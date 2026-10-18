@@ -1,4 +1,6 @@
 #include "SmacSimulationState.h"
+#include "fixtures/SmacRegionalMilitary.h"
+#include "fixtures/SmacRegionalBaseFlags.h"
 
 #include "game/backend/faction/SmacSimulationState.h"
 #include "game/backend/faction/SmacRankOrder.h"
@@ -87,7 +89,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=17,bool include_capabilities=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=23,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -99,6 +101,45 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=17,bool
         if(value.capabilities) {for(const auto& owner:value.capabilities->factions) {
             for(const auto& fields:{owner.available,owner.foreign}) {for(const auto field:fields) {suffix.WriteInt(field);}}
         }}
+    }
+    if(version>=18 && include_military) {
+        suffix.WriteBool(value.regional_military.has_value());
+        if(value.regional_military) {
+            std::string packed;
+            for(const auto& owner:value.regional_military->factions) {for(const auto* fields:{&owner.units,&owner.attack}) {for(const auto field:*fields) {
+                packed+=static_cast<char>(field&255);packed+=static_cast<char>(field>>8);
+            }}}
+            if(version>=19) {for(const auto& owner:value.regional_military->factions) {
+                packed+=owner.unit_phase_flags ? char(1) : char(0);
+                if(owner.unit_phase_flags) {for(const auto flags:*owner.unit_phase_flags) {
+                    packed+=static_cast<char>(flags&255);packed+=static_cast<char>(flags>>8);
+                }}
+            }}
+            if(version>=20) {for(const auto& owner:value.regional_military->factions) {
+                packed+=owner.base_phase_flags ? char(1) : char(0);
+                if(owner.base_phase_flags) {for(const auto flags:*owner.base_phase_flags) {
+                    packed+=static_cast<char>(flags&255);packed+=static_cast<char>(flags>>8);
+                }}
+            }}
+            suffix.WriteString(packed);
+        }
+    }
+    if(version>=21) {
+        suffix.WriteBool(value.victory_history.has_value());
+        if(value.victory_history) {
+            for(const auto* words:{&value.victory_history->economic_deadlines,&value.victory_history->economic_paid_costs,&value.victory_history->last_base_expansion_or_advice_turn}) {
+                for(const auto word:*words) {suffix.WriteInt(word);}
+            }
+            suffix.WriteInt(value.victory_history->voice_host);
+        }
+    }
+    if(version>=22) {
+        suffix.WriteBool(value.retained_land_region_concentration.has_value());
+        if(value.retained_land_region_concentration) {suffix.WriteBool(*value.retained_land_region_concentration);}
+    }
+    if(version>=23) {
+        suffix.WriteBool(value.retained_base_totals.has_value());
+        if(value.retained_base_totals) {for(const auto total:*value.retained_base_totals) {suffix.WriteInt(total);}}
     }
     return Wire(value,1,version)+suffix.ToString();
 }
@@ -117,6 +158,125 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC retained Base totals V23 preserve all8 signed words without a live recount",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();value.retained_base_totals=faction::SmacBaseTotals{{-3,111,222,333,444,555,666,777}};
+        auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"Original all8 Base totals changed on restore");
+        GT_ASSERT(!SmacSimulationState::Deserialize(CurrentWire(value,22),technologies,profiles,units).retained_base_totals,"V22 migration recounted missing history");
+        for(const auto bad:{wire.substr(0,wire.size()-1),wire+"x"}) {GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(bad,technologies,profiles,units);}),"Malformed Base-total suffix accepted");}
+        value.retained_base_totals->at(0)=INT32_MIN;value.retained_base_totals->at(7)=INT32_MAX;
+        GT_ASSERT(SmacSimulationState::Deserialize(value.Serialize(technologies,profiles,units).ToString(),technologies,profiles,units)==value,"Signed diagnostic Base totals narrowed");
+        value.retained_base_totals.reset();wire=value.Serialize(technologies,profiles,units).ToString();
+        types::Buffer absent;absent.WriteBool(false);types::Buffer overflow;overflow.WriteBool(true);overflow.WriteInt(INT64_MAX);
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-absent.ToString().size())+overflow.ToString(),technologies,profiles,units);}),"Base total outside signed32 admitted");
+        GT_OK();
+    });
+    task->AddTest("SMAC retained Base total deltas preserve native stale offsets and capture transfers",GT(){
+        for(const auto before:{1,7}) {
+            auto totals=std::optional<faction::SmacBaseTotals>{faction::SmacBaseTotals{}};totals->at(1)=before;totals->at(2)=888;
+            totals=faction::AdjustSmacBaseTotal(totals,1,1);
+            GT_ASSERT(totals->at(1)==before+1 && totals->at(2)==888,"Founding recounted a stale Base total or touched peer");
+            totals=faction::AdjustSmacBaseTotal(totals,1,-1);
+            GT_ASSERT(totals->at(1)==before,"Removal repaired a stale Base total");
+        }
+        for(const auto values:{std::array<int32_t,4>{{10,20,11,19}},std::array<int32_t,4>{{1,1,2,0}}}) {
+            auto totals=std::optional<faction::SmacBaseTotals>{faction::SmacBaseTotals{}};totals->at(1)=values[0];totals->at(2)=values[1];
+            const auto next=faction::AdjustSmacBaseTotal(faction::AdjustSmacBaseTotal(totals,2,-1),1,1);
+            GT_ASSERT(next->at(1)==values[2] && next->at(2)==values[3] && totals->at(1)==values[0],"Native capture deltas changed source or recount totals");
+        }
+        GT_ASSERT(!faction::AdjustSmacBaseTotal({},1,1),"Legacy absent Base totals were invented");
+        auto limits=std::optional<faction::SmacBaseTotals>{faction::SmacBaseTotals{}};limits->at(1)=INT32_MAX;limits->at(2)=INT32_MIN;
+        GT_ASSERT(Rejects([&]{faction::AdjustSmacBaseTotal(limits,1,1);}) && Rejects([&]{faction::AdjustSmacBaseTotal(limits,2,-1);})
+            && Rejects([&]{faction::AdjustSmacBaseTotal(limits,0,1);}),"Unsupported count overflow or slot admitted");GT_OK();
+    });
+    task->AddTest("SMAC retained land concentration V22 preserves false true and unavailable history",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        for(const auto retained:{std::optional<bool>{},std::optional<bool>{false},std::optional<bool>{true}}) {
+            auto value=State();value.retained_land_region_concentration=retained;
+            const auto random=value.gameplay_random;
+            const auto wire=value.Serialize(technologies,profiles,units).ToString();
+            auto restored=State();restored.retained_land_region_concentration=retained ? !*retained : true;
+            restored=SmacSimulationState::Deserialize(wire,technologies,profiles,units);
+            GT_ASSERT(wire==CurrentWire(value) && restored==value && restored.gameplay_random==random,"V22 reconstructed or lost saved concentration authority");
+            const auto old=SmacSimulationState::Deserialize(CurrentWire(value,21),technologies,profiles,units);
+            GT_ASSERT(!old.retained_land_region_concentration,"V21 migration invented a terrain status");
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);})
+                && Rejects([&]{SmacSimulationState::Deserialize(wire+"x",technologies,profiles,units);}),"Malformed concentration framing accepted");
+        }
+        GT_OK();
+    });
+	task->AddTest("SMAC fresh victory storage resets all8 native slot prefixes and absent Voice",GT(){
+		faction::SmacVictoryHistory history;history.economic_deadlines.fill(777);history.economic_paid_costs.fill(777);history.last_base_expansion_or_advice_turn.fill(777);
+		for(int32_t owner=0;owner<=7;++owner) {history.Initialize(owner,0);}
+		GT_ASSERT(history==faction::SmacVictoryHistory{},"Fresh slot0 or unused faction retained poisoned pressure words");
+		GT_ASSERT(history.voice_host==-1,"Fresh no-project storage did not establish absent Voice marker");GT_OK();
+	});
+	task->AddTest("SMAC victory history matches4 native initializer prefixes and V21 preserves25 saved words",GT(){
+		using History=faction::SmacVictoryHistory;
+		for(const auto owner:{1,2}) {for(const auto turn:{0,1}) {
+			History history;history.economic_deadlines.fill(777);history.economic_paid_costs.fill(777);history.last_base_expansion_or_advice_turn.fill(777);
+			history.Initialize(owner,turn);
+			GT_ASSERT(history.last_base_expansion_or_advice_turn[owner]==turn
+				&& history.economic_deadlines[owner]==(turn ? 777 : 0) && history.economic_paid_costs[owner]==(turn ? 777 : 0)
+				&& history.last_base_expansion_or_advice_turn[7]==777 && history.economic_deadlines[7]==777,"Native initializer history reset/preservation differs");
+		}}
+		auto value=State();value.victory_history.emplace();auto& history=*value.victory_history;
+		for(size_t owner=0;owner<8;++owner) {history.economic_deadlines[owner]=1000+owner;history.economic_paid_costs[owner]=5000+owner;history.last_base_expansion_or_advice_turn[owner]=10+owner;}
+		history.voice_host=0; // diagnostic storage marker, not a constructed project
+		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+		const auto wire=value.Serialize(technologies,profiles,units).ToString();
+		GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"V21 changed native slot0 or25 retained words");
+		const auto old=SmacSimulationState::Deserialize(CurrentWire(value,20),technologies,profiles,units);
+		GT_ASSERT(!old.victory_history,"V20 migration fabricated economic or expansion history");
+		for(const auto malformed:{wire.substr(0,wire.size()-1),wire+"x"}) {
+			GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(malformed,technologies,profiles,units);}),"Malformed V21 history framing admitted");
+		}
+		auto absent=value;absent.victory_history.reset();const auto absent_wire=CurrentWire(absent,21);
+		types::Buffer marker;marker.WriteBool(false);types::Buffer overflow;overflow.WriteBool(true);overflow.WriteInt(INT64_MAX);
+		const auto invalid=absent_wire.substr(0,absent_wire.size()-marker.ToString().size())+overflow.ToString();
+		GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(invalid,technologies,profiles,units);}),"History accepted a word outside signed32");
+		history.last_base_expansion_or_advice_turn[0]=INT32_MIN;history.economic_paid_costs[7]=INT32_MAX;history.voice_host=-2;
+		GT_ASSERT(SmacSimulationState::Deserialize(value.Serialize(technologies,profiles,units).ToString(),technologies,profiles,units)==value,"History codec reinterpreted signed diagnostic words");
+		GT_OK();
+	});
+    task->AddTest("SMAC Base-phase flags match51 native reset and immediate-sea projections",GT(){
+        using Military=game::backend::faction::SmacRegionalMilitaryState;
+        for(const auto& row:regional_base_flags_fixture::Cases()) {
+            auto flags=row.initial;Military::ResetBaseFlags(flags,row.turn,row.owner);
+            GT_ASSERT(flags==row.reset,"Native Base flag reset differs: "+std::string(row.id));
+            std::array<uint8_t,128> counts{};std::vector<uint8_t> directions;
+            for(const auto& base:row.bases) {if(base.owner==row.owner) {
+                const auto direction=game::backend::map::smac_territory::ImmediateSeaNeighbor(row.width,row.height,row.wrap,row.sea,base.point);
+                directions.push_back(direction);++counts.at(base.region);Military::AccumulateBaseFlag(flags,base.region,direction!=0);
+            }}
+            GT_ASSERT(flags==row.expected && counts==row.counts && directions==row.directions,"Native Base flags/coastal direction/count differ: "+std::string(row.id));
+        }GT_OK();
+    });
+    task->AddTest("SMAC Base-phase flags V20 retain bit8 history and preserve V19 absence",GT(){
+        using Military=game::backend::faction::SmacRegionalMilitaryState;
+        auto value=State();value.regional_military.emplace();
+        for(size_t owner=0;owner<7;++owner) {
+            auto& flags=value.regional_military->factions[owner].base_phase_flags;flags.emplace();
+            for(size_t region=0;region<128;++region) {flags->at(region)=std::array<uint16_t,4>{0,8,128,136}[(owner+region)%4];}
+        }
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"V20 lost Base-stage flags or polar/unoccupied regions");
+        const auto old=SmacSimulationState::Deserialize(CurrentWire(value,19),technologies,profiles,units);
+        for(const auto& owner:old.regional_military->factions) {GT_ASSERT(!owner.base_phase_flags,"V19 acquired invented retained bit8 history");}
+        for(int variant=0;variant<4;++variant) {
+            std::string packed(Military::V18_WIRE_BYTES+7,0); // all unit rows absent
+            if(variant==0) {packed+=char(2);packed.append(6,0);}
+            if(variant==1) {packed+=char(1);packed.append(6,0);}
+            if(variant==2) {packed+=char(1);packed+=char(1);packed.append(255+6,0);}
+            if(variant==3) {packed.append(8,0);}
+            types::Buffer invalid;invalid.WriteBool(true);invalid.WriteString(packed);
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(CurrentWire(value,20,true,false)+invalid.ToString(),technologies,profiles,units);}),"Malformed Base-phase flags accepted");
+        }
+        value.regional_military->factions.front().base_phase_flags->at(0)=2;
+        GT_ASSERT(Rejects([&]{value.Serialize(technologies,profiles,units);}),"Unit/peer flags leaked into Base-phase snapshot");GT_OK();
+    });
     task->AddTest("SMAC retained capability scans match 31 original binding and width controls",GT(){
         for(const auto& test:smac_capability_fixture::Cases()) {
             auto catalog=CapabilityCatalog();auto technologies=smac_rules_fixture::Technologies();
@@ -185,6 +345,62 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
         const auto before=state;
         GT_ASSERT(Rejects([&]{state.Refresh(1,owned,technologies,catalog,combat,relations,0,false,false,false);}) && state==before,
             "unsupported PSI overflow partially published capabilities");
+        GT_OK();
+    });
+    task->AddTest("SMAC regional military matches 130 native resolved unit-phase projections",GT(){
+        for(const auto& row:regional_military_fixture::Cases()) {
+            auto actual=row.before;
+            for(const auto& unit:row.units) {game::backend::faction::SmacRegionalMilitaryState::Accumulate(actual,unit);}
+            GT_ASSERT(actual==row.expected,"native regional unit or attack projection differs: "+std::string(row.id));
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC unit-phase flags V19 retain exact scoped bits and V18 absence",GT(){
+        using Military=game::backend::faction::SmacRegionalMilitaryState;
+        auto value=State();value.regional_military.emplace();
+        const std::array<uint16_t,7> patterns{0,2,2050,4096,8192,10242,14338};
+        for(size_t owner=0;owner<7;++owner) {
+            auto& flags=value.regional_military->factions[owner].unit_phase_flags;flags.emplace();
+            for(size_t region=0;region<128;++region) {flags->at(region)=patterns[(owner+region)%patterns.size()];}
+        }
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"V19 lost scoped flag history or unoccupied/polar slots");
+        const auto old=SmacSimulationState::Deserialize(CurrentWire(value,18),technologies,profiles,units);
+        for(const auto& owner:old.regional_military->factions) {GT_ASSERT(!owner.unit_phase_flags,"V18 acquired invented flag history");}
+        auto stale=old.regional_military->factions.front();
+        Military::Accumulate(stale,{1,8,0,true,0,1,0,0,false,false});
+        GT_ASSERT(!stale.unit_phase_flags,"arithmetic query manufactured missing flag authority");
+        for(int variant=0;variant<4;++variant) {
+            std::string packed(Military::V18_WIRE_BYTES,0);
+            if(variant==0) {packed+=char(2);packed.append(6,0);}
+            if(variant==1) {packed+=char(1);packed.append(6,0);}
+            if(variant==2) {packed+=char(1);packed+=char(1);packed.append(255+6,0);}
+            if(variant==3) {packed.append(8,0);}
+            types::Buffer invalid;invalid.WriteBool(true);invalid.WriteString(packed);
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(CurrentWire(value,19,true,false)+invalid.ToString(),technologies,profiles,units);}),"malformed scoped flags accepted");
+        }
+        value.regional_military->factions.front().unit_phase_flags->at(0)=1;
+        GT_ASSERT(Rejects([&]{value.Serialize(technologies,profiles,units);}),"Base/peer/final flags leaked into unit-phase history");GT_OK();
+    });
+    task->AddTest("SMAC regional military V18 preserves all word counters and legacy absence",GT(){
+        auto value=State();value.regional_military.emplace();
+        for(size_t owner=0;owner<7;++owner) {for(size_t region=0;region<128;++region) {
+            value.regional_military->factions[owner].units[region]=static_cast<uint16_t>(owner*9000+region);
+            value.regional_military->factions[owner].attack[region]=static_cast<uint16_t>(65535-owner*9000-region);
+        }}
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,
+            "military restore rebuilt counters or omitted unoccupied faction or polar regions");
+        const auto old=SmacSimulationState::Deserialize(CurrentWire(value,17),technologies,profiles,units);
+        GT_ASSERT(!old.regional_military,"V17 acquired invented owner-summary history");
+        for(const auto length:{size_t(0),size_t(3583),size_t(3585)}) {
+            types::Buffer invalid;invalid.WriteBool(true);invalid.WriteString(std::string(length,'x'));
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(CurrentWire(value,18,true,false)+invalid.ToString(),technologies,profiles,units);}),
+                "malformed regional military extent accepted");
+        }
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);}),"truncated regional military state accepted");
         GT_OK();
     });
     task->AddTest("SMAC capability history survives V17 restore while V16 preserves absence",GT(){

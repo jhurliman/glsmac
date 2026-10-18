@@ -78,6 +78,7 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareBaseTerritory( const base
 			if(removed) {sites=sites.RemoveBase({{static_cast<int32_t>(removed->GetTile()->coord.x),static_cast<int32_t>(removed->GetTile()->coord.y)}},centers);}
 			next=m_map->PrepareSiteRatingRefill(next.WithSiteRatings(std::move(sites)),centers,GetTurnId());
 		}
+		next=m_map->PrepareTerritorySummary(next,replacement);
 		*prepared_topology=std::move(next);
 	}
 	return replacement;

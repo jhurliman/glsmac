@@ -29,6 +29,8 @@
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/MoraleSet.h"
 #include "game/backend/unit/CvrScoutRender.h"
+#include "game/backend/unit/FormerMarkerRender.h"
+#include "game/backend/unit/ColonyMarkerRender.h"
 #include "gse/value/Object.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Int.h"
@@ -265,6 +267,71 @@ struct WireRecord {
 }
 
 void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC live regional military recount preserves peer history and actual Start",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved;
+        const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* world=game->GetMap();
+            for(size_t y=0;y<world->GetHeight();++y) {for(size_t x=y&1;x<world->GetWidth();x+=2) {
+                auto* square=world->GetTile(x,y);for(auto* corner:square->elevation.corners) {*corner=100;}square->Update();
+                square->moisture=map::tile::MOISTURE_RAINY;square->rockiness=map::tile::ROCKINESS_FLAT;
+                square->features=0;square->terraforming=0;square->bonus=map::tile::BONUS_NONE;
+            }}
+            map::SmacWorkerKnowledge::Data knowledge{static_cast<int32_t>(world->GetWidth()),static_cast<int32_t>(world->GetHeight()),true,true,0,{},{},{}};
+            knowledge.tiles.resize(knowledge.width*knowledge.height/2,{0,std::nullopt});
+            fixture.ResourceState([&](auto& state){
+                for(const auto& participant:state.roster) {knowledge.observers[participant.simulation_id]=map::SmacWorkerKnowledge::Observer{};}
+                state.regional_military.emplace();state.regional_military->factions[6].units.fill(777);state.regional_military->factions[6].attack.fill(888);
+                state.regional_military->factions[6].unit_phase_flags.emplace();state.regional_military->factions[6].unit_phase_flags->fill(4096);
+                state.regional_military->factions[0].base_phase_flags.emplace();state.regional_military->factions[0].base_phase_flags->fill(8);
+                state.regional_military->factions[6].base_phase_flags.emplace();state.regional_military->factions[6].base_phase_flags->fill(128);
+                state.social.factions.front().retained->at(4)=0;
+            });
+            game->PublishSmacWorkerKnowledge(GSE_CALL,map::SmacWorkerKnowledge::Create(knowledge));Define(game->GetUM());
+            auto low=Record();low.stored_morale=0;auto high=Record();high.stored_morale=6;high.damage=9;
+            auto* first_unit=Spawn(GSE_CALL,fixture,low,901);auto* second_unit=Spawn(GSE_CALL,fixture,high,800);
+            auto* manager=game->GetUM();
+            auto* former=new StaticDef("military-former",manager->GetMoraleSet("CONVENTIONAL_MORALE"),"Former",MT_LAND,1,new FormerMarkerRender());manager->DefineUnit(former);
+            auto* colony=new StaticDef("military-colony",manager->GetMoraleSet("CONVENTIONAL_MORALE"),"Colony",MT_LAND,1,new ColonyMarkerRender());manager->DefineUnit(colony);
+            auto special=low;special.design_id=1;manager->SpawnConventionalUnit(GSE_CALL,799,former,first_unit->m_owner,first_unit->GetTile(),special);
+            special.design_id=0;manager->SpawnConventionalUnit(GSE_CALL,798,colony,first_unit->m_owner,first_unit->GetTile(),special);
+            manager->SpawnConventionalUnit(GSE_CALL,797,colony,first_unit->m_owner,first_unit->GetTile(),special);
+
+            GT_ASSERT(first_unit->QueryStats(SmacMoraleMode::Mode0).effective_morale==0 && second_unit->QueryStats(SmacMoraleMode::Mode0).effective_morale==6,"military fixture lost resolved morale controls");
+            const auto rng=fixture.GameplayRandom();const auto jsf=game->GetRandom()->GetStateString();fixture.RefreshPopulation(1);
+            bool correct=false;
+            fixture.ResourceState([&](auto& state){const auto& military=*state.regional_military;
+                correct=military.factions[0].units[1]==2 && military.factions[0].attack[1]==1
+                    && military.factions[6].units[127]==777 && military.factions[6].attack[0]==888
+                    && military.factions[0].unit_phase_flags->at(1)==10242 && military.factions[6].unit_phase_flags->at(127)==4096
+                    && game->GetTurnId()==1 && military.factions[0].base_phase_flags->at(1)==8 && military.factions[0].base_phase_flags->at(14)==0
+                    && military.factions[6].base_phase_flags->at(127)==128;
+            });
+            GT_ASSERT(correct,"military recount used raw morale HP damage or refreshed a peer");
+            std::optional<faction::SmacSimulationState> state_before;
+            fixture.ResourceState([&](auto& state){state.regional_military->factions[0].base_phase_flags->at(14)=8;state_before=state;});
+            auto* square=first_unit->GetTile();for(auto* corner:square->elevation.corners) {*corner=-1000;}square->Update();
+            bool rejected=false;try {fixture.RefreshPopulation(1);}catch(const std::exception&) {rejected=true;}
+            GT_ASSERT(rejected,"unbased water placement silently supplied an invalid military contribution");
+            fixture.ResourceState([&](auto& state){correct=state==*state_before;});
+            GT_ASSERT(correct,"failed military preparation partially published capability or owner counters");
+            for(auto* corner:square->elevation.corners) {*corner=100;}square->Update();
+
+            auto removal=game->GetUM()->PrepareConventionalRemoval(GSE_CALL,{901,798});removal.Commit();removal.Notify(GSE_CALL);
+            fixture.ResourceState([&](auto& state){correct=state.regional_military->factions[0].units[1]==2;});
+            GT_ASSERT(correct && fixture.GameplayRandom()==rng && game->GetRandom()->GetStateString()==jsf,"removal eagerly recounted military or producer consumed RNG");
+            saved=fixture.Snapshot();GT_OK();
+        });if(!first.empty()) {return first;}
+        ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});bool correct=false;
+            restored.ResourceState([&](auto& state){correct=state.regional_military && state.regional_military->factions[0].units[1]==2 && state.regional_military->factions[0].unit_phase_flags->at(1)==10242;});
+            GT_ASSERT(correct,"actual Start reconstructed stale military history");
+            restored.RefreshPopulation(1);
+            restored.ResourceState([&](auto& state){correct=state.regional_military->factions[0].units[1]==1 && state.regional_military->factions[0].attack[1]==1 && state.regional_military->factions[0].unit_phase_flags->at(1)==8194;});
+            GT_ASSERT(correct,"restored next owner summary did not consume current Unit records");GT_OK();
+        });
+    });
+
 	task->AddTest("Conventional friendly stack entry returns to occupied HQ and preserves stationary Units",GT() {
 		std::string saved;
 		ConventionalUnitFixture fixture;fixture.Configure(true,3,true);

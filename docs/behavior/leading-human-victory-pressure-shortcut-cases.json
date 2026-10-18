@@ -1,0 +1,1634 @@
+{
+  "research_id": "RE-SMAC-VICTORY-PRESSURE-SHORTCUT-001",
+  "profile": {
+    "width": 128,
+    "height": 64,
+    "querying_leader": 1,
+    "runner_up": 2,
+    "mode": 0,
+    "retained_ranking_scores": [100,100],
+    "objective_required_for_victory": 9999,
+    "actual_Base_records": [
+      {
+        "id": 0,
+        "owner": 1,
+        "coordinates": [0,0],
+        "population": 1
+      },
+      {
+        "id": 1,
+        "owner": 1,
+        "coordinates": [2,0],
+        "population": 1
+      },
+      {
+        "id": 2,
+        "owner": 1,
+        "coordinates": [4,0],
+        "population": 1
+      },
+      {
+        "id": 3,
+        "owner": 1,
+        "coordinates": [6,0],
+        "population": 1
+      },
+      {
+        "id": 4,
+        "owner": 1,
+        "coordinates": [8,0],
+        "population": 1
+      },
+      {
+        "id": 5,
+        "owner": 1,
+        "coordinates": [10,0],
+        "population": 1
+      },
+      {
+        "id": 6,
+        "owner": 2,
+        "coordinates": [12,0],
+        "population": "per_case_rival_population"
+      }
+    ],
+    "retained_Base_count_is_separate_from_live_records": true,
+    "all_VOTES_modifiers": 0,
+    "all_projects_absent_except_explicit_Voice_marker": true,
+    "majority_required_technology": {
+      "id": 41,
+      "name": "Mind/Machine Interface",
+      "immediate_prerequisites": [39,52]
+    },
+    "pressure_technologies": [
+      {
+        "id": 57,
+        "name": "Matter Transmission",
+        "requirement_of": "Psi Gate"
+      },
+      {
+        "id": 56,
+        "name": "Threshold of Transcendence",
+        "requirement_of": "Voice of Planet"
+      }
+    ],
+    "history_vector_owners": [1,2,3,4,5,6,7],
+    "terrain_not_read_by_these_predicates": true
+  },
+  "cases": [
+    {
+      "id": "ordinary_no_pressure",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "future_1_False",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 0,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "future_1_True",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "future_2_False",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,252,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "future_2_True",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 6,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,252,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "future_7_False",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,252],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "future_7_True",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 130,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,252],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "deadline_-1",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [-1,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "deadline_0",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "deadline_250",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [250,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "deadline_251",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [251,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "deadline_252",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "deadline_10000",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [10000,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "future_with_no_cost",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "future_with_saved_cost",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [1500,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "future_economic_rule_off",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6666,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "future_dead_roster_human",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 0,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "future_diplomatic_rule_off",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6662,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 0,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "cooperative_history_word_0",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "cooperative_history_word_1",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [1,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 0,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "cooperative_history_word_2",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [2,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "cooperative_history_word_3",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [3,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 0,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "cooperative_history_word_100",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [100,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "cooperative_history_word_101",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [101,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 0,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "cooperative_history_word_-1",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [-1,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 0,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "odd_history_coop_off",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 2574,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [1,1,1,1,1,1,1],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "majority_rival_1",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "majority_rival_6",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 6,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "majority_rival_7",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 7,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 2,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "leader_tech_missing",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {},
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 0,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "voice_-1_None",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "voice_-1_56",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41,56]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "voice_-1_57",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41,57]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "voice_0_None",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 0,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "voice_0_56",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 0,
+        "technology_ownership": {
+          "1": [41,56]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "voice_0_57",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 0,
+        "technology_ownership": {
+          "1": [41,57]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "voice_6_None",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 6,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "voice_6_56",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 6,
+        "technology_ownership": {
+          "1": [41,56]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "voice_6_57",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 6,
+        "technology_ownership": {
+          "1": [41,57]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "voice_9999_None",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 9999,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "voice_9999_56",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 9999,
+        "technology_ownership": {
+          "1": [41,56]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "voice_9999_57",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 9999,
+        "technology_ownership": {
+          "1": [41,57]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "voice_other_human_technology",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 10,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 0,
+        "technology_ownership": {
+          "1": [41],
+          "3": [57]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "voice_other_AI_technology",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 0,
+        "technology_ownership": {
+          "1": [41],
+          "3": [57]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": false,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "voice_transcendence_rule_off",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 0,
+        "technology_ownership": {
+          "1": [41,56]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": true,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": true
+      }
+    },
+    {
+      "id": "voice_no_majority_technology",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [0,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": 0,
+        "technology_ownership": {
+          "1": [56]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 0,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": true,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "admission_exact_time",
+      "inputs": {
+        "turn": 250,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 6
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": false
+      }
+    },
+    {
+      "id": "admission_insufficient_bases",
+      "inputs": {
+        "turn": 251,
+        "human_mask": 2,
+        "alive_mask": 6,
+        "options": 6670,
+        "deadlines": [252,0,0,0,0,0,0],
+        "stored_costs": [0,0,0,0,0,0,0],
+        "voice_host": -1,
+        "technology_ownership": {
+          "1": [41]
+        },
+        "rival_population": 1,
+        "leader_difficulty": 2,
+        "last_base_expansion_or_advice_turns": [0,0,0,0,0,0,0],
+        "retained_leader_base_count": 5
+      },
+      "expected": {
+        "pressure": true,
+        "majority": 1,
+        "dominance": false,
+        "query_zero_majority": 0,
+        "score_comparison_reached": false,
+        "shortcut_true_reached": false
+      }
+    }
+  ],
+  "initialization": [
+    {
+      "inputs": {
+        "owner": 1,
+        "entry": "higher_newgame",
+        "current_turn": 0,
+        "previous_history": 777,
+        "previous_deadline": 777,
+        "previous_paid_cost": 777
+      },
+      "expected": {
+        "last_base_expansion_or_advice_turn": 0,
+        "economic_deadline": 0,
+        "economic_paid_cost": 0
+      }
+    },
+    {
+      "inputs": {
+        "owner": 2,
+        "entry": "same_faction_initializer",
+        "current_turn": 0,
+        "previous_history": 777,
+        "previous_deadline": 777,
+        "previous_paid_cost": 777
+      },
+      "expected": {
+        "last_base_expansion_or_advice_turn": 0,
+        "economic_deadline": 0,
+        "economic_paid_cost": 0
+      }
+    },
+    {
+      "inputs": {
+        "owner": 1,
+        "entry": "higher_newgame",
+        "current_turn": 1,
+        "previous_history": 777,
+        "previous_deadline": 777,
+        "previous_paid_cost": 777
+      },
+      "expected": {
+        "last_base_expansion_or_advice_turn": 1,
+        "economic_deadline": 777,
+        "economic_paid_cost": 777
+      }
+    },
+    {
+      "inputs": {
+        "owner": 2,
+        "entry": "same_faction_initializer",
+        "current_turn": 1,
+        "previous_history": 777,
+        "previous_deadline": 777,
+        "previous_paid_cost": 777
+      },
+      "expected": {
+        "last_base_expansion_or_advice_turn": 1,
+        "economic_deadline": 777,
+        "economic_paid_cost": 777
+      }
+    }
+  ],
+  "ordinary_storage": {
+    "inputs": {
+      "map_width": 16,
+      "map_height": 8,
+      "Base_records": 0,
+      "Unit_records": 0,
+      "diagnostic_voice_host_without_Base": true,
+      "values": {
+        "economic_deadlines": [1000,1001,1002,1003,1004,1005,1006,1007],
+        "economic_paid_costs": [5000,5001,5002,5003,5004,5005,5006,5007],
+        "voice_host": 0,
+        "last_base_expansion_or_advice_turns": [10,11,12,13,14,15,16,17]
+      },
+      "poison_before_load": true
+    },
+    "expected": {
+      "economic_deadlines": [1000,1001,1002,1003,1004,1005,1006,1007],
+      "economic_paid_costs": [5000,5001,5002,5003,5004,5005,5006,5007],
+      "voice_host": 0,
+      "last_base_expansion_or_advice_turns": [10,11,12,13,14,15,16,17]
+    },
+    "restored_words": 25
+  },
+  "Base_event_history_controls": [
+    {
+      "id": "ordinary_manual_scout_move",
+      "inputs": {
+        "current_turn": 1,
+        "history_words": [777,0,0,0,0,0,0]
+      },
+      "expected_history_words": [777,0,0,0,0,0,0]
+    },
+    {
+      "id": "colony_factory",
+      "inputs": {
+        "current_turn": 1,
+        "history_words": [777,0,0,0,0,0,0]
+      },
+      "expected_history_words": [777,0,0,0,0,0,0]
+    },
+    {
+      "id": "native_base_founding_action",
+      "inputs": {
+        "current_turn": 1,
+        "history_words": [777,0,0,0,0,0,0]
+      },
+      "expected_history_words": [1,0,0,0,0,0,0]
+    },
+    {
+      "id": "native_nonlast_base_removal",
+      "inputs": {
+        "current_turn": 1,
+        "history_words": [777,0,0,0,0,0,0]
+      },
+      "expected_history_words": [777,0,0,0,0,0,0]
+    },
+    {
+      "id": "directed_relation_primitive",
+      "inputs": {
+        "current_turn": 1,
+        "history_words": [777,0,0,0,0,0,0]
+      },
+      "expected_history_words": [777,0,0,0,0,0,0]
+    },
+    {
+      "id": "survivor_capture",
+      "inputs": {
+        "current_turn": 6,
+        "old_owner": 2,
+        "new_owner": 1,
+        "history_words_owners_1_2": [777,888],
+        "Base_window_virtual_show_supplied": true
+      },
+      "expected_history_words_owners_1_2": [6,888]
+    }
+  ],
+  "regional_consumer_profile": {
+    "width": 64,
+    "height": 32,
+    "Base_y": 16,
+    "own_Base_x": [16,20,24,28,32,36],
+    "peer_Base_x": 40,
+    "all_Base_populations": 1,
+    "all_Base_regions": 1,
+    "all_directional_relations": 0,
+    "Voice_absent": true,
+    "leader_technology_ownership": [41]
+  },
+  "regional_consumers": [
+    {
+      "id": "no_pressure",
+      "inputs": {
+        "turn": 251,
+        "ordinary_options": 6670,
+        "deadline": 0,
+        "last_base_expansion_history_turn": 0,
+        "retained_scores": [100,100],
+        "leader": 1,
+        "runner_up": 2,
+        "human_mask": 2,
+        "leader_difficulty": 2,
+        "own_base_records": 6,
+        "peer_base_records": 1,
+        "cached_peer_bases_in_region": 1,
+        "region": 1,
+        "owned_suitable": 39,
+        "covered_suitable": 0,
+        "neutral_suitable": 57,
+        "maximum_site_rating": 2,
+        "explore": 0,
+        "build": 0,
+        "world_tiles": 1024,
+        "setup_adjustment": 0
+      },
+      "expected": {
+        "dominance": 0,
+        "pressure": 0,
+        "initial_and_final_strategy": 8,
+        "threshold_Q": 8
+      }
+    },
+    {
+      "id": "future_pressure",
+      "inputs": {
+        "turn": 251,
+        "ordinary_options": 6670,
+        "deadline": 252,
+        "last_base_expansion_history_turn": 0,
+        "retained_scores": [100,100],
+        "leader": 1,
+        "runner_up": 2,
+        "human_mask": 2,
+        "leader_difficulty": 2,
+        "own_base_records": 6,
+        "peer_base_records": 1,
+        "cached_peer_bases_in_region": 1,
+        "region": 1,
+        "owned_suitable": 39,
+        "covered_suitable": 0,
+        "neutral_suitable": 57,
+        "maximum_site_rating": 2,
+        "explore": 0,
+        "build": 0,
+        "world_tiles": 1024,
+        "setup_adjustment": 0
+      },
+      "expected": {
+        "dominance": 1,
+        "pressure": 1,
+        "initial_and_final_strategy": 7,
+        "threshold_Q": 9
+      }
+    },
+    {
+      "id": "future_odd_history_excluded",
+      "inputs": {
+        "turn": 251,
+        "ordinary_options": 6670,
+        "deadline": 252,
+        "last_base_expansion_history_turn": 1,
+        "retained_scores": [100,100],
+        "leader": 1,
+        "runner_up": 2,
+        "human_mask": 2,
+        "leader_difficulty": 2,
+        "own_base_records": 6,
+        "peer_base_records": 1,
+        "cached_peer_bases_in_region": 1,
+        "region": 1,
+        "owned_suitable": 39,
+        "covered_suitable": 0,
+        "neutral_suitable": 57,
+        "maximum_site_rating": 2,
+        "explore": 0,
+        "build": 0,
+        "world_tiles": 1024,
+        "setup_adjustment": 0
+      },
+      "expected": {
+        "dominance": 0,
+        "pressure": 0,
+        "initial_and_final_strategy": 8,
+        "threshold_Q": 8
+      }
+    }
+  ],
+  "validation": {
+    "complete_predicate_contexts": 48,
+    "initializer_prefixes": 4,
+    "ordinary_storage_words": 25,
+    "Base_history_controls": 6,
+    "complete_owner_summaries": 3,
+    "helper_results_supplied": false,
+    "old_score_and_majority_grids_reused": true,
+    "raw_initialization_turn_label_renamed_for_correct_semantics": true
+  }
+}

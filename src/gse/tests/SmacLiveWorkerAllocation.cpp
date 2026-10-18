@@ -1121,10 +1121,18 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
             fixture.ResourceState([](auto& state) {state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
                 state.economy.at(1).credits=100;state.economy.at(2).credits=200;state.economy.at(2).population_aggregate=2;});
+			fixture.ResourceState([&](auto& state){state.retained_land_region_concentration=(turn==100);state.retained_base_totals->at(1)=10;state.retained_base_totals->at(2)=20;state.victory_history->last_base_expansion_or_advice_turn.fill(777);
+				state.victory_history->economic_deadlines.fill(777);state.victory_history->economic_paid_costs.fill(777);});
             fixture.GameplayRandom({3,3});fixture.Updates();const auto before=fixture.Snapshot();const auto first=Unit::GetNextId();
             um->ValidateConventionalMove(actor,target->GetTile(),0);
             GT_ASSERT(fixture.Snapshot()==before && Unit::GetNextId()==first && um->GetUnit(92),"successful replacement query published candidate placements or retired old Units");
             fixture.MoveEvent(GSE_CALL,actor,target->GetTile());GT_ASSERT(um->GetUnits().size()==count+1 && !um->GetUnit(92),"successful capture restart did not replace old faction Units");
+			bool stamped=false;fixture.ResourceState([&](auto& state){const auto& history=*state.victory_history;
+				stamped=history.last_base_expansion_or_advice_turn[1]==static_cast<int32_t>(turn) && history.last_base_expansion_or_advice_turn[2]==static_cast<int32_t>(turn)
+					&& history.last_base_expansion_or_advice_turn[7]==777 && history.economic_deadlines[2]==777 && history.economic_paid_costs[2]==777
+					&& state.retained_land_region_concentration==std::optional<bool>{turn==100}
+					&& state.retained_base_totals->at(1)==11 && state.retained_base_totals->at(2)==0;});
+			GT_ASSERT(stamped,"Capture/restart failed owner history stamps or reset the retained economic attempt");
             const std::array<int32_t,4> designs{{0,1,0,2}};const auto& topology=*game->GetMap()->GetTerritoryTopology();
             const auto captured_region=topology.Regions().at(16*32+10);map::tile::Tile* site=nullptr;
             for(size_t i=0;i<count;++i) {const auto* unit=um->GetUnit(first+i);GT_ASSERT(unit && unit->Conventional().design_id==(i<4 ? designs[i] : 2) && !unit->Conventional().home_base_id,"successful capture lost native package order or unhomed state");
@@ -1149,6 +1157,12 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true,64,32);restored.BasePresentationRoles(names);
         const auto loaded=restored.Run([&](GSE_CALLABLE)->std::string {
             restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+			bool stamped=false;restored.ResourceState([&](auto& state){const auto& history=*state.victory_history;
+				stamped=history.last_base_expansion_or_advice_turn[1]==static_cast<int32_t>(turn) && history.last_base_expansion_or_advice_turn[2]==static_cast<int32_t>(turn)
+					&& history.economic_deadlines[2]==777 && history.economic_paid_costs[2]==777
+					&& state.retained_land_region_concentration==std::optional<bool>{turn==100}
+					&& state.retained_base_totals->at(1)==11 && state.retained_base_totals->at(2)==0;});
+			GT_ASSERT(stamped,"Actual Start reconstructed capture/restart or economic history");
             GT_ASSERT(restored.Game()->GetUM()->GetUnits().size()==count+1 && restored.Game()->GetBM()->GetBases().size()==2
                 && restored.GameplayRandom()==SmacGameplayRandomState(3,smac_capture_restart_fixture::final_crt)
                 && restored.Game()->GetMap()->GetSmacWorkerKnowledge()->Serialize()==remembered,"actual Start replayed tracking or lost its visibility/exploration history");GT_OK();
@@ -1263,6 +1277,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
                     state.economy.at(1).credits=100;state.economy.at(2).credits=paid ? 1200 : 200;
                     state.economy.at(1).population_aggregate=111;state.economy.at(2).population_aggregate=static_cast<int32_t>(population+1);
+					state.victory_history->last_base_expansion_or_advice_turn[1]=777;state.victory_history->last_base_expansion_or_advice_turn[2]=888;
+                    state.retained_base_totals->at(1)=10;state.retained_base_totals->at(2)=20;
                     // HQ reference retains3 here despite only2 live defender
                     // Bases. Relocation must not derive a fresh count.
                     state.economy.at(1).regional_base_counts->at(1)=1;state.economy.at(2).regional_base_counts->at(1)=scenario>=3 ? 3 : 2;
@@ -1307,6 +1323,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 fixture.MoveEvent(GSE_CALL,actor,target->GetTile());
                 GT_ASSERT(*game->GetMap()->GetTerritoryTopology()->LandmarkDetails()==shared_details,"capture commit rewrote raw shared detail");
                 const auto context=target->GetSmacResourceContext();const auto production=target->GetProductionState();
+				bool capture_history=false;fixture.ResourceState([&](auto& state){capture_history=state.victory_history->last_base_expansion_or_advice_turn[1]==static_cast<int32_t>(game->GetTurnId())
+					&& state.victory_history->last_base_expansion_or_advice_turn[2]==888 && state.retained_base_totals->at(1)==11 && state.retained_base_totals->at(2)==19;});
+				GT_ASSERT(capture_history,"Capture did not stamp only the gaining owner");
                 GT_ASSERT(target->m_owner==own->m_owner && target->m_pops.size()==population-1 && &target->m_pops.at(19)==survivor && Pop::Unwrap(retained)==survivor
                     && retired->type==VT_UNDEFINED && context.conquest==std::optional<SmacConquestState>({2,50}) && context.owner_simulation_id==1
                     && context.governor_options==own->GetSmacResourceContext().governor_options && !target->m_facilities.count("tanks") && !target->m_facilities.count("capture-hq"),"capture lost ownership, citizen lifetime, governor or facility rules");
@@ -1372,14 +1391,19 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             fixture.ResourceState([](auto& state){auto& a=state.hostility.owners.at(1);auto& d=state.hostility.owners.at(2);
                 a.directions[2]={UINT32_MAX,77,-9,17,23};d.directions[1]={0x80008118u,99,42,31,41};d.directions[3].primary=UINT32_MAX;
                 a.losses[2]=9;a.losses[511]=UINT16_MAX;a.integrity=4;a.bookkeeping=7;
-                state.economy.at(1).population_aggregate=137;state.economy.at(2).population_aggregate=222;});
+                state.economy.at(1).population_aggregate=137;state.economy.at(2).population_aggregate=222;state.retained_base_totals->at(1)=777;state.retained_base_totals->at(2)=888;});
+			fixture.ResourceState([](auto& state){state.victory_history->last_base_expansion_or_advice_turn.fill(777);
+				state.victory_history->economic_deadlines.fill(777);state.victory_history->economic_paid_costs.fill(777);});
             fixture.SettleEconomy(1);bool exact=false;
             fixture.ResourceState([&](auto& state){const auto& a=state.hostility.owners.at(1);const auto& d=state.hostility.owners.at(2);
                 exact=a.directions[2]==faction::SmacHostileDirection{0x6fff00b7u,77,-9,17,23}
                     && d.directions[1]==faction::SmacHostileDirection{0x10u,99,42,31,41} && d.directions[3].primary==UINT32_MAX
                     && a.losses[2]==9 && a.losses[511]==UINT16_MAX && a.integrity==4 && a.bookkeeping==7
-                    && state.economy.at(1).population_aggregate==137 && state.economy.at(2).population_aggregate==222;});
-            GT_ASSERT(exact,"actual faction-tail initialization reset loss/diplomatic history or touched an unrelated pair");GT_OK();
+                    && state.economy.at(1).population_aggregate==137 && state.economy.at(2).population_aggregate==222 && state.retained_base_totals->at(1)==0 && state.retained_base_totals->at(2)==888;});
+			bool history=false;fixture.ResourceState([&](auto& state){const auto& saved=*state.victory_history;
+				history=saved.last_base_expansion_or_advice_turn[1]==static_cast<int32_t>(fixture.Game()->GetTurnId())
+					&& saved.last_base_expansion_or_advice_turn[2]==777 && saved.economic_deadlines[1]==777 && saved.economic_paid_costs[1]==777;});
+            GT_ASSERT(exact && history,"actual faction-tail initialization reset economic history or touched an unrelated pair");GT_OK();
         });
     });
 
@@ -1852,7 +1876,15 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             picker->Run(GSE_CALL,{VALUE(value::Int,,-3),VALUE(value::String,,"open")});
             picker->Run(GSE_CALL,{VALUE(value::Int,,-3),VALUE(value::String,,"ok")});fixture.DrainEvents();
             GT_ASSERT(base->GetProductionState()->current_item.kind==ProductionItemKind::Facility && base->GetProductionState()->current_item.smac_source_id==3,"actual picker event did not install the Tanks target");
-            for(int turn=0;turn<5;++turn) {game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();}
+            // A retained canary in an unused sea region distinguishes the
+            // global turn5 refresh from owner upkeep/read-only queries.
+            auto territory=*game->GetMap()->GetTerritoryTopology()->Summary();territory.site_signals[127]=12345;
+            fixture.TerritoryTopology(game->GetMap()->GetTerritoryTopology()->WithTerritorySummary(territory).Serialize());
+            for(int turn=0;turn<5;++turn) {
+                game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();
+                GT_ASSERT(game->GetMap()->GetTerritoryTopology()->Summary()->site_signals[127]==(game->GetTurnId()<5 ? 12345 : 0),
+                    "actual global territory refresh ran outside turn modulo4 equals1 or failed to run at turn5");
+            }
             GT_ASSERT(game->GetTurnId()==6 && base->GetProductionState()->minerals==20 && !base->m_facilities.count("tanks"),"live turns did not accumulate Tanks minerals exactly once");
             saved=fixture.Snapshot();GT_OK();
         });if(!first.empty()) {return "Tanks picker/first turns: "+first;}
@@ -2066,16 +2098,18 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             auto knowledge=KnowledgeValue(false,true,128,64).CopyData(); knowledge.units.push_back({92,0,false}); game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
             std::array<std::string,8> roles; roles[0]=Roles().worker; for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}
             fixture.BasePresentationRoles(roles); (void)fixture.Updates();
-            for(int failure=0;failure<5;++failure) {
+            for(const int failure:{0,1,2,3,5,4}) {
                 if(failure==0) {site->features|=FEATURE_XENOFUNGUS;}
                 if(failure==1) {site->rockiness=ROCKINESS_ROCKY;}
                 if(failure==2) {roles[7]="absent-role";}
                 if(failure==3) {auto data=game->GetMap()->GetSmacWorkerKnowledge()->CopyData(); data.tiles.at(2*64+3).claimant=2; game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));}
                 if(failure==4) {auto value=pod->Conventional(); value.spent=3; um->UpdateConventionalUnit(GSE_CALL,pod,value);}
+                if(failure==5) {fixture.ResourceState([](auto& state){state.retained_base_totals->at(1)=INT32_MAX;});}
                 const auto before=fixture.Snapshot(); const auto id=Base::GetNextId();
                 GT_ASSERT(Rejects([&]{game->GetBM()->FoundSmacBase(GSE_CALL,*pod,roles);}) && fixture.Snapshot()==before && Base::GetNextId()==id,
                     "rejected founding changed Base/Unit/knowledge or ID");
                 site->features=0; site->rockiness=ROCKINESS_FLAT; roles[7]=Roles().specialists[6];
+                if(failure==5) {fixture.ResourceState([](auto& state){state.retained_base_totals->at(1)=1;});}
                 if(failure==3) {auto data=game->GetMap()->GetSmacWorkerKnowledge()->CopyData(); data.tiles.at(2*64+3).claimant.reset(); game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));}
             }
             GT_OK();
@@ -2106,8 +2140,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 auto knowledge=KnowledgeValue(false,true,128,64).CopyData(); knowledge.units.push_back({92,0,false});
                 game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
                 std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i){roles[i+1]=Roles().specialists[i];}
+				fixture.ResourceState([](auto& state){state.victory_history->last_base_expansion_or_advice_turn[1]=777;state.retained_base_totals->at(1)=7;});
                 fixture.BasePresentationRoles(roles); game->Event(GSE_CALL,"found_base",{{"unit",pod->Wrap(GSE_CALL)}}); fixture.DrainEvents();
                 auto* founded=site->base;
+				bool history=false;fixture.ResourceState([&](auto& state){history=state.victory_history->last_base_expansion_or_advice_turn[1]==static_cast<int32_t>(game->GetTurnId()) && state.retained_base_totals->at(1)==8;});
+				GT_ASSERT(history,"Actual Colony founding retained old expansion history");
                 GT_ASSERT(founded && founded->GetProductionState()->current_item.smac_source_id==64
                     && founded->GetProductionState()->minerals==(support==-2 ? 0 : game->GetState()->m_settings.global.GetSmacProductionRules()->retool_exemption),
                     "founding hardcoded Scout or substituted current SUPPORT for retained credit");
@@ -3212,7 +3249,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 const auto first=Unit::GetNextId();const auto colony=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,0);
                 base->SetProductionState(GSE_CALL,ProductionState{colony,999,colony,0,std::vector<ProductionItem>{}});
                 if(scenario==4) {
-                    auto legacy=game->GetMap()->GetTerritoryTopology()->Serialize();legacy.resize(legacy.size()-1024);
+                    auto legacy=game->GetMap()->GetTerritoryTopology()->Serialize();legacy.resize(legacy.size()-1024-map::smac_territory::TerritorySummary::WIRE_BYTES);
                     legacy.replace(0,8,"GLSTERR3");legacy[15]=static_cast<char>(static_cast<uint8_t>(legacy[15])&1);fixture.TerritoryTopology(legacy);
                     fixture.Updates();const auto original=fixture.Snapshot();const auto queues=fixture.QueuedFrontendRequests().size();
                     auto* retained=static_cast<value::Object*>(base->Wrap(GSE_CALL));

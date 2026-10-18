@@ -7,6 +7,7 @@
 #include "base/SmacBaseEnergy.h"
 #include "faction/Faction.h"
 #include "map/Map.h"
+#include "map/SmacTerritoryRules.h"
 #include "slot/Slot.h"
 #include "unit/Unit.h"
 #include "unit/UnitManager.h"
@@ -14,6 +15,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <type_traits>
+#include <set>
 
 namespace game::backend {
 namespace {
@@ -257,39 +259,87 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
 	if(!GetGCSpace()->IsAccumulating() || !IsRunning() || !m_simulation->value.economy.count(owner)) {
 		throw std::runtime_error("Population refresh requires its current owning faction upkeep");
 	}
-	int64_t population=0;
+	int64_t population=0,base_total=0;
 	const auto& topology=m_map->GetTerritoryTopology();
+	auto military=m_simulation->value.regional_military;
+	const bool recount_military=military.has_value() && topology.has_value();
+	if(recount_military && military->factions.at(owner-1).base_phase_flags) {
+		faction::SmacRegionalMilitaryState::ResetBaseFlags(*military->factions.at(owner-1).base_phase_flags,GetTurnId(),owner);
+	}
+	std::optional<std::vector<bool>> coastal_sea;
 	std::optional<faction::SmacEconomyState::RegionalBaseCounts> counts;
 	if(topology) {counts=faction::SmacEconomyState::RegionalBaseCounts{};}
-	for(const auto& entry:m_bm->GetBases()) {
-		const auto* base=entry.second;
-		if(!base || base->m_id!=entry.first) {throw std::runtime_error("Population refresh found an invalid Base");}
+	std::set<size_t> base_records;
+	for(const auto id:m_bm->GetBaseRecordOrder()) {
+		const auto* base=m_bm->GetBase(id);
+		if(!base || base->m_id!=id || !base_records.insert(id).second) {throw std::runtime_error("Population refresh found an invalid Base record");}
 		if(base->GetSmacResourceContext().owner_simulation_id==owner) {
 			if(base->m_pops.size()>static_cast<uint64_t>(INT32_MAX-population)) {throw std::overflow_error("Population aggregate exceeds signed32");}
 			population+=static_cast<int64_t>(base->m_pops.size());
+			if(++base_total>INT32_MAX) {throw std::overflow_error("Base total exceeds signed32");}
 			if(counts) {
 				if(!base->GetTile()) {throw std::runtime_error("Regional summary Base has no center");}
-				++(*counts)[GetCanonicalRegion(*base->GetTile(),*topology)];
+				const auto region=GetCanonicalRegion(*base->GetTile(),*topology);++(*counts)[region];
+				if(recount_military && military->factions.at(owner-1).base_phase_flags) {
+					if(!coastal_sea) {coastal_sea=m_map->TerritorySea();}
+					const auto* square=base->GetTile();
+					const auto direction=map::smac_territory::ImmediateSeaNeighbor(topology->Width(),topology->Height(),topology->Wraps(),
+						*coastal_sea,{{static_cast<int32_t>(square->coord.x),static_cast<int32_t>(square->coord.y)}});
+					faction::SmacRegionalMilitaryState::AccumulateBaseFlag(*military->factions.at(owner-1).base_phase_flags,region,direction!=0);
+				}
 			}
 		}
 	}
+	if(base_records.size()!=m_bm->GetBases().size()) {throw std::runtime_error("Population refresh omitted a registered Base");}
 	if(population>INT32_MAX) {throw std::overflow_error("Population aggregate exceeds signed32");}
 	// Founding, removal and individual Base recalculation deliberately do not
 	// update this saved field. The native post-Base owner pass owns its refresh.
-    faction::SmacDesignCounts design_counts{};
-    for(const auto& entry:m_um->GetUnits()) {
-        const auto* unit=entry.second;
-        if(!unit || !unit->IsConventional()) {throw std::runtime_error("Faction summary requires conventional Unit records");}
-        const auto& record=unit->Conventional();
-        if(record.owner_simulation_id==owner) {++design_counts.at(record.design_id);}
-    }
 	const auto& settings=m_state->m_settings.global;
 	if(!settings.GetSmacCombatRules() || (!settings.GetSmacCampaignRules() && !settings.IsOrdinarySmacCampaign())) {throw std::runtime_error("Owner summary lacks frozen capability inputs");}
-	m_simulation->value.RefreshCapabilities(owner,*settings.GetSmacTechnologyRules(),*settings.GetSmacPredefinedUnitRules(),
+	auto capability_candidate=m_simulation->value;
+	capability_candidate.RefreshCapabilities(owner,*settings.GetSmacTechnologyRules(),*settings.GetSmacPredefinedUnitRules(),
 		*settings.GetSmacCombatRules(),settings.GetSmacCampaignRules() && (settings.GetSmacCampaignRules()->primary&0x00400000u)!=0);
+    faction::SmacDesignCounts design_counts{};
+    if(recount_military) {auto& row=military->factions.at(owner-1);row.units={};row.attack={};row.unit_phase_flags.emplace();}
+    std::set<size_t> seen;
+    const auto& order=m_um->GetUnitRecordOrder();
+    for(size_t cursor=order.size();cursor>0;--cursor) {
+        const auto id=order[cursor-1];const auto* unit=m_um->GetUnit(id);
+        if(!unit || !unit->IsConventional() || !seen.insert(id).second) {throw std::runtime_error("Faction summary requires complete ordered conventional Unit records");}
+        const auto& record=unit->Conventional();
+        if(record.owner_simulation_id!=owner) {continue;}
+        ++design_counts.at(record.design_id);
+        if(!recount_military) {continue;}
+        const auto context=ResolveConventionalUnit(record,unit->m_owner);
+        const auto* square=unit->GetTile();
+        if(!square || square->tiles!=m_map->GetTilesPtr() || square->coord.x>=m_map->GetWidth() || square->coord.y>=m_map->GetHeight()
+            || ((square->coord.x^square->coord.y)&1) || m_map->GetTile(square->coord.x,square->coord.y)!=square) {
+            throw std::runtime_error("Military summary Unit has no current map coordinate");
+        }
+        const bool valid_base=square->base && m_bm->GetBase(square->base->m_id)==square->base && square->base->GetTile()==square;
+        if(square->is_water_tile && !valid_base) {
+            throw std::runtime_error("Unbased ground units on water require the native transport/invalid-placement cleanup producer");
+        }
+        // The current resolver admits land Scout/Rover and Former/Colony
+        // designs. Native unit count and attack have distinct role/sea gates.
+        const auto design=ResolveConventionalDesign(record,*m_simulation);
+        const auto& catalog=m_state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+        const auto power=catalog.weapons.weapons.at(design.weapon).offense;
+        const auto armor=catalog.defenses.defenses.at(design.defense).rating;
+        const auto morale=unit::QueryConventionalUnit(record,context,unit::SmacMoraleMode::Mode0).effective_morale;
+        const auto region=GetCanonicalRegion(*square,*topology);
+        // No Sentry/order2 or special plan5 is admitted by these packages.
+        // Civilian A0 yields zero naturally; attack is not filtered by plan.
+        faction::SmacRegionalMilitaryState::Accumulate(military->factions.at(owner-1),{
+            region,design.plan,0,!square->is_water_tile,power,armor,morale,0,false,valid_base});
+    }
+    if(seen.size()!=m_um->GetUnits().size()) {throw std::runtime_error("Faction summary omitted a registered Unit");}
+    m_simulation->value.capabilities=std::move(capability_candidate.capabilities);
+    m_simulation->value.regional_military=std::move(military);
     m_simulation->value.economy.at(owner).design_counts=design_counts;
 	m_simulation->value.economy.at(owner).population_aggregate=static_cast<int32_t>(population);
 	m_simulation->value.economy.at(owner).regional_base_counts=counts;
+	if(m_simulation->value.retained_base_totals) {m_simulation->value.retained_base_totals->at(owner)=static_cast<int32_t>(base_total);}
 }
 
 void Game::SettleCanonicalEconomy( int32_t owner ) {
@@ -301,11 +351,18 @@ void Game::SettleCanonicalEconomy( int32_t owner ) {
 	if (!has_base && !has_unit) {
 		const auto initialized=PrepareSmacNonzeroInitialization(owner);
 		auto hostility=m_simulation->value.hostility;hostility.Reinitialize(owner);
+		auto victory=m_simulation->value.victory_history;
+		if(victory) {
+			if(GetTurnId()>INT32_MAX) {throw std::runtime_error("Faction initialization history exceeds signed32");}
+			victory->Initialize(owner,static_cast<int32_t>(GetTurnId()));
+		}
 		auto technology=std::find_if(m_simulation->value.technology.factions.begin(),m_simulation->value.technology.factions.end(),[&](const auto& row){return row.admission.simulation_id==owner;});
 		if(technology==m_simulation->value.technology.factions.end()) {throw std::runtime_error("Empty faction has no technology authority");}
 		saved=initialized;technology->cached_threshold.reset();
+		if(m_simulation->value.retained_base_totals) {m_simulation->value.retained_base_totals->at(owner)=0;}
 		if(m_simulation->value.capabilities) {m_simulation->value.capabilities->factions.at(owner-1)={};}
 		m_simulation->value.hostility.owners.swap(hostility.owners);
+		m_simulation->value.victory_history=std::move(victory);
 	}
 	const auto next = saved.SettleDebit(); saved = next;
 }

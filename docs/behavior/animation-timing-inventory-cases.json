@@ -1,0 +1,705 @@
+{
+  "research_id": "RE-SMAC-ANIMATION-INVENTORY-001",
+  "profile": "pinned stock SMAC; admitted scheduling fragments",
+  "universal_animation_rate": false,
+  "unit_display": {
+    "local_full_interval_ms": {
+      "land": 16,
+      "sea": 10,
+      "air": 5
+    },
+    "local_facing_interval_ms": {
+      "land": 8,
+      "sea": 5,
+      "air": 2
+    },
+    "local_translation_steps": {
+      "normal": 6,
+      "smooth": 9,
+      "fast": 3
+    },
+    "configuration": {
+      "fast_key": "FastUnitAnim",
+      "smooth_key": "SmoothUnitAnim",
+      "normal_defaults": [
+        0,
+        0
+      ]
+    },
+    "timestamp_update": "actual accepted now",
+    "clock": "timeGetTime32",
+    "elapsed_comparison": "signed32 in these loops",
+    "message_pump": true,
+    "elapsed_frame_skip": false,
+    "missed_step_drain": false,
+    "actual_model_facing_frame_count_newly_established": false
+  },
+  "effect_wait": {
+    "ordinary_ms": 25,
+    "special_flag_mask": 18,
+    "special_ms": 50,
+    "shift_ms": 0,
+    "network_ms": 0,
+    "fast_battle_ordinary_ms": 0,
+    "fast_battle_flag2_ms": 50,
+    "extra_tail_delay_ms": 50,
+    "separate_battle_callsite_delay_ms": 200,
+    "full_effect_id_to_duration_mapping_closed": false
+  },
+  "shared_services": {
+    "blink_request_ms": 150,
+    "status_request_ms": 100,
+    "view_refresh_request_ms": 100,
+    "network_request_ms": 500,
+    "coalesced_application_messages": true,
+    "terrain_frame_duration_inferred": false
+  },
+  "title": {
+    "steps_each_direction": 6,
+    "minimum_step_ms": 10,
+    "installed_flc_header_ms": 40
+  },
+  "cases": [
+    {
+      "id": "unit_display_parameters_0_1_0_-1",
+      "inputs": {
+        "network": false,
+        "owner_is_focused": true,
+        "domain": 0,
+        "fast_smooth_setting": -1
+      },
+      "actual": [
+        16,
+        9
+      ],
+      "expected": [
+        16,
+        9
+      ]
+    },
+    {
+      "id": "unit_display_parameters_0_1_0_0",
+      "inputs": {
+        "network": false,
+        "owner_is_focused": true,
+        "domain": 0,
+        "fast_smooth_setting": 0
+      },
+      "actual": [
+        16,
+        6
+      ],
+      "expected": [
+        16,
+        6
+      ]
+    },
+    {
+      "id": "unit_display_parameters_0_1_0_1",
+      "inputs": {
+        "network": false,
+        "owner_is_focused": true,
+        "domain": 0,
+        "fast_smooth_setting": 1
+      },
+      "actual": [
+        16,
+        3
+      ],
+      "expected": [
+        16,
+        3
+      ]
+    },
+    {
+      "id": "unit_display_parameters_0_1_1_-1",
+      "inputs": {
+        "network": false,
+        "owner_is_focused": true,
+        "domain": 1,
+        "fast_smooth_setting": -1
+      },
+      "actual": [
+        10,
+        9
+      ],
+      "expected": [
+        10,
+        9
+      ]
+    },
+    {
+      "id": "unit_display_parameters_0_1_1_0",
+      "inputs": {
+        "network": false,
+        "owner_is_focused": true,
+        "domain": 1,
+        "fast_smooth_setting": 0
+      },
+      "actual": [
+        10,
+        6
+      ],
+      "expected": [
+        10,
+        6
+      ]
+    },
+    {
+      "id": "unit_display_parameters_0_1_1_1",
+      "inputs": {
+        "network": false,
+        "owner_is_focused": true,
+        "domain": 1,
+        "fast_smooth_setting": 1
+      },
+      "actual": [
+        10,
+        3
+      ],
+      "expected": [
+        10,
+        3
+      ]
+    },
+    {
+      "id": "unit_display_parameters_0_1_2_-1",
+      "inputs": {
+        "network": false,
+        "owner_is_focused": true,
+        "domain": 2,
+        "fast_smooth_setting": -1
+      },
+      "actual": [
+        5,
+        9
+      ],
+      "expected": [
+        5,
+        9
+      ]
+    },
+    {
+      "id": "unit_display_parameters_0_1_2_0",
+      "inputs": {
+        "network": false,
+        "owner_is_focused": true,
+        "domain": 2,
+        "fast_smooth_setting": 0
+      },
+      "actual": [
+        5,
+        6
+      ],
+      "expected": [
+        5,
+        6
+      ]
+    },
+    {
+      "id": "unit_display_parameters_0_1_2_1",
+      "inputs": {
+        "network": false,
+        "owner_is_focused": true,
+        "domain": 2,
+        "fast_smooth_setting": 1
+      },
+      "actual": [
+        5,
+        3
+      ],
+      "expected": [
+        5,
+        3
+      ]
+    },
+    {
+      "id": "unit_display_parameters_1_2_0_0",
+      "inputs": {
+        "network": true,
+        "owner_is_focused": false,
+        "domain": 0,
+        "fast_smooth_setting": 0
+      },
+      "actual": [
+        10,
+        4
+      ],
+      "expected": [
+        10,
+        4
+      ]
+    },
+    {
+      "id": "unit_display_parameters_1_2_1_0",
+      "inputs": {
+        "network": true,
+        "owner_is_focused": false,
+        "domain": 1,
+        "fast_smooth_setting": 0
+      },
+      "actual": [
+        6,
+        4
+      ],
+      "expected": [
+        6,
+        4
+      ]
+    },
+    {
+      "id": "unit_display_parameters_1_2_2_0",
+      "inputs": {
+        "network": true,
+        "owner_is_focused": false,
+        "domain": 2,
+        "fast_smooth_setting": 0
+      },
+      "actual": [
+        3,
+        4
+      ],
+      "expected": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": "unit_display_parameters_1_1_0_0",
+      "inputs": {
+        "network": true,
+        "owner_is_focused": true,
+        "domain": 0,
+        "fast_smooth_setting": 0
+      },
+      "actual": [
+        0,
+        4
+      ],
+      "expected": [
+        0,
+        4
+      ]
+    },
+    {
+      "id": "unit_display_parameters_1_1_1_0",
+      "inputs": {
+        "network": true,
+        "owner_is_focused": true,
+        "domain": 1,
+        "fast_smooth_setting": 0
+      },
+      "actual": [
+        0,
+        4
+      ],
+      "expected": [
+        0,
+        4
+      ]
+    },
+    {
+      "id": "unit_display_parameters_1_1_2_0",
+      "inputs": {
+        "network": true,
+        "owner_is_focused": true,
+        "domain": 2,
+        "fast_smooth_setting": 0
+      },
+      "actual": [
+        0,
+        4
+      ],
+      "expected": [
+        0,
+        4
+      ]
+    },
+    {
+      "id": "facing_loop_early",
+      "inputs": {
+        "admitted_frames": 3,
+        "full_interval_ms": 16,
+        "phase_interval_ms": 8,
+        "clock_values": [
+          100,
+          107,
+          108,
+          115,
+          116,
+          123,
+          124
+        ],
+        "view_raster_supplied": true
+      },
+      "actual": [
+        [
+          0,
+          1,
+          2
+        ],
+        7,
+        124
+      ],
+      "expected": [
+        [
+          0,
+          1,
+          2
+        ],
+        7,
+        124
+      ]
+    },
+    {
+      "id": "facing_loop_overrun",
+      "inputs": {
+        "admitted_frames": 3,
+        "full_interval_ms": 16,
+        "phase_interval_ms": 8,
+        "clock_values": [
+          100,
+          140,
+          180,
+          220
+        ],
+        "view_raster_supplied": true
+      },
+      "actual": [
+        [
+          0,
+          1,
+          2
+        ],
+        4,
+        220
+      ],
+      "expected": [
+        [
+          0,
+          1,
+          2
+        ],
+        4,
+        220
+      ]
+    },
+    {
+      "id": "facing_loop_wrap",
+      "inputs": {
+        "admitted_frames": 3,
+        "full_interval_ms": 16,
+        "phase_interval_ms": 8,
+        "clock_values": [
+          4294967288,
+          0,
+          8,
+          16
+        ],
+        "view_raster_supplied": true
+      },
+      "actual": [
+        [
+          0,
+          1,
+          2
+        ],
+        4,
+        16
+      ],
+      "expected": [
+        [
+          0,
+          1,
+          2
+        ],
+        4,
+        16
+      ]
+    },
+    {
+      "id": "translation_loop_normal",
+      "inputs": {
+        "admitted_steps": 6,
+        "interval_ms": 16,
+        "clock_values": [
+          116,
+          132,
+          148,
+          164,
+          180,
+          196
+        ],
+        "view_raster_supplied": true
+      },
+      "actual": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        6,
+        196
+      ],
+      "expected": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        6,
+        196
+      ]
+    },
+    {
+      "id": "translation_loop_overrun",
+      "inputs": {
+        "admitted_steps": 6,
+        "interval_ms": 16,
+        "clock_values": [
+          140,
+          180,
+          220,
+          260,
+          300,
+          340
+        ],
+        "view_raster_supplied": true
+      },
+      "actual": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        6,
+        340
+      ],
+      "expected": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        6,
+        340
+      ]
+    },
+    {
+      "id": "translation_loop_zero",
+      "inputs": {
+        "admitted_steps": 6,
+        "interval_ms": 0,
+        "clock_values": [
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "view_raster_supplied": true
+      },
+      "actual": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        6,
+        100
+      ],
+      "expected": [
+        [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        6,
+        100
+      ]
+    },
+    {
+      "id": "effect_wait_ordinary",
+      "inputs": {
+        "flags": 0,
+        "shift": false,
+        "fast_battle_resolution": false,
+        "network": false
+      },
+      "actual": [
+        25,
+        125
+      ],
+      "expected": [
+        25,
+        125
+      ]
+    },
+    {
+      "id": "effect_wait_flag2",
+      "inputs": {
+        "flags": 2,
+        "shift": false,
+        "fast_battle_resolution": false,
+        "network": false
+      },
+      "actual": [
+        50,
+        150
+      ],
+      "expected": [
+        50,
+        150
+      ]
+    },
+    {
+      "id": "effect_wait_flag16",
+      "inputs": {
+        "flags": 16,
+        "shift": false,
+        "fast_battle_resolution": false,
+        "network": false
+      },
+      "actual": [
+        50,
+        150
+      ],
+      "expected": [
+        50,
+        150
+      ]
+    },
+    {
+      "id": "effect_wait_shift",
+      "inputs": {
+        "flags": 2,
+        "shift": true,
+        "fast_battle_resolution": false,
+        "network": false
+      },
+      "actual": [
+        0,
+        100
+      ],
+      "expected": [
+        0,
+        100
+      ]
+    },
+    {
+      "id": "effect_wait_fast_ordinary",
+      "inputs": {
+        "flags": 0,
+        "shift": false,
+        "fast_battle_resolution": true,
+        "network": false
+      },
+      "actual": [
+        0,
+        100
+      ],
+      "expected": [
+        0,
+        100
+      ]
+    },
+    {
+      "id": "effect_wait_fast_flag2",
+      "inputs": {
+        "flags": 2,
+        "shift": false,
+        "fast_battle_resolution": true,
+        "network": false
+      },
+      "actual": [
+        50,
+        150
+      ],
+      "expected": [
+        50,
+        150
+      ]
+    },
+    {
+      "id": "effect_wait_network",
+      "inputs": {
+        "flags": 2,
+        "shift": false,
+        "fast_battle_resolution": false,
+        "network": true
+      },
+      "actual": [
+        0,
+        100
+      ],
+      "expected": [
+        0,
+        100
+      ]
+    },
+    {
+      "id": "pumped_delay_wrap",
+      "inputs": {
+        "delay_ms": 50
+      },
+      "actual": 3,
+      "expected": 3
+    },
+    {
+      "id": "interface_tick_hold_False",
+      "inputs": {
+        "requested_timer_ms": 100,
+        "hit_effect_hold": false
+      },
+      "actual": 10,
+      "expected": 10
+    },
+    {
+      "id": "interface_tick_hold_True",
+      "inputs": {
+        "requested_timer_ms": 100,
+        "hit_effect_hold": true
+      },
+      "actual": 9,
+      "expected": 9
+    }
+  ],
+  "unknowns": [
+    "complete terrain animation producers",
+    "other unit clip clocks",
+    "keyboard drag and camera scroll interpolation",
+    "general sliding GUI controls",
+    "movie playback",
+    "SMAX differences",
+    "PRACX differences",
+    "live focus minimization compositor and vsync"
+  ],
+  "validation": {
+    "new_native_scheduling_controls": 31,
+    "prior_blink_title_assertions": 66,
+    "view_raster_work": "empty admitted view slots",
+    "effect_raster_newly_executed": false,
+    "clock_keyboard_and_message_services_supplied": true,
+    "original_executable_patched": false,
+    "WSLg_capture_timing_used": false
+  }
+}

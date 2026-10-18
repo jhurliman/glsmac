@@ -6,8 +6,11 @@ controlled foreign-cache inputs. [Numeric cases](regional-research-summary-produ
 It covers 14 complete native owner summaries, nine capability refresh controls,
 two initializer prefixes and one native save/load round trip. The independent
 decision model matches all **1,792 regional strategy entries** across the 14
-summary controls. Full live foreign-Base routing, AI policy and later diplomacy
-transitions are outside this bounded receipt.
+summary controls. The [regional lifecycle/territory follow-up](regional-lifecycle-and-territory.md)
+corrects the covered-suitable label and closes actual nonzero restart behavior.
+The strategy follow-up (reference receipt `regional-strategy-overrides.md`) adds live foreign-Base
+route controls, staggered decisions and complete code0/2 predicates; arbitrary
+map pathfinding and broad AI diplomacy remain outside those bounded controls.
 
 ## What the research comparison actually reads
 
@@ -109,7 +112,7 @@ constant or an instruction to initialize every occupied region to 7.
 
 For an ordinary region define C = owner's regional Base count, N = owner's
 total cached Base count, G = retained owned suitable-tile count, F = retained
-owned farmed-suitable count, Z = retained neutral suitable count, R = retained
+owned Base-radius-covered suitable count, Z = retained neutral suitable count, R = retained
 maximum site rating, X/B = stored Explore/Build priorities, and H = number of
 positive factions with retained Base presence in the region, **including self**.
 The source uses the following threshold:
@@ -119,7 +122,7 @@ The source uses the following threshold:
 
 `setupStateAdjustment` is 2 when the retained game-state bit256 is set, else 0.
 The checked ordinary opening has it set. `leadingHumanPressure` is the existing
-leading-human dominance predicate (companion receipt leading-human-dominance-score-path.md)
+leading-human dominance predicate (reference receipt `leading-human-dominance-score-path.md`)
 queried for the retained score leader in mode0; it is zero in these controls.
 
 If C is positive, choose the pressure result when **any** of these holds:
@@ -151,7 +154,9 @@ absent peer Base count takes a different shortcut. This discrepancy is a real
 reason to preserve cache lifetime rather than rebuild peer presence on demand.
 
 Reachable war counts and capability comparisons can override the initial7/8:
-the code0 branch runs first, then code2 can override it. An owned region with
+the code0 branch runs first, then code2 can override it. A hostile take0 also
+clears the Pact mask before the code2 test, as detailed in the follow-up.
+An owned region with
 zero reachable-war count bypasses these overrides. In the checked foreign-cache
 controls, a single Scout against peer regional count2/attack2 produces2;
 Scout+Laser against peer count1/attack1 produces0. Controlled Pact-only retained
@@ -168,16 +173,21 @@ that admitted slice until their real route/policy producers exist.
 The separate territory/site-cache pass owns the regional tile summaries and
 maximum site rating. It clears/recounts them across faction slots and regions;
 the owner-summary pass above preserves them. Suitable tiles have nonzero
-moisture, less than rocky terrain and no fungus; the farmed subset additionally
-has a Farm. Counts are attributed to the pass's resolved territorial owner,
+moisture, less than rocky terrain and no fungus; the covered subset additionally
+has the Base-radius exclusion flag, not a Farm. The legacy numeric fixture key
+`owned_farmed_suitable` means covered suitable; its numbers are unchanged.
+Counts are attributed to the pass's resolved territorial owner,
 including neutral slot0. Maximum rating comes from retained or computed native
 site ratings. Known-tile counts have their separate visibility/override gate.
 These are neither total region area nor a fresh calculation made by valuation.
 
-The tested faction-initialization prefixes zero own/foreign capability caches
+The tested **fresh turn-zero** faction-initialization prefixes zero own/foreign capability caches
 and the regional Base/unit/attack arrays but **preserve poisoned strategy
 bytes**. Cold executable memory supplies zero strategy in the observed startup;
 these prefixes do not prove an unconditional strategy clear on every restart.
+The actual nonzero restart caller skips that fresh regional reset, preserving
+the regional Base/unit/attack/flag/strategy arrays through search/package return.
+Later owner-summary recount is a separate boundary, as the linked follow-up proves.
 The owner summary also preserves strategy entry0. Ordinary native save/load
 restores both capability fields and strategy canaries, including stale values,
 without recomputing them.

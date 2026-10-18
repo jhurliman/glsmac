@@ -1,0 +1,1475 @@
+{
+  "research_id": "RE-SMAC-RESOLVED-SITE-001",
+  "known_authority_id": "RE-SMAC-KNOWN-AUTHORITY-001",
+  "pinned_coefficients": [
+    11,
+    61
+  ],
+  "return_meaning": {
+    "0": "no resolved signal",
+    "1": "secondary/forced class",
+    "2": "primary/explicit class"
+  },
+  "wire": {
+    "v5_header_file_offset": 15,
+    "resource_pattern_relative_offset": 8,
+    "resource_pattern_absolute_offset": 23,
+    "pattern_signed_little_endian_bits": 32,
+    "tile_block_file_offset": 2739,
+    "tile_stride": 44,
+    "item_word_relative_offset": 8,
+    "item_word_unsigned_little_endian_bits": 32,
+    "relevant_item_bit_indices": {
+      "monolith": 13,
+      "special_site_suppression_marker": 20,
+      "explicit_primary_A": 26,
+      "explicit_primary_B": 27,
+      "force_secondary": 28
+    }
+  },
+  "named_cases": [
+    {
+      "id": "zero_pattern",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": 0,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "force_with_zero_pattern",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 268435456,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": true,
+        "automatic_land_resources": false,
+        "resource_pattern": 0,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 1
+    },
+    {
+      "id": "monolith_suppresses_force",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 268443648,
+        "monolith": true,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": true,
+        "automatic_land_resources": false,
+        "resource_pattern": 0,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "special_marker_suppresses_force",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 269484032,
+        "monolith": false,
+        "special_site_suppression_marker": true,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": true,
+        "automatic_land_resources": false,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "automatic_ignores_force",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 268435456,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": true,
+        "automatic_land_resources": true,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "automatic_explicit_bit_a",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 67108864,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": true,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": true,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 2
+    },
+    {
+      "id": "automatic_explicit_bit_b",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 134217728,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": true,
+        "force_secondary": false,
+        "automatic_land_resources": true,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 2
+    },
+    {
+      "id": "automatic_explicit_both",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 201326592,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": true,
+        "explicit_primary_B": true,
+        "force_secondary": false,
+        "automatic_land_resources": true,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 2
+    },
+    {
+      "id": "automatic_monolith_suppresses_explicit",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 201334784,
+        "monolith": true,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": true,
+        "explicit_primary_B": true,
+        "force_secondary": false,
+        "automatic_land_resources": true,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "automatic_marker_suppresses_explicit",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 202375168,
+        "monolith": false,
+        "special_site_suppression_marker": true,
+        "explicit_primary_A": true,
+        "explicit_primary_B": true,
+        "force_secondary": false,
+        "automatic_land_resources": true,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "explicit_bits_ignored_in_pattern_mode",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 201326592,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": true,
+        "explicit_primary_B": true,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": 0,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "force_on_deep_water",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 0,
+        "item_word": 268435456,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": true,
+        "automatic_land_resources": false,
+        "resource_pattern": 0,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 1
+    },
+    {
+      "id": "primary_land_pattern_match",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": 16,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 2
+    },
+    {
+      "id": "no_primary_on_water",
+      "inputs": {
+        "coordinate": [
+          0,
+          0
+        ],
+        "elevation_band": 2,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": 16,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "fungus_does_not_suppress",
+      "inputs": {
+        "coordinate": [
+          5,
+          1
+        ],
+        "elevation_band": 3,
+        "item_word": 32,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "base_radius_does_not_suppress",
+      "inputs": {
+        "coordinate": [
+          5,
+          1
+        ],
+        "elevation_band": 3,
+        "item_word": 4096,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "farm_does_not_suppress",
+      "inputs": {
+        "coordinate": [
+          5,
+          1
+        ],
+        "elevation_band": 3,
+        "item_word": 32768,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "base_and_unit_do_not_suppress",
+      "inputs": {
+        "coordinate": [
+          5,
+          1
+        ],
+        "elevation_band": 3,
+        "item_word": 3,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "forced_class1_trench",
+      "inputs": {
+        "coordinate": [
+          5,
+          1
+        ],
+        "elevation_band": 0,
+        "item_word": 268435456,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": true,
+        "automatic_land_resources": false,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 1
+    },
+    {
+      "id": "explicit_class2_trench",
+      "inputs": {
+        "coordinate": [
+          5,
+          1
+        ],
+        "elevation_band": 0,
+        "item_word": 67108864,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": true,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": true,
+        "resource_pattern": 1,
+        "coefficients": [
+          11,
+          61
+        ]
+      },
+      "expected": 2
+    }
+  ],
+  "diagnostic_coefficient_controls": [
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          0,
+          16
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          0,
+          0
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          1,
+          17
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          0,
+          0
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          78,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          0,
+          0
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          1,
+          79
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          0,
+          0
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          0,
+          16
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          -11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          1,
+          17
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          -11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          78,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          -11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          1,
+          79
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          -11,
+          61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          0,
+          16
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          11,
+          -61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          1,
+          17
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          11,
+          -61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          78,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          11,
+          -61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          1,
+          79
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          11,
+          -61
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          0,
+          16
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          2147483647,
+          -2147483648
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          1,
+          17
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          2147483647,
+          -2147483648
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          78,
+          0
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          2147483647,
+          -2147483648
+        ]
+      },
+      "expected": 0
+    },
+    {
+      "id": "coefficient_discriminator",
+      "inputs": {
+        "coordinate": [
+          1,
+          79
+        ],
+        "elevation_band": 3,
+        "item_word": 0,
+        "monolith": false,
+        "special_site_suppression_marker": false,
+        "explicit_primary_A": false,
+        "explicit_primary_B": false,
+        "force_secondary": false,
+        "automatic_land_resources": false,
+        "resource_pattern": -1,
+        "coefficients": [
+          2147483647,
+          -2147483648
+        ]
+      },
+      "expected": 0
+    }
+  ],
+  "diagnostic_coefficient_scope": "Supplied replacements validate arithmetic only; no normal gameplay coefficient writer/admission is established",
+  "grid": {
+    "total": 109824,
+    "coordinate_order": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        5,
+        1
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        6,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        7,
+        3
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        6,
+        4
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        7,
+        5
+      ],
+      [
+        0,
+        6
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        6,
+        6
+      ],
+      [
+        1,
+        7
+      ],
+      [
+        3,
+        7
+      ],
+      [
+        5,
+        7
+      ],
+      [
+        7,
+        7
+      ],
+      [
+        0,
+        16
+      ],
+      [
+        1,
+        17
+      ],
+      [
+        2,
+        18
+      ],
+      [
+        78,
+        0
+      ],
+      [
+        79,
+        1
+      ],
+      [
+        0,
+        78
+      ],
+      [
+        1,
+        79
+      ]
+    ],
+    "elevations": [
+      0,
+      2,
+      3,
+      7
+    ],
+    "flags_values": [
+      0,
+      268435456,
+      134217728,
+      402653184,
+      67108864,
+      335544320,
+      201326592,
+      469762048,
+      1048576,
+      269484032,
+      135266304,
+      403701760,
+      68157440,
+      336592896,
+      202375168,
+      470810624,
+      8192,
+      268443648,
+      134225920,
+      402661376,
+      67117056,
+      335552512,
+      201334784,
+      469770240,
+      1056768,
+      269492224,
+      135274496,
+      403709952,
+      68165632,
+      336601088,
+      202383360,
+      470818816
+    ],
+    "patterns": [
+      -17,
+      -1,
+      0,
+      1,
+      8,
+      15,
+      16,
+      17,
+      31,
+      32,
+      27067
+    ],
+    "automatic_order": [
+      false,
+      true
+    ],
+    "result_counts": {
+      "0": 92240,
+      "1": 7104,
+      "2": 10480
+    },
+    "branch_counts": {
+      "secondary_pattern": 6056,
+      "zero_pattern": 624,
+      "explicit_primary": 13728,
+      "forced_secondary": 6864,
+      "suppressed": 82368,
+      "primary_pattern": 184
+    },
+    "ordered_results_sha256": "575a19684d3c40360962ca40cb04bc1147ab7057fb2ca216802b837a753aa99a"
+  },
+  "installed_raw_load": {
+    "asset_sha256": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+    "serialized_pattern_offset": 27067,
+    "coefficient_defaults_preserved": true,
+    "results": [
+      {
+        "automatic_land_resources": false,
+        "calls": 3200,
+        "counts": {
+          "0": 3031,
+          "2": 60,
+          "1": 109
+        },
+        "results_sha256": "c8154953af8695c35655b71eaaceae7c7771128bbc2ab777f09814cb6ff87630",
+        "samples": {
+          "0": {
+            "coordinate": [
+              0,
+              0
+            ],
+            "elevation_band": 3,
+            "flags": 32,
+            "branch": "secondary_pattern"
+          },
+          "2": {
+            "coordinate": [
+              5,
+              1
+            ],
+            "elevation_band": 3,
+            "flags": 32,
+            "branch": "primary_pattern"
+          },
+          "1": {
+            "coordinate": [
+              13,
+              1
+            ],
+            "elevation_band": 3,
+            "flags": 32,
+            "branch": "secondary_pattern"
+          }
+        }
+      },
+      {
+        "automatic_land_resources": true,
+        "calls": 3200,
+        "counts": {
+          "0": 3200
+        },
+        "results_sha256": "5a312281df4bd8dfbb4d4a94ad0bf44d01bb8cfced1206b90e21b4ca0568cdb1",
+        "samples": {
+          "0": {
+            "coordinate": [
+              0,
+              0
+            ],
+            "elevation_band": 3,
+            "flags": 32,
+            "branch": "explicit_primary"
+          }
+        }
+      }
+    ]
+  },
+  "installed_prepared_queries": [
+    {
+      "primary_rules": 6670,
+      "calls": 3200,
+      "counts": {
+        "0": 3031,
+        "2": 60,
+        "1": 109
+      },
+      "results_sha256": "c8154953af8695c35655b71eaaceae7c7771128bbc2ab777f09814cb6ff87630"
+    },
+    {
+      "primary_rules": 14862,
+      "calls": 3200,
+      "counts": {
+        "0": 3200
+      },
+      "results_sha256": "5a312281df4bd8dfbb4d4a94ad0bf44d01bb8cfced1206b90e21b4ca0568cdb1"
+    }
+  ],
+  "prepared_scope": "Actual installed Planet menu arm, complete original terrain/climate/region preparation to setup-controller entry, then6400 complete site helper calls. Standard low rules supplied at query boundary; not a full menu rules/faction/start or site-quality score run. Original FILE/heap/clock/presentation services inherited.",
+  "fresh_faction_controls": [
+    {
+      "owner": 1,
+      "entry": "higher_newgame",
+      "after_flags": 0,
+      "peer_after_flags": 536871424
+    },
+    {
+      "owner": 2,
+      "entry": "same_faction_initializer",
+      "after_flags": 0,
+      "peer_after_flags": 0
+    }
+  ],
+  "cold_faction_flags": [
+    0,
+    0
+  ],
+  "nonzero_initializer_flags": [
+    536871424,
+    536871424
+  ],
+  "strategy_editor_commit_fragments": [
+    {
+      "search_objectives_checked": false,
+      "after_flags": 512
+    },
+    {
+      "search_objectives_checked": true,
+      "after_flags": 536871424
+    }
+  ],
+  "technology_reveal_fragments": [
+    {
+      "technology_reveals_map": false,
+      "after_flags": 536870912,
+      "exploration_values": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    {
+      "technology_reveals_map": true,
+      "after_flags": 536871424,
+      "exploration_values": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ]
+    }
+  ],
+  "fresh_map_flags_cleared": 64,
+  "ordinary_file_roundtrip": {
+    "before": {
+      "faction_flags": [
+        512,
+        536870912,
+        536871424
+      ],
+      "pattern": 27067,
+      "tile_flags": [
+        0,
+        8192,
+        1048576,
+        67108864,
+        134217728,
+        268435456,
+        470818816
+      ]
+    },
+    "after_save": {
+      "faction_flags": [
+        512,
+        536870912,
+        536871424
+      ],
+      "pattern": 27067,
+      "tile_flags": [
+        0,
+        8192,
+        1048576,
+        67108864,
+        134217728,
+        268435456,
+        470818816
+      ]
+    },
+    "after": {
+      "faction_flags": [
+        0,
+        536870912,
+        536870912
+      ],
+      "pattern": 27067,
+      "tile_flags": [
+        0,
+        8192,
+        1048576,
+        67108864,
+        134217728,
+        268435456,
+        470818816
+      ]
+    },
+    "save_return": 0,
+    "load_return": 0,
+    "coefficient_canaries_preserved": [
+      997,
+      991
+    ]
+  },
+  "load_reconstruction_controls": [
+    {
+      "id": "none",
+      "after_flags": 536870912
+    },
+    {
+      "id": "orbital_0",
+      "slot": 0,
+      "value": 1,
+      "after_flags": 536871424
+    },
+    {
+      "id": "orbital_1",
+      "slot": 1,
+      "value": 1,
+      "after_flags": 536871424
+    },
+    {
+      "id": "orbital_2",
+      "slot": 2,
+      "value": 1,
+      "after_flags": 536871424
+    },
+    {
+      "id": "orbital_3",
+      "slot": 3,
+      "value": 1,
+      "after_flags": 536871424
+    },
+    {
+      "id": "orbital_negative_nonzero",
+      "slot": 0,
+      "value": -1,
+      "after_flags": 536871424
+    },
+    {
+      "id": "owned_map_reveal_technology",
+      "technology": true,
+      "after_flags": 536871424
+    },
+    {
+      "id": "unowned_map_reveal_technology",
+      "technology": false,
+      "after_flags": 536870912
+    }
+  ],
+  "validation": {
+    "named_queries": 20,
+    "synthetic_grid_queries": 109824,
+    "diagnostic_coefficient_queries": 16,
+    "raw_loaded_map_queries": 6400,
+    "prepared_map_queries": 6400,
+    "fresh_initializer_prefixes": 2,
+    "nonzero_initializer_prefixes": 1,
+    "editor_commit_fragments": 2,
+    "technology_reveal_fragments": 2,
+    "complete_fresh_map_reset": 1,
+    "complete_ordinary_save_load_roundtrips": 9,
+    "independent_output_checks_passed": true
+  }
+}

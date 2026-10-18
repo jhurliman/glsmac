@@ -144,6 +144,14 @@ void Game::PrepareNewSimulation() {
     for(const auto& participant:roster) {value.human_membership|=static_cast<uint8_t>(1u<<participant.simulation_id);}
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
 	value.capabilities=capabilities;value.hostility=std::move(hostility);
+	value.regional_military.emplace(); // explicit fresh-world ushort counters, all positive slots
+	// Whole-new-world reset follows setup terrain generation in the native
+	// lifecycle. Do not derive the retained status from the generated map here.
+	value.retained_land_region_concentration=false;
+	value.retained_base_totals=faction::SmacBaseTotals{};
+	value.victory_history.emplace(); // measured fresh economic/history words; no Voice project
+	for(int32_t owner=0;owner<=7;++owner) {value.victory_history->Initialize(owner,0);}
+	for(auto& owner:value.regional_military->factions) {owner.unit_phase_flags.emplace();owner.base_phase_flags.emplace();}
 	value.strategy.emplace();
 	for ( const auto& participant : value.roster ) {
 		value.satellites.emplace( participant.simulation_id, faction::SmacSatelliteCounts::NewWorld() );

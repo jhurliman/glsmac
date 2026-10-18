@@ -89,6 +89,33 @@ void SmacCapabilityState::Refresh(int32_t owner,const SmacFactionTechnologyState
     factions[owner-1]=next; // no partial cache publication on failed eligibility/arithmetic
 }
 
+void SmacRegionalMilitaryState::ResetBaseFlags(Flags& flags,uint32_t turn,int32_t owner) {
+    if(owner<1 || owner>7) {throw std::runtime_error("Regional Base flags require a positive owner");}
+    for(size_t region=0;region<flags.size();++region) {
+        flags[region]&=((turn+static_cast<uint32_t>(owner)+static_cast<uint32_t>(region))&15u) ? 8 : 0;
+    }
+}
+void SmacRegionalMilitaryState::AccumulateBaseFlag(Flags& flags,uint8_t region,bool immediate_sea) {
+    if(region>=128) {throw std::runtime_error("Invalid regional Base flag region");}
+    if(immediate_sea) {flags[region]|=128;}
+}
+
+void SmacRegionalMilitaryState::Accumulate(Owner& owner,const Contribution& unit) {
+    if(unit.region>=128 || unit.domain>2 || unit.morale<0 || unit.morale>6) {
+        throw std::runtime_error("Invalid regional military contribution");
+    }
+    const auto contribution=unit.skip_strength || (unit.attack<=unit.armor && unit.order==2)
+        ? 0 : RankingChecked(int64_t(unit.morale+6)*unit.attack)/8;
+    if(owner.unit_phase_flags) {
+        auto& flags=owner.unit_phase_flags->at(unit.region);
+        if(unit.plan==8) {flags|=(flags&2) ? 2048 : 2;}
+        if(unit.plan==11) {flags|=4096;}
+        if(unit.plan==3 && !unit.valid_base) {flags|=8192;}
+    }
+    if(unit.plan<=7 && unit.domain==0 && unit.land) {++owner.units[unit.region];}
+    owner.attack[unit.region]=static_cast<uint16_t>(int64_t(owner.attack[unit.region])+contribution);
+}
+
 void SmacSimulationState::RefreshCapabilities(int32_t owner,const settings::SmacTechnologyRules& technologies,
     const settings::SmacPredefinedUnitRules& units,const settings::SmacCombatRules& combat,bool no_colony_pods) {
     if(!capabilities) {return;} // preserve the explicit missing history of old port saves
@@ -184,7 +211,7 @@ void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t wi
 }
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 17;
+constexpr int64_t VERSION = 23;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -217,6 +244,56 @@ StrategyRecords ReadStrategy(types::Buffer& buffer,size_t count) {
 		if(owner<1 || owner>7 || !result->emplace(owner,state).second) {throw std::runtime_error("Invalid or duplicate SMAC strategy owner");}
 	}
 	return result;
+}
+void WriteRegionalMilitary(types::Buffer& buffer,const std::optional<SmacRegionalMilitaryState>& military) {
+    buffer.WriteBool(military.has_value());if(!military) {return;}
+    std::string wire;wire.reserve(SmacRegionalMilitaryState::WIRE_BYTES);
+    for(const auto& owner:military->factions) {for(const auto* values:{&owner.units,&owner.attack}) {for(const auto value:*values) {
+        wire.push_back(static_cast<char>(value&255));wire.push_back(static_cast<char>(value>>8));
+    }}}
+    for(const auto& owner:military->factions) {
+        wire.push_back(owner.unit_phase_flags ? 1 : 0);
+        if(owner.unit_phase_flags) {for(const auto flags:*owner.unit_phase_flags) {
+            if(flags&~SmacRegionalMilitaryState::UNIT_PHASE_MASK) {throw std::runtime_error("Unknown unit-phase regional flag bits");}
+            wire.push_back(static_cast<char>(flags&255));wire.push_back(static_cast<char>(flags>>8));
+        }}
+    }
+    for(const auto& owner:military->factions) {
+        wire.push_back(owner.base_phase_flags ? 1 : 0);
+        if(owner.base_phase_flags) {for(const auto flags:*owner.base_phase_flags) {
+            if(flags&~SmacRegionalMilitaryState::BASE_PHASE_MASK) {throw std::runtime_error("Unknown Base-phase regional flag bits");}
+            wire.push_back(static_cast<char>(flags&255));wire.push_back(static_cast<char>(flags>>8));
+        }}
+    }
+    buffer.WriteString(wire);
+}
+std::optional<SmacRegionalMilitaryState> ReadRegionalMilitary(types::Buffer& buffer,int64_t version) {
+    if(!buffer.ReadBool()) {return {};}
+    const auto wire=buffer.ReadString(SmacRegionalMilitaryState::WIRE_BYTES);
+    if((version==18 && wire.size()!=SmacRegionalMilitaryState::V18_WIRE_BYTES)
+        || (version>=19 && wire.size()<SmacRegionalMilitaryState::V18_WIRE_BYTES+7)) {
+        throw std::runtime_error("Invalid retained regional military extent");
+    }
+    SmacRegionalMilitaryState result;size_t offset=0;
+    for(auto& owner:result.factions) {for(auto* values:{&owner.units,&owner.attack}) {for(auto& value:*values) {
+        value=static_cast<uint8_t>(wire[offset]) | (uint16_t(static_cast<uint8_t>(wire[offset+1]))<<8);offset+=2;
+    }}}
+    const auto read_flags=[&](auto member,uint16_t mask) {for(auto& owner:result.factions) {
+        if(offset>=wire.size()) {throw std::runtime_error("Truncated regional phase flag presence");}
+        const auto present=static_cast<uint8_t>(wire[offset++]);
+        if(present>1 || (present && wire.size()-offset<256)) {throw std::runtime_error("Invalid regional phase flag extent");}
+        if(present) {
+            auto& values=owner.*member;values.emplace();
+            for(auto& flags:*values) {
+                flags=static_cast<uint8_t>(wire[offset]) | (uint16_t(static_cast<uint8_t>(wire[offset+1]))<<8);offset+=2;
+                if(flags&~mask) {throw std::runtime_error("Unknown regional phase flag bits");}
+            }
+        }
+    }};
+    if(version>=19) {read_flags(&SmacRegionalMilitaryState::Owner::unit_phase_flags,SmacRegionalMilitaryState::UNIT_PHASE_MASK);}
+    if(version>=20) {read_flags(&SmacRegionalMilitaryState::Owner::base_phase_flags,SmacRegionalMilitaryState::BASE_PHASE_MASK);}
+    if(offset!=wire.size()) {throw std::runtime_error("Unexpected regional military trailing data");}
+    return result;
 }
 void WriteCapabilities(types::Buffer& buffer,const std::optional<SmacCapabilityState>& capabilities) {
     buffer.WriteBool(capabilities.has_value());
@@ -342,7 +419,27 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order && human_membership==other.human_membership && strategy==other.strategy && capabilities==other.capabilities; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order && human_membership==other.human_membership && strategy==other.strategy && capabilities==other.capabilities && regional_military==other.regional_military && victory_history==other.victory_history && retained_land_region_concentration==other.retained_land_region_concentration && retained_base_totals==other.retained_base_totals; }
+
+std::optional<SmacBaseTotals> AdjustSmacBaseTotal(std::optional<SmacBaseTotals> saved,int32_t owner,int32_t delta) {
+	if(owner<1 || owner>7 || (delta!=1 && delta!=-1)) {throw std::invalid_argument("Base total delta requires positive owner and unit delta");}
+	if(saved) {
+		const int64_t value=int64_t(saved->at(owner))+delta;
+		if(value<INT32_MIN || value>INT32_MAX) {throw std::overflow_error("Base total exceeds signed32");}
+		saved->at(owner)=static_cast<int32_t>(value);
+	}
+	return saved;
+}
+
+void SmacVictoryHistory::RecordBaseExpansion(int32_t owner,int32_t turn) {
+	if(owner<1 || owner>7 || turn<0) {throw std::invalid_argument("Victory history requires a positive owner and nonnegative turn");}
+	last_base_expansion_or_advice_turn[owner]=turn;
+}
+void SmacVictoryHistory::Initialize(int32_t owner,int32_t turn) {
+	if(owner<0 || owner>7 || turn<0) {throw std::invalid_argument("Faction initialization history requires slot0..7 and a nonnegative turn");}
+	last_base_expansion_or_advice_turn[owner]=turn;
+	if(!turn) {economic_deadlines[owner]=0;economic_paid_costs[owner]=0;}
+}
 
 SmacSatelliteCounts SmacSimulationState::GetSatelliteCounts( int32_t simulation_id ) const {
 	if ( roster.empty() || roster.size() > 7 || satellites.size() != roster.size() ) { throw std::runtime_error( "Incomplete SMAC faction satellite assets" ); }
@@ -409,6 +506,18 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
     buffer.WriteInt(human_membership);
 	WriteStrategy(buffer,strategy);
 	WriteCapabilities(buffer,capabilities);
+	WriteRegionalMilitary(buffer,regional_military);
+	buffer.WriteBool(victory_history.has_value());
+	if(victory_history) {
+		for(const auto* words:{&victory_history->economic_deadlines,&victory_history->economic_paid_costs,&victory_history->last_base_expansion_or_advice_turn}) {
+			for(const auto word:*words) {buffer.WriteInt(word);}
+		}
+		buffer.WriteInt(victory_history->voice_host);
+	}
+	buffer.WriteBool(retained_land_region_concentration.has_value());
+	if(retained_land_region_concentration) {buffer.WriteBool(*retained_land_region_concentration);}
+	buffer.WriteBool(retained_base_totals.has_value());
+	if(retained_base_totals) {for(const auto total:*retained_base_totals) {buffer.WriteInt(total);}}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -420,7 +529,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		types::Buffer buffer( wire );
 		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto version=buffer.ReadInt();
-		if(version!=VERSION && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
+		if(version!=VERSION && version!=22 && version!=21 && version!=20 && version!=19 && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC simulation roster requires 1..7 participants" ); }
 		std::vector< SmacSimulationParticipant > roster;
@@ -504,6 +613,18 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
         }
 		if(version>=16) {result.strategy=ReadStrategy(buffer,static_cast<size_t>(count));}
 		if(version>=17) {result.capabilities=ReadCapabilities(buffer);}
+		if(version>=18) {result.regional_military=ReadRegionalMilitary(buffer,version);}
+		if(version>=21 && buffer.ReadBool()) {
+			result.victory_history.emplace();auto& history=*result.victory_history;
+			for(auto* words:{&history.economic_deadlines,&history.economic_paid_costs,&history.last_base_expansion_or_advice_turn}) {
+				for(auto& word:*words) {word=ReadInt32(buffer);}
+			}
+			history.voice_host=ReadInt32(buffer);
+		}
+		if(version>=22 && buffer.ReadBool()) {result.retained_land_region_concentration=buffer.ReadBool();}
+		if(version>=23 && buffer.ReadBool()) {
+			result.retained_base_totals.emplace();for(auto& total:*result.retained_base_totals) {total=ReadInt32(buffer);}
+		}
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );
 		result.Validate( technologies, profiles, units );

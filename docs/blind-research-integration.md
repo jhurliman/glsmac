@@ -125,6 +125,28 @@ The automatic chooser consumes the shared bounded-range stream, not the CRT stre
 
 ## Retained producer contracts
 
+The [live Base-stage flag snapshot](regional-base-phase-flags.md) now preserves
+staggered bit8 history and the owned Base's immediate-sea bit128 at the actual
+owner-summary boundary. It complements the unit-phase contributions without
+claiming the final peer/strategy flag word or inventing legacy history.
+
+The [regional land reachability implementation](regional-land-reachability.md)
+now matches the original fresh-workspace boolean graph and Base-pair controls,
+including directional diplomacy and the unowned/slot0 distinction. Its actual
+summary dispatch still requires the original workspace lifetime and complete
+regional strategy inputs; it does not replace them with a universal route.
+
+The [live regional military producer](regional-military-producer.md) now retains
+unit counts and attack sums at the post-Base owner boundary. Its V18 storage
+preserves stale peer/restore history; flags and final strategy are still needed.
+
+
+The [live territory summary integration](retained-territory-summary.md) now owns
+the territory/known/suitable/covered/site counters and their scheduled refresh
+and save lifetimes. Per-owner regional military/strategy and ecology integration
+remain required before the automatic research dispatcher can use complete inputs.
+
+
 The [regional producer receipt](behavior/regional-research-summary-producer.md)
 establishes the capability and strategy update boundaries. Its native controls
 cover 14 owner summaries, nine capability refreshes, two initializer prefixes

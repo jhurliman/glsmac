@@ -2,8 +2,10 @@
 #include "ConventionalUnits.h"
 #include "fixtures/GlsmacTerritoryTopology.h"
 #include "fixtures/SmacCoastalGeography.h"
+#include "fixtures/SmacLandConcentration.h"
 #include "fixtures/SmacRulesSource.h"
 #include "fixtures/SmacSharedLandmarkDetails.h"
+#include "fixtures/SmacTerritorySummary.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
 #include "game/backend/Player.h"
@@ -14,6 +16,7 @@
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/PopDef.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/SmacTerritoryRules.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "game/backend/slot/Slots.h"
 #include "loader/txt/SmacRulesTXTLoader.h"
@@ -63,6 +66,319 @@ base::Base* Found(GSE_CALLABLE,Game* game,size_t id,size_t slot,int32_t simulati
 }
 
 void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC live Base totals retain action offsets owner-only recount and actual Start",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;
+        const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();Land(game);game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+            bool fresh=false;fixture.ResourceState([&](auto& state){fresh=state.retained_base_totals==std::optional<faction::SmacBaseTotals>{faction::SmacBaseTotals{}};});
+            GT_ASSERT(fresh,"Fresh world lacked all8 zero totals");Found(GSE_CALL,game,901,0,1,16,16);
+            fixture.ResourceState([&](auto& state){state.retained_base_totals->at(1)=7;state.retained_base_totals->at(2)=888;});
+            Found(GSE_CALL,game,902,0,1,24,16);bool exact=false;
+            fixture.ResourceState([&](auto& state){exact=state.retained_base_totals->at(1)==8 && state.retained_base_totals->at(2)==888;});
+            GT_ASSERT(exact,"Live founding repaired stale total7 instead of incrementing to8");game->GetBM()->DespawnBase(GSE_CALL,902);
+            fixture.ResourceState([&](auto& state){exact=state.retained_base_totals->at(1)==7;});GT_ASSERT(exact,"Live removal did not return to stale7");
+            fixture.RefreshPopulation(1);
+            fixture.ResourceState([&](auto& state){exact=state.retained_base_totals->at(1)==1 && state.retained_base_totals->at(2)==888;
+            });GT_ASSERT(exact,"Owner summary recounted foreign total or omitted own Base");
+            fixture.ResourceState([&](auto& state){state.retained_base_totals->at(1)=7;});saved=fixture.Snapshot();GT_OK();
+        });if(!first.empty()) {return first;}
+        ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});bool exact=false;
+            restored.ResourceState([&](auto& state){exact=state.retained_base_totals->at(1)==7 && state.retained_base_totals->at(2)==888;state.retained_base_totals.reset();});
+            GT_ASSERT(exact,"Actual Start recounted saved stale Base totals");Found(GSE_CALL,restored.Game(),903,0,1,32,16);
+            restored.ResourceState([&](auto& state){exact=!state.retained_base_totals;});GT_ASSERT(exact,"Legacy founding invented missing totals");GT_OK();
+        });
+    });
+    task->AddTest("SMAC live owner Base totals match native0 1 5 256 counts independently of byte wrap",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();Land(game);game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+            size_t made=0;
+            for(const size_t total:{0u,1u,5u,256u}) {
+                while(made<total) {Found(GSE_CALL,game,1000+made,0,1,2*(made%32),4+2*(made/32));++made;}
+                if(total==5) {Found(GSE_CALL,game,9000,1,2,50,40);}
+                fixture.ResourceState([&](auto& state){state.retained_base_totals->at(1)=777;state.retained_base_totals->at(2)=888;state.economy.at(1).regional_base_counts->fill(255);});
+                fixture.RefreshPopulation(1);bool exact=false;
+                fixture.ResourceState([&](auto& state){exact=state.retained_base_totals->at(1)==static_cast<int32_t>(total) && state.retained_base_totals->at(2)==888
+                    && state.economy.at(1).regional_base_counts->at(1)==static_cast<uint8_t>(total);});
+                GT_ASSERT(exact,"Owner recount confused total with wrapping regional bytes at "+std::to_string(total));
+            }
+            GT_OK();
+        });
+    });
+    task->AddTest("SMAC land concentration matches8 native builders and6 retained area reductions",GT(){
+        for(const auto& row:land_concentration_fixture::cases) {
+            if(row.width) {
+                std::vector<bool> sea(row.width*row.height/2,true);
+                for(const auto& point:row.land) {sea.at(Index(row.width,point[0],point[1]))=false;}
+                const auto topology=Topology::Build(row.width,row.height,row.wrap,sea,row.before);
+                GT_ASSERT(topology.Areas() && *topology.Areas()==row.after,"Complete builder areas differ: "+std::string(row.id));
+                GT_ASSERT(topology.LandRegionConcentrated()==row.expected,"Complete builder concentration differs: "+std::string(row.id));
+            } else {
+                GT_ASSERT(Topology::LandRegionConcentrated(row.before)==row.expected,"Area fragment differs: "+std::string(row.id));
+            }
+        }
+        auto invalid=Topology::RegionValues{};invalid[42]=-1;
+        GT_ASSERT(Rejects([&]{Topology::LandRegionConcentrated(invalid);}),"Negative normal region area was silently admitted");
+        GT_OK();
+    });
+    task->AddTest("SMAC live land concentration clears at new world and survives Base events and actual Start",GT(){
+        for(const bool retained:{false,true}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;
+            const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();Land(game);game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+                bool fresh=false;fixture.ResourceState([&](auto& state){fresh=state.retained_land_region_concentration==std::optional<bool>{false};});
+                GT_ASSERT(fresh && game->GetMap()->GetTerritoryTopology()->LandRegionConcentrated(),"Whole-world reset followed terrain classification instead of clearing status");
+                fixture.ResourceState([&](auto& state){state.retained_land_region_concentration=retained;});
+                Found(GSE_CALL,game,901,0,1,16,16);Found(GSE_CALL,game,902,0,1,24,16);
+                game->GetBM()->DespawnBase(GSE_CALL,901);fixture.RefreshPopulation(1);
+                bool preserved=false;fixture.ResourceState([&](auto& state){preserved=state.retained_land_region_concentration==std::optional<bool>{retained};});
+                GT_ASSERT(preserved,"Base or owner-summary update rebuilt terrain status");
+                saved=fixture.Snapshot();GT_OK();
+            });if(!first.empty()) {return first;}
+            ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+            const auto second=restored.Run([&](GSE_CALLABLE)->std::string {
+                restored.ResourceState([&](auto& state){state.retained_land_region_concentration=!retained;});
+                restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});bool preserved=false;
+                restored.ResourceState([&](auto& state){preserved=state.retained_land_region_concentration==std::optional<bool>{retained};state.retained_land_region_concentration.reset();});
+                GT_ASSERT(preserved,"Actual Start discarded the saved status");
+                Found(GSE_CALL,restored.Game(),903,0,1,32,16);bool absent=false;
+                restored.ResourceState([&](auto& state){absent=!state.retained_land_region_concentration;});
+                GT_ASSERT(absent,"Legacy absent status was reconstructed at a Base event");GT_OK();
+            });if(!second.empty()) {return second;}
+        }
+        GT_OK();
+    });
+	task->AddTest("SMAC live victory history follows founding nonlast removal actual Start and legacy absence",GT(){
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;faction::SmacVictoryHistory retained;
+		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Land(game);game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+			bool fresh=false;fixture.ResourceState([&](auto& state){fresh=state.victory_history && *state.victory_history==faction::SmacVictoryHistory{};
+				auto& history=*state.victory_history;history.last_base_expansion_or_advice_turn.fill(777);
+				for(size_t owner=0;owner<8;++owner) {history.economic_deadlines[owner]=1000+owner;history.economic_paid_costs[owner]=5000+owner;}
+			});GT_ASSERT(fresh,"New world did not own fresh economic and Base history");
+			Found(GSE_CALL,game,901,0,1,16,16);Found(GSE_CALL,game,902,0,1,24,16);
+			bool stamped=false;fixture.ResourceState([&](auto& state){const auto& history=*state.victory_history;
+				stamped=history.last_base_expansion_or_advice_turn[1]==1 && history.last_base_expansion_or_advice_turn[2]==777
+					&& history.economic_deadlines[1]==1001 && history.economic_paid_costs[1]==5001;
+				state.victory_history->last_base_expansion_or_advice_turn[1]=333;retained=*state.victory_history;
+			});GT_ASSERT(stamped,"Founding did not stamp only gaining owner or changed economic history");
+			game->GetBM()->DespawnBase(GSE_CALL,901);
+			bool preserved=false;fixture.ResourceState([&](auto& state){preserved=*state.victory_history==retained;});
+			GT_ASSERT(preserved,"Nonlast Base removal rewrote history");saved=fixture.Snapshot();GT_OK();
+		});if(!first.empty()) {return first;}
+		ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});bool preserved=false;
+			restored.ResourceState([&](auto& state){preserved=state.victory_history && *state.victory_history==retained;state.victory_history.reset();});
+			GT_ASSERT(preserved,"Actual Start rebuilt saved expansion or economic history");
+			Found(GSE_CALL,restored.Game(),903,0,1,32,16);
+			bool absent=false;restored.ResourceState([&](auto& state){absent=!state.victory_history;});
+			GT_ASSERT(absent,"Founding manufactured missing legacy history");GT_OK();
+		});
+	});
+	task->AddTest("SMAC live regional workspace preserves Base events but retires at owner tail and Start",GT(){
+		namespace routes=map::smac_territory;
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;
+		const auto graph=[](Game* game) {
+			routes::RegionalRouteMap value{static_cast<int32_t>(game->GetMap()->GetWidth()),static_cast<int32_t>(game->GetMap()->GetHeight()),true,{}, {},2};
+			value.tiles.assign(value.width*value.height/2,{false,1,1});value.tiles[Index(value.width,20,16)].territory=2;return value;
+		};
+		const routes::RegionalRouteQuery query{{16,16},{20,16},1,2,0};
+		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Land(game);game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+			auto& workspace=game->GetMap()->GetRegionalPathWorkspace();const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+			GT_ASSERT(workspace.Query(graph(game),query,0,[](int32_t){return 8;}),"Live workspace failed warm route");
+			const auto distances=workspace.Distances();
+			GT_ASSERT(before==fixture.Snapshot() && random==fixture.GameplayRandom(),"Transient workspace entered save or RNG authority");
+			Found(GSE_CALL,game,901,0,1,16,16);fixture.RefreshPopulation(1);
+			GT_ASSERT(workspace.Destination()==query.target && workspace.Distances()==distances,"Founding or summary eagerly retired the route");
+			game->GetBM()->DespawnBase(GSE_CALL,901);
+			GT_ASSERT(workspace.Destination()==query.target && workspace.Distances()==distances,"Base removal retired the route");
+			saved=fixture.Snapshot();
+			std::array<std::string,8> roles;
+			for(size_t i=0;i<roles.size();++i) {
+				roles[i]="route-role-"+std::to_string(i);
+				game->GetBM()->DefinePop(new base::PopDef(roles[i],roles[i],{},{},i ? base::PopDef::PF_NONE : base::PopDef::PF_TILE_WORKER,
+					i ? std::optional<uint8_t>(i-1) : std::nullopt));
+			}
+			fixture.BasePresentationRoles(roles);
+			// This asset-free source deliberately has synthetic negative score
+			// inputs. Enter the supported pre-ranking state; upkeep owns its
+			// first aggregate publication independently of the transient route.
+			fixture.ResourceState([](auto& state){state.economy.at(1).population_aggregate.reset();});
+			game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();
+			GT_ASSERT((workspace.Destination()==routes::Coordinate{-1,-1}) && workspace.Distances()==distances,
+				"Actual owner tail failed destination-only invalidation");GT_OK();
+		});if(!first.empty()) {return first;}
+		ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+		const auto second=restored.Run([&](GSE_CALLABLE)->std::string {
+			auto& old=restored.Game()->GetMap()->GetRegionalPathWorkspace();
+			GT_ASSERT(old.Query(graph(restored.Game()),query,0,[](int32_t){return 8;}),"Restore fixture failed warm route");
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+			auto* game=restored.Game();auto& workspace=game->GetMap()->GetRegionalPathWorkspace();
+			GT_ASSERT((workspace.Destination()==routes::Coordinate{-1,-1})
+				&& std::all_of(workspace.Distances().begin(),workspace.Distances().end(),[](uint32_t value){return value==0;}),"Actual Start restored a warm route");
+			GT_ASSERT(workspace.Query(graph(game),query,0,[](int32_t){return 8;}),"Fresh restored workspace cannot query");
+			GT_OK();
+		});
+		if(!second.empty()) {return second;}
+		ConventionalUnitFixture imported;imported.ConfigureMovementCampaign(false);
+		return imported.Run([&](GSE_CALLABLE)->std::string {
+			auto* world=imported.Game()->GetMap();
+			GT_ASSERT(world->GetRegionalPathWorkspace().Query(graph(imported.Game()),query,0,[](int32_t){return 8;}),"Raw import fixture failed warm route");
+			auto bytes=world->GetTilesPtr()->Serialize();
+			GT_ASSERT(world->LoadFromBuffer(bytes)==map::Map::EC_NONE,"Raw map replacement failed");
+			GT_ASSERT((world->GetRegionalPathWorkspace().Destination()==routes::Coordinate{-1,-1}),"Raw map replacement retained route key");GT_OK();
+		});
+	});
+	task->AddTest("SMAC live Base-phase flags retain peers removal and actual Start history",GT(){
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved;
+		const auto flags=[](ConventionalUnitFixture& value,int owner) {
+			std::optional<faction::SmacRegionalMilitaryState::Flags> result;
+			value.ResourceState([&](auto& state){result=state.regional_military->factions.at(owner-1).base_phase_flags;});return result;
+		};
+		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Land(game);auto* square=game->GetMap()->GetTile(18,16);
+			for(auto* corner:square->elevation.corners) {*corner=-1000;}square->Update();
+			// Corner elevations are shared: publish a coherent complete map,
+			// including every neighbor changed by this controlled sea tile.
+			for(size_t y=0;y<game->GetMap()->GetHeight();++y) {for(size_t x=y&1;x<game->GetMap()->GetWidth();x+=2) {game->GetMap()->GetTile(x,y)->Update();}}
+			game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));Found(GSE_CALL,game,901,0,1,16,16);
+			fixture.ResourceState([&](auto& state){
+				state.regional_military->factions[0].base_phase_flags.emplace();state.regional_military->factions[0].base_phase_flags->fill(8);
+				state.regional_military->factions[6].base_phase_flags.emplace();state.regional_military->factions[6].base_phase_flags->fill(128);
+			});
+			const auto random=fixture.GameplayRandom();fixture.RefreshPopulation(1);
+			GT_ASSERT(game->GetTurnId()==1 && flags(fixture,1)->at(1)==136 && flags(fixture,1)->at(14)==0 && flags(fixture,7)->at(1)==128,
+				"Actual Base summary lost sea/expiry gates or recounted a peer");
+			game->GetBM()->DespawnBase(GSE_CALL,901);
+			GT_ASSERT(flags(fixture,1)->at(1)==136 && fixture.GameplayRandom()==random,"Base removal eagerly refreshed flag history or drew RNG");
+			saved=fixture.Snapshot();GT_OK();
+		});if(!first.empty()) {return first;}
+		ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+			GT_ASSERT(flags(restored,1)->at(1)==136 && flags(restored,7)->at(1)==128,"Actual Start reconstructed stale Base flags");
+			restored.RefreshPopulation(1);
+			GT_ASSERT(flags(restored,1)->at(1)==8 && flags(restored,7)->at(1)==128,"Next summary retained removed Base coast or refreshed peer history");
+			restored.ResourceState([&](auto& state){state.regional_military->factions[0].base_phase_flags.reset();});
+			restored.RefreshPopulation(1);GT_ASSERT(!flags(restored,1),"Owner summary invented missing legacy bit8 history");GT_OK();
+		});
+	});
+    task->AddTest("SMAC regional routing preserves native peer marks across split source components",GT(){
+        namespace routes=game::backend::map::smac_territory;
+        routes::RegionalRouteMap graph{16,12,false,std::vector<routes::RegionalRouteTile>(96,{true,-1,1}),{},0};
+        const std::array<std::array<int32_t,3>,8> land{{{{2,2,1}},{{4,2,1}},{{2,8,1}},{{4,8,1}},{{6,8,-1}},{{8,8,-1}},{{10,8,2}},{{12,8,2}}}};
+        for(const auto& point:land) {graph.tiles.at(point[1]*8+point[0]/2)={false,static_cast<int8_t>(point[2]),1};}
+        const std::vector<routes::Base> bases{{{2,2},1},{{2,8},1},{{10,8},2}};
+        GT_ASSERT(!routes::RegionalBasesReachable(graph,bases,1,2,1,0,2,1),"Native failed first source lost the peer component mark");
+        GT_ASSERT(routes::RegionalLandReachable(graph,{{2,8},{10,8},1,2,0}),"Native second source direct path was not reachable");
+        auto reordered=bases;reordered[0]=bases[1];reordered[1]=bases[0];
+        GT_ASSERT(routes::RegionalBasesReachable(graph,reordered,1,2,1,0,2,1),"Native reachable-first Base order did not change the result");GT_OK();
+    });
+
+	task->AddTest("SMAC live regional fresh routes use actual claims Base order and saved Start",GT(){
+		namespace routes=map::smac_territory;
+		const auto query=[](ConventionalUnitFixture& fixture,int mode)->bool {
+			auto* game=fixture.Game();auto* world=game->GetMap();
+			routes::RegionalRelations relations{};uint8_t humans=0,own_bases=0,peer_bases=0;
+			fixture.ResourceState([&](auto& state){
+				humans=state.human_membership;
+				for(const auto& owner:state.hostility.owners) {for(size_t target=0;target<8;++target) {relations.at(owner.first).at(target)=owner.second.directions[target].primary;}}
+				own_bases=state.economy.at(1).regional_base_counts->at(1);peer_bases=state.economy.at(2).regional_base_counts->at(1);
+			});
+			const auto graph=routes::ProjectRegionalRoutes(*world->GetSmacWorkerKnowledge(),world->TerritorySea(),
+				world->GetTerritoryTopology()->Regions(),relations,humans);
+			std::vector<routes::Base> bases;
+			for(const auto id:game->GetBM()->GetBaseRecordOrder()) {
+				const auto* base=game->GetBM()->GetBase(id);const auto* tile=base->GetTile();
+				bases.push_back({{static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},base->GetSmacResourceContext().owner_simulation_id});
+			}
+			return routes::RegionalBasesReachable(graph,bases,1,2,1,mode,own_bases,peer_bases);
+		};
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);std::string saved;
+		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Land(game);game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+			Found(GSE_CALL,game,901,0,1,16,16);Found(GSE_CALL,game,800,1,2,64,16);
+			const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+			GT_ASSERT(query(fixture,0) && !query(fixture,1),"Actual unclaimed corridor did not distinguish regional route modes");
+			GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Fresh route query changed saved world or RNG");saved=before;GT_OK();
+		});if(!first.empty()) {return first;}
+		ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+			GT_ASSERT(query(restored,0) && !query(restored,1),"Actual Start changed retained route inputs");
+			restored.Game()->GetBM()->DespawnBase(GSE_CALL,800);
+			GT_ASSERT(!query(restored,0) && !query(restored,1),"Actual Base removal left an invented route endpoint");GT_OK();
+		});
+	});
+    task->AddTest("SMAC territory summary matches 12 complete original aggregate passes",GT(){
+        namespace native=map::smac_territory;
+        for(const auto& row:territory_summary_fixture::Cases()) {
+            const auto actual=native::Summarize(row.tiles,row.reveal,row.search);
+            GT_ASSERT(actual==row.expected,"native territory summary differs: "+std::string(row.id));
+            GT_ASSERT(native::TerritorySummary::Deserialize(actual.Serialize())==actual,"summary codec changed native retained output");
+        }
+        for(size_t turn=0;turn<8;++turn) {
+            GT_ASSERT(native::RefreshTerritoryAtGlobalTail(turn)==(turn==1 || turn==5),"native global-upkeep gate differs");
+        }
+        // Native byte/word storage wraps; a region can reach the map bound.
+        std::vector<native::SummaryTile> wrap(65536,{1,1,2,2,0,false,false,false,13,2});
+        const auto actual=native::Summarize(wrap,0,0);
+        GT_ASSERT(actual.owners[1].tiles[1]==0 && actual.owners[1].site_signals[1]==0
+            && actual.site_signals[1]==65536 && actual.maximum_rating[1]==13,"byte word and global counter widths differ");
+        GT_OK();
+    });
+    task->AddTest("SMAC retained territory summary framing preserves stale and absent history",GT(){
+        namespace native=map::smac_territory;
+        const auto bare=Topology::Build(16,8,true,std::vector<bool>(64,false));
+        auto summary=territory_summary_fixture::Cases().back().expected;summary.search_objectives=128;
+        const auto value=bare.WithTerritorySummary(summary);const auto wire=value.Serialize();
+        GT_ASSERT(Topology::Deserialize(wire)==value && value.Rebuild(std::vector<bool>(64,false)).Summary()==value.Summary(),"restore or region rebuild recounted retained summary");
+        auto old=bare.Serialize();old.replace(0,8,"GLSTERR4");
+        GT_ASSERT(!Topology::Deserialize(old).Summary(),"old save acquired invented territory or Search authority");
+        for(int variant=0;variant<4;++variant) {
+            auto bad=wire;if(variant==0) {bad.pop_back();}if(variant==1) {bad.back()=1;}
+            if(variant==2) {bad[7]='4';}if(variant==3) {bad[16+64+512+1024+4]=16;}
+            GT_ASSERT(Rejects([&]{Topology::Deserialize(bad);}),"malformed retained summary accepted");
+        }
+        GT_ASSERT(Rejects([&]{native::Summarize({{128,0,0,0,0,false,false,false,0,0}},0,0);}),"invalid summary tile admitted");
+        GT_OK();
+    });
+    task->AddTest("SMAC live territory summaries follow founding removal and actual Start",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved,retained;
+        const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();Land(game);auto* world=game->GetMap();
+            for(size_t y=0;y<world->GetHeight();++y) {for(size_t x=y&1;x<world->GetWidth();x+=2) {
+                auto* square=world->GetTile(x,y);square->moisture=map::tile::MOISTURE_RAINY;square->rockiness=map::tile::ROCKINESS_FLAT;
+                square->features=0;square->terraforming=map::tile::TERRAFORMING_FARM;square->bonus=map::tile::BONUS_NONE;
+            }}
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+            const auto rng=fixture.GameplayRandom();const auto jsf=game->GetRandom()->GetStateString();
+            Found(GSE_CALL,game,901,0,1,16,16);Found(GSE_CALL,game,800,1,2,48,16);
+            const auto& summary=*world->GetTerritoryTopology()->Summary();
+            GT_ASSERT(summary.owners[1].covered_suitable[1]==21 && summary.owners[2].covered_suitable[1]==21,"covered suitable counts used Farm or missed Base radius");
+            GT_ASSERT(summary.owners[1].known[1]==3968 && summary.owners[2].known[63]==128 && summary.owners[0].known[1]==0,"known counters filtered exploration by ownership");
+            GT_ASSERT(summary.owners[0].tiles[1]>0 && summary.owners[0].maximum_rating[1]==0 && summary.maximum_rating[1]>0,"neutral claims acquired an owned maximum");
+            // Mutation/query/save alone must leave the retained producer untouched.
+            const auto before=world->GetTerritoryTopology()->Summary();world->GetTile(0,0)->moisture=map::tile::MOISTURE_ARID;
+            const auto snapshot=fixture.Snapshot();(void)snapshot;
+            GT_ASSERT(world->GetTerritoryTopology()->Summary()==before,"snapshot refreshed territory counters");
+            game->GetBM()->DespawnBase(GSE_CALL,800);
+            const auto& removed=*world->GetTerritoryTopology()->Summary();
+            GT_ASSERT(removed.owners[2].tiles[1]==0 && removed.owners[2].covered_suitable[1]==0 && removed.owners[1].covered_suitable[1]==21,"removal retained stale claims or dropped survivor exclusion");
+            GT_ASSERT(fixture.GameplayRandom()==rng && game->GetRandom()->GetStateString()==jsf,"territory pass consumed gameplay RNG");
+            retained=world->GetTerritoryTopology()->Serialize();saved=fixture.Snapshot();GT_OK();
+        });if(!first.empty()) {return first;}
+        ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+            GT_ASSERT(restored.Game()->GetMap()->GetTerritoryTopology()->Serialize()==retained,"actual Start rebuilt retained territory summary");GT_OK();
+        });
+    });
+
 	task->AddTest("SMAC shared landmark detail retains native saved bytes and independent geography lifetimes",GT(){
 		for(const auto& row:shared_landmark_fixture::storage) {
 			const std::vector<bool> sea(64,false),fertile(64,true);
@@ -147,7 +463,7 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 			game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
 			// A V3 world has no shared-byte history. Preserve that absence rather
 			// than treating missing metadata as an initialized fresh zero.
-			auto legacy=map->GetTerritoryTopology()->Serialize();legacy.resize(legacy.size()-map->GetWidth()*map->GetHeight()/2);
+			auto legacy=map->GetTerritoryTopology()->Serialize();legacy.resize(legacy.size()-map->GetWidth()*map->GetHeight()/2-map::smac_territory::TerritorySummary::WIRE_BYTES);
 			legacy.replace(0,8,"GLSTERR3");legacy[15]=static_cast<char>(static_cast<uint8_t>(legacy[15])&1);fixture.TerritoryTopology(legacy);
 			std::string packed(map->GetWidth()*map->GetHeight()/2,char(13));packed[Index(128,96,48)]=29;fixture.SiteRatings(packed);
 			// This distant cached tile must never enter the uncached decoder.
@@ -223,7 +539,7 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 		const auto previous=Topology::Deserialize(v2);
 		GT_ASSERT(previous.Areas()==value.Areas() && previous.Postpass()==value.Postpass() && !previous.SiteRatings()
 			&& Topology::Deserialize(previous.Serialize())==previous,"V2 load invented rating or exclusion history");
-		GT_ASSERT(Rejects([&]{old.Rebuild(sea);}) && Rejects([&]{old.WithTerrainPostpass(sea,fertile);}),"missing polar history was fabricated");GT_OK();
+		GT_ASSERT(Rejects([&]{old.Rebuild(sea);}) && Rejects([&]{old.LandRegionConcentrated();}) && Rejects([&]{old.WithTerrainPostpass(sea,fertile);}),"missing polar history was fabricated");GT_OK();
 	});
 	task->AddTest("SMAC live geography admission and actual Start retain stale postpass data",GT(){
 		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved,geography;

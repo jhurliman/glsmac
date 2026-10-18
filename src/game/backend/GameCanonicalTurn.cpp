@@ -203,6 +203,8 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 		const auto& owner=next.owners[next.owner_index];
 		if(next.base_index==owner.second.size()) {
 			RefreshCanonicalPopulationAggregate(owner.first);
+			// Native upkeep retires the shared route only AFTER this summary.
+			m_map->InvalidateRegionalPathWorkspace();
 			ResetCanonicalHurryMarkers(owner.first);
 			SettleCanonicalEconomy(owner.first);
 			++next.owner_index;next.base_index=0;next.stage=Stage::Base;
@@ -227,6 +229,13 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 			return; // credit is committed; close resumes after this exact Base
 		}
 		next.energy.reset();++next.base_index;next.stage=Stage::Base;
+	}
+	// The global territory producer follows all owner tails; read-only research
+	// and suspended Base screens never refresh these retained counters.
+	if(map::smac_territory::RefreshTerritoryAtGlobalTail(next.turn)) {
+		std::optional<map::GlsmacTerritoryTopology> topology;
+		auto knowledge=PrepareBaseTerritory(nullptr,nullptr,false,&topology);
+		CommitBaseTerritory(knowledge,topology);
 	}
 	const auto turn_id=next.turn;
 	m_canonical_continuation.reset();

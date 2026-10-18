@@ -1,0 +1,262 @@
+{
+  "research_id": "RE-SMAC-DOMINANCE-001",
+  "specification": "leading-human-dominance-score-path.md",
+  "reference_executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Complete leading-human dominance routine on score-comparison path; diplomatic-victory shortcut disabled, Voice of Planet absent and human future-pressure dates zero. Three integrations execute complete original nutrient cost and uninstigated non-Pact war handler. No substitutes/hooks/patches.",
+  "defaults": {
+    "actor_human": true,
+    "is_global_leader": true,
+    "actor_base_count": 6,
+    "current_turn": 251,
+    "difficulty": 2,
+    "mode_argument": 0,
+    "intense_rivalry": false,
+    "conquest_victory": true,
+    "objectives_required_for_victory": 9999,
+    "leader_score": 150,
+    "runner_up_score": 100
+  },
+  "cases": [
+    {
+      "id": "DOMINANCE-001",
+      "name": "standard ratio equality qualifies",
+      "overrides": {},
+      "expected": true
+    },
+    {
+      "id": "DOMINANCE-002",
+      "name": "one below standard ratio fails",
+      "overrides": {
+        "leader_score": 149
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-003",
+      "name": "nonhuman leader fails",
+      "overrides": {
+        "actor_human": false
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-004",
+      "name": "human nonleader fails",
+      "overrides": {
+        "is_global_leader": false
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-005",
+      "name": "base threshold equality fails",
+      "overrides": {
+        "actor_base_count": 5
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-006",
+      "name": "strict difficulty time boundary fails",
+      "overrides": {
+        "current_turn": 250
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-007",
+      "name": "difficulty3 time equality fails",
+      "overrides": {
+        "difficulty": 3,
+        "current_turn": 200
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-008",
+      "name": "difficulty3 time one past qualifies",
+      "overrides": {
+        "difficulty": 3,
+        "current_turn": 201
+      },
+      "expected": true
+    },
+    {
+      "id": "DOMINANCE-009",
+      "name": "low difficulty mode0 suppressed",
+      "overrides": {
+        "difficulty": 1,
+        "current_turn": 301,
+        "actor_base_count": 7
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-010",
+      "name": "nonzero mode bypasses low difficulty exclusion",
+      "overrides": {
+        "difficulty": 1,
+        "current_turn": 301,
+        "actor_base_count": 7,
+        "mode_argument": 1
+      },
+      "expected": true
+    },
+    {
+      "id": "DOMINANCE-011",
+      "name": "nonzero mode does not bypass time threshold",
+      "overrides": {
+        "difficulty": 1,
+        "current_turn": 300,
+        "actor_base_count": 7,
+        "mode_argument": 1
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-012",
+      "name": "intense rivalry ratio equality qualifies",
+      "overrides": {
+        "intense_rivalry": true,
+        "current_turn": 101,
+        "actor_base_count": 5,
+        "leader_score": 125
+      },
+      "expected": true
+    },
+    {
+      "id": "DOMINANCE-013",
+      "name": "intense rivalry one below ratio fails",
+      "overrides": {
+        "intense_rivalry": true,
+        "current_turn": 101,
+        "actor_base_count": 5,
+        "leader_score": 124
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-014",
+      "name": "intense rivalry time100 fails",
+      "overrides": {
+        "intense_rivalry": true,
+        "current_turn": 100,
+        "actor_base_count": 5,
+        "leader_score": 125
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-015",
+      "name": "intense rivalry allows difficulty0 mode0",
+      "overrides": {
+        "intense_rivalry": true,
+        "current_turn": 101,
+        "actor_base_count": 5,
+        "leader_score": 125,
+        "difficulty": 0
+      },
+      "expected": true
+    },
+    {
+      "id": "DOMINANCE-016",
+      "name": "conquest disabled low difficulty requires double",
+      "overrides": {
+        "conquest_victory": false,
+        "leader_score": 199
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-017",
+      "name": "double score equality qualifies",
+      "overrides": {
+        "conquest_victory": false,
+        "leader_score": 200
+      },
+      "expected": true
+    },
+    {
+      "id": "DOMINANCE-018",
+      "name": "objective threshold1000 retains standard ratio",
+      "overrides": {
+        "conquest_victory": false,
+        "objectives_required_for_victory": 1000
+      },
+      "expected": true
+    },
+    {
+      "id": "DOMINANCE-019",
+      "name": "objective threshold1001 requires double",
+      "overrides": {
+        "conquest_victory": false,
+        "objectives_required_for_victory": 1001
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-020",
+      "name": "difficulty3 not subject to double-score branch",
+      "overrides": {
+        "conquest_victory": false,
+        "difficulty": 3
+      },
+      "expected": true
+    },
+    {
+      "id": "DOMINANCE-021",
+      "name": "base-count floor4 equality fails early intense",
+      "overrides": {
+        "intense_rivalry": true,
+        "current_turn": 101,
+        "actor_base_count": 4
+      },
+      "expected": false
+    },
+    {
+      "id": "DOMINANCE-022",
+      "name": "synthetic zero-score equality qualifies",
+      "overrides": {
+        "leader_score": 0,
+        "runner_up_score": 0
+      },
+      "expected": true
+    }
+  ],
+  "integrations": [
+    {
+      "id": "DOMINANCE-REAL-001",
+      "overrides": {},
+      "expected_dominance": true,
+      "expected": {
+        "human_nutrient_cost_per_step": 10,
+        "ai_nutrient_cost_per_step": 5,
+        "war_integrity_blemishes": 2
+      }
+    },
+    {
+      "id": "DOMINANCE-REAL-002",
+      "overrides": {
+        "current_turn": 250
+      },
+      "expected_dominance": false,
+      "expected": {
+        "human_nutrient_cost_per_step": 10,
+        "ai_nutrient_cost_per_step": 6,
+        "war_integrity_blemishes": 1
+      }
+    },
+    {
+      "id": "DOMINANCE-REAL-003",
+      "overrides": {
+        "leader_score": 149
+      },
+      "expected_dominance": false,
+      "expected": {
+        "human_nutrient_cost_per_step": 10,
+        "ai_nutrient_cost_per_step": 6,
+        "war_integrity_blemishes": 1
+      }
+    }
+  ]
+}

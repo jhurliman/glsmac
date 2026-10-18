@@ -6,6 +6,7 @@
 #include <array>
 #include <optional>
 #include "SmacSiteRatingCache.h"
+#include "SmacTerritorySummary.h"
 
 namespace game::backend::map {
 
@@ -22,17 +23,23 @@ public:
 		std::vector<uint8_t> coastal;
 		bool operator==(const TerrainPostpass& other) const {return fertility==other.fertility && coastal==other.coastal;}
 	};
-	static constexpr size_t MAX_WIRE_BYTES = 16 + 4 * (512 * 256 / 2) + 2 * 128 * 4;
+	static constexpr size_t MAX_WIRE_BYTES = 16 + 4 * (512 * 256 / 2) + 2 * 128 * 4 + smac_territory::TerritorySummary::WIRE_BYTES;
 	static GlsmacTerritoryTopology Build( int32_t width, int32_t height, bool wrap, const std::vector< bool >& sea, RegionValues initial_areas = {} );
 	GlsmacTerritoryTopology Rebuild(const std::vector<bool>& sea) const;
 	GlsmacTerritoryTopology WithTerrainPostpass(const std::vector<bool>& sea,const std::vector<bool>& fertile) const;
 	GlsmacTerritoryTopology WithSiteRatings(smac_site::RatingCache sites) const;
 	GlsmacTerritoryTopology WithLandmarkDetails(std::vector<uint8_t> details) const;
+	GlsmacTerritoryTopology WithTerritorySummary(smac_territory::TerritorySummary summary) const;
+	const std::optional<smac_territory::TerritorySummary>& Summary() const {return m_summary;}
 	int32_t Width() const { return m_width; }
 	int32_t Height() const { return m_height; }
 	bool Wraps() const { return m_wrap; }
 	const std::vector< uint8_t >& Regions() const { return m_regions; }
 	const std::optional<RegionValues>& Areas() const {return m_areas;}
+	// Region-builder result over retained stored areas1..62 (including stale
+	// unused entries). This read does not update simulation status or rebuild.
+	bool LandRegionConcentrated() const;
+	static bool LandRegionConcentrated(const RegionValues& stored_areas);
 	const std::optional<TerrainPostpass>& Postpass() const {return m_postpass;}
 	const std::optional<smac_site::RatingCache>& SiteRatings() const {return m_sites;}
 	const std::optional<std::vector<uint8_t>>& LandmarkDetails() const {return m_details;}
@@ -56,6 +63,9 @@ private:
 	// Full raw shared byte, including suppression. Absent in V1/V2/V3 saves;
 	// neither membership flags nor a registry can recover missing history.
 	std::optional<std::vector<uint8_t>> m_details;
+	// Absent before V5: stale producer history and Search-objective authority
+	// cannot be reconstructed from a restored current map.
+	std::optional<smac_territory::TerritorySummary> m_summary;
 	static GlsmacTerritoryTopology BuildWithAreas(int32_t width,int32_t height,bool wrap,const std::vector<bool>& sea,RegionValues areas);
 };
 

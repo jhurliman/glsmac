@@ -5,6 +5,7 @@
 #include "SmacEconomyState.h"
 #include "SmacRankOrder.h"
 #include "SmacHostileState.h"
+#include "SmacRegionalMilitaryState.h"
 #include "game/backend/settings/SmacCombatRules.h"
 #include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/SmacMovementHistory.h"
@@ -85,6 +86,24 @@ struct SmacSatelliteCounts {
 	bool operator==( const SmacSatelliteCounts& other ) const noexcept { return resources == other.resources; }
 };
 
+using SmacBaseTotals=std::array<int32_t,8>;
+// Staged immediate action delta; no live recount. Preserve unavailable legacy
+// history. Original signed overflow outside ordinary counts is unmeasured.
+std::optional<SmacBaseTotals> AdjustSmacBaseTotal(std::optional<SmacBaseTotals> saved,int32_t owner,int32_t delta);
+
+// Original retained signed words, including native slot0. Query-time pressure
+// is derived; it is not a saved latch. A history turn is not a faction birth.
+struct SmacVictoryHistory {
+	std::array<int32_t,8> economic_deadlines{},economic_paid_costs{},last_base_expansion_or_advice_turn{};
+	int32_t voice_host=-1;
+	void Initialize(int32_t owner,int32_t turn);
+	void RecordBaseExpansion(int32_t owner,int32_t turn);
+	bool operator==(const SmacVictoryHistory& other) const noexcept {
+		return economic_deadlines==other.economic_deadlines && economic_paid_costs==other.economic_paid_costs
+			&& last_base_expansion_or_advice_turn==other.last_base_expansion_or_advice_turn && voice_host==other.voice_host;
+	}
+};
+
 struct SmacSimulationState {
 	// Supported-campaign admission, not inferred project ownership. Future
 	// project consumers must retire this capability before activating effects.
@@ -112,6 +131,19 @@ struct SmacSimulationState {
 	// V11-V16 did not record capability history. Migration retains absence;
 	// neither loading nor a read-only query reconstructs it from ownership.
 	std::optional<SmacCapabilityState> capabilities;
+	// Absent before V18. Loading cannot reconstruct stale owner-summary counts.
+	std::optional<SmacRegionalMilitaryState> regional_military;
+	// Absent in V11-V20. Migration cannot invent economic attempts or parity of
+	// history words from the current map; subsequent Base events preserve absence.
+	std::optional<SmacVictoryHistory> victory_history;
+	// Secondary native status bit0x100, independent of Standard Rules and
+	// regional flags. New-world initialization clears it; restore retains it.
+	// Absent before V22: current terrain cannot recover its saved lifetime.
+	std::optional<bool> retained_land_region_concentration;
+	// All eight native signed totals. Separate from population and byte regional
+	// counts: action deltas preserve stale offsets, summary refreshes one owner.
+	// V11-V22 migration retains absence rather than recounting current Bases.
+	std::optional<SmacBaseTotals> retained_base_totals;
 	SmacHostileState hostility;
 	// Standard campaign behavior; custom rule selection must retain this value.
 	bool do_or_die = false;

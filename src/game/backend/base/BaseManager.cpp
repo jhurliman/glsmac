@@ -18,6 +18,7 @@
 #include "gse/callable/Native.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Array.h"
+#include "gse/value/Null.h"
 #include <memory>
 #include <algorithm>
 #include <set>
@@ -291,9 +292,17 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 	m_game->RequireSmacGameplayActive();
 	faction::SmacEconomyState* economy=nullptr;
 	std::optional<faction::SmacEconomyState::RegionalBaseCounts> regional;
+	std::optional<faction::SmacBaseTotals> totals;
+	std::optional<faction::SmacVictoryHistory> victory;
 	if(base->HasSmacResourceContext()) {
 		regional=m_game->PrepareCanonicalRegionalBaseDelta(*base,1,m_game->GetMap()->GetTerritoryTopology());
+		totals=faction::AdjustSmacBaseTotal(m_game->m_simulation->value.retained_base_totals,base->m_resource_context->owner_simulation_id,1);
 		economy=&m_game->m_simulation->value.economy.at(base->m_resource_context->owner_simulation_id);
+		victory=m_game->m_simulation->value.victory_history;
+		if(victory) {
+			if(m_game->GetTurnId()>INT32_MAX) {THROW("Founding history turn exceeds signed32");}
+			victory->RecordBaseExpansion(base->m_resource_context->owner_simulation_id,static_cast<int32_t>(m_game->GetTurnId()));
+		}
 	}
 	std::optional<map::GlsmacTerritoryTopology> topology;
 	auto territory = m_game->PrepareBaseTerritory( base, nullptr, true, &topology );
@@ -302,7 +311,8 @@ void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 	PrepareBaseName( base );
 	RegisterBase( base );
 	m_game->CommitBaseTerritory( territory, topology );
-	if(economy) {economy->regional_base_counts=regional;}
+	if(economy) {economy->regional_base_counts=regional;m_game->m_simulation->value.retained_base_totals=totals;}
+	if(victory) {m_game->m_simulation->value.victory_history=std::move(victory);}
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
@@ -389,8 +399,10 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	auto* base = it->second;
 	faction::SmacEconomyState* economy=nullptr;
 	std::optional<faction::SmacEconomyState::RegionalBaseCounts> regional;
+	std::optional<faction::SmacBaseTotals> totals;
 	if(base->HasSmacResourceContext()) {
 		regional=m_game->PrepareCanonicalRegionalBaseDelta(*base,-1,m_game->GetMap()->GetTerritoryTopology());
+		totals=faction::AdjustSmacBaseTotal(m_game->m_simulation->value.retained_base_totals,base->m_resource_context->owner_simulation_id,-1);
 		economy=&m_game->m_simulation->value.economy.at(base->m_resource_context->owner_simulation_id);
 	}
 	const auto ordered = std::find( m_base_order.begin(), m_base_order.end(), base_id );
@@ -419,7 +431,7 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 	m_bases.erase( it );
 	m_base_order.erase( ordered );
 	m_game->CommitBaseTerritory( territory, topology );
-	if(economy) {economy->regional_base_counts=regional;}
+	if(economy) {economy->regional_base_counts=regional;m_game->m_simulation->value.retained_base_totals=totals;}
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
@@ -705,6 +717,8 @@ WRAPIMPL_BEGIN( BaseManager )
 				m_game->CheckGameplayRW( GSE_CALL );
 
 				N_EXPECT_ARGS_MIN_MAX( 3, 4 );
+				bool rollback_record=false;
+				if(arguments.size()==4) {N_GETVALUE(capture,3,Bool);rollback_record=capture;}
 				N_GETVALUE_UNWRAP( owner, 0, Player );
 				N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
 
@@ -737,6 +751,10 @@ WRAPIMPL_BEGIN( BaseManager )
 				}
 
 				const auto resource_context = starting_context ? std::optional< SmacBaseResourceContext >( PrepareStartingResourceContext( owner->GetSlot() ) ) : std::nullopt;
+				std::optional<int32_t> previous_expansion;
+				if(resource_context && m_game->m_simulation->value.victory_history) {
+					previous_expansion=m_game->m_simulation->value.victory_history->last_base_expansion_or_advice_turn.at(resource_context->owner_simulation_id);
+				}
 				auto* base = new Base(
 					m_game,
 					Base::GetNextId(),
@@ -750,9 +768,38 @@ WRAPIMPL_BEGIN( BaseManager )
 
 				SpawnBase( GSE_CALL, base );
 
-				return base->Wrap( GSE_CALL );
+                auto* wrapped=base->Wrap(GSE_CALL);
+                if(!rollback_record) {return wrapped;}
+                return VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+                    {"base",wrapped},
+                    {"expansion_history",previous_expansion ? static_cast<gse::Value*>(VALUE(gse::value::Int,,*previous_expansion)) : VALUE(gse::value::Null)}
+                }));
 			} )
 		},
+        {
+            "rollback_spawn_base",
+            NATIVE_CALL(this) {
+                m_game->CheckGameplayRW(GSE_CALL);
+                N_EXPECT_ARGS(2);N_GETVALUE_UNWRAP(base,0,Base);
+                std::optional<int32_t> previous;
+                if(arguments[1]->type==gse::VT_INT) {
+                    const auto value=static_cast<gse::value::Int*>(arguments[1])->value;
+                    if(value<INT32_MIN || value>INT32_MAX) {GSE_ERROR(gse::EC.GAME_ERROR,"Invalid spawn rollback history");}
+                    previous=static_cast<int32_t>(value);
+                } else if(arguments[1]->type!=gse::VT_NULL) {GSE_ERROR(gse::EC.GAME_ERROR,"Invalid spawn rollback history type");}
+                const bool canonical=base->HasSmacResourceContext();
+                auto history=m_game->m_simulation ? m_game->m_simulation->value.victory_history : std::optional<faction::SmacVictoryHistory>{};
+                if(canonical && history) {
+                    if(!previous) {GSE_ERROR(gse::EC.GAME_ERROR,"Missing canonical spawn rollback history");}
+                    history->last_base_expansion_or_advice_turn.at(base->GetSmacResourceContext().owner_simulation_id)=*previous;
+                } else if(previous) {GSE_ERROR(gse::EC.GAME_ERROR,"Unexpected spawn rollback history");}
+                DespawnBase(GSE_CALL,base->m_id);
+                // Ordinary despawn retains expansion history. Only rollback of
+                // the event that made the write restores its prior owner word.
+                if(canonical && history) {m_game->m_simulation->value.victory_history=std::move(history);}
+                return VALUE(gse::value::Undefined);
+            })
+        },
 		{
 			"despawn_base",
 			NATIVE_CALL( this ) {

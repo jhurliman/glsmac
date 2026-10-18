@@ -34,6 +34,8 @@ struct BaseManager::PreparedSmacCapture::Data {
 	SmacGameplayRandomState random;
 	faction::SmacHostileState history;
 	faction::SmacEconomyState actor_economy,defender_economy;
+	std::optional<faction::SmacVictoryHistory> victory;
+	std::optional<faction::SmacBaseTotals> totals;
 	SmacBaseResourceContext context{};
 	Base::facilities_t facilities;
 	std::vector<std::pair<Base*,Base::facilities_t>> facility_changes;
@@ -104,6 +106,12 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	if(!defender_economy.population_aggregate || *defender_economy.population_aggregate<0 || *defender_economy.population_aggregate==INT32_MAX
 		|| defender_economy.credits<0 || simulation.economy.at(new_owner).credits<0) {THROW("Capture needs the defender's saved population summary and ordinary treasuries");}
 	auto data=std::make_unique<PreparedSmacCapture::Data>(simulation.gameplay_random,simulation.hostility,simulation.economy.at(new_owner),defender_economy);
+	data->totals=faction::AdjustSmacBaseTotal(faction::AdjustSmacBaseTotal(simulation.retained_base_totals,old_owner,-1),new_owner,1);
+	data->victory=simulation.victory_history;
+	if(data->victory) {
+		if(m_game->GetTurnId()>INT32_MAX) {THROW("Capture history turn exceeds signed32");}
+		data->victory->RecordBaseExpansion(new_owner,static_cast<int32_t>(m_game->GetTurnId()));
+	}
 	data->actor=actor;data->base=captured;data->source=source;data->owner=actor->m_owner;data->old_owner=old_owner;data->new_owner=new_owner;
 	data->population=captured->m_pops.size()-1;
 	const int64_t numerator=int64_t(defender_economy.credits)*static_cast<int64_t>(captured->m_pops.size());
@@ -210,6 +218,8 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	auto preview_topology=data->topology;
 	auto preview_actor_economy=data->actor_economy,preview_defender_economy=data->defender_economy;
 	auto preview_history=data->history;
+	auto preview_victory=data->victory;
+	auto preview_totals=data->totals;
 	std::map<size_t,unit::Unit*> preview_source,preview_destination{{actor->m_id,actor}};
 	auto& query_simulation=m_game->m_simulation->value;
 	auto* next_faction=data->owner->GetPlayer()->GetFaction();
@@ -218,6 +228,8 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 		if(!preview_active) {return;}preview_active=false;
 		m_game->CommitBaseTerritory(preview_knowledge,preview_topology);
 		query_simulation.hostility.owners.swap(preview_history.owners);
+		query_simulation.victory_history.swap(preview_victory);
+		query_simulation.retained_base_totals.swap(preview_totals);
 		std::swap(query_simulation.economy.at(new_owner),preview_actor_economy);std::swap(query_simulation.economy.at(old_owner),preview_defender_economy);
 		actor->CommitConventionalMove(actor->Conventional(),source);source->units.swap(preview_source);destination->units.swap(preview_destination);
 		for(auto& entry:data->units) {std::swap(std::get<unit::ConventionalUnitState>(entry.first->m_state),entry.second);}
@@ -230,6 +242,8 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	for(auto& entry:data->units) {std::swap(std::get<unit::ConventionalUnitState>(entry.first->m_state),entry.second);}
 	actor->CommitConventionalMove(actor->Conventional(),destination);source->units.swap(preview_source);destination->units.swap(preview_destination);
 	query_simulation.hostility.owners.swap(preview_history.owners);
+	query_simulation.victory_history.swap(preview_victory);
+	query_simulation.retained_base_totals.swap(preview_totals);
 	std::swap(query_simulation.economy.at(new_owner),preview_actor_economy);std::swap(query_simulation.economy.at(old_owner),preview_defender_economy);
 	m_game->CommitBaseTerritory(preview_knowledge);
 	const auto calculate=[&] {
@@ -247,6 +261,10 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 			data->faction_units.emplace(um->PrepareFactionUnitsForQuery(previous_owner,plan.site,plan.units,*plan.territory,nullptr,&*leaving));
 			data->faction_units->Refresh(actor);
 			query_simulation.economy.at(old_owner)=plan.economy;
+			if(query_simulation.retained_base_totals) {query_simulation.retained_base_totals->at(old_owner)=0;}
+			if(query_simulation.victory_history && plan.initialization_history_turn) {
+				query_simulation.victory_history->last_base_expansion_or_advice_turn[old_owner]=*plan.initialization_history_turn;
+			}
 			auto history=plan.hostility;query_simulation.hostility.owners.swap(history.owners);
 			auto search_topology=plan.topology;m_game->CommitBaseTerritoryTopology(search_topology);
 			data->faction_units->Query([&] {
@@ -333,6 +351,8 @@ void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 	data.actor_economy.design_counts=simulation.economy.at(data.new_owner).design_counts;
 	data.defender_economy.design_counts=simulation.economy.at(data.old_owner).design_counts;
 	simulation.economy.at(data.new_owner)=data.actor_economy;simulation.economy.at(data.old_owner)=data.defender_economy;
+	simulation.victory_history=data.victory;
+	simulation.retained_base_totals=data.totals;
 	if(data.disposition) {CommitSmacFactionDisposition(*data.disposition);}
 	workers.Commit();data.base->m_smac_upkeep_cache.swap(data.cache);workers.Finish();
 	if(data.faction_units) {data.faction_units->Notify(GSE_CALL);}

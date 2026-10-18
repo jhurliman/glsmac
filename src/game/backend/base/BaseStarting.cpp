@@ -164,11 +164,16 @@ Base* BaseManager::SpawnStartingSmacBase( GSE_CALLABLE, slot::Slot* owner, map::
     auto* result_base=candidate.get();
     const auto regional=m_game->PrepareCanonicalRegionalBaseDelta(*result_base,1,knowledge.topology);
     auto& economy=m_game->m_simulation->value.economy.at(context.owner_simulation_id);
+	const auto totals=faction::AdjustSmacBaseTotal(m_game->m_simulation->value.retained_base_totals,context.owner_simulation_id,1);
+	auto victory=m_game->m_simulation->value.victory_history;
+	if(victory) {victory->RecordBaseExpansion(context.owner_simulation_id,0);}
     RegisterBase(result_base); // prepares every allocating registry/update copy
     candidate.release();
     result_base->CommitStartupPlacement();
     m_game->CommitStartingBaseKnowledge(knowledge);
     economy.regional_base_counts=regional;
+	m_game->m_simulation->value.retained_base_totals=totals;
+	if(victory) {m_game->m_simulation->value.victory_history=std::move(victory);}
     m_game->GetState()->TriggerObject(this,"base_spawn",ARGS_F(result_base) {
         {"base",result_base->Wrap(GSE_CALL)},
     }; });

@@ -53,6 +53,7 @@
 #include "gse/value/Int.h"
 #include "gse/value/Float.h"
 #include "gse/value/Bool.h"
+#include "gse/value/Null.h"
 #include "gse/value/String.h"
 #include "gse/context/GlobalContext.h"
 #include "gc/Space.h"
@@ -199,6 +200,8 @@ public:
             GT_ASSERT(source.Encode()==bytes && map->GetWidth()==80 && map->GetHeight()==80 && map->m_territory_topology,"Import lost opaque provenance geometry or topology");
             using Counts=std::array<size_t,4>;
             size_t land=0;Counts standard{},automatic{};
+            std::array<size_t,3> sites{},automatic_sites{};
+            const auto restored_policy=map::GlsmacResourceMapPolicy::Deserialize(policy.Serialize().ToString());
             const auto with_automatic=map::GlsmacResourceMapPolicy::InstalledPlanetV1(source,true);
             for(size_t y=0;y<80;++y) {for(size_t x=y&1;x<80;x+=2) {
                 auto* tile=map->GetTile(x,y);const auto& raw=source.At(x,y);
@@ -206,11 +209,19 @@ public:
                     && tile->rockiness==1+(raw.bytes[5]>>6),"Source terrain interpretation changed");
                 land+=!tile->is_water_tile;++standard.at(static_cast<size_t>(policy.Bonus(*tile)));
                 ++automatic.at(static_cast<size_t>(with_automatic.Bonus(*tile)));
+                const auto signal=policy.SiteSignal(*tile);
+                ++sites.at(signal);++automatic_sites.at(with_automatic.SiteSignal(*tile));
+                GT_ASSERT(restored_policy.SiteSignal(*tile)==signal,"Saved source policy changed site classes");
+                const auto visible_features=tile->features;tile->features^=map::tile::FEATURE_UNITY_POD;
+                const auto unchanged=policy.SiteSignal(*tile)==signal;tile->features=visible_features;
+                GT_ASSERT(unchanged,"Installed site query used a display marker instead of source authority");
                 tile->Update();GT_ASSERT(tile->is_water_tile==((raw.Climate()>>5)<3),"Display update replaced source land/sea authority");
             }}
             if(!installed_asset.empty()) {
                 GT_ASSERT(source.OceanCoverageCategory()==1 && land==1374 && standard==Counts({3111,34,28,27})
                     && automatic==Counts({3028,87,44,41}),"Installed source differs from original full-loader resource receipt");
+                GT_ASSERT((sites==std::array<size_t,3>{3031,109,60}) && (automatic_sites==std::array<size_t,3>{3200,0,0}),
+                    "Installed source differs from original full-loader site query receipt");
             }
             GT_ASSERT(map::GlsmacResourceMapPolicy::Deserialize(policy.Serialize().ToString())==policy,"Saved native source policy lost original bytes or option");
             GT_ASSERT(m_game.GetRandom()->GetStateString()==random && m_game.m_simulation->value.gameplay_random==gameplay,"Import consumed a gameplay or map RNG stream");
@@ -4234,6 +4245,10 @@ public:
 				++callbacks;const auto state=base->GetSmacResourceContext();
 				require(m_game.GetTurnId()==0 && !m_game.m_simulation->value.social.Find(state.owner_simulation_id)->retained,"first Base refreshed social before callback");
 				require(base->GetSmacAllocation().has_value() && base->GetTile()->base==base && m_game.GetMap()->GetSmacWorkerKnowledge().has_value(),"callback observed partial Base publication");
+				require(m_game.m_simulation->value.victory_history && m_game.m_simulation->value.victory_history->last_base_expansion_or_advice_turn[state.owner_simulation_id]==0,
+					"starting Base callback observed stale expansion history");
+                require(m_game.m_simulation->value.retained_base_totals && m_game.m_simulation->value.retained_base_totals->at(state.owner_simulation_id)==1,
+                    "starting Base callback observed missing or doubled total");
 				const auto& cache=base->GetSmacUpkeepCache();
 				require(cache && cache->calculation.nutrients.intake==(scenario==1 ? 4 : 2)
 					&& cache->calculation.nutrients.demand==2 && cache->calculation.nutrients.surplus==(scenario==1 ? 2 : 0)
@@ -4257,6 +4272,7 @@ public:
 				require(rejected && Base::GetNextId()==id && bm->GetBases().empty() && !center->base && !map->GetSmacWorkerKnowledge() && m_frontend_requests.size()==before,"failed preparation published startup state");
 			}
 			const auto spawn=[&](slot::Slot* slot,map::tile::Tile* tile) {
+				m_game.m_simulation->value.victory_history->last_base_expansion_or_advice_turn[m_game.RequireSmacProductionOwner(slot).simulation_id]=777;
 				value::array_elements_t items;for(const auto& role:roles){items.push_back(VALUE(value::String,,role));}
 				auto* input=VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{{"worker",VALUE(value::String,,"WORKER")},{"specialists",VALUE(value::Array,,items)}}));
 				auto* wrapper=static_cast<value::Object*>(bm->Wrap(GSE_CALL));
@@ -4366,6 +4382,35 @@ public:
 		size_t produced = 0;
 		const auto create = [ & ]( GSE_CALLABLE ) {
 			auto* bm = m_game.GetBM(); auto* wrapper = static_cast< value::Object* >( bm->Wrap( GSE_CALL ) );
+            const auto original_history=m_game.m_simulation->value.victory_history;
+            const auto simulation=m_game.m_simulation->value.FindSlot(0)->simulation_id;
+            auto* handler=static_cast<value::Object*>(RunScript(GSE_CALL,"./GLSMAC_data/default/game/event/spawn_base"));
+            for(const bool available:{false,true}) {
+                m_game.m_simulation->value.victory_history=original_history;
+                if(available) {m_game.m_simulation->value.victory_history->last_base_expansion_or_advice_turn.at(simulation)=73;}
+                else {m_game.m_simulation->value.victory_history.reset();}
+                const auto before=m_game.m_simulation->value.victory_history;
+                auto* data=VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{
+                    {"owner",m_state->m_slots->GetSlot(0).GetPlayer()->Wrap(GSE_CALL)},
+                    {"tile",m_game.GetMap()->GetTile(0,2)->Wrap(GSE_CALL)},
+                    {"facilities",VALUE(value::Array,,{})},
+                    {"smac_starting_resource_context",VALUE(value::Bool,,true)}
+                }));
+                auto* event=VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{
+                    {"game",m_game.Wrap(GSE_CALL)},{"data",data},{"caller",VALUE(value::Int,,0)}
+                }));
+                auto* applied=static_cast<value::Object*>(static_cast<value::Callable*>(handler->Get("apply"))->Run(GSE_CALL,{event}));
+                event->Set("applied",applied,GSE_CALL);
+                if(available && m_game.m_simulation->value.victory_history->last_base_expansion_or_advice_turn.at(simulation)!=0) {throw std::runtime_error("spawn event did not publish expansion history");}
+                if(available) {
+                    bool rejected=false;
+                    try {static_cast<value::Callable*>(wrapper->Get("rollback_spawn_base"))->Run(GSE_CALL,{applied->Get("base"),VALUE(value::Null)});}catch(const std::exception&) {rejected=true;}
+                    if(!rejected || bm->GetBases().empty() || m_game.m_simulation->value.victory_history->last_base_expansion_or_advice_turn.at(simulation)!=0) {throw std::runtime_error("invalid rollback changed a published Base or history");}
+                }
+                static_cast<value::Callable*>(handler->Get("rollback"))->Run(GSE_CALL,{event});
+                if(!bm->GetBases().empty() || !(m_game.m_simulation->value.victory_history==before)) {throw std::runtime_error("actual spawn event rollback retained rejected history or invented absent history");}
+            }
+            m_game.m_simulation->value.victory_history=original_history;
 			const auto spawn = [ & ]( size_t slot, size_t x ) {
 				auto* info = VALUEEXT( value::Object, GSE_CALL, ( value::object_properties_t{ { "smac_starting_resource_context", VALUE( value::Bool,, true ) } } ) );
 				return static_cast< value::Callable* >( wrapper->Get( "spawn_base" ) )->Run( GSE_CALL, {

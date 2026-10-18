@@ -669,8 +669,11 @@ private:
 	};
 	StartingBaseKnowledge PrepareStartingBaseKnowledge( const base::Base& base ) const;
 	void CommitStartingBaseKnowledge( StartingBaseKnowledge& prepared ) noexcept;
-	std::optional< map::SmacWorkerKnowledge > PrepareBaseTerritory( const base::Base* added, const base::Base* removed, bool attached ) const;
+	std::optional< map::SmacWorkerKnowledge > PrepareBaseTerritory( const base::Base* added, const base::Base* removed, bool attached,
+		std::optional<map::GlsmacTerritoryTopology>* prepared_topology ) const;
 	void CommitBaseTerritory( std::optional< map::SmacWorkerKnowledge >& prepared ) noexcept;
+	void CommitBaseTerritory( std::optional< map::SmacWorkerKnowledge >& prepared,std::optional<map::GlsmacTerritoryTopology>& topology ) noexcept;
+	void CommitBaseTerritoryTopology(std::optional<map::GlsmacTerritoryTopology>& topology) noexcept;
 	bool HasSmacTechnologyReveal( int32_t simulation_id ) const;
 	std::optional< map::SmacWorkerKnowledge > PrepareSmacTechnologyReveal( int32_t simulation_id ) const;
 	void CommitSmacTechnologyReveal( std::optional< map::SmacWorkerKnowledge > prepared ) noexcept;

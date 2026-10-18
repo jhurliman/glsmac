@@ -62,6 +62,43 @@ base::Base* Found(GSE_CALLABLE,Game* game,size_t id,size_t slot,int32_t simulati
 }
 
 void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
+	task->AddTest("SMAC live site cache joins founding removal rollback and actual Start",GT(){
+		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved,retained;
+		const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();Land(game);auto* map=game->GetMap();
+			for(size_t y=0;y<map->GetHeight();++y) {for(size_t x=y&1;x<map->GetWidth();x+=2) {
+				auto* square=map->GetTile(x,y);square->moisture=map::tile::MOISTURE_RAINY;square->rockiness=map::tile::ROCKINESS_FLAT;
+				square->bonus=map::tile::BONUS_NONE;square->features=0;square->terraforming=0;
+			}}
+			game->PublishSmacWorkerKnowledge(GSE_CALL,Supplied(game));
+			std::string packed(map->GetWidth()*map->GetHeight()/2,char(13));packed[Index(128,96,48)]=29;fixture.SiteRatings(packed);
+			// This distant cached tile must never enter the uncached decoder.
+			map->GetTile(80,50)->features=map::tile::FEATURE_VOLCANO;
+			const auto random=fixture.GameplayRandom();const auto jsf=game->GetRandom()->GetStateString();
+			Found(GSE_CALL,game,901,0,1,16,16);Found(GSE_CALL,game,800,1,2,24,16);
+			const auto& sites=*map->GetTerritoryTopology()->SiteRatings();
+			GT_ASSERT(sites.Excluded({{16,16}}) && sites.Rating({{16,16}})==13 && sites.Rating({{20,16}})==1
+				&& sites.Rating({{80,50}})==13 && sites.Excluded({{96,48}}),"live founding refreshed stale ratings or missed the radius/cache producer");
+			map->GetTile(52,16)->features=map::tile::FEATURE_VOLCANO;
+			const auto before=fixture.Snapshot();const auto id=base::Base::GetNextId();const auto requests=fixture.QueuedFrontendRequests().size();
+			GT_ASSERT(Rejects([&]{Found(GSE_CALL,game,id,0,1,48,16);}),"missing uncached landmark detail was manufactured");
+			GT_ASSERT(fixture.Snapshot()==before && base::Base::GetNextId()==id && !map->GetTile(48,16)->base
+				&& fixture.QueuedFrontendRequests().size()==requests,"failed cache preparation published Base IDs tiles queues or history");
+			map->GetTile(52,16)->features=0;game->GetBM()->DespawnBase(GSE_CALL,800);
+			const auto& removed=*map->GetTerritoryTopology()->SiteRatings();
+			GT_ASSERT(!removed.Excluded({{24,16}}) && removed.Rating({{24,16}})==1 && removed.Excluded({{16,16}})
+				&& removed.Excluded({{96,48}}) && removed.Rating({{96,48}})==13,"live removal did not repair survivors or preserve a stray exclusion");
+			GT_ASSERT(fixture.GameplayRandom()==random && game->GetRandom()->GetStateString()==jsf,"site history consumed either gameplay stream");
+			retained=map->GetTerritoryTopology()->Serialize();saved=fixture.Snapshot();GT_OK();
+		});if(!first.empty()) {return first;}
+		ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
+		return restored.Run([&](GSE_CALLABLE)->std::string {
+			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();
+			GT_ASSERT(game->GetMap()->GetTerritoryTopology()->Serialize()==retained,"actual Start reconstructed stale cache history");
+			game->GetBM()->DespawnBase(GSE_CALL,901);
+			GT_ASSERT(game->GetMap()->GetTerritoryTopology()->SiteRatings()->Excluded({{96,48}}),"restored removal globally cleared exclusions");GT_OK();
+		});
+	});
 	task->AddTest("SMAC geography matches 11 original coastal and retained region area compositions",GT(){
 		for(const auto& item:coastal_geography_fixture::cases) {
 			const auto count=size_t(item.width)*item.height/2;std::vector<bool> sea(count);

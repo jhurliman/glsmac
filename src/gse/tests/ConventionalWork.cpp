@@ -229,12 +229,16 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
         for(size_t i=0;i<actions.size();++i){
             ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::Source,"GAIANS");
             const auto error=fixture.Run([&](GSE_CALLABLE)->std::string{
-                auto* actor=Populate(GSE_CALL,fixture);Event(GSE_CALL,fixture,actor,actions[i]);
+                auto* actor=Populate(GSE_CALL,fixture);auto* map=fixture.Game()->GetMap();
+                GT_ASSERT(map->GetTerritoryTopology()->SiteRatings(),"ordinary work fixture lacks initialized site history");
+                const std::string ratings(map->GetWidth()*map->GetHeight()/2,char(13));fixture.SiteRatings(ratings);
+                Event(GSE_CALL,fixture,actor,actions[i]);
                 for(int step=1;step<=turns[i];++step){
                     if(step>1){fixture.Game()->GetUM()->ResetConventionalSpent(GSE_CALL,actor);}
                     Event(GSE_CALL,fixture,actor,Order::None,true);
                     GT_ASSERT(actor->Conventional().spent==3&&actor->Conventional().work_progress==(step==turns[i]?0:step*2),"active source time did not control work threshold");
                     GT_ASSERT(actor->GetTile()->terraforming==(step==turns[i]?bits[i]:0),"terrain appeared at the wrong work boundary");
+                    GT_ASSERT(map->GetTerritoryTopology()->SiteRatings()->Serialize()==ratings,"ordinary Former completion invalidated or refreshed a nonzero site cache");
                 }
                 GT_ASSERT(actor->Conventional().work_order==Order::None,"completion left an active order");GT_OK();
             });if(!error.empty()){return error;}

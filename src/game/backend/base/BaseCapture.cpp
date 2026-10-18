@@ -36,6 +36,7 @@ struct BaseManager::PreparedSmacCapture::Data {
 	SmacBaseAllocationState allocation{};
 	std::optional<SmacBaseUpkeepCache> cache;
 	std::optional<map::SmacWorkerKnowledge> knowledge;
+	std::optional<map::GlsmacTerritoryTopology> topology;
 	std::vector<std::pair<unit::Unit*,unit::ConventionalUnitState>> units;
 	std::vector<Base*> refresh;
 };
@@ -148,6 +149,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	for(const auto& pair:{std::pair<int32_t,int32_t>{old_owner,new_owner},{new_owner,old_owner}}) {data->history.owners.at(pair.first).directions.at(pair.second).primary|=0x8000a118u;}
 	auto& counters=data->history.owners.at(new_owner).directions.at(old_owner);const auto encounters=static_cast<uint32_t>(captured->m_pops.size())*2u;counters.paired_a+=encounters;counters.paired_b+=encounters;
 	data->knowledge=m_game->GetMap()->GetSmacWorkerKnowledge();
+	data->topology=m_game->GetMap()->GetTerritoryTopology();
 	if(!data->knowledge) {THROW("Capture needs saved movement sight and territory");}
 	// Queries below contain no script callbacks or yields. The owning Space
 	// excludes other readers/collection. Install only a private future query
@@ -156,11 +158,12 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	auto* previous_owner=captured->m_owner;auto* previous_faction=captured->m_faction;
 	std::optional<SmacBaseResourceContext> preview_context=data->context;
 	auto preview_facilities=data->facilities;auto preview_production=data->production;auto preview_knowledge=data->knowledge;
+	auto preview_topology=data->topology;
 	auto* next_faction=data->owner->GetPlayer()->GetFaction();
 	bool preview_active=false;
 	util::FinallyGuard restore([&]{
 		if(!preview_active) {return;}preview_active=false;
-		m_game->CommitBaseTerritory(preview_knowledge);
+		m_game->CommitBaseTerritory(preview_knowledge,preview_topology);
 		for(auto& entry:data->units) {std::swap(std::get<unit::ConventionalUnitState>(entry.first->m_state),entry.second);}
 		captured->m_resource_context.swap(preview_context);captured->m_facilities.swap(preview_facilities);captured->m_production.swap(preview_production);
 		captured->m_owner=previous_owner;captured->m_faction=previous_faction;
@@ -171,10 +174,12 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	for(auto& entry:data->units) {std::swap(std::get<unit::ConventionalUnitState>(entry.first->m_state),entry.second);}
 	m_game->CommitBaseTerritory(preview_knowledge);
 	auto sight=m_game->PrepareConventionalSight(actor->m_id,new_owner,destination,source);m_game->CommitBaseTerritory(sight);
-	auto territory=m_game->PrepareBaseTerritory(nullptr,nullptr,false);m_game->CommitBaseTerritory(territory);
+	std::optional<map::GlsmacTerritoryTopology> topology;
+	auto territory=m_game->PrepareBaseTerritory(nullptr,nullptr,false,&topology);m_game->CommitBaseTerritory(territory,topology);
 	data->allocation=captured->CalculateSmacWorkers(*captured->m_allocation,data->context,SmacBaseResourcePhase::Ordinary,1,nullptr,&*data->production);
 	data->cache=SmacBaseUpkeepCache{captured->CalculateSmacResourceCalculation(SmacBaseResourcePhase::Ordinary,&data->allocation,1),m_game->CalculateCanonicalUnitSupport(*captured,1,nullptr)};
 	data->knowledge=m_game->GetMap()->GetSmacWorkerKnowledge();
+	data->topology=m_game->GetMap()->GetTerritoryTopology();
 	// Restore while Data is still owned locally; the guard must not reference a
 	// moved-from unique_ptr when return-value construction transfers the plan.
 	restore.f_after();
@@ -199,7 +204,7 @@ void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 	data.source->units.swap(source);data.base->GetTile()->units.swap(destination);
 	um->CommitPlacementHistory(placement);
 	um->m_unit_updates.swap(updates);
-	m_game->CommitBaseTerritory(data.knowledge);
+	m_game->CommitBaseTerritory(data.knowledge,data.topology);
 	auto& simulation=m_game->m_simulation->value;
 	simulation.hostility.owners.swap(data.history.owners);simulation.gameplay_random=data.random;
 	simulation.economy.at(data.new_owner)=data.actor_economy;simulation.economy.at(data.old_owner)=data.defender_economy;

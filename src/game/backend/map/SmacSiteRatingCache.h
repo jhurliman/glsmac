@@ -1,6 +1,7 @@
 #pragma once
 
-#include "SmacSiteQuality.h"
+#include "SmacSiteGeometry.h"
+#include <functional>
 #include <string>
 #include <vector>
 

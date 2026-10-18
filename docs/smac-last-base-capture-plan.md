@@ -20,19 +20,19 @@ Current prerequisites: PR195 owns human-defeat requests and their saved/controll
 path; PR196 owns retained regional Base counts and their incremental writers;
 PR197 preserves the original ocean-choice index. PR198 adds saved region areas,
 fertility and coastal postpass values. PR199 implements the31-case original land
-site-quality query. Both are accepted after current-head review and CI. PR200
-adds the40-case sea query and remains under review. None replaces restart search
+site-quality query. PR200 adds the40-case sea query and PR201 the40-case
+startup/late-turn extension; all are accepted after current-head review and CI.
+None replaces restart search
 by itself.
 
-The next joined producer is saved site ratings and Base-radius exclusions.
-Preserve nonzero stale ratings through ordinary Road/Farm/Solar/Mine/Forest
-completions. Connect world-postpass and local invalidation, actual founding and
-removal, and territory query-on-zero to the original footprint/ordering rules.
-Territory processing also reaches water and polar tiles: close those score
-branches before enabling a full-map refill. Do not populate those entries with
-land scores or default1. Old saves without cache history must retain that
-absence until an established producer supplies it; a fresh terrain recount
-cannot recover a stale nonzero score.
+The [joined site-cache producer](smac-site-rating-cache.md) now owns ratings and
+exclusions, retains them through save/Start, and stages founding/removal/capture
+refill with their future Base list. Ordinary Road/Farm/Solar/Mine/Forest preserve
+nonzero history; water/polar/startup/late queries use the original formula.
+Old saves retain unavailable history, since a fresh recount cannot recover a
+stale score or stray exclusion. This slice still needs its own review and
+focused sanitizer acceptance. Native restart search remains the next consumer;
+original world generation and complete landmark-detail ownership remain open.
 
 1. Complete the restart search contract used by `PrepareLastSmacBaseDisposition`.
    Its current farthest-site policy is explicitly a port approximation. Capture

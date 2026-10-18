@@ -17,6 +17,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacSiteRatingCache.cpp
 	${PWD}/GlsmacTerritoryTopology.cpp
 	${PWD}/MapTerritory.cpp
+	${PWD}/MapSiteRatings.cpp
 	${PWD}/MapState.cpp
 
 	PARENT_SCOPE )

@@ -26,16 +26,34 @@ and a91-query removal repair involving all three surviving Bases and a stray
 exclusion. Query outputs supplied by these fixtures test the cache caller;
 the independent31 land and40 water score cases test the actual score function.
 
-This commit establishes saved ownership, fresh-world initialization and the
-prepared mutation operations. Actual Base founding/removal/capture and global
-territory callers still need to publish their joined prepared cache. Do not
-claim live cache parity or original restart search until those callers are
-connected. The newly frozen late-turn adjustment must also be integrated before
-enabling refill throughout an unrestricted campaign.
+Starting/running founding, generic Base spawn/despawn, starvation and Colony
+abandonment now prepare the cache with their future Base list and publish it
+with their existing authority transaction. Capture stages refill under its
+private future context, restores both knowledge and topology on every exit,
+then publishes the prepared result during apply. Unit retirement/replacement
+commits keep their joined sight result while publishing the prepared topology
+before notifications. The live constructor checks preparation before changing
+IDs or attaching the candidate center.
 
-Validation: cached Linux Debug build;41 affected native groups pass with
-allocation tracking (40 unchanged successes reused after correcting the
-restore fixture, then the one corrected actual Start case passes). Eleven
-production units pass LLVM15 analysis in20.24s, with three changed producer
-units rechecked in2.34s; query/cache consumers also pass the sea follow-up check.
-Focused sanitizer validation remains due with the joined live producer.
+The map adapter queries only cache misses. It uses DisplayedTerrainV1 terrain
+ordinals, explicit bonus/site markers, active Jungle/Uranium flags and owned
+coastal/area metadata. Existing nonzero ratings bypass decoding. Shared detail
+for Mount Planet/Crater is not stored by the port Tile; an actually queried
+unsupported tile is refused instead of inventing that input. Original world
+generation and its complete landmark/site metadata remain separate work.
+Terrain publication/restore retain known history; initial fresh admission
+marks existing Bases once, without making every postpass unconditionally refill.
+Ordinary Former completions preserve existing nonzero ratings. Startup and
+late-turn scoring use the accepted query contract, without a turn100 refusal.
+
+This joins the site-cache producer; it does not replace the approximate
+last-Base restart search or enable last-Base capture. Those consumers are next.
+
+Validation: cached Linux Debug build;64 affected native groups pass with
+allocation tracking, including capture, founding/abandonment, actual Start and
+all five ordinary Former completions. The new live case preserves poisoned
+ratings through real founding/removal, rejects an unresolvable query without
+changing IDs/tiles/queues/history, and reloads the saved result through actual
+Start. LLVM15 analysis passes13 live production/consumer units in33.02s; prior
+core codec/score analysis is reused for unchanged source. Focused sanitizer
+validation is pending for this joined producer.

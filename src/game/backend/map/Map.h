@@ -158,6 +158,8 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	const std::optional< GlsmacTerritoryTopology >& GetTerritoryTopology() const { return m_territory_topology; }
 	std::vector< bool > TerritorySea() const;
 	GlsmacTerritoryTopology PrepareFreshTerritoryTopology() const;
+	GlsmacTerritoryTopology PrepareSiteRatingRefill(const GlsmacTerritoryTopology& topology,
+		const std::vector<smac_site::Coordinate>& bases,size_t turn) const;
 
 	WRAPDEFS_PTR( Map )
 

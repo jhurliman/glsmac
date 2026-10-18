@@ -128,6 +128,11 @@ Game::StartingBaseKnowledge Game::PrepareStartingBaseKnowledge( const base::Base
     if ( seen.size()!=m_bm->GetBases().size() ) { throw std::runtime_error("Starting Base order is incomplete"); }
     territory.bases.push_back({radius.center,owner});
     knowledge = map::smac_territory::ReplaceClaims(knowledge,territory);
+    if(topology->SiteRatings()) {
+        std::vector<map::smac_site::Coordinate> centers;centers.reserve(territory.bases.size());
+        for(const auto& existing:territory.bases) {centers.push_back(existing.coordinate);}
+        topology=m_map->PrepareSiteRatingRefill(topology->WithSiteRatings(topology->SiteRatings()->FoundBase(radius.center)),centers,GetTurnId());
+    }
     auto frame = ProjectSmacWorkerKnowledge(knowledge,owner,nullptr,true).CopyData();
     frame.bases.push_back({owner,radius.center,0});
     const auto unavailable = map::SmacWorkerMapFrame::Create(frame).Evaluate(frame.bases.size()-1).unavailable;

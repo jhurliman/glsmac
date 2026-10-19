@@ -1994,12 +1994,13 @@ public:
         class OrderFonts final : public loader::font::FontLoader {
         protected:
             types::Font* LoadFontImpl(const std::string& name,const std::vector<unsigned char>&,unsigned char,loader::font::RasterMode) override {
-                auto font=std::make_unique<types::Font>(name);
+                NEWV(font,types::Font,name);
+                util::FinallyGuard cleanup([&]{if(font) {DELETE(font);}});
                 for(size_t code=32;code<128;++code) {
                     auto& glyph=font->m_symbols[code];glyph={8,0,1,1,0,9,static_cast<unsigned char*>(malloc(1))};
                     if(!glyph.data) {throw std::bad_alloc();}glyph.data[0]=255;
                 }
-                return font.release();
+                auto* result=font;font=nullptr;return result;
             }
         } fonts;
 		const auto directory = std::filesystem::temp_directory_path() / ( "glsmac-scout-unit-" + util::UUID::Generate() );
@@ -2567,12 +2568,13 @@ public:
         class OrderFonts final : public loader::font::FontLoader {
         protected:
             types::Font* LoadFontImpl(const std::string& name,const std::vector<unsigned char>&,unsigned char,loader::font::RasterMode) override {
-                auto font=std::make_unique<types::Font>(name);
+                NEWV(font,types::Font,name);
+                util::FinallyGuard cleanup([&]{if(font) {DELETE(font);}});
                 for(size_t code=32;code<128;++code) {
                     auto& glyph=font->m_symbols[code];glyph={8,0,1,1,0,9,static_cast<unsigned char*>(malloc(1))};
                     if(!glyph.data) {throw std::bad_alloc();}glyph.data[0]=255;
                 }
-                return font.release();
+                auto* result=font;font=nullptr;return result;
             }
         } fonts;
 		resource::ResourceManager resources( "" );

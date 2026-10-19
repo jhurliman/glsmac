@@ -26,22 +26,7 @@ const ::game::native_terrain::Tile* At(const World& world,int x,int y) {
 }
 }
 std::vector<Placement> View(int x,int y,bool wrap) {
-    if(x<0 || x>=80 || y<0 || y>=80) {throw std::invalid_argument("Native terrain view requires80x80 camera coordinates");}
-    const int first_y=std::clamp(y-12,-2,60);
-    int first_x=x-11;
-    if(wrap) {if(first_x<0) {first_x+=80;}else if(first_x>=80) {first_x-=80;}}
-    else {first_x=std::clamp(first_x,-4,62);}
-    // Avoid a host-dependent signed bitwise parity repair at the flat edge.
-    first_x=(first_x%2<0?first_x-1:first_x-first_x%2)+(first_y%2==0?0:1);
-    std::vector<Placement> result;result.reserve(288);
-    for(int row=0;row<25;++row) {for(int col=0;col<(row&1?11:12);++col) {
-        const int unwrapped=first_x+(row&1)+2*col;
-        int tx=unwrapped;const int ty=first_y+row;
-        if(wrap) {if(tx<0) {tx+=80;}else if(tx>=80) {tx-=80;}}
-        if(tx<0 || tx>=80 || ty<0 || ty>=80) {continue;}
-        result.push_back({{{tx,ty}},{{48*(unwrapped-first_x),24*row}},static_cast<uint32_t>(44*(40*ty+tx/2))});
-    }}
-    return result;
+    return SelectView(Layout(x,y,0,wrap));
 }
 
 Frame Render(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags,uint8_t initial_index) {

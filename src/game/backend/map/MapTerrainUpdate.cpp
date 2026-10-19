@@ -113,7 +113,9 @@ std::unique_ptr< Map::PreparedTerrainUpdate > Map::PrepareOrdinaryTerrainUpdate(
 		else out.sprites.push_back( sprite );
 	}
 	const auto& layer = out.state->layers[ tile::LAYER_LAND ].coords;
-	const types::Vec3 center{ ( layer.left.x + layer.right.x ) / 2, -( layer.top.y + layer.bottom.y ) / 2,
+	const types::Vec3 center = out.state->smac_projector_height
+        ? out.state->GetProjectorCoords( tile::LAYER_LAND ).InvertY()
+        : types::Vec3{ ( layer.left.x + layer.right.x ) / 2, -( layer.top.y + layer.bottom.y ) / 2,
 		( layer.left.z + layer.top.z + layer.right.z + layer.bottom.z ) / 4 };
 	const auto add = [&]( const std::string& name, pcx_texture_coordinates_t coords, float z ) {
 		if ( out.next_id == std::numeric_limits< size_t >::max() ) throw std::runtime_error( "terrain sprite identity overflow" );
@@ -253,7 +255,9 @@ std::unique_ptr<Map::PreparedTerrainUpdate> Map::PrepareTerrainAppearanceUpdate(
             else out.payload.removed.emplace_back(sprite.instance,sprite.actor);
         }
         const auto& layer=ts->layers[t->is_water_tile ? tile::LAYER_WATER : tile::LAYER_LAND].coords;
-        const types::Vec3 center{(layer.left.x+layer.right.x)/2,-(layer.top.y+layer.bottom.y)/2,
+        const types::Vec3 center = ts->smac_projector_height && !t->is_water_tile
+            ? ts->GetProjectorCoords(tile::LAYER_LAND).InvertY()
+            : types::Vec3{(layer.left.x+layer.right.x)/2,-(layer.top.y+layer.bottom.y)/2,
             (layer.left.z+layer.top.z+layer.right.z+layer.bottom.z)/4};
         for (const auto& wanted : desired) {
             if (out.next_id==std::numeric_limits<size_t>::max()) throw std::runtime_error("terrain sprite identity overflow");

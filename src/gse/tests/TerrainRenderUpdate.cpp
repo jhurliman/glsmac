@@ -8,6 +8,7 @@
 #include "game/backend/map/SmacTerrainGeometry.h"
 #include "game/backend/map/SmacPlanetMap.h"
 #include "game/backend/map/module/Finalize.h"
+#include "game/backend/map/module/Sprites.h"
 #include "fixtures/SmacTerrainHeights.h"
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
@@ -138,6 +139,31 @@ public:
         world.m_meshes.terrain=nullptr;world.m_meshes.terrain_data=nullptr;
         return result && projected && legacy;
     }
+    bool CheckSpriteAnchors(bool native) {
+        auto* t=world.GetTile(2,2);auto* ts=world.GetTileState(t);
+        auto& c=ts->layers[tile::LAYER_LAND].coords;
+        c.center={10,20,9};c.left={9,20,2};c.top={10,19,2};
+        c.right={11,20,2.125f};c.bottom={10,21,2.125f};
+        if(native) ts->smac_projector_height=3;
+        const types::Vec3 expected{10,-20,2.0625f}; // native floor3; legacy mean also3 here
+        // Distinguish legacy float averaging from the native integer floor.
+        c.bottom.z+=1.0f/48;
+        const auto wanted=native?expected:types::Vec3(10,-20,(c.left.z+c.top.z+c.right.z+c.bottom.z)/4);
+        t->bonus=tile::BONUS_NONE;
+        t->terraforming=tile::TERRAFORMING_FARM|tile::TERRAFORMING_MINE|tile::TERRAFORMING_SOLAR|
+            tile::TERRAFORMING_SENSOR|tile::TERRAFORMING_BUNKER;
+        map::module::Sprites sprites(&world);sprites.GenerateTile(t,ts,world.m_map_state);
+        if(ts->sprites.size()!=5) return false;
+        for(const auto& s:ts->sprites) if(world.m_sprite_instances.at(s.instance).second!=wanted) return false;
+        t->terraforming=tile::TERRAFORMING_FARM|tile::TERRAFORMING_MINE|tile::TERRAFORMING_SOLAR;
+        auto ordinary=world.PrepareOrdinaryTerrainUpdate(t,tile::TERRAFORMING_FARM|tile::TERRAFORMING_MINE|tile::TERRAFORMING_SOLAR);
+        const auto& a=world.GetTerrainUpdatePayload(*ordinary);
+        if(a.added.size()!=3) return false;
+        for(const auto& s:a.added) if(s.coords!=wanted) return false;
+        auto appearance=world.PrepareTerrainAppearanceUpdate({{t,{tile::FEATURE_NONE,tile::TERRAFORMING_SOIL_ENRICHER,tile::ROCKINESS_FLAT}}});
+        const auto& b=world.GetTerrainUpdatePayload(*appearance);
+        return b.added.size()==1 && b.added.front().coords==wanted;
+    }
     auto Replay(const map::TerrainCoastRecipes::Land& land) { return world.m_coast_recipes.Prepare(land); }
 	void Commit( tile::Tile* t, uint16_t bits, map::Map::PreparedTerrainUpdate& update ) {
 		t->terraforming = bits; world.CommitOrdinaryTerrainUpdate( update );
@@ -146,6 +172,11 @@ public:
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("SMAC terrain sprite anchors agree through initial ordinary and appearance callers",GT(){
+        {TerrainRenderFixture f;GT_ASSERT(f.CheckSpriteAnchors(true),"Native sprite lost floored projector height");}
+        {TerrainRenderFixture f;GT_ASSERT(f.CheckSpriteAnchors(false),"Legacy sprite lost floating outer mean");}
+        GT_OK();
+    });
     task->AddTest("SMAC terrain projector metadata survives tile transport and preserves legacy absence",GT(){
         tile::TileState source{};
         NEW(source.moisture_original,types::texture::Texture,map::s_consts.tc.texture_pcx.dimensions.x,map::s_consts.tc.texture_pcx.dimensions.y);

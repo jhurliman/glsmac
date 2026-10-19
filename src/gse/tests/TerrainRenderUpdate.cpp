@@ -204,6 +204,7 @@ public:
             // Source replacement must discard the shared cache; snapshots own
             // the resulting signed geometry after the backend is destroyed.
             for(const uint32_t word:{0x200u,0x800u}) {
+                if(word==0x800u) {live->features|=tile::FEATURE_FOSSIL_FIELD_RIDGE;}
                 for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=static_cast<char>(word>>(8*byte));
                 local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
                 auto* geometry=local.GetNativeGeometry();
@@ -213,6 +214,7 @@ public:
                     (*cell.heights)[0]!=(word==0x200u?-12:20)) return false;
                 if(snapshot->tiles[40*40+19].heights->at(3)!=cell.heights->at(1)) return false;
             }
+            live->features&=~tile::FEATURE_FOSSIL_FIELD_RIDGE;
             for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=0;
             local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
             wire[record]=char(2<<5);

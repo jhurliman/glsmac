@@ -86,8 +86,13 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         const auto unsupported_landmark_materials=landmarks&~(0xff400000u|0xa00u|4u|8u|0x400u|sea_memberships);
         // Unsupported later improvements retain the existing GPU terrain.
         // Road/Tube now compose from the viewer's separately copied memory.
+        // Pholus is height-only in this prefix. Its live adapter feature must
+        // not veto the now-proven original profile; an unrelated port-only
+        // ridge still lacks the retained source authority needed for admission.
+        const auto unsupported_ridge=(landmarks&0x800u) && output.heights
+            ?0u:static_cast<unsigned>(tile::FEATURE_FOSSIL_FIELD_RIDGE);
         const auto unsupported_features=tile::FEATURE_JUNGLE|tile::FEATURE_VOLCANO|
-            tile::FEATURE_GARLAND_CRATER|tile::FEATURE_FOSSIL_FIELD_RIDGE|tile::FEATURE_DUNES;
+            tile::FEATURE_GARLAND_CRATER|unsupported_ridge|tile::FEATURE_DUNES;
         const auto unsupported_work=live->terraforming&~((1u<<13)-1);
         output.ordinary=!output.deformed && !unsupported_landmark_materials && !(live->features&unsupported_features) && !unsupported_work;
     }}

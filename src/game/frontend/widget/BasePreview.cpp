@@ -29,6 +29,7 @@ BasePreview::BasePreview( Game* const game, ui::UI* const ui )
 		{ "base",     { true,  gse::VT_OBJECT, ::game::backend::base::Base::WRAP_CLASS } },
 		{ "no_badge", { false, gse::VT_BOOL } },
 		{ "roster", { false, gse::VT_BOOL } },
+        { "card", { false, gse::VT_BOOL } },
 	}
 ) {}
 
@@ -74,7 +75,7 @@ void BasePreview::Update( ui::dom::Widget* const widget, const void* const data 
     const auto* source=base->GetSprite()->instanced_sprite;
     // The current original receipt admits University stock land/sea artwork.
     // Other content retains the working fitted fallback without a parity claim.
-    if(filename=="univ.pcx" && source->wh.x==100 && source->wh.y==75
+    if(flag("card") && filename=="univ.pcx" && source->wh.x==100 && source->wh.y==75
         && (no_badge || (render.badge.texture->GetHeight()==16 && render.badge.texture->GetWidth()<=64))) {
         const auto key=source->key+(roster?"_roster":"_selected");
         auto found=m_cards.find(key);

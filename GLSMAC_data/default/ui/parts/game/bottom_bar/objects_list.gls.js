@@ -31,6 +31,7 @@ return {
 			case 'Base': {
 				type = 'base-preview';
 				data.base = object;
+                data.card = true;
 				data.roster = true;
 				top = 0;
 				break;

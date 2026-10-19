@@ -44,6 +44,7 @@ return {
 			case 'Base': {
 				type = 'base-preview';
 				data.base = object;
+                data.card = true;
 				break;
 			}
 			default: {

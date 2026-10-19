@@ -2712,10 +2712,21 @@ public:
                     auto presenter=std::make_unique<game::frontend::widget::BasePreview>(&frontend,ui);
                     frontend.m_widgets.BasePreview=presenter.get();
                     auto* root=static_cast<value::Object*>(ui->GetRoot()->Wrap(GSE_CALL));
+                    if(scenario==7) {
+                        // Base Screen resource-map caller:100x70, no_badge,
+                        // deliberately no console-card context.
+                        auto* resource=static_cast<::ui::dom::Widget*>(::ui::dom::Object::Unwrap(
+                            static_cast<value::Callable*>(root->Get("widget"))->Run(GSE_CALL,{new value::Object(GSE_CALL,{
+                                {"type",VALUE(value::String,,"base-preview")},{"width",VALUE(value::Int,,100)},{"height",VALUE(value::Int,,70)},
+                                {"data",new value::Object(GSE_CALL,{{"base",native->Wrap(GSE_CALL)},{"no_badge",VALUE(value::Bool,,true)}})}
+                            })})));
+                        GT_ASSERT(presenter->m_cards.empty(),"Base Screen resource-map preview inherited lower-console card geometry");
+                        resource->Hide();
+                    }
                     auto* widget=static_cast<::ui::dom::Widget*>(::ui::dom::Object::Unwrap(
                         static_cast<value::Callable*>(root->Get("widget"))->Run(GSE_CALL,{new value::Object(GSE_CALL,{
                             {"type",VALUE(value::String,,"base-preview")},{"width",VALUE(value::Int,,116)},{"height",VALUE(value::Int,,68)},
-                            {"data",new value::Object(GSE_CALL,{{"base",native->Wrap(GSE_CALL)},{"no_badge",VALUE(value::Bool,,scenario==7)}})}
+                            {"data",new value::Object(GSE_CALL,{{"base",native->Wrap(GSE_CALL)},{"no_badge",VALUE(value::Bool,,scenario==7)},{"card",VALUE(value::Bool,,scenario==7)}})}
                         })})));
                     GT_ASSERT(frontend.m_widget_relations.at(::ui::WT_BASE_PREVIEW).at(widget)==9,"Base widget did not render actual registered Base");
                     std::weak_ptr<types::texture::Texture> retained_card;
@@ -2726,7 +2737,7 @@ public:
                         GT_ASSERT(card.offset==offset && card.texture->GetWidth()==30 && card.texture->GetHeight()==28,
                             "actual selected Base widget did not preserve original retained crop geometry");
                         widget->WrapSet("data",new value::Object(GSE_CALL,{{"base",native->Wrap(GSE_CALL)},
-                            {"no_badge",VALUE(value::Bool,,true)},{"roster",VALUE(value::Bool,,true)}}),GSE_CALL);
+                            {"no_badge",VALUE(value::Bool,,true)},{"roster",VALUE(value::Bool,,true)},{"card",VALUE(value::Bool,,true)}}),GSE_CALL);
                         presenter->Update(widget,captured);
                         GT_ASSERT(presenter->m_cards.size()==2,"roster Base reused selected portrait scale");
                         for(const auto& entry:presenter->m_cards) {if(entry.first.find("_roster")!=std::string::npos) {card=entry.second;}}

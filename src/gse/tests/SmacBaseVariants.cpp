@@ -88,6 +88,7 @@ void AddSmacBaseVariantTests(task::gsetests::GSETests* task) {
         fs::copy_file(fs::path(assets)/"UNIV.PCX",data/"univ.pcx");fs::copy_file(fs::path(assets)/"PALETTE.PCX",data/"palette.pcx");
         return WithWidgetTextureResources(directory.string(),[&]()->std::string {
             const auto palette=g_engine->GetTextureLoader()->GetSmacGraphPalette();const auto shadow=game::frontend::smac_developed_overlay::ShadowLookup(palette->colors);
+            GT_ASSERT(palette->text_available,"actual population color metadata unavailable");
             for(const auto& b:BANKS) {
                 const auto source=g_engine->GetTextureLoader()->GetSmacDetailBaseSprite("univ.pcx",1+76*b.row,b.column);
                 GT_ASSERT(source->offset==b.offset && source->width==b.size[0] && source->height==b.size[1] && Fnv(source->pixels)==b.hash,"native retained Base bank differs");

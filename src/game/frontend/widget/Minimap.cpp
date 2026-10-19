@@ -118,7 +118,7 @@ void Minimap::DrawDetail(ui::dom::Widget* widget) {
         const auto source=g_engine->GetTextureLoader()->GetSmacDetailBaseSprite(base->file,base->crop_y,base->column);
         if(!source) {continue;}
         detail::Composite(frame,anchor,*source,shadow,[](int,int,int,int,uint8_t){});
-        if(!base->style_known) {continue;}
+        if(!base->style_known || !palette->text_available) {continue;}
         const auto style=smac_base_body::Colors(base->filled,base->spartans,palette->normal.at(base->native_owner),palette->alternate.at(base->native_owner),palette->text.at(base->native_owner));
         const auto layout=smac_base_body::PopulationLayout(base->population,font->m_symbols['8'].ax,7);
         detail::PopulationBox(frame,anchor,layout,style);

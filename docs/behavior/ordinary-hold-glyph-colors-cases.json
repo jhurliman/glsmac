@@ -1,0 +1,778 @@
+{
+  "research_id": "stock-smac-ordinary-hold-glyph-colors-20261019",
+  "anchor": [
+    100,
+    100
+  ],
+  "scope": "Original complete56fd50 and text stack through captured TextOutA; native stock faction filename list, explicit retained filename/owner/viewer/human-mask inputs; no-status undamaged conventional unit, Hold, moves remaining, zoom0. Existing body/morale/admission services reused. No full fog admission, treaty visibility, status overrides, native/nonhuman order-disclosure policy or live raster parity claim.",
+  "cases": [
+    {
+      "id": "owned_GAIANS",
+      "input": {
+        "owner": 1,
+        "faction_filename": "GAIANS",
+        "viewer": 1,
+        "human_player_mask": 2,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_human_GAIANS",
+      "input": {
+        "owner": 1,
+        "faction_filename": "GAIANS",
+        "viewer": 2,
+        "human_player_mask": 4,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "-",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 113,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_editor_GAIANS",
+      "input": {
+        "owner": 1,
+        "faction_filename": "GAIANS",
+        "viewer": 2,
+        "human_player_mask": 4,
+        "editor": true,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_nonhuman_GAIANS",
+      "input": {
+        "owner": 1,
+        "faction_filename": "GAIANS",
+        "viewer": 2,
+        "human_player_mask": 2,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "owned_HIVE",
+      "input": {
+        "owner": 2,
+        "faction_filename": "HIVE",
+        "viewer": 2,
+        "human_player_mask": 4,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_human_HIVE",
+      "input": {
+        "owner": 2,
+        "faction_filename": "HIVE",
+        "viewer": 3,
+        "human_player_mask": 8,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "-",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 113,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_editor_HIVE",
+      "input": {
+        "owner": 2,
+        "faction_filename": "HIVE",
+        "viewer": 3,
+        "human_player_mask": 8,
+        "editor": true,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_nonhuman_HIVE",
+      "input": {
+        "owner": 2,
+        "faction_filename": "HIVE",
+        "viewer": 3,
+        "human_player_mask": 4,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "owned_UNIV",
+      "input": {
+        "owner": 3,
+        "faction_filename": "UNIV",
+        "viewer": 3,
+        "human_player_mask": 8,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_human_UNIV",
+      "input": {
+        "owner": 3,
+        "faction_filename": "UNIV",
+        "viewer": 4,
+        "human_player_mask": 16,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "-",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 113,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_editor_UNIV",
+      "input": {
+        "owner": 3,
+        "faction_filename": "UNIV",
+        "viewer": 4,
+        "human_player_mask": 16,
+        "editor": true,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_nonhuman_UNIV",
+      "input": {
+        "owner": 3,
+        "faction_filename": "UNIV",
+        "viewer": 4,
+        "human_player_mask": 8,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "owned_MORGAN",
+      "input": {
+        "owner": 4,
+        "faction_filename": "MORGAN",
+        "viewer": 4,
+        "human_player_mask": 16,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_human_MORGAN",
+      "input": {
+        "owner": 4,
+        "faction_filename": "MORGAN",
+        "viewer": 5,
+        "human_player_mask": 32,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "-",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 113,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_editor_MORGAN",
+      "input": {
+        "owner": 4,
+        "faction_filename": "MORGAN",
+        "viewer": 5,
+        "human_player_mask": 32,
+        "editor": true,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_nonhuman_MORGAN",
+      "input": {
+        "owner": 4,
+        "faction_filename": "MORGAN",
+        "viewer": 5,
+        "human_player_mask": 16,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "owned_SPARTANS",
+      "input": {
+        "owner": 5,
+        "faction_filename": "SPARTANS",
+        "viewer": 5,
+        "human_player_mask": 32,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 44,
+        "rgb": [
+          226,
+          203,
+          176
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_human_SPARTANS",
+      "input": {
+        "owner": 5,
+        "faction_filename": "SPARTANS",
+        "viewer": 6,
+        "human_player_mask": 64,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "-",
+        "foreground_index": 44,
+        "rgb": [
+          226,
+          203,
+          176
+        ],
+        "x": 113,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_editor_SPARTANS",
+      "input": {
+        "owner": 5,
+        "faction_filename": "SPARTANS",
+        "viewer": 6,
+        "human_player_mask": 64,
+        "editor": true,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 44,
+        "rgb": [
+          226,
+          203,
+          176
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_nonhuman_SPARTANS",
+      "input": {
+        "owner": 5,
+        "faction_filename": "SPARTANS",
+        "viewer": 6,
+        "human_player_mask": 32,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 44,
+        "rgb": [
+          226,
+          203,
+          176
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "owned_BELIEVE",
+      "input": {
+        "owner": 6,
+        "faction_filename": "BELIEVE",
+        "viewer": 6,
+        "human_player_mask": 64,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_human_BELIEVE",
+      "input": {
+        "owner": 6,
+        "faction_filename": "BELIEVE",
+        "viewer": 7,
+        "human_player_mask": 128,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "-",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 113,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_editor_BELIEVE",
+      "input": {
+        "owner": 6,
+        "faction_filename": "BELIEVE",
+        "viewer": 7,
+        "human_player_mask": 128,
+        "editor": true,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_nonhuman_BELIEVE",
+      "input": {
+        "owner": 6,
+        "faction_filename": "BELIEVE",
+        "viewer": 7,
+        "human_player_mask": 64,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "owned_PEACE",
+      "input": {
+        "owner": 7,
+        "faction_filename": "PEACE",
+        "viewer": 7,
+        "human_player_mask": 128,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_human_PEACE",
+      "input": {
+        "owner": 7,
+        "faction_filename": "PEACE",
+        "viewer": 1,
+        "human_player_mask": 2,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "-",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 113,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_editor_PEACE",
+      "input": {
+        "owner": 7,
+        "faction_filename": "PEACE",
+        "viewer": 1,
+        "human_player_mask": 2,
+        "editor": true,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "foreign_nonhuman_PEACE",
+      "input": {
+        "owner": 7,
+        "faction_filename": "PEACE",
+        "viewer": 1,
+        "human_player_mask": 128,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "slot3_spartans_identity",
+      "input": {
+        "owner": 3,
+        "faction_filename": "SPARTANS",
+        "viewer": 3,
+        "human_player_mask": 8,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 44,
+        "rgb": [
+          226,
+          203,
+          176
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "slot5_univ_identity",
+      "input": {
+        "owner": 5,
+        "faction_filename": "UNIV",
+        "viewer": 5,
+        "human_player_mask": 32,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "lowercase_spartans_identity",
+      "input": {
+        "owner": 5,
+        "faction_filename": "spartans",
+        "viewer": 5,
+        "human_player_mask": 32,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    },
+    {
+      "id": "owned_nonhuman_UNIV",
+      "input": {
+        "owner": 3,
+        "faction_filename": "UNIV",
+        "viewer": 3,
+        "human_player_mask": 0,
+        "editor": false,
+        "unit_status": 0,
+        "order": "hold",
+        "zoom": 0
+      },
+      "expected": {
+        "glyph": "H",
+        "foreground_index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "x": 111,
+        "baseline_y": 116
+      }
+    }
+  ]
+}

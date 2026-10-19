@@ -74,6 +74,7 @@ public:
 	static const movement_t MINIMUM_MOVEMENT_TO_KEEP;
 	static const movement_t MINIMUM_HEALTH_TO_KEEP;
 	const bool HasMovesLeft() const;
+    char VisibleOrderGlyph(size_t viewer_slot) const;
 
 	const std::string& GetMoraleString() const;
 

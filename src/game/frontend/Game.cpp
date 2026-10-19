@@ -1144,6 +1144,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			);
             m_um->GetUnitById(d.unit_id)->SetMaximumHitPoints(d.maximum_hit_points);
             m_um->GetUnitById(d.unit_id)->SetHeld(d.held);
+            m_um->GetUnitById(d.unit_id)->SetOrderGlyph(d.order_glyph,d.order_color_index);
             m_um->GetUnitById(d.unit_id)->Refresh();
 			break;
 		}
@@ -1160,6 +1161,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			unit->SetHealth( d.health );
 			unit->SetActionability( d.conventional, d.has_moves, d.full_movement );
             unit->SetHeld(d.held);
+            unit->SetOrderGlyph(d.order_glyph,d.order_color_index);
 			unit->SetMorale( d.morale, *d.morale_string );
 			const auto& c = unit->GetTile()->GetCoords();
 			if ( d.tile_coords.x != c.x || d.tile_coords.y != c.y ) {

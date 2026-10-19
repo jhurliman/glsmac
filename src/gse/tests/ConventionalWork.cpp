@@ -87,6 +87,23 @@ void Event(GSE_CALLABLE,ConventionalUnitFixture& fixture,Unit* actor,Order order
 }
 }
 void AddConventionalWorkTests(task::gsetests::GSETests* task) {
+    task->AddTest("Conventional visible order glyph uses actual work and hides foreign Hold",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string{
+            auto* actor=Populate(GSE_CALL,fixture);auto* game=fixture.Game();
+            const std::pair<Order,char> cases[]{{Order::None,'-'},{Order::Farm,'f'},{Order::Road,'R'},{Order::Forest,'F'},{Order::Solar,'S'},{Order::Mine,'M'}};
+            for(const auto& value:cases) {
+                Event(GSE_CALL,fixture,actor,value.first);
+                GT_ASSERT(actor->VisibleOrderGlyph(0)==value.second && actor->VisibleOrderGlyph(1)=='-',"Renderer substituted port wire ID or exposed foreign work");
+            }
+            game->Event(GSE_CALL,"unit_hold",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});fixture.DrainEvents();
+            GT_ASSERT(actor->VisibleOrderGlyph(0)=='H' && actor->VisibleOrderGlyph(1)=='-',"Hold glyph leaked to another viewer");
+            auto state=actor->Conventional();state.retained_state_word=ConventionalUnitState::PAID_SUPPORT;game->GetUM()->UpdateConventionalUnit(GSE_CALL,actor,state);
+            GT_ASSERT(actor->VisibleOrderGlyph(0)=='H',"Accounting bits replaced ordinary Hold");
+            state.retained_state_word=0x4000;game->GetUM()->UpdateConventionalUnit(GSE_CALL,actor,state);
+            GT_ASSERT(actor->VisibleOrderGlyph(0)==0,"Unimplemented status override was presented as ordinary Hold");GT_OK();
+        });
+    });
     task->AddTest("Human order queued behind actual turn end cannot mutate next turn",GT(){
         for(const char* name:{"unit_hold","unit_hold_ten","unit_skip_turn","unit_activate"}) {
             ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");

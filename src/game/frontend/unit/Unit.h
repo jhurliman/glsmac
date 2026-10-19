@@ -106,6 +106,7 @@ public:
     void SetMaximumHitPoints(int32_t maximum);
 	void SetMorale( backend::unit::morale_t morale, const std::string& text );
 	void SetHeld(bool held);
+    void SetOrderGlyph(char glyph,uint8_t color_index);
 	void SetActionability( bool conventional, bool has_moves, backend::unit::movement_t full_movement = 0 );
 	const bool CanMove() const;
 
@@ -164,6 +165,8 @@ private:
 	backend::unit::health_t m_health = 0;
     int32_t m_maximum_hit_points = 0;
 	bool m_held = false;
+    char m_order_glyph = 0;
+    uint8_t m_order_color_index = 0;
 	bool m_conventional = false, m_has_moves = false;
 	const bool m_native = false;
 	backend::unit::movement_t m_full_movement = 0;

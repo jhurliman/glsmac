@@ -5,6 +5,11 @@
 #include "game/frontend/sprite/InstancedSprite.h"
 #include "game/frontend/faction/Faction.h"
 #include "scene/actor/Instanced.h"
+#include "scene/actor/Sprite.h"
+#include "SmacOrderGlyph.h"
+#include "engine/Engine.h"
+#include "loader/font/FontLoader.h"
+#include "game/backend/map/Consts.h"
 
 namespace game {
 namespace frontend {
@@ -42,6 +47,7 @@ SlotBadges::SlotBadges(
 }
 
 SlotBadges::~SlotBadges() {
+    for(const auto& item:m_order_sprites) {m_ism->RemoveInstancedSpriteByKey(item.second.instanced_sprite->key);}
 	for ( const auto& it : m_per_morale_sprites ) {
 		if ( it.second.normal ) {
 			m_ism->RemoveRepaintedInstancedSpriteByKey( it.second.normal->instanced_sprite->key );
@@ -58,7 +64,8 @@ SlotBadges::~SlotBadges() {
 	}
 }
 
-sprite::Sprite* SlotBadges::GetUnitBadgeSprite( const backend::unit::morale_t morale, const bool is_active ) {
+sprite::Sprite* SlotBadges::GetUnitBadgeSprite( const backend::unit::morale_t morale, const bool is_active, char order_glyph, uint8_t color ) {
+    if(m_faction && order_glyph) {return GetOrderBadgeSprite(morale,is_active,order_glyph,color);}
     if(!m_faction) {return m_badge_defs->GetNativeBadgeSprite(morale);}
 	auto it = m_per_morale_sprites.find( morale );
 	if ( it == m_per_morale_sprites.end() ) {
@@ -97,6 +104,26 @@ sprite::Sprite* SlotBadges::GetUnitBadgeSprite( const backend::unit::morale_t mo
 		} );
 	}
 	return *sprite_ptr;
+}
+
+sprite::Sprite* SlotBadges::GetOrderBadgeSprite(backend::unit::morale_t morale,bool active,char glyph,uint8_t color) {
+    const uint32_t key=(static_cast<uint32_t>(static_cast<unsigned char>(glyph))<<24) | (uint32_t(color)<<16)
+        | (static_cast<uint32_t>(morale)<<1) | (active?1u:0u);
+    auto found=m_order_sprites.find(key);
+    if(found==m_order_sprites.end()) {
+        const auto* base=GetUnitBadgeSprite(morale,active,0)->instanced_sprite;
+        auto* font=g_engine->GetFontLoader()->LoadCustomFont("arialbd.ttf",12,loader::font::RasterMode::MONOCHROME);
+        if(!font) {throw std::runtime_error("Order badge font is unavailable");}
+        auto pixels=std::make_shared<types::texture::Texture>("SMAC order badge",23,30);
+        const auto* source=base->actor->GetSpriteActor();
+        for(size_t y=0;y<30;++y) {for(size_t x=0;x<23;++x) {pixels->SetPixel(x,y,source->GetTexture()->GetPixel(base->xy.x+x,base->xy.y+y));}}
+        PaintSmacOrderGlyph(*pixels,*font,glyph,m_badge_defs->GetOrderColor(color));
+        auto* sprite=m_ism->GetInstancedSprite(m_badges_key+"_ORDER_"+std::to_string(key),pixels.get(),{0,0},{23,30},{11,15},
+            source->GetDimensions(),ZL_UNITS,0.008f);
+        sprite->texture_owner=std::move(pixels);sprite->actor->GetSpriteActor()->SetRenderFlags(source->GetRenderFlags());
+        found=m_order_sprites.emplace(key,sprite::Sprite{sprite,1}).first;
+    }
+    return &found->second;
 }
 
 const size_t SlotBadges::ShowFakeBadge( const types::Vec3& coords, const uint8_t offset ) {

@@ -1,4 +1,5 @@
 #include "UnitManager.h"
+#include "game/SmacUnitOrder.h"
 
 #include "MoraleSet.h"
 #include "Def.h"
@@ -1196,7 +1197,17 @@ void UnitManager::PushUpdates() {
                 if(!viewer) {THROW("Native map presentation requires the current viewing simulation faction");}
                 return unit->GetPresentation(viewer->simulation_id);
             };
-			// Rebuild only the frontend view. Backend identity and wrapper stay live.
+            const auto order_foreground = [&]() -> uint8_t {
+                if(!unit->IsConventional()) {return 0;}
+                const auto* owner=m_game->m_simulation ? m_game->m_simulation->value.FindSlot(unit->m_owner->GetIndex()):nullptr;
+                const auto& rules=m_game->GetState()->m_settings.global.GetSmacFactionStartupRules();
+                const auto* profile=owner && rules ? rules->Find(owner->faction_id):nullptr;
+                if(!profile) {THROW("Order color requires the retained canonical faction source binding");}
+                // Canonical profiles retain native logical identity in section;
+                // their lowercase.txt path is only a filesystem adaptation.
+                return SmacOrderForegroundIndex(profile->section);
+            };
+            // Rebuild only the frontend view. Backend identity and wrapper stay live.
             if((uu.ops & UUO_OWNER_CHANGE) && !(uu.ops & UUO_SPAWN)) {
                 auto fr=FrontendRequest(FrontendRequest::FR_UNIT_DESPAWN);
                 fr.data.unit_despawn.unit_id=unit_id;m_game->AddFrontendRequest(fr);
@@ -1229,6 +1240,8 @@ void UnitManager::PushUpdates() {
 				fr.data.unit_spawn.full_movement = presentation.full_movement;
 				fr.data.unit_spawn.has_moves = unit->HasMovesLeft();
                 fr.data.unit_spawn.held = unit->IsConventional() && unit->Conventional().IsHeld();
+                fr.data.unit_spawn.order_glyph = unit->VisibleOrderGlyph(m_game->GetSlotNum());
+                fr.data.unit_spawn.order_color_index = order_foreground();
 				m_game->AddFrontendRequest( fr );
 			}
 			if ( uu.ops & UUO_REFRESH ) {
@@ -1244,6 +1257,8 @@ void UnitManager::PushUpdates() {
 				fr.data.unit_update.full_movement = presentation.full_movement;
 				fr.data.unit_update.has_moves = unit->HasMovesLeft();
                 fr.data.unit_update.held = unit->IsConventional() && unit->Conventional().IsHeld();
+                fr.data.unit_update.order_glyph = unit->VisibleOrderGlyph(m_game->GetSlotNum());
+                fr.data.unit_update.order_color_index = order_foreground();
 				const auto* tile = unit->GetTile();
 				fr.data.unit_update.tile_coords = {
 					tile->coord.x,

@@ -4,6 +4,7 @@
 #include "SmacRoadTube.h"
 #include "SmacDevelopedOverlay.h"
 #include "SmacLandmarkArt.h"
+#include "SmacResourceArt.h"
 #include "game/backend/map/SmacTerrainGeometry.h"
 #include "game/backend/map/SmacLandmarkGeometry.h"
 #include "game/backend/map/SmacTerrainLighting.h"
@@ -89,12 +90,13 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
     Frame frame;
     std::map<material::Crop,smac_developed_overlay::Sprite> sprites;
     std::vector<raster::Command> commands;commands.reserve(placements.size()*14);
-    const auto append_marker=[&](const std::optional<material::Crop>& pick,const Point& anchor) {
+    const auto append_marker=[&](const std::optional<material::Crop>& pick,const Point& anchor,bool shadow=false) {
         if(!pick || source.ter1.pixels.empty()) {return;}
         auto found=sprites.find(*pick);
         if(found==sprites.end()) {found=sprites.emplace(*pick,smac_developed_overlay::Decode(source.ter1,*pick)).first;}
         const auto& sprite=found->second;if(sprite.bitmap.pixels.empty()) {return;}
-        raster::Command command;command.texture=&sprite.bitmap;command.shader=raster::Shader::Sprite;
+        raster::Command command;command.texture=&sprite.bitmap;command.shader=shadow?raster::Shader::SpriteShadow:raster::Shader::Sprite;
+        command.shadow_lookup=&source.shadow_lookup;
         command.sprite_origin={anchor[0]+sprite.offset[0],anchor[1]+sprite.offset[1]};commands.push_back(command);
     };
     const auto append_quads=[&](int x,int y,const std::array<Point,5>& points,const std::array<int,5>& light) {
@@ -162,12 +164,22 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         const auto& tile=*At(world,x,y);
         if(!tile.ordinary) {continue;}
         const auto fx=placement.flat_center[0]+offset[0],fy=placement.flat_center[1]+offset[1];
+        const auto resources=tile.resource_ready && !source.ter1.pixels.empty()
+            ?smac_resource_art::Select(x,y,tile.band,tile.resource_items,world.resource_pattern,world.automatic_land_resources,display_flags)
+            :std::vector<smac_resource_art::Pick>{};
+        const auto append_resources=[&](const Point& anchor,bool late) {
+            for(const auto& pick:resources) {
+                if((pick.stage!=smac_resource_art::Stage::Resource)==late) {append_marker(pick.crop,anchor,pick.shadow);}
+            }
+        };
         if(tile.band<3) {
             frame.landmark_tiles[static_cast<size_t>(y)*40+x/2]=!source.ter1.pixels.empty();
             const std::array<Point,5> points{{{{fx,fy}},{{fx-48,fy}},{{fx,fy-24}},{{fx+48,fy}},{{fx,fy+24}}}};
             append_water(x,y,points);append_boundary(x,y,points);
-            append_developed(tile,{{fx-48,fy-24}},true);append_developed(tile,{{fx-48,fy-24}},false);
-            append_marker(smac_landmark_art::Nexus(tile.landmarks,display_flags),{{fx-48,fy-24}});
+            const Point anchor{{fx-48,fy-24}};
+            append_developed(tile,anchor,true);append_resources(anchor,false);append_developed(tile,anchor,false);
+            append_marker(smac_landmark_art::Nexus(tile.landmarks,display_flags),anchor);append_resources(anchor,true);
+            frame.resource_tiles[static_cast<size_t>(y)*40+x/2]=tile.resource_ready && !source.ter1.pixels.empty();
             frame.developed_tiles[static_cast<size_t>(y)*40+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
             ++frame.tiles;continue;
         }
@@ -215,8 +227,9 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             command.shader=pass.shader;command.shade_limits=pass.shade_limits;commands.push_back(command);
         }
         const Point anchor{{fx-48,fy-24-terrain::LandmarkGeometry::FloorQuarter(heights[1]+heights[2]+heights[3]+heights[4])}};
-        append_developed(tile,anchor,false);
-        append_marker(smac_landmark_art::Nexus(tile.landmarks,display_flags),anchor);
+        append_resources(anchor,false);append_developed(tile,anchor,false);
+        append_marker(smac_landmark_art::Nexus(tile.landmarks,display_flags),anchor);append_resources(anchor,true);
+        frame.resource_tiles[static_cast<size_t>(y)*40+x/2]=tile.resource_ready && !source.ter1.pixels.empty();
         frame.developed_tiles[static_cast<size_t>(y)*40+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
         ++frame.tiles;
     }

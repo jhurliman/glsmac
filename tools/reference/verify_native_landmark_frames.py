@@ -1,4 +1,4 @@
-"""Replay443 original landmark indexed frames through the production rasterizer.
+"""Replay original landmark/resource indexed frames through the production rasterizer.
 
 This consumes captured commands; the separate landmark selector verifier checks
 C++ named-art submissions. It does not prove the complete live scene assembler.
@@ -13,6 +13,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--asset-directory',required=True)
     parser.add_argument('--cxx',default='c++');parser.add_argument('--sanitize',action='store_true')
+    parser.add_argument('--include-resources',action='store_true',help='Also replay the56 resource/Pod/Monolith frames')
     args=parser.parse_args();root=Path(__file__).resolve().parents[2];data=root/'docs/behavior'
     sys.path.insert(0,str(data));assets=Path(args.asset_directory)
     cases=json.loads((data/'named-landmark-quad-marker-art-cases.json').read_text(encoding='utf-8'))
@@ -20,6 +21,11 @@ def main():
     if cases['shadow']!=material['shadow'] or cases['viewport']!=material['viewport'] or cases['background']!=material['background']:
         raise ValueError('Inconsistent captured landmark raster state')
     cases['frames']+=material['frames']
+    if args.include_resources:
+        resources=json.loads((data/'resource-pod-monolith-art-cases.json').read_text(encoding='utf-8'))
+        if any(cases[key]!=resources[key] for key in ['shadow','viewport','background']):
+            raise ValueError('Inconsistent captured resource raster state')
+        cases['frames']+=resources['frames']
     cases['producer_cases']=[]
     prior=json.loads((data/'territory-boundary-cases.json').read_text(encoding='utf-8'))
     pcx=runpy.run_path(str(data/'terrain_triangle_raster_reference.py'))['pcx_crop']
@@ -70,7 +76,7 @@ def main():
             if digest(temp/f'frame-{index}.bin')!=frame['frame_sha256'] or counts[index]!=expected_counts:
                 raise ValueError('Original indexed frame differs: '+frame['id']+' '+str(counts[index])+' '+str(expected_counts))
             print('PASS',frame['id'])
-        print('PASS443 complete original indexed frames and256 shadow entries; captured-command replay, not live scene parity')
+        print(f"PASS{len(cases['frames'])} complete original indexed frames and256 shadow entries; captured-command replay, not live scene parity")
 
 
 if __name__=='__main__':main()

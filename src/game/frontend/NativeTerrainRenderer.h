@@ -23,7 +23,7 @@ struct Frame {
     std::vector<uint8_t> rgba;
     uint64_t attempts=0,writes=0;
     size_t tiles=0;
-    std::array<bool,3200> developed_tiles{},landmark_tiles{};
+    std::array<bool,3200> developed_tiles{},landmark_tiles{},resource_tiles{};
 };
 // Explicit reference allocation-base low16; never a coordinate hash or a
 // gameplay RNG stream. Offset translates a visible copy without changing UVs.

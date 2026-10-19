@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "SmacResourceArt.h"
 #include "NativeTerrainRenderer.h"
 #include "SmacDevelopedOverlay.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
@@ -19,17 +20,19 @@
 #include <cmath>
 
 namespace game::frontend {
-void Game::UpdateNativeTerrainSpriteVisibility(const std::array<bool,3200>* covered,const std::array<bool,3200>* landmarks) {
+void Game::UpdateNativeTerrainSpriteVisibility(const std::array<bool,3200>* covered,const std::array<bool,3200>* landmarks,const std::array<bool,3200>* resources) {
     std::unordered_set<size_t> hidden;
-    if((covered || landmarks) && m_tm && m_map_data.width==80 && m_map_data.height==80) {
+    if((covered || landmarks || resources) && m_tm && m_map_data.width==80 && m_map_data.height==80) {
         for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
             const auto index=static_cast<size_t>(y)*40+x/2;
             const bool developed=covered && covered->at(index),named=landmarks && landmarks->at(index);
-            if(!developed && !named) {continue;}
+            const bool resource=resources && resources->at(index);
+            if(!developed && !named && !resource) {continue;}
             for(const auto& sprite:m_tm->GetTile(x,y)->GetRenderData().terrain_instances) {
                 const auto entry=m_native_legacy_instances.find(sprite.id);
                 if(entry!=m_native_legacy_instances.end() && entry->second.first==sprite.actor && ((developed && smac_developed_overlay::ReplacesLegacySprite(sprite.name)) ||
-                    (named && (sprite.name=="Uranium" || sprite.name=="Geothermal")))) {hidden.insert(sprite.id);}
+                    (named && (sprite.name=="Uranium" || sprite.name=="Geothermal")) ||
+                    (resource && smac_resource_art::ReplacesLegacySprite(sprite.name)))) {hidden.insert(sprite.id);}
             }
         }}
     }
@@ -99,7 +102,10 @@ void Game::UpdateNativeTerrain() {
     }
     // Default controlled comparison base0x40100000. A measured original run
     // can override its low16 explicitly, without consuming any RNG stream.
-    auto frame=native_terrain::Render(*m_native_world,*m_native_source,placements,g_engine->GetConfig()->GetNativeTerrainBaseLow16());
+    // The opt-in inspector presents resources/sites as well as improvements.
+    // Keep the raw selector gate explicit; this is a presentation profile,
+    // not a claim about unimplemented original display-option persistence.
+    auto frame=native_terrain::Render(*m_native_world,*m_native_source,placements,g_engine->GetConfig()->GetNativeTerrainBaseLow16(),{{0,0}},0x10621);
     if(!m_native_texture) {
         NEW(m_native_texture,types::texture::Texture,"NativeTerrainViewport",1024,511);
         NEWV(quad,types::mesh::Rectangle,(types::Vec2<float>{-1,1}),(types::Vec2<float>{1,1-2*511.0f/768}),0.0f);
@@ -113,7 +119,7 @@ void Game::UpdateNativeTerrain() {
     }
     std::copy(frame.rgba.begin(),frame.rgba.end(),m_native_texture->GetBitmap());
     m_native_texture->FullUpdate();m_native_actor->SetTexture(m_native_texture);m_native_actor->Show();
-    UpdateNativeTerrainSpriteVisibility(&frame.developed_tiles,&frame.landmark_tiles);
+    UpdateNativeTerrainSpriteVisibility(&frame.developed_tiles,&frame.landmark_tiles,&frame.resource_tiles);
     m_native_frame_dirty=false;
 }
 }

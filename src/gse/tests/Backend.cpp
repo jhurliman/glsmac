@@ -6187,7 +6187,7 @@ public:
 			if ( scenario == 31 ) { social_wire.assign( faction::SmacSocialState::MAX_WIRE_BYTES + 1, 'x' ); }
 			if ( scenario == 32 ) {
 				types::Buffer input( social_wire ); const auto marker = input.ReadInt(); input.ReadInt();
-				types::Buffer bad; bad.WriteInt( marker ); bad.WriteInt( 2 ); social_wire = bad.ToString() + social_wire.substr( input.lenr );
+				types::Buffer bad; bad.WriteInt( marker ); bad.WriteInt( 3 ); social_wire = bad.ToString() + social_wire.substr( input.lenr );
 			}
 			if ( scenario != 33 ) { raw.WriteString( social_wire ); }
 			auto gameplay_wire = value.gameplay_random.Serialize();

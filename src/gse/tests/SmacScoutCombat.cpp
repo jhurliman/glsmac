@@ -7,6 +7,7 @@
 #include "loader/texture/SmacEffect.h"
 #include "game/ScoutBattlePresentation.h"
 #include "game/SmacHealthbar.h"
+#include "game/frontend/base/SmacPopulationBadge.h"
 #include "game/frontend/unit/BadgeDefs.h"
 #include "game/backend/map/Consts.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
@@ -62,6 +63,32 @@ bool StepMatches( const fixture::Step& e, const model::Survivor& s, const model:
 }
 
 void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC population badge preserves original one and two digit layout",GT(){
+        types::Font font("population layout fixture");
+        // Pin the measured original advance and baseline independently of host fonts.
+        for(const char digit:std::string("0189")) {
+            auto& glyph=font.m_symbols[static_cast<unsigned char>(digit)];
+            glyph={9,0,1,1,0,12,static_cast<unsigned char*>(malloc(1))};
+            if(!glyph.data) {throw std::bad_alloc();}glyph.data[0]=255;
+        }
+        const auto black=types::Color::FromRGB(0,0,0),white=types::Color::FromRGB(255,255,255);
+        const auto clear=types::Color::FromRGBA(0,0,0,0);
+        auto nine=game::frontend::base::MakeSmacPopulationBadge(9,font,clear,white,black);
+        auto ten=game::frontend::base::MakeSmacPopulationBadge(10,font,white,black,black);
+        GT_ASSERT(nine->GetWidth()==14 && ten->GetWidth()==23 && nine->GetHeight()==16 && ten->GetHeight()==16,
+            "Original placeholder8/88 width or fixed16 pixel height changed");
+        GT_ASSERT(nine->GetPixel(3,2)==white.GetRGBA() && ten->GetPixel(3,2)==black.GetRGBA()
+            && ten->GetPixel(12,2)==black.GetRGBA(),"Digits lost left padding baseline or glyph advance");
+        GT_ASSERT(nine->GetPixel(2,2)==clear.GetRGBA() && nine->GetPixel(4,3)==clear.GetRGBA()
+            && ten->GetPixel(1,1)==white.GetRGBA(),"Transparent/filled interior or absent shadow changed");
+        for(auto* texture:{nine.get(),ten.get()}) {
+            for(size_t x=0;x<texture->GetWidth();++x) {GT_ASSERT(texture->GetPixel(x,0)==black.GetRGBA()
+                && texture->GetPixel(x,15)==black.GetRGBA(),"Population horizontal border is not one pixel");}
+            for(size_t y=0;y<16;++y) {GT_ASSERT(texture->GetPixel(0,y)==black.GetRGBA()
+                && texture->GetPixel(texture->GetWidth()-1,y)==black.GetRGBA(),"Population vertical border is not one pixel");}
+        }
+        GT_OK();
+    });
     task->AddTest("SMAC health bar renderer preserves indexed colors geometry cache and retirement",GT(){
         scene::Scene scene("Health bar fixture",scene::SCENE_TYPE_WORLD);
         game::frontend::sprite::InstancedSpriteManager sprites(&scene);

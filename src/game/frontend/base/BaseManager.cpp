@@ -21,17 +21,20 @@
 #include "game/backend/base/Base.h"
 #include "game/backend/map/Map.h"
 #include "gse/value/Int.h"
+#include "loader/cvr/CvrActorMaterial.h"
+#include "resource/ResourceManager.h"
+#include "util/FS.h"
 
 namespace game {
 namespace frontend {
 namespace base {
 
-BaseManager::BaseManager( Game* game )
+BaseManager::BaseManager( Game* game, bool smac_population )
 	: m_game( game )
 	, m_ism( game->GetISM() )
 	, m_name_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( ::resource::TTF_ARIALN, 48 ) ) )
-	, m_badge_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( ::resource::TTF_ARIALNB, 48 ) ) ) {
-	//
+	, m_badge_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( ::resource::TTF_ARIALNB, 48 ) ) )
+	, m_smac_population( smac_population ) {
 }
 
 BaseManager::~BaseManager() {
@@ -268,6 +271,27 @@ Base* BaseManager::GetBaseAfter( Base* base ) const {
 
 text::InstancedFont* BaseManager::GetBadgeFont() const {
 	return m_badge_font;
+}
+
+const types::Font* BaseManager::GetSmacPopulationFont() {
+	if (!m_smac_population_font) {
+		m_smac_population_font = g_engine->GetFontLoader()->LoadCustomFont("arialbd.ttf",16,loader::font::RasterMode::MONOCHROME);
+	}
+	return m_smac_population_font;
+}
+
+const std::array<types::Color,256>& BaseManager::GetSmacPopulationPalette() {
+	if (!m_smac_population_palette_loaded) {
+		std::vector<unsigned char> bytes;
+		util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath("PALETTE.PCX"));
+		const auto colors=loader::cvr::CvrActorMaterial::ReadSoftwareColors(
+			std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));
+		for(size_t i=0;i<colors.size();++i) {
+			m_smac_population_palette[i]=types::Color::FromRGB(colors[i][0],colors[i][1],colors[i][2]);
+		}
+		m_smac_population_palette_loaded=true;
+	}
+	return m_smac_population_palette;
 }
 
 }

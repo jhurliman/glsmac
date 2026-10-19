@@ -30,15 +30,16 @@ void Finalize::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapSta
     const bool native_land=planet && !tile->is_water_tile &&
         tile->coord.x<SmacPlanetMap::WIDTH && tile->coord.y<SmacPlanetMap::HEIGHT &&
         (planet->At(tile->coord.x,tile->coord.y).Climate()>>5)>=3;
+    ts->smac_projector_height.reset();
     if(native_land) {
         const auto band_at=[&](int x,int y)->std::optional<uint8_t> {
             if(y<0 || y>=int(SmacPlanetMap::HEIGHT)) {return std::nullopt;}
             x=(x+int(SmacPlanetMap::WIDTH))%int(SmacPlanetMap::WIDTH);
             return planet->At(x,y).Climate()>>5;
         };
-        ts->layers[tile::LAYER_LAND].coords=smac_terrain::LandCoordinates(
-            smac_terrain::OrdinaryHeights(int(tile->coord.x),int(tile->coord.y),band_at),
-            ts->coord,s_consts.tile.radius);
+        const auto heights=smac_terrain::OrdinaryHeights(int(tile->coord.x),int(tile->coord.y),band_at);
+        ts->smac_projector_height=static_cast<uint8_t>((heights[1]+heights[2]+heights[3]+heights[4])/4);
+        ts->layers[tile::LAYER_LAND].coords=smac_terrain::LandCoordinates(heights,ts->coord,s_consts.tile.radius);
     }
 
 #define do_x() \

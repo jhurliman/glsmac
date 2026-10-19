@@ -1,4 +1,5 @@
 #include "TerrainRenderUpdate.h"
+#include "game/frontend/tile/Tile.h"
 #include "game/frontend/unit/SelectionBlink.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/MapState.h"
@@ -121,8 +122,17 @@ public:
             ts->layers[tile::LAYER_LAND].coords.center==center &&
             gameplay.GetStateString()==expected.GetStateString() &&
             (coast?gameplay.GetStateString()==state:gameplay.GetStateString()!=state);
+        const auto anchor=ts->GetProjectorCoords(tile::LAYER_LAND);
+        const auto expected_height=coast?18:25; // floor((0+25+25+25)/4), not center25
+        game::frontend::tile::Tile shown({2,2});shown.Update(*t,*ts);
+        const bool projected=ts->smac_projector_height==std::optional<uint8_t>(expected_height) &&
+            close_coord(anchor,types::Vec3(10,20,2.0f+expected_height/48.0f)) &&
+            shown.GetRenderData().name_anchor==std::optional<types::Vec3>(anchor) &&
+            shown.GetRenderData().coords==center && shown.GetRenderData().selection_coords.left==west;
+        ts->smac_projector_height.reset();shown.Update(*t,*ts);
+        const bool legacy=!shown.GetRenderData().name_anchor && ts->GetProjectorCoords(tile::LAYER_LAND)==center;
         world.m_meshes.terrain=nullptr;world.m_meshes.terrain_data=nullptr;
-        return result;
+        return result && projected && legacy;
     }
     auto Replay(const map::TerrainCoastRecipes::Land& land) { return world.m_coast_recipes.Prepare(land); }
 	void Commit( tile::Tile* t, uint16_t bits, map::Map::PreparedTerrainUpdate& update ) {
@@ -132,6 +142,31 @@ public:
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("SMAC terrain projector metadata survives tile transport and preserves legacy absence",GT(){
+        tile::TileState source{};
+        NEW(source.moisture_original,types::texture::Texture,map::s_consts.tc.texture_pcx.dimensions.x,map::s_consts.tc.texture_pcx.dimensions.y);
+        source.layers[tile::LAYER_LAND].coords.center={10,20,2.0f+25.0f/48};
+        source.smac_projector_height=18;
+        const auto expected=source.GetProjectorCoords(tile::LAYER_LAND);
+        tile::TileState restored{};restored.Deserialize(source.Serialize());
+        GT_ASSERT(restored.smac_projector_height==source.smac_projector_height && restored.GetProjectorCoords(tile::LAYER_LAND)==expected,
+            "Transport discarded native terrain-aware projector anchor");
+        source.smac_projector_height.reset();const auto legacy=source.Serialize();
+        tile::TileState old{};old.Deserialize(legacy);
+        GT_ASSERT(!old.smac_projector_height && old.GetProjectorCoords(tile::LAYER_LAND)==source.layers[tile::LAYER_LAND].coords.center,
+            "Legacy transport invented native projector displacement");
+        for(const int height:{-1,128}) {
+            auto bad=legacy;bad.WriteString("SMAC_PROJECTOR_HEIGHT_V1");bad.WriteInt(height);
+            bool rejected=false;
+            try {tile::TileState probe{};probe.Deserialize(bad);}catch(const std::exception&){rejected=true;}
+            GT_ASSERT(rejected,"Out-of-range projector metadata was accepted");
+        }
+        auto unknown=legacy;unknown.WriteString("UNKNOWN_PROJECTOR");unknown.WriteInt(18);
+        bool rejected=false;
+        try {tile::TileState probe{};probe.Deserialize(unknown);}catch(const std::exception&){rejected=true;}
+        GT_ASSERT(rejected,"Unknown projector extension was accepted");
+        GT_OK();
+    });
     task->AddTest("SMAC ordinary land heights match 18 original terrain contexts",GT(){
         for(const auto& c:terrain_cases::ALL) {
             const auto band_at=[&](int x,int y)->std::optional<uint8_t> {

@@ -2913,13 +2913,14 @@ public:
             auto* tile=m_game.GetMap()->GetTile(2,2);tile->is_water_tile=false;
             Unit* expected=nullptr;
             m_game.WithRW([&] {
-                const auto spawn=[&](size_t id,Def* def,int32_t design,size_t owner,uint8_t simulation) {
+                const auto spawn=[&](size_t id,Def* def,int32_t design,size_t owner) {
+                    const auto simulation=static_cast<uint8_t>(m_game.m_simulation->value.FindSlot(owner)->simulation_id);
                     return manager->SpawnConventionalUnit(GSE_CALL,id,def,&m_state->m_slots->GetSlot(owner),tile,
                         {design,simulation,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
                 };
-                spawn(1,scout,2,6,7); // foreign Scout must not become the source
-                spawn(2,colony,0,0,1);spawn(3,former,1,0,1);
-                expected=spawn(4,scout,2,0,1);
+                spawn(1,scout,2,6); // foreign Scout must not become the source
+                spawn(2,colony,0,0);spawn(3,former,1,0);
+                expected=spawn(4,scout,2,0);
             });
             const auto before=WorldSnapshot();
             GT_ASSERT(FindDevelopedReferenceScout()==expected,"reference fixture selected a foreign Scout or lower-ID worker instead of its owned Scout");

@@ -2271,6 +2271,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     const auto former=game->MakeSmacProductionItem(foreign,ProductionItemKind::Unit,1);
                     auto context=SmacBaseResourceContext{2,false,0,0,0x1000040u,false};
                     if(retained && i==0) {context.conquest=SmacConquestState{liberation ? 1:2,27};}
+                    if(raze && i==0) {context.uncaptured_former_owner=2;}
                     auto* base=new Base(game,702+i,foreign,foreign->GetPlayer()->GetFaction(),game->GetMap()->GetTile(20+6*i,16),"Capture "+std::to_string(i),{},pops,41,5,
                         ProductionState{former,7,former,7,std::vector<ProductionItem>{former}},context);
                     bm->SpawnBase(GSE_CALL,base);base->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},static_cast<int32_t>(pops.size())}},Roles());bases.push_back(base);

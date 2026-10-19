@@ -6,6 +6,7 @@
 #include <vector>
 
 namespace task::intro { class Movie; }
+namespace loader::texture {struct SmacTurnFrames;}
 
 namespace types {
 namespace mesh {
@@ -34,6 +35,7 @@ public:
 	void Destroy( GSE_CALLABLE ) override;
 	// Main-thread RGBA upload; updates both the texture and cached actor revision.
 	void PresentMovieFrame(int width, int height, const std::vector<uint8_t>& rgba);
+    void PresentTurnFrame(const std::vector<uint8_t>& rgba);
 
 protected:
 	virtual ~Surface();
@@ -51,6 +53,7 @@ private:
 
 	void ClearTexture();
 	std::unique_ptr<task::intro::Movie> m_movie;
+    std::shared_ptr<const loader::texture::SmacTurnFrames> m_turn_frames;
 	void StopMovie();
 
 private:

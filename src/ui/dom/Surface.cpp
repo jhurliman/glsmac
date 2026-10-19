@@ -7,6 +7,8 @@
 #include "ui/geometry/Rectangle.h"
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
+#include "loader/texture/SmacTurnFrames.h"
+#include "gse/value/Int.h"
 #include "graphics/Graphics.h"
 #include "types/texture/Texture.h"
 #include "util/String.h"
@@ -64,6 +66,15 @@ Surface::Surface( DOM_ARGS_T )
 	Method( GSE_CALL, "stopmovie", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 0 );StopMovie();return VALUE(gse::value::Undefined);
 	} ) );
+
+    Method( GSE_CALL, "smacturnframe", NATIVE_CALL( this ) {
+        N_EXPECT_ARGS(1);N_GETVALUE(frame,0,Int);
+        if(frame<0 || frame>19) {GSE_ERROR(gse::EC.UI_ERROR,"Turn Complete frame must be0..19");}
+        if(!m_turn_frames) {m_turn_frames=g_engine->GetTextureLoader()->GetSmacTurnFrames();}
+        if(!m_turn_frames) {GSE_ERROR(gse::EC.LOADER_ERROR,"Turn Complete source unavailable");}
+        PresentTurnFrame(m_turn_frames->rgba[frame==19 ? 18 : frame]);
+        return VALUE(gse::value::Bool,,true);
+    } ) );
 
 	Property(
 		GSE_CALL, "opacity", gse::VT_FLOAT, VALUE( gse::value::Float, , 1.0f ), PF_NONE,
@@ -294,6 +305,16 @@ void Surface::PresentMovieFrame(int width,int height,const std::vector<uint8_t>&
 	const float viewport_width=std::min(parent_area.width,parent_area.height*4.0f/3.0f);
 	const float scale=std::min(viewport_width/width,parent_area.height/height);
 	geometry->SetWidth(width*scale);geometry->SetHeight(height*scale);
+}
+
+void Surface::PresentTurnFrame(const std::vector<uint8_t>& rgba) {
+    if(rgba.size()!=233*23*4) {throw std::invalid_argument("Invalid Turn Complete RGBA frame");}
+    // Reuse one owned texture. No path resolution, decode or allocation on the
+    // recurring timer; refresh the actor revision so cached UI sees each frame.
+    CreateTexture();m_background.texture->Resize(233,23);
+    std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());
+    m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);
+    m_geometry->AsRectangle()->SetStretched();
 }
 
 void Surface::StopMovie() {

@@ -19,6 +19,7 @@ namespace game::frontend::native_terrain {struct Source;}
 namespace loader {
 namespace texture {
 struct SmacBaseCard;
+struct SmacTurnFrames;
 
 CLASS( TextureLoader, Loader )
 
@@ -46,6 +47,8 @@ CLASS( TextureLoader, Loader )
     virtual std::shared_ptr<const SmacBaseCard> GetSmacNativeBaseCard(const std::string& faction,size_t x,size_t y,bool roster);
     virtual std::shared_ptr<const game::frontend::native_terrain::Source> GetSmacTerrainSource();
     virtual std::shared_ptr<types::texture::Texture> GetSmacEffectTexture(bool death);
+
+    virtual std::shared_ptr<const SmacTurnFrames> GetSmacTurnFrames();
 
 	// create texture of solid color
 	types::texture::Texture* GetColorTexture( const types::Color& color );

@@ -5,6 +5,8 @@
 #include "SmacEffect.h"
 #include "SmacNativeBadge.h"
 #include "SmacBaseCard.h"
+#include "SmacTurnFrames.h"
+#include "loader/flic/TurnComplete.h"
 #include "loader/cvr/CvrActorMaterial.h"
 #include "loader/flic/MenuCompositor.h"
 #include <algorithm>
@@ -42,6 +44,28 @@ SDL_Surface* load_image( const std::vector< unsigned char >& buffer ) {
 	SDL_RWops* rw = SDL_RWFromConstMem( buffer.data(), buffer.size() );
 	ASSERT( rw, "rw is null" );
 	return IMG_Load_RW( rw, 1 );
+}
+
+std::shared_ptr<const SmacTurnFrames> SDL2::GetSmacTurnFrames() {
+    const auto animation=GetCustomFilename("turn.flc"),palette=GetCustomFilename("palette.pcx");
+    const auto key=animation+":"+palette;
+    const auto found=m_turn_frames.find(key);if(found!=m_turn_frames.end()) {return found->second;}
+    std::vector<uint8_t> bytes;util::FS::ReadFile(bytes,animation);
+    const auto indexed=loader::flic::DecodeTurnComplete(bytes);
+    util::FS::ReadFile(bytes,palette);
+    const auto colors=loader::cvr::CvrActorMaterial::ReadSoftwareColors(
+        std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));
+    auto result=std::make_shared<SmacTurnFrames>();
+    for(size_t f=0;f<19;++f) {
+        auto& rgba=result->rgba[f];rgba.resize(233*23*4);
+        for(size_t p=0;p<233*23;++p) {
+            const auto index=indexed[f].pixels[p];
+            for(size_t c=0;c<3;++c) {rgba[p*4+c]=colors[index][c];}
+            // Key0 restores the retained console backing, never palette0 black.
+            rgba[p*4+3]=index ? 255 : 0;
+        }
+    }
+    return m_turn_frames.emplace(key,std::move(result)).first->second;
 }
 
 struct SmacBaseCardSource {

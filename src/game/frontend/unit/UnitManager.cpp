@@ -366,24 +366,17 @@ void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 		if(m_selected_unit->IsActive()) {m_selected_unit->StartBadgeBlink();}
 		const auto id = m_selected_unit->GetId();
 		Log( "Selected unit " + std::to_string( id ) );
-		auto* game = m_game->GetGame();
-		auto* const u = game->GetUM()->GetUnit( id );
-		m_game->Trigger(
-			game->GetMap(), "unit_preview", ARGS_F( &u ) {
-				{
-					"unit",
-					u->Wrap( GSE_CALL )
-				},
-			}; }
-		);
-		m_game->Trigger(
-			game, "unit_select", ARGS_F( &u ) {
-				{
-					"unit",
-					u->Wrap( GSE_CALL )
-				},
-			}; }
-		);
+        auto* state=m_game->GetGame()->GetState();
+        state->WithGameSession(state->CaptureGameSession(),state,[id](backend::Game* const game,GSE_CALLABLE) {
+            auto* actor=game->GetUM()->GetUnit(id);
+            if(!actor) {return;}
+            game->GetState()->TriggerObject(game->GetMap(),"unit_preview",ARGS_F(actor){{"unit",actor->Wrap(GSE_CALL)}};});
+            // Preview listeners can retire a Unit. Resolve the stable ID again;
+            // neither callback borrows this frontend stack frame or a raw session.
+            actor=game->GetUM()->GetUnit(id);
+            if(!actor) {return;}
+            game->GetState()->TriggerObject(game,"unit_select",ARGS_F(actor){{"unit",actor->Wrap(GSE_CALL)}};});
+        });
 	}
 }
 

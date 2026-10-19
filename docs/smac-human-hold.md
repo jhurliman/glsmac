@@ -14,3 +14,5 @@ The retained general order is distinct from the port's WorkOrder IDs (whose valu
 Tests cover actual ten-turn upkeep, indefinite and inherited negative counters, malformed codec fields, real world save/restore, next-unit selection, Former Farm2 -> Hold -> restore -> Activate button -> move -> Solar4, and Skip retaining work. The real command-panel callback is used with only DOM construction replaced. Frontend actionability checks keep movement separate from selection eligibility.
 
 The map H glyph, original context-menu layout, Sentry/transport/repair branches, native-life orders and SMAX-specific admission remain follow-ups. This change supplies real Hold authority for the renderer; it does not claim a matched H overlay or complete original unit-order system.
+
+Runtime selection acceptance also admits owned held units through both map hit-testing and FR_UNIT_SELECT. Deferred selection notifications capture a stable Unit ID inside the active game session; they no longer borrow the caller's local pointer. A real FR request followed by deferred GSE delivery and Activate exercises this boundary. Focused frontend sanitizers include stack-use-after-return detection.

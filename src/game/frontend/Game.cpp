@@ -1095,7 +1095,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		}
 		case FrontendRequest::FR_UNIT_SELECT: {
 			auto* const unit = m_um->GetUnitById( request->data.unit_select.unit_id );
-			if ( unit && unit->IsActive() ) {
+			if ( unit && (unit->IsActive() || (unit->IsOwned() && unit->IsHeld())) ) {
 				m_um->SelectUnit( unit, true );
 				ScrollToTile( unit->GetTile(), true );
 			}
@@ -1986,7 +1986,8 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 			m_tile_at_query_purpose = backend::TQP_NONE;
 		}
 		else if ( selected_object->GetType() == TileObject::TOT_UNIT ) {
-			if ( ( (unit::Unit*)selected_object )->IsActive() ) {
+			const auto* inspected=static_cast<unit::Unit*>(selected_object);
+			if ( inspected->IsActive() || (inspected->IsOwned() && inspected->IsHeld()) ) {
 				m_tile_at_query_purpose = backend::TQP_UNIT_SELECT;
 			}
 			else {

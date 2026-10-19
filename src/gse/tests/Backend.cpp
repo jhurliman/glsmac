@@ -2611,7 +2611,26 @@ public:
 			m_game.Event(GSE_CALL,"work_unit",{{"unit",helper->Wrap(GSE_CALL)},{"action",VALUE(value::Int,,1)}});ProcessEvents();GT_OK();
 		});if(!error.empty()){return error;}
 		error=publish();if(!error.empty()){return error;}
-		return script("check",idle,none);
+        error=script("check",idle,none);if(!error.empty()){return error;}
+        // Explicit held inspection must pass the actual FR_UNIT_SELECT gate,
+        // not only a synthetic unit_select callback. Leave the retained target
+        // selected to isolate request admission from this fixture's unset map focus.
+        error=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{
+            m_game.Event(GSE_CALL,"unit_hold",{{"unit",actor->Wrap(GSE_CALL)}});ProcessEvents();GT_OK();
+        });if(!error.empty()){return error;}
+        auto* held=controller->GetUnitById(actor->m_id);
+        controller->m_selected_unit=nullptr;held->SetHeld(true);held->Refresh();controller->m_selected_unit=held;
+        frontend->m_is_turn_active=true;
+        game::FrontendRequest inspect(game::FrontendRequest::FR_UNIT_SELECT);inspect.data.unit_select.unit_id=actor->m_id;
+        std::exception_ptr selection_failure;
+        std::thread select([&]{try {frontend->ProcessRequest(&inspect);}catch(...){selection_failure=std::current_exception();}});select.join();
+        if(selection_failure){std::rethrow_exception(selection_failure);}ProcessAccumulations();
+        error=script("check","Activate unit","Holding position — stored work: 0");if(!error.empty()){return error;}
+        error=script("click","Activate unit");if(!error.empty()){return error;}
+        error=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{ProcessEvents();GT_OK();});if(!error.empty()){return error;}
+        error=publish();if(!error.empty()){return error;}
+        GT_ASSERT(!actor->Conventional().IsHeld() && held->IsActive() && held->CanMove(),"Actual held inspection/Activate request did not restore eligibility");
+        return script("check",idle,none);
 	}
 
 	std::string CheckRetainedWorkSelection( GSE_CALLABLE, game::backend::unit::Unit* actor, game::backend::unit::Unit* scout ) {

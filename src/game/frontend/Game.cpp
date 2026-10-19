@@ -1143,6 +1143,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				d.health, d.conventional, d.has_moves, d.full_movement, d.native
 			);
             m_um->GetUnitById(d.unit_id)->SetMaximumHitPoints(d.maximum_hit_points);
+            m_um->GetUnitById(d.unit_id)->Refresh();
 			break;
 		}
 		case FrontendRequest::FR_UNIT_DESPAWN: {

@@ -22,11 +22,9 @@ const types::Vec3 MapObject::GetRenderCoords() const {
 	ASSERT( m_tile, "tile not set" );
 	const auto* ts = m_map->GetTileState( m_tile );
 	ASSERT( ts, "ts not found" );
-	const auto c = ts->layers[
-		m_tile->is_water_tile
-			? map::tile::LAYER_WATER
-			: map::tile::LAYER_LAND
-	].coords.center;
+	const auto c = ts->GetProjectorCoords(
+		m_tile->is_water_tile ? map::tile::LAYER_WATER : map::tile::LAYER_LAND
+    );
 	return {
 		c.x,
 		-c.y,

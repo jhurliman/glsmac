@@ -161,7 +161,8 @@ void Sprites::GenerateSprite( const tile::Tile* tile, tile::TileState* ts, const
 	sprite.name = name;
 	sprite.tex_coords = tex_coords;
 	sprite.actor = m_map->GetTerrainSpriteActor( name, sprite.tex_coords, z_index );
-	const types::Vec3 center = {
+	const types::Vec3 center = ts->smac_projector_height && !tile->is_water_tile
+        ? ts->GetProjectorCoords( tile::LAYER_LAND ) : types::Vec3{
 		( coords.left.x + coords.right.x ) / 2,
 		( coords.top.y + coords.bottom.y ) / 2,
 		( coords.left.z + coords.top.z + coords.right.z + coords.bottom.z ) / 4

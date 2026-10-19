@@ -1,0 +1,390 @@
+{
+  "scope": "Original ordinary map caller, native lookup and overlay/layout evidence; conventional Scout model surface setup and sampled improvement callers. Fixed camera40,40, tile40,40, zoom0,1024x511, known80x80 round world. Native sprite/model pixel generation not claimed.",
+  "fixtures": {
+    "uniform3": "all altitude bands3",
+    "uniform4": "all bands4",
+    "single_hill": "band3 world, tile40,40 band4",
+    "coast": "single_hill plus tile39,39 band2",
+    "unit": "native predefined Scout Patrol design2, owner3, Hold, damage3, singleton links\u22121",
+    "base": "owner3,population3,New Austin; occupied Base pass then separate Unit-only marker pass"
+  },
+  "cases": [
+    {
+      "id": "uniform3",
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "mean_outer_height": 0,
+      "projector": [
+        528,
+        264
+      ],
+      "base_art_call_anchor": [
+        528,
+        240
+      ],
+      "base_population_box": [
+        528,
+        240,
+        542,
+        256
+      ],
+      "base_population_text_start_baseline": [
+        531,
+        254
+      ],
+      "base_name_start_baseline": [
+        545,
+        315
+      ],
+      "scout_dispatch_anchor": [
+        528,
+        240
+      ],
+      "scout_model_surface_anchor": [
+        578,
+        290
+      ],
+      "hold_start_baseline": [
+        539,
+        256
+      ],
+      "health_black_rect": [
+        534,
+        246,
+        536,
+        267
+      ],
+      "health_damage3_colored_rect": [
+        534,
+        246,
+        536,
+        260
+      ],
+      "improvement_sprites": [
+        {
+          "feature": "sensor",
+          "anchor": [
+            528,
+            264
+          ]
+        },
+        {
+          "feature": "bunker",
+          "anchor": [
+            528,
+            264
+          ]
+        },
+        {
+          "feature": "farm",
+          "anchor": [
+            528,
+            264
+          ]
+        },
+        {
+          "feature": "mine",
+          "anchor": [
+            528,
+            264
+          ]
+        },
+        {
+          "feature": "solar",
+          "anchor": [
+            528,
+            264
+          ]
+        }
+      ]
+    },
+    {
+      "id": "uniform4",
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "mean_outer_height": 25,
+      "projector": [
+        528,
+        239
+      ],
+      "base_art_call_anchor": [
+        528,
+        215
+      ],
+      "base_population_box": [
+        528,
+        215,
+        542,
+        231
+      ],
+      "base_population_text_start_baseline": [
+        531,
+        229
+      ],
+      "base_name_start_baseline": [
+        545,
+        290
+      ],
+      "scout_dispatch_anchor": [
+        528,
+        215
+      ],
+      "scout_model_surface_anchor": [
+        578,
+        265
+      ],
+      "hold_start_baseline": [
+        539,
+        231
+      ],
+      "health_black_rect": [
+        534,
+        221,
+        536,
+        242
+      ],
+      "health_damage3_colored_rect": [
+        534,
+        221,
+        536,
+        235
+      ],
+      "improvement_sprites": [
+        {
+          "feature": "sensor",
+          "anchor": [
+            528,
+            239
+          ]
+        },
+        {
+          "feature": "bunker",
+          "anchor": [
+            528,
+            239
+          ]
+        },
+        {
+          "feature": "farm",
+          "anchor": [
+            528,
+            239
+          ]
+        },
+        {
+          "feature": "mine",
+          "anchor": [
+            528,
+            239
+          ]
+        },
+        {
+          "feature": "solar",
+          "anchor": [
+            528,
+            239
+          ]
+        }
+      ]
+    },
+    {
+      "id": "single_hill",
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "mean_outer_height": 6,
+      "projector": [
+        528,
+        258
+      ],
+      "base_art_call_anchor": [
+        528,
+        234
+      ],
+      "base_population_box": [
+        528,
+        234,
+        542,
+        250
+      ],
+      "base_population_text_start_baseline": [
+        531,
+        248
+      ],
+      "base_name_start_baseline": [
+        545,
+        309
+      ],
+      "scout_dispatch_anchor": [
+        528,
+        234
+      ],
+      "scout_model_surface_anchor": [
+        578,
+        284
+      ],
+      "hold_start_baseline": [
+        539,
+        250
+      ],
+      "health_black_rect": [
+        534,
+        240,
+        536,
+        261
+      ],
+      "health_damage3_colored_rect": [
+        534,
+        240,
+        536,
+        254
+      ],
+      "improvement_sprites": [
+        {
+          "feature": "sensor",
+          "anchor": [
+            528,
+            258
+          ]
+        },
+        {
+          "feature": "bunker",
+          "anchor": [
+            528,
+            258
+          ]
+        },
+        {
+          "feature": "farm",
+          "anchor": [
+            528,
+            258
+          ]
+        },
+        {
+          "feature": "mine",
+          "anchor": [
+            528,
+            258
+          ]
+        },
+        {
+          "feature": "solar",
+          "anchor": [
+            528,
+            258
+          ]
+        }
+      ]
+    },
+    {
+      "id": "coast",
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "mean_outer_height": 3,
+      "projector": [
+        528,
+        261
+      ],
+      "base_art_call_anchor": [
+        528,
+        237
+      ],
+      "base_population_box": [
+        528,
+        237,
+        542,
+        253
+      ],
+      "base_population_text_start_baseline": [
+        531,
+        251
+      ],
+      "base_name_start_baseline": [
+        545,
+        312
+      ],
+      "scout_dispatch_anchor": [
+        528,
+        237
+      ],
+      "scout_model_surface_anchor": [
+        578,
+        287
+      ],
+      "hold_start_baseline": [
+        539,
+        253
+      ],
+      "health_black_rect": [
+        534,
+        243,
+        536,
+        264
+      ],
+      "health_damage3_colored_rect": [
+        534,
+        243,
+        536,
+        257
+      ],
+      "improvement_sprites": [
+        {
+          "feature": "sensor",
+          "anchor": [
+            528,
+            261
+          ]
+        },
+        {
+          "feature": "bunker",
+          "anchor": [
+            528,
+            261
+          ]
+        },
+        {
+          "feature": "farm",
+          "anchor": [
+            528,
+            261
+          ]
+        },
+        {
+          "feature": "mine",
+          "anchor": [
+            528,
+            261
+          ]
+        },
+        {
+          "feature": "solar",
+          "anchor": [
+            528,
+            261
+          ]
+        }
+      ]
+    }
+  ],
+  "checks": 48
+}

@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <cstring>
 #include <cctype>
+#include "engine/Engine.h"
+#include "loader/texture/TextureLoader.h"
 
 namespace game {
 namespace frontend {
@@ -77,7 +79,8 @@ void BasePreview::Update( ui::dom::Widget* const widget, const void* const data 
         const auto key=source->key+(roster?"_roster":"_selected");
         auto found=m_cards.find(key);
         if(found==m_cards.end()) {
-            auto card=MakeSmacBaseCard(*render.base.texture,source->xy.x,source->xy.y,roster);
+            const auto native=g_engine->GetTextureLoader()->GetSmacNativeBaseCard(filename,source->xy.x,source->xy.y,roster);
+            auto card=native?std::optional<SmacBaseCard>(*native):MakeSmacBaseCard(*render.base.texture,source->xy.x,source->xy.y,roster);
             if(card) {found=m_cards.emplace(key,std::move(*card)).first;}
         }
         if(found!=m_cards.end()) {

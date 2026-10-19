@@ -329,6 +329,8 @@ types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t 
 
 std::shared_ptr<types::texture::Texture> TextureLoader::GetSmacEffectTexture(bool) {THROW("Indexed effects are unsupported by this texture loader");}
 
+std::shared_ptr<const SmacBaseCard> TextureLoader::GetSmacNativeBaseCard(const std::string&,size_t,size_t,bool) {return {};}
+
 types::texture::Texture* TextureLoader::CreateSmacNativeBadgeTexture(int,int) {THROW("Native badge decoding is not supported by this texture loader");}
 
 types::texture::Texture* TextureLoader::CreateSmacMenuTexture( const std::string&, const std::string&, size_t, size_t, size_t, size_t ) {

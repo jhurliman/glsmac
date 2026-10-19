@@ -40,11 +40,11 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         //1/2/0x100 also select special art and stay excluded on sea.
         const uint32_t sea_memberships=output.band<3?0xd0u:0u;
         const auto unsupported_landmark_materials=landmarks&~(0xff400000u|0xa00u|4u|8u|0x400u|sea_memberships);
-        // Roads and other unsupported paint continuations are not overwritten by
-        // the ordinary land prefix. Existing GPU terrain remains underneath.
+        // Unsupported later improvements retain the existing GPU terrain.
+        // Road/Tube now compose from the viewer's separately copied memory.
         const auto unsupported_features=tile::FEATURE_JUNGLE|tile::FEATURE_VOLCANO|
             tile::FEATURE_GARLAND_CRATER|tile::FEATURE_FOSSIL_FIELD_RIDGE|tile::FEATURE_DUNES;
-        const auto unsupported_work=live->terraforming&~(tile::TERRAFORMING_FOREST|tile::TERRAFORMING_FARM);
+        const auto unsupported_work=live->terraforming&~(tile::TERRAFORMING_FOREST|tile::TERRAFORMING_FARM|tile::TERRAFORMING_ROAD|tile::TERRAFORMING_MAG_TUBE);
         output.ordinary=!output.deformed && !unsupported_landmark_materials && !(live->features&unsupported_features) && !unsupported_work;
     }}
     return result;

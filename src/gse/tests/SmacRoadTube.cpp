@@ -45,7 +45,7 @@ void AddSmacRoadTubeTests(task::gsetests::GSETests* task) {
                     for(const auto& patch:c.patch) {if(x==(c.x+patch[0]+80)%80 && y==c.y+patch[1]) {band=static_cast<uint8_t>(patch[2]);items=static_cast<uint32_t>(patch[4]);}}
                     for(const auto& row:c.remembered) {const auto& delta=offsets[row[0]];if(x==(c.x+delta[0]+80)%80 && y==c.y+delta[1]) {items=static_cast<uint32_t>(row[1]);}}
                 }
-                for(const auto& row:c.bases) {if(x==(c.x+row[0]+80)%80 && y==c.y+row[1]) {base=row[2]==3 || (row[3]&8);}}
+                for(const auto& row:c.bases) {if(x==(c.x+row[0]+80)%80 && y==c.y+row[1]) {base=::game::native_terrain::AdmitsBase(3,row[2],static_cast<uint8_t>(row[3]));}}
                 return game::frontend::smac_road_tube::Cell{band,items,base};
             };
             const auto view=game::frontend::native_terrain::View(c.x,c.y,c.wrap);

@@ -1,6 +1,7 @@
 #include "NativeTerrainRenderer.h"
 #include "SmacWaterCoast.h"
 #include "SmacRiver.h"
+#include "SmacRoadTube.h"
 #include "game/backend/map/SmacTerrainGeometry.h"
 #include "game/backend/map/SmacTerrainLighting.h"
 #include <algorithm>
@@ -59,6 +60,9 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
     };
     const smac_territory_boundary::CellAt territories=[&](int x,int y)->std::optional<smac_territory_boundary::Cell> {
         const auto* tile=At(world,x,y);return tile?std::optional<smac_territory_boundary::Cell>{{tile->band,tile->region,tile->owner}}:std::nullopt;
+    };
+    const smac_road_tube::CellAt roads=[&](int x,int y)->std::optional<smac_road_tube::Cell> {
+        const auto* tile=At(world,x,y);return tile?std::optional<smac_road_tube::Cell>{{tile->band,tile->selected_items,tile->admitted_base}}:std::nullopt;
     };
     // This opt-in inspector reveals terrain; ordinary game fog is not inferred
     // from explored memory. Owner relations still use the actual local viewer.
@@ -136,6 +140,10 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         append_boundary(x,y,points);
         append_water(x,y,points);
         for(const auto& pass:smac_river::Select(x,y,points,*light,cells,display_flags)) {
+            raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
+            command.shader=pass.shader;command.shade_limits=pass.shade_limits;commands.push_back(command);
+        }
+        for(const auto& pass:smac_road_tube::Select(x,y,points,*light,roads,display_flags)) {
             raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
             command.shader=pass.shader;command.shade_limits=pass.shade_limits;commands.push_back(command);
         }

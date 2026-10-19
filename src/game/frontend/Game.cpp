@@ -1131,6 +1131,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			break;
 		}
 		case FrontendRequest::FR_UNIT_SPAWN: {
+            m_native_snapshot_dirty=true; // Movement/placement can publish remembered improvements.
 			const auto& d = request->data.unit_spawn;
 			const auto& tc = d.tile_coords;
 			const auto& rc = d.render_coords;
@@ -1159,6 +1160,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			break;
 		}
 		case FrontendRequest::FR_UNIT_DESPAWN: {
+            m_native_snapshot_dirty=true; // Movement/placement can publish remembered improvements.
 			m_um->DespawnUnit( request->data.unit_despawn.unit_id );
 			break;
 		}
@@ -1187,6 +1189,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			break;
 		}
 		case FrontendRequest::FR_UNIT_MOVE: {
+            m_native_snapshot_dirty=true; // Movement/placement can publish remembered improvements.
 			const auto& d = request->data.unit_move;
 			auto* unit = m_um->GetUnitById( d.unit_id );
 			ASSERT( unit, "unit is null" );

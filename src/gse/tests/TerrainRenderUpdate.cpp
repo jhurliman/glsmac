@@ -223,7 +223,9 @@ public:
             if(!river->tiles[40*40+20].ordinary || river->tiles[40*40+20].items!=0x82a0) return false;
             live->features&=~tile::FEATURE_RIVER;wire[record+9]=0;
             local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
-            live->terraforming=tile::TERRAFORMING_ROAD;
+            live->terraforming=tile::TERRAFORMING_ROAD|tile::TERRAFORMING_MAG_TUBE;
+            if(!local.CopyNativeTerrain()->tiles[40*40+20].ordinary) return false;
+            live->terraforming|=tile::TERRAFORMING_SOLAR;
             const auto updated=local.CopyNativeTerrain();
             if(updated->tiles[40*40+20].ordinary || updated->tiles[40*40+20].items!=0x20 || !before.ordinary || before.owner!=-1) return false;
             map::SmacWorkerKnowledge::Data data{};data.width=80;data.height=80;data.ordinary_local_mode=true;data.tiles.resize(3200);data.observers[3]=map::SmacWorkerKnowledge::Observer{};
@@ -385,6 +387,37 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(river.rgba[pixel]==200,"Territory compositor painted over a later River");
         world.tiles[39*40+41/2].owner=3;center.items=0;
         GT_ASSERT(native::Render(world,source,view,0).rgba==disabled.rgba,"Territory boundary did not refresh after claim change");GT_OK();
+    });
+
+    task->AddTest("SMAC native terrain composes remembered Road and Tube after River and territory",GT(){
+        namespace native=game::frontend::native_terrain;
+        ::game::native_terrain::World world;world.viewer=3;
+        for(auto& tile:world.tiles) {tile.band=3;tile.ordinary=true;tile.region=1;tile.owner=3;}
+        auto& center=world.tiles[40*40+20];center.items=0x80;
+        native::Source source{{1024,768,std::vector<uint8_t>(1024*768,10)},{}};
+        source.coast_mask={56,56,std::vector<uint8_t>(56*56,0)};source.boundary_mask={60,60,std::vector<uint8_t>(3600,1)};
+        for(auto& row:source.owner_clut) {for(size_t i=0;i<256;++i) {row[i]=static_cast<uint8_t>(i);}}
+        source.owner_clut[3][10]=20;world.tiles[39*40+41/2].owner=-1;
+        source.palette[10]={1,0,0};source.palette[20]={2,0,0};source.palette[30]={3,0,0};source.palette[40]={4,0,0};source.palette[50]={5,0,0};
+        for(int y=259;y<315;++y) {std::fill_n(source.loaded.pixels.begin()+y*1024+280,56,30);}
+        for(int index=0;index<9;++index) {for(int y=0;y<56;++y) {
+            std::fill_n(source.loaded.pixels.begin()+(395+57*(index/3)+y)*1024+775+57*(index%3),56,40);
+            std::fill_n(source.loaded.pixels.begin()+(566+57*(index/3)+y)*1024+775+57*(index%3),56,50);
+        }}
+        const std::vector<native::Placement> view{{{{40,40}},{{576,288}},44*(40*40+20)}};
+        const size_t pixel=(288*1024+575)*4;
+        const auto river=native::Render(world,source,view,0);
+        GT_ASSERT(river.rgba[pixel]==3,"Live-only items unexpectedly selected a Road");
+        center.selected_items=4;const auto road=native::Render(world,source,view,0);
+        GT_ASSERT(road.rgba[pixel]==4 && road.writes>river.writes,"Remembered Road did not compose after River/territory");
+        GT_ASSERT(native::Render(world,source,view,0,{{0,0}},0x10401).rgba==river.rgba,"Disabling Road flag removed the preceding River");
+        center.selected_items=12;const auto tube=native::Render(world,source,view,0);
+        GT_ASSERT(tube.rgba[pixel]==5,"Remembered isolated Tube used Road family");
+        center.selected_items=8;GT_ASSERT(native::Render(world,source,view,0).rgba==river.rgba,"Tube-only bits incorrectly admitted a Road branch");
+        center.selected_items=0;center.admitted_base=true;
+        GT_ASSERT(native::Render(world,source,view,0).rgba==river.rgba,"Isolated Base emitted an isolated patch");
+        world.tiles[39*40+41/2].admitted_base=true;
+        GT_ASSERT(native::Render(world,source,view,0).rgba[pixel]==5,"Admitted Bases did not connect through the Tube family");GT_OK();
     });
 
     task->AddTest("SMAC indexed terrain generates759 actual native spans from vertices",GT(){

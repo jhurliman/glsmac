@@ -33,7 +33,7 @@ runs. It does not consume either random stream.
 
 ## Boundaries still to close
 
-- Roads and further land continuations.
+- Further land improvements and landmark continuations.
 - Named landmark deformation/shading and neighboring affected stencils.
 - Original observer/fog admission, complete object occlusion and animated water.
 - Full native view/camera-origin/scrolling behavior and other zooms/viewports.
@@ -145,4 +145,30 @@ python tools/reference/verify_native_territory_boundary.py --asset-directory PAT
 Add `--sanitize --cxx clang++` for focused ASan/UBSan. The live inspector deliberately
 reveals terrain; it does not implement original fog admission, arbitrary display
 flags, all diplomacy refresh events or original cache/hot-reload timing. Complete
-native map/camera and unsupported landmark/road continuations remain separate.
+native map/camera and unsupported landmark continuations remain separate.
+
+## Road/Tube continuation
+
+The live ordinary profile is now 0x10421, adding Road/Tube flag0x20 after
+territory, coast and River. Road and Tube bits come from the actual local
+viewer's retained improvement memory, with no live-terrain fallback for unknown
+memory. The owned snapshot also admits matching live Base records by actual
+simulation owner or retained Base visibility. Territorial claims, tile
+visibility and occupancy alone do not manufacture a Base connection.
+
+Unit placement/removal/movement refreshes this snapshot alongside terrain,
+Base and turn changes. Ordinary Road/Tube tiles now use the native material
+prefix; later unsupported improvements still retain the existing GPU layer.
+Isolated Bases suppress patches; a Tube connected only to Roads adds its isolated
+Tube patch after the Road links. All eight directional links retain native order.
+
+[Source contract](behavior/ordinary-road-tube.md) covers61 producer contexts,
+86 Road/Tube continuations, and65 composed indexed frames/10364 spans. Replay:
+
+```
+python tools/reference/verify_native_road_tube.py --texture-pcx PATH/TEXTURE.PCX --rainfall-pcx PATH/RAINFALL.PCX
+```
+
+Add `--sanitize --cxx clang++` for the focused raster check. This is the bounded
+ordinary zoom0 profile; fog admission, other zooms, original view scheduling,
+remaining improvements and whole-screen pixel parity are not claimed.

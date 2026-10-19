@@ -5389,6 +5389,24 @@ public:
 		GT_OK();
 	}
 
+    std::string CheckNativeRoadBaseAdmission() {
+        using namespace game::backend;
+        const auto startup=CheckCanonicalFirstBase(5,true,3,true);if(!startup.empty()) {return startup;}
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            GT_ASSERT(m_game.GetBM()->GetBases().size()==1,"Native Base admission needs its real founding record");
+            auto* base=m_game.GetBM()->GetBases().begin()->second;auto* tile=base->GetTile();
+            const auto inspect=[&]()->bool {
+                const auto ticket=FixtureWorldTicket(),id=m_game.MT_GetNativeTerrain(ticket);ProcessRequests();auto response=m_game.MT_GetResponse(id);
+                util::FinallyGuard destroy([&]{m_game.MT_DestroyResponse(response);});
+                if(response.result!=R_SUCCESS || !response.data.native_terrain) {throw std::runtime_error("Native Base snapshot unavailable");}
+                return response.data.native_terrain->tiles[tile->coord.y*40+tile->coord.x/2].admitted_base;
+            };
+            GT_ASSERT(inspect(),"Native Road Base query hid an actual owned Base");
+            util::FinallyGuard restore([&]{tile->base=base;});tile->base=nullptr;
+            GT_ASSERT(!inspect(),"Native Road Base query fabricated a missing live marker from its record");GT_OK();
+        });
+    }
+
     std::string CheckNativeBoundaryMetadata() {
         using namespace game::backend;
         const auto startup=CheckSimulationStartup(true,0,true,false,2,false,0,false,false,{},{},"UNIVERSITY",{},false,true);
@@ -5409,6 +5427,9 @@ public:
             knowledge.ordinary_local_mode=true;knowledge.horizontal_wrap=m_game.m_map->m_territory_topology->Wraps();
             knowledge.tiles.resize(3200);knowledge.observers[viewer]=map::SmacWorkerKnowledge::Observer{};
             knowledge.observers[viewer]->relations[6].territory_recognition=true;
+            knowledge.remembered[viewer].resize(3200);
+            knowledge.remembered[viewer][40*40+20]=map::SmacWorkerKnowledge::Improvements{0,map::tile::TERRAFORMING_ROAD|map::tile::TERRAFORMING_MAG_TUBE,false,false};
+            m_game.m_map->GetTile(42,40)->terraforming=map::tile::TERRAFORMING_ROAD; // Live-only is not remembered.
             m_game.m_map->m_worker_knowledge=map::SmacWorkerKnowledge::Create(knowledge);m_game.m_map->m_worker_knowledge_ready=true;
             const auto ticket=FixtureWorldTicket(),request=m_game.MT_GetNativeTerrain(ticket);ProcessRequests();
             const auto response=m_game.MT_GetResponse(request);
@@ -5417,6 +5438,7 @@ public:
             const auto& snapshot=*response.data.native_terrain;
             GT_ASSERT(snapshot.viewer==viewer && snapshot.relations[7]==relation,"Snapshot lost local simulation identity or directed relations");
             GT_ASSERT(snapshot.relations[6]==(discovered|0x08000008u) && snapshot.relations[5]==discovered,"Snapshot ignored committed worker recognition or leaked it to an undiscovered peer");
+            GT_ASSERT(snapshot.tiles[40*40+20].selected_items==12 && snapshot.tiles[40*40+21].selected_items==0,"Snapshot used live Road bits instead of local viewer memory");
             for(const auto& row:m_game.m_simulation->value.roster) {
                 GT_ASSERT(snapshot.faction_files[row.simulation_id]==row.faction_id+".pcx","Snapshot assigned owner colors by transport slot or stock order");
                 m_state->GetFM()->Get(row.faction_id)->m_bases_render.file.clear();
@@ -7722,6 +7744,9 @@ public:
 };
 
 static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
+    task->AddTest("world admission native terrain requires the actual owned Base record and marker",GT(){
+        BackendFixture fixture;return fixture.CheckNativeRoadBaseAdmission();
+    });
     task->AddTest("world admission native terrain owns local viewer relations and faction metadata",GT(){
         BackendFixture fixture;return fixture.CheckNativeBoundaryMetadata();
     });

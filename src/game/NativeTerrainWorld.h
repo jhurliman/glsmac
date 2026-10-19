@@ -4,11 +4,16 @@
 #include <string>
 
 namespace game::native_terrain {
+// Original Base-specific owner/visibility gate after a matching live record.
+inline bool AdmitsBase(int viewer,int owner,uint8_t known_by) {
+    return viewer>0 && viewer<8 && (owner==viewer || (known_by&(1u<<viewer)));
+}
 // Owned rendering inputs copied on the backend thread. No Tile/Map pointers,
 // gameplay RNG state, assets or serialization lifetime cross this boundary.
 struct Tile {
     uint8_t band=0,moisture=0,rockiness=0,contour=0;
-    uint32_t items=0;
+    uint32_t items=0,selected_items=0;
+    bool admitted_base=false;
     uint8_t region=0;
     int8_t owner=-1;
     bool ordinary=false,deformed=false;

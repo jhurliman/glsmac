@@ -179,7 +179,10 @@ std::optional<Game::CanonicalRanking> Game::PrepareCanonicalRankOrder() const {
     // Full rank selection consumes every positive score slot, including inactive
     // zero-score slots. Dominance later reads this same retained table.
     if(retained) {for(size_t i=1;i<retained->size();++i) {retained->at(i)=-1;}}
-    return CanonicalRanking{faction::SmacRankOrder::Update(scores,active),retained};
+    std::array<int32_t,8> composite{};
+    if(simulation.ranking_scores) {composite[0]=simulation.ranking_scores->at(0);}
+    std::copy(scores.begin(),scores.end(),composite.begin()+1);
+    return CanonicalRanking{faction::SmacRankOrder::Update(scores,active),retained,composite};
 }
 
 void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
@@ -216,6 +219,9 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
         const auto perihelion=PrepareSmacPerihelionForTurn(turn_id);
 		RefreshSimulationForTurn(turn_id);
         if(rank_order) {
+            // Publish fresh composites before rank selection consumes its working
+            // table and before advancing the turn. Never manufacture old rows.
+            if(m_simulation->value.dominance_history) {m_simulation->value.dominance_history->Publish(GetTurnId(),rank_order->composite);}
             m_simulation->value.ranking_scores=rank_order->scores;
             m_simulation->value.rank_order=rank_order->order;
         }

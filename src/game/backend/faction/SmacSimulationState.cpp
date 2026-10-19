@@ -211,7 +211,7 @@ void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t wi
 }
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 30;
+constexpr int64_t VERSION = 31;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -420,7 +420,7 @@ void SmacSimulationState::Validate( const settings::SmacTechnologyRules& technol
 	}
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order && human_membership==other.human_membership && strategy==other.strategy && capabilities==other.capabilities && regional_military==other.regional_military && victory_history==other.victory_history && retained_land_region_concentration==other.retained_land_region_concentration && retained_base_totals==other.retained_base_totals && regional_strategy==other.regional_strategy && ranking_scores==other.ranking_scores && ecology_history==other.ecology_history && ecology_world==other.ecology_world && perihelion==other.perihelion && remembered_governor==other.remembered_governor && faction_status==other.faction_status && ecology_warming_count==other.ecology_warming_count && native_factory==other.native_factory && battle_plan_target==other.battle_plan_target; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order && human_membership==other.human_membership && strategy==other.strategy && capabilities==other.capabilities && regional_military==other.regional_military && victory_history==other.victory_history && retained_land_region_concentration==other.retained_land_region_concentration && retained_base_totals==other.retained_base_totals && regional_strategy==other.regional_strategy && ranking_scores==other.ranking_scores && dominance_history==other.dominance_history && ecology_history==other.ecology_history && ecology_world==other.ecology_world && perihelion==other.perihelion && remembered_governor==other.remembered_governor && faction_status==other.faction_status && ecology_warming_count==other.ecology_warming_count && native_factory==other.native_factory && battle_plan_target==other.battle_plan_target; }
 
 std::optional<SmacBaseTotals> AdjustSmacBaseTotal(std::optional<SmacBaseTotals> saved,int32_t owner,int32_t delta) {
 	if(owner<1 || owner>7 || (delta!=1 && delta!=-1)) {throw std::invalid_argument("Base total delta requires positive owner and unit delta");}
@@ -554,6 +554,8 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
 	buffer.WriteBool(ecology_warming_count.has_value());if(ecology_warming_count) {buffer.WriteInt(*ecology_warming_count);}
 	buffer.WriteBool(native_factory.has_value());if(native_factory) {buffer.WriteString(native_factory->Serialize().ToString());}
 	for(const auto target:battle_plan_target) {buffer.WriteBool(target.has_value());if(target) {buffer.WriteInt(*target);}}
+    buffer.WriteBool(dominance_history.has_value());
+    if(dominance_history) {buffer.WriteString(dominance_history->Serialize());}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -565,7 +567,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		types::Buffer buffer( wire );
 		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto version=buffer.ReadInt();
-		if(version!=VERSION && version!=29 && version!=28 && version!=27 && version!=26 && version!=25 && version!=24 && version!=23 && version!=22 && version!=21 && version!=20 && version!=19 && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
+		if(version!=VERSION && version!=30 && version!=29 && version!=28 && version!=27 && version!=26 && version!=25 && version!=24 && version!=23 && version!=22 && version!=21 && version!=20 && version!=19 && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC simulation roster requires 1..7 participants" ); }
 		std::vector< SmacSimulationParticipant > roster;
@@ -694,6 +696,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		}
 		if(version>=29 && buffer.ReadBool()) {result.native_factory=SmacNativeFactoryState::Deserialize(buffer.ReadString(SmacNativeFactoryState::MAX_WIRE_BYTES));}
 		if(version>=30) {for(auto& target:result.battle_plan_target) {if(buffer.ReadBool()) {target=buffer.ReadInt();}}}
+        if(version>=31 && buffer.ReadBool()) {result.dominance_history=SmacDominanceHistory::Deserialize(buffer.ReadString(SmacDominanceHistory::BYTES));}
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );
 		result.Validate( technologies, profiles, units );

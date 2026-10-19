@@ -91,7 +91,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=30,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=31,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -174,6 +174,17 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=30,bool
     }
     if(version>=29) {suffix.WriteBool(value.native_factory.has_value());if(value.native_factory) {suffix.WriteString(value.native_factory->Serialize().ToString());}}
     if(version>=30) {for(const auto target:value.battle_plan_target) {suffix.WriteBool(target.has_value());if(target) {suffix.WriteInt(*target);}}}
+    if(version>=31) {
+        suffix.WriteBool(value.dominance_history.has_value());
+        if(value.dominance_history) {
+            std::string packed;packed.reserve(16000);
+            for(const auto& row:value.dominance_history->samples) {for(const auto sample:row) {
+                const auto word=static_cast<uint16_t>(sample);
+                packed+=static_cast<char>(word&255);packed+=static_cast<char>(word>>8);
+            }}
+            suffix.WriteString(packed);
+        }
+    }
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -191,6 +202,19 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC dominance V31 matches independent wire and retains V30 absence",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();value.dominance_history.emplace();
+        for(size_t turn=0;turn<1000;++turn) {for(size_t owner=0;owner<8;++owner) {
+            const auto word=uint16_t((turn*8+owner)*37+11);
+            value.dominance_history->samples[turn][owner]=static_cast<int16_t>(word<=INT16_MAX ? int32_t(word):int32_t(word)-65536);
+        }}
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"V31 differs from independent full short payload");
+        auto legacy=value;legacy.dominance_history.reset();
+        GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(value,30),technologies,profiles,units)==legacy,"Explicit V30 acquired graph samples");
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);}),"Truncated V31 accepted");GT_OK();
+    });
     task->AddTest("SMAC native factory initialization and counters preserve original independent authorities",GT(){
         SmacGameplayRandomState observed(0x12345678,65);
         for(const auto raw:{250,18237,2761,26456,23942,4890,14066,5852}) {

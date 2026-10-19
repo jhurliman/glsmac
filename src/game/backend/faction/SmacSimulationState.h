@@ -4,6 +4,7 @@
 #include "SmacSocialState.h"
 #include "SmacEconomyState.h"
 #include "SmacRankOrder.h"
+#include "SmacDominanceHistory.h"
 #include "SmacHostileState.h"
 #include "SmacRegionalMilitaryState.h"
 #include "SmacRegionalStrategy.h"
@@ -176,6 +177,8 @@ struct SmacSimulationState {
 	// Global score provider writes positive slots; slot0 retains its prior word.
 	// Dominance reads this table at retained rank IDs, not fresh per-owner scores.
 	std::optional<std::array<int32_t,8>> ranking_scores;
+    // V11-V30 did not retain graph samples. Loading preserves absence.
+    std::optional<SmacDominanceHistory> dominance_history;
 	// V11-V24 did not retain these words. Loading preserves absence and never
 	// rebuilds H from facilities, atrocity history or aggregate from current Bases.
 	std::optional<SmacEcologyHistory> ecology_history;

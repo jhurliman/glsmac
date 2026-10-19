@@ -1,4 +1,5 @@
 #include "Map.h"
+#include "SmacLandmarkGeometry.h"
 #include "game/NativeTerrainWorld.h"
 #include "SmacPlanetMap.h"
 #include "SmacNativeTerrainItems.h"

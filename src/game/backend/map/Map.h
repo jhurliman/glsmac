@@ -14,7 +14,6 @@ namespace game::native_terrain {struct World;}
 #include "Types.h"
 #include "GlsmacResourceMapPolicy.h"
 #include "SmacWorkerKnowledge.h"
-#include "SmacLandmarkGeometry.h"
 #include "GlsmacTerritoryTopology.h"
 #include "common/MTTypes.h"
 #include "game/backend/map/tile/Types.h"
@@ -54,6 +53,7 @@ class MapSettings;
 namespace map {
 
 namespace smac_territory { class RegionalLandWorkspace; }
+namespace smac_terrain { class LandmarkGeometry; }
 
 namespace tile {
 class Tile;

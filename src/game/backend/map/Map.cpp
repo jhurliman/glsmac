@@ -1,4 +1,5 @@
 #include "Map.h"
+#include "SmacLandmarkGeometry.h"
 #include "SmacTerritoryRules.h"
 
 #include "game/backend/Game.h"

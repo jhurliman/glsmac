@@ -507,6 +507,12 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         const auto fungus=native::Render(world,source,view,0);
         GT_ASSERT(fungus.rgba[(288*1024+575)*4+1]==255 && fungus.writes>water.writes,"Live sea Fungus did not follow water or used shaded/wrong bank");
         GT_ASSERT(holes.rgba==water.rgba,"Later source mutation changed an owned frame");
+        center.selected_known=true;center.selected_items=0;
+        GT_ASSERT(native::Render(world,source,view,0).rgba==water.rgba,"Sea Fungus leaked live flags into observer-selected terrain");
+        center.items=0;center.selected_items=0x20;
+        GT_ASSERT(native::Render(world,source,view,0).rgba==fungus.rgba,"Sea Fungus discarded remembered presence");
+        center.selected_known=false;center.items=0x20;
+
         center.band=1;
         const auto ocean=native::Render(world,source,view,0);
         center.items=0;

@@ -180,7 +180,10 @@ Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,cons
         const bool keyed=command.shader==Shader::KeyedShaded || command.shader==Shader::KeyedUnlit;
         if(command.shader==Shader::WaterDepth16 && std::all_of(command.polygon.vertices.begin(),
             command.polygon.vertices.begin()+command.polygon.count,[](const auto& vertex){return vertex.light>=16;})) {continue;}
-        for(const auto& span:GeneratePolygonSpans(command.polygon,Intersection(command.clip,bounded),shaded,command.shade_limits)) {
+        // Native6393d0 interpolates coast depth without the ordinary terrain
+        // shade caps, even while the caller globals remain[-4,+4].
+        const auto limits=command.shader==Shader::CoastMapped?std::array<int32_t,2>{{-256,256}}:command.shade_limits;
+        for(const auto& span:GeneratePolygonSpans(command.polygon,Intersection(command.clip,bounded),shaded,limits)) {
             int64_t u=span.u,v=span.v;
             auto shade=span.shade;
             for(auto x=span.left;x<span.right;++x) {

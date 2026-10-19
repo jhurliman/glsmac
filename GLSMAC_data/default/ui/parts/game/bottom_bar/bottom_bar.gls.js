@@ -19,6 +19,14 @@ return {
 	init: (p) => {
 
 		this.pp = {};
+		// Original ground-card movement preserves the movement quantum, even
+		// for unreduced fractions such as 0 2/4.
+		const format_points = (amount, quantum) => {
+			const whole = amount / quantum;
+			const remainder = amount % quantum;
+			if (remainder == 0) { return #to_string(whole); }
+			return #to_string(whole) + ' ' + #to_string(remainder) + '/' + #to_string(quantum);
+		};
 		this.message_fade_timer = null;
 		const console_art = p.game.get_ruleset() == 'smac' ? 'console2.pcx' : 'console2_a.pcx';
 
@@ -172,8 +180,11 @@ return {
 						if (object.is_conventional) {
 							const state = object.get_conventional_state();
 							const stats = object.query_conventional_stats(state.render_morale_mode);
-							const movement = #to_float(stats.full_allowance) / #to_float(stats.quantum);
-							return '? - ? - ' + #to_string(#to_float(#round(movement * 100.0)) / 100.0);
+							let offense = '?';
+							let defense = '?';
+							if (#is_defined(stats.offense_rating)) { offense = #to_string(stats.offense_rating); }
+							if (#is_defined(stats.defense_rating)) { defense = #to_string(stats.defense_rating); }
+							return offense + '-' + defense + '-' + #to_string(stats.basic_allowance / stats.quantum);
 						}
                         if (object.is_native) {
                             const stats = object.query_native_stats(0);
@@ -194,6 +205,7 @@ return {
 				}
 				return '';
 			},
+			format_points: format_points,
 		};
 		for (s of ['object_preview', 'tile_preview', 'middle_area', 'objects_list', 'mini_map', 'unit_commands']) {
 			this.pp.sections[s] = #include(s);

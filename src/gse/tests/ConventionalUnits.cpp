@@ -705,27 +705,32 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 						&& Unit::GetNextId() == id && fixture.Updates().empty(), "bottom bar changed authoritative world, RNG, ID or presentation queue" ); GT_OK();
 				};
 				auto error = inspect( legacy, "(?) - ? - 2", "native4", "Moves: 1.25" ); if ( !error.empty() ) { return error; }
-				error = inspect( unit, rover ? "? - ? - 2.0" : "? - ? - 1.0", "level1", rover ? "Moves: 2.0" : "Moves: 1.0" ); if ( !error.empty() ) { return error; }
+				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level1", rover ? "Moves: 2" : "Moves: 1" ); if ( !error.empty() ) { return error; }
 				auto* copied_stats = static_cast< value::Object* >( Call( GSE_CALL, static_cast< value::Object* >( unit->Wrap( GSE_CALL ) ),
 					"query_conventional_stats", { VALUE( value::Int,, 0 ) } ) );
+				GT_ASSERT(static_cast<value::Int*>(copied_stats->Get("offense_rating"))->value==1
+					&& static_cast<value::Int*>(copied_stats->Get("defense_rating"))->value==1,"checked preview lost owned weapon/armor ratings");
 				record.spent = 1; manager->UpdateConventionalUnit( GSE_CALL, unit, record );
-				error = inspect( unit, rover ? "? - ? - 2.0" : "? - ? - 1.0", "level1", rover ? "Moves: 1.67" : "Moves: 0.67" ); if ( !error.empty() ) { return error; }
+				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level1", rover ? "Moves: 1 2/3" : "Moves: 0 2/3" ); if ( !error.empty() ) { return error; }
 				record.stored_morale = 6; manager->UpdateConventionalUnit( GSE_CALL, unit, record );
-				error = inspect( unit, rover ? "? - ? - 3.0" : "? - ? - 2.0", "level6", rover ? "Moves: 2.67" : "Moves: 1.67" ); if ( !error.empty() ) { return error; }
+				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level6", rover ? "Moves: 2 2/3" : "Moves: 1 2/3" ); if ( !error.empty() ) { return error; }
 				GT_ASSERT( static_cast< value::String* >( copied_stats->Get( "morale_name" ) )->value == "level1", "query label did not remain an owned snapshot" );
 				record.damage = 5; manager->UpdateConventionalUnit( GSE_CALL, unit, record );
-				error = inspect( unit, rover ? "? - ? - 2.0" : "? - ? - 1.0", "level6", rover ? "Moves: 1.67" : "Moves: 0.67" ); if ( !error.empty() ) { return error; }
+				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level6", rover ? "Moves: 1 2/3" : "Moves: 0 2/3" ); if ( !error.empty() ) { return error; }
 				record.spent = 255; manager->UpdateConventionalUnit( GSE_CALL, unit, record );
-				error = inspect( unit, rover ? "? - ? - 2.0" : "? - ? - 1.0", "level6", "Moves: 0.0" ); if ( !error.empty() ) { return error; }
+				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level6", "ALREADY MOVED" ); if ( !error.empty() ) { return error; }
+				record.order = ConventionalUnitState::Order::Hold; manager->UpdateConventionalUnit( GSE_CALL, unit, record );
+				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level6", "ALREADY MOVED" ); if ( !error.empty() ) { return error; }
+				record.order = ConventionalUnitState::Order::None;
 				if ( !rover ) {
 					record.stored_morale = 1; record.damage = 0; record.spent = 0; fixture.RetainedMorale( -4, 7 );
 					manager->UpdateConventionalUnit( GSE_CALL, unit, record );
-					error = inspect( unit, "? - ? - 1.0", "level0", "Moves: 1.0" ); if ( !error.empty() ) { return error; }
+					error = inspect( unit, "1-1-1", "level0", "Moves: 1" ); if ( !error.empty() ) { return error; }
 					// Both explicit modes are accepted. They coincide for the admitted
 					// homeless context; no rioting-home distinction is invented here.
 					record.render_morale_mode = SmacMoraleMode::Mode1;
 					auto* alternate = Spawn( GSE_CALL, fixture, record, 73 );
-					error = inspect( alternate, "? - ? - 1.0", "level0", "Moves: 1.0" ); if ( !error.empty() ) { return error; }
+					error = inspect( alternate, "1-1-1", "level0", "Moves: 1" ); if ( !error.empty() ) { return error; }
 				}
 				legacy->Legacy().movement = 0.5f; legacy->Legacy().morale = 6;
 				error = inspect( legacy, "(?) - ? - 2", "native6", "Moves: 0.5" ); if ( !error.empty() ) { return error; }

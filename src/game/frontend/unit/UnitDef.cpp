@@ -161,6 +161,13 @@ sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
 	}
 }
 
+sprite::InstancedSprite* UnitDef::GetCardSprite( bool roster ) const {
+	if ( !m_scout_render ) { return nullptr; }
+	const backend::unit::CvrScoutRender descriptor( 0, roster ? -8 : -4, 0, 1,
+		{ 1, 1 }, { 128, 128 }, m_scout_render->composition );
+	return m_ism->GetScoutSprite( "UnitCard_" + m_id, descriptor );
+}
+
 const bool UnitDef::IsImmovable() const {
 	return static_.movement_type == backend::unit::MT_IMMOVABLE;
 }

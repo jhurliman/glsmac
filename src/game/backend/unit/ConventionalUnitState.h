@@ -61,6 +61,9 @@ struct ConventionalUnitContext {
 	std::optional< SmacMoraleHome > home;
 	enum class Package { Combat, Former, Colony };
 	Package package = Package::Combat;
+	// Copied from the admitted owned design's frozen component tables. Absence
+	// in diagnostic contexts is not a guessed Scout rating.
+	std::optional<int32_t> offense_rating, defense_rating;
 };
 
 using ConventionalUnitResolver = std::function< ConventionalUnitContext( const ConventionalUnitState&, const slot::Slot* ) >;
@@ -68,6 +71,7 @@ using ConventionalUnitResolver = std::function< ConventionalUnitContext( const C
 struct ConventionalUnitStats {
 	int32_t effective_morale, allowance_morale, quantum, basic_allowance;
 	int32_t full_allowance, remaining_allowance, hit_points, maximum_hit_points;
+	std::optional<int32_t> offense_rating, defense_rating;
 };
 
 ConventionalUnitStats QueryConventionalUnit( const ConventionalUnitState& state,

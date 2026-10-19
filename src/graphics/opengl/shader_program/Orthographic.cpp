@@ -120,7 +120,7 @@ void main(void) { \
             vec3 delta=background-texelFetch(uTexture,ivec2(i,size.y-1),0).rgb; \
             float distance=dot(delta,delta);if(distance<best) {best=distance;destination=i;} \
         } \
-        int index=int(round(texelFetch(uTexture,ivec2(destination,size.y-17+source),0).r*255.0)); \
+        int index=int(round(texelFetch(uTexture,ivec2(destination,size.y-18+(source==252 ? 16:source)),0).r*255.0)); \
         FragColor=texelFetch(uTexture,ivec2(index,size.y-1),0);return; \
     } \
 	vec4 tex = sampleTexture(texpos.xy); \

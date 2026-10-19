@@ -28,10 +28,10 @@ incorrect dependence on the embedded XI/XF RGB palettes.
 
 Two fidelity limits are explicit. RGB-to-index reconstruction is verified for
 ordinary palette-backed backgrounds, not the entire lit world renderer or
-reserved background indices. XF contains 210 source-index-252 pixels that the
-original reads outside its allocated bank. Their stock initialized colors are
-unresolved; this port temporarily renders those pixels transparent. Neither
-limit is a claim of original pixel fidelity.
+reserved background indices. XF source252 uses an explicit measured initialized
+SMAC software compatibility row, with the original reserved output RGB values
+and opaque alpha. This safely reproduces that profile without reading unrelated
+memory; SMAX and other bitmap/display lifetimes are not claimed.
 
 Validation:
 
@@ -77,13 +77,16 @@ and periodic readback are capture machinery, not a frame-rate benchmark.
 
 The index252 follow-up now establishes a measured initialized SMAC software
 compatibility mapping and reserved RGB colors, including opaque cyan for the
-background44→index6 case. The current renderer still uses its documented
-transparent fallback until that explicit profile is ported. SMAX initialization,
+background44→index6 case. The renderer now uses that explicit profile instead of the transparent
+fallback. All256 outputs match the original-execution fixture. The GPU control
+also renders the extra row, checking reserved RGB and alpha255; the five focused
+groups pass again under ASan/UBSan, and the three changed production TUs pass
+correctness analysis. SMAX initialization,
 physical display behavior and later bitmap lifetime remain separate open limits.
 See [index252](scout-effect-index252.md) and
 [reserved software RGB](scout-effect-reserved-rgb.md).
 
-Remaining before review: port the pinned SMAC index252/software color profile,
+Remaining before review: final public integration checks,
 projection/zoom alignment, audible sound/channel behavior, preference/skip
 policy, and resolving or explicitly accepting the documented compositor limits.
 Separate CVR body/facing clips and broader combat domains remain open.

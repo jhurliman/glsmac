@@ -10,6 +10,7 @@
 
 #include "game/backend/unit/SmacScoutCombat.h"
 #include "fixtures/SmacScoutCombat.h"
+#include "fixtures/SmacEffectEscape.h"
 #include "task/gsetests/GSETests.h"
 
 #include <functional>
@@ -59,7 +60,7 @@ void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
         util::FinallyGuard video([]{SDL_QuitSubSystem(SDL_INIT_VIDEO);});
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,3);SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE);
-        auto* window=SDL_CreateWindow("Scout GPU control",0,0,256,16,SDL_WINDOW_OPENGL|SDL_WINDOW_HIDDEN);
+        auto* window=SDL_CreateWindow("Scout GPU control",0,0,256,17,SDL_WINDOW_OPENGL|SDL_WINDOW_HIDDEN);
         GT_ASSERT(window,"GPU fixture could not create a hidden window");util::FinallyGuard destroy([&]{SDL_DestroyWindow(window);});
         const auto context=SDL_GL_CreateContext(window);GT_ASSERT(context,"GPU fixture could not create GL3.3 context");
         util::FinallyGuard destroy_context([&]{SDL_GL_DeleteContext(context);});glewExperimental=GL_TRUE;
@@ -68,37 +69,38 @@ void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
         shader.Start();util::FinallyGuard stop([&]{GLint current=0;glGetIntegerv(GL_CURRENT_PROGRAM,&current);if(current) {glUseProgram(0);}shader.Stop();});const auto program=shader.Program();
         GLuint vao=0,vbo=0,textures[2]{};glGenVertexArrays(1,&vao);glBindVertexArray(vao);glGenBuffers(1,&vbo);glBindBuffer(GL_ARRAY_BUFFER,vbo);for(auto& texture:textures) {glGenTextures(1,&texture);}
         util::FinallyGuard buffers([&]{GLint current=0;glGetIntegerv(GL_CURRENT_PROGRAM,&current);if(current) {glUseProgram(0);}glActiveTexture(GL_TEXTURE0);GLint bound=0;glGetIntegerv(GL_TEXTURE_BINDING_2D,&bound);if(bound) {glBindTexture(GL_TEXTURE_2D,0);}glBindBuffer(GL_ARRAY_BUFFER,0);glBindVertexArray(0);for(auto& texture:textures) {glDeleteTextures(1,&texture);}glDeleteBuffers(1,&vbo);glDeleteVertexArrays(1,&vao);});
-        const float vertices[]{-1,-1,0,0,0,1,-1,0,1,0,-1,1,0,0,16.0f/33,1,1,0,1,16.0f/33};
+        const float vertices[]{-1,-1,0,0,0,1,-1,0,1,0,-1,1,0,0,17.0f/35,1,1,0,1,17.0f/35};
         glBufferData(GL_ARRAY_BUFFER,sizeof(vertices),vertices,GL_STATIC_DRAW);glUseProgram(program);
         const auto coordinate=glGetAttribLocation(program,"aCoord"),uv=glGetAttribLocation(program,"aTexCoord");
         glEnableVertexAttribArray(coordinate);glVertexAttribPointer(coordinate,3,GL_FLOAT,GL_FALSE,5*sizeof(float),nullptr);
         glEnableVertexAttribArray(uv);glVertexAttribPointer(uv,2,GL_FLOAT,GL_FALSE,5*sizeof(float),reinterpret_cast<void*>(3*sizeof(float)));
         glVertexAttrib4f(glGetAttribLocation(program,"aTintColor"),1,1,1,1);glVertexAttrib3f(glGetAttribLocation(program,"aNormal"),0,0,1);
-        glUniform1i(glGetUniformLocation(program,"uPageColumns"),0);glViewport(0,0,256,16);glDisable(GL_DEPTH_TEST);glDisable(GL_BLEND);glPixelStorei(GL_UNPACK_ALIGNMENT,1);
-        graphics::opengl::OpenGL capture("GPU control",256,16,false,false);util::FinallyGuard release([&]{capture.ReleaseEffectBackground();});
+        glUniform1i(glGetUniformLocation(program,"uPageColumns"),0);glViewport(0,0,256,17);glDisable(GL_DEPTH_TEST);glDisable(GL_BLEND);glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+        graphics::opengl::OpenGL capture("GPU control",256,17,false,false);util::FinallyGuard release([&]{capture.ReleaseEffectBackground();});
         fx::Palette palette{};for(size_t i=0;i<256;++i) {palette[i]={uint8_t(i),uint8_t(i),uint8_t(i)};}
+        fx::ApplySmacSoftwareReservedColors(palette);
         fx::Rows rows{};for(size_t i=0;i<16;++i) {rows[i]={49,int(i*100/15)};}const auto bank=fx::Generate(palette,rows);
-        std::vector<uint8_t> background(256*16*4),atlas(256*33*4),output(256*16*4);
-        for(size_t y=0;y<16;++y) {for(size_t x=0;x<256;++x) {
+        std::vector<uint8_t> background(256*17*4),atlas(256*35*4),output(256*17*4);
+        for(size_t y=0;y<17;++y) {for(size_t x=0;x<256;++x) {
             for(size_t c=0;c<3;++c) {background[(y*256+x)*4+c]=palette[x][c];}background[(y*256+x)*4+3]=255;
-            atlas[(y*256+x)*4]=y;atlas[(y*256+x)*4+3]=(x==15 || x==253) ? 0:255;
-            atlas[((y+16)*256+x)*4]=bank[y*256+x];atlas[((y+16)*256+x)*4+3]=255;
+            atlas[(y*256+x)*4]=y==16 ? 252:y;atlas[(y*256+x)*4+3]=(x==15 || x==253) ? 0:255;
+            atlas[((y+17)*256+x)*4]=(y==16 ? fx::SmacSoftwareStartupEscape(x):bank[y*256+x]);atlas[((y+17)*256+x)*4+3]=255;
         }}
-        for(size_t x=0;x<256;++x) {for(size_t c=0;c<3;++c) {atlas[(32*256+x)*4+c]=palette[x][c];}atlas[(32*256+x)*4+3]=255;}
+        for(size_t x=0;x<256;++x) {for(size_t c=0;c<3;++c) {atlas[(34*256+x)*4+c]=palette[x][c];}atlas[(34*256+x)*4+3]=255;}
         const auto upload=[&](GLuint texture,int height,const uint8_t* pixels) {
             GLint bound=0;glGetIntegerv(GL_TEXTURE_BINDING_2D,&bound);if(bound) {glBindTexture(GL_TEXTURE_2D,0);}
             glBindTexture(GL_TEXTURE_2D,texture);glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,256,height,0,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
             glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
         };
-        glActiveTexture(GL_TEXTURE0);upload(textures[0],16,background.data());
+        glActiveTexture(GL_TEXTURE0);upload(textures[0],17,background.data());
         glUniform1ui(glGetUniformLocation(program,"uFlags"),scene::actor::Actor::RF_IGNORE_CAMERA|scene::actor::Actor::RF_IGNORE_LIGHTING);glDrawArrays(GL_TRIANGLE_STRIP,0,4);
         const auto origin=capture.PrepareEffectBackground();glUniform2i(glGetUniformLocation(program,"uEffectOrigin"),origin.x,origin.y);
-        glActiveTexture(GL_TEXTURE0);upload(textures[1],33,atlas.data());
+        glActiveTexture(GL_TEXTURE0);upload(textures[1],35,atlas.data());
         glUniform1ui(glGetUniformLocation(program,"uFlags"),scene::actor::Actor::RF_IGNORE_CAMERA|scene::actor::Actor::RF_IGNORE_LIGHTING|scene::actor::Actor::RF_SMAC_EFFECT);glDrawArrays(GL_TRIANGLE_STRIP,0,4);
-        glReadPixels(0,0,256,16,GL_RGBA,GL_UNSIGNED_BYTE,output.data());GT_ASSERT(glGetError()==GL_NO_ERROR,"GPU compositor/capture generated a GL error");
-        for(size_t y=0;y<16;++y) {for(size_t x=10;x<=245;++x) {
-            const auto expected=x==15 ? uint8_t(x):bank[y*256+x];
-            GT_ASSERT(output[(y*256+x)*4]==expected && output[(y*256+x)*4+1]==expected && output[(y*256+x)*4+2]==expected,
+        glReadPixels(0,0,256,17,GL_RGBA,GL_UNSIGNED_BYTE,output.data());GT_ASSERT(glGetError()==GL_NO_ERROR,"GPU compositor/capture generated a GL error");
+        for(size_t y=0;y<17;++y) {for(size_t x=10;x<=245;++x) {
+            const auto expected=x==15 ? uint8_t(x):(y==16 ? fixtures::smac_effect_escape[x]:bank[y*256+x]);
+            GT_ASSERT(output[(y*256+x)*4]==palette[expected][0] && output[(y*256+x)*4+1]==palette[expected][1] && output[(y*256+x)*4+2]==palette[expected][2] && output[(y*256+x)*4+3]==255,
                 "GPU effect differs from indexed source/background lookup at "+std::to_string(y)+"/"+std::to_string(x));
         }}GT_OK();
     });}
@@ -115,6 +117,11 @@ void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
         const auto protected_bank=fx::Generate(palette,rows,{{59,59}});
         GT_ASSERT(fx::Composite(protected_bank,0,59)==59 && fx::Composite(protected_bank,0,44)==58,"Protected effect colors were altered or considered nearest candidates");
         for(int row=0;row<16;++row) {for(int i=0;i<10;++i) {GT_ASSERT(bank[row*256+i]==i && bank[row*256+246+i]==246+i,"Generated CLUT rewrote reserved destination indices");}}
+        for(size_t i=0;i<256;++i) {GT_ASSERT(fx::SmacSoftwareStartupEscape(i)==fixtures::smac_effect_escape[i],"SMAC startup escape differs from original execution");}
+        auto reserved=palette;fx::ApplySmacSoftwareReservedColors(reserved);
+        GT_ASSERT((reserved[0]==std::array<uint8_t,3>{0,0,0} && reserved[1]==std::array<uint8_t,3>{128,0,0}
+            && reserved[6]==std::array<uint8_t,3>{0,128,128} && reserved[255]==std::array<uint8_t,3>{255,255,255}
+            && reserved[44]==palette[44]),"Software reserved colors changed ordinary colors or opaque escape RGB");
         GT_ASSERT(Rejects([&]{fx::Composite(bank,252,44);}),"Unknown original out-of-bank source was silently given a color");
         std::string system="; diagnostic\r\n#EXPLOSIONS3\r\n";
         for(int i=0;i<16;++i) {system+="49, 100, ; row\r\n";}

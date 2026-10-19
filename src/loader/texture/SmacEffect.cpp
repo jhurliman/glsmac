@@ -40,6 +40,19 @@ Bank Generate(const Palette& palette,const Rows& rows,const std::vector<std::pai
         }bank[source*256+destination]=selected;
     }}return bank;
 }
+void ApplySmacSoftwareReservedColors(Palette& palette) {
+    const std::array<std::array<uint8_t,3>,20> colors{{
+        {{0,0,0}},{{128,0,0}},{{0,128,0}},{{128,128,0}},{{0,0,128}},
+        {{128,0,128}},{{0,128,128}},{{192,192,192}},{{8,0,0}},{{9,0,0}},
+        {{245,0,0}},{{246,0,0}},{{128,128,128}},{{255,0,0}},{{0,255,0}},
+        {{255,255,0}},{{0,0,255}},{{255,0,255}},{{0,255,255}},{{255,255,255}}
+    }};
+    for(size_t i=0;i<10;++i) {palette[i]=colors[i];palette[246+i]=colors[10+i];}
+}
+uint8_t SmacSoftwareStartupEscape(uint8_t destination) {
+    if(destination==13) {return 1;}
+    return destination>=20 && destination<=252 && destination%4==0 ? (destination-20)/4:0;
+}
 uint8_t Composite(const Bank& bank,uint8_t source,uint8_t destination) {
     if(source==253 || source==255) {return destination;}
     if(source>=16) {throw std::invalid_argument("Effect source reads beyond the verified CLUT bank");}

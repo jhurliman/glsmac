@@ -1,0 +1,2063 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Actual owning movement entry5466c0 through full conventional capture520730 and captured-Base screen boundary420b10; no screen body executed or new interaction answer supplied. Same existing local two-human full-move healthy Scout, equal technology, no projects, flat land, surviving defender, HQ population3 fixture; only target former/timer differ.",
+  "baseline": {
+    "source": "headquarters-capture-development-20261017.json",
+    "source_sha256": "4f9655f8471b9a53b5e43e66e127e778b744b67d63e17d6ac63c43eae8820502",
+    "before": {
+      "bases": [
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "former_owner": 1,
+          "population": 1,
+          "assimilation": 0,
+          "status": 28672,
+          "governor": 14663233,
+          "food": 0,
+          "minerals": 11,
+          "baseline_item": 1,
+          "baseline_minerals": 11,
+          "target": 1,
+          "queue": [],
+          "facilities": [
+            1
+          ],
+          "resources": {
+            "nutrient_intake": 0,
+            "mineral_intake": 0,
+            "energy_intake": 0,
+            "nutrient_surplus": 1,
+            "mineral_surplus": 2,
+            "economy": 1,
+            "psych": 2,
+            "labs": 0,
+            "energy_inefficiency": 2,
+            "support": 0
+          }
+        },
+        {
+          "id": 1,
+          "coordinate": [
+            20,
+            16
+          ],
+          "owner": 2,
+          "former_owner": 2,
+          "population": 3,
+          "assimilation": 0,
+          "status": 0,
+          "governor": 0,
+          "food": 5,
+          "minerals": 7,
+          "baseline_item": 1,
+          "baseline_minerals": 7,
+          "target": 1,
+          "queue": [
+            2,
+            1
+          ],
+          "facilities": [
+            1,
+            3,
+            4,
+            7,
+            8
+          ],
+          "resources": {
+            "nutrient_intake": 0,
+            "mineral_intake": 0,
+            "energy_intake": 0,
+            "nutrient_surplus": 1,
+            "mineral_surplus": 1,
+            "economy": 1,
+            "psych": 1,
+            "labs": 0,
+            "energy_inefficiency": 1,
+            "support": 0
+          }
+        },
+        {
+          "id": 2,
+          "coordinate": [
+            26,
+            16
+          ],
+          "owner": 2,
+          "former_owner": 2,
+          "population": 1,
+          "assimilation": 0,
+          "status": 0,
+          "governor": 0,
+          "food": 0,
+          "minerals": 10,
+          "baseline_item": 2,
+          "baseline_minerals": 10,
+          "target": 2,
+          "queue": [],
+          "facilities": [],
+          "resources": {
+            "nutrient_intake": 0,
+            "mineral_intake": 0,
+            "energy_intake": 0,
+            "nutrient_surplus": 1,
+            "mineral_surplus": 1,
+            "economy": 1,
+            "psych": 1,
+            "labs": 0,
+            "energy_inefficiency": 1,
+            "support": 0
+          }
+        }
+      ],
+      "units": [
+        {
+          "id": 0,
+          "owner": 1,
+          "design": 2,
+          "position": [
+            16,
+            16
+          ],
+          "home": -1,
+          "spent": 0,
+          "morale": 1,
+          "damage": 0
+        },
+        {
+          "id": 1,
+          "owner": 1,
+          "design": 2,
+          "position": [
+            19,
+            15
+          ],
+          "home": 0,
+          "spent": 0,
+          "morale": 1,
+          "damage": 0
+        },
+        {
+          "id": 2,
+          "owner": 2,
+          "design": 1,
+          "position": [
+            30,
+            16
+          ],
+          "home": 1,
+          "spent": 0,
+          "morale": 1,
+          "damage": 0
+        }
+      ],
+      "credits": [
+        100,
+        200
+      ],
+      "owned_bases": [
+        1,
+        2
+      ],
+      "technologies": [
+        [
+          6
+        ],
+        [
+          6
+        ]
+      ],
+      "selected": 1,
+      "secondary": -1,
+      "crt": 3,
+      "shared": 3,
+      "active_mask": 6,
+      "human_mask": 6,
+      "focus": 1,
+      "controller": 1,
+      "active_faction": 1,
+      "ending_state": 0,
+      "game_flags": 16640,
+      "total_population": [
+        1,
+        4
+      ],
+      "current_base": 2
+    },
+    "after": {
+      "bases": [
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "former_owner": 1,
+          "population": 1,
+          "assimilation": 0,
+          "status": 28672,
+          "governor": 14663233,
+          "food": 0,
+          "minerals": 11,
+          "baseline_item": 1,
+          "baseline_minerals": 11,
+          "target": 1,
+          "queue": [],
+          "facilities": [
+            1
+          ],
+          "resources": {
+            "nutrient_intake": 0,
+            "mineral_intake": 0,
+            "energy_intake": 0,
+            "nutrient_surplus": 1,
+            "mineral_surplus": 2,
+            "economy": 1,
+            "psych": 2,
+            "labs": 0,
+            "energy_inefficiency": 2,
+            "support": 0
+          }
+        },
+        {
+          "id": 1,
+          "coordinate": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "former_owner": 2,
+          "population": 2,
+          "assimilation": 50,
+          "status": 0,
+          "governor": 14663233,
+          "food": 5,
+          "minerals": 0,
+          "baseline_item": -38,
+          "baseline_minerals": 0,
+          "target": 2,
+          "queue": [],
+          "facilities": [
+            4,
+            7,
+            8
+          ],
+          "resources": {
+            "nutrient_intake": 0,
+            "mineral_intake": 0,
+            "energy_intake": 0,
+            "nutrient_surplus": 1,
+            "mineral_surplus": 1,
+            "economy": 1,
+            "psych": 1,
+            "labs": 0,
+            "energy_inefficiency": 1,
+            "support": 0
+          }
+        },
+        {
+          "id": 2,
+          "coordinate": [
+            26,
+            16
+          ],
+          "owner": 2,
+          "former_owner": 2,
+          "population": 1,
+          "assimilation": 0,
+          "status": 0,
+          "governor": 0,
+          "food": 0,
+          "minerals": 10,
+          "baseline_item": 2,
+          "baseline_minerals": 10,
+          "target": 2,
+          "queue": [],
+          "facilities": [],
+          "resources": {
+            "nutrient_intake": 0,
+            "mineral_intake": 0,
+            "energy_intake": 0,
+            "nutrient_surplus": 1,
+            "mineral_surplus": 1,
+            "economy": 1,
+            "psych": 1,
+            "labs": 0,
+            "energy_inefficiency": 1,
+            "support": 0
+          }
+        }
+      ],
+      "units": [
+        {
+          "id": 0,
+          "owner": 1,
+          "design": 2,
+          "position": [
+            16,
+            16
+          ],
+          "home": -1,
+          "spent": 0,
+          "morale": 1,
+          "damage": 0
+        },
+        {
+          "id": 1,
+          "owner": 1,
+          "design": 2,
+          "position": [
+            20,
+            16
+          ],
+          "home": 0,
+          "spent": 3,
+          "morale": 1,
+          "damage": 0
+        },
+        {
+          "id": 2,
+          "owner": 2,
+          "design": 1,
+          "position": [
+            30,
+            16
+          ],
+          "home": 2,
+          "spent": 0,
+          "morale": 1,
+          "damage": 0
+        }
+      ],
+      "credits": [
+        220,
+        80
+      ],
+      "owned_bases": [
+        2,
+        1
+      ],
+      "technologies": [
+        [
+          6
+        ],
+        [
+          6
+        ]
+      ],
+      "selected": 1,
+      "secondary": -1,
+      "crt": 1951609278,
+      "shared": 3,
+      "active_mask": 6,
+      "human_mask": 6,
+      "focus": 1,
+      "controller": 1,
+      "active_faction": 1,
+      "ending_state": 0,
+      "game_flags": 16640,
+      "total_population": [
+        1,
+        4
+      ],
+      "current_base": 1
+    },
+    "rng_calls": 37
+  },
+  "cases": [
+    {
+      "id": "return_to_former",
+      "input": {
+        "former": 1,
+        "assimilation": 27
+      },
+      "before": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "resources": {
+              "nutrient_intake": 0,
+              "mineral_intake": 0,
+              "energy_intake": 0,
+              "nutrient_surplus": 1,
+              "mineral_surplus": 2,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0,
+              "energy_inefficiency": 2,
+              "support": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 1,
+            "population": 3,
+            "assimilation": 27,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ],
+            "resources": {
+              "nutrient_intake": 0,
+              "mineral_intake": 0,
+              "energy_intake": 0,
+              "nutrient_surplus": 1,
+              "mineral_surplus": 1,
+              "economy": 1,
+              "psych": 1,
+              "labs": 0,
+              "energy_inefficiency": 1,
+              "support": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "resources": {
+              "nutrient_intake": 0,
+              "mineral_intake": 0,
+              "energy_intake": 0,
+              "nutrient_surplus": 1,
+              "mineral_surplus": 1,
+              "economy": 1,
+              "psych": 1,
+              "labs": 0,
+              "energy_inefficiency": 1,
+              "support": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              19,
+              15
+            ],
+            "home": 0,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2,
+        "research_points": [
+          0,
+          0
+        ],
+        "research_ratings": [
+          0,
+          0
+        ],
+        "rules": 0
+      },
+      "after": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "resources": {
+              "nutrient_intake": 0,
+              "mineral_intake": 0,
+              "energy_intake": 0,
+              "nutrient_surplus": 1,
+              "mineral_surplus": 2,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0,
+              "energy_inefficiency": 2,
+              "support": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 3,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              3,
+              4,
+              7,
+              8
+            ],
+            "resources": {
+              "nutrient_intake": 0,
+              "mineral_intake": 0,
+              "energy_intake": 0,
+              "nutrient_surplus": 2,
+              "mineral_surplus": 2,
+              "economy": 2,
+              "psych": 2,
+              "labs": 0,
+              "energy_inefficiency": 2,
+              "support": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "resources": {
+              "nutrient_intake": 0,
+              "mineral_intake": 0,
+              "energy_intake": 0,
+              "nutrient_surplus": 1,
+              "mineral_surplus": 1,
+              "economy": 1,
+              "psych": 1,
+              "labs": 0,
+              "energy_inefficiency": 1,
+              "support": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 1,
+        "research_points": [
+          0,
+          0
+        ],
+        "research_ratings": [
+          0,
+          0
+        ],
+        "rules": 0
+      },
+      "events": [
+        {
+          "stage": "capture_entry",
+          "pc": "0x520730",
+          "eax": 0,
+          "esi": 2,
+          "edi": 1,
+          "edx": 1
+        },
+        {
+          "stage": "plunder_population_formula",
+          "pc": "0x520b94",
+          "eax": 2,
+          "esi": 9805984,
+          "edi": 9892272,
+          "edx": 200
+        },
+        {
+          "stage": "hq_relocation_credit_gate",
+          "pc": "0x520bf7",
+          "eax": 16760,
+          "esi": 9805984,
+          "edi": 9892272,
+          "edx": 1
+        },
+        {
+          "stage": "hq_after_relocation_branch",
+          "pc": "0x520f06",
+          "eax": 16760,
+          "esi": 9805984,
+          "edi": 9892272,
+          "edx": 1
+        },
+        {
+          "stage": "credits_transferred",
+          "pc": "0x52105c",
+          "eax": 80,
+          "esi": 16760,
+          "edi": 8380,
+          "edx": 120
+        },
+        {
+          "stage": "donor_selector_entry",
+          "pc": "0x5211cd",
+          "eax": 4294967258,
+          "esi": 0,
+          "edi": 8380,
+          "edx": 9892668
+        },
+        {
+          "stage": "donor_selector_exit",
+          "pc": "0x52127a",
+          "eax": 0,
+          "esi": 3,
+          "edi": 2,
+          "edx": 0
+        },
+        {
+          "stage": "governor_copied",
+          "pc": "0x521293",
+          "eax": 0,
+          "esi": 3,
+          "edi": 2,
+          "edx": 0
+        },
+        {
+          "stage": "forced_hq_clear_entry",
+          "pc": "0x5212eb",
+          "eax": 1,
+          "esi": 3,
+          "edi": 2,
+          "edx": 0
+        },
+        {
+          "stage": "capture_facility_cleanup_done",
+          "pc": "0x52131e",
+          "eax": 1,
+          "esi": 1,
+          "edi": 2,
+          "edx": 253
+        },
+        {
+          "stage": "home_repair_entry",
+          "pc": "0x521445",
+          "eax": 268458424,
+          "esi": 19,
+          "edi": 13,
+          "edx": 1052675
+        },
+        {
+          "stage": "home_reassignment_write",
+          "pc": "0x521508",
+          "eax": 10,
+          "esi": 2,
+          "edi": 10048026,
+          "edx": 0
+        },
+        {
+          "stage": "home_repair_done",
+          "pc": "0x52152f",
+          "eax": 4294967295,
+          "esi": 2,
+          "edi": 10047870,
+          "edx": 1
+        },
+        {
+          "stage": "production_selection_call",
+          "pc": "0x5215f2",
+          "eax": 6,
+          "esi": 2872,
+          "edi": 9811272,
+          "edx": 1
+        },
+        {
+          "stage": "production_selection_return",
+          "pc": "0x5215ff",
+          "eax": 2,
+          "esi": 2872,
+          "edi": 9811272,
+          "edx": 26572
+        },
+        {
+          "stage": "tech_compare_entry",
+          "pc": "0x521a05",
+          "eax": 0,
+          "esi": 20,
+          "edi": 16,
+          "edx": 1
+        },
+        {
+          "stage": "tech_compare_complete",
+          "pc": "0x521a37",
+          "eax": 0,
+          "esi": 0,
+          "edi": 89,
+          "edx": 88
+        },
+        {
+          "stage": "capture_research_posting",
+          "pc": "0x521a84",
+          "eax": 0,
+          "esi": 8380,
+          "edi": 1,
+          "edx": 0
+        },
+        {
+          "stage": "capture_research_posted",
+          "pc": "0x521a8a",
+          "eax": 0,
+          "esi": 8380,
+          "edi": 1,
+          "edx": 0
+        },
+        {
+          "stage": "disposition_entry",
+          "pc": "0x5ca7f0",
+          "eax": 262144,
+          "esi": 304,
+          "edi": 1,
+          "edx": 9
+        },
+        {
+          "stage": "base_recalculation_call",
+          "pc": "0x521d75",
+          "eax": 0,
+          "esi": 304,
+          "edi": 1,
+          "edx": 9
+        },
+        {
+          "stage": "captured_base_recalculation_entry",
+          "pc": "0x4f92a0"
+        },
+        {
+          "stage": "captured_base_resource_entry",
+          "pc": "0x501570"
+        },
+        {
+          "stage": "base_resource_calculation_return",
+          "pc": "0x521d81",
+          "eax": 4294967295,
+          "esi": 304,
+          "edi": 1,
+          "edx": 0
+        },
+        {
+          "stage": "captured_base_screen_call",
+          "pc": "0x521dc3",
+          "eax": 0,
+          "esi": 304,
+          "edi": 1,
+          "edx": 3
+        }
+      ],
+      "facility_calls": [
+        {
+          "caller": "0x5212fc",
+          "arguments": [
+            1,
+            1,
+            0
+          ]
+        }
+      ],
+      "rng": [],
+      "production_calls": [
+        {
+          "routine": "0x4fa3b0",
+          "caller": "0x5215ff",
+          "arguments": [
+            1,
+            1
+          ]
+        }
+      ],
+      "screen_boundary": {
+        "entry": "0x420b10",
+        "caller": "0x521dc8",
+        "arguments": [
+          1,
+          0
+        ]
+      },
+      "notification": "LIBERATEBASE",
+      "source_sha256": "9bcee11a19ccfc6e89325dcd62074faaae8d8ba9b98ee44a548d4427f7bfc77f"
+    },
+    {
+      "id": "already_conquered_third_former",
+      "input": {
+        "former": 3,
+        "assimilation": 27
+      },
+      "before": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "resources": {
+              "nutrient_intake": 0,
+              "mineral_intake": 0,
+              "energy_intake": 0,
+              "nutrient_surplus": 1,
+              "mineral_surplus": 2,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0,
+              "energy_inefficiency": 2,
+              "support": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 3,
+            "population": 3,
+            "assimilation": 27,
+            "status": 0,
+            "governor": 0,
+            "food": 5,
+            "minerals": 7,
+            "baseline_item": 1,
+            "baseline_minerals": 7,
+            "target": 1,
+            "queue": [
+              2,
+              1
+            ],
+            "facilities": [
+              1,
+              3,
+              4,
+              7,
+              8
+            ],
+            "resources": {
+              "nutrient_intake": 0,
+              "mineral_intake": 0,
+              "energy_intake": 0,
+              "nutrient_surplus": 1,
+              "mineral_surplus": 1,
+              "economy": 1,
+              "psych": 1,
+              "labs": 0,
+              "energy_inefficiency": 1,
+              "support": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "resources": {
+              "nutrient_intake": 0,
+              "mineral_intake": 0,
+              "energy_intake": 0,
+              "nutrient_surplus": 1,
+              "mineral_surplus": 1,
+              "economy": 1,
+              "psych": 1,
+              "labs": 0,
+              "energy_inefficiency": 1,
+              "support": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              19,
+              15
+            ],
+            "home": 0,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          100,
+          200
+        ],
+        "owned_bases": [
+          1,
+          2
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 3,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 2,
+        "research_points": [
+          0,
+          0
+        ],
+        "research_ratings": [
+          0,
+          0
+        ],
+        "rules": 0
+      },
+      "after": {
+        "bases": [
+          {
+            "id": 0,
+            "coordinate": [
+              16,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 1,
+            "population": 1,
+            "assimilation": 0,
+            "status": 28672,
+            "governor": 14663233,
+            "food": 0,
+            "minerals": 11,
+            "baseline_item": 1,
+            "baseline_minerals": 11,
+            "target": 1,
+            "queue": [],
+            "facilities": [
+              1
+            ],
+            "resources": {
+              "nutrient_intake": 0,
+              "mineral_intake": 0,
+              "energy_intake": 0,
+              "nutrient_surplus": 1,
+              "mineral_surplus": 2,
+              "economy": 1,
+              "psych": 2,
+              "labs": 0,
+              "energy_inefficiency": 2,
+              "support": 0
+            }
+          },
+          {
+            "id": 1,
+            "coordinate": [
+              20,
+              16
+            ],
+            "owner": 1,
+            "former_owner": 2,
+            "population": 2,
+            "assimilation": 50,
+            "status": 0,
+            "governor": 14663233,
+            "food": 5,
+            "minerals": 0,
+            "baseline_item": -38,
+            "baseline_minerals": 0,
+            "target": 2,
+            "queue": [],
+            "facilities": [
+              4,
+              7,
+              8
+            ],
+            "resources": {
+              "nutrient_intake": 0,
+              "mineral_intake": 0,
+              "energy_intake": 0,
+              "nutrient_surplus": 1,
+              "mineral_surplus": 1,
+              "economy": 1,
+              "psych": 1,
+              "labs": 0,
+              "energy_inefficiency": 1,
+              "support": 0
+            }
+          },
+          {
+            "id": 2,
+            "coordinate": [
+              26,
+              16
+            ],
+            "owner": 2,
+            "former_owner": 2,
+            "population": 1,
+            "assimilation": 0,
+            "status": 0,
+            "governor": 0,
+            "food": 0,
+            "minerals": 10,
+            "baseline_item": 2,
+            "baseline_minerals": 10,
+            "target": 2,
+            "queue": [],
+            "facilities": [],
+            "resources": {
+              "nutrient_intake": 0,
+              "mineral_intake": 0,
+              "energy_intake": 0,
+              "nutrient_surplus": 1,
+              "mineral_surplus": 1,
+              "economy": 1,
+              "psych": 1,
+              "labs": 0,
+              "energy_inefficiency": 1,
+              "support": 0
+            }
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "home": -1,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              20,
+              16
+            ],
+            "home": 0,
+            "spent": 3,
+            "morale": 1,
+            "damage": 0
+          },
+          {
+            "id": 2,
+            "owner": 2,
+            "design": 1,
+            "position": [
+              30,
+              16
+            ],
+            "home": 2,
+            "spent": 0,
+            "morale": 1,
+            "damage": 0
+          }
+        ],
+        "credits": [
+          220,
+          80
+        ],
+        "owned_bases": [
+          2,
+          1
+        ],
+        "technologies": [
+          [
+            6
+          ],
+          [
+            6
+          ]
+        ],
+        "selected": 1,
+        "secondary": -1,
+        "crt": 1951609278,
+        "shared": 3,
+        "active_mask": 6,
+        "human_mask": 6,
+        "focus": 1,
+        "controller": 1,
+        "active_faction": 1,
+        "ending_state": 0,
+        "game_flags": 16640,
+        "total_population": [
+          1,
+          4
+        ],
+        "current_base": 1,
+        "research_points": [
+          0,
+          0
+        ],
+        "research_ratings": [
+          0,
+          0
+        ],
+        "rules": 0
+      },
+      "events": [
+        {
+          "stage": "capture_entry",
+          "pc": "0x520730",
+          "eax": 0,
+          "esi": 2,
+          "edi": 1,
+          "edx": 1
+        },
+        {
+          "stage": "plunder_population_formula",
+          "pc": "0x520b94",
+          "eax": 2,
+          "esi": 9805984,
+          "edi": 9892272,
+          "edx": 200
+        },
+        {
+          "stage": "hq_relocation_credit_gate",
+          "pc": "0x520bf7",
+          "eax": 16760,
+          "esi": 9805984,
+          "edi": 9892272,
+          "edx": 1
+        },
+        {
+          "stage": "hq_after_relocation_branch",
+          "pc": "0x520f06",
+          "eax": 16760,
+          "esi": 9805984,
+          "edi": 9892272,
+          "edx": 1
+        },
+        {
+          "stage": "credits_transferred",
+          "pc": "0x52105c",
+          "eax": 80,
+          "esi": 16760,
+          "edi": 8380,
+          "edx": 120
+        },
+        {
+          "stage": "population_decrement",
+          "pc": "0x5210b7",
+          "eax": 3,
+          "esi": 16760,
+          "edi": 8380,
+          "edx": 0
+        },
+        {
+          "stage": "population_decrement_done",
+          "pc": "0x5210bf",
+          "eax": 2,
+          "esi": 16760,
+          "edi": 8380,
+          "edx": 0
+        },
+        {
+          "stage": "donor_selector_entry",
+          "pc": "0x5211cd",
+          "eax": 4294967258,
+          "esi": 0,
+          "edi": 8380,
+          "edx": 9892668
+        },
+        {
+          "stage": "donor_selector_exit",
+          "pc": "0x52127a",
+          "eax": 0,
+          "esi": 3,
+          "edi": 2,
+          "edx": 0
+        },
+        {
+          "stage": "governor_copied",
+          "pc": "0x521293",
+          "eax": 0,
+          "esi": 3,
+          "edi": 2,
+          "edx": 0
+        },
+        {
+          "stage": "random_facility_loop_entry",
+          "pc": "0x5212b8",
+          "eax": 0,
+          "esi": 3,
+          "edi": 2,
+          "edx": 0
+        },
+        {
+          "stage": "forced_hq_clear_entry",
+          "pc": "0x5212eb",
+          "eax": 9926,
+          "esi": 39,
+          "edi": 2,
+          "edx": 1
+        },
+        {
+          "stage": "capture_facility_cleanup_done",
+          "pc": "0x52131e",
+          "eax": 9892716,
+          "esi": 1,
+          "edi": 2,
+          "edx": 247
+        },
+        {
+          "stage": "home_repair_entry",
+          "pc": "0x521445",
+          "eax": 268458424,
+          "esi": 19,
+          "edi": 13,
+          "edx": 1052675
+        },
+        {
+          "stage": "home_reassignment_write",
+          "pc": "0x521508",
+          "eax": 10,
+          "esi": 2,
+          "edi": 10048026,
+          "edx": 0
+        },
+        {
+          "stage": "home_repair_done",
+          "pc": "0x52152f",
+          "eax": 4294967295,
+          "esi": 2,
+          "edi": 10047870,
+          "edx": 1
+        },
+        {
+          "stage": "production_selection_call",
+          "pc": "0x5215f2",
+          "eax": 6,
+          "esi": 2872,
+          "edi": 9811272,
+          "edx": 1
+        },
+        {
+          "stage": "production_selection_return",
+          "pc": "0x5215ff",
+          "eax": 2,
+          "esi": 2872,
+          "edi": 9811272,
+          "edx": 26572
+        },
+        {
+          "stage": "tech_compare_entry",
+          "pc": "0x521a05",
+          "eax": 0,
+          "esi": 20,
+          "edi": 16,
+          "edx": 1
+        },
+        {
+          "stage": "tech_compare_complete",
+          "pc": "0x521a37",
+          "eax": 0,
+          "esi": 0,
+          "edi": 89,
+          "edx": 88
+        },
+        {
+          "stage": "capture_research_posting",
+          "pc": "0x521a84",
+          "eax": 0,
+          "esi": 8380,
+          "edi": 1,
+          "edx": 0
+        },
+        {
+          "stage": "capture_research_posted",
+          "pc": "0x521a8a",
+          "eax": 0,
+          "esi": 8380,
+          "edi": 1,
+          "edx": 0
+        },
+        {
+          "stage": "disposition_entry",
+          "pc": "0x5ca7f0",
+          "eax": 262144,
+          "esi": 304,
+          "edi": 1,
+          "edx": 9
+        },
+        {
+          "stage": "base_recalculation_call",
+          "pc": "0x521d75",
+          "eax": 0,
+          "esi": 304,
+          "edi": 1,
+          "edx": 9
+        },
+        {
+          "stage": "captured_base_recalculation_entry",
+          "pc": "0x4f92a0"
+        },
+        {
+          "stage": "captured_base_resource_entry",
+          "pc": "0x501570"
+        },
+        {
+          "stage": "base_resource_calculation_return",
+          "pc": "0x521d81",
+          "eax": 4294967295,
+          "esi": 304,
+          "edi": 1,
+          "edx": 0
+        },
+        {
+          "stage": "captured_base_screen_call",
+          "pc": "0x521dc3",
+          "eax": 0,
+          "esi": 304,
+          "edi": 1,
+          "edx": 3
+        }
+      ],
+      "facility_calls": [
+        {
+          "caller": "0x5212e2",
+          "arguments": [
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x5212e2",
+          "arguments": [
+            3,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x5212e2",
+          "arguments": [
+            6,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x5212e2",
+          "arguments": [
+            10,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x5212e2",
+          "arguments": [
+            11,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x5212e2",
+          "arguments": [
+            12,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x5212e2",
+          "arguments": [
+            22,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x5212e2",
+          "arguments": [
+            23,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x5212e2",
+          "arguments": [
+            27,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x5212e2",
+          "arguments": [
+            30,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x5212e2",
+          "arguments": [
+            31,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x5212fc",
+          "arguments": [
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x521311",
+          "arguments": [
+            6,
+            1,
+            0
+          ]
+        },
+        {
+          "caller": "0x52131b",
+          "arguments": [
+            3,
+            1,
+            0
+          ]
+        }
+      ],
+      "rng": [
+        {
+          "order": 48,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 3,
+          "facility": 1,
+          "after": 3173050,
+          "result": 48
+        },
+        {
+          "order": 51,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 3173050,
+          "facility": 2,
+          "after": 471647893,
+          "result": 7196
+        },
+        {
+          "order": 52,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 471647893,
+          "facility": 3,
+          "after": 2756632324,
+          "result": 9294
+        },
+        {
+          "order": 55,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 2756632324,
+          "facility": 4,
+          "after": 2743275959,
+          "result": 9091
+        },
+        {
+          "order": 56,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 2743275959,
+          "facility": 5,
+          "after": 460785054,
+          "result": 7031
+        },
+        {
+          "order": 57,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 460785054,
+          "facility": 6,
+          "after": 1545176553,
+          "result": 23577
+        },
+        {
+          "order": 60,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 1545176553,
+          "facility": 7,
+          "after": 1160179976,
+          "result": 17702
+        },
+        {
+          "order": 61,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 1160179976,
+          "facility": 8,
+          "after": 1540352939,
+          "result": 23503
+        },
+        {
+          "order": 62,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 1540352939,
+          "facility": 9,
+          "after": 3931195330,
+          "result": 27217
+        },
+        {
+          "order": 63,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 3931195330,
+          "facility": 10,
+          "after": 2944946045,
+          "result": 12168
+        },
+        {
+          "order": 66,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 2944946045,
+          "facility": 11,
+          "after": 354542668,
+          "result": 5409
+        },
+        {
+          "order": 69,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 354542668,
+          "facility": 12,
+          "after": 1850286559,
+          "result": 28233
+        },
+        {
+          "order": 72,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 1850286559,
+          "facility": 13,
+          "after": 2280092966,
+          "result": 2023
+        },
+        {
+          "order": 73,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 2280092966,
+          "facility": 14,
+          "after": 1124095825,
+          "result": 17152
+        },
+        {
+          "order": 74,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 1124095825,
+          "facility": 15,
+          "after": 1414143184,
+          "result": 21578
+        },
+        {
+          "order": 75,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 1414143184,
+          "facility": 16,
+          "after": 157255763,
+          "result": 2399
+        },
+        {
+          "order": 76,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 157255763,
+          "facility": 17,
+          "after": 3711373770,
+          "result": 23863
+        },
+        {
+          "order": 77,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 3711373770,
+          "facility": 18,
+          "after": 1050218853,
+          "result": 16025
+        },
+        {
+          "order": 78,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 1050218853,
+          "facility": 19,
+          "after": 556351124,
+          "result": 8489
+        },
+        {
+          "order": 79,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 556351124,
+          "facility": 20,
+          "after": 1292251911,
+          "result": 19718
+        },
+        {
+          "order": 80,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 1292251911,
+          "facility": 21,
+          "after": 1471603118,
+          "result": 22454
+        },
+        {
+          "order": 81,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 1471603118,
+          "facility": 22,
+          "after": 838742457,
+          "result": 12798
+        },
+        {
+          "order": 84,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 838742457,
+          "facility": 23,
+          "after": 2223779224,
+          "result": 1164
+        },
+        {
+          "order": 87,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 2223779224,
+          "facility": 24,
+          "after": 929461755,
+          "result": 14182
+        },
+        {
+          "order": 88,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 929461755,
+          "facility": 25,
+          "after": 4080724178,
+          "result": 29498
+        },
+        {
+          "order": 89,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 4080724178,
+          "facility": 27,
+          "after": 2260970573,
+          "result": 1731
+        },
+        {
+          "order": 92,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 2260970573,
+          "facility": 28,
+          "after": 1787235804,
+          "result": 27271
+        },
+        {
+          "order": 93,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 1787235804,
+          "facility": 29,
+          "after": 3386107183,
+          "result": 18899
+        },
+        {
+          "order": 94,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 3386107183,
+          "facility": 30,
+          "after": 2602068790,
+          "result": 6936
+        },
+        {
+          "order": 97,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 2602068790,
+          "facility": 31,
+          "after": 3975787809,
+          "result": 27897
+        },
+        {
+          "order": 100,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 3975787809,
+          "facility": 32,
+          "after": 2897822560,
+          "result": 11449
+        },
+        {
+          "order": 101,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 2897822560,
+          "facility": 33,
+          "after": 4194325667,
+          "result": 31232
+        },
+        {
+          "order": 102,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 4194325667,
+          "facility": 34,
+          "after": 646573274,
+          "result": 9865
+        },
+        {
+          "order": 103,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 646573274,
+          "facility": 35,
+          "after": 4127244341,
+          "result": 30208
+        },
+        {
+          "order": 104,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 4127244341,
+          "facility": 36,
+          "after": 2446422564,
+          "result": 4561
+        },
+        {
+          "order": 105,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 2446422564,
+          "facility": 37,
+          "after": 1131403351,
+          "result": 17263
+        },
+        {
+          "order": 106,
+          "kind": "CRT",
+          "caller": "0x5212c7",
+          "before": 1131403351,
+          "facility": 38,
+          "after": 1951609278,
+          "result": 29779
+        }
+      ],
+      "production_calls": [
+        {
+          "routine": "0x4fa3b0",
+          "caller": "0x5215ff",
+          "arguments": [
+            1,
+            1
+          ]
+        }
+      ],
+      "screen_boundary": {
+        "entry": "0x420b10",
+        "caller": "0x521dc8",
+        "arguments": [
+          1,
+          0
+        ]
+      },
+      "notification": "SEIZEBASE",
+      "source_sha256": "91f3cc14d6e48cebf824a7c0f79bc084c5ee9e8a951bac5754619345eb32aac8"
+    }
+  ]
+}

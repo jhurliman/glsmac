@@ -80,7 +80,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	const auto registered=std::find_if(m_bases.begin(),m_bases.end(),[&](const auto& row){return row.second==destination->base;});
 	if(registered==m_bases.end() || registered->second->m_id!=registered->first) {THROW("Capture target is not a current Base");}
 	auto* captured=registered->second;const auto before=captured->GetSmacResourceContext();
-	if(captured->m_owner==actor->m_owner || captured->GetPopulation()<2 || before.conquest || before.golden_age || before.drone_riots || before.resource_events) {THROW("This Base requires a different capture rule");}
+	if(captured->m_owner==actor->m_owner || captured->GetPopulation()<2 || before.golden_age || before.drone_riots || before.resource_events) {THROW("This Base requires a different capture rule");}
 	m_game->RequireSmacLocalHumanOwner(actor->m_owner);m_game->RequireSmacLocalHumanOwner(captured->m_owner);
 	const auto resolved=um->ResolveConventional(actor->Conventional(),actor->m_owner);
 	const auto design=m_game->ResolveConventionalDesign(actor->Conventional(),*m_game->m_simulation);
@@ -113,13 +113,14 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 		data->victory->RecordBaseExpansion(new_owner,static_cast<int32_t>(m_game->GetTurnId()));
 	}
 	data->actor=actor;data->base=captured;data->source=source;data->owner=actor->m_owner;data->old_owner=old_owner;data->new_owner=new_owner;
-	data->population=captured->GetPopulation()-1;
+	const bool liberation=before.FormerOwner()==new_owner;
+	data->population=captured->GetPopulation()-(liberation ? 0:1);
 	const int64_t numerator=int64_t(defender_economy.credits)*static_cast<int64_t>(captured->GetPopulation());
 	if(numerator>INT32_MAX) {THROW("Capture treasury multiplication exceeds the admitted ordinary domain");}
 	const int64_t booty=numerator/(*defender_economy.population_aggregate+1);
 	if(booty>INT32_MAX || int64_t(data->actor_economy.credits)+booty>INT32_MAX) {THROW("Capture treasury arithmetic exceeds the admitted ordinary domain");}
 	data->loot=static_cast<int32_t>(booty);data->actor_economy.credits+=data->loot;
-	data->context=before;data->context.owner_simulation_id=new_owner;data->context.conquest=SmacConquestState{old_owner,50};data->context.uncaptured_former_owner.reset();data->context.former_owner_migration=false;
+	data->context=before;data->context.owner_simulation_id=new_owner;data->context.conquest=liberation ? SmacConquestState{new_owner,0}:SmacConquestState{old_owner,50};data->context.uncaptured_former_owner.reset();data->context.former_owner_migration=false;
 	data->context.recent_defender_loss=false;data->context.SyncKnownStatusBits();
 	data->facilities=captured->m_facilities;
 	bool headquarters=false;
@@ -162,8 +163,13 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	}
 	data->defender_economy.credits=static_cast<int32_t>(std::clamp(int64_t(data->defender_economy.credits)-data->loot,INT64_C(0),INT64_C(9999999)));
 	const auto remove=[&](int32_t source_id) {for(auto it=data->facilities.begin();it!=data->facilities.end();) {if(it->second->m_smac_source_id==source_id) {it=data->facilities.erase(it);}else{++it;}}};
-	for(int32_t id=1;id<=38;++id) {if(id!=26 && data->random.NextCrtRaw15()%3==0) {remove(id);}}
-	remove(1);remove(6);remove(3);
+	// Return to the recorded former faction skips population loss and the
+	// entire facility RNG loop; HQ removal and pre-loss loot still apply.
+	if(!liberation) {
+		for(int32_t id=1;id<=38;++id) {if(id!=26 && data->random.NextCrtRaw15()%3==0) {remove(id);}}
+		remove(6);remove(3);
+	}
+	remove(1);
 	const auto* profile=state->m_settings.global.GetSmacFactionStartupRules()->Find(actor->m_owner->GetPlayer()->GetFaction()->m_id);
 	if(!profile) {THROW("Capture owner has no faction profile");}
 	for(const auto& bonus:profile->Records()) {if(bonus.kind==settings::SmacFactionStartupBonus::Kind::FACILITY) {

@@ -39,6 +39,7 @@ public:
 	const bool IsArtillery() const;
 
 	sprite::Sprite* GetSprite( const backend::unit::morale_t morale );
+    bool UsesNativeMapPlacement() const;
 	// Native console draws use fixed facing/zoom, independent of the map.
 	sprite::InstancedSprite* GetCardSprite( bool roster ) const;
 

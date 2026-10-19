@@ -8,6 +8,8 @@
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "types/texture/Texture.h"
+#include "scene/actor/Instanced.h"
+#include "scene/actor/Sprite.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "game/backend/map/Consts.h"
 #include "game/frontend/sprite/InstancedSprite.h"
@@ -24,6 +26,7 @@ BadgeDefs::BadgeDefs( sprite::InstancedSpriteManager* ism )
 }
 
 BadgeDefs::~BadgeDefs() {
+    for(const auto& item:m_native_map_sprites) {m_ism->RemoveInstancedSpriteByKey(item.second.instanced_sprite->key);}
     for(const auto& badge:m_native_badges) {if(badge.instanced_sprite) {m_ism->RemoveInstancedSpriteByKey(badge.instanced_sprite->key);}}
 	for ( const auto& it : m_unitbadge_sprites ) {
 		for ( const auto& it2 : it.second ) {
@@ -39,6 +42,22 @@ BadgeDefs::~BadgeDefs() {
 	for ( const auto& it : m_healthbar_textures ) {
 		delete it.second;
 	}
+}
+
+sprite::Sprite* BadgeDefs::GetNativeMapSprite(sprite::Sprite* source) {
+    const auto* original=source->instanced_sprite;
+    auto found=m_native_map_sprites.find(original->key);
+    if(found==m_native_map_sprites.end()) {
+        const auto width=original->wh.x,height=original->wh.y;
+        auto* sprite=m_ism->GetInstancedSprite("NativeMapOverlay:"+original->key,
+            original->actor->GetSpriteActor()->GetTexture(),original->xy,original->wh,
+            {original->xy.x+width,original->xy.y},{width/96.0f,height/48.0f},ZL_UNITS,0.005f);
+        sprite->texture_owner=original->texture_owner;
+        sprite->actor->GetSpriteActor()->SetRenderFlags(original->actor->GetSpriteActor()->GetRenderFlags());
+        try {found=m_native_map_sprites.emplace(original->key,sprite::Sprite{sprite,1}).first;}
+        catch(...) {m_ism->RemoveInstancedSpriteByKey(sprite->key);throw;}
+    }
+    return &found->second;
 }
 
 const types::Vec3 BadgeDefs::GetBadgeCoords( const types::Vec3& unit_coords ) {

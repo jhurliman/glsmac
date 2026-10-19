@@ -2,6 +2,7 @@
 #include "SelectionBlink.h"
 
 #include <array>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -32,6 +33,8 @@ public:
 	static const types::Vec3 GetBadgeCoords( const types::Vec3& unit_coords );
 	static const types::Vec3 GetBadgeHealthbarCoords( const types::Vec3& unit_coords, bool canonical = false );
 
+    // Independent native map geometry; source texture/UV and console geometry remain owned separately.
+    sprite::Sprite* GetNativeMapSprite(sprite::Sprite* source);
 	BadgeDefs( sprite::InstancedSpriteManager* ism );
 	~BadgeDefs();
 
@@ -54,6 +57,7 @@ public:
     bool IsSelectionBlinkVisible() const {return !m_selection_blink_admitted || m_selection_blink.Visible();}
 
 private:
+    std::unordered_map<std::string,sprite::Sprite> m_native_map_sprites;
 	SelectionBlink m_selection_blink;
     bool m_order_color_loaded=false;
     types::Color m_spartan_order_color;

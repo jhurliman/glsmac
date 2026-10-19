@@ -207,8 +207,8 @@ const bool Unit::IsBadgeVisible() const {
 
 void Unit::ShowBadge() {
 	if(!m_render.is_rendered || (m_render.badge.blink && !m_badge_defs->IsSelectionBlinkVisible())) {HideBadge();return;}
-	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, BadgeDefs::GetBadgeCoords( m_render.coords ) );
-	m_render.badge.healthbar.def->instanced_sprite->actor->SetInstance( m_render.badge.healthbar.instance_id, BadgeDefs::GetBadgeHealthbarCoords( m_render.coords, m_maximum_hit_points>0 ) );
+	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, GetRenderedBadgeCoords(false) );
+	m_render.badge.healthbar.def->instanced_sprite->actor->SetInstance( m_render.badge.healthbar.instance_id, GetRenderedBadgeCoords(true) );
 }
 
 void Unit::HideBadge() {
@@ -261,7 +261,12 @@ void Unit::Refresh() {
 			HideBadge();
 		}
 		{
-			auto* newdef = m_slot_badges->GetUnitBadgeSprite( m_morale, m_is_active || (m_held && m_is_owned && CanMove()), m_order_glyph, m_order_color_index );
+            auto* newdef=UsesNativeMapOverlay()?m_slot_badges->GetNativeMapBadge(
+                m_morale,m_is_owned && !CanMove(),m_order_glyph,m_order_color_index):nullptr;
+            if(!newdef) {
+                newdef=m_slot_badges->GetUnitBadgeSprite(m_morale,m_is_active || (m_held && m_is_owned && CanMove()),m_order_glyph,m_order_color_index);
+                if(UsesNativeMapOverlay()) {newdef=m_badge_defs->GetNativeMapSprite(newdef);}
+            }
 			if ( m_render.badge.def != newdef ) {
 				if ( m_render.badge.instance_id ) {
 					m_render.badge.def->instanced_sprite->actor->RemoveInstance( m_render.badge.instance_id );
@@ -275,6 +280,7 @@ void Unit::Refresh() {
 		}
 		{
 			auto* newdef = m_badge_defs->GetBadgeHealthbarSprite( m_health, m_maximum_hit_points );
+            if(UsesNativeMapOverlay()) {newdef=m_badge_defs->GetNativeMapSprite(newdef);}
 			if ( m_render.badge.healthbar.def != newdef ) {
 				if ( m_render.badge.healthbar.instance_id ) {
 					m_render.badge.healthbar.def->instanced_sprite->actor->RemoveInstance( m_render.badge.healthbar.instance_id );
@@ -395,6 +401,19 @@ const Unit::render_data_t& Unit::GetRenderData() const {
 	return m_render_data;
 }
 
+bool Unit::UsesNativeMapOverlay() const {
+    return m_conventional && m_maximum_hit_points>0 && m_def->UsesNativeMapPlacement();
+}
+
+types::Vec3 Unit::GetRenderedBadgeCoords(bool health) const {
+    if(UsesNativeMapOverlay()) {
+        // Original flag canvas starts at the dispatcher helper; health starts at(6,6).
+        return {m_render.coords.x-0.5f+(health?6.0f/96:0),
+            m_render.coords.y+1-(health?6.0f/48:0),m_render.coords.z};
+    }
+    return health?BadgeDefs::GetBadgeHealthbarCoords(m_render.coords,m_maximum_hit_points>0):BadgeDefs::GetBadgeCoords(m_render.coords);
+}
+
 const bool Unit::ShouldBeActive() const {
 	return m_is_owned && !m_held && CanMove();
 }
@@ -444,11 +463,11 @@ void Unit::SetRenderCoords( const types::Vec3& coords ) {
 	);
 	m_render.badge.def->instanced_sprite->actor->UpdateInstance(
 		m_render.badge.instance_id,
-		BadgeDefs::GetBadgeCoords( m_render.coords )
+		GetRenderedBadgeCoords(false)
 	);
 	m_render.badge.healthbar.def->instanced_sprite->actor->UpdateInstance(
 		m_render.badge.healthbar.instance_id,
-		BadgeDefs::GetBadgeHealthbarCoords( m_render.coords, m_maximum_hit_points>0 )
+		GetRenderedBadgeCoords(true)
 	);
 	if ( m_render.fake_badge.instance_id ) {
 		m_slot_badges->HideFakeBadge( m_render.fake_badge.instance_id );

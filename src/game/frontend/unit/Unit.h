@@ -181,6 +181,8 @@ private:
     mutable std::shared_ptr<types::texture::Texture> m_card_overlay;
 	uint8_t m_fake_badge_offset = 0;
 
+    bool UsesNativeMapOverlay() const;
+    types::Vec3 GetRenderedBadgeCoords(bool health) const;
 	const bool ShouldBeActive() const;
 
 	render_data_t m_render_data = {};

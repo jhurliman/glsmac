@@ -696,6 +696,8 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					auto* wrapper = target->Wrap( GSE_CALL );
 					// These are the production frontend's published event names and actual
 					// native wrapper identities; DOM.listen registered the real callbacks.
+					auto* tile_wrapper = target->GetTile()->Wrap( GSE_CALL );
+					game->GetState()->TriggerObject( game->GetMap(), "tile_preview", ARGS_F( &tile_wrapper ) { { "tile", tile_wrapper } }; } );
 					game->GetState()->TriggerObject( game->GetMap(), "unit_preview", ARGS_F( &wrapper ) { { "unit", wrapper } }; } );
 					game->GetState()->TriggerObject( game, "unit_select", ARGS_F( &wrapper ) { { "unit", wrapper } }; } );
 					check->Run( GSE_CALL, { wrapper, new value::Object( GSE_CALL, {

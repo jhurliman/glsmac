@@ -69,6 +69,11 @@ return (game) => {
 			previous_item = null;
 			return;
 		}
+		const terrain = sections.tile_preview;
+		check(terrain.preview.left == 2 && terrain.preview.top == 1 && terrain.preview.width == 80 && terrain.preview.height == 40,
+			'terrain preview lost native80x40 extent/anchor');
+		check(terrain.lines.children[0].top + terrain.lines.children[0].measure().height == 56
+			&& terrain.bottom_line.top + terrain.bottom_line.measure().height == 113, 'terrain baselines drifted into preview');
 		const lines = sections.object_preview.lines.children;
 		const held = unit.is_conventional && unit.get_conventional_state().order == 2;
 		check(#sizeof(lines) == (unit.is_immovable ? 4 : (held ? 6 : 5)), 'wrong preview line count');

@@ -91,7 +91,7 @@ return {
 			left: 0,
 		});
 		label.top = 56 + this.row * 13 - label.measure().height;
-		this.row++;
+		this.row = this.row + 1;
 	},
 
 	set_lines: () => {

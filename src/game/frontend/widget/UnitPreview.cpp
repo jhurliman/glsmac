@@ -12,6 +12,7 @@
 #include "types/texture/Texture.h"
 #include "gse/value/Bool.h"
 #include "game/frontend/sprite/InstancedSprite.h"
+#include <algorithm>
 #include <cstring>
 #include <memory>
 
@@ -96,11 +97,17 @@ void UnitPreview::Update( ui::dom::Widget* const widget, const void* const data 
 			{ 2 / area.width, 21 / area.height }, { ( bx + 6 ) / area.width, ( by + 6 ) / area.height } );
 		return;
 	}
-	AddMeshAndTexture( widget, index++, render.unit.mesh, render.unit.texture, true );
+	// Static/native sprites and explicit port markers retain their compact
+	// fitted portrait path. The selected card's tall native clip is not a
+	// request to stretch those fallback images across its text rows.
+	const auto& area = widget->GetGeometry()->AsRectangle()->m_area;
+	if ( area.height <= 0 ) { return; }
+	const float portrait_ratio = std::min( area.height, 68.0f ) / area.height;
+	AddMeshAndTexture( widget, index++, render.unit.mesh, render.unit.texture, true, { 1, portrait_ratio } );
 	auto* badge = preview_texture( render.badge.texture, index );
-	AddMeshAndTexture( widget, index++, render.badge.mesh, badge, true, { 0.23f, 0.4f }, { 0.06f, 0.08f } );
+	AddMeshAndTexture( widget, index++, render.badge.mesh, badge, true, { 0.23f, 0.4f * portrait_ratio }, { 0.06f, 0.08f * portrait_ratio } );
 	auto* healthbar = preview_texture( render.healthbar.texture, index );
-	AddMeshAndTexture( widget, index++, render.healthbar.mesh, healthbar, true, { 0.03f, 0.2933f }, { 0.12f, 0.16f } );
+	AddMeshAndTexture( widget, index++, render.healthbar.mesh, healthbar, true, { 0.03f, 0.2933f * portrait_ratio }, { 0.12f, 0.16f * portrait_ratio } );
 }
 
 }

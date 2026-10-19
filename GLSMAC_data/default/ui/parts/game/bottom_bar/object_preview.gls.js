@@ -96,7 +96,9 @@ return {
 				f_line(def.name, 16, 'center');
 
 				const tuple = this.p.get_stats_str(object);
-				f_line(object.is_conventional || object.is_native ? '(' + tuple + ')' : tuple, 14, 'center');
+				// Retain the legacy artillery offense decoration without nesting it.
+				const legacy_artillery = !object.is_conventional && !object.is_native && def.id == 'SporeLauncher';
+				f_line(legacy_artillery ? tuple : '(' + tuple + ')', 14, 'center');
 
 				if (object.is_conventional) {
 					const state = object.get_conventional_state();

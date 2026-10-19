@@ -110,6 +110,14 @@ void UnitPreview::Update( ui::dom::Widget* const widget, const void* const data 
 	if ( area.height <= 0 ) { return; }
 	const float portrait_ratio = std::min( area.height, 68.0f ) / area.height;
 	AddMeshAndTexture( widget, index++, render.unit.mesh, render.unit.texture, true, { 1, portrait_ratio } );
+    if(unit->IsNative() && area.width>0) {
+        if(auto overlay=unit->GetCardOverlay()) {
+            widget->RetainTexture(overlay);
+            AddMeshAndTexture(widget,index++,nullptr,overlay.get(),false,
+                {23/area.width,30/area.height},{(roster?2.0f:0)/area.width,(roster?1.0f:0)/area.height});
+            return;
+        }
+    }
 	auto* badge = preview_texture( render.badge.texture, index );
 	AddMeshAndTexture( widget, index++, render.badge.mesh, badge, true, { 0.23f, 0.4f * portrait_ratio }, { 0.06f, 0.08f * portrait_ratio } );
 	auto* healthbar = preview_texture( render.healthbar.texture, index );

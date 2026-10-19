@@ -1,5 +1,6 @@
 #include "Backend.h"
 #include "game/NativeTerrainWorld.h"
+#include "game/backend/map/SmacLandmarkGeometry.h"
 #include "util/String.h"
 #include "loader/txt/FactionTXTLoader.h"
 #include "SmacFirstBase.h"

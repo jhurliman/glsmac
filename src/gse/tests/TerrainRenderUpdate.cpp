@@ -1,4 +1,6 @@
 #include "TerrainRenderUpdate.h"
+#include "game/frontend/NativeTerrainRenderer.h"
+#include "fixtures/NativeTerrainView.h"
 #include "Mesh.h"
 #include "scene/Camera.h"
 #include "game/frontend/MapProjection.h"
@@ -169,6 +171,34 @@ public:
         const auto& b=world.GetTerrainUpdatePayload(*appearance);
         return b.added.size()==1 && b.added.front().coords==wanted;
     }
+    bool CheckNativeTerrainSnapshot() {
+        std::unique_ptr<::game::native_terrain::World> retained;
+        {
+            map::Map local(nullptr,80,80);
+            if(local.CopyNativeTerrain()) return false;
+            using Planet=map::SmacPlanetMap;
+            std::string wire(Planet::FILE_BYTES,'\0');wire.replace(0,11,"TERRANMAP\0\x1a",11);
+            wire[11]=5;wire[15]=80;wire[19]=80;wire[15+0xa30]=4;
+            for(size_t i=0;i<Planet::TILE_COUNT;++i) {
+                wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES]=char(3<<5);
+            }
+            local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+            local.m_territory_topology=map::GlsmacTerritoryTopology::Build(80,80,false,std::vector<bool>(3200,false));
+            auto* live=local.GetTile(40,40);live->features=tile::FEATURE_XENOFUNGUS;
+            live->terraforming=tile::TERRAFORMING_FOREST;live->moisture=tile::MOISTURE_RAINY;live->rockiness=tile::ROCKINESS_ROLLING;
+            retained=local.CopyNativeTerrain();
+            if(!retained || retained->horizontal_wrap) return false;
+            const auto& before=retained->tiles[40*40+20];
+            if(before.band!=3 || before.moisture!=2 || before.rockiness!=1 || before.items!=0x200020 || !before.ordinary) return false;
+            live->terraforming=tile::TERRAFORMING_FARM;
+            const auto farm=local.CopyNativeTerrain();
+            if(!farm->tiles[40*40+20].ordinary || farm->tiles[40*40+20].items!=0x8020) return false;
+            live->terraforming=tile::TERRAFORMING_ROAD;
+            const auto updated=local.CopyNativeTerrain();
+            if(updated->tiles[40*40+20].ordinary || updated->tiles[40*40+20].items!=0x20 || !before.ordinary) return false;
+        }
+        return retained->tiles[40*40+20].items==0x200020 && retained->tiles[40*40+20].ordinary;
+    }
     bool CheckProjectionProvenance() {
         game::backend::response_map_data_t response{};
         response.SetMapProjectionProvenance(world);
@@ -199,6 +229,54 @@ public:
 };
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC native terrain snapshots current items and outlives its backend map",GT(){
+        TerrainRenderFixture fixture;
+        GT_ASSERT(fixture.CheckNativeTerrainSnapshot(),"Native terrain snapshot borrowed, went stale or admitted unsupported map");GT_OK();
+    });
+    task->AddTest("SMAC native terrain view preserves1597 original ordered submissions",GT(){
+        namespace native=game::frontend::native_terrain;
+        size_t total=0;
+        for(const auto& c:native_view_fixture::cases) {
+            const auto actual=native::View(c.x,c.y,c.wrap);uint64_t hash=14695981039346656037ULL;
+            for(const auto& p:actual) {
+                for(const auto value:{p.tile[0],p.tile[1],p.flat_center[0],p.flat_center[1],static_cast<int>(p.record_offset)}) {
+                    const auto bits=static_cast<uint32_t>(value);
+                    for(int shift=0;shift<32;shift+=8) {hash=(hash^static_cast<uint8_t>(bits>>shift))*1099511628211ULL;}
+                }
+            }
+            GT_ASSERT(actual.size()==c.count && hash==c.hash,"Native view order, padding, wrap or seed offset differs");
+            total+=actual.size();
+        }
+        GT_ASSERT(total==1597,"Missing native edge/interior view cases");GT_OK();
+    });
+    task->AddTest("SMAC native terrain coverage distinguishes keyed holes from shade-to-key stores",GT(){
+        namespace raster=game::frontend::smac_terrain_raster;
+        raster::Bitmap initial{8,8,std::vector<uint8_t>(64,9)},source{8,8,std::vector<uint8_t>(64,10)};
+        raster::Polygon polygon{{{{{{0,0}},{{0,0}},-1},{{{8,0}},{{7,0}},-1},{{{8,8}},{{7,7}},-1},{{{0,8}},{{0,7}},-1}}},4};
+        const raster::Command command{polygon,&source,raster::Shader::KeyedShaded};
+        const auto stored=raster::DrawBatch(initial,{command},{{0,0,8,8}},true);
+        GT_ASSERT(stored.writes==64 && std::all_of(stored.coverage.begin(),stored.coverage.end(),[](auto n){return n==1;}) &&
+            std::all_of(stored.bitmap.pixels.begin(),stored.bitmap.pixels.end(),[](auto n){return n==9;}),"Opaque shade-to9 lost coverage");
+        std::fill(source.pixels.begin(),source.pixels.end(),9);
+        const auto skipped=raster::DrawBatch(initial,{command},{{0,0,8,8}},true);
+        GT_ASSERT(skipped.writes==0 && std::all_of(skipped.coverage.begin(),skipped.coverage.end(),[](auto n){return !n;}),"Transparent key wrote coverage");GT_OK();
+    });
+    task->AddTest("SMAC native terrain connected painter owns frame and preserves unsupported holes",GT(){
+        namespace native=game::frontend::native_terrain;
+        ::game::native_terrain::World world;
+        for(auto& tile:world.tiles) {tile.band=3;tile.ordinary=true;}
+        native::Source source{{1024,768,std::vector<uint8_t>(1024*768,10)},{}};
+        source.palette[10]={11,22,33};
+        const std::vector<native::Placement> view{{{{40,40}},{{576,288}},44*(40*40+20)}};
+        const auto first=native::Render(world,source,view,0);
+        GT_ASSERT(first.tiles==1 && first.writes>2000 && first.rgba[(288*1024+575)*4+3]==255,"Connected land pipeline did not paint");
+        std::fill(source.loaded.pixels.begin(),source.loaded.pixels.end(),11);
+        GT_ASSERT(first.rgba[(288*1024+575)*4]==11,"Frame retained borrowed source data");
+        world.tiles[40*40+20].ordinary=false;
+        const auto hole=native::Render(world,source,view,0);
+        GT_ASSERT(hole.tiles==0 && hole.writes==0 && hole.rgba[(288*1024+575)*4+3]==0,"Unsupported continuation covered legacy terrain");GT_OK();
+    });
+
 
     task->AddTest("SMAC indexed terrain generates759 actual native spans from vertices",GT(){
         namespace raster=game::frontend::smac_terrain_raster;

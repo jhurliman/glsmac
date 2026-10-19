@@ -219,6 +219,11 @@ bool Game::MatchesActiveAdmission( const world_ticket_t ticket ) const {
 		&& m_state->IsGameSessionActive( m_active_admission->admitted_binding );
 }
 
+common::mt_id_t Game::MT_GetNativeTerrain(world_ticket_t world) {
+    MT_Request request={};request.op=OP_GET_NATIVE_TERRAIN;request.world_ticket=world;
+    return MT_CreateRequest(request);
+}
+
 common::mt_id_t Game::MT_GetMapData( const world_ticket_t world ) {
 	MT_Request request = {};
 	request.op = OP_GET_MAP_DATA;
@@ -1295,7 +1300,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 	MT_Response response = {};
 	response.op = request.op;
 	response.world_ticket = request.world_ticket;
-	if ( request.op == OP_GET_MAP_DATA || request.op == OP_SAVE_MAP ||
+	if ( request.op == OP_GET_MAP_DATA || request.op == OP_GET_NATIVE_TERRAIN || request.op == OP_SAVE_MAP ||
 		request.op == OP_GET_FRONTEND_REQUESTS || request.op == OP_SEND_BACKEND_REQUESTS ) {
 		std::lock_guard guard( m_admission_mutex );
 		if ( !MatchesActiveAdmission( request.world_ticket ) ) {
@@ -1340,6 +1345,16 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			if ( response.result == R_SUCCESS ) { response.data.init.slot_index = m_slot_num; }
 			break;
 		}
+        case OP_GET_NATIVE_TERRAIN: {
+            // Explicit local inspector, never a network disclosure endpoint.
+            response.result=R_SUCCESS;
+            if(m_game_state==GS_RUNNING && m_map && m_state && !m_state->GetConnection()
+                && m_state->m_settings.global.GetRulesetId()=="smac") {
+                auto snapshot=m_map->CopyNativeTerrain();
+                response.data.native_terrain=snapshot.release();
+            }
+            break;
+        }
 		case OP_GET_MAP_DATA: {
 			//MTModule::Log( "Got get-map-data request" );
 			if ( m_game_state != GS_RUNNING ) {
@@ -1511,6 +1526,10 @@ void Game::DestroyResponse( const MT_Response& response ) {
 	}
 	if ( response.result == R_SUCCESS ) {
 		switch ( response.op ) {
+            case OP_GET_NATIVE_TERRAIN: {
+                delete response.data.native_terrain;
+                break;
+            }
 			case OP_GET_MAP_DATA: {
 				if ( response.data.get_map_data ) {
 					DELETE( response.data.get_map_data );

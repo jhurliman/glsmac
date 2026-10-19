@@ -22,7 +22,12 @@ struct Bitmap {
     int32_t width, height;
     std::vector<uint8_t> pixels;
 };
-struct Result { Bitmap bitmap; uint64_t writes = 0, attempts = 0; };
+struct Result {
+    Bitmap bitmap;
+    uint64_t writes = 0, attempts = 0;
+    // Optional actual-store mask. A non-key index shaded to9 is still opaque.
+    std::vector<uint8_t> coverage;
+};
 struct Command {
     Polygon polygon;
     // Synchronous borrowed source; must remain alive and unchanged for DrawBatch.
@@ -43,7 +48,7 @@ std::vector<Span> GeneratePolygonSpans(const Polygon& polygon,const Clip& clip,
 
 // Keeps caller order across textures/shaders; copies the destination once.
 // Key9 is compared before shading. No borrowed source escapes the result.
-Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,const Clip& clip);
+Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,const Clip& clip,bool track_coverage=false);
 
 // Loaded indexed texture bytes (including the original PCX index rebase).
 // Shade addition wraps in the index domain; palette conversion is downstream.

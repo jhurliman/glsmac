@@ -1,5 +1,6 @@
 #pragma once
 #include <deque>
+#include "game/NativeTerrainWorld.h"
 #include <memory>
 #include "game/FrontendRequest.h"
 
@@ -24,7 +25,8 @@
 #include "util/Scroller.h"
 #include "ui/Types.h"
 
-namespace scene::actor {class Sound;}
+namespace scene::actor {class Sound;class Mesh;}
+namespace game::frontend::native_terrain {struct Source;}
 
 // TODO: remove those
 #include "game/backend/map/tile/TileState.h"
@@ -285,6 +287,13 @@ private:
         bool native_projection
 	);
 	void Deinitialize();
+    void UpdateNativeTerrain();
+    void ClearNativeTerrain();
+    bool m_native_inspector=false,m_native_snapshot_dirty=false,m_native_frame_dirty=false;
+    std::unique_ptr<::game::native_terrain::World> m_native_world;
+    std::shared_ptr<const native_terrain::Source> m_native_source;
+    scene::actor::Mesh* m_native_actor=nullptr;
+    types::texture::Texture* m_native_texture=nullptr;
 
 	std::function< void() > m_on_start;
 	std::function< void() > m_on_cancel;
@@ -432,6 +441,7 @@ private:
     GAME_MT_ID_X( ping ) \
     GAME_MT_ID_X( init ) \
     GAME_MT_ID_X( get_map_data ) \
+    GAME_MT_ID_X( native_terrain ) \
     GAME_MT_ID_X( reset ) \
     GAME_MT_ID_X( save_map ) \
     GAME_MT_ID_X( chat ) \

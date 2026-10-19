@@ -12,6 +12,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacOccupancyCache.cpp
 	${PWD}/SmacPlanetMap.cpp
 	${PWD}/MapPlanet.cpp
+    ${PWD}/MapNativeTerrain.cpp
 	${PWD}/MapTerrainUpdate.cpp
 	${PWD}/TerrainRenderUpdate.cpp
 	${PWD}/GlsmacResourceMapPolicy.cpp

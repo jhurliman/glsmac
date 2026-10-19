@@ -1,5 +1,7 @@
 #include "SDL2.h"
 #include "SmacPalette.h"
+#include "util/FinallyGuard.h"
+#include "game/frontend/NativeTerrainRenderer.h"
 #include "SmacEffect.h"
 #include "SmacNativeBadge.h"
 #include "SmacBaseCard.h"
@@ -78,6 +80,28 @@ std::shared_ptr<const SmacBaseCard> SDL2::GetSmacNativeBaseCard(const std::strin
 }
 
 struct SmacNativeBadgeSource {std::array<SmacNativeBadge,14> badges;};
+std::shared_ptr<const game::frontend::native_terrain::Source> SDL2::GetSmacTerrainSource() {
+    const auto path=GetCustomFilename("texture.pcx"),common_path=GetCustomFilename("palette.pcx");
+    const auto key=path+":"+common_path;
+    const auto found=m_native_terrain_sources.find(key);if(found!=m_native_terrain_sources.end()) {return found->second;}
+    using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
+    std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,path);Surface image(load_image(bytes),SDL_FreeSurface);
+    util::FS::ReadFile(bytes,common_path);Surface common(load_image(bytes),SDL_FreeSurface);
+    if(!image || image->w!=1024 || image->h!=768) {THROW("Unsupported native terrain atlas dimensions");}
+    ApplySmacTerrainPalette(image.get(),common && common->format?common->format->palette:nullptr);
+    auto source=std::make_shared<game::frontend::native_terrain::Source>();
+    source->loaded={image->w,image->h,std::vector<uint8_t>(static_cast<size_t>(image->w)*static_cast<size_t>(image->h))};
+    for(size_t i=0;i<256;++i) {
+        const auto color=image->format->palette->colors[static_cast<uint8_t>(i-10)];source->palette[i]={color.r,color.g,color.b};
+    }
+    if(SDL_LockSurface(image.get())!=0) {THROW(SDL_GetError());}
+    util::FinallyGuard unlock([&]{SDL_UnlockSurface(image.get());});
+    for(int y=0;y<image->h;++y) {
+        const auto* row=static_cast<const uint8_t*>(image->pixels)+y*image->pitch;
+        for(int x=0;x<image->w;++x) {source->loaded.pixels[static_cast<size_t>(y)*static_cast<size_t>(image->w)+static_cast<size_t>(x)]=static_cast<uint8_t>(row[x]+10);}
+    }
+    m_native_terrain_sources.emplace(key,source);return source;
+}
 types::texture::Texture* SDL2::CreateSmacNativeBadgeTexture(int level,int variant) {
     if(level<0 || level>6 || variant<0 || variant>1) {THROW("Native badge requires level0..6 and variant0..1");}
     const auto units_path=GetCustomFilename("units.pcx"),palette_path=GetCustomFilename("palette.pcx");

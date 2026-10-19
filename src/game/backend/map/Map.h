@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/NativeTerrainWorld.h"
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -154,6 +155,7 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	void CommitOrdinaryTerrainUpdate( PreparedTerrainUpdate& prepared ) noexcept;
 
 	const size_t GetWidth() const;
+    std::unique_ptr<::game::native_terrain::World> CopyNativeTerrain() const;
 	const size_t GetHeight() const;
 
 	// be careful using this

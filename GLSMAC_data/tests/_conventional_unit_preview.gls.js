@@ -11,6 +11,7 @@ return (game) => {
 		result.children = [];
 		result.get_children = () => { return result.children; };
 		result.handlers = {};
+		result.measure = () => { return {width: 20, height: 10}; };
 		if (!#is_defined(result.width)) { result.width = 300; }
 		result.on = (name, callback) => { result.handlers[name] = callback; };
 		result.listen = (object, name, callback) => { object.on(name, callback); };

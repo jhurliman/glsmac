@@ -1,0 +1,290 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "receipt_sha256": "6e8195b4e0ad01716fb03bd58444616a3d1a7d0d463d2657e1e517255ffb03ba",
+  "input": {
+    "system_section": "VEH_LIGHT_DIR_MAP",
+    "components": [
+      6,
+      4,
+      15
+    ],
+    "reader_fragment": [
+      "0x45d326",
+      "0x45d38c"
+    ],
+    "ordinary_helper": "0x4d7860",
+    "helper_arguments": [
+      "bitmap",
+      1,
+      624,
+      288,
+      3,
+      0,
+      1
+    ],
+    "facing": 2
+  },
+  "cases": [
+    {
+      "label": "default",
+      "global_color": [
+        -0.5773500204086304,
+        0.5773500204086304,
+        0.5773500204086304
+      ],
+      "global_color_bits": "36cd13bf36cd133f36cd133f",
+      "scene": {
+        "color": [
+          -0.5773500204086304,
+          0.5773500204086304,
+          0.5773500204086304
+        ],
+        "shadow": [
+          -0.5773500204086304,
+          -0.21090613305568695,
+          -0.7887869477272034
+        ]
+      },
+      "draw_count": 59,
+      "copies": [
+        {
+          "entry": "0x5f1ce0",
+          "source_bitmap": "0x9c1ba8",
+          "args": [
+            1076535508,
+            0,
+            546,
+            210,
+            1,
+            1,
+            1342603680
+          ],
+          "size": [
+            256,
+            256
+          ],
+          "source_clip": [
+            0,
+            0,
+            256,
+            256
+          ],
+          "target_clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "source_pixels": 222,
+          "source_frame_sha256": "3c26c4bbd927a4752e779a90f378c4ef9aade2b86755ca4d2aeb69f3aa4e9b20",
+          "dirty_bounds": [
+            108,
+            79,
+            138,
+            131
+          ],
+          "target_store_start": 0
+        },
+        {
+          "entry": "0x5f12c0",
+          "source_bitmap": "0x9c1600",
+          "args": [
+            1076535508,
+            9,
+            546,
+            210,
+            1,
+            1
+          ],
+          "size": [
+            256,
+            256
+          ],
+          "source_clip": [
+            0,
+            0,
+            256,
+            256
+          ],
+          "target_clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "source_pixels": 403,
+          "source_frame_sha256": "fa26b8ac45a18a91c2027fd619114f2e16e2bcca1754da4794716ccd7f57ab0d",
+          "dirty_bounds": [
+            108,
+            79,
+            138,
+            131
+          ],
+          "target_store_start": 222
+        }
+      ],
+      "target_stores": 625,
+      "shadow": {
+        "sha256": "3c26c4bbd927a4752e779a90f378c4ef9aade2b86755ca4d2aeb69f3aa4e9b20",
+        "pixels": 222
+      },
+      "color": {
+        "sha256": "fa26b8ac45a18a91c2027fd619114f2e16e2bcca1754da4794716ccd7f57ab0d",
+        "pixels": 403
+      }
+    },
+    {
+      "label": "system_initialized",
+      "global_color": [
+        0.36050504446029663,
+        0.24033670127391815,
+        0.901262640953064
+      ],
+      "global_color_bits": "1e94b83ed31a763e26b9663f",
+      "scene": {
+        "color": [
+          0.36050504446029663,
+          0.24033670127391815,
+          0.901262640953064
+        ],
+        "shadow": [
+          -0.5773500204086304,
+          -0.21090613305568695,
+          -0.7887869477272034
+        ]
+      },
+      "draw_count": 59,
+      "copies": [
+        {
+          "entry": "0x5f1ce0",
+          "source_bitmap": "0x9c1ba8",
+          "args": [
+            1076535508,
+            0,
+            546,
+            210,
+            1,
+            1,
+            1342603680
+          ],
+          "size": [
+            256,
+            256
+          ],
+          "source_clip": [
+            0,
+            0,
+            256,
+            256
+          ],
+          "target_clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "source_pixels": 222,
+          "source_frame_sha256": "3c26c4bbd927a4752e779a90f378c4ef9aade2b86755ca4d2aeb69f3aa4e9b20",
+          "dirty_bounds": [
+            108,
+            79,
+            138,
+            131
+          ],
+          "target_store_start": 625
+        },
+        {
+          "entry": "0x5f12c0",
+          "source_bitmap": "0x9c1600",
+          "args": [
+            1076535508,
+            9,
+            546,
+            210,
+            1,
+            1
+          ],
+          "size": [
+            256,
+            256
+          ],
+          "source_clip": [
+            0,
+            0,
+            256,
+            256
+          ],
+          "target_clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "source_pixels": 403,
+          "source_frame_sha256": "c97309a3f81d7444cfe95fc5f662b423935968f6c8b944574967ea0e6dfda7df",
+          "dirty_bounds": [
+            108,
+            79,
+            138,
+            131
+          ],
+          "target_store_start": 847
+        }
+      ],
+      "target_stores": 1250,
+      "shadow": {
+        "sha256": "3c26c4bbd927a4752e779a90f378c4ef9aade2b86755ca4d2aeb69f3aa4e9b20",
+        "pixels": 222
+      },
+      "color": {
+        "sha256": "c97309a3f81d7444cfe95fc5f662b423935968f6c8b944574967ea0e6dfda7df",
+        "pixels": 403
+      }
+    }
+  ],
+  "native_light_writes": [
+    {
+      "pc": "0x45d34e",
+      "address": "0x6aa018",
+      "size": 4,
+      "value": 1086324736
+    },
+    {
+      "pc": "0x45d361",
+      "address": "0x6aa01c",
+      "size": 4,
+      "value": 1082130432
+    },
+    {
+      "pc": "0x45d37e",
+      "address": "0x6aa020",
+      "size": 4,
+      "value": 1097859072
+    },
+    {
+      "pc": "0x642009",
+      "address": "0x6aa018",
+      "size": 4,
+      "value": 1052283934
+    },
+    {
+      "pc": "0x64200e",
+      "address": "0x6aa01c",
+      "size": 4,
+      "value": 1047927507
+    },
+    {
+      "pc": "0x642014",
+      "address": "0x6aa020",
+      "size": 4,
+      "value": 1063696678
+    }
+  ],
+  "rule": "SYSTEM normalized map light supplies scene color at+0x48. Shadow at+0x54 uses inverse(camera basis) times independent fixed direction bits bf13cd36/3f13cd36/3f13cd36. Changing initialized color light does not change this ordinary shadow mask.",
+  "limits": [
+    "Native light-reader fragment is executed with inherited FILE/parser services; not a fresh WinMain launch.",
+    "One flat ordinary Scout camera/facing; no perspective/slope/animation matrix inferred.",
+    "Mask/color hashes sample actual source buffers at final-copy entry; helper clears temporary buffers afterward.",
+    "Full indexed rasters remain private owned-asset outputs."
+  ]
+}

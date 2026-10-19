@@ -208,6 +208,28 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
         GT_OK();
     });
 
+    task->AddTest("CVR initialized SYSTEM color light preserves the independent native Scout shadow",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto read=[&](const char* name) {std::ifstream stream(std::filesystem::path(directory)/name,std::ios::binary);
+            if(!stream) {throw std::runtime_error("Missing owned initialized-light control asset");}return std::string(std::istreambuf_iterator<char>(stream),{});};
+        const auto body=read("VI.cvr"),reactor=read("Viptr00.cvr");
+        const auto original=CvrScoutRenderer::Load(body,reactor);
+        const auto initialized=CvrScoutRenderer::LoadInitialized(body,reactor,read("PALETTE.PCX"),read("SYSTEM.TXT"));
+        const CvrScoutViewInput input{2,0,0,1,{128,128}};
+        const auto digest=[](const std::vector<uint8_t>& bytes) {uint64_t h=UINT64_C(14695981039346656037);
+            for(const auto byte:bytes) {h=(h^byte)*UINT64_C(1099511628211);}return h;};
+        const auto default_color=original.Render(input),initialized_color=initialized.Render(input);
+        // Digests derived from independently SHA256-verified full native rasters.
+        GT_ASSERT(digest(default_color.indexed.color)==UINT64_C(0x655f2e3d9e7b8c64)
+            && digest(initialized_color.indexed.color)==UINT64_C(0x84ab80ba1e03b2b3),"Complete initialized/default native color rasters differ");
+        const auto scene=scout::FlatScoutShadowScene(input);
+        const auto default_shadow=original.RenderShadow(scene),initialized_shadow=initialized.RenderShadow(scene);
+        GT_ASSERT(default_shadow.mask==initialized_shadow.mask && digest(initialized_shadow.mask)==UINT64_C(0x48a3fafe3b09d325)
+            && initialized_shadow.frame_count==59 && initialized_shadow.draw_count==65
+            && std::count(initialized_shadow.mask.begin(),initialized_shadow.mask.end(),128)==222,
+            "SYSTEM color light leaked into the independent native shadow projection");GT_OK();
+    });
+
 	task->AddTest( "CVR initialized Infantry preserves geometry uses main RGB and owns source values", GT() {
 		auto body = MakeScoutTestAsset( false ), reactor = MakeScoutTestAsset( true );
 		auto palette = MakeSpartanRoverTestAsset( "PALETTE.PCX" ), system = MakeSpartanRoverTestAsset( "system.txt" );

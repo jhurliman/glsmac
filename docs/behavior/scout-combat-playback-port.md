@@ -52,6 +52,13 @@ Validation:
   is disabled. The GPU control uses software GL and proves neither hardware
   frame rate nor audible playback.
 
+An installed-asset hidden-window quickstart capture also reached the map,
+accepted the real research picker, selected and moved the Scout, and shut down
+with no tracked OpenGL leaks. It did not exercise battle: AddSinglePlayerSlot
+creates only slot 0, so get_players supplied no opposing starting Unit to the
+external worldscript. Do not use this capture as battle evidence. The next
+rendered battle setup must supply a genuine second canonical participant.
+
 Remaining before review: actual graphical battle capture and cancellation,
 projection/zoom alignment, audible sound/channel behavior, preference/skip
 policy, and resolving or explicitly accepting the documented compositor limits.

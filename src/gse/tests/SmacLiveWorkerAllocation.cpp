@@ -1,4 +1,5 @@
 #include "SmacLiveWorkerAllocation.h"
+#include "game/ScoutBattlePresentation.h"
 #include "ConventionalUnits.h"
 #include "game/backend/map/SmacClimate.h"
 #include "fixtures/SmacStartupSource.h"
@@ -2419,6 +2420,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     try {game->Event(GSE_CALL,"move_unit",args);} catch(const std::exception& error) {return std::string("second battle enqueue: ")+error.what();}
                     try {fixture.DrainEvents();} catch(const std::exception& error) {return std::string("battle dispatch: ")+error.what();}
                 } else {fixture.MoveEvent(GSE_CALL,actor,defender->GetTile());}
+                const auto& requests=fixture.QueuedFrontendRequests();
+                const auto playback=std::find_if(requests.begin(),requests.end(),[](const auto& request){return request.type==game::FrontendRequest::FR_SCOUT_BATTLE;});
+                GT_ASSERT(playback!=requests.end() && playback->data.scout_battle.plan->units[0]==91 && playback->data.scout_battle.plan->units[1]==92
+                    && !playback->data.scout_battle.plan->steps.empty() && playback->data.scout_battle.plan->steps.back().effect==game::scout_presentation::Effect::Death,
+                    "Actual Scout command omitted its owned presentation before retiring the casualty");
                 const bool defender_wins=scenario==3 || scenario==4 || scenario==5;
                 GT_ASSERT((defender_wins ? retained_actor : retained_defender)->type==VT_UNDEFINED,"casualty left a callable native Unit wrapper linked");
                 survivor_id=defender_wins ? 92 : 91;winner=defender_wins ? 2 : 1;loser=defender_wins ? 1 : 2;

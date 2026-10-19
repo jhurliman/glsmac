@@ -1,7 +1,16 @@
+#include "graphics/opengl/OpenGL.h"
+#include "scene/actor/Actor.h"
+#include "graphics/opengl/shader_program/Orthographic.h"
+#include "util/FinallyGuard.h"
 #include "SmacScoutCombat.h"
+#include <cstdlib>
+#include "loader/texture/SmacEffect.h"
+#include "game/ScoutBattlePresentation.h"
+#include "game/FrontendRequest.h"
 
 #include "game/backend/unit/SmacScoutCombat.h"
 #include "fixtures/SmacScoutCombat.h"
+#include "fixtures/SmacEffectEscape.h"
 #include "task/gsetests/GSETests.h"
 
 #include <functional>
@@ -45,6 +54,114 @@ bool StepMatches( const fixture::Step& e, const model::Survivor& s, const model:
 }
 
 void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
+    if(std::getenv("GLSMAC_TEST_SCOUT_GPU")) {task->AddTest("SMAC Scout GPU indexed compositor matches every ordinary background and source row",GT(){
+        namespace fx=loader::texture::smac_effect;
+        GT_ASSERT(SDL_InitSubSystem(SDL_INIT_VIDEO)==0,"GPU fixture could not initialize video");
+        util::FinallyGuard video([]{SDL_QuitSubSystem(SDL_INIT_VIDEO);});
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,3);SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE);
+        auto* window=SDL_CreateWindow("Scout GPU control",0,0,256,17,SDL_WINDOW_OPENGL|SDL_WINDOW_HIDDEN);
+        GT_ASSERT(window,"GPU fixture could not create a hidden window");util::FinallyGuard destroy([&]{SDL_DestroyWindow(window);});
+        const auto context=SDL_GL_CreateContext(window);GT_ASSERT(context,"GPU fixture could not create GL3.3 context");
+        util::FinallyGuard destroy_context([&]{SDL_GL_DeleteContext(context);});glewExperimental=GL_TRUE;
+        GT_ASSERT(glewInit()==GLEW_OK,"GPU fixture could not initialize GL loader");while(glGetError()!=GL_NO_ERROR) {}
+        class Probe:public graphics::opengl::shader_program::Orthographic {public:GLuint Program() const {return m_gl_shader_program;}} shader;
+        shader.Start();util::FinallyGuard stop([&]{GLint current=0;glGetIntegerv(GL_CURRENT_PROGRAM,&current);if(current) {glUseProgram(0);}shader.Stop();});const auto program=shader.Program();
+        GLuint vao=0,vbo=0,textures[2]{};glGenVertexArrays(1,&vao);glBindVertexArray(vao);glGenBuffers(1,&vbo);glBindBuffer(GL_ARRAY_BUFFER,vbo);for(auto& texture:textures) {glGenTextures(1,&texture);}
+        util::FinallyGuard buffers([&]{GLint current=0;glGetIntegerv(GL_CURRENT_PROGRAM,&current);if(current) {glUseProgram(0);}glActiveTexture(GL_TEXTURE0);GLint bound=0;glGetIntegerv(GL_TEXTURE_BINDING_2D,&bound);if(bound) {glBindTexture(GL_TEXTURE_2D,0);}glBindBuffer(GL_ARRAY_BUFFER,0);glBindVertexArray(0);for(auto& texture:textures) {glDeleteTextures(1,&texture);}glDeleteBuffers(1,&vbo);glDeleteVertexArrays(1,&vao);});
+        const float vertices[]{-1,-1,0,0,0,1,-1,0,1,0,-1,1,0,0,17.0f/35,1,1,0,1,17.0f/35};
+        glBufferData(GL_ARRAY_BUFFER,sizeof(vertices),vertices,GL_STATIC_DRAW);glUseProgram(program);
+        const auto coordinate=glGetAttribLocation(program,"aCoord"),uv=glGetAttribLocation(program,"aTexCoord");
+        glEnableVertexAttribArray(coordinate);glVertexAttribPointer(coordinate,3,GL_FLOAT,GL_FALSE,5*sizeof(float),nullptr);
+        glEnableVertexAttribArray(uv);glVertexAttribPointer(uv,2,GL_FLOAT,GL_FALSE,5*sizeof(float),reinterpret_cast<void*>(3*sizeof(float)));
+        glVertexAttrib4f(glGetAttribLocation(program,"aTintColor"),1,1,1,1);glVertexAttrib3f(glGetAttribLocation(program,"aNormal"),0,0,1);
+        glUniform1i(glGetUniformLocation(program,"uPageColumns"),0);glViewport(0,0,256,17);glDisable(GL_DEPTH_TEST);glDisable(GL_BLEND);glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+        graphics::opengl::OpenGL capture("GPU control",256,17,false,false);util::FinallyGuard release([&]{capture.ReleaseEffectBackground();});
+        fx::Palette palette{};for(size_t i=0;i<256;++i) {palette[i]={uint8_t(i),uint8_t(i),uint8_t(i)};}
+        fx::ApplySmacSoftwareReservedColors(palette);
+        fx::Rows rows{};for(size_t i=0;i<16;++i) {rows[i]={49,int(i*100/15)};}const auto bank=fx::Generate(palette,rows);
+        std::vector<uint8_t> background(256*17*4),atlas(256*35*4),output(256*17*4);
+        for(size_t y=0;y<17;++y) {for(size_t x=0;x<256;++x) {
+            for(size_t c=0;c<3;++c) {background[(y*256+x)*4+c]=palette[x][c];}background[(y*256+x)*4+3]=255;
+            atlas[(y*256+x)*4]=y==16 ? 252:y;atlas[(y*256+x)*4+3]=(x==15 || x==253) ? 0:255;
+            atlas[((y+17)*256+x)*4]=(y==16 ? fx::SmacSoftwareStartupEscape(x):bank[y*256+x]);atlas[((y+17)*256+x)*4+3]=255;
+        }}
+        for(size_t x=0;x<256;++x) {for(size_t c=0;c<3;++c) {atlas[(34*256+x)*4+c]=palette[x][c];}atlas[(34*256+x)*4+3]=255;}
+        const auto upload=[&](GLuint texture,int height,const uint8_t* pixels) {
+            GLint bound=0;glGetIntegerv(GL_TEXTURE_BINDING_2D,&bound);if(bound) {glBindTexture(GL_TEXTURE_2D,0);}
+            glBindTexture(GL_TEXTURE_2D,texture);glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,256,height,0,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
+            glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+        };
+        glActiveTexture(GL_TEXTURE0);upload(textures[0],17,background.data());
+        glUniform1ui(glGetUniformLocation(program,"uFlags"),scene::actor::Actor::RF_IGNORE_CAMERA|scene::actor::Actor::RF_IGNORE_LIGHTING);glDrawArrays(GL_TRIANGLE_STRIP,0,4);
+        const auto origin=capture.PrepareEffectBackground();glUniform2i(glGetUniformLocation(program,"uEffectOrigin"),origin.x,origin.y);
+        glActiveTexture(GL_TEXTURE0);upload(textures[1],35,atlas.data());
+        glUniform1ui(glGetUniformLocation(program,"uFlags"),scene::actor::Actor::RF_IGNORE_CAMERA|scene::actor::Actor::RF_IGNORE_LIGHTING|scene::actor::Actor::RF_SMAC_EFFECT);glDrawArrays(GL_TRIANGLE_STRIP,0,4);
+        glReadPixels(0,0,256,17,GL_RGBA,GL_UNSIGNED_BYTE,output.data());GT_ASSERT(glGetError()==GL_NO_ERROR,"GPU compositor/capture generated a GL error");
+        for(size_t y=0;y<17;++y) {for(size_t x=10;x<=245;++x) {
+            const auto expected=x==15 ? uint8_t(x):(y==16 ? fixtures::smac_effect_escape[x]:bank[y*256+x]);
+            GT_ASSERT(output[(y*256+x)*4]==palette[expected][0] && output[(y*256+x)*4+1]==palette[expected][1] && output[(y*256+x)*4+2]==palette[expected][2] && output[(y*256+x)*4+3]==255,
+                "GPU effect differs from indexed source/background lookup at "+std::to_string(y)+"/"+std::to_string(x));
+        }}GT_OK();
+    });}
+
+    task->AddTest("SMAC Scout indexed effect compositor matches original numeric CLUT controls",GT(){
+        namespace fx=loader::texture::smac_effect;
+        fx::Palette palette{};for(size_t i=0;i<256;++i) {palette[i]={uint8_t(i),uint8_t(i),uint8_t(i)};}
+        fx::Rows rows{};rows.fill({49,0});rows[0]={49,100};rows[1]={49,40};
+        const auto bank=fx::Generate(palette,rows);
+        const std::array<uint8_t,5> source{{0,1,2,253,255}},background{{44,100,200,249,255}},expected{{59,83,200,249,255}};
+        for(size_t i=0;i<source.size();++i) {GT_ASSERT(fx::Composite(bank,source[i],background[i])==expected[i],"Indexed blend differs from the original asset-free compositor");}
+        palette[200]={199,199,199};const auto duplicate=fx::Generate(palette,rows);
+        GT_ASSERT(fx::Composite(duplicate,2,200)==199,"Zero opacity bypassed original nearest-color tie quantization");
+        const auto protected_bank=fx::Generate(palette,rows,{{59,59}});
+        GT_ASSERT(fx::Composite(protected_bank,0,59)==59 && fx::Composite(protected_bank,0,44)==58,"Protected effect colors were altered or considered nearest candidates");
+        for(int row=0;row<16;++row) {for(int i=0;i<10;++i) {GT_ASSERT(bank[row*256+i]==i && bank[row*256+246+i]==246+i,"Generated CLUT rewrote reserved destination indices");}}
+        for(size_t i=0;i<256;++i) {GT_ASSERT(fx::SmacSoftwareStartupEscape(i)==fixtures::smac_effect_escape[i],"SMAC startup escape differs from original execution");}
+        auto reserved=palette;fx::ApplySmacSoftwareReservedColors(reserved);
+        GT_ASSERT((reserved[0]==std::array<uint8_t,3>{0,0,0} && reserved[1]==std::array<uint8_t,3>{128,0,0}
+            && reserved[6]==std::array<uint8_t,3>{0,128,128} && reserved[255]==std::array<uint8_t,3>{255,255,255}
+            && reserved[44]==palette[44]),"Software reserved colors changed ordinary colors or opaque escape RGB");
+        GT_ASSERT(Rejects([&]{fx::Composite(bank,252,44);}),"Unknown original out-of-bank source was silently given a color");
+        std::string system="; diagnostic\r\n#EXPLOSIONS3\r\n";
+        for(int i=0;i<16;++i) {system+="49, 100, ; row\r\n";}
+        const auto parsed=fx::ReadRows(system,3);
+        GT_ASSERT(parsed[0].color==49 && parsed[15].opacity==100,"Installed CRLF/comment explosion rows did not bind");
+        GT_ASSERT(Rejects([&]{fx::ReadRows(system,0);}) && Rejects([&]{fx::ReadRows(system+"49,100\n",3);}),"Missing or oversized explosion bank accepted");GT_OK();
+    });
+
+    task->AddTest("SMAC Scout playback matches original grouped effects and preserves late frames",GT(){
+        namespace av=game::scout_presentation;
+        const model::Participant a(ATTACKER,1,10,1,1,0),d(DEFENDER,1,10,1,1,0);
+        const auto result=model::ResolveNeutralFlatAttack(a,d,3,{3,3},{ATTACKER,DEFENDER});
+        const auto plan=av::Prepare(result);
+        const std::array<std::array<int32_t,2>,19> damage{{{{0,1}},{{1,1}},{{1,2}},{{2,2}},{{2,3}},{{2,4}},{{3,4}},{{4,4}},{{5,4}},{{5,5}},{{5,6}},{{6,6}},{{7,6}},{{7,7}},{{7,8}},{{8,8}},{{9,8}},{{9,9}},{{9,10}}}};
+        const std::array<size_t,7> effect_rounds{{5,7,11,12,17,18,19}},targets{{1,0,1,0,0,1,1}};
+        GT_ASSERT(plan.steps.size()==19 && plan.units[0]==ATTACKER && plan.units[1]==DEFENDER,"Playback lost stable participants or original rounds");
+        size_t effect=0;
+        for(size_t i=0;i<damage.size();++i) {
+            GT_ASSERT((plan.steps[i].health==std::array<int32_t,2>{{10-damage[i][0],10-damage[i][1]}}),"Playback health differs from original timeline");
+            if(effect<effect_rounds.size() && i+1==effect_rounds[effect]) {
+                GT_ASSERT(plan.steps[i].target==targets[effect] && plan.steps[i].effect==(effect==6 ? av::Effect::Death:av::Effect::Hit),"Playback grouped effect differs from original call");++effect;
+            } else {GT_ASSERT(plan.steps[i].effect==av::Effect::None,"Playback invented an effect between original grouped hits");}
+        }
+        for(const bool fast:{false,true}) {for(const uint64_t tick:{uint64_t(25),uint64_t(100)}) {
+            av::Playback playback(plan,fast);size_t health=0,frames=0,clears=0;bool finished=false;uint64_t ended=0;
+            for(uint64_t now=0;now<20000 && !finished;now+=tick) {while(const auto action=playback.Next(now)) {
+                if(action->kind==av::Playback::Kind::Health) {++health;}
+                if(action->kind==av::Playback::Kind::Frame) {GT_ASSERT(action->frame==frames%16,"Late clock skipped or reordered an original frame");++frames;}
+                if(action->kind==av::Playback::Kind::Clear) {++clears;}
+                if(action->kind==av::Playback::Kind::Finished) {finished=true;ended=now;}
+            }}
+            GT_ASSERT(finished && health==19 && frames==112 && clears==7 && !playback.Next(30000),"Playback lost health, frame, tail or terminal actions");
+            GT_ASSERT(ended==(fast ? (tick==25 ? 800u:1600u):(tick==25 ? 3550u:11900u)),"Playback changed original minimum waits or caught up late frames");
+        }}
+        game::FrontendRequest request(game::FrontendRequest::FR_SCOUT_BATTLE);request.data.scout_battle.plan=new av::Plan(plan);
+        game::FrontendRequest copy(request);request.data.scout_battle.plan->steps[0].health[0]=0;
+        GT_ASSERT(copy.data.scout_battle.plan!=request.data.scout_battle.plan && copy.data.scout_battle.plan->steps[0].health[0]==10,"Frontend transport aliased the owning battle timeline");
+        GT_OK();
+    });
+
 	task->AddTest("SMAC Scout Base garrison matches original17 rounds and sequential bonuses",GT(){
         const model::Participant a(ATTACKER,1,10,1,1,0),d(DEFENDER,1,10,1,1,0);
         const auto result=model::ResolveFlatScoutAttack(a,d,3,{3,4},{ATTACKER,DEFENDER},false,{25,25,25});

@@ -17,6 +17,7 @@ CLASS( Audio, common::Module )
 	// TODO: scenes?
 	virtual void AddActor( scene::actor::Sound* actor ) = 0;
 	virtual void RemoveActor( scene::actor::Sound* actor ) = 0;
+    virtual bool IsPlaybackAvailable() const {return true;}
 	virtual void SuspendForMovie() {}
 	virtual void ResumeAfterMovie() {}
 

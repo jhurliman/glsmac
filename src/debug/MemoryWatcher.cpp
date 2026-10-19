@@ -606,7 +606,13 @@ void MemoryWatcher::GLBindTexture( GLenum target, GLuint texture, const std::str
 		ASSERT(!texture || m_opengl.textures.count(texture),"array texture was not generated @"+source);
 		bound=texture;glBindTexture_real(target,texture);return;
 	}
-	ASSERT(unit==GL_TEXTURE0,"legacy 2D texture requires unit zero @"+source);
+    if(unit!=GL_TEXTURE0) {
+        auto& bound=m_opengl.current_aux_2d_textures[unit];
+        ASSERT(bound!=texture,"auxiliary 2D texture already bound @"+source);
+        ASSERT(!texture || !bound,"auxiliary 2D texture unit already occupied @"+source);
+        ASSERT(!texture || m_opengl.textures.count(texture),"auxiliary 2D texture was not generated @"+source);
+        bound=texture;glBindTexture_real(target,texture);return;
+    }
 
 	if ( texture ) {
 		ASSERT( m_opengl.textures.find( texture ) != m_opengl.textures.end(), "glBindTexture texture " + std::to_string( texture ) + " was not generated @" + source );
@@ -653,6 +659,8 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
+    GLint active=0;glGetIntegerv(GL_ACTIVE_TEXTURE,&active);
+    const auto bound=active==GL_TEXTURE0 ? m_opengl.current_texture:m_opengl.current_aux_2d_textures[active];
 
 	ASSERT( target == GL_TEXTURE_2D, "glTexImage2D unknown target " + std::to_string( target ) + " @" + source );
 	ASSERT( level == 0, "glTexImage2D unknown level " + std::to_string( level ) + " @" + source );
@@ -665,7 +673,7 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 			type == GL_FLOAT,
 		"glTexImage2D unknown type " + std::to_string( type ) + " @" + source
 	);
-	ASSERT( m_opengl.current_texture != 0, "glTexImage2D called without bound texture @" + source );
+	ASSERT( bound != 0, "glTexImage2D called without bound texture @" + source );
 
 	size_t internalbpp, bpp;
 	switch ( internalformat ) {
@@ -713,14 +721,14 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 	);
 
 	size_t size = bpp * width * height;
-	alloc_t& old = m_opengl.textures.at( m_opengl.current_texture );
+	alloc_t& old = m_opengl.textures.at( bound );
 	if ( old.size > 0 ) {
-		//Log( "Freeing " + std::to_string( size ) + " bytes from opengl texture " + std::to_string( m_opengl.current_texture ) + " @" + source );
+		//Log( "Freeing " + std::to_string( size ) + " bytes from opengl texture " + std::to_string( bound ) + " @" + source );
 		DEBUG_STAT_CHANGE_BY( opengl_textures_size, -old.size );
 	}
-	//Log( "Loading " + std::to_string( size ) + " bytes into opengl texture " + std::to_string( m_opengl.current_texture ) + " @" + source );
+	//Log( "Loading " + std::to_string( size ) + " bytes into opengl texture " + std::to_string( bound ) + " @" + source );
 
-	m_opengl.textures[ m_opengl.current_texture ] = {
+	m_opengl.textures[ bound ] = {
 		size,
 		source
 	};
@@ -735,13 +743,15 @@ void MemoryWatcher::GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, 
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
+    GLint active=0;glGetIntegerv(GL_ACTIVE_TEXTURE,&active);
+    const auto bound=active==GL_TEXTURE0 ? m_opengl.current_texture:m_opengl.current_aux_2d_textures[active];
 
 	ASSERT( target == GL_TEXTURE_2D, "glTexSubImage2D unknown target " + std::to_string( target ) + " @" + source );
 	ASSERT( level == 0, "glTexSubImage2D unknown level " + std::to_string( level ) + " @" + source );
 	ASSERT( width > 0, "glTexSubImage2D zero width" );
 	ASSERT( height, "glTexSubImage2D zero height" );
 	ASSERT( type == GL_UNSIGNED_BYTE, "glTexSubImage2D unknown type " + std::to_string( type ) + " @" + source );
-	ASSERT( m_opengl.current_texture != 0, "glTexSubImage2D called without bound texture @" + source );
+	ASSERT( bound != 0, "glTexSubImage2D called without bound texture @" + source );
 
 	size_t bpp;
 	switch ( format ) {
@@ -799,6 +809,7 @@ void MemoryWatcher::GLDeleteTextures( GLsizei n, GLuint* textures, const std::st
 	ASSERT( it != m_opengl.textures.end(), "glDeleteTextures texture does not exist @" + source );
 
 	ASSERT( m_opengl.current_texture != *textures, "glDeleteTextures destroying texture while it's still bound @" + source );
+    for(const auto& binding:m_opengl.current_aux_2d_textures) {ASSERT(binding.second!=*textures,"destroying a bound auxiliary 2D texture @"+source);}
 	for(const auto& binding:m_opengl.current_array_textures) {ASSERT(binding.second!=*textures,"destroying a bound array texture @"+source);}
 
 	if ( m_opengl.current_framebuffer ) {

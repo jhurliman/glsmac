@@ -6,16 +6,19 @@
 #include "loader/texture/TextureLoader.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "types/texture/Texture.h"
+#include "scene/actor/Instanced.h"
+#include "scene/actor/Sprite.h"
+#include "game/frontend/sprite/InstancedSprite.h"
 
 namespace game {
 namespace frontend {
 
-AnimationDef::AnimationDef( sprite::InstancedSpriteManager* ism, const backend::animation::Def* def )
+AnimationDef::AnimationDef( sprite::InstancedSpriteManager* ism, const backend::animation::Def* def, std::shared_ptr<types::texture::Texture> indexed_effect )
 	: m_ism( ism )
 	, m_id( def->m_id )
 	, m_type( def->m_type )
 	, m_duration_ms( def->m_duration_ms )
-	, m_sound_file( def->m_sound_file ) {
+	, m_sound_file( def->m_sound_file ), m_indexed_effect(std::move(indexed_effect)) {
 
 	ASSERT( def->m_type == backend::animation::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
 
@@ -30,7 +33,7 @@ AnimationDef::~AnimationDef() {
 
 const instanced_sprites_t& AnimationDef::GetSprites() {
 	if ( m_sprites.empty() ) {
-		auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.file, types::texture::TF_MIPMAPS );
+		auto* texture = m_indexed_effect ? m_indexed_effect.get():g_engine->GetTextureLoader()->LoadCustomTexture( m_render.file, types::texture::TF_MIPMAPS );
 		const uint32_t w = m_render.frame_width;
 		const uint32_t h = m_render.frame_height;
 		const uint32_t p = m_render.frame_padding;
@@ -66,6 +69,10 @@ const instanced_sprites_t& AnimationDef::GetSprites() {
 					ZL_ANIMATIONS
 				)
 			);
+            if(m_indexed_effect) {
+                auto* sprite=m_sprites.back();sprite->texture_owner=m_indexed_effect;
+                auto* actor=sprite->actor->GetSpriteActor();actor->SetRenderFlags(actor->GetRenderFlags()|scene::actor::Actor::RF_SMAC_EFFECT|scene::actor::Actor::RF_IGNORE_LIGHTING);
+            }
 		}
 	}
 	return m_sprites;

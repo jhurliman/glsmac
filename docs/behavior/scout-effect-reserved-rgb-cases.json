@@ -1,0 +1,500 @@
+{
+  "research_id": "RE-SMAC-SCOUT-EFFECT-RESERVED-RGB-001",
+  "assets": {
+    "terran.exe": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+    "palette.pcx": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "palcheck.tmp": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6"
+  },
+  "gamma": 100,
+  "mode": "software fixed palette, original DIB RGB publication",
+  "entries": [
+    {
+      "index": 0,
+      "rgb": [
+        0,
+        0,
+        0
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "canonical_RGBA": [
+        0,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "index": 1,
+      "rgb": [
+        128,
+        0,
+        0
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        0,
+        0,
+        128,
+        0
+      ],
+      "canonical_RGBA": [
+        128,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "index": 2,
+      "rgb": [
+        0,
+        128,
+        0
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        0,
+        128,
+        0,
+        0
+      ],
+      "canonical_RGBA": [
+        0,
+        128,
+        0,
+        255
+      ]
+    },
+    {
+      "index": 3,
+      "rgb": [
+        128,
+        128,
+        0
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        0,
+        128,
+        128,
+        0
+      ],
+      "canonical_RGBA": [
+        128,
+        128,
+        0,
+        255
+      ]
+    },
+    {
+      "index": 4,
+      "rgb": [
+        0,
+        0,
+        128
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        128,
+        0,
+        0,
+        0
+      ],
+      "canonical_RGBA": [
+        0,
+        0,
+        128,
+        255
+      ]
+    },
+    {
+      "index": 5,
+      "rgb": [
+        128,
+        0,
+        128
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        128,
+        0,
+        128,
+        0
+      ],
+      "canonical_RGBA": [
+        128,
+        0,
+        128,
+        255
+      ]
+    },
+    {
+      "index": 6,
+      "rgb": [
+        0,
+        128,
+        128
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        128,
+        128,
+        0,
+        0
+      ],
+      "canonical_RGBA": [
+        0,
+        128,
+        128,
+        255
+      ]
+    },
+    {
+      "index": 7,
+      "rgb": [
+        192,
+        192,
+        192
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        192,
+        192,
+        192,
+        0
+      ],
+      "canonical_RGBA": [
+        192,
+        192,
+        192,
+        255
+      ]
+    },
+    {
+      "index": 8,
+      "rgb": [
+        8,
+        0,
+        0
+      ],
+      "logical_entry_flag": 2,
+      "DIB_BGR0": [
+        0,
+        0,
+        8,
+        0
+      ],
+      "canonical_RGBA": [
+        8,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "index": 9,
+      "rgb": [
+        9,
+        0,
+        0
+      ],
+      "logical_entry_flag": 2,
+      "DIB_BGR0": [
+        0,
+        0,
+        9,
+        0
+      ],
+      "canonical_RGBA": [
+        9,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "index": 246,
+      "rgb": [
+        245,
+        0,
+        0
+      ],
+      "logical_entry_flag": 2,
+      "DIB_BGR0": [
+        0,
+        0,
+        245,
+        0
+      ],
+      "canonical_RGBA": [
+        245,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "index": 247,
+      "rgb": [
+        246,
+        0,
+        0
+      ],
+      "logical_entry_flag": 2,
+      "DIB_BGR0": [
+        0,
+        0,
+        246,
+        0
+      ],
+      "canonical_RGBA": [
+        246,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "index": 248,
+      "rgb": [
+        128,
+        128,
+        128
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        128,
+        128,
+        128,
+        0
+      ],
+      "canonical_RGBA": [
+        128,
+        128,
+        128,
+        255
+      ]
+    },
+    {
+      "index": 249,
+      "rgb": [
+        255,
+        0,
+        0
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        0,
+        0,
+        255,
+        0
+      ],
+      "canonical_RGBA": [
+        255,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "index": 250,
+      "rgb": [
+        0,
+        255,
+        0
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        0,
+        255,
+        0,
+        0
+      ],
+      "canonical_RGBA": [
+        0,
+        255,
+        0,
+        255
+      ]
+    },
+    {
+      "index": 251,
+      "rgb": [
+        255,
+        255,
+        0
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        0,
+        255,
+        255,
+        0
+      ],
+      "canonical_RGBA": [
+        255,
+        255,
+        0,
+        255
+      ]
+    },
+    {
+      "index": 252,
+      "rgb": [
+        0,
+        0,
+        255
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        255,
+        0,
+        0,
+        0
+      ],
+      "canonical_RGBA": [
+        0,
+        0,
+        255,
+        255
+      ]
+    },
+    {
+      "index": 253,
+      "rgb": [
+        255,
+        0,
+        255
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        255,
+        0,
+        255,
+        0
+      ],
+      "canonical_RGBA": [
+        255,
+        0,
+        255,
+        255
+      ]
+    },
+    {
+      "index": 254,
+      "rgb": [
+        0,
+        255,
+        255
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        255,
+        255,
+        0,
+        0
+      ],
+      "canonical_RGBA": [
+        0,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "index": 255,
+      "rgb": [
+        255,
+        255,
+        255
+      ],
+      "logical_entry_flag": 4,
+      "DIB_BGR0": [
+        255,
+        255,
+        255,
+        0
+      ],
+      "canonical_RGBA": [
+        255,
+        255,
+        255,
+        255
+      ]
+    }
+  ],
+  "pixel252_control": {
+    "source": [
+      252,
+      252,
+      252
+    ],
+    "background": [
+      0,
+      13,
+      44
+    ],
+    "output_indices": [
+      0,
+      1,
+      6
+    ],
+    "DIB_RGB": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        128,
+        0,
+        0
+      ],
+      [
+        0,
+        128,
+        128
+      ]
+    ],
+    "canonical_RGBA": [
+      [
+        0,
+        0,
+        0,
+        255
+      ],
+      [
+        128,
+        0,
+        0,
+        255
+      ],
+      [
+        0,
+        128,
+        128,
+        255
+      ]
+    ]
+  },
+  "source_constant_table_hashes": {
+    "first": "870df118646d056fda82475ebdefe9f37a43f59844029e2f9d682e0290ee9e36",
+    "last": "e9fa81249680018a18240e8a91aa23399bbf1493435fd8a3e89e0826b4b50c17"
+  },
+  "reserved_unchanged_after_PalettePCX_and_gamma": true,
+  "native_DIB_table_matches": true,
+  "system_palette_mode_executed": false,
+  "actual_device_realization_measured": false,
+  "SMAX_display_parity_established": false,
+  "external_API_sources": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setdibcolortable",
+    "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/45e5c320-55b4-4f3a-af55-40f9e0f6e3ac"
+  ],
+  "passed": true
+}

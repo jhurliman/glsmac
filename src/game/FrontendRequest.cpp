@@ -1,4 +1,5 @@
 #include "FrontendRequest.h"
+#include "ScoutBattlePresentation.h"
 
 #include <cstring>
 #include "backend/map/TerrainRenderUpdate.h"
@@ -53,6 +54,7 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.animation_undefine.animation_id, std::string, *other.data.animation_undefine.animation_id );
 			break;
 		}
+        case FR_SCOUT_BATTLE: {NEW(data.scout_battle.plan,scout_presentation::Plan,*other.data.scout_battle.plan);break;}
 		case FR_ANIMATION_SHOW: {
 			NEW( data.animation_show.animation_id, std::string, *other.data.animation_show.animation_id );
 			break;
@@ -153,6 +155,7 @@ FrontendRequest::~FrontendRequest() {
 			DELETE( data.animation_undefine.animation_id );
 			break;
 		}
+        case FR_SCOUT_BATTLE: {DELETE(data.scout_battle.plan);break;}
 		case FR_ANIMATION_SHOW: {
 			DELETE( data.animation_show.animation_id );
 			break;

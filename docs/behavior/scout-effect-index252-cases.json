@@ -1,0 +1,1175 @@
+{
+  "research_id": "RE-SMAC-SCOUT-EFFECT-252-001",
+  "assets": {
+    "terran.exe": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+    "terranx.exe": "01901cbf7196b0c5d0df9540a029520f5df8fd9a6b343deef8b5663872805fcf",
+    "XF.PCX": "2646e142878e6942a191e30fc4759a678a42360b191444de132d8ead19932af2",
+    "system.txt": "cadbe5153d3e36fbb95638f6aec54ba929b6f60af56e782b38042fb835cb146f",
+    "palette.pcx": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "palcheck.tmp": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6",
+    "explosions0.tmp": "8aee8ce66f3468b40cd97f72e40faef5e762cd45fab7c14f447c81a16c359873"
+  },
+  "SMAC": {
+    "scope": "Measured initialized original software contexts, no live OS/gameplay assertion",
+    "default_mapping": [
+      {
+        "background": 0,
+        "output": 0
+      },
+      {
+        "background": 1,
+        "output": 0
+      },
+      {
+        "background": 2,
+        "output": 0
+      },
+      {
+        "background": 3,
+        "output": 0
+      },
+      {
+        "background": 4,
+        "output": 0
+      },
+      {
+        "background": 5,
+        "output": 0
+      },
+      {
+        "background": 6,
+        "output": 0
+      },
+      {
+        "background": 7,
+        "output": 0
+      },
+      {
+        "background": 8,
+        "output": 0
+      },
+      {
+        "background": 9,
+        "output": 0
+      },
+      {
+        "background": 10,
+        "output": 0
+      },
+      {
+        "background": 11,
+        "output": 0
+      },
+      {
+        "background": 12,
+        "output": 0
+      },
+      {
+        "background": 13,
+        "output": 1
+      },
+      {
+        "background": 14,
+        "output": 0
+      },
+      {
+        "background": 15,
+        "output": 0
+      },
+      {
+        "background": 16,
+        "output": 0
+      },
+      {
+        "background": 17,
+        "output": 0
+      },
+      {
+        "background": 18,
+        "output": 0
+      },
+      {
+        "background": 19,
+        "output": 0
+      },
+      {
+        "background": 20,
+        "output": 0
+      },
+      {
+        "background": 21,
+        "output": 0
+      },
+      {
+        "background": 22,
+        "output": 0
+      },
+      {
+        "background": 23,
+        "output": 0
+      },
+      {
+        "background": 24,
+        "output": 1
+      },
+      {
+        "background": 25,
+        "output": 0
+      },
+      {
+        "background": 26,
+        "output": 0
+      },
+      {
+        "background": 27,
+        "output": 0
+      },
+      {
+        "background": 28,
+        "output": 2
+      },
+      {
+        "background": 29,
+        "output": 0
+      },
+      {
+        "background": 30,
+        "output": 0
+      },
+      {
+        "background": 31,
+        "output": 0
+      },
+      {
+        "background": 32,
+        "output": 3
+      },
+      {
+        "background": 33,
+        "output": 0
+      },
+      {
+        "background": 34,
+        "output": 0
+      },
+      {
+        "background": 35,
+        "output": 0
+      },
+      {
+        "background": 36,
+        "output": 4
+      },
+      {
+        "background": 37,
+        "output": 0
+      },
+      {
+        "background": 38,
+        "output": 0
+      },
+      {
+        "background": 39,
+        "output": 0
+      },
+      {
+        "background": 40,
+        "output": 5
+      },
+      {
+        "background": 41,
+        "output": 0
+      },
+      {
+        "background": 42,
+        "output": 0
+      },
+      {
+        "background": 43,
+        "output": 0
+      },
+      {
+        "background": 44,
+        "output": 6
+      },
+      {
+        "background": 45,
+        "output": 0
+      },
+      {
+        "background": 46,
+        "output": 0
+      },
+      {
+        "background": 47,
+        "output": 0
+      },
+      {
+        "background": 48,
+        "output": 7
+      },
+      {
+        "background": 49,
+        "output": 0
+      },
+      {
+        "background": 50,
+        "output": 0
+      },
+      {
+        "background": 51,
+        "output": 0
+      },
+      {
+        "background": 52,
+        "output": 8
+      },
+      {
+        "background": 53,
+        "output": 0
+      },
+      {
+        "background": 54,
+        "output": 0
+      },
+      {
+        "background": 55,
+        "output": 0
+      },
+      {
+        "background": 56,
+        "output": 9
+      },
+      {
+        "background": 57,
+        "output": 0
+      },
+      {
+        "background": 58,
+        "output": 0
+      },
+      {
+        "background": 59,
+        "output": 0
+      },
+      {
+        "background": 60,
+        "output": 10
+      },
+      {
+        "background": 61,
+        "output": 0
+      },
+      {
+        "background": 62,
+        "output": 0
+      },
+      {
+        "background": 63,
+        "output": 0
+      },
+      {
+        "background": 64,
+        "output": 11
+      },
+      {
+        "background": 65,
+        "output": 0
+      },
+      {
+        "background": 66,
+        "output": 0
+      },
+      {
+        "background": 67,
+        "output": 0
+      },
+      {
+        "background": 68,
+        "output": 12
+      },
+      {
+        "background": 69,
+        "output": 0
+      },
+      {
+        "background": 70,
+        "output": 0
+      },
+      {
+        "background": 71,
+        "output": 0
+      },
+      {
+        "background": 72,
+        "output": 13
+      },
+      {
+        "background": 73,
+        "output": 0
+      },
+      {
+        "background": 74,
+        "output": 0
+      },
+      {
+        "background": 75,
+        "output": 0
+      },
+      {
+        "background": 76,
+        "output": 14
+      },
+      {
+        "background": 77,
+        "output": 0
+      },
+      {
+        "background": 78,
+        "output": 0
+      },
+      {
+        "background": 79,
+        "output": 0
+      },
+      {
+        "background": 80,
+        "output": 15
+      },
+      {
+        "background": 81,
+        "output": 0
+      },
+      {
+        "background": 82,
+        "output": 0
+      },
+      {
+        "background": 83,
+        "output": 0
+      },
+      {
+        "background": 84,
+        "output": 16
+      },
+      {
+        "background": 85,
+        "output": 0
+      },
+      {
+        "background": 86,
+        "output": 0
+      },
+      {
+        "background": 87,
+        "output": 0
+      },
+      {
+        "background": 88,
+        "output": 17
+      },
+      {
+        "background": 89,
+        "output": 0
+      },
+      {
+        "background": 90,
+        "output": 0
+      },
+      {
+        "background": 91,
+        "output": 0
+      },
+      {
+        "background": 92,
+        "output": 18
+      },
+      {
+        "background": 93,
+        "output": 0
+      },
+      {
+        "background": 94,
+        "output": 0
+      },
+      {
+        "background": 95,
+        "output": 0
+      },
+      {
+        "background": 96,
+        "output": 19
+      },
+      {
+        "background": 97,
+        "output": 0
+      },
+      {
+        "background": 98,
+        "output": 0
+      },
+      {
+        "background": 99,
+        "output": 0
+      },
+      {
+        "background": 100,
+        "output": 20
+      },
+      {
+        "background": 101,
+        "output": 0
+      },
+      {
+        "background": 102,
+        "output": 0
+      },
+      {
+        "background": 103,
+        "output": 0
+      },
+      {
+        "background": 104,
+        "output": 21
+      },
+      {
+        "background": 105,
+        "output": 0
+      },
+      {
+        "background": 106,
+        "output": 0
+      },
+      {
+        "background": 107,
+        "output": 0
+      },
+      {
+        "background": 108,
+        "output": 22
+      },
+      {
+        "background": 109,
+        "output": 0
+      },
+      {
+        "background": 110,
+        "output": 0
+      },
+      {
+        "background": 111,
+        "output": 0
+      },
+      {
+        "background": 112,
+        "output": 23
+      },
+      {
+        "background": 113,
+        "output": 0
+      },
+      {
+        "background": 114,
+        "output": 0
+      },
+      {
+        "background": 115,
+        "output": 0
+      },
+      {
+        "background": 116,
+        "output": 24
+      },
+      {
+        "background": 117,
+        "output": 0
+      },
+      {
+        "background": 118,
+        "output": 0
+      },
+      {
+        "background": 119,
+        "output": 0
+      },
+      {
+        "background": 120,
+        "output": 25
+      },
+      {
+        "background": 121,
+        "output": 0
+      },
+      {
+        "background": 122,
+        "output": 0
+      },
+      {
+        "background": 123,
+        "output": 0
+      },
+      {
+        "background": 124,
+        "output": 26
+      },
+      {
+        "background": 125,
+        "output": 0
+      },
+      {
+        "background": 126,
+        "output": 0
+      },
+      {
+        "background": 127,
+        "output": 0
+      },
+      {
+        "background": 128,
+        "output": 27
+      },
+      {
+        "background": 129,
+        "output": 0
+      },
+      {
+        "background": 130,
+        "output": 0
+      },
+      {
+        "background": 131,
+        "output": 0
+      },
+      {
+        "background": 132,
+        "output": 28
+      },
+      {
+        "background": 133,
+        "output": 0
+      },
+      {
+        "background": 134,
+        "output": 0
+      },
+      {
+        "background": 135,
+        "output": 0
+      },
+      {
+        "background": 136,
+        "output": 29
+      },
+      {
+        "background": 137,
+        "output": 0
+      },
+      {
+        "background": 138,
+        "output": 0
+      },
+      {
+        "background": 139,
+        "output": 0
+      },
+      {
+        "background": 140,
+        "output": 30
+      },
+      {
+        "background": 141,
+        "output": 0
+      },
+      {
+        "background": 142,
+        "output": 0
+      },
+      {
+        "background": 143,
+        "output": 0
+      },
+      {
+        "background": 144,
+        "output": 31
+      },
+      {
+        "background": 145,
+        "output": 0
+      },
+      {
+        "background": 146,
+        "output": 0
+      },
+      {
+        "background": 147,
+        "output": 0
+      },
+      {
+        "background": 148,
+        "output": 32
+      },
+      {
+        "background": 149,
+        "output": 0
+      },
+      {
+        "background": 150,
+        "output": 0
+      },
+      {
+        "background": 151,
+        "output": 0
+      },
+      {
+        "background": 152,
+        "output": 33
+      },
+      {
+        "background": 153,
+        "output": 0
+      },
+      {
+        "background": 154,
+        "output": 0
+      },
+      {
+        "background": 155,
+        "output": 0
+      },
+      {
+        "background": 156,
+        "output": 34
+      },
+      {
+        "background": 157,
+        "output": 0
+      },
+      {
+        "background": 158,
+        "output": 0
+      },
+      {
+        "background": 159,
+        "output": 0
+      },
+      {
+        "background": 160,
+        "output": 35
+      },
+      {
+        "background": 161,
+        "output": 0
+      },
+      {
+        "background": 162,
+        "output": 0
+      },
+      {
+        "background": 163,
+        "output": 0
+      },
+      {
+        "background": 164,
+        "output": 36
+      },
+      {
+        "background": 165,
+        "output": 0
+      },
+      {
+        "background": 166,
+        "output": 0
+      },
+      {
+        "background": 167,
+        "output": 0
+      },
+      {
+        "background": 168,
+        "output": 37
+      },
+      {
+        "background": 169,
+        "output": 0
+      },
+      {
+        "background": 170,
+        "output": 0
+      },
+      {
+        "background": 171,
+        "output": 0
+      },
+      {
+        "background": 172,
+        "output": 38
+      },
+      {
+        "background": 173,
+        "output": 0
+      },
+      {
+        "background": 174,
+        "output": 0
+      },
+      {
+        "background": 175,
+        "output": 0
+      },
+      {
+        "background": 176,
+        "output": 39
+      },
+      {
+        "background": 177,
+        "output": 0
+      },
+      {
+        "background": 178,
+        "output": 0
+      },
+      {
+        "background": 179,
+        "output": 0
+      },
+      {
+        "background": 180,
+        "output": 40
+      },
+      {
+        "background": 181,
+        "output": 0
+      },
+      {
+        "background": 182,
+        "output": 0
+      },
+      {
+        "background": 183,
+        "output": 0
+      },
+      {
+        "background": 184,
+        "output": 41
+      },
+      {
+        "background": 185,
+        "output": 0
+      },
+      {
+        "background": 186,
+        "output": 0
+      },
+      {
+        "background": 187,
+        "output": 0
+      },
+      {
+        "background": 188,
+        "output": 42
+      },
+      {
+        "background": 189,
+        "output": 0
+      },
+      {
+        "background": 190,
+        "output": 0
+      },
+      {
+        "background": 191,
+        "output": 0
+      },
+      {
+        "background": 192,
+        "output": 43
+      },
+      {
+        "background": 193,
+        "output": 0
+      },
+      {
+        "background": 194,
+        "output": 0
+      },
+      {
+        "background": 195,
+        "output": 0
+      },
+      {
+        "background": 196,
+        "output": 44
+      },
+      {
+        "background": 197,
+        "output": 0
+      },
+      {
+        "background": 198,
+        "output": 0
+      },
+      {
+        "background": 199,
+        "output": 0
+      },
+      {
+        "background": 200,
+        "output": 45
+      },
+      {
+        "background": 201,
+        "output": 0
+      },
+      {
+        "background": 202,
+        "output": 0
+      },
+      {
+        "background": 203,
+        "output": 0
+      },
+      {
+        "background": 204,
+        "output": 46
+      },
+      {
+        "background": 205,
+        "output": 0
+      },
+      {
+        "background": 206,
+        "output": 0
+      },
+      {
+        "background": 207,
+        "output": 0
+      },
+      {
+        "background": 208,
+        "output": 47
+      },
+      {
+        "background": 209,
+        "output": 0
+      },
+      {
+        "background": 210,
+        "output": 0
+      },
+      {
+        "background": 211,
+        "output": 0
+      },
+      {
+        "background": 212,
+        "output": 48
+      },
+      {
+        "background": 213,
+        "output": 0
+      },
+      {
+        "background": 214,
+        "output": 0
+      },
+      {
+        "background": 215,
+        "output": 0
+      },
+      {
+        "background": 216,
+        "output": 49
+      },
+      {
+        "background": 217,
+        "output": 0
+      },
+      {
+        "background": 218,
+        "output": 0
+      },
+      {
+        "background": 219,
+        "output": 0
+      },
+      {
+        "background": 220,
+        "output": 50
+      },
+      {
+        "background": 221,
+        "output": 0
+      },
+      {
+        "background": 222,
+        "output": 0
+      },
+      {
+        "background": 223,
+        "output": 0
+      },
+      {
+        "background": 224,
+        "output": 51
+      },
+      {
+        "background": 225,
+        "output": 0
+      },
+      {
+        "background": 226,
+        "output": 0
+      },
+      {
+        "background": 227,
+        "output": 0
+      },
+      {
+        "background": 228,
+        "output": 52
+      },
+      {
+        "background": 229,
+        "output": 0
+      },
+      {
+        "background": 230,
+        "output": 0
+      },
+      {
+        "background": 231,
+        "output": 0
+      },
+      {
+        "background": 232,
+        "output": 53
+      },
+      {
+        "background": 233,
+        "output": 0
+      },
+      {
+        "background": 234,
+        "output": 0
+      },
+      {
+        "background": 235,
+        "output": 0
+      },
+      {
+        "background": 236,
+        "output": 54
+      },
+      {
+        "background": 237,
+        "output": 0
+      },
+      {
+        "background": 238,
+        "output": 0
+      },
+      {
+        "background": 239,
+        "output": 0
+      },
+      {
+        "background": 240,
+        "output": 55
+      },
+      {
+        "background": 241,
+        "output": 0
+      },
+      {
+        "background": 242,
+        "output": 0
+      },
+      {
+        "background": 243,
+        "output": 0
+      },
+      {
+        "background": 244,
+        "output": 56
+      },
+      {
+        "background": 245,
+        "output": 0
+      },
+      {
+        "background": 246,
+        "output": 0
+      },
+      {
+        "background": 247,
+        "output": 0
+      },
+      {
+        "background": 248,
+        "output": 57
+      },
+      {
+        "background": 249,
+        "output": 0
+      },
+      {
+        "background": 250,
+        "output": 0
+      },
+      {
+        "background": 251,
+        "output": 0
+      },
+      {
+        "background": 252,
+        "output": 58
+      },
+      {
+        "background": 253,
+        "output": 0
+      },
+      {
+        "background": 254,
+        "output": 0
+      },
+      {
+        "background": 255,
+        "output": 0
+      }
+    ],
+    "row_sha256": "7c250271ff11c098419c18f43258c3c7d7f6bc64f6df51b73cd27bbb80adfcd9",
+    "complete_fresh_initialization_contexts": 3,
+    "heap_padding_bytes": 65536,
+    "all256_original_compositor_outputs_match": true,
+    "full_lookup_initializer_completed": true,
+    "initialized_XF_frame_controls": 64,
+    "escaped_reads_in_XF_controls": 840,
+    "normal_banks_uninitialized_in_frame_controls": true,
+    "initialized_row_writes_after_constructors": 0
+  },
+  "SMAX": {
+    "scope": "Owning bitmap constructor plus original one-pixel compositor only; full startup not established",
+    "constructor_mapping_cases": [
+      {
+        "heap_padding": 0,
+        "row_sha256": "7eebb277beafbda0dbdb9eb0dc73b5a73ba6b3a824383cecc40b14fd7080b40e",
+        "cases": [
+          {
+            "background": 0,
+            "output": 122
+          },
+          {
+            "background": 13,
+            "output": 0
+          },
+          {
+            "background": 24,
+            "output": 128
+          },
+          {
+            "background": 44,
+            "output": 133
+          },
+          {
+            "background": 100,
+            "output": 147
+          },
+          {
+            "background": 200,
+            "output": 172
+          },
+          {
+            "background": 245,
+            "output": 0
+          },
+          {
+            "background": 249,
+            "output": 0
+          },
+          {
+            "background": 252,
+            "output": 185
+          },
+          {
+            "background": 255,
+            "output": 0
+          }
+        ]
+      },
+      {
+        "heap_padding": 65536,
+        "row_sha256": "7eebb277beafbda0dbdb9eb0dc73b5a73ba6b3a824383cecc40b14fd7080b40e",
+        "cases": [
+          {
+            "background": 0,
+            "output": 122
+          },
+          {
+            "background": 13,
+            "output": 0
+          },
+          {
+            "background": 24,
+            "output": 128
+          },
+          {
+            "background": 44,
+            "output": 133
+          },
+          {
+            "background": 100,
+            "output": 147
+          },
+          {
+            "background": 200,
+            "output": 172
+          },
+          {
+            "background": 245,
+            "output": 0
+          },
+          {
+            "background": 249,
+            "output": 0
+          },
+          {
+            "background": 252,
+            "output": 185
+          },
+          {
+            "background": 255,
+            "output": 0
+          }
+        ]
+      }
+    ],
+    "full_constructor_batch_completed": false
+  },
+  "display_object_mutation": {
+    "scope": "Diagnostic original bitmap allocation, normal gameplay caller admission not established",
+    "size": [
+      100,
+      150
+    ],
+    "changes": [
+      {
+        "background": 0,
+        "before": 0,
+        "after": 152
+      },
+      {
+        "background": 1,
+        "before": 0,
+        "after": 58
+      }
+    ]
+  },
+  "evidence_limits": {
+    "repeat_OS_launches_established": false,
+    "hardware_display_established": false,
+    "full_SMAX_runtime_established": false,
+    "later_owning_UI_lifetime_established": false,
+    "transparent252_matches_measured_original": false
+  },
+  "measured_controls_passed": true
+}

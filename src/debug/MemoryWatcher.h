@@ -113,6 +113,7 @@ private:
 		GLuint current_index_buffer = 0;
 		GLuint current_texture = 0;
 		std::unordered_map<GLenum,GLuint> current_array_textures;
+        std::unordered_map<GLenum,GLuint> current_aux_2d_textures;
 		GLuint current_framebuffer = 0;
 		GLuint current_program = 0;
 		framebuffer_mode_t current_framebuffer_mode = FM_NONE;

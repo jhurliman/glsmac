@@ -1,10 +1,12 @@
 #pragma once
+#include <memory>
 
 #include "Types.h"
 #include "game/backend/animation/Types.h"
 
 namespace types {
 class Sound;
+namespace texture {class Texture;}
 }
 
 namespace game::backend::animation {
@@ -21,7 +23,7 @@ class InstancedSpriteManager;
 class AnimationDef {
 public:
 
-	AnimationDef( sprite::InstancedSpriteManager* ism, const backend::animation::Def* def );
+	AnimationDef( sprite::InstancedSpriteManager* ism, const backend::animation::Def* def, std::shared_ptr<types::texture::Texture> indexed_effect = {} );
 	~AnimationDef();
 
 	const instanced_sprites_t& GetSprites();
@@ -42,6 +44,7 @@ private:
 	instanced_sprites_t m_sprites = {};
 	const size_t m_duration_ms = 0;
 	const std::string m_sound_file = "";
+    std::shared_ptr<types::texture::Texture> m_indexed_effect;
 };
 
 }

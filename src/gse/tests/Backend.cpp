@@ -6651,7 +6651,7 @@ static void AddLoaderProgressTests( task::gsetests::GSETests* task ) {
 		const auto error = fixture.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			return fixture.WithTransferableFrontendQueue( [ & ]() -> std::string {
 				const std::vector< op_t > blocked{
-					OP_NONE, OP_INIT, OP_GET_MAP_DATA, OP_RESET, OP_SAVE_MAP, OP_SEND_BACKEND_REQUESTS, OP_ADD_EVENT,
+					OP_NONE, OP_INIT, OP_GET_MAP_DATA, OP_GET_NATIVE_TERRAIN, OP_RESET, OP_SAVE_MAP, OP_SEND_BACKEND_REQUESTS, OP_ADD_EVENT,
 #ifdef DEBUG
 					OP_SAVE_DUMP, OP_LOAD_DUMP,
 #endif
@@ -7683,6 +7683,26 @@ public:
 };
 
 static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
+    task->AddTest("world admission native terrain snapshots reject stale retired and cancelled tickets",GT(){
+        using namespace game::backend;
+        BackendFixture fixture;
+        return fixture.WithScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.GetGame();
+            const auto ticket=fixture.FixtureWorldTicket();
+            const auto current=game->MT_GetNativeTerrain(ticket),stale=game->MT_GetNativeTerrain(ticket+1);
+            const auto cancelled=game->MT_GetNativeTerrain(ticket);game->MT_Cancel(cancelled);
+            fixture.ProcessRequests();
+            const auto response=game->MT_GetResponse(current);
+            util::FinallyGuard dispose([&]{game->MT_DestroyResponse(response);});
+            GT_ASSERT(response.result==R_SUCCESS && response.world_ticket==ticket && !response.data.native_terrain,"Unavailable legacy frame replaced admission or invented terrain");
+            GT_ASSERT(game->MT_GetResponse(stale).result==R_ABORTED,"Stale ticket disclosed native terrain");
+            GT_ASSERT(game->MT_GetResponse(cancelled).result==R_NONE,"Cancelled frame was delivered");
+            game->MT_RetireWorld(ticket,0);
+            const auto retired=game->MT_GetNativeTerrain(ticket);fixture.ProcessRequests();
+            GT_ASSERT(game->MT_GetResponse(retired).result==R_ABORTED,"Retired ticket reached the current map");GT_OK();
+        });
+    });
+
 	for ( int scenario = 0; scenario < 5; ++scenario ) {
 		const char* names[] = { "same-thread pending and success", "request during script stage", "shutdown before processing", "shutdown after processing", "stale cutoff no-op" };
 		task->AddTest( std::string( "public reset polling " ) + names[ scenario ], GT( scenario ) {

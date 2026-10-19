@@ -14,6 +14,8 @@ SET( SRC ${SRC}
 	${PWD}/GameScoutBattle.cpp
 	${PWD}/SmacTerrainRaster.cpp
 	${PWD}/SmacLandMaterial.cpp
+	${PWD}/NativeTerrainRenderer.cpp
+    ${PWD}/GameNativeTerrain.cpp
 	${PWD}/Slot.cpp
 	${PWD}/TileObject.cpp
 	${PWD}/AnimationDef.cpp

@@ -53,6 +53,7 @@ CLASS( Config, common::Module )
 		LF_JOIN = 1 << 19,
 		LF_MAXIPS = 1 << 20,
 		LF_SINGLE_THREAD = 1 << 21,
+        LF_NATIVE_TERRAIN_INSPECTOR = 1 << 22,
 	};
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
@@ -92,6 +93,7 @@ CLASS( Config, common::Module )
 
 	const bool HasLaunchFlag( const launch_flag_t flag ) const;
 	const types::Vec2< size_t >& GetWindowSize() const;
+    uint16_t GetNativeTerrainBaseLow16() const {return m_native_terrain_base_low16;}
 
 	const util::random::state_t& GetQuickstartSeed() const;
 	const std::string& GetQuickstartMapFile() const;
@@ -141,6 +143,7 @@ private:
 	std::string m_ruleset;
 
 	uint32_t m_launch_flags = LF_NONE;
+    uint16_t m_native_terrain_base_low16=0;
 	types::Vec2< size_t > m_window_size = {};
 
 	util::random::state_t m_quickstart_seed = {};

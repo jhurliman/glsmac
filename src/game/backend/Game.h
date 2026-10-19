@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "game/NativeTerrainWorld.h"
 #include <functional>
 #include <array>
 
@@ -135,6 +136,7 @@ enum op_t {
 	OP_PING,
 	OP_INIT,
 	OP_GET_MAP_DATA,
+    OP_GET_NATIVE_TERRAIN,
 	OP_RESET,
 	OP_SAVE_MAP,
 	OP_GET_FRONTEND_REQUESTS,
@@ -268,6 +270,7 @@ struct MT_Response {
 			size_t slot_index;
 		} init;
 		response_map_data_t* get_map_data;
+        ::game::native_terrain::World* native_terrain;
 		struct {
 			const std::string* error_text;
 		} error;
@@ -321,6 +324,7 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 
 	// get map data for display
 	common::mt_id_t MT_GetMapData( world_ticket_t world );
+    common::mt_id_t MT_GetNativeTerrain(world_ticket_t world);
 
 	// deinitialize everything
 	common::mt_id_t MT_Reset( world_ticket_t world, world_ticket_t pending_initialization = 0 );

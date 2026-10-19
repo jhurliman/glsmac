@@ -482,6 +482,7 @@ void Game::Iterate() {
 		}
 
         if(!m_scout_battle) {m_um->Iterate();}
+        UpdateNativeTerrain();
 	}
 }
 
@@ -626,6 +627,7 @@ void Game::UpdateViewport() {
 }
 
 void Game::UpdateCameraPosition() {
+    m_native_frame_dirty=true;
 
 	// prevent vertical scrolling outside viewport
 	if ( m_camera_position.y < m_camera_range.min.y ) {
@@ -981,6 +983,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			break;
 		}
 		case FrontendRequest::FR_UPDATE_TERRAIN: {
+            m_native_snapshot_dirty=true;
 			// All atlas/actor access stays on the frontend thread. A reset can retire
 			// the renderer before a previously queued presentation payload is drained.
 			if ( !m_textures.terrain ) break;
@@ -996,6 +999,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			break;
 		}
 		case FrontendRequest::FR_UPDATE_TILES: {
+            m_native_snapshot_dirty=true;
 			const auto& tiles_data = *request->data.update_tiles.tile_updates;
 			for ( const auto& tile_data : tiles_data ) {
 				const auto& t = tile_data.first;
@@ -1338,6 +1342,8 @@ void Game::Initialize(
 
 	NEW( m_camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
     m_map_data.native_projection=native_projection;
+    m_native_inspector=native_projection && g_engine->GetConfig()->HasLaunchFlag(config::Config::LF_NATIVE_TERRAIN_INSPECTOR);
+    m_native_snapshot_dirty=m_native_inspector;
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
 	UpdateCameraAngle();
 
@@ -1812,7 +1818,7 @@ void Game::Initialize(
 		{
 			0.0f,
 			-0.25f,
-			0.1f
+			m_native_inspector?0.125f:0.1f
 		}
 	);
 
@@ -1840,6 +1846,7 @@ void Game::Deinitialize() {
 	ASSERT( m_is_initialized, "not initialized" );
 
 	m_is_initialized = false;
+    ClearNativeTerrain();
 
 	DeselectTileOrUnit();
 
@@ -2294,6 +2301,7 @@ void Game::SmoothScroll( const float scroll_value ) {
 
 void Game::SmoothScroll( const types::Vec2< float > position, const float scroll_value ) {
 
+	if(m_native_inspector) {return;}
 	float speed = Game::s_consts.map_scroll.smooth_scrolling.zoom_speed * m_camera_position.z;
 
 	float new_z = m_camera_position.z + scroll_value * speed;

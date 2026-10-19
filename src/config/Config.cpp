@@ -316,6 +316,25 @@ Config::Config( const std::string& path )
 		}
 	);
 
+    m_manager->AddRule(
+        "native-terrain-inspector", "Inspect ordinary SMAC indexed terrain at native 1024x768 zoom (reveals terrain)", AH( this ) {
+            m_launch_flags |= LF_NATIVE_TERRAIN_INSPECTOR;
+        }
+    );
+
+    m_manager->AddRule(
+        "native-terrain-base-low16", "0..65535", "Original reference map allocation low16 for indexed terrain variation (default: 0)", AH( this ) {
+            if(value.empty() || value.size()>5) {Error("Native terrain base requires decimal0..65535");}
+            uint32_t parsed=0;
+            for(const auto digit:value) {
+                if(digit<'0' || digit>'9') {Error("Native terrain base requires decimal0..65535");}
+                parsed=10*parsed+static_cast<uint32_t>(digit-'0');
+            }
+            if(parsed>65535) {Error("Native terrain base requires decimal0..65535");}
+            m_native_terrain_base_low16=static_cast<uint16_t>(parsed);
+        }
+    );
+
 #if defined( DEBUG ) || defined( FASTDEBUG )
 	m_manager->AddRule(
 		"gdb", "Try to start within gdb (on supported platforms)", AH( this ) {

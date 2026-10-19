@@ -142,7 +142,7 @@ Result Draw(const Bitmap& initial,const Bitmap& texture,const std::vector<Triang
     return DrawBatch(initial,commands,clip);
 }
 
-Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,const Clip& clip) {
+Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,const Clip& clip,bool track_coverage) {
     ValidateBitmap(initial);
     for(const auto& command:commands) {
         if(!command.texture || (command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded && command.shader!=Shader::KeyedUnlit)) {Invalid();}
@@ -150,6 +150,7 @@ Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,cons
     }
     const auto bounded=Intersection(clip,{{0,0,initial.width,initial.height}});
     Result result{initial,0};
+    if(track_coverage) {result.coverage.resize(initial.pixels.size());}
     for(const auto& command:commands) {
         const auto& texture=*command.texture;
         const bool shaded=command.shader!=Shader::KeyedUnlit,keyed=command.shader!=Shader::OpaqueShaded;
@@ -165,6 +166,7 @@ Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,cons
                     result.bitmap.pixels[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]=
                         static_cast<uint8_t>(loaded+(shaded?(shade>>8):0));
                     ++result.writes;
+                    if(track_coverage) {result.coverage[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]=1;}
                 }
                 u+=span.du;v+=span.dv;shade=static_cast<uint16_t>(shade+span.dshade);
                 Signed32(u);Signed32(v);

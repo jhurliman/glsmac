@@ -1,4 +1,5 @@
 #include "UnitManager.h"
+#include "game/frontend/MapProjection.h"
 
 #include <algorithm>
 #include <cmath>
@@ -111,7 +112,7 @@ bool UnitManager::QueueAutomaticSelection() {
 	const auto& view = m_game->m_viewport;
 	if ( camera.z <= 0 || view.window_aspect_ratio <= 0 || view.ratio.y <= 0 ) { return false; }
 	const double x = 1.0 - m_game->m_map_data.range.percent_to_absolute.x.Unclamp( camera.x / camera.z / view.window_aspect_ratio );
-	const double y = 1.0 - m_game->m_map_data.range.percent_to_absolute.y.Unclamp( camera.y / camera.z / view.ratio.y / 0.707f );
+	const double y = 1.0 - m_game->m_map_data.range.percent_to_absolute.y.Unclamp( camera.y / camera.z / view.ratio.y / map_projection::Vertical(m_game->m_map_data.native_projection) );
 	if ( !std::isfinite(x) || !std::isfinite(y) ) { return false; }
 	const auto cy = static_cast<size_t>(std::clamp(y,0.0,1.0)*double(height-1));
 	auto cx = static_cast<size_t>(std::clamp(x,0.0,1.0)*double(width-1));

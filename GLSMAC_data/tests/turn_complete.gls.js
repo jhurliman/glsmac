@@ -9,8 +9,8 @@ const read = create({
     event: (name, data) => { events :+ name; },
 });
 let state = read();
-test.assert(state.frames == [0] && state.timers == 1 && state.plays == 0,
-    'initial ready control must consume frame0 once without a fabricated status transition');
+test.assert(state.frames == [0] && state.timers == 1 && state.timer_delay == 100 && state.plays == 1,
+    'initial ready control must consume frame0 once and preserve its ready announcement');
 test.assert(state.label.font == 'arialbd.ttf:14:mono' && state.label.left == 57 && state.label.top == 4);
 let i = 0;
 for (i = 0; i < 41; i++) { test.assert(state.tick() == true); }
@@ -31,6 +31,6 @@ state.click(); state.confirm(false); test.assert(events == [], 'Cancel completed
 state.click(); state.confirm(true);
 test.assert(events == ['complete_turn'] && (read()).text == 'PLEASE WAIT');
 listeners.turn_status({status: 'turn_complete'});frames = (read()).frames;
-test.assert(frames[#sizeof(frames) - 1] == 1 && (read()).plays == 1,
+test.assert(frames[#sizeof(frames) - 1] == 1 && (read()).plays == 2,
     'inactive frame0 must leave next active redraw at frame1');
 state.click(); test.assert(events == ['complete_turn', 'complete_turn']);

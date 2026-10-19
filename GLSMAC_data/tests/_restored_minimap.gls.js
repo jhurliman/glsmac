@@ -11,6 +11,7 @@ return (game) => {
     let turn_events = {};
     let frames = [];
     let tick = null;
+    let timer_delay = null;
     let modal = false;
     let confirmation = null;
 	let overview = null;
@@ -31,7 +32,7 @@ return (game) => {
 				return properties + {
                     smacturnframe: (frame) => { frames :+ frame; return true; },
                     timer: (delay, callback) => {
-                    test.assert(delay == 100, 'Turn Complete must use admitted100ms redraws');
+                    timer_delay = delay;
                     tick = callback;
 					timers++;
 					return {stop: () => { timers--; }};
@@ -73,7 +74,7 @@ return (game) => {
 		modules: {popup: {is_shown: () => { return modal; }, show: (name, callback) => { confirmation = callback; }}},
 		ui: {class: (name) => { return style; }}, el: {panel: panel, button: button, widget: widget}});
 	return () => { return {year: year.text, energy: energy.text, text: turn_label.text, plays: plays, timers: timers,
-		frames: frames, label: turn_label, turn_geometry: turn_button,
+		frames: frames, timer_delay: timer_delay, label: turn_label, turn_geometry: turn_button,
         tick: () => { return tick(); }, hover: (inside) => { return turn_events[inside ? 'mouseover' : 'mouseout']({}); },
         click: () => { return turn_events.click({}); }, modal: (shown) => { modal = shown; },
         confirm: (accepted) => { confirmation(accepted); },

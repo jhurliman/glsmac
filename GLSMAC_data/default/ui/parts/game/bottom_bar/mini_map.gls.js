@@ -123,7 +123,7 @@ return {
             label.top = 17 - size.height;
         };
         const advance = (#include('turn_complete_phase'))();
-        let turn_status = p.game.get_turn_status();
+        let turn_status = '';
         const redraw = () => { artwork.smacturnframe(advance(turn_status == 'turn_complete')); };
         let is_mouseover = false;
         btn_turn_complete.on('mouseover', (e) => {

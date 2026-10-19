@@ -214,6 +214,7 @@ CLASS( Game, common::Module )
 	// structures received from game thread
 	struct map_data_t {
 		map_data_t();
+		bool native_projection = false;
 		size_t width = 0;
 		size_t height = 0;
 		struct {

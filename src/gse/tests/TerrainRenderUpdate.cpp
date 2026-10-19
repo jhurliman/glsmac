@@ -1,4 +1,7 @@
 #include "TerrainRenderUpdate.h"
+#include "Mesh.h"
+#include "scene/Camera.h"
+#include "game/frontend/MapProjection.h"
 #include "game/frontend/tile/Tile.h"
 #include "game/backend/MapObject.h"
 #include "game/frontend/unit/SelectionBlink.h"
@@ -172,6 +175,35 @@ public:
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("SMAC ordinary terrain actual camera projects native96x48 diamonds and pixel heights",GT(){
+        return WithWidgetGraphics([]()->std::string {
+            scene::Camera camera(scene::Camera::CT_ORTHOGRAPHIC);
+            camera.SetCustomAspectRatio(768.0f/1024);
+            camera.SetAngle({-float(M_PI)*0.5f,float(M_PI)*0.75f,0});
+            camera.SetScale(game::frontend::map_projection::CameraScale(0.125f,true));
+            camera.SetPosition({0.75f,0.5f,0.5f});
+            const auto project=[&](types::Vec3 c) {
+                c.y=-c.y;c.z+=2;
+                const auto& m=camera.GetMatrix().m;
+                const float x=m[0][0]*c.x+m[0][1]*c.y+m[0][2]*c.z+m[0][3];
+                const float y=m[1][0]*c.x+m[1][1]*c.y+m[1][2]*c.z+m[1][3];
+                return types::Vec2<float>{(x+1)*512,(1-y)*384};
+            };
+            const std::array<types::Vec2<float>,5> flat{{{576,288},{528,288},{576,264},{624,288},{576,312}}};
+            for(const auto& fixture:terrain_cases::ALL) {
+                const auto c=map::smac_terrain::LandCoordinates(fixture.expected,{0,0},{0.5f,0.5f});
+                const std::array<types::Vec3,5> vertices{{c.center,c.left,c.top,c.right,c.bottom}};
+                for(size_t i=0;i<vertices.size();++i) {
+                    const auto p=project(vertices[i]);
+                    GT_ASSERT(std::abs(p.x-flat[i].x)<0.001f &&
+                        std::abs(p.y-(flat[i].y-fixture.expected[i]))<0.001f,
+                        "Original pixel projection differs: "+std::string(fixture.name)+" vertex"+std::to_string(i)+" at"+p.ToString());
+                }
+            }
+            GT_ASSERT(game::frontend::map_projection::CameraScale(0.125f,false)==types::Vec3(0.125f,0.125f,0.125f),"Legacy camera scale changed");
+            GT_OK();
+        });
+    });
     task->AddTest("SMAC terrain sprite anchors agree through initial ordinary and appearance callers",GT(){
         {TerrainRenderFixture f;GT_ASSERT(f.CheckSpriteAnchors(true),"Native sprite lost floored projector height");}
         {TerrainRenderFixture f;GT_ASSERT(f.CheckSpriteAnchors(false),"Legacy sprite lost floating outer mean");}

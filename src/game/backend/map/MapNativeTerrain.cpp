@@ -1,6 +1,7 @@
 #include "Map.h"
 #include "game/NativeTerrainWorld.h"
 #include "SmacPlanetMap.h"
+#include "SmacNativeTerrainItems.h"
 #include "tile/Tile.h"
 
 namespace game::backend::map {
@@ -19,14 +20,16 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         const auto index=static_cast<size_t>(y)*40+x/2;
         output.region=m_territory_topology->Regions().at(index);
         if(knowledge) {output.owner=static_cast<int8_t>(knowledge->tiles[index].claimant.value_or(-1));}
+        if(knowledge && knowledge->occupancy) {
+            const auto& cell=knowledge->occupancy->At({x,y});
+            output.center_known=true;output.base_present=bool(cell.presence&1u);output.cached_affiliation=cell.affiliation;
+        }
         output.contour=original.Contour();
         output.moisture=live->moisture?live->moisture-1:0;
         output.rockiness=live->rockiness?live->rockiness-1:0;
-        if(live->features&tile::FEATURE_XENOFUNGUS) {output.items|=0x20;}
-        if(live->features&tile::FEATURE_RIVER) {output.items|=0x80;}
+        output.items=NativeTerrainItems(live->terraforming,live->features);
         output.items|=original.Items()&0x200u; // retained raw extra-River conditional
-        if(live->terraforming&tile::TERRAFORMING_FARM) {output.items|=0x8000;}
-        if(live->terraforming&tile::TERRAFORMING_FOREST) {output.items|=0x200000;}
+        output.landmarks=original.Landmarks();
         // These landmark-specific geometric branches still need translation.
         const auto landmarks=original.Landmarks();
         // Only these low memberships select land height/shading profiles.
@@ -44,7 +47,7 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         // Road/Tube now compose from the viewer's separately copied memory.
         const auto unsupported_features=tile::FEATURE_JUNGLE|tile::FEATURE_VOLCANO|
             tile::FEATURE_GARLAND_CRATER|tile::FEATURE_FOSSIL_FIELD_RIDGE|tile::FEATURE_DUNES;
-        const auto unsupported_work=live->terraforming&~(tile::TERRAFORMING_FOREST|tile::TERRAFORMING_FARM|tile::TERRAFORMING_ROAD|tile::TERRAFORMING_MAG_TUBE);
+        const auto unsupported_work=live->terraforming&~((1u<<13)-1);
         output.ordinary=!output.deformed && !unsupported_landmark_materials && !(live->features&unsupported_features) && !unsupported_work;
     }}
     return result;

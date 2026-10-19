@@ -1,5 +1,9 @@
 #include "Game.h"
 #include "NativeTerrainRenderer.h"
+#include "SmacDevelopedOverlay.h"
+#include "game/frontend/sprite/InstancedSpriteManager.h"
+#include "game/frontend/sprite/InstancedSprite.h"
+#include "scene/actor/Instanced.h"
 #include "game/backend/Game.h"
 #include "game/backend/map/Consts.h"
 #include "game/frontend/tile/TileManager.h"
@@ -15,7 +19,31 @@
 #include <cmath>
 
 namespace game::frontend {
+void Game::UpdateNativeTerrainSpriteVisibility(const std::array<bool,3200>* covered) {
+    std::unordered_set<size_t> hidden;
+    if(covered && m_tm && m_map_data.width==80 && m_map_data.height==80) {
+        for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
+            if(!covered->at(static_cast<size_t>(y)*40+x/2)) {continue;}
+            for(const auto& sprite:m_tm->GetTile(x,y)->GetRenderData().terrain_instances) {
+                const auto entry=m_native_legacy_instances.find(sprite.id);
+                if(entry!=m_native_legacy_instances.end() && entry->second.first==sprite.actor && smac_developed_overlay::ReplacesLegacySprite(sprite.name)) {hidden.insert(sprite.id);}
+            }
+        }}
+    }
+    for(const auto id:m_native_hidden_instances) {if(!hidden.count(id)) {
+        const auto entry=m_native_legacy_instances.find(id);if(entry==m_native_legacy_instances.end()) {continue;}
+        auto* actor=m_ism->GetInstancedSpriteByKey(entry->second.first)->actor;
+        actor->SetInstance(id,entry->second.second);
+    }}
+    for(const auto id:hidden) {
+        const auto& entry=m_native_legacy_instances.at(id);
+        auto* actor=m_ism->GetInstancedSpriteByKey(entry.first)->actor;
+        if(actor->HasInstance(id)) {actor->RemoveInstance(id);}
+    }
+    m_native_hidden_instances=std::move(hidden);
+}
 void Game::ClearNativeTerrain() {
+    UpdateNativeTerrainSpriteVisibility(nullptr);m_native_legacy_instances.clear();
     if(m_native_actor) {m_world_scene->RemoveActor(m_native_actor);DELETE(m_native_actor);m_native_actor=nullptr;}
     if(m_native_texture) {DELETE(m_native_texture);m_native_texture=nullptr;}
     m_native_world.reset();m_native_source.reset();
@@ -42,7 +70,7 @@ void Game::UpdateNativeTerrain() {
     }
     const bool admitted=m_native_world && m_viewport.window_width==1024 && m_viewport.window_height==768
         && std::abs(m_camera_position.z-0.125f)<0.000001f;
-    if(!admitted) {if(m_native_actor) {m_native_actor->Hide();}return;}
+    if(!admitted) {if(m_native_actor) {m_native_actor->Hide();}UpdateNativeTerrainSpriteVisibility(nullptr);return;}
     if(!m_native_frame_dirty) {return;}
     if(!m_native_source || m_native_source->faction_files!=m_native_world->faction_files) {m_native_source=g_engine->GetTextureLoader()->GetSmacTerrainSource(m_native_world->faction_files);}
     const auto& matrix=m_camera->GetMatrix().m;
@@ -82,6 +110,7 @@ void Game::UpdateNativeTerrain() {
     }
     std::copy(frame.rgba.begin(),frame.rgba.end(),m_native_texture->GetBitmap());
     m_native_texture->FullUpdate();m_native_actor->SetTexture(m_native_texture);m_native_actor->Show();
+    UpdateNativeTerrainSpriteVisibility(&frame.developed_tiles);
     m_native_frame_dirty=false;
 }
 }

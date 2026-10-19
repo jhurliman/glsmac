@@ -407,8 +407,10 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 	}
 
 	std::vector< std::string > sprites = {};
+    std::vector<TerrainSpriteInstance> terrain_instances;
 	for ( auto& s : ts.sprites ) {
 		sprites.push_back( s.actor );
+        terrain_instances.push_back({s.instance,s.actor,s.name});
 	}
 
 	std::vector< std::string > info_lines = {};
@@ -569,6 +571,7 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 	m_render_data.preview_meshes.swap( preview_meshes );
 	m_render_data.preview_lines.swap( preview_lines );
 	m_render_data.sprites.swap( sprites );
+    m_render_data.terrain_instances.swap(terrain_instances);
 	m_is_water = tile.is_water_tile;
 
 	for ( const auto& it : m_units ) {

@@ -89,4 +89,24 @@ TileNutrientYield CalculateTileNutrients( const TileNutrientRules& rules, const 
 	return { value, excess };
 }
 
+TileNutrientYield CalculateBaselessTileNutrients(const TileNutrientRules& rules,int32_t center_rule,
+    bool base_present,uint8_t cached_affiliation,const TileNutrientInputs& live) {
+    Validate(live);
+    if(cached_affiliation>15) {throw std::invalid_argument("Invalid native nutrient center affiliation");}
+    if(base_present && cached_affiliation<8) {
+        const auto wrap=[](int64_t value)->int64_t {
+            const auto bits=static_cast<uint32_t>(value);
+            return bits<=INT32_MAX?int64_t(bits):int64_t(bits)-0x100000000LL;
+        };
+        int64_t nutrients=center_rule;
+        if(live.terrain.resource_bonus==ResourceBonus::Nutrients) {nutrients=wrap(nutrients*2);}
+        if(live.terrain.landmark_bonus) {nutrients=wrap(nutrients+1);}
+        return {nutrients,0};
+    }
+    auto ordinary=live;
+    ordinary.context.tree_farm=false;ordinary.context.hybrid_forest=false;
+    ordinary.context.bumper_crop=false;ordinary.context.famine=false;
+    return CalculateTileNutrients(rules,ordinary);
+}
+
 }

@@ -715,6 +715,7 @@ private:
 	gse::Value* CopyStartupDesigns( GSE_CALLABLE, const Player* player ) const;
 	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy, std::optional< map::SmacWorkerKnowledge > worker_knowledge, std::optional< map::GlsmacTerritoryTopology > territory = std::nullopt );
 	map::SmacWorkerMapFrame ProjectSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge, int32_t observer, const base::Base* pending_base = nullptr, bool startup = false ) const;
+    std::optional<int64_t> GetNativeTerrainNutrients(const map::tile::Tile& tile,int viewer,bool base_present,uint8_t affiliation) const;
 	std::array< int64_t, 3 > CalculateCanonicalTileResources( const map::tile::Tile& tile, const base::Base& base, ResourceQueryPhase phase, bool startup, bool founding = false, const base::FacilityDef* granted = nullptr ) const;
 	struct StartingBaseKnowledge {
 		std::optional< map::SmacWorkerKnowledge > knowledge;

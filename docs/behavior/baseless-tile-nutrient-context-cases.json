@@ -1,0 +1,353 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Complete4fc6c0, original facility and technology helpers; poisoned real Base0 facilities/event state, no helper return supplied. Separate exact46fec4..46ff00 faction fragment. Declared current/snapshot PLANET and capability inputs; does not rebuild them.",
+  "cases": [
+    {
+      "input": {
+        "id": "forest_no_base",
+        "items": 2097152
+      },
+      "result": 1,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "forest_base_positive",
+        "items": 2097152,
+        "base": 0
+      },
+      "result": 3,
+      "excess": 0,
+      "base_reads": [
+        [
+          "0x96f23d",
+          1
+        ],
+        [
+          "0x96f23d",
+          1
+        ],
+        [
+          "0x96f1e4",
+          4
+        ]
+      ],
+      "facility_queries": [
+        14,
+        13
+      ]
+    },
+    {
+      "input": {
+        "id": "forest_no_base_bumper",
+        "items": 2097152,
+        "event": 512
+      },
+      "result": 1,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "forest_base_bumper",
+        "items": 2097152,
+        "event": 512,
+        "base": 0
+      },
+      "result": 4,
+      "excess": 0,
+      "base_reads": [
+        [
+          "0x96f23d",
+          1
+        ],
+        [
+          "0x96f23d",
+          1
+        ],
+        [
+          "0x96f1e4",
+          4
+        ]
+      ],
+      "facility_queries": [
+        14,
+        13
+      ]
+    },
+    {
+      "input": {
+        "id": "forest_no_base_famine",
+        "items": 2097152,
+        "event": 1024
+      },
+      "result": 1,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "forest_base_famine",
+        "items": 2097152,
+        "event": 1024,
+        "base": 0
+      },
+      "result": 2,
+      "excess": 0,
+      "base_reads": [
+        [
+          "0x96f23d",
+          1
+        ],
+        [
+          "0x96f23d",
+          1
+        ],
+        [
+          "0x96f1e4",
+          4
+        ]
+      ],
+      "facility_queries": [
+        14,
+        13
+      ]
+    },
+    {
+      "input": {
+        "id": "center_no_base",
+        "items": 1,
+        "marker": 1
+      },
+      "result": 2,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "center_no_base_bumper",
+        "items": 1,
+        "marker": 1,
+        "event": 512
+      },
+      "result": 2,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "center_base",
+        "items": 1,
+        "marker": 1,
+        "base": 0
+      },
+      "result": 3,
+      "excess": 0,
+      "base_reads": [
+        [
+          "0x96f23c",
+          1
+        ],
+        [
+          "0x96f1e4",
+          4
+        ]
+      ],
+      "facility_queries": [
+        3
+      ]
+    },
+    {
+      "input": {
+        "id": "invalid_center_marker",
+        "items": 1,
+        "marker": 8
+      },
+      "result": 0,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "no_live_center",
+        "items": 0,
+        "marker": 1
+      },
+      "result": 0,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "center_resource",
+        "items": 536871937,
+        "marker": 1
+      },
+      "result": 4,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "rainy_farm_cap",
+        "items": 32768,
+        "moisture": 2,
+        "technology": false
+      },
+      "result": 2,
+      "excess": 1,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "rainy_farm_tech",
+        "items": 32768,
+        "moisture": 2
+      },
+      "result": 3,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "fungus_current_negative",
+        "items": 32,
+        "current_planet": -2,
+        "retained_planet": 3
+      },
+      "result": 3,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "fungus_current_positive",
+        "items": 32,
+        "current_planet": 3,
+        "retained_planet": -2
+      },
+      "result": 5,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "fungus_capability_zero",
+        "items": 32,
+        "capability": 0
+      },
+      "result": 0,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "fungus_capability_high",
+        "items": 32,
+        "capability": 200
+      },
+      "result": 99,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "fungus_no_base_events",
+        "items": 32,
+        "event": 512
+      },
+      "result": 5,
+      "excess": 0,
+      "base_reads": [],
+      "facility_queries": []
+    },
+    {
+      "input": {
+        "id": "fungus_base_events",
+        "items": 32,
+        "event": 512,
+        "base": 0
+      },
+      "result": 6,
+      "excess": 0,
+      "base_reads": [
+        [
+          "0x96f1e4",
+          4
+        ]
+      ],
+      "facility_queries": []
+    }
+  ],
+  "faction_selection": [
+    {
+      "viewer": -1,
+      "tile_faction": 0,
+      "global_viewer": 2,
+      "result": 2
+    },
+    {
+      "viewer": -1,
+      "tile_faction": 1,
+      "global_viewer": 2,
+      "result": 1
+    },
+    {
+      "viewer": -1,
+      "tile_faction": 7,
+      "global_viewer": 2,
+      "result": 7
+    },
+    {
+      "viewer": 0,
+      "tile_faction": 0,
+      "global_viewer": 2,
+      "result": 0
+    },
+    {
+      "viewer": 0,
+      "tile_faction": 1,
+      "global_viewer": 2,
+      "result": 0
+    },
+    {
+      "viewer": 0,
+      "tile_faction": 7,
+      "global_viewer": 2,
+      "result": 0
+    },
+    {
+      "viewer": 3,
+      "tile_faction": 0,
+      "global_viewer": 2,
+      "result": 3
+    },
+    {
+      "viewer": 3,
+      "tile_faction": 1,
+      "global_viewer": 2,
+      "result": 3
+    },
+    {
+      "viewer": 3,
+      "tile_faction": 7,
+      "global_viewer": 2,
+      "result": 3
+    }
+  ]
+}

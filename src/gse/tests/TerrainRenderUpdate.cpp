@@ -227,7 +227,7 @@ public:
             if(!local.CopyNativeTerrain()->tiles[40*40+20].ordinary) return false;
             live->terraforming|=tile::TERRAFORMING_SOLAR;
             const auto updated=local.CopyNativeTerrain();
-            if(updated->tiles[40*40+20].ordinary || updated->tiles[40*40+20].items!=0x20 || !before.ordinary || before.owner!=-1) return false;
+            if(!updated->tiles[40*40+20].ordinary || updated->tiles[40*40+20].items!=0x6c || !before.ordinary || before.owner!=-1) return false;
             map::SmacWorkerKnowledge::Data data{};data.width=80;data.height=80;data.ordinary_local_mode=true;data.tiles.resize(3200);data.observers[3]=map::SmacWorkerKnowledge::Observer{};
             data.tiles[40*40+20].claimant=3;
             local.m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);local.m_worker_knowledge_ready=true;

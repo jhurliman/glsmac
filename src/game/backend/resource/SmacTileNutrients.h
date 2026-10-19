@@ -65,4 +65,10 @@ struct TileNutrientYield {
 // No live-state adapter, preview modes, terraforming legality or SMAX claim.
 TileNutrientYield CalculateTileNutrients( const TileNutrientRules& rules, const TileNutrientInputs& inputs );
 
+// Original renderer art query with Base=-1: no Base facilities/events, but
+// retained live center presence/affiliation still selects the center branch.
+TileNutrientYield CalculateBaselessTileNutrients(const TileNutrientRules& rules,
+    int32_t center_rule,bool base_present,uint8_t cached_affiliation,const TileNutrientInputs& live);
+
+
 }

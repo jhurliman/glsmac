@@ -29,7 +29,7 @@ void AddSmacTerritoryBoundaryTests(task::gsetests::GSETests* task) {
         namespace fs=std::filesystem;
         const auto directory=fs::temp_directory_path()/("glsmac-boundary-source-"+util::UUID::Generate());
         const auto data=directory/"default";fs::create_directory(directory);fs::create_directory(data);
-        const std::array<std::string,8> names{{"texture.pcx","palette.pcx","rainfall.pcx","custom-a.pcx","custom-b.pcx","system.txt","small.pcx","truecolor.bmp"}};
+        const std::array<std::string,9> names{{"texture.pcx","palette.pcx","rainfall.pcx","custom-a.pcx","custom-b.pcx","system.txt","small.pcx","truecolor.bmp","ter1.pcx"}};
         util::FinallyGuard remove([&]{std::error_code ignored;for(const auto& name:names) {fs::remove(data/name,ignored);}fs::remove(data,ignored);fs::remove(directory,ignored);});
         const auto write_pcx=[](const fs::path& path,int width,int height,const std::vector<uint8_t>& pixels) {
             std::vector<uint8_t> bytes(128,0);bytes[0]=10;bytes[1]=5;bytes[2]=1;bytes[3]=8;bytes[65]=1;
@@ -41,6 +41,7 @@ void AddSmacTerritoryBoundaryTests(task::gsetests::GSETests* task) {
             if(!file) {throw std::runtime_error("Cannot write boundary PCX fixture");}
         };
         write_pcx(data/names[0],1024,768,std::vector<uint8_t>(1024*768,20));
+        write_pcx(data/names[8],1024,768,std::vector<uint8_t>(1024*768,255));
         std::vector<uint8_t> common(640*60,0);for(size_t owner=0;owner<8;++owner) {common[56*640+580+8*owner]=static_cast<uint8_t>(30+owner);}
         write_pcx(data/names[1],640,60,common);
         std::vector<uint8_t> rainfall(128*400,255);rainfall[254*128+2]=208;write_pcx(data/names[2],128,400,rainfall);
@@ -68,7 +69,7 @@ void AddSmacTerritoryBoundaryTests(task::gsetests::GSETests* task) {
                     GT_ASSERT(port_art->owner_clut[3]==defaults->owner_clut[3] && port_art->owner_clut[5]==expected,"Non-native custom artwork did not retain the global owner row");}
                 retained=custom;
             }
-            GT_ASSERT(retained->loaded.pixels[0]==30 && retained->owner_clut[3][30]==130,"Native terrain source borrowed retired SDL surfaces or loader cache");GT_OK();
+            GT_ASSERT(retained->ter1.pixels[0]==9 && retained->ter1.width==1024 && retained->loaded.pixels[0]==30 && retained->owner_clut[3][30]==130,"Native terrain source borrowed retired SDL surfaces or loader cache");GT_OK();
         });
     });
 

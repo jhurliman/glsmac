@@ -44,6 +44,13 @@ Sprite Decode(const smac_terrain_raster::Bitmap& atlas,const Crop& crop) {
     for(int sy=top;sy<bottom;++sy) {for(int sx=left;sx<right;++sx) {result.bitmap.pixels.push_back(at(sx,sy));}}
     return result;
 }
+bool ReplacesLegacySprite(std::string_view name) {
+    for(const auto candidate:{"Condenser","FarmLand","FarmSea","SolarLand","SolarSea","MineLand","MineSea",
+        "ThermalBorehole","SoilEnricher","EchelonMirror","Airbase","Sensor","Bunker"}) {
+        if(name==candidate) {return true;}
+    }
+    return false;
+}
 std::array<uint8_t,256> ShadowLookup(const Palette& palette) {
     using Triple=std::array<double,3>;
     std::array<Triple,256> points{};

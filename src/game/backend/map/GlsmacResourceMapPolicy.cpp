@@ -44,6 +44,11 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithClimateTerrain(const smac_c
     return RetainedClimatePlanetV2(m_planet->WithClimateTerrain(world,sea_level_offset,climate_extra),m_automatic_land_resources);
 }
 
+GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithStartingBalance(const smac_balance::Result& plan) const {
+    if(!m_planet) {throw std::runtime_error("Compensation markers require original terrain item authority");}
+    auto result=*this;result.m_planet=std::make_shared<const SmacPlanetMap>(m_planet->WithStartingBalance(plan));return result;
+}
+
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const {
     if (!m_planet) { throw std::runtime_error("Bloom terrain requires original Planet resource authority"); }
     const auto updated=m_planet->WithBloomTerrain(plan);

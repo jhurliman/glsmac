@@ -89,9 +89,10 @@ actual Base and Scout/Rover before selecting the next owner. This replaces the
 provisional script picker for the currently admitted immediate-HQ local human
 profile. It uses retained regional Base presence and the existing Base factory's
 exclusion/cache history. Late event replays and cancelled admissions are rejected.
-Look First, computer admission and post-selection balancing remain incomplete;
-in particular, the mandatory balancing RNG draw is not yet part of this caller.
-SMAX/network startup still uses its existing placeholder path.
+Post-selection balancing now follows these factories, including the mandatory
+zero-deficit draw and real extra-Pod creation; see[startup-site-balance.md](startup-site-balance.md).
+Look First and computer admission remain incomplete. SMAX/network startup still
+uses its existing placeholder path.
 
 Validation: the full private original replay and synthetic budget groups pass;
 twelve focused actual default-start/research/lifecycle groups cover Gaian and

@@ -7,6 +7,8 @@
 #include "map/SmacPlanetMap.h"
 #include "map/SmacTerritoryRules.h"
 #include "map/SmacStartingSite.h"
+#include "map/SmacStartingBalance.h"
+#include "resource/SmacSiteSignal.h"
 #include "map/SmacRestartPreprocessing.h"
 #include "unit/Unit.h"
 #include "slot/Slots.h"
@@ -116,6 +118,46 @@ bool Game::HandleCanonicalStartupEvent(GSE_CALLABLE,const std::string& name,
             m_bm->SpawnStartingSmacBase(GSE_CALL,owner,tile,configured[0],specialists);
             const auto raw=PrepareStartingConventionalUnit(owner,unit::SmacMoraleMode::Mode0);
             m_um->SpawnStartingConventionalUnit(GSE_CALL,ResolveSmacProductionPresentation(owner,raw.design_id),owner,tile,unit::SmacMoraleMode::Mode0);
+        }
+        const auto& geography=*m_map->GetTerritoryTopology();
+        const auto& policy=*m_map->GetResourcePolicy();const auto* source=policy.OriginalPlanet();
+        map::smac_balance::Input balance{};balance.geometry={geography.Width(),geography.Height(),geography.Wraps()};
+        balance.difficulty=m_simulation->value.designs.global_difficulty;balance.human_mask=m_simulation->value.human_membership;
+        balance.areas=*geography.Areas();
+        // Supported stock faction descriptors do not contain UNIT bonuses.
+        // The profile parser rejects unsupported UNIT descriptors rather than
+        // inferring credits from the Units just created.
+        for(const auto& row:m_um->GetUnits()) {const auto* u=row.second;
+            balance.units.push_back({static_cast<int64_t>(u->m_id),u->Conventional().owner_simulation_id,
+                {{static_cast<int32_t>(u->GetTile()->coord.x),static_cast<int32_t>(u->GetTile()->coord.y)}}});
+        }
+        const auto compensation=map::smac_balance::Prepare(balance,m_simulation->value.gameplay_random,[&](auto p) {
+            const auto* t=m_map->GetTile(p[0],p[1]);
+            const auto at=size_t(p[1])*(balance.geometry.width/2)+p[0]/2;
+            if(source) {const auto& raw=source->At(p[0],p[1]);return map::smac_balance::Tile{uint8_t(raw.Climate()>>5),uint8_t((raw.Climate()>>3)&3),uint8_t(raw.bytes[5]>>6),geography.Regions()[at],raw.Items()};}
+            const uint32_t items=(t->features&map::tile::FEATURE_RIVER ? 0x80u:0)
+                |(t->features&map::tile::FEATURE_MONOLITH ? 0x2000u:0)|(t->features&map::tile::FEATURE_UNITY_POD ? 0x10000000u:0);
+            return map::smac_balance::Tile{uint8_t(policy.Altitude(*t)),uint8_t(t->is_water_tile ? 0:t->moisture-map::tile::MOISTURE_ARID),
+                uint8_t(t->is_water_tile ? 0:t->rockiness-map::tile::ROCKINESS_FLAT),geography.Regions()[at],items};
+        },[&](auto p,uint32_t items) {
+            if(!source) {return int32_t(policy.SiteSignal(*m_map->GetTile(p[0],p[1])));}
+            return int32_t(resource::smac::ResolveSiteSignal({p[0],p[1],static_cast<resource::smac::AltitudeBand>(source->At(p[0],p[1]).Climate()>>5),
+                items,policy.AutomaticLandResources(),source->ResourcePattern(),11,61}));
+        });
+        auto compensated_policy=compensation.writes.empty() ? m_map->m_resource_policy
+            :std::optional<map::GlsmacResourceMapPolicy>(policy.WithStartingBalance(compensation));
+        for(const auto& pod:compensation.pods) {
+            auto participant=std::find_if(participants.begin(),participants.end(),[&](const auto* p){return p->simulation_id==pod.owner;});
+            if(participant==participants.end()) {throw std::runtime_error("Compensation Pod has no admitted owner");}
+            auto* owner=&m_state->m_slots->GetSlot((*participant)->slot);
+            m_um->SpawnStartingConventionalUnit(GSE_CALL,ResolveSmacProductionPresentation(owner,0),owner,
+                m_map->GetTile(pod.point[0],pod.point[1]),unit::SmacMoraleMode::Mode0,true);
+        }
+        m_map->m_resource_policy=std::move(compensated_policy);m_simulation->value.gameplay_random=compensation.random;
+        for(const auto& w:compensation.writes) {
+            auto* t=m_map->GetTile(w.point[0],w.point[1]);
+            if(m_map->GetResourcePolicy()->SiteSignal(*t)) {t->features|=map::tile::FEATURE_UNITY_POD;}
+            else {t->features&=~map::tile::FEATURE_UNITY_POD;}
         }
         return true;
     }

@@ -100,7 +100,7 @@ public:
 	PreparedConventionalUnit PrepareConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state );
 	PreparedConventionalUnit PrepareManufacturedConventionalUnit( GSE_CALLABLE, base::Base& home, int32_t design_id, Def* def, SmacMoraleMode mode );
 	Unit* SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state );
-	Unit* SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::Slot* owner, map::tile::Tile* tile, SmacMoraleMode mode );
+	Unit* SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::Slot* owner, map::tile::Tile* tile, SmacMoraleMode mode, bool compensation_pod = false );
 	bool HasPendingConventionalUnits() const;
 	void RequireConventionalUnitsReady() const;
 	void CompleteConventionalHomeRestore();

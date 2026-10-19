@@ -982,7 +982,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
-	const std::array< const char*, 12 > early_names = {{
+	const std::array< const char*, 13 > early_names = {{
 		"Early conventional claimed queued Start preserves raw order then seals before upkeep",
 		"Early conventional claimed immediate Start preserves raw order then seals before upkeep",
 		"Early conventional missing first turn retires raw identities without publication",
@@ -994,7 +994,8 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		"Default conventional Gaian startup scripts create movable Scout and continue next turn",
 		"Default conventional Spartan startup scripts select Rover and continue next turn",
 		"SMAC research claimed Start pauses then completes Secrets and stable restore exactly once",
-		"SMAC research claimed Start pending choice resets without replay"
+		"SMAC research claimed Start pending choice resets without replay",
+        "Default conventional Thinker startup grants real independent Colony Pod and restores without replay"
 	}};
 	for ( int scenario = 0; scenario < static_cast< int >( early_names.size() ); ++scenario ) {
 		task->AddTest( early_names[ scenario ], GT( scenario ) { ConventionalUnitFixture fixture; return fixture.CheckEarlyStartup( scenario ); } );

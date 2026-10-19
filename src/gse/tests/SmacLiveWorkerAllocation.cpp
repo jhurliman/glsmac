@@ -2247,10 +2247,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
         // The final extension distinguishes relocation scoring from nearest
         // home repair: the larger farther Base receives HQ, not the Former.
-        for(const int mode:{2,1,0,3,4,5,6,7,8,9,10,11,12,13}) {
-            const bool retained=mode>=10,liberation=retained && mode%2==0;
-            const bool with_native=mode==8 || mode==9;const int scenario=retained ? (mode>=12 ? 4:3):with_native?mode-8:mode;
-            const size_t population=scenario>=3 ? 3 : 2;
+        for(const int mode:{2,1,0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17}) {
+            const bool retained=mode>=10 && mode<16,liberation=retained && (mode%2==0 || mode>=14),raze=mode>=16;
+            const bool with_native=mode==8 || mode==9;const int scenario=raze ? 3:retained ? (mode==12 || mode==13 || mode==15 ? 4:3):with_native?mode-8:mode;
+            const size_t population=mode>=14 ? 1:scenario>=3 ? 3:2;
             const bool paid=scenario>=5;const size_t final_population=population-(liberation ? 0:1);
             const SmacConquestState final_conquest{liberation ? 1:2,static_cast<uint8_t>(liberation ? 0:50)};
             const SmacGameplayRandomState final_random(3,liberation ? 3:1951609278u);
@@ -2271,6 +2271,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     const auto former=game->MakeSmacProductionItem(foreign,ProductionItemKind::Unit,1);
                     auto context=SmacBaseResourceContext{2,false,0,0,0x1000040u,false};
                     if(retained && i==0) {context.conquest=SmacConquestState{liberation ? 1:2,27};}
+                    if(raze && i==0) {context.uncaptured_former_owner=2;}
                     auto* base=new Base(game,702+i,foreign,foreign->GetPlayer()->GetFaction(),game->GetMap()->GetTile(20+6*i,16),"Capture "+std::to_string(i),{},pops,41,5,
                         ProductionState{former,7,former,7,std::vector<ProductionItem>{former}},context);
                     bm->SpawnBase(GSE_CALL,base);base->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},static_cast<int32_t>(pops.size())}},Roles());bases.push_back(base);
@@ -2278,19 +2279,20 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 for(size_t i=0;i<bases.size();++i) {auto production=*bases[i]->GetProductionState();production.hurry_partial_paid=i>0 || scenario%2==1;bases[i]->SetProductionState(GSE_CALL,production);}
                 auto* target=bases[0];
                 target->m_facilities.emplace("tanks",bm->GetFacilityDef("tanks"));
-                if(scenario>=3) {target->m_facilities.emplace("capture-hq",bm->GetFacilityDef("capture-hq"));}
+                if(scenario>=3 && !raze) {target->m_facilities.emplace("capture-hq",bm->GetFacilityDef("capture-hq"));}
+                if(raze) {bases[1]->m_facilities.emplace("capture-hq",bm->GetFacilityDef("capture-hq"));}
                 actor->SetTile(GSE_CALL,game->GetMap()->GetTile(19,15));
                 ConventionalUnitState former{1,2,1,0,0,false,ConventionalUnitState::Home::Base,SmacMoraleMode::Mode0};former.home_base_id=702;
                 auto* remote=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("choice-former"),foreign,game->GetMap()->GetTile(30,16),former);
                 fixture.ResourceState([&](auto& state) {
                     state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
                     state.economy.at(1).credits=100;state.economy.at(2).credits=paid ? 1200 : 200;
-                    state.economy.at(1).population_aggregate=111;state.economy.at(2).population_aggregate=static_cast<int32_t>(population+1);
-					state.victory_history->last_base_expansion_or_advice_turn[1]=777;state.victory_history->last_base_expansion_or_advice_turn[2]=888;
-                    state.retained_base_totals->at(1)=10;state.retained_base_totals->at(2)=20;
+                    state.economy.at(1).population_aggregate=raze ? 1:111;state.economy.at(2).population_aggregate=static_cast<int32_t>(population+1);
+					state.victory_history->last_base_expansion_or_advice_turn[1]=raze ? 2:777;state.victory_history->last_base_expansion_or_advice_turn[2]=raze ? 2:888;
+                    state.retained_base_totals->at(1)=raze ? 1:10;state.retained_base_totals->at(2)=raze ? 2:20;
                     // HQ reference retains3 here despite only2 live defender
                     // Bases. Relocation must not derive a fresh count.
-                    state.economy.at(1).regional_base_counts->at(1)=1;state.economy.at(2).regional_base_counts->at(1)=scenario>=3 ? 3 : 2;
+                    state.economy.at(1).regional_base_counts->at(1)=raze ? 3:1;state.economy.at(2).regional_base_counts->at(1)=scenario>=3 ? 3 : 2;
                 });
                 auto knowledge=KnowledgeValue(true,true,128,64).CopyData();knowledge.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};
                 knowledge.units={{91,6,false},{92,6,false}};for(auto& tile:knowledge.tiles) {tile.explored_by=6;}
@@ -2320,7 +2322,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 for(size_t i=0;i<shared_details.size();++i) {shared_details[i]=detail_pattern[i%detail_pattern.size()];}
                 fixture.TerritoryTopology(game->GetMap()->GetTerritoryTopology()->WithLandmarkDetails(shared_details).Serialize());
                 fixture.Updates();const auto before=fixture.Snapshot();const auto next=Unit::GetNextId();const auto jsf=game->GetRandom()->GetStateString();
-                auto* survivor=&target->m_pops.at(19);auto* retained=survivor->Wrap(GSE_CALL);auto* retired=target->m_pops.at(18+population).Wrap(GSE_CALL);
+                auto* survivor=&target->m_pops.at(19);auto* base_wrapper=target->Wrap(GSE_CALL);auto* retained=survivor->Wrap(GSE_CALL);auto* retired=target->m_pops.at(18+population).Wrap(GSE_CALL);
                 if(scenario==2) {
                     game->GetMap()->GetTile(18,16)->terraforming=TERRAFORMING_MIRROR;
                     const auto rejected=fixture.Snapshot();
@@ -2343,7 +2345,40 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 if(paid && scenario!=7) {bases[1]->m_facilities.emplace("capture-hq",bm->GetFacilityDef("capture-hq"));}
                 foreign_record=Base::Serialize(bases[1]).ToString();
                 if(paid) {bases[1]->m_facilities.erase("capture-hq");}
-                fixture.MoveEvent(GSE_CALL,actor,target->GetTile());
+                if(mode==17) {
+                    bool notified=false;
+                    const auto handler=bm->On(GSE_CALL,"base_despawn",NATIVE_CALL(&){
+                        if(bm->GetBase(702) || actor->GetTile()!=game->GetMap()->GetTile(20,16) || remote->Conventional().home_base_id!=703) {
+                            throw std::runtime_error("raze notification observed a partial commit");
+                        }notified=true;throw std::runtime_error("expected postcommit notification failure");return VALUE(value::Undefined);
+                    }));
+                    const bool rejected=Rejects([&]{bm->ApplySmacCapture(GSE_CALL,bm->PrepareSmacCapture(actor,target->GetTile(),0));});
+                    bm->Off(GSE_CALL,"base_despawn",handler);
+                    GT_ASSERT(rejected && notified,"raze did not exercise the postcommit notification boundary");
+                } else {fixture.MoveEvent(GSE_CALL,actor,target->GetTile());}
+                if(raze) {
+                    GT_ASSERT(!bm->GetBase(702) && game->GetMap()->GetTile(20,16)->base==nullptr && !static_cast<value::Object*>(base_wrapper)->wrapobj
+                        && retained->type==VT_UNDEFINED && um->GetUnit(91)==actor && actor->GetTile()==game->GetMap()->GetTile(20,16)
+                        && actor->Conventional().spent==3 && remote->Conventional().home_base_id==703 && um->GetUnits().size()==2,
+                        "size-one capture failed removal, retirement, movement or home repair");
+                    GT_ASSERT((bm->GetBaseRecordOrder()==std::vector<size_t>{701,703}) && Base::Serialize(own).ToString()==own_record
+                        && Base::Serialize(bases[1]).ToString()==foreign_record && fixture.GameplayRandom()==SmacGameplayRandomState(3,3)
+                        && game->GetRandom()->GetStateString()==jsf && Unit::GetNextId()==next,"raze changed survivor records, order, identities or random streams");
+                    const auto cells=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                    GT_ASSERT((cells.occupancy->At({20,16})==map::SmacOccupancyCache::Cell{1,2}) && cells.bases.end()==std::find_if(cells.bases.begin(),cells.bases.end(),[](const auto& b){return b.id==702;}),
+                        "raze retained Base presence or observer memory");
+                    bool exact=false;fixture.ResourceState([&](auto& state){exact=state.economy.at(1).credits==166 && state.economy.at(2).credits==134
+                        && state.economy.at(1).population_aggregate==1 && state.economy.at(2).population_aggregate==2
+                        && state.retained_base_totals->at(1)==1 && state.retained_base_totals->at(2)==1
+                        && state.economy.at(1).regional_base_counts->at(1)==3 && state.economy.at(2).regional_base_counts->at(1)==2
+                        && state.victory_history->last_base_expansion_or_advice_turn[1]==2 && state.victory_history->last_base_expansion_or_advice_turn[2]==2
+                        && state.hostility.owners.at(1).directions[2].paired_a==2 && state.hostility.owners.at(1).directions[2].paired_b==2;});
+                    GT_ASSERT(exact,"size-one razing changed pre-loss loot, retained population or Base counts");
+                    size_t removed=0;for(const auto& request:fixture.Updates()) {
+                        GT_ASSERT(request.type!=game::FrontendRequest::FR_BASE_SELECT,"raze opened a removed Base screen");
+                        if(request.type==game::FrontendRequest::FR_BASE_DESPAWN && request.data.base_despawn.base_id==702) {++removed;}
+                    }GT_ASSERT(removed==1,"raze lost or duplicated frontend removal");saved=fixture.Snapshot();GT_OK();
+                }
                 const auto occupancy=game->GetMap()->GetSmacWorkerKnowledge()->CopyData().occupancy;
                 GT_ASSERT((occupancy->At({19,15})==map::SmacOccupancyCache::Cell{1,0}
                     && occupancy->At({20,16})==map::SmacOccupancyCache::Cell{1,3}
@@ -2375,7 +2410,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 }
                 bool exact=false;fixture.ResourceState([&](auto& state) {
                     const auto& a=state.hostility.owners.at(1);const auto& d=state.hostility.owners.at(2);
-                    exact=state.economy.at(1).credits==(paid ? 820 : population==3 ? 220 : 200) && state.economy.at(2).credits==(paid ? 0 : population==3 ? 80 : 100) && state.economy.at(1).population_aggregate==111
+                    exact=state.economy.at(1).credits==100+static_cast<int32_t>((paid ? 1200:200)*population/(population+2)) && state.economy.at(2).credits==(paid ? 0:200-static_cast<int32_t>(200*population/(population+2))) && state.economy.at(1).population_aggregate==111
                         && state.economy.at(2).population_aggregate==static_cast<int32_t>(population+1) && state.economy.at(1).regional_base_counts->at(1)==1
                         && state.economy.at(2).regional_base_counts->at(1)==(scenario>=3 ? 3 : 2) && a.directions[2].primary==0x8000a118u && d.directions[1].primary==0x8000a118u
                         && a.directions[2].paired_a==population*2 && a.directions[2].paired_b==population*2 && d.directions[1].paired_a==0 && d.losses[2]==0;
@@ -2399,6 +2434,12 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true);restored.BasePresentationRoles(names);
                 const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
                     restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(702);
+                    if(raze) {
+                        GT_ASSERT(!base && game->GetBM()->GetBase(703) && game->GetUM()->GetUnit(92)->Conventional().home_base_id==703
+                            && game->GetUM()->GetUnit(91)->GetTile()==game->GetMap()->GetTile(20,16) && restored.GameplayRandom()==SmacGameplayRandomState(3,3)
+                            && Base::Serialize(game->GetBM()->GetBase(701)).ToString()==own_record && Base::Serialize(game->GetBM()->GetBase(703)).ToString()==foreign_record,
+                            "actual Start replayed razing or lost survivor/home/RNG state");GT_OK();
+                    }
                     if(with_native) {std::string factory;restored.ResourceState([&](auto& state){factory=state.native_factory->Serialize().ToString();});
                         GT_ASSERT(game->GetUM()->GetUnits().size()==3 && Unit::Serialize(game->GetUM()->GetUnit(native_id)).ToString()==native_wire && factory==native_factory,"Captured world Start lost native identity or factory authority");}
                     GT_ASSERT(*game->GetMap()->GetTerritoryTopology()->LandmarkDetails()==shared_details,"actual captured world Start lost shared bytes");

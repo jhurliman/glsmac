@@ -90,7 +90,14 @@ public:
 
 	void Update( const backend::map::tile::Tile& tile, const backend::map::tile::TileState& ts );
 
+    void SetNativeProjectorHeight(std::optional<int> height);
+
 private:
+    void ApplyNativeProjectorHeight();
+    void UpdateObjectPositions();
+    std::optional<int> m_native_projector_height;
+    types::Vec3 m_canonical_coords{};
+    std::optional<types::Vec3> m_canonical_name_anchor;
 
 	struct {
 		unit::Unit* currently_rendered_unit = nullptr;

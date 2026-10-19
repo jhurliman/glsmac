@@ -28,7 +28,7 @@ namespace game::native_terrain {struct World;}
 #include "ui/Types.h"
 
 namespace scene::actor {class Sound;class Mesh;}
-namespace game::frontend::native_terrain {struct Source;}
+namespace game::frontend::native_terrain {struct Source;struct Session;}
 
 // TODO: remove those
 #include "game/backend/map/tile/TileState.h"
@@ -292,12 +292,14 @@ private:
 	void Deinitialize();
     void UpdateNativeTerrain();
     void ClearNativeTerrain();
+    void RestoreNativeTerrainProjection();
     void UpdateNativeTerrainSpriteVisibility(const std::array<bool,3200>* covered,const std::array<bool,3200>* landmarks=nullptr,const std::array<bool,3200>* resources=nullptr);
     std::unordered_map<size_t,std::pair<std::string,types::Vec3>> m_native_legacy_instances;
     std::unordered_set<size_t> m_native_hidden_instances;
     bool m_native_inspector=false,m_native_snapshot_dirty=false,m_native_frame_dirty=false;
     std::unique_ptr<::game::native_terrain::World> m_native_world;
     std::shared_ptr<const native_terrain::Source> m_native_source;
+    std::shared_ptr<native_terrain::Session> m_native_view;
     scene::actor::Mesh* m_native_actor=nullptr;
     types::texture::Texture* m_native_texture=nullptr;
 

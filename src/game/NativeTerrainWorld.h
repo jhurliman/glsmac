@@ -22,12 +22,12 @@ struct Tile {
     uint32_t landmarks=0;
     uint8_t region=0;
     int8_t owner=-1;
-    bool ordinary=false,deformed=false;
+    bool ordinary=false,deformed=false,material_admitted=false;
     std::optional<std::array<int,5>> heights,lighting;
 };
 struct World {
     static constexpr int WIDTH=80,HEIGHT=80;
-    bool horizontal_wrap=true;
+    bool horizontal_wrap=true,retained_geometry=false;
     int viewer=0;
     int32_t resource_pattern=0;
     bool automatic_land_resources=false;

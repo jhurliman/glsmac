@@ -1,6 +1,7 @@
 #include "TerrainRenderUpdate.h"
 #include "game/backend/map/SmacLandmarkGeometry.h"
 #include "game/frontend/NativeTerrainRenderer.h"
+#include "game/frontend/NativeTerrainSession.h"
 #include "fixtures/NativeTerrainView.h"
 #include "Mesh.h"
 #include "scene/Camera.h"
@@ -144,8 +145,19 @@ public:
         ts->smac_projector_height.reset();shown.Update(*t,*ts);
         const bool legacy=!shown.GetRenderData().name_anchor && ts->GetProjectorCoords(tile::LAYER_LAND)==center &&
             shown.GetRenderData().coords==center && game::backend::MapObject(&world,t).GetRenderCoords()==center.InvertY();
+        shown.SetNativeProjectorHeight(-19);
+        const auto overridden=shown.GetRenderData().coords;
+        const bool view_anchor=close_coord(overridden,types::Vec3(center.x,center.y,2.0f-19.0f/48)) &&
+            shown.GetRenderData().name_anchor==std::optional<types::Vec3>(overridden) && shown.GetRenderData().selection_coords.center==center;
+        // Backend refresh replaces canonical metadata, but does not destroy
+        // the active view-owned projector. Clearing restores the latest input.
+        ts->smac_projector_height=7;shown.Update(*t,*ts);
+        const bool retained=shown.GetRenderData().coords==overridden;
+        shown.SetNativeProjectorHeight(std::nullopt);
+        const bool restored=shown.GetRenderData().coords==ts->GetProjectorCoords(tile::LAYER_LAND) &&
+            shown.GetRenderData().name_anchor==std::optional<types::Vec3>(ts->GetProjectorCoords(tile::LAYER_LAND));
         world.m_meshes.terrain=nullptr;world.m_meshes.terrain_data=nullptr;
-        return result && projected && legacy;
+        return result && projected && legacy && view_anchor && retained && restored;
     }
     bool CheckSpriteAnchors(bool native) {
         auto* t=world.GetTile(2,2);auto* ts=world.GetTileState(t);
@@ -308,6 +320,20 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
     task->AddTest("SMAC native terrain snapshots current items and outlives its backend map",GT(){
         TerrainRenderFixture fixture;
         GT_ASSERT(fixture.CheckNativeTerrainSnapshot(),"Native terrain snapshot borrowed, went stale or admitted unsupported map");GT_OK();
+    });
+    task->AddTest("SMAC native terrain view session requires retained authority and retires changed geometry",GT(){
+        namespace native=game::frontend::native_terrain;
+        game::native_terrain::World world;for(auto& cell:world.tiles) {cell.band=4;}
+        GT_ASSERT(!native::Session::Admits(world),"Unauthenticated source entered view geometry");
+        world.retained_geometry=true;native::Session session(world);
+        GT_ASSERT(native::Session::Admits(world) && session.Matches(world),"Ordinary retained map rejected");
+        world.tiles[0].items=0x10;GT_ASSERT(session.Matches(world),"Appearance change retired unchanged height cache");
+        world.tiles[0].band=5;GT_ASSERT(!session.Matches(world),"Changed altitude reused stale cache");
+        world.tiles[0].band=4;world.tiles[0].landmarks=0xff000001u;
+        GT_ASSERT(native::Session::Admits(world) && !session.Matches(world),"Measured negative profile rejected or reused stale cache");
+        world.tiles[0].landmarks=0xc0000001u;GT_ASSERT(!native::Session::Admits(world),"Unmeasured negative profile admitted");
+        world.tiles[0].landmarks=0;world.horizontal_wrap=false;
+        GT_ASSERT(!native::Session::Admits(world),"Unmeasured flat view cache admitted");GT_OK();
     });
     task->AddTest("SMAC native terrain view preserves1597 original ordered submissions",GT(){
         namespace native=game::frontend::native_terrain;

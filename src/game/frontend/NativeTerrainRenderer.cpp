@@ -149,7 +149,8 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             placement.flat_center[0]<-4096 || placement.flat_center[0]>4096 ||
             placement.flat_center[1]<-4096 || placement.flat_center[1]>4096) {throw std::invalid_argument("Invalid native terrain placement");}
         const auto& tile=*At(world,x,y);
-        if(!tile.ordinary) {continue;}
+        const bool admitted=submission && world.retained_geometry?tile.material_admitted:tile.ordinary;
+        if(!admitted) {continue;}
         const auto center=submission?submission->flat_center:placement.flat_center;
         const auto fx=center[0]+offset[0],fy=center[1]+offset[1];
         const auto resources=tile.resource_ready && !source.ter1.pixels.empty()

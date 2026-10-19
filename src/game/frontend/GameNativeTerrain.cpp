@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "SmacResourceArt.h"
 #include "NativeTerrainRenderer.h"
+#include "NativeTerrainSession.h"
 #include "SmacDevelopedOverlay.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "game/frontend/sprite/InstancedSprite.h"
@@ -48,7 +49,12 @@ void Game::UpdateNativeTerrainSpriteVisibility(const std::array<bool,3200>* cove
     }
     m_native_hidden_instances=std::move(hidden);
 }
+void Game::RestoreNativeTerrainProjection() {
+    if(m_native_view && m_tm) {for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {m_tm->GetTile(x,y)->SetNativeProjectorHeight(std::nullopt);}}}
+    m_native_view.reset();
+}
 void Game::ClearNativeTerrain() {
+    RestoreNativeTerrainProjection();
     UpdateNativeTerrainSpriteVisibility(nullptr);m_native_legacy_instances.clear();
     if(m_native_actor) {m_world_scene->RemoveActor(m_native_actor);DELETE(m_native_actor);m_native_actor=nullptr;}
     if(m_native_texture) {DELETE(m_native_texture);m_native_texture=nullptr;}
@@ -65,6 +71,10 @@ void Game::UpdateNativeTerrain() {
                 // Steal only the owned value. DestroyResponse handles cancelled or
                 // obsolete worlds without leaving borrowed backend map pointers.
                 m_native_world.reset(response.data.native_terrain);
+                if(m_native_view) {
+                    if(!m_native_world || !m_native_view->Matches(*m_native_world)) {RestoreNativeTerrainProjection();}
+                    else {m_native_view->frame.reset();m_native_view->layout.reset();}
+                }
                 response.data.native_terrain=nullptr;m_native_frame_dirty=true;
             }
             m_game->MT_DestroyResponse(response);
@@ -76,7 +86,7 @@ void Game::UpdateNativeTerrain() {
     }
     const bool admitted=m_native_world && m_viewport.window_width==1024 && m_viewport.window_height==768
         && std::abs(m_camera_position.z-0.125f)<0.000001f;
-    if(!admitted) {if(m_native_actor) {m_native_actor->Hide();}UpdateNativeTerrainSpriteVisibility(nullptr);return;}
+    if(!admitted) {RestoreNativeTerrainProjection();if(m_native_actor) {m_native_actor->Hide();}UpdateNativeTerrainSpriteVisibility(nullptr);return;}
     if(!m_native_frame_dirty) {return;}
     if(!m_native_source || m_native_source->faction_files!=m_native_world->faction_files) {m_native_source=g_engine->GetTextureLoader()->GetSmacTerrainSource(m_native_world->faction_files);}
     const auto& matrix=m_camera->GetMatrix().m;
@@ -106,7 +116,25 @@ void Game::UpdateNativeTerrain() {
     // The opt-in inspector presents resources/sites as well as improvements.
     // Keep the raw selector gate explicit; this is a presentation profile,
     // not a claim about unimplemented original display-option persistence.
-    auto frame=native_terrain::Render(*m_native_world,*m_native_source,placements,g_engine->GetConfig()->GetNativeTerrainBaseLow16(),{{0,0}},0x10621);
+    native_terrain::Frame frame;
+    if(native_terrain::Session::Admits(*m_native_world)) {
+        if(!m_native_view) {m_native_view=std::make_shared<native_terrain::Session>(*m_native_world);}
+        const bool incremental=m_native_view->frame && m_native_view->layout &&
+            bool(native_terrain::HorizontalPan(*m_native_view->layout,layout));
+        const auto plan=m_native_view->geometry.Prepare(layout,0,25,incremental);
+        frame=native_terrain::RenderPrepared(*m_native_world,*m_native_source,plan,
+            g_engine->GetConfig()->GetNativeTerrainBaseLow16(),0x10621,0,incremental?&*m_native_view->frame:nullptr);
+        // The object pass already performed its own projector query. Reuse
+        // that result for bodies, badges and names without touching caches.
+        for(const auto& object:plan.objects) {
+            const int height=(object.tile[1]-layout.first[1]-1)*24-object.projector[1];
+            m_tm->GetTile(object.tile[0],object.tile[1])->SetNativeProjectorHeight(height);
+        }
+        m_native_view->frame=frame;m_native_view->layout=layout;
+    } else {
+        RestoreNativeTerrainProjection();
+        frame=native_terrain::Render(*m_native_world,*m_native_source,placements,g_engine->GetConfig()->GetNativeTerrainBaseLow16(),{{0,0}},0x10621);
+    }
     if(!m_native_texture) {
         NEW(m_native_texture,types::texture::Texture,"NativeTerrainViewport",1024,511);
         NEWV(quad,types::mesh::Rectangle,(types::Vec2<float>{-1,1}),(types::Vec2<float>{1,1-2*511.0f/768}),0.0f);

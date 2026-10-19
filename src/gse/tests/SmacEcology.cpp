@@ -422,7 +422,8 @@ void AddSmacEcologyTests(task::gsetests::GSETests* task) {
         types::Buffer unavailable(v33);
         GT_ASSERT(Rejects([&]{world::ValidateHeader(unavailable,host);}), "Legacy world invented current ecology authority");
         auto old = absent.Serialize(); old.ReadInt(); types::Buffer version; version.WriteInt(19); types::Buffer marker; marker.WriteBool(false);
-        const auto v19 = version.ToString() + old.ToString().substr(old.lenr,old.lenw-old.lenr-marker.lenw);
+		// V19 predates both optional ecology and summary-label tails.
+		const auto v19 = version.ToString() + old.ToString().substr(old.lenr,old.lenw-old.lenr-2*marker.lenw);
         GlobalSettings legacy; legacy.Deserialize(types::Buffer(v19));
         GT_ASSERT(!legacy.GetSmacEcologyRules(), "V19 restore invented ecology authority");
         host.ResetRuleset(); GT_ASSERT(!host.GetSmacEcologyRules(), "Reset retained old ecology rules");

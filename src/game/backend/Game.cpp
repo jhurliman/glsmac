@@ -773,6 +773,14 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_smac_faction_summary",
+			NATIVE_CALL(this) {
+				N_EXPECT_ARGS(0);
+				try {return CopyLocalFactionSummary(GSE_CALL);}
+				catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+			})
+		},
+		{
 			"get_turn",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );

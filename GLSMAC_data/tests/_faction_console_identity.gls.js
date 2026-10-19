@@ -33,8 +33,15 @@ return (game) => {
 		for (let row = 0; row < 5; row++) {
 			if (view.labels[row].left != 5 || view.labels[row].top + view.labels[row].measure().height != 14 + row * 13) { throw TestError('Faction text baseline/spacing differs'); }
 		}
+		const summary = game.get_smac_faction_summary();
+		let expected_values = ['unavailable', 'unavailable', 'unavailable'];
+		if (#is_defined(summary)) {
+			if (#is_defined(summary.integrity)) { expected_values[0] = summary.integrity; }
+			if (#is_defined(summary.might)) { expected_values[1] = summary.might; }
+			if (#is_defined(summary.council_votes)) { expected_values[2] = #to_string(summary.council_votes); }
+		}
 		for (let value_index = 0; value_index < 3; value_index++) {
-			if (view.values[value_index].text != 'unavailable') { throw TestError('Console invented an unimplemented rating/vote count'); }
+			if (view.values[value_index].text != expected_values[value_index]) { throw TestError('Console lost real summary or invented missing authority'); }
 		}
 		if (view.values[0].left != 53 || view.values[1].left != 40) { throw TestError('Inline values ignored measured prefix advances'); }
 		if (view.heading.text != 'Faction Dominance' || view.heading.top + view.heading.measure().height != 14) { throw TestError('Dominance heading has wrong baseline'); }

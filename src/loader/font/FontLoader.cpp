@@ -39,6 +39,9 @@ types::Font* FontLoader::LoadCustomFont( const std::string& name, const unsigned
 	if ( it == m_fonts.end() ) {
 		std::vector< unsigned char > data = {};
 		auto path = TryGetCustomFilename( name );
+		// The original CD distribution names the regular face arialr.ttf.
+		// Prefer that installed face to system lookup or the narrow fallback.
+		if ( path.empty() && name == "arial.ttf" ) { path = TryGetCustomFilename( "arialr.ttf" ); }
 		if ( path.empty() && ( name == "arialbd.ttf" || name == "arial.ttf" ) ) {
 			const bool bold = name == "arialbd.ttf";
 			std::vector< std::string > candidates;

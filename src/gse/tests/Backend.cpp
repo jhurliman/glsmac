@@ -2465,6 +2465,27 @@ public:
 	}
 
 
+	std::string CheckInstalledRegularFont() {
+		class Fonts final : public loader::font::FontLoader {
+		public: std::string loaded;
+		protected:
+			types::Font* LoadFontImpl(const std::string& name,const std::vector<unsigned char>&,unsigned char,loader::font::RasterMode) override {
+				loaded=name;return new types::Font(name);
+			}
+		} fonts;
+		resource::ResourceManager resources("");
+		const std::string legacy="resource/font/terminus/TerminusTTF-4.49.3-minified.ttf";
+		resources.m_custom_resource_paths["arial.ttf"]="";
+		resources.m_custom_resource_paths["arialr.ttf"]=legacy;
+		resources.m_custom_resource_paths["arialnb.ttf"]="CMakeLists.txt";
+		auto* previous=g_engine->m_resource_manager;
+		{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;}
+		util::FinallyGuard restore([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=previous;});
+		fonts.LoadCustomFont("arial.ttf",12,loader::font::RasterMode::MONOCHROME);
+		GT_ASSERT(fonts.loaded==legacy,"regular font ignored installed legacy Arial before system/narrow fallback");
+		GT_OK();
+	}
+
 	std::string CheckFrontendBaseOwnership() {
 		class Textures final : public loader::texture::TextureLoader {
 		public: types::texture::Texture bitmap{512,512};
@@ -10679,6 +10700,9 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 				"font byte measurement differs at "+std::to_string(value));
 		}
 		GT_ASSERT(font.GetTextWidth("")==0 && font.GetTextHeight("")==0,"empty text measurement changed");GT_OK();
+	});
+	task->AddTest("regular Arial loader prefers installed legacy face",GT(){
+		BackendFixture fixture;return fixture.CheckInstalledRegularFont();
 	});
 	task->AddTest("frontend Base ownership refresh retains identity rendering and owner navigation",GT(){
 		return BackendFixture::WithControllerViewport([] {BackendFixture fixture;return fixture.CheckFrontendBaseOwnership();});

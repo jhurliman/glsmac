@@ -1,5 +1,6 @@
 #include "Backend.h"
 #include "util/String.h"
+#include "loader/txt/FactionTXTLoader.h"
 #include "SmacFirstBase.h"
 #include "game/backend/WorldSnapshotWorkerKnowledge.h"
 #include "game/backend/WorldSnapshotTerritory.h"
@@ -8188,10 +8189,13 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 				{ "add", wrapped->Get( "add" ) },
 				{ "import_display_identity", NATIVE_CALL() {
 					N_EXPECT_ARGS(2);N_GETVALUE(filename,0,String);N_GETVALUE(section,1,String);
+					// Real configure/add receives parsed custom text with an empty
+					// bonus record and harmless formatting blanks after later rows.
+					const auto identity=loader::txt::FactionTXTLoader::ParseDisplayIdentity("#"+section+"\n"+filename+", group, short, M, 1, "+section+", M, 0, 0, 1, 0, 0\n\n\nValues, Knowledge, RESEARCH\n\nPolitics, Fundamentalist, nil\n\nShort, Abbr\n\nAssistant, Surname, Base\n\nCommander, bright, dark, talent, vice\n",section);
 					return new value::Object(GSE_CALL,{
-						{"faction_name",VALUE(value::String,,filename)},
-						{"leader_title",VALUE(value::String,,"Commander")},
-						{"leader_name",VALUE(value::String,,section)}
+						{"faction_name",VALUE(value::String,,identity.faction_name)},
+						{"leader_title",VALUE(value::String,,identity.leader_title)},
+						{"leader_name",VALUE(value::String,,identity.leader_name)}
 					});
 				}) },
 				{ "import_colors", NATIVE_CALL() {

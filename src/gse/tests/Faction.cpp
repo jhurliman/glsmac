@@ -95,6 +95,11 @@ void AddFactionTests( task::gsetests::GSETests* task ) {
 		const std::string source="; synthetic records around installed University identity fields\n#UNIV\nUniversity of Planet, The Scientist, University, M, 1, Zakharov, M, 0, 0, 1, 0, 0,\n\nValues, Knowledge, RESEARCH\nPolitics, Fundamentalist, nil\nUniversity, Univ.\nAssistant, Surname, Base\nProvost, brilliant, unethical, talented, reckless\n#BASES\nOne\n";
 		const auto identity=FactionTXTLoader::ParseDisplayIdentity(source,"UNIV");
 		GT_ASSERT(identity.faction_name=="University of Planet" && identity.leader_title=="Provost" && identity.leader_name=="Zakharov","source display fields were confused with priorities or controller name");
+		for (const std::string bonus : {"", "TECH, Biogen"}) {
+			const auto formatted = std::string("#UNIV\n\nUniversity of Planet, The Scientist, University, M, 1, Zakharov, M, 0, 0, 1, 0, 0,\n") + bonus
+				+ "\n\nValues, Knowledge, RESEARCH\n \t\nPolitics, Fundamentalist, nil\n\nUniversity, Univ.\n; comment\n\nAssistant, Surname, Base\n\nProvost, brilliant, unethical, talented, reckless\n";
+			GT_ASSERT(FactionTXTLoader::ParseDisplayIdentity(formatted,"UNIV")==identity,"formatting blanks shifted faction identity records or empty bonus row");
+		}
 		for(const auto& bad:{source+source, std::string("#UNIV\nIncomplete\n"),std::string("N\0UL",4)+source}) {
 			bool rejected=false;try{FactionTXTLoader::ParseDisplayIdentity(bad,"UNIV");}catch(const std::exception&){rejected=true;}
 			GT_ASSERT(rejected,"malformed display identity accepted");

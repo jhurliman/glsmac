@@ -88,7 +88,10 @@ game::backend::faction::DisplayIdentity FactionTXTLoader::ParseDisplayIdentity(c
 			found = found || inside;
 			continue;
 		}
-		if (inside && (!rows.empty() || !line.empty()) && rows.size() < 7) { rows.push_back(Field(line.substr(0, line.find(';')))); }
+		const auto record = Field(line.substr(0, line.find(';')));
+		// Only the row immediately after the header may be an empty bonus
+		// record. Later blanks are formatting, as in the ordinary TXT reader.
+		if (inside && rows.size() < 7 && (!record.empty() || rows.size() == 1)) { rows.push_back(record); }
 	}
 	if (!found || rows.size() < 7) { throw std::invalid_argument("Missing faction display identity records"); }
 	auto header = Fields(rows[0]);

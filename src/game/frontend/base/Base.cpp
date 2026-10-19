@@ -155,13 +155,17 @@ void Base::Show() {
 			}
 		);
 
-		m_render.name_sprite->ShowAt(
+        if ( m_bm->m_smac_population ) {
+            const auto& anchor=m_tile->GetRenderData().name_anchor;
+            m_render.name_sprite->ShowAt(anchor?anchor->InvertY():c);
+        }
+		else { m_render.name_sprite->ShowAt(
 			{
 				m_render.coords.x,
 				m_render.coords.y - 0.25f,
 				m_render.coords.z - 0.25f
 			}
-		);
+		); }
 
 		ShowBadge();
 

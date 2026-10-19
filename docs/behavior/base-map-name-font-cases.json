@@ -1,0 +1,819 @@
+{
+  "research_id": "stock-smac-base-map-name-font-20261019",
+  "scope": "Seven original Base-name caller prefixes through centered draw return,14 actual whole-string TextOutA calls; current Windows Arial/GDI metrics and isolated indexed raster, no historical/live-framebuffer claim.",
+  "screen": [
+    1024,
+    768
+  ],
+  "map_bitmap": [
+    1024,
+    511
+  ],
+  "world": [
+    80,
+    40
+  ],
+  "camera": [
+    8,
+    8
+  ],
+  "font": {
+    "face": "Arial",
+    "logical_height": -12,
+    "requested_weight": 0,
+    "resolved_weight": 400,
+    "quality": 0,
+    "out_precision": 7,
+    "charset": 0,
+    "background_mode": 1,
+    "alignment": 24
+  },
+  "character_metrics": {
+    " ": {
+      "A": 0,
+      "B": 1,
+      "C": 2,
+      "advance": 3
+    },
+    "A": {
+      "A": 0,
+      "B": 7,
+      "C": 0,
+      "advance": 7
+    },
+    "C": {
+      "A": 1,
+      "B": 7,
+      "C": 1,
+      "advance": 9
+    },
+    "H": {
+      "A": 1,
+      "B": 7,
+      "C": 1,
+      "advance": 9
+    },
+    "N": {
+      "A": 1,
+      "B": 7,
+      "C": 1,
+      "advance": 9
+    },
+    "T": {
+      "A": 0,
+      "B": 7,
+      "C": 0,
+      "advance": 7
+    },
+    "V": {
+      "A": 0,
+      "B": 7,
+      "C": 0,
+      "advance": 7
+    },
+    "W": {
+      "A": 0,
+      "B": 11,
+      "C": 0,
+      "advance": 11
+    },
+    "a": {
+      "A": 1,
+      "B": 5,
+      "C": 1,
+      "advance": 7
+    },
+    "c": {
+      "A": 1,
+      "B": 4,
+      "C": 1,
+      "advance": 6
+    },
+    "d": {
+      "A": 1,
+      "B": 5,
+      "C": 1,
+      "advance": 7
+    },
+    "e": {
+      "A": 1,
+      "B": 5,
+      "C": 1,
+      "advance": 7
+    },
+    "f": {
+      "A": 0,
+      "B": 4,
+      "C": -1,
+      "advance": 3
+    },
+    "g": {
+      "A": 1,
+      "B": 5,
+      "C": 1,
+      "advance": 7
+    },
+    "h": {
+      "A": 1,
+      "B": 5,
+      "C": 1,
+      "advance": 7
+    },
+    "i": {
+      "A": 1,
+      "B": 1,
+      "C": 1,
+      "advance": 3
+    },
+    "j": {
+      "A": -1,
+      "B": 3,
+      "C": 1,
+      "advance": 3
+    },
+    "l": {
+      "A": 1,
+      "B": 1,
+      "C": 1,
+      "advance": 3
+    },
+    "n": {
+      "A": 1,
+      "B": 5,
+      "C": 1,
+      "advance": 7
+    },
+    "o": {
+      "A": 1,
+      "B": 5,
+      "C": 1,
+      "advance": 7
+    },
+    "s": {
+      "A": 1,
+      "B": 5,
+      "C": 1,
+      "advance": 7
+    },
+    "t": {
+      "A": 0,
+      "B": 3,
+      "C": 0,
+      "advance": 3
+    },
+    "u": {
+      "A": 1,
+      "B": 5,
+      "C": 1,
+      "advance": 7
+    },
+    "w": {
+      "A": 0,
+      "B": 9,
+      "C": 0,
+      "advance": 9
+    }
+  },
+  "available_host_kerning": [
+    {
+      "pair": "AV",
+      "delta": -1
+    },
+    {
+      "pair": "To",
+      "delta": -1
+    },
+    {
+      "pair": "Wa",
+      "delta": 0
+    }
+  ],
+  "faction_palette_metadata": {
+    "NATIVE": {
+      "foreground": 249,
+      "shadow": 199,
+      "foreground_rgb": [
+        255,
+        0,
+        0
+      ],
+      "shadow_rgb": [
+        68,
+        32,
+        12
+      ]
+    },
+    "GAIANS": {
+      "foreground": 242,
+      "shadow": 37,
+      "foreground_rgb": [
+        16,
+        228,
+        0
+      ],
+      "shadow_rgb": [
+        21,
+        41,
+        24
+      ]
+    },
+    "HIVE": {
+      "foreground": 218,
+      "shadow": 198,
+      "foreground_rgb": [
+        0,
+        97,
+        235
+      ],
+      "shadow_rgb": [
+        12,
+        12,
+        16
+      ]
+    },
+    "UNIV": {
+      "foreground": 155,
+      "shadow": 83,
+      "foreground_rgb": [
+        216,
+        224,
+        235
+      ],
+      "shadow_rgb": [
+        27,
+        33,
+        31
+      ]
+    },
+    "MORGAN": {
+      "foreground": 251,
+      "shadow": 135,
+      "foreground_rgb": [
+        255,
+        255,
+        0
+      ],
+      "shadow_rgb": [
+        62,
+        41,
+        13
+      ]
+    },
+    "SPARTANS": {
+      "foreground": 75,
+      "shadow": 65,
+      "foreground_rgb": [
+        137,
+        166,
+        166
+      ],
+      "shadow_rgb": [
+        0,
+        0,
+        0
+      ]
+    },
+    "BELIEVE": {
+      "foreground": 98,
+      "shadow": 135,
+      "foreground_rgb": [
+        224,
+        156,
+        28
+      ],
+      "shadow_rgb": [
+        62,
+        41,
+        13
+      ]
+    },
+    "PEACE": {
+      "foreground": 235,
+      "shadow": 192,
+      "foreground_rgb": [
+        164,
+        176,
+        232
+      ],
+      "shadow_rgb": [
+        14,
+        32,
+        59
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "New_Austin",
+      "input": {
+        "name": "New Austin",
+        "owner": 3,
+        "base_coordinate": [
+          8,
+          8
+        ],
+        "zoom": 0
+      },
+      "expected": {
+        "width": 62,
+        "character_advances": [
+          9,
+          7,
+          9,
+          3,
+          7,
+          7,
+          7,
+          3,
+          3,
+          7
+        ],
+        "cumulative_advances": [
+          9,
+          16,
+          25,
+          28,
+          35,
+          42,
+          49,
+          52,
+          55,
+          62
+        ],
+        "draw_order": [
+          {
+            "role": "shadow",
+            "text": "New Austin",
+            "x": 546,
+            "baseline_y": 268,
+            "palette_index": 83,
+            "rgb": [
+              27,
+              33,
+              31
+            ]
+          },
+          {
+            "role": "foreground",
+            "text": "New Austin",
+            "x": 545,
+            "baseline_y": 267,
+            "palette_index": 155,
+            "rgb": [
+              216,
+              224,
+              235
+            ]
+          }
+        ],
+        "raster_ink_bounds": [
+          546,
+          258,
+          607,
+          268
+        ],
+        "raster_palette_counts": {
+          "80": 786156,
+          "155": 152,
+          "83": 124
+        }
+      }
+    },
+    {
+      "id": "New_Chicago",
+      "input": {
+        "name": "New Chicago",
+        "owner": 3,
+        "base_coordinate": [
+          8,
+          10
+        ],
+        "zoom": 0
+      },
+      "expected": {
+        "width": 74,
+        "character_advances": [
+          9,
+          7,
+          9,
+          3,
+          9,
+          7,
+          3,
+          6,
+          7,
+          7,
+          7
+        ],
+        "cumulative_advances": [
+          9,
+          16,
+          25,
+          28,
+          37,
+          44,
+          47,
+          53,
+          60,
+          67,
+          74
+        ],
+        "draw_order": [
+          {
+            "role": "shadow",
+            "text": "New Chicago",
+            "x": 540,
+            "baseline_y": 316,
+            "palette_index": 83,
+            "rgb": [
+              27,
+              33,
+              31
+            ]
+          },
+          {
+            "role": "foreground",
+            "text": "New Chicago",
+            "x": 539,
+            "baseline_y": 315,
+            "palette_index": 155,
+            "rgb": [
+              216,
+              224,
+              235
+            ]
+          }
+        ],
+        "raster_ink_bounds": [
+          540,
+          306,
+          613,
+          318
+        ],
+        "raster_palette_counts": {
+          "80": 786111,
+          "155": 176,
+          "83": 145
+        }
+      }
+    },
+    {
+      "id": "Hilton_Head",
+      "input": {
+        "name": "Hilton Head",
+        "owner": 3,
+        "base_coordinate": [
+          8,
+          12
+        ],
+        "zoom": 0
+      },
+      "expected": {
+        "width": 65,
+        "character_advances": [
+          9,
+          3,
+          3,
+          3,
+          7,
+          7,
+          3,
+          9,
+          7,
+          7,
+          7
+        ],
+        "cumulative_advances": [
+          9,
+          12,
+          15,
+          18,
+          25,
+          32,
+          35,
+          44,
+          51,
+          58,
+          65
+        ],
+        "draw_order": [
+          {
+            "role": "shadow",
+            "text": "Hilton Head",
+            "x": 545,
+            "baseline_y": 364,
+            "palette_index": 83,
+            "rgb": [
+              27,
+              33,
+              31
+            ]
+          },
+          {
+            "role": "foreground",
+            "text": "Hilton Head",
+            "x": 544,
+            "baseline_y": 363,
+            "palette_index": 155,
+            "rgb": [
+              216,
+              224,
+              235
+            ]
+          }
+        ],
+        "raster_ink_bounds": [
+          545,
+          354,
+          609,
+          364
+        ],
+        "raster_palette_counts": {
+          "80": 786127,
+          "155": 163,
+          "83": 142
+        }
+      }
+    },
+    {
+      "id": "iiiWWW",
+      "input": {
+        "name": "iiiWWW",
+        "owner": 3,
+        "base_coordinate": [
+          8,
+          14
+        ],
+        "zoom": 0
+      },
+      "expected": {
+        "width": 42,
+        "character_advances": [
+          3,
+          3,
+          3,
+          11,
+          11,
+          11
+        ],
+        "cumulative_advances": [
+          3,
+          6,
+          9,
+          20,
+          31,
+          42
+        ],
+        "draw_order": [
+          {
+            "role": "shadow",
+            "text": "iiiWWW",
+            "x": 556,
+            "baseline_y": 412,
+            "palette_index": 83,
+            "rgb": [
+              27,
+              33,
+              31
+            ]
+          },
+          {
+            "role": "foreground",
+            "text": "iiiWWW",
+            "x": 555,
+            "baseline_y": 411,
+            "palette_index": 155,
+            "rgb": [
+              216,
+              224,
+              235
+            ]
+          }
+        ],
+        "raster_ink_bounds": [
+          556,
+          402,
+          598,
+          412
+        ],
+        "raster_palette_counts": {
+          "80": 786217,
+          "155": 117,
+          "83": 98
+        }
+      }
+    },
+    {
+      "id": "jifj",
+      "input": {
+        "name": "jifj",
+        "owner": 3,
+        "base_coordinate": [
+          8,
+          16
+        ],
+        "zoom": 0
+      },
+      "expected": {
+        "width": 12,
+        "character_advances": [
+          3,
+          3,
+          3,
+          3
+        ],
+        "cumulative_advances": [
+          3,
+          6,
+          9,
+          12
+        ],
+        "draw_order": [
+          {
+            "role": "shadow",
+            "text": "jifj",
+            "x": 571,
+            "baseline_y": 460,
+            "palette_index": 83,
+            "rgb": [
+              27,
+              33,
+              31
+            ]
+          },
+          {
+            "role": "foreground",
+            "text": "jifj",
+            "x": 570,
+            "baseline_y": 459,
+            "palette_index": 155,
+            "rgb": [
+              216,
+              224,
+              235
+            ]
+          }
+        ],
+        "raster_ink_bounds": [
+          570,
+          450,
+          582,
+          462
+        ],
+        "raster_palette_counts": {
+          "80": 786354,
+          "155": 40,
+          "83": 38
+        }
+      }
+    },
+    {
+      "id": "AV_To_Wa",
+      "input": {
+        "name": "AV To Wa",
+        "owner": 3,
+        "base_coordinate": [
+          8,
+          18
+        ],
+        "zoom": 0
+      },
+      "expected": {
+        "width": 52,
+        "character_advances": [
+          7,
+          7,
+          3,
+          7,
+          7,
+          3,
+          11,
+          7
+        ],
+        "cumulative_advances": [
+          7,
+          14,
+          17,
+          24,
+          31,
+          34,
+          45,
+          52
+        ],
+        "draw_order": [
+          {
+            "role": "shadow",
+            "text": "AV To Wa",
+            "x": 551,
+            "baseline_y": 508,
+            "palette_index": 83,
+            "rgb": [
+              27,
+              33,
+              31
+            ]
+          },
+          {
+            "role": "foreground",
+            "text": "AV To Wa",
+            "x": 550,
+            "baseline_y": 507,
+            "palette_index": 155,
+            "rgb": [
+              216,
+              224,
+              235
+            ]
+          }
+        ],
+        "raster_ink_bounds": [
+          550,
+          498,
+          602,
+          508
+        ],
+        "raster_palette_counts": {
+          "80": 786220,
+          "155": 116,
+          "83": 96
+        }
+      }
+    },
+    {
+      "id": "New_Austin_SPARTANS",
+      "input": {
+        "name": "New Austin",
+        "owner": 5,
+        "base_coordinate": [
+          8,
+          8
+        ],
+        "zoom": 0
+      },
+      "expected": {
+        "width": 62,
+        "character_advances": [
+          9,
+          7,
+          9,
+          3,
+          7,
+          7,
+          7,
+          3,
+          3,
+          7
+        ],
+        "cumulative_advances": [
+          9,
+          16,
+          25,
+          28,
+          35,
+          42,
+          49,
+          52,
+          55,
+          62
+        ],
+        "draw_order": [
+          {
+            "role": "shadow",
+            "text": "New Austin",
+            "x": 546,
+            "baseline_y": 268,
+            "palette_index": 65,
+            "rgb": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "foreground",
+            "text": "New Austin",
+            "x": 545,
+            "baseline_y": 267,
+            "palette_index": 75,
+            "rgb": [
+              137,
+              166,
+              166
+            ]
+          }
+        ],
+        "raster_ink_bounds": [
+          546,
+          258,
+          607,
+          268
+        ],
+        "raster_palette_counts": {
+          "80": 786156,
+          "75": 152,
+          "65": 124
+        }
+      }
+    }
+  ]
+}

@@ -22,12 +22,15 @@ class InstancedText {
 public:
 	InstancedText( const std::string& text, InstancedFont* font, const types::Color& color, const types::Color& shadow_color );
 	~InstancedText();
+	InstancedText(const InstancedText&) = delete;
+	InstancedText& operator=(const InstancedText&) = delete;
 
 	void ShowAt( const types::Vec3& coords );
 	void Hide();
 
 private:
 	const std::string m_text = "";
+	InstancedFont* m_font;
 	std::vector< sprite::InstancedSprite* > m_text_sprites = {};
 	std::vector< size_t > m_instance_ids = {};
 	std::vector< types::Vec2< float > > m_offsets = {};

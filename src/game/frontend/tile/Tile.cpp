@@ -277,7 +277,7 @@ const Tile::render_data_t& Tile::GetRenderData() const {
 void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::tile::TileState& ts ) {
 
 
-	backend::map::tile::tile_layer_type_t lt = ( tile.is_water_tile
+	const backend::map::tile::tile_layer_type_t lt = ( tile.is_water_tile
 		? backend::map::tile::LAYER_WATER
 		: backend::map::tile::LAYER_LAND
 	);
@@ -320,7 +320,7 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 	x( bottom );
 #undef x
 
-	if ( !tile.is_water_tile && ts.is_coastline_corner ) {
+	if ( !tile.is_water_tile && ts.is_coastline_corner && !ts.smac_projector_height ) {
 		if ( tile.W->is_water_tile ) {
 			selection_coords.left = ts.layers[ backend::map::tile::LAYER_WATER ].coords.left;
 		}
@@ -376,12 +376,12 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 
 	preview_meshes.reserve( layers.size() );
 	for ( auto i = 0 ; i < layers.size() ; i++ ) {
-		lt = layers[ i ];
+		const auto preview_layer = layers[ i ];
 
 		NEWV( mesh, types::mesh::Render, 5, 4 );
 		preview_meshes.push_back( mesh ); // reserved; cleanup owns it before mesh work
 
-		const auto& l = ts.layers[ lt ];
+		const auto& l = ts.layers[ preview_layer ];
 
 		auto tint = l.colors;
 
@@ -561,6 +561,8 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 	}
 
 	m_render_data.coords = layer.coords.center;
+    m_render_data.name_anchor=lt==backend::map::tile::LAYER_LAND && ts.smac_projector_height
+        ? std::optional<types::Vec3>(ts.GetProjectorCoords(lt)) : std::nullopt;
 	m_render_data.selection_coords = selection_coords;
 	// Widgets copy source meshes. Swapping publishes the complete new preview
 	// and leaves the old meshes with the same cleanup guard.

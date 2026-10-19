@@ -28,11 +28,12 @@ namespace text {
 
 class InstancedFont {
 public:
-	InstancedFont( sprite::InstancedSpriteManager* ism, const types::Font* font );
+	InstancedFont( sprite::InstancedSpriteManager* ism, const types::Font* font, bool pixel_base_names = false );
 	~InstancedFont();
 
 	const std::string& GetFontName() const;
-	const std::vector< sprite::InstancedSprite* > GetSymbolSprites( const std::string& text, const types::Color& color, const types::Color& shadow_color );
+	std::vector< sprite::InstancedSprite* > AcquireSymbolSprites( const std::string& text, const types::Color& color, const types::Color& shadow_color );
+	void ReleaseSymbolSprites( const std::vector<sprite::InstancedSprite*>& sprites );
 	const std::vector< types::Vec2< float > > GetSymbolOffsets( const std::string& text ) const;
 
 	types::texture::Texture* GetTextTexture(
@@ -61,6 +62,9 @@ private:
 	sprite::InstancedSpriteManager* m_ism = nullptr;
 	const types::Font* m_font = nullptr;
 	const std::string m_name = "";
+	const bool m_pixel_base_names;
+	struct BaseName {sprite::InstancedSprite* sprite;size_t references;};
+	std::unordered_map<std::string,BaseName> m_base_names;
 
 	types::texture::Texture* m_base_texture = nullptr;
 	std::unordered_map< uint64_t, types::texture::Texture* > m_color_textures = {};

@@ -17,6 +17,7 @@ in vec2 aTexCoord; \
 in vec4 aTintColor; \
 in vec3 aNormal; \
 uniform vec2 uPosition; \
+uniform vec2 uPixelStep; \
 uniform mat4 uWorld; \
 uniform mat4 uInstances[" + std::to_string( OpenGL::MAX_INSTANCES ) + "]; \
 uniform uint uFlags; \
@@ -27,7 +28,12 @@ out vec3 normal; \
 \
 void main(void) { \
 	vec4 position; \
-	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_IGNORE_CAMERA ) + " ) { \
+	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_PIXEL_SPRITE ) + " ) { \
+		position = uWorld * uInstances[ gl_InstanceID ] * vec4(0.0, 0.0, 0.0, 1.0); \
+		position.xy = (floor((position.xy / position.w + 1.0) / uPixelStep + 0.5) * uPixelStep - 1.0 \
+			+ vec2(aCoord.x + uPosition.x, -aCoord.y - uPosition.y) * uPixelStep) * position.w; \
+	} \
+	else if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_IGNORE_CAMERA ) + " ) { \
 		position = vec4( aCoord, 1.0 ); \
 	} \
 	else { \
@@ -149,6 +155,7 @@ void Orthographic::Initialize() {
 	attributes.tint_color = GetAttributeLocation( "aTintColor" );
 	attributes.normal = GetAttributeLocation( "aNormal" );
 	uniforms.position = GetUniformLocation( "uPosition" );
+	uniforms.pixel_step = GetUniformLocation( "uPixelStep" );
 	uniforms.texture = GetUniformLocation( "uTexture" );
     uniforms.effect_background=GetUniformLocation("uEffectBackground");uniforms.effect_origin=GetUniformLocation("uEffectOrigin");
     glUniform1i(uniforms.effect_background,2);

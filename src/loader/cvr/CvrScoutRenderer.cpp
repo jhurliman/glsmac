@@ -184,4 +184,33 @@ CvrScoutImage CvrScoutRenderer::Render( const CvrScoutViewInput& input ) const {
 	return result;
 }
 
+
+CvrShadowResult CvrScoutRenderer::RenderShadow(const scout::ShadowScene& scene) const {
+    using namespace scout;
+    if(m_assets->profile==Profile::SpartanSpeeder) {throw std::invalid_argument("CVR shadow: Speeder detail path is not admitted");}
+    const auto view=MakeShadowView(scene);
+    std::vector<CvrFrameSelection> requests;
+    for(size_t i=0;i<m_assets->geometry.size();++i) {requests.push_back({i,0,{-400,200,0}});}
+    const auto frames=CvrFrameAssembler::Assemble(m_assets->frames,requests);
+    if(frames.first_omitted) {throw std::invalid_argument("CVR shadow: incomplete frame assembly");}
+    std::vector<CvrIndexedDraw> draws;
+    for(const auto& frame:frames.records) {
+        const auto& geometry=std::get<CvrGeometry>(m_assets->geometry[frame.scene_index][frame.object_index]);
+        auto matrix=MultiplyMatrix(view.projection,Bits(frame.value.matrix));
+        for(size_t i=0;i<6;++i) {matrix[i]=Store(Multiply(Decode(matrix[i]),Decode(geometry.scalar_bits)));}
+        const auto location=AddVector(MultiplyVector(view.projection,Bits(frame.value.location)),view.translation);
+        auto basis=CvrBasisConverter::Convert(matrix);basis[2]={0,0,0};
+        for(const auto& group:geometry.groups) {
+            Vector header;
+            for(size_t i=0;i<3;++i) {header[i]=Store(Integer(group.header?
+                int32_t(group.header->vectors[0][i])+group.header->vectors[3][i]:geometry.vectors[2][i]));}
+            const auto start=AddVector(MultiplyVector(matrix,header),location);
+            Matrix origin{};std::copy(start.begin(),start.end(),origin.begin()+6);
+            draws.push_back({&group.records,(geometry.flags&8)!=0,CvrSampleFootprint::Single,basis,CvrBasisConverter::Convert(origin)[2]});
+        }
+    }
+    auto result=CvrIndexedRasterizer::Shadow(scene.width,scene.height,draws);
+    result.frame_count=frames.records.size();return result;
+}
+
 }

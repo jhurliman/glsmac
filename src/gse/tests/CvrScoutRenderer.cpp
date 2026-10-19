@@ -10,6 +10,8 @@
 #include "task/gsetests/GSETests.h"
 #include "types/texture/Texture.h"
 #include "fixtures/CvrScoutMatrix.h"
+#include "fixtures/ScoutShadow.h"
+#include <cstdlib>
 #include "game/backend/unit/CvrScoutRender.h"
 #include "game/frontend/sprite/ScoutSpriteCache.h"
 #include "resource/ResourceManager.h"
@@ -143,6 +145,69 @@ std::string MakeScoutTestAssetWithGeometry( const std::vector< uint8_t >& geomet
 }
 
 void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
+
+    task->AddTest("CVR Scout shadow scene producer matches three native camera controls",GT(){
+        const auto same=[](const auto& a,const auto& b) {for(size_t i=0;i<a.size();++i) {
+            if(a[i]!=b[i] && ((a[i]&0x7fffffffU)!=0 || (b[i]&0x7fffffffU)!=0)) {return false;}}return true;};
+        for(const auto& c:fixtures::SCOUT_SHADOW_CASES) {
+            const auto view=scout::MakeShadowView(c.scene);
+            GT_ASSERT(same(view.projection,c.projection) && same(view.translation,c.translation),"Shadow producer differs: "+std::string(c.name));
+            if(std::string(c.name)!="translated_ground") {
+                const auto scene=scout::FlatScoutShadowScene({c.facing,0,0,1,{0,0}});
+                const auto generated=scout::MakeShadowView(scene);
+                GT_ASSERT(same(scene.direction,c.scene.direction) && same(generated.projection,c.projection) && same(generated.translation,c.translation),
+                    "Flat shadow factory used measured camera inputs or wrong inverse: "+std::string(c.name));
+            }
+        }
+        GT_OK();
+    });
+    task->AddTest("CVR shadow stamps independently of depth and blends destination indices",GT(){
+        std::vector<CvrGeometryRecord> records{{{uint8_t(13<<3),255,255}},{{uint8_t(13<<3),0,0}},{{uint8_t(26<<3),0,0}}};
+        CvrIndexedDraw draw{&records,true,CvrSampleFootprint::Single,{},{{256,256,0}}};
+        auto shadow=CvrIndexedRasterizer::Shadow(3,3,{draw});
+        GT_ASSERT(shadow.processed_records==2 && shadow.written_samples==2 && shadow.mask[4]==128 &&
+            std::count(shadow.mask.begin(),shadow.mask.end(),128)==1,"Shadow depth-tested repeated stamps or used color bytes");
+        std::array<uint8_t,256> lookup{};for(size_t i=0;i<256;++i) {lookup[i]=uint8_t(i+1);}
+        shadow.mask[4]=1;std::vector<uint8_t> target(25,10);
+        GT_ASSERT(shadow.Blend(target,5,5,5,lookup,{1,1},{0,0,5,5})==1 && target[12]==11 && target[0]==10,
+            "Mask is a key discriminator, not alpha or a palette index");
+        auto invalid=draw;invalid.initial[0]=INT32_MAX;invalid.basis[0][2]=1;
+        GT_ASSERT(Rejects([&]{CvrIndexedRasterizer::Shadow(3,3,{draw,invalid});}),"Shadow accepted coordinate overflow");
+        invalid=draw;invalid.terminal=false;
+        GT_ASSERT(Rejects([&]{CvrIndexedRasterizer::Shadow(3,3,{invalid});}),"Shadow inferred an unobserved nonterminal profile");
+        invalid=draw;invalid.basis[0][0]=32768;
+        GT_ASSERT(Rejects([&]{CvrIndexedRasterizer::Shadow(3,3,{invalid});}),"Shadow admitted a wider native coefficient");
+        const auto before=target;
+        GT_ASSERT(Rejects([&]{shadow.Blend(target,6,5,5,lookup,{0,0},{0,0,5,5});}) && target==before,"Malformed blend changed caller storage");
+        GT_ASSERT(Rejects([&]{shadow.Blend(shadow.mask,3,3,3,lookup,{0,0},{0,0,3,3});}),"Aliased shadow source was admitted");
+        GT_ASSERT(shadow.Blend(target,5,5,5,lookup,{-2,-2},{0,0,5,5})==0,"Clipped shadow wrote outside its target");
+        GT_OK();
+    });
+    task->AddTest("CVR installed Scout generates complete native shadow masks from owned models",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto read=[&](const char* name) {std::ifstream stream(std::filesystem::path(directory)/name,std::ios::binary);
+            if(!stream) {throw std::runtime_error("Missing owned Scout shadow asset");}return std::string(std::istreambuf_iterator<char>(stream),{});};
+        const auto renderer=CvrScoutRenderer::Load(read("VI.cvr"),read("Viptr00.cvr"));
+        for(const auto& c:fixtures::SCOUT_SHADOW_CASES) {
+            const auto image=renderer.RenderShadow(c.scene);
+            uint64_t hash=UINT64_C(14695981039346656037);for(const auto byte:image.mask) {hash=(hash^byte)*UINT64_C(1099511628211);}
+            GT_ASSERT(hash==c.mask_fnv && size_t(std::count(image.mask.begin(),image.mask.end(),128))==c.pixels &&
+                image.processed_records==c.stores && image.written_samples==c.stores && image.draw_count==65 && image.frame_count==59,
+                "Complete generated shadow differs from native receipt: "+std::string(c.name)+" stores="+std::to_string(image.written_samples));
+            if(std::string(c.name)=="facing2") {if(const auto* target_path=std::getenv("GLSMAC_SHADOW_TARGET")) {
+                std::ifstream input(target_path,std::ios::binary);if(!input) {throw std::runtime_error("Missing owned shadow target");}
+                std::vector<uint8_t> target(std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>{});
+                GT_ASSERT(image.Blend(target,1024,511,1024,fixtures::SCOUT_SHADOW_LOOKUP,{546,210},{0,0,1024,511})==222,
+                    "Actual Scout mask did not produce all222 native target writes");
+                if(const auto* output=std::getenv("GLSMAC_SHADOW_DUMP")) {std::ofstream stream(std::filesystem::path(output)/"facing2.target.bin",std::ios::binary);
+                    if(!stream || !stream.write(reinterpret_cast<const char*>(target.data()),target.size())) {throw std::runtime_error("Shadow target diagnostic write failed");}}
+            }}
+            if(const auto* output=std::getenv("GLSMAC_SHADOW_DUMP")) {std::ofstream stream(std::filesystem::path(output)/(std::string(c.name)+".mask.bin"),std::ios::binary);
+                if(!stream || !stream.write(reinterpret_cast<const char*>(image.mask.data()),image.mask.size())) {throw std::runtime_error("Shadow diagnostic write failed");}}
+        }
+        GT_OK();
+    });
+
 	task->AddTest( "CVR initialized Infantry preserves geometry uses main RGB and owns source values", GT() {
 		auto body = MakeScoutTestAsset( false ), reactor = MakeScoutTestAsset( true );
 		auto palette = MakeSpartanRoverTestAsset( "PALETTE.PCX" ), system = MakeSpartanRoverTestAsset( "system.txt" );

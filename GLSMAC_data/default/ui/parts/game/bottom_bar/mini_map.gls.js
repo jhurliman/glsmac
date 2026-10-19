@@ -110,141 +110,58 @@ return {
 		// debug action that merely blanked the map. This is not a completed
 		// two-mode console; Detail requires its own measured zoom-7 view.
 
-		// 'turn complete' button
-
-		const btn_turn_complete = this.frame.button({
-			left: 2,
-			top: 2,
-			width: 233,
-			height: 23,
-			border: 'rgb(228, 104, 24),2',
-			color: 'rgb(228, 104, 24),2',
-			font: 'arialnb.ttf:17',
-			text: 'TURN COMPLETE',
-		});
-
-		const blink_rate = 25;
-		const blink_speed = 0.025;
-
-		const blinker = btn_turn_complete.surface({
-			left: 4,
-			top: 4,
-			right: 4,
-			bottom: 4,
-			background: 'console_x2_a.pcx:crop(198, 113, 375, 129)',
-			opacity: 0.0,
-		});
-		let blink_timer = null;
-		let blink_forward = true;
-		let blink_opacity = 0.0;
-		let is_mouseover = false;
-		let allow_turn_complete = true;
-		// TODO: use _hover and _active
-		btn_turn_complete.on('mouseover', (e) => {
-			if (allow_turn_complete && !is_mouseover) {
-				is_mouseover = true;
-				blinker.opacity = 0.5;
-			}
-			return false;
-		});
-		btn_turn_complete.on('mouseout', (e) => {
-			if (is_mouseover) {
-				is_mouseover = false;
-				blinker.opacity = blink_opacity;
-			}
-			return false;
-		});
-		btn_turn_complete.on('mousedown', (e) => {
-			if (allow_turn_complete && is_mouseover) {
-				blinker.opacity = 0.8;
-			}
-			return false;
-		});
-		btn_turn_complete.on('mouseup', (e) => {
-			if (allow_turn_complete && is_mouseover) {
-				blinker.opacity = 0.5;
-			} else {
-				blinker.opacity = blink_opacity;
-			}
-			return false;
-		});
-
-		const f_blink_stop = () => {
-			if (blink_timer != null) {
-				blink_timer.stop();
-				blink_timer = null;
-				blink_opacity = 0.0;
-				blinker.opacity = 0.0;
-			}
-		};
-		const f_blink_start = () => {
-			f_blink_stop();
-			blink_timer = blinker.timer(blink_rate, () => {
-				if (blink_forward) {
-					blink_opacity += blink_speed;
-					if (blink_opacity >= 1.0) {
-						blink_opacity = 1.0;
-						blink_forward = false;
-					}
-				} else {
-					blink_opacity -= blink_speed;
-					if (blink_opacity <= 0.25) {
-						blink_opacity = 0.25;
-						blink_forward = true;
-					}
-				}
-				if (!is_mouseover) {
-					blinker.opacity = blink_opacity;
-				}
-				return true;
-			});
-		};
+        // Original233x23 turn.flc control at console-local783,61.
+        const btn_turn_complete = this.frame.button({left: 2, top: 2, width: 233, height: 23});
+        const artwork = btn_turn_complete.surface({left: 0, top: 0, width: 233, height: 23});
+        const label = btn_turn_complete.text({
+            align: 'top left', font: 'arialbd.ttf:14:mono', color: 'rgb(228,104,24)', text: 'TURN COMPLETE',
+        });
+        const set_label = (text) => {
+            label.text = text;
+            const size = label.measure();
+            label.left = (233 - size.width) / 2;
+            label.top = 17 - size.height;
+        };
+        const advance = (#include('turn_complete_phase'))();
+        let turn_status = '';
+        const redraw = () => { artwork.smacturnframe(advance(turn_status == 'turn_complete')); };
+        let is_mouseover = false;
+        btn_turn_complete.on('mouseover', (e) => {
+            if (!is_mouseover) { is_mouseover = true; redraw(); }
+            return false;
+        });
+        btn_turn_complete.on('mouseout', (e) => {
+            if (is_mouseover) { is_mouseover = false; redraw(); }
+            return false;
+        });
+        // Async repeats from the delivered callback's current time. A modal
+        // prevents phase advancement. Original global/effect-hold admission is
+        // not yet exposed by the port; this is not a claim of its full gate.
+        artwork.timer(100, () => {
+            if (!p.modules.popup.is_shown()) { redraw(); }
+            return true;
+        });
 
 		const turn_complete_sound = btn_turn_complete.sound({
 			sound: 'cpu turn complete.wav',
 			volume: 0.5,
 		});
 
-		let turn_status = 'active';
-		const f_set_status = (status) => {
-			if (turn_status != status) {
-				turn_status = status;
-				switch (turn_status) {
-					case 'please_wait': {
-						f_blink_stop();
-						btn_turn_complete.text = 'PLEASE WAIT';
-						allow_turn_complete = false;
-						break;
-					}
-					case 'active': {
-						f_blink_stop();
-						btn_turn_complete.text = 'TURN COMPLETE';
-						allow_turn_complete = true;
-						break;
-					}
-					case 'turn_complete': {
-						btn_turn_complete.text = 'TURN COMPLETE';
-						allow_turn_complete = true;
-						f_blink_start();
-						turn_complete_sound.play();
-						break;
-					}
-					case 'waiting_for_players': {
-						f_blink_stop();
-						btn_turn_complete.text = 'WAITING FOR PLAYERS';
-						allow_turn_complete = true;
-						break;
-					}
-					default: {
-						#print('warning: unknown turn status: ' + status);
-					}
-				}
-				if (!allow_turn_complete && is_mouseover) {
-					is_mouseover = false;
-					blinker.opacity = blink_opacity;
-				}
-			}
-		};
+        const f_set_status = (status) => {
+            const previous = turn_status;
+            turn_status = status;
+            switch (status) {
+                case 'please_wait': { set_label('PLEASE WAIT'); break; }
+                case 'waiting_for_players': {
+                    // Retain the port's functional status until actual native
+                    // network masks/mode are available; do not infer them here.
+                    set_label('WAITING FOR PLAYERS'); break;
+                }
+                default: { set_label('TURN COMPLETE'); }
+            }
+            redraw();
+            if (previous != status && status == 'turn_complete') { turn_complete_sound.play(); }
+        };
 		minimap.listen(p.game, 'turn_status', (e) => {
 			refresh_energy();
 			f_set_status(e.status);

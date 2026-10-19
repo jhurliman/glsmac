@@ -10389,7 +10389,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( static_cast< value::String* >( ui->Get( "year" ) )->value == "Mission Year 2137", "late minimap lost restored year" );
 				GT_ASSERT( static_cast< value::String* >( ui->Get( "energy" ) )->value == "Energy: N/A", "legacy minimap fabricated a treasury" );
 				GT_ASSERT( static_cast< value::String* >( ui->Get( "text" ) )->value == ( scenario == 2 ? "WAITING FOR PLAYERS" : "TURN COMPLETE" ), "late minimap lost restored status" );
-				GT_ASSERT( static_cast< value::Int* >( ui->Get( "plays" ) )->value == ( scenario == 1 ? 1 : 0 ) && static_cast< value::Int* >( ui->Get( "timers" ) )->value == ( scenario == 1 ? 1 : 0 ), "late minimap readiness presentation differs" );
+				GT_ASSERT( static_cast< value::Int* >( ui->Get( "plays" ) )->value == ( scenario == 1 ? 1 : 0 ) && static_cast< value::Int* >( ui->Get( "timers" ) )->value == 1, "late minimap readiness presentation differs" );
 				// Ordinary advancement must still invoke real unit-turn logic and all
 				// gameplay hooks, clear completion, reset movement and publish normally.
 				auto* turns_module = static_cast< value::Object* >( destination.RunScript( GSE_CALL, "./GLSMAC_data/default/units/turns" ) );
@@ -10399,7 +10399,7 @@ static void AddWorldTurnTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( turns == 1 && unit_turns == 1 && base_turns == 1 && game->GetTurnId() == 38, "ordinary advancement hooks changed" );
 				GT_ASSERT( !local->IsTurnCompleted() && !remote->IsTurnCompleted() && !unit->Legacy().moved_this_turn && unit->Legacy().movement == 1.0f && unit->Legacy().health == 0.625f, "ordinary advancement no longer resets gameplay state" );
 				ui = static_cast< value::Object* >( read_ui->Run( GSE_CALL, {} ) );
-				GT_ASSERT( static_cast< value::String* >( ui->Get( "year" ) )->value == "Mission Year 2138" && static_cast< value::String* >( ui->Get( "text" ) )->value == "TURN COMPLETE" && static_cast< value::Int* >( ui->Get( "timers" ) )->value == 0, "minimap stopped processing subsequent turn/status events" );
+				GT_ASSERT( static_cast< value::String* >( ui->Get( "year" ) )->value == "Mission Year 2138" && static_cast< value::String* >( ui->Get( "text" ) )->value == "TURN COMPLETE" && static_cast< value::Int* >( ui->Get( "timers" ) )->value == 1, "minimap stopped processing subsequent turn/status events" );
 				GT_OK();
 			} );
 			GT_ASSERT( error.empty(), "turn restoration: " + error ); GT_OK();

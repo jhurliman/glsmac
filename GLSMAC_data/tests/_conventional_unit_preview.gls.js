@@ -21,6 +21,7 @@ return (game) => {
 		result.remove = () => { removed = true; };
 		result.was_removed = () => { return removed; };
 		result.clear = () => { result.children = []; };
+		result.smacturnframe = (frame) => { return true; };
 		result.timer = (delay, callback) => { return { stop: () => {} }; };
 		result.sound = (properties) => { return { play: () => {} }; };
 		const child = (props) => {
@@ -45,7 +46,7 @@ return (game) => {
 		ui: { get_width: () => { return 1024; }, class: (name) => { return style; } },
 		modules: {
 			menu: { on_close: (callback) => {} },
-			popup: { hide: (name) => {} },
+			popup: { hide: (name) => {}, is_shown: () => { return false; } },
 		},
 	});
 	const check = (condition, reason) => { if (!condition) { throw TestError(reason); } };

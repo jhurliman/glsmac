@@ -10,6 +10,21 @@
 
 namespace loader::texture {
 
+// Gamma100 active game-index palette. Common entries10..245 are capped;
+// the20 measured system-reserved entries keep their own full channel values.
+inline smac_effect::Palette MakeSmacSoftwarePalette(const SDL_Palette* common) {
+    if(!common || common->ncolors!=256) {
+        throw std::invalid_argument("SMAC software display requires the256-color common palette");
+    }
+    smac_effect::Palette active{};
+    smac_effect::ApplySmacSoftwareReservedColors(active);
+    for(size_t i=0;i<236;++i) {
+        const auto& color=common->colors[i];
+        active[i+10]={std::min<uint8_t>(color.r,235),std::min<uint8_t>(color.g,235),std::min<uint8_t>(color.b,235)};
+    }
+    return active;
+}
+
 // The ordinary terrain loader rebases PCX bytes by10 before rendering. RGB
 // conversion therefore uses the common palette plus the measured SMAC software
 // startup reserved entries. Transparency belongs to source255/loaded9, not RGB.
@@ -18,12 +33,7 @@ inline void ApplySmacTerrainPalette(SDL_Surface* image,const SDL_Palette* common
         image->format->palette->ncolors!=256 || !common || common->ncolors!=256) {
         throw std::invalid_argument("SMAC terrain requires indexed source and common palettes");
     }
-    smac_effect::Palette active{};
-    smac_effect::ApplySmacSoftwareReservedColors(active);
-    for(size_t i=0;i<236;++i) {
-        const auto& color=common->colors[i];
-        active[i+10]={std::min<uint8_t>(color.r,235),std::min<uint8_t>(color.g,235),std::min<uint8_t>(color.b,235)};
-    }
+    const auto active=MakeSmacSoftwarePalette(common);
     SDL_Color colors[256];
     for(size_t i=0;i<256;++i) {
         const auto& rgb=active[(i+10)&255];colors[i]={rgb[0],rgb[1],rgb[2],255};

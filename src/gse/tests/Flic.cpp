@@ -4,6 +4,27 @@
 #include <stdexcept>
 
 #include "loader/flic/FlicReader.h"
+#include "loader/flic/TurnComplete.h"
+#include "loader/texture/SmacPalette.h"
+#include "util/FS.h"
+#include <cstdlib>
+#include "Mesh.h"
+#include "engine/Engine.h"
+#include "gse/GSE.h"
+#include "gc/Space.h"
+#include "gse/ExecutionPointer.h"
+#include "gse/context/GlobalContext.h"
+#include "gse/value/Callable.h"
+#include "gse/value/Object.h"
+#include "gse/value/Int.h"
+#include "scene/Scene.h"
+#include "scene/actor/Cache.h"
+#include "scene/actor/Mesh.h"
+#include "types/texture/Texture.h"
+#include "ui/UI.h"
+#include "ui/dom/Root.h"
+#include "ui/dom/Surface.h"
+#include "util/FinallyGuard.h"
 #include "loader/flic/MenuCompositor.h"
 #include "task/gsetests/GSETests.h"
 
@@ -66,6 +87,86 @@ std::string CheckFrames() {
 	GT_OK();
 }
 
+std::string CheckTurnPalette() {
+    const std::unique_ptr<SDL_Palette,decltype(&SDL_FreePalette)> common(SDL_AllocPalette(256),SDL_FreePalette);
+    GT_ASSERT(common,"could not allocate common palette fixture");
+    std::array<SDL_Color,256> colors{};
+    colors[0]={255,1,240,255};colors[92]={252,104,24,255};colors[235]={250,251,255,255};
+    GT_ASSERT(SDL_SetPaletteColors(common.get(),colors.data(),0,256)==0,"could not set common fixture");
+    const auto active=loader::texture::MakeSmacSoftwarePalette(common.get());
+    GT_ASSERT(active[10]==(std::array<uint8_t,3>{235,1,235}) &&
+        active[102]==(std::array<uint8_t,3>{235,104,24}) &&
+        active[245]==(std::array<uint8_t,3>{235,235,235}),"turn common entries bypassed Gamma100 cap");
+    GT_ASSERT(active[9]==(std::array<uint8_t,3>{9,0,0}) &&
+        active[246]==(std::array<uint8_t,3>{245,0,0}) &&
+        active[249]==(std::array<uint8_t,3>{255,0,0}) &&
+        active[255]==(std::array<uint8_t,3>{255,255,255}),"common cap changed measured reserved colors");
+    GT_ASSERT(Rejects([&]{loader::texture::MakeSmacSoftwarePalette(nullptr);}),"missing common palette admitted");
+    GT_OK();
+}
+
+std::string CheckTurnSurface() {
+    return WithWidgetGraphics([]()->std::string {
+        GSE runtime;std::string result;auto* gc_space=runtime.GetGCSpace();
+        gc_space->Accumulate(&runtime,[&] {
+            auto* ctx=runtime.CreateGlobalContext();const si_t si;ExecutionPointer ep;
+            auto* ui=new ::ui::UI(GSE_CALL);
+            util::FinallyGuard cleanup([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
+            auto* root=static_cast<value::Object*>(ui->GetRoot()->Wrap(GSE_CALL));
+            auto* surface=static_cast<::ui::dom::Surface*>(::ui::dom::Object::Unwrap(
+                static_cast<value::Callable*>(root->Get("surface"))->Run(GSE_CALL,{})));
+            scene::actor::Mesh* actor=nullptr;
+            ui->GetRoot()->m_cache->GetScene()->WithActors([&](const auto& actors) {
+                for(auto* candidate:actors) {if(candidate->GetType()==scene::actor::Actor::TYPE_MESH) {
+                    actor=static_cast<scene::actor::Mesh*>(candidate);
+                }}
+            });
+            result=[&]()->std::string {
+                GT_ASSERT(actor,"turn surface has no actor");
+                Bytes rgba(233*23*4,0);rgba[0]=23;rgba[3]=255;
+                surface->PresentTurnFrame(rgba);const auto* texture=actor->GetTexture();
+                const auto revision=actor->GetTextureRevision();rgba[0]=41;
+                for(size_t i=0;i<42;++i) {surface->PresentTurnFrame(rgba);}
+                GT_ASSERT(actor->GetTexture()==texture && actor->GetTextureRevision()>revision &&
+                    texture->GetWidth()==233 && texture->GetHeight()==23 && texture->GetBitmap()[0]==41 &&
+                    texture->GetBitmap()[3]==255 && texture->GetBitmap()[7]==0,
+                    "turn upload lost cached actor update, backing alpha or retained ownership");
+                GT_ASSERT(Rejects([&]{surface->PresentTurnFrame({});}),"short turn upload admitted");
+                GT_OK();
+            }();
+        });
+        return result;
+    });
+}
+
+std::string CheckTurnComplete() {
+    Bytes runs;
+    for(size_t y=0;y<23;++y) {runs.insert(runs.end(),{2,127,12,106,0});}
+    std::vector<Bytes> frames{Frame({Chunk(15,runs)})};
+    for(size_t i=1;i<20;++i) {frames.push_back(Frame({}));}
+    auto bytes=File(233,23,19,frames);
+    const auto decoded=loader::flic::DecodeTurnComplete(bytes);
+    GT_ASSERT(decoded[18].pixels[0]==12 && decoded[18].pixels[232]==0,"turn indexed delta state or key0 changed");
+    auto nonempty=frames;nonempty.back()=Frame({Chunk(7,{0,0})});
+    GT_ASSERT(Rejects([&]{loader::flic::DecodeTurnComplete(File(233,23,19,nonempty));}),"unproved nonempty ring admitted as hold");
+    bytes.resize(bytes.size()-16);Put(bytes,0,bytes.size(),4);
+    GT_ASSERT(Rejects([&]{loader::flic::DecodeTurnComplete(bytes);}),"missing physical ring admitted");
+    GT_ASSERT(Rejects([&]{loader::flic::DecodeTurnComplete(File(232,23,19,frames));}),"unsupported profile admitted");
+    // External installed art only. Hashes below are full native indexed frame
+    // outputs with retained backing100; Python first verifies original SHA256.
+    const auto* asset=std::getenv("GLSMAC_TEST_TURN_FLC");
+    if(asset) {
+        util::FS::ReadFile(bytes,asset);const auto native=loader::flic::DecodeTurnComplete(bytes);
+        const uint64_t expected[]{0xfb5cfffcb6046f9eULL,0xdc253857af3aec07ULL,0x4f07f54e48cb3d6cULL,0x9c87c4153153e8baULL,0x3fcc5c0b3796ca3ULL,0x4cc28f41e05a3a5cULL,0xea6a2acbcbffb11dULL,0x23d8d4307602e4dULL,0x88a4dfdce2575fcaULL,0xa0e6fd7c456d080dULL,0x88a4dfdce2575fcaULL,0x23d8d4307602e4dULL,0xea6a2acbcbffb11dULL,0x4cc28f41e05a3a5cULL,0x3fcc5c0b3796ca3ULL,0x9c87c4153153e8baULL,0x4f07f54e48cb3d6cULL,0xdc253857af3aec07ULL,0xfb5cfffcb6046f9eULL};
+        for(size_t f=0;f<19;++f) {
+            uint64_t hash=14695981039346656037ULL;
+            for(const auto index:native[f].pixels) {hash^=index ? index : 100;hash*=1099511628211ULL;}
+            GT_ASSERT(hash==expected[f],"original Turn Complete full indexed frame differs");
+        }
+    }
+    GT_OK();
+}
+
 std::string CheckMalformed() {
 	const auto fixture = MakeFixture();
 	GT_ASSERT( Rejects( [ & ] { loader::flic::FlicReader::ReadFrame( fixture.bytes, 0, 14 ); } ), "pixel budget ignored" );
@@ -119,6 +220,11 @@ std::string CheckMenu() {
 }
 
 void AddFlicTests( task::gsetests::GSETests* task ) {
+    task->AddTest("FLC Turn Complete Gamma100 caps common entries and preserves reserved colors",GT(){return CheckTurnPalette();});
+    task->AddTest("FLC Turn Complete surface retains one texture and refreshes UI actor",GT(){return CheckTurnSurface();});
+    task->AddTest("FLC Turn Complete native frames and explicit empty ring admission",GT(){
+        try {return CheckTurnComplete();} catch(const std::exception& error) {GT_FAIL(error.what());}
+    });
 	task->AddTest( "FLC menu composition preserves native indexed drawing codes", GT() {
 		try { return CheckMenu(); } catch ( const std::exception& error ) { GT_FAIL( error.what() ); }
 	} );

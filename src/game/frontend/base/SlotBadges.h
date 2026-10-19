@@ -49,6 +49,8 @@ private:
 	sprite::InstancedSpriteManager* const m_ism;
 	const size_t m_slot_index = 0;
 	const faction::Faction* m_faction = nullptr;
+	bool m_smac_population = false;
+	uint8_t m_primary = 0, m_secondary = 0, m_population_text = 0;
 
 	class slot_sprites_t {
 	public:

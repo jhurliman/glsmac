@@ -118,7 +118,7 @@ void Game::Start() {
 	NEW( m_fm, faction::FactionManager, this );
 	NEW( m_tm, tile::TileManager, this );
 	NEW( m_um, unit::UnitManager, this );
-	NEW( m_bm, base::BaseManager, this );
+	NEW( m_bm, base::BaseManager, this, m_state->m_settings.global.GetRulesetId() == "smac" );
 	NEW( m_rm, resource::ResourceManager, this );
 
 	RegisterWidgets();

@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include <vector>
 #include <set>
+#include <array>
+#include "types/Color.h"
 
 #include "common/Common.h"
 
@@ -22,6 +24,7 @@ class PopDef;
 }
 
 namespace gse::tests { class BackendFixture; }
+namespace types { class Font; }
 
 namespace game {
 namespace frontend {
@@ -55,7 +58,7 @@ class SlotBadges;
 
 CLASS( BaseManager, common::Class )
 
-	BaseManager( Game* game );
+	BaseManager( Game* game, bool smac_population = false );
 	~BaseManager();
 
 	base::Base* GetBaseById( const size_t id ) const;
@@ -91,6 +94,8 @@ private:
 private:
 	friend class SlotBadges;
 	text::InstancedFont* GetBadgeFont() const;
+	const types::Font* GetSmacPopulationFont();
+	const std::array<types::Color,256>& GetSmacPopulationPalette();
 
 private:
 
@@ -99,6 +104,10 @@ private:
 
 	text::InstancedFont* m_name_font;
 	text::InstancedFont* m_badge_font;
+	bool m_smac_population = false;
+	const types::Font* m_smac_population_font = nullptr;
+	std::array<types::Color,256> m_smac_population_palette{};
+	bool m_smac_population_palette_loaded = false;
 
 	std::unordered_map< size_t, SlotBadges* > m_slot_badges = {};
 

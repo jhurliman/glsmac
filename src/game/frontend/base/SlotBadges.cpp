@@ -8,6 +8,9 @@
 #include "game/backend/map/Consts.h"
 #include "scene/actor/Instanced.h"
 #include "types/texture/Texture.h"
+#include "SmacPopulationBadge.h"
+#include "engine/Engine.h"
+#include "loader/texture/TextureLoader.h"
 
 namespace game {
 namespace frontend {
@@ -33,7 +36,19 @@ SlotBadges::SlotBadges(
 	, m_ism( ism )
 	, m_slot_index( slot_index )
 	, m_faction( faction ) {
-	//
+	// Stock faction identities, not transport slot numbers (which may be reordered).
+	struct Colors { const char* id; uint8_t primary,secondary,text; };
+	static constexpr Colors colors[]={{"GAIANS",241,32,242},{"HIVE",252,187,218},
+		{"UNIVERSITY",255,209,155},{"MORGANITES",251,85,251},{"SPARTANS",65,79,75},
+		{"BELIEVERS",102,109,98},{"PEACEKEEPERS",235,186,235}};
+	if(m_bm->m_smac_population) {
+		for(const auto& row:colors) {if(m_faction->m_id==row.id) {
+			const auto* asset=g_engine->GetTextureLoader()->TryLoadCustomTexture(m_faction->GetBaseFilename());
+			if(!asset || !MatchesSmacPopulationMetadata(*asset,m_bm->GetSmacPopulationPalette(),row.primary,row.secondary,row.text,
+				{m_faction->m_colors.text,m_faction->m_colors.text_shadow,m_faction->m_colors.border})) {break;}
+			m_smac_population=true;m_primary=row.primary;m_secondary=row.secondary;m_population_text=row.text;break;
+		}}
+	}
 }
 
 SlotBadges::~SlotBadges() {
@@ -94,6 +109,27 @@ sprite::InstancedSprite* SlotBadges::GetBadgeSprite( const size_t population, co
 	}
 	auto it2 = it1->second.find( population );
 	if ( it2 == it1->second.end() ) {
+		if(m_smac_population && population<=127) {
+			const auto& palette=m_bm->GetSmacPopulationPalette();
+			const bool spartan=m_faction->m_id=="SPARTANS";
+			auto texture=MakeSmacPopulationBadge(population,*m_bm->GetSmacPopulationFont(),
+				is_guarded ? SmacPopulationDisplayColor(palette,m_primary):types::Color::FromRGBA(0,0,0,0),
+				SmacPopulationDisplayColor(palette,is_guarded ? (spartan ? 44:0):m_population_text),
+				SmacPopulationDisplayColor(palette,is_guarded && spartan ? m_secondary:0));
+			const auto width=static_cast<uint32_t>(texture->GetWidth());
+			const auto height=static_cast<uint32_t>(texture->GetHeight());
+			// NormalizePosition adds (pivot/size - 1/2)*dimensions to the
+			// centered rectangle: full-size pivots keep its first corner fixed.
+			auto* sprite=m_ism->GetInstancedSprite("SmacPopulation_"+std::to_string(m_slot_index)+"_"+
+				std::to_string(population)+(is_guarded ? "_filled":"_outline"),texture.get(),{0,0},
+				{width,height},{width,height},{backend::map::s_consts.tile.scale.x*0.25f*width/23,
+				backend::map::s_consts.tile.scale.y*backend::map::s_consts.sprite.y_scale*0.5f*height/30},
+				ZL_TERRAIN_TEXT,0.008f);
+			try {it2=it1->second.emplace(population,badge_sprite_t{texture.get(),sprite}).first;}
+			catch(...) {m_ism->RemoveInstancedSpriteByKey(sprite->key);throw;}
+			texture.release();
+			return it2->second.sprite;
+		}
 
 		const auto& c = m_faction->m_colors;
 		const auto transparent = types::Color::FromRGBA( 0, 0, 0, 0 );

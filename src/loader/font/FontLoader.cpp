@@ -39,18 +39,20 @@ types::Font* FontLoader::LoadCustomFont( const std::string& name, const unsigned
 	if ( it == m_fonts.end() ) {
 		std::vector< unsigned char > data = {};
 		auto path = TryGetCustomFilename( name );
-		if ( path.empty() && name == "arialbd.ttf" ) {
+		if ( path.empty() && ( name == "arialbd.ttf" || name == "arial.ttf" ) ) {
+			const bool bold = name == "arialbd.ttf";
 			std::vector< std::string > candidates;
 #ifdef _WIN32
-			if ( const auto* windows = std::getenv( "WINDIR" ) ) { candidates.emplace_back( std::string( windows ) + "/Fonts/arialbd.ttf" ); }
+			if ( const auto* windows = std::getenv( "WINDIR" ) ) { candidates.emplace_back( std::string( windows ) + "/Fonts/" + name ); }
 #elif defined( __APPLE__ )
-			candidates = { "/System/Library/Fonts/Supplemental/Arial Bold.ttf", "/Library/Fonts/Arial Bold.ttf" };
+			const std::string face = bold ? "Arial Bold.ttf" : "Arial.ttf";
+			candidates = { "/System/Library/Fonts/Supplemental/" + face, "/Library/Fonts/" + face };
 #else
-			candidates = { "/usr/share/fonts/truetype/msttcorefonts/Arial_Bold.ttf", "/usr/share/fonts/truetype/msttcorefonts/arialbd.ttf", "/mnt/c/Windows/Fonts/arialbd.ttf" };
+			candidates = { std::string("/usr/share/fonts/truetype/msttcorefonts/") + (bold ? "Arial_Bold.ttf" : "Arial.ttf"), "/usr/share/fonts/truetype/msttcorefonts/" + name, "/mnt/c/Windows/Fonts/" + name };
 #endif
 			for ( const auto& candidate : candidates ) { if ( util::FS::FileExists( candidate ) ) { path = candidate; break; } }
 			if ( path.empty() ) {
-				Log( "Arial Bold is unavailable; title font fidelity requires arialbd.ttf in the game data or system fonts" );
+				Log( std::string( bold ? "Arial Bold" : "Arial" ) + " is unavailable; font fidelity requires " + name + " in the game data or system fonts" );
 				path = GetCustomFilename( "arialnb.ttf" );
 			}
 		}

@@ -7,7 +7,8 @@ return {
 	init: (p) => {
 
 		this.pp = {};
-		const margin = 263;
+		const left_margin = 262;
+		const right_margin = 261;
 		const page_inset = 3;
 		const button_strip = 30;
 
@@ -30,13 +31,13 @@ return {
 			game: p.game,
 			// Query live viewport geometry. A stored DOM wrapper's width may be
 			// its construction snapshot, before the parent margins have settled.
-			get_info_width: () => { return p.ui.get_width() - margin * 2 - page_inset - button_strip; },
+			get_info_width: () => { return p.ui.get_width() - left_margin - right_margin - 7 - 39; },
 			frame: p.el.panel({
 				class: 'bottombar-panel',
-				left: margin,
-				top: 69,
-				right: margin,
-				bottom: 86,
+				left: left_margin,
+				top: 66,
+				right: right_margin,
+				bottom: 85,
 			}),
 			pages: {},
 		};

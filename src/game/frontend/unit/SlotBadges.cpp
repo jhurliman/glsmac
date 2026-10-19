@@ -53,12 +53,20 @@ SlotBadges::SlotBadges(
 }
 
 std::shared_ptr<types::texture::Texture> SlotBadges::MakeCardOverlay(int level,int variant,float health,int32_t maximum,char glyph,uint8_t color) const {
-    if(!m_faction || m_native_palette_slot<1 || m_native_palette_slot>7) {return {};}
-    const auto source=g_engine->GetTextureLoader()->GetSmacUnitBadge(m_native_palette_slot,level,variant);
-    if(!source) {return {};}
-    const auto bar=CalculateSmacHealthbar(health,maximum);
     auto image=std::make_shared<types::texture::Texture>("SMAC console Unit overlay",23,30,types::texture::TF_SMAC_PALETTE);
-    std::memcpy(image->GetBitmap(),source->rgba.data(),source->rgba.size());
+    if(!m_faction) {
+        // Owner0 has a separately proved palette and always uses variant0.
+        // Reuse that retained bank; never infer a human loaded palette slot.
+        const auto source=m_badge_defs->GetNativeBadgeSprite(level)->instanced_sprite->texture_owner;
+        if(!source || source->GetWidth()!=23 || source->GetHeight()!=30) {return {};}
+        std::memcpy(image->GetBitmap(),source->GetBitmap(),source->GetBitmapSize());
+    } else {
+        if(m_native_palette_slot<1 || m_native_palette_slot>7) {return {};}
+        const auto source=g_engine->GetTextureLoader()->GetSmacUnitBadge(m_native_palette_slot,level,variant);
+        if(!source) {return {};}
+        std::memcpy(image->GetBitmap(),source->rgba.data(),source->rgba.size());
+    }
+    const auto bar=CalculateSmacHealthbar(health,maximum);
     image->Fill(6,6,7,26,types::Color::FromRGB(0,0,0));
     if(bar.filled) {
         const auto rgb=bar.color==SmacHealthbar::Color::Green ? types::Color::FromRGB(0,255,0)

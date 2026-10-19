@@ -386,8 +386,8 @@ sprite::InstancedSprite* Unit::GetCardSprite( bool roster ) const {
 }
 
 std::shared_ptr<types::texture::Texture> Unit::GetCardOverlay() const {
-    if(!m_conventional || m_maximum_hit_points<=0) {return {};}
-    const bool spent=m_is_owned && !CanMove();
+    if((!m_conventional && !m_native) || m_maximum_hit_points<=0) {return {};}
+    const bool spent=!m_native && m_is_owned && !CanMove();
     const CardOverlayKey key{m_morale,spent,m_health,m_maximum_hit_points,m_order_glyph,m_order_color_index};
     if(!m_card_overlay_key || *m_card_overlay_key!=key) {
         auto next=m_slot_badges->MakeCardOverlay(m_morale,spent?1:0,m_health,m_maximum_hit_points,m_order_glyph,m_order_color_index);

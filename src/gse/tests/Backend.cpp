@@ -81,6 +81,7 @@
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/SpriteRender.h"
+#include "game/backend/base/SmacEcologyNativeSpawn.h"
 #include "game/backend/unit/MoraleSet.h"
 #include "game/backend/animation/AnimationManager.h"
 #include "game/backend/resource/ResourceManager.h"
@@ -2502,6 +2503,45 @@ public:
 				presenter->Update( widget, unit.get() );
 			}
 			auto* scout_texture = selected_card->texture_owner.get();
+			{
+                // A native static portrait must use the measured independent
+                // overlay even though its body still follows the legacy fit.
+                StaticDef native_source("CARD_NATIVE",manager->GetMoraleSet("SCOUT_TEST"),"Native card",MT_LAND,1,
+                    new SpriteRender("PALETTE.PCX",0,0,32,32,16,16,0));
+                game::frontend::unit::UnitDef native_def(ism.get(),&native_source);
+                game::frontend::unit::Unit native(um.get(),badges.get(),200,&native_def,nullptr,&tile,{},false,0,2,"Neutral native",0.7f,false,false,1,true);
+                native.SetMaximumHitPoints(10);
+                const auto original=native.GetBadgeSprite()->instanced_sprite->texture_owner;
+                const std::string pixels(reinterpret_cast<const char*>(original->GetBitmap()),original->GetBitmapSize());
+                auto overlay=native.GetCardOverlay();
+                GT_ASSERT(overlay && overlay==native.GetCardOverlay() && overlay->HasFlag(types::texture::TF_SMAC_PALETTE)
+                    && overlay->GetPixel(0,0)==types::Color::RGB(255,0,0)
+                    && overlay->GetPixel(6,19)==types::Color::RGB(255,255,0) && overlay->GetPixel(6,20)==types::Color::RGB(0,0,0),
+                    "Native console lost owner0 art, exact health fill or immutable cache");
+                native.SetMovement(1);native.SetActionability(false,true,1);
+                GT_ASSERT(native.GetCardOverlay()==overlay,"Native console selected a human spent variant");
+                for(const bool roster:{false,true}) {
+                    widget->GetGeometry()->SetHeight(roster?38:176);
+                    widget->WrapSet("data",new value::Object(GSE_CALL,{{"unit",backend_unit->Wrap(GSE_CALL)},{"roster",VALUE(value::Bool,,roster)}}),GSE_CALL);
+                    presenter->Update(widget,&native);
+                    bool extent=false,uv=false;
+                    graphics.ui_scene->WithActors([&](const auto& actors) {for(const auto* candidate:actors) {
+                        const auto* image=dynamic_cast<const scene::actor::Mesh*>(candidate);
+                        if(image && image->GetTexture()==overlay.get()) {
+                            const auto* mesh=static_cast<const types::mesh::Render*>(image->GetMesh());types::Vec3 a,z;types::Vec2<float> first,last;
+                            mesh->GetVertexCoord(0,&a);mesh->GetVertexCoord(2,&z);mesh->GetVertexTexCoord(0,&first);mesh->GetVertexTexCoord(2,&last);
+                            const auto& region=widget->GetGeometry()->m_area;const int x=roster?2:0,y=roster?1:0;
+                            extent=a.x==ui->ClampX(region.left+x) && z.x==ui->ClampX(region.left+x+23)
+                                && a.y==ui->ClampY(region.top+y+30) && z.y==ui->ClampY(region.top+y);
+                            uv=first==types::Vec2<float>(0,1) && last==types::Vec2<float>(1,0);
+                        }
+                    }});
+                    GT_ASSERT(extent && uv,"Native static card fitted the overlay or reused inset atlas UVs");
+                }
+                GT_ASSERT(std::string(reinterpret_cast<const char*>(original->GetBitmap()),original->GetBitmapSize())==pixels,
+                    "Native card health modified the shared owner0 source bank");
+                widget->GetGeometry()->SetHeight(32);widget->WrapSet("data",preview_data(),GSE_CALL);presenter->Update(widget,unit.get());
+            }
 			const auto card_baseline = std::string( reinterpret_cast< char* >( scout_texture->GetBitmap() ), scout_texture->GetBitmapSize() );
 			std::weak_ptr< types::texture::Texture > retained = selected_card->texture_owner;
 			auto* badge_copy = widget->GetTexture( 1 ); auto* health_copy = widget->GetTexture( 2 );
@@ -3346,6 +3386,34 @@ public:
                 }
             });
             GT_OK();
+        });
+    }
+
+    std::string BuildNativeCardReference(const std::string& input,const std::string& output) {
+        using namespace game::backend;
+        if(std::filesystem::exists(output)) {throw std::runtime_error("Native reference output must be a new file");}
+        const auto old_unit=unit::Unit::GetNextId(),old_base=base::Base::GetNextId();
+        util::FinallyGuard restore_ids([=]{unit::Unit::SetNextId(old_unit);base::Base::SetNextId(old_base);});
+        const auto saved=campaign::Read(input);EnableWorldSnapshot();
+        return WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* previous=m_state;auto* restored=new State(gc_space,ctx,m_glsmac.get());m_gse->AddRootObject(restored);
+            restored->Deserialize(types::Buffer(saved.settings));restored->RestoreLocalCampaignRoster(saved.roster);
+            m_game.BindLocalCampaignState(restored);m_state=restored;m_gse->RemoveRootObject(previous);
+            m_state->m_settings.local.game_mode=settings::LocalSettings::GM_SINGLEPLAYER;
+            m_state->m_settings.local.network_role=settings::LocalSettings::NR_NONE;
+            m_game.m_slot_num=saved.local_slot;m_game.m_slot=&m_state->m_slots->GetSlot(saved.local_slot);m_game.m_player=m_game.m_slot->GetPlayer();
+            m_game.m_smac_base_presentations=std::array<std::string,8>{"WORKER","TECHNICIAN","DOCTOR","LIBRARIAN","ENGINEER","EMPATH","THINKER","TRANSCEND"};
+            m_map.reset();m_game.m_map=nullptr;m_game.DecodeWorldSnapshot(GSE_CALL,saved.world);m_map.reset(m_game.m_map);CompleteWorldRestore(GSE_CALL);
+            // Explicit UI control: a supplied fallback bloom plan, not a
+            // naturally played encounter. Placement/sight/counters use the
+            // actual native factory; no save/knowledge bytes are patched.
+            const auto plan=base::PrepareSmacNativeSpawn({{{6,52},80,80,true},1,7,9,1},{},[](int32_t,int32_t) {
+                return base::SmacNativeSpawnTile{3,false,1,1,false,15};
+            });
+            WithRW([&]{auto birth=m_game.GetUM()->PrepareEcologyNativeBirths(GSE_CALL,plan);
+                if(birth.Size()!=1) {throw std::runtime_error("Native card reference needs one checked birth");}
+                birth.Commit();birth.Notify(GSE_CALL);});
+            SaveCampaign(output);GT_ASSERT(std::filesystem::is_regular_file(output),"Native reference was not exported");GT_OK();
         });
     }
 
@@ -11541,6 +11609,14 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(input && output,"Both GLSMAC_REFERENCE_INPUT and GLSMAC_REFERENCE_OUTPUT are required");
         return ConventionalUnitFixture::WithControllerViewport([&] {
             return ConventionalUnitFixture::WithCampaignMapSources([&] {BackendFixture fixture;return fixture.BuildDevelopedReference(input,output);});
+        });
+    });
+    task->AddTest("Export controlled native card reference campaign",GT(){
+        const auto* input=std::getenv("GLSMAC_NATIVE_CARD_INPUT");const auto* output=std::getenv("GLSMAC_NATIVE_CARD_OUTPUT");
+        if(!input && !output) {GT_OK();}
+        GT_ASSERT(input && output,"Both native card input/output are required");
+        return ConventionalUnitFixture::WithControllerViewport([&] {
+            return ConventionalUnitFixture::WithCampaignMapSources([&] {BackendFixture fixture;return fixture.BuildNativeCardReference(input,output);});
         });
     });
 

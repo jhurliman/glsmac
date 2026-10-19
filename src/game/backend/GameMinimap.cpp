@@ -30,7 +30,7 @@ gse::Value* Game::CopyLocalMinimap(GSE_CALLABLE) const {
     const auto& rules=m_state->m_settings.global.GetSmacCampaignRules();
     // Neither current installed files nor the rendered whole-world mesh can
     // fill unavailable saved survey/knowledge/terrain authorities on a read.
-    if(!knowledge || !terrain || !rules || !m_map->m_worker_knowledge_ready) {return unavailable();}
+    if(!knowledge || !terrain || !m_map->m_worker_knowledge_ready) {return unavailable();}
     const auto data=knowledge->CopyData();
     const auto observer=participant.simulation_id;
     if(data.width!=static_cast<int64_t>(m_map->GetWidth()) || data.height!=static_cast<int64_t>(m_map->GetHeight())
@@ -49,7 +49,10 @@ gse::Value* Game::CopyLocalMinimap(GSE_CALLABLE) const {
         input.band=static_cast<int32_t>(terrain->Altitude(*tile));
         input.viewer=observer;
         input.explored=(data.tiles.at(index).explored_by&bit)!=0;
-        input.initial_survey=(rules->primary&0x0100u)!=0;
+        // Generated campaigns can retain no optional survey selection.
+        // Known/revealed geography still has saved authority; unknown cells
+        // require the explicit retained survey bit, never an assumed default.
+        input.initial_survey=rules && (rules->primary&0x0100u)!=0;
         input.revealed=(data.all_map_revealed&bit)!=0;
         // Default World overview is physical. No button binding establishes
         // a political/rainfall selector, and map-color assignment is separate.

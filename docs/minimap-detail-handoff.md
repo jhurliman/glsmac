@@ -24,3 +24,12 @@ The current World slice does not establish native Detail painter output. Do not 
 - frontend/Game: read-only active native tile center after parent camera/projection work lands; avoid reconstructing from stale selection or unit coordinates.
 - bottom_bar/mini_map.gls.js: original Detail atlas control and Bool callback, World/Detail visibility/state transition, Shift action.
 - Dedicated native and actual GSE caller cases: mode transitions, differing active/Detail centers, seam/pole clips, unknown admission, detached lifetime/late GPU safety.
+
+## Known-geography admission correction
+
+Generated canonical quickstart campaigns may retain no optional campaign-rule
+selection. That absence does not erase actual saved exploration or all-map
+revelation. The World query admits those known cells and only enables initial
+survey for an explicitly retained bit0x0100. Unknown cells remain transparent
+when survey authority is absent. This fixes an empty World panel; it does not
+implement or relabel the still-unclosed separate Detail painter.

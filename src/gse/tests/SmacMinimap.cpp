@@ -188,6 +188,35 @@ void AddSmacMinimapTests(task::gsetests::GSETests* task) {
         GT_ASSERT(map::smac_minimap::Resolve(own,colors)==colors[1],"political owner compared against renderer viewer instead of native focus faction");
         own.flags=0x80010010u;GT_ASSERT(Rejects([&]{(void)map::smac_minimap::Resolve(own,colors);}),"unmeasured combined scan flags admitted");GT_OK();
     });
+    task->AddTest("minimap generated campaign without survey options retains actual explored geography",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"UNIVERSITY",64,32);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();
+            GT_ASSERT(!game->GetState()->m_settings.global.GetSmacCampaignRules(),"fixture supplied optional survey rules");
+            using Knowledge=map::SmacWorkerKnowledge;
+            Knowledge::Data data{64,32,true,true,0,{},{},{}};
+            data.observers[1]=Knowledge::Observer{};data.observers[1]->pact_with=0;
+            data.tiles.resize(1024,{0,std::nullopt});
+            const size_t known=19*32+45/2;data.tiles[known].explored_by=2;
+            auto* tile=game->GetMap()->GetTile(45,19);tile->is_water_tile=false;*tile->elevation.center=100;
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+            const auto saved=fixture.Snapshot(),random=game->GetRandom()->GetStateString();
+            auto* frame=Query(GSE_CALL,game);
+            GT_ASSERT(frame->type==VT_OBJECT && !static_cast<value::Object*>(frame)->value.empty(),"known geography discarded merely because optional survey rules are absent");
+            const auto rgba=Pixels(static_cast<value::Object*>(frame));
+            for(size_t i=0;i<data.tiles.size();++i) {
+                GT_ASSERT(static_cast<uint8_t>(rgba[i*4+3])==(i==known?255:0),"absent survey authority hid explored tile or disclosed unknown geography");
+            }
+            namespace raster=game::frontend::widget::smac_minimap;
+            const auto target=raster::OverviewTarget({{64,32}},{{239,119}},rgba);
+            GT_ASSERT(std::count(target.rgba.begin(),target.rgba.end(),static_cast<char>(255))>0,"actual known frame produced a blank fallback raster");
+            GT_ASSERT(fixture.Snapshot()==saved && game->GetRandom()->GetStateString()==random,"minimap synthesized campaign options or changed world/RNG");
+            data.all_map_revealed=2;game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+            const auto revealed=Pixels(static_cast<value::Object*>(Query(GSE_CALL,game)));
+            for(size_t i=3;i<revealed.size();i+=4) {GT_ASSERT(static_cast<uint8_t>(revealed[i])==255,"actual saved revelation was suppressed by absent survey options");}
+            GT_OK();
+        });
+    });
     task->AddTest("minimap real local query preserves unknowns retained survey and restore without mutation",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"UNIVERSITY",80,80);
         std::string saved, expected;

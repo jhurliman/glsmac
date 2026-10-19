@@ -2201,6 +2201,43 @@ public:
                         std::abs(last.x-first.x-256)<0.001f && std::abs(last.y-first.y-256)<0.001f,
                         "Native Scout lost original256-square final copy or target anchor: "+first.ToString()+".."+last.ToString());
                 }
+                {
+                    game::frontend::tile::Tile overlay_tile({2,2});
+                    game::frontend::Slot map_slot(31,&faction);um->DefineSlotBadges(31,&faction,initialized?3:255);
+                    for(const int height:{0,25,6,3}) {
+                        const types::Vec3 coords{0,0,2+height/48.0f};
+                        game::frontend::unit::Unit overlay(um.get(),badges.get(),98,um->m_unitdefs.at("NATIVE_WORLD_SCOUT"),
+                            &map_slot,&overlay_tile,coords,true,1,0,"Rank",0.4f,true,true,1);
+                        overlay.SetMaximumHitPoints(10);overlay.Refresh();overlay.Show();
+                        const auto project=[](const auto& transform,const types::Vec3& c) {const auto& m=transform.m;return types::Vec2<float>{
+                            (m[0][0]*c.x+m[0][1]*c.y+m[0][2]*c.z+m[0][3]+1)*512,
+                            (1-m[1][0]*c.x-m[1][1]*c.y-m[1][2]*c.z-m[1][3])*384};};
+                        const auto anchor=project(camera.GetMatrix(),types::Vec3{coords.x-0.5f,coords.y+1,coords.z});
+                        if(initialized) {
+                            overlay.SetOrderGlyph('H',44);overlay.Refresh();
+                            const auto card=overlay.GetCardOverlay();const auto* map=overlay.GetBadgeSprite()->instanced_sprite;
+                            GT_ASSERT(card && map->texture_owner,"Native map lost admitted indexed palette identity");
+                            for(size_t y=0;y<30;++y) {for(size_t x=0;x<23;++x) {
+                                const auto expected=(x>=6 && x<8 && y>=6 && y<27)?types::Color::FromRGBA(0,0,0,0).GetRGBA():card->GetPixel(x,y);
+                                GT_ASSERT(map->texture_owner->GetPixel(x,y)==expected,"Native map bank/glyph differs from original card producer outside health opening");
+                            }}
+                        }
+                        for(const bool health:{false,true}) {
+                            const auto* sprite=(health?overlay.GetBadgeHealthbarSprite():overlay.GetBadgeSprite())->instanced_sprite;
+                            const auto instances=sprite->actor->GetInstanceMatrices();
+                            GT_ASSERT(instances.size()==1,"Native overlay instance is missing or aliased");
+                            auto mesh=sprite->actor->GetSpriteActor()->GenerateMesh();types::Vec3 a,z;
+                            mesh->GetVertexCoord(0,&a);mesh->GetVertexCoord(2,&z);
+                            const auto transform=camera.GetMatrix()*instances.front();
+                            const auto first=project(transform,a),last=project(transform,z);
+                            const float offset=health?6:0,width=health?2:23,height_px=health?21:30;
+                            GT_ASSERT(std::abs(first.x-anchor.x-offset)<0.001f && std::abs(first.y-anchor.y-offset)<0.001f &&
+                                std::abs(last.x-first.x-width)<0.001f && std::abs(last.y-first.y-height_px)<0.001f,
+                                "Native map "+std::string(health?"health":"flag")+" projected "+first.ToString()+".."+last.ToString()+
+                                " relative to helper "+anchor.ToString()+" instead of original canvas geometry");
+                        }
+                    }
+                }
                 auto* card=um->m_unitdefs.at("NATIVE_WORLD_SCOUT")->GetCardSprite(false);
                 GT_ASSERT(card->actor->GetSpriteActor()->GetDimensions()==types::Vec2<float>(1,1),"Native map placement changed independent console-card geometry");
             }

@@ -76,7 +76,25 @@ std::shared_ptr<types::texture::Texture> SlotBadges::MakeCardOverlay(int level,i
     image->FullUpdate();return image;
 }
 
+sprite::Sprite* SlotBadges::GetNativeMapBadge(backend::unit::morale_t level,bool spent,char glyph,uint8_t color) {
+    const uint32_t key=(uint32_t(static_cast<unsigned char>(glyph))<<24)|(uint32_t(color)<<16)|(uint32_t(level)<<1)|(spent?1u:0u);
+    auto found=m_native_map_badges.find(key);
+    if(found==m_native_map_badges.end()) {
+        auto pixels=MakeCardOverlay(level,spent?1:0,1,10,glyph,color);
+        if(!pixels) {return nullptr;}
+        // The separate map health actor owns this exact two-column opening.
+        pixels->Fill(6,6,7,26,types::Color::FromRGBA(0,0,0,0));pixels->FullUpdate();
+        auto* sprite=m_ism->GetInstancedSprite(m_badges_key+"_NATIVE_MAP_"+std::to_string(key),pixels.get(),
+            {0,0},{23,30},{23,0},{23.0f/96,30.0f/48},ZL_UNITS,0.008f);
+        sprite->texture_owner=std::move(pixels);
+        try {found=m_native_map_badges.emplace(key,sprite::Sprite{sprite,1}).first;}
+        catch(...) {m_ism->RemoveInstancedSpriteByKey(sprite->key);throw;}
+    }
+    return &found->second;
+}
+
 SlotBadges::~SlotBadges() {
+    for(const auto& item:m_native_map_badges) {m_ism->RemoveInstancedSpriteByKey(item.second.instanced_sprite->key);}
     for(const auto& item:m_order_sprites) {m_ism->RemoveInstancedSpriteByKey(item.second.instanced_sprite->key);}
 	for ( const auto& it : m_per_morale_sprites ) {
 		if ( it.second.normal ) {

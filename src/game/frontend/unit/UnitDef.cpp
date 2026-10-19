@@ -79,6 +79,13 @@ const bool UnitDef::IsArtillery() const {
 	return m_id != "SporeLauncher";
 }
 
+bool UnitDef::UsesNativeMapPlacement() const {
+    if(!m_native_projection || !m_scout_render) {return false;}
+    const auto& render=*m_scout_render;const auto& view=render.view;
+    return render.size==types::Vec2<float>(1,1) && render.center==types::Vec2<float>(128,128) && view.zoom==0 &&
+        (view.scale_numerator<=0 || view.scale_numerator==view.scale_denominator);
+}
+
 sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
 	ASSERT( m_type == backend::unit::DT_STATIC, "only static units are supported for now" );
 	ASSERT( static_.render.is_sprite, "only sprite unitdefs are supported for now" );
@@ -92,11 +99,7 @@ sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
 	}
 	if ( m_scout_render ) {
 		if ( !static_.render.sprite.instanced_sprite ) {
-            const auto& render=*m_scout_render;const auto& view=render.view;
-            const bool native=m_native_projection &&
-                render.size==types::Vec2<float>(1,1) && render.center==types::Vec2<float>(128,128) && view.zoom==0 &&
-                (view.scale_numerator<=0 || view.scale_numerator==view.scale_denominator);
-			static_.render.sprite.instanced_sprite = m_ism->GetScoutSprite( "Unit_" + m_id, render, native );
+            static_.render.sprite.instanced_sprite = m_ism->GetScoutSprite( "Unit_" + m_id, *m_scout_render, UsesNativeMapPlacement() );
 		}
 		return &static_.render.sprite;
 	}

@@ -6,9 +6,70 @@
 #include <SDL_image.h>
 #include <cstdlib>
 #include <limits>
+#include <filesystem>
+#include <fstream>
+#include "loader/texture/SDL2.h"
+#include "loader/cvr/CvrActorMaterial.h"
+#include "util/FinallyGuard.h"
+#include "util/UUID.h"
+
 
 namespace gse::tests {
 void AddSmacBaseCardTests(task::gsetests::GSETests* task) {
+    task->AddTest("Base console actual SDL loader uses Gamma100 common palette and retained reserved pixels",GT(){
+        return []()->std::string {
+            namespace fs=std::filesystem;
+            const auto directory=fs::temp_directory_path()/("glsmac-base-display-"+util::UUID::Generate());
+            const auto data=directory/"default",faction=data/"univ.pcx",common=data/"palette.pcx";
+            fs::create_directory(directory);fs::create_directory(data);
+            util::FinallyGuard remove([&]{std::error_code ignored;fs::remove(faction,ignored);fs::remove(common,ignored);
+                fs::remove(data,ignored);fs::remove(directory,ignored);});
+            using Palette=std::array<std::array<uint8_t,3>,256>;
+            const auto write_pcx=[](const fs::path& path,int width,int height,const std::vector<uint8_t>& pixels,const Palette& palette) {
+                std::vector<uint8_t> bytes(128,0);bytes[0]=10;bytes[1]=5;bytes[2]=1;bytes[3]=8;bytes[65]=1;
+                const auto word=[&](size_t at,int value){bytes[at]=value&255;bytes[at+1]=(value>>8)&255;};
+                word(8,width-1);word(10,height-1);word(66,width);word(68,1);
+                for(const auto value:pixels) {if(value>=192) {bytes.push_back(193);}bytes.push_back(value);}
+                bytes.push_back(12);for(const auto& rgb:palette) {bytes.insert(bytes.end(),rgb.begin(),rgb.end());}
+                std::ofstream file(path,std::ios::binary);file.write(reinterpret_cast<const char*>(bytes.data()),bytes.size());
+                if(!file) {throw std::runtime_error("Cannot write Base palette PCX fixture");}
+                return bytes;
+            };
+            Palette embedded{},active{};for(auto& rgb:embedded) {rgb={20,40,60};}
+            active[0]={255,1,240};
+            std::vector<uint8_t> pixels(102*77,255);
+            for(size_t y=1;y<=75;++y) {for(size_t x=1;x<=100;++x) {pixels[y*102+x]=0;}}
+            // Loaded indices255,9(key),0(black lookup),246 and249.
+            for(const auto pair:std::array<std::pair<size_t,uint8_t>,5>{{{2,245},{4,255},{6,246},{8,236},{10,239}}}) {
+                pixels[102+1+pair.first]=pair.second;
+            }
+            write_pcx(faction,102,77,pixels,embedded);
+            const auto common_bytes=write_pcx(common,2,1,{0,0},active);
+            const auto model=loader::cvr::CvrActorMaterial::ReadSoftwareColors(
+                std::string_view(reinterpret_cast<const char*>(common_bytes.data()),common_bytes.size()));
+            GT_ASSERT(model[10]==(std::array<uint8_t,3>{255,1,240}),"display correction changed raw model palette/quantization input");
+            return WithWidgetTextureResources(directory.string(),[&]()->std::string {
+            std::shared_ptr<const loader::texture::SmacBaseCard> retained;
+            {
+                loader::texture::SDL2 loader;
+                for(bool roster_case:{false,true}) {
+                    const auto card=loader.GetSmacNativeBaseCard("univ.pcx",1,1,roster_case);
+                    GT_ASSERT(card && card==loader.GetSmacNativeBaseCard("univ.pcx",1,1,roster_case),"actual Base loader did not retain its cache");
+                    GT_ASSERT(card->texture->GetPixel(0,0)==types::Color::RGB(235,1,235),"Base display used raw or embedded common RGB instead of Gamma100");
+                    const auto at=[&](size_t source_x) {return roster_case?source_x/2:(source_x==2?1:source_x==4?3:source_x==6?4:source_x==8?6:7);};
+                    GT_ASSERT(card->texture->GetPixel(at(2),0)==types::Color::RGB(255,255,255) &&
+                        card->texture->GetPixel(at(8),0)==types::Color::RGB(245,0,0) &&
+                        card->texture->GetPixel(at(10),0)==types::Color::RGB(255,0,0),"Base display capped measured reserved colors");
+                    GT_ASSERT(card->texture->GetPixel(at(4),0)==0 &&
+                        card->texture->GetPixel(at(6),0)==types::Color::RGB(0,0,0),"Base display changed key9 or opaque source0 lookup");
+                    retained=card;
+                }
+            }
+            GT_ASSERT(retained->texture->GetPixel(0,0)==types::Color::RGB(235,1,235),"Base texture borrowed retired SDL source or loader palette");
+            GT_OK();
+            });
+        }();
+    });
     task->AddTest("Base console installed indexed art matches four original full-frame controls",GT(){
         const auto* path=std::getenv("GLSMAC_TEST_BASE_FACTION_ASSET");if(!path) {GT_OK();}
         return WithWidgetGraphics([&]()->std::string {

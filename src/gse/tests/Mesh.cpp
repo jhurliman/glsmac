@@ -116,6 +116,10 @@ std::string WithWidgetGraphics( const std::function< std::string() >& check, uns
 	return check();
 }
 
+std::string WithWidgetTextureResources(const std::string& path,const std::function<std::string()>& check) {
+    WidgetGraphicsFixture graphics(path);return check();
+}
+
 static std::string CheckMeshCoordinates() {
 	try {
 		types::mesh::Render mesh( 3, 1 );

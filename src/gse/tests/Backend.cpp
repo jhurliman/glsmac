@@ -2939,6 +2939,17 @@ public:
         });
     }
 
+    static game::backend::map::smac_site::RatingCache RetireReferenceSiteExclusions(
+        game::backend::map::smac_site::RatingCache sites,
+        const std::vector<game::backend::map::smac_site::Coordinate>& removed) {
+        for(const auto point:removed) {sites=sites.RemoveBase(point,{});}
+        const auto geometry=sites.GetGeometry();
+        for(int32_t y=0;y<geometry.height;++y) {for(int32_t x=y&1;x<geometry.width;x+=2) {
+            if(sites.Excluded({x,y})) {throw std::runtime_error("Reference retirement retained a ghost Base site exclusion");}
+        }}
+        return sites;
+    }
+
     void SpawnDeclaredReferenceBase(GSE_CALLABLE,game::backend::base::Base* base,const std::string& name) {
         m_game.GetBM()->SpawnBase(GSE_CALL,base);
         // This opt-in fixture constructs replacement initial state. Spawn still
@@ -3010,6 +3021,18 @@ public:
             // This opt-in fixture constructs replacement initial state. Generic
             // gameplay mutations remain guarded; publish a complete new sight
             // and occupancy input after construction, never weaken that guard.
+            // Generic entity reconstruction intentionally suspends knowledge,
+            // but retire the old native site exclusions before that suspension.
+            // All old Bases are removed, so there are no surviving centers in
+            // this staged batch. Preserve unrelated scores and cache history.
+            if(world->GetTerritoryTopology() && world->GetTerritoryTopology()->SiteRatings()) {
+                std::vector<map::smac_site::Coordinate> removed;
+                for(const auto id:base_ids) {
+                    const auto* tile=bm->GetBase(id)->GetTile();removed.push_back({int32_t(tile->coord.x),int32_t(tile->coord.y)});
+                }
+                world->m_territory_topology=world->GetTerritoryTopology()->WithSiteRatings(
+                    RetireReferenceSiteExclusions(*world->GetTerritoryTopology()->SiteRatings(),removed));
+            }
             world->m_worker_knowledge.reset();world->m_worker_knowledge_ready=false;
             m_game.WithRW([&]{
                 for(auto id:unit_ids) {um->DespawnUnit(GSE_CALL,id);}
@@ -10922,6 +10945,18 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
     });
     task->AddTest("Developed reference restores declared names after retired Base history",GT(){
         BackendFixture fixture;return fixture.CheckDevelopedReferenceRetiredNames();
+    });
+    task->AddTest("Developed reference retires all old site exclusions without clearing unrelated ratings",GT(){
+        using Cache=game::backend::map::smac_site::RatingCache;
+        const auto source=Cache::Fresh({80,80,true}).FoundBase({6,6}).FoundBase({36,36}).Resolve({66,66},[](auto){return uint8_t(9);});
+        const auto before=source.Serialize();
+        GT_ASSERT(source.Excluded({6,6}) && source.Excluded({36,36}),"Source cache did not contain old Base exclusions");
+        const auto cleared=BackendFixture::RetireReferenceSiteExclusions(source,{{6,6},{36,36}});
+        GT_ASSERT(!cleared.Excluded({6,6}) && !cleared.Excluded({36,36}) && cleared.Rating({66,66})==9 && source.Serialize()==before,
+            "Reference batch kept ghost marks, cleared unrelated scores, or changed its source cache");
+        const auto replacement=cleared.FoundBase({66,66});
+        GT_ASSERT(replacement.Excluded({66,66}) && !replacement.Excluded({6,6}),"Replacement Base retained a removed Base exclusion");
+        GT_OK();
     });
     task->AddTest("Export developed gameplay reference campaign",GT(){
         const auto* input=std::getenv("GLSMAC_REFERENCE_INPUT");const auto* output=std::getenv("GLSMAC_REFERENCE_OUTPUT");

@@ -14,6 +14,7 @@
 #include "game/backend/map/module/Finalize.h"
 #include "game/backend/map/module/Sprites.h"
 #include "fixtures/SmacTerrainHeights.h"
+#include "fixtures/SmacTerrainRaster.h"
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
 #include "game/backend/map/tile/Tile.h"
@@ -198,6 +199,44 @@ public:
 };
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
+
+    task->AddTest("SMAC indexed terrain generates759 actual native spans from vertices",GT(){
+        namespace raster=game::frontend::smac_terrain_raster;
+        size_t count=0;
+        for(const auto& c:smac_terrain_fixture::Cases()) {
+            const auto got=raster::GenerateSpans(c.triangle,c.clip);
+            GT_ASSERT(got==c.spans,std::string("Native span mismatch: ")+c.name);
+            count+=got.size();
+        }
+        GT_ASSERT(count==759,"Missing original terrain or edge-control spans");
+        GT_OK();
+    });
+    task->AddTest("SMAC indexed terrain sampling wraps shade and rejects invalid batches",GT(){
+        namespace raster=game::frontend::smac_terrain_raster;
+        raster::Bitmap initial{32,32,std::vector<uint8_t>(32*32,7)},texture{56,56,std::vector<uint8_t>(56*56,1)};
+        const auto unchanged=initial.pixels;
+        auto triangle=smac_terrain_fixture::Cases()[16].triangle;
+        for(auto& vertex:triangle) {vertex.uv={8,8};vertex.light=-2;}
+        const auto dark=raster::Draw(initial,texture,{triangle},{0,0,32,32});
+        GT_ASSERT(dark.writes==231 && std::count(dark.bitmap.pixels.begin(),dark.bitmap.pixels.end(),255)==231,"Negative shade did not wrap indexed pixels");
+        GT_ASSERT(dark.bitmap.pixels.front()==7 && initial.pixels==unchanged,"Draw changed the caller or pixels outside coverage");
+        std::fill(texture.pixels.begin(),texture.pixels.end(),255);
+        for(auto& vertex:triangle) {vertex.light=2;}
+        const auto bright=raster::Draw(initial,texture,{triangle},{0,0,32,32});
+        GT_ASSERT(bright.writes==231 && std::count(bright.bitmap.pixels.begin(),bright.bitmap.pixels.end(),1)==231,"Positive shade was clamped or added as RGB");
+        const auto rejects=[](const auto& f) {try {f();}catch(const std::invalid_argument&) {return true;}return false;};
+        auto invalid=triangle;invalid[0].screen[0]=32767;
+        GT_ASSERT(rejects([&]{raster::Draw(initial,texture,{triangle,invalid},{0,0,32,32});}),"Later invalid triangle returned a partial batch");
+        invalid=triangle;invalid[0].uv[0]=8192;
+        GT_ASSERT(rejects([&]{raster::GenerateSpans(invalid,{0,0,32,32});}),"Unsupported fixed-point UV accepted");
+        invalid=triangle;for(auto& v:invalid) {v.uv={60,60};}
+        GT_ASSERT(rejects([&]{raster::Draw(initial,texture,{invalid},{0,0,32,32});}),"Texture address outside source accepted");
+        auto malformed=texture;malformed.pixels.pop_back();
+        GT_ASSERT(rejects([&]{raster::Draw(initial,malformed,{triangle},{0,0,32,32});}),"Malformed source bitmap accepted");
+        const auto empty=raster::Draw(initial,texture,{triangle},{12,0,12,32});
+        GT_ASSERT(empty.writes==0 && empty.bitmap.pixels==unchanged && initial.pixels==unchanged,"Empty clip or failure mutated caller pixels");
+        GT_OK();
+    });
 
     task->AddTest("SMAC native camera provenance survives all ocean tiles without land metadata",GT(){
         TerrainRenderFixture f;GT_ASSERT(f.CheckProjectionProvenance(),"Projection inferred provenance from current land or retained stale mode");

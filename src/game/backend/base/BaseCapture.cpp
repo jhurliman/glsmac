@@ -253,7 +253,15 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	};
 	const auto prepare=[&] {
 		auto sight=m_game->PrepareConventionalSight(actor->m_id,new_owner,destination,source);
-        if(sight) {auto view=sight->CopyData();if(view.occupancy) {view.occupancy->SetAffiliation({static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y)},new_owner);sight=map::SmacWorkerKnowledge::Create(view);}}
+        if(sight) {auto view=sight->CopyData();if(view.occupancy) {
+            // Sight reads the projected post-move registry. Its ordinary move
+            // cache predicates expect pre-move membership, so stage capture's
+            // source departure and destination arrival explicitly here.
+            view.occupancy->RemoveUnit({static_cast<int32_t>(source->coord.x),static_cast<int32_t>(source->coord.y)},source->units.empty());
+            view.occupancy->PlaceUnit({static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y)},new_owner,false);
+            view.occupancy->SetAffiliation({static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y)},new_owner);
+            sight=map::SmacWorkerKnowledge::Create(view);
+        }}
         m_game->CommitBaseTerritory(sight);
 		std::optional<map::GlsmacTerritoryTopology> topology;
 		auto territory=m_game->PrepareBaseTerritory(nullptr,nullptr,false,&topology);m_game->CommitBaseTerritory(territory,topology);

@@ -31,6 +31,8 @@ namespace game {
 namespace frontend {
 namespace base {
 
+bool BaseManager::UsesNativeMapProjection() const {return m_game->UsesNativeMapProjection();}
+
 BaseManager::BaseManager( Game* game, bool smac_population )
 	: m_game( game )
 	, m_ism( game->GetISM() )

@@ -127,7 +127,7 @@ sprite::Sprite* Base::GetSpriteFor( faction::Faction* faction ) const {
 		}
 		size = i;
 	}
-	return faction->GetBaseSprite( m_tile->IsWater(), size, 0 ); // TODO: perimeter
+	return faction->GetBaseSprite( m_tile->IsWater(), size, 0, m_bm->UsesNativeMapProjection() ); // TODO: perimeter
 }
 
 void Base::Show() {

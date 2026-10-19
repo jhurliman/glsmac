@@ -62,6 +62,7 @@ CLASS( BaseManager, common::Class )
 	~BaseManager();
 
 	base::Base* GetBaseById( const size_t id ) const;
+    bool UsesNativeMapProjection() const;
 
 	void DefinePop( const backend::base::PopDef* def );
 	void UndefinePop( const std::string& id );

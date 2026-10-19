@@ -186,6 +186,7 @@ CLASS( Game, common::Module )
 	base::BaseManager* GetBM() const;
 	resource::ResourceManager* GetRM() const;
 	sprite::InstancedSpriteManager* GetISM() const;
+    bool UsesNativeMapProjection() const {return m_map_data.native_projection;}
 	text::InstancedTextManager* GetITM() const;
 
 	types::texture::Texture* GetSourceTexture( const ::resource::resource_t res );

@@ -82,7 +82,9 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	if(registered==m_bases.end() || registered->second->m_id!=registered->first) {THROW("Capture target is not a current Base");}
 	auto* captured=registered->second;const auto before=captured->GetSmacResourceContext();
 	if(captured->m_owner==actor->m_owner || captured->GetPopulation()<1 || before.golden_age || before.drone_riots || before.resource_events) {THROW("This Base requires a different capture rule");}
-	m_game->RequireSmacLocalHumanOwner(actor->m_owner);m_game->RequireSmacLocalHumanOwner(captured->m_owner);
+	m_game->RequireSmacLocalHumanOwner(actor->m_owner);
+    const auto& defending=m_game->RequireSmacProductionOwner(captured->m_owner);
+    if(defending.role!=roster::Role::Single && defending.role!=roster::Role::Player) {THROW("Capture defender requires a bound local participant");}
 	const auto resolved=um->ResolveConventional(actor->Conventional(),actor->m_owner);
 	const auto design=m_game->ResolveConventionalDesign(actor->Conventional(),*m_game->m_simulation);
 	const auto& catalog=state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
@@ -134,6 +136,17 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 		if(!entry.second->m_smac_source_id || *entry.second->m_smac_source_id>33) {THROW("Advanced facility capture needs its separate rules");}
 		headquarters=headquarters || *entry.second->m_smac_source_id==1;
 	}
+    if(!simulation.IsHuman(old_owner)) {
+        const bool survives=std::any_of(m_bases.begin(),m_bases.end(),[&](const auto& entry) {
+            return entry.second!=captured && entry.second->m_owner==captured->m_owner;
+        });
+        // The paired native role control establishes ordinary retained HQ
+        // capture, not paid relocation, liberation or last-Base disposition.
+        if(raze || !headquarters || defender_economy.credits>=1000 || !survives || before.FormerOwner()!=old_owner
+            || (before.conquest && before.conquest->assimilation!=0)) {
+            THROW("Computer defender capture requires ordinary surviving unpaid Headquarters");
+        }
+    }
 	// Original HQ relocation precedes loot transfer and random facility loss.
 	// Booty retains the old treasury calculation even after the relocation fee.
 	if(headquarters && defender_economy.credits>=1000) {

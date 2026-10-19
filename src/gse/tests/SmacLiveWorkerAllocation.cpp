@@ -2272,10 +2272,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
         // The final extension distinguishes relocation scoring from nearest
         // home repair: the larger farther Base receives HQ, not the Former.
-        for(const int mode:{2,1,0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17}) {
-            const bool retained=mode>=10 && mode<16,liberation=retained && (mode%2==0 || mode>=14),raze=mode>=16;
-            const bool with_native=mode==8 || mode==9;const int scenario=raze ? 3:retained ? (mode==12 || mode==13 || mode==15 ? 4:3):with_native?mode-8:mode;
-            const size_t population=mode>=14 ? 1:scenario>=3 ? 3:2;
+        for(const int mode:{18,19,2,1,0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17}) {
+            const bool computer=mode>=18,retained=mode>=10 && mode<16,liberation=retained && (mode%2==0 || mode>=14),raze=mode==16 || mode==17;
+            const bool with_native=mode==8 || mode==9;const int scenario=computer ? (mode==19?5:3):raze ? 3:retained ? (mode==12 || mode==13 || mode==15 ? 4:3):with_native?mode-8:mode;
+            const size_t population=computer ? 3:mode>=14 ? 1:scenario>=3 ? 3:2;
             const bool paid=scenario>=5;const size_t final_population=population-(liberation ? 0:1);
             const SmacConquestState final_conquest{liberation ? 1:2,static_cast<uint8_t>(liberation ? 0:50)};
             const SmacGameplayRandomState final_random(3,liberation ? 3:1951609278u);
@@ -2296,7 +2296,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     const auto former=game->MakeSmacProductionItem(foreign,ProductionItemKind::Unit,1);
                     auto context=SmacBaseResourceContext{2,false,0,0,0x1000040u,false};
                     if(retained && i==0) {context.conquest=SmacConquestState{liberation ? 1:2,27};}
-                    if(raze && i==0) {context.uncaptured_former_owner=2;}
+                    if((raze || computer) && i==0) {context.uncaptured_former_owner=2;}
                     auto* base=new Base(game,702+i,foreign,foreign->GetPlayer()->GetFaction(),game->GetMap()->GetTile(20+6*i,16),"Capture "+std::to_string(i),{},pops,41,5,
                         ProductionState{former,7,former,7,std::vector<ProductionItem>{former}},context);
                     bm->SpawnBase(GSE_CALL,base);base->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},static_cast<int32_t>(pops.size())}},Roles());bases.push_back(base);
@@ -2346,6 +2346,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 shared_details.resize(4096);const std::array<uint8_t,5> detail_pattern{{0,1,127,128,255}};
                 for(size_t i=0;i<shared_details.size();++i) {shared_details[i]=detail_pattern[i%detail_pattern.size()];}
                 fixture.TerritoryTopology(game->GetMap()->GetTerritoryTopology()->WithLandmarkDetails(shared_details).Serialize());
+                if(computer) {fixture.ResourceState([](auto& state){state.human_membership=2;});}
                 fixture.Updates();const auto before=fixture.Snapshot();const auto next=Unit::GetNextId();const auto jsf=game->GetRandom()->GetStateString();
                 auto* survivor=&target->m_pops.at(19);auto* base_wrapper=target->Wrap(GSE_CALL);auto* retained=survivor->Wrap(GSE_CALL);auto* retired=target->m_pops.at(18+population).Wrap(GSE_CALL);
                 if(scenario==2) {
@@ -2354,6 +2355,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     GT_ASSERT(Rejects([&]{um->ValidateConventionalMove(actor,target->GetTile(),0);}) && fixture.Snapshot()==rejected
                         && fixture.Updates().empty() && Pop::Unwrap(retained)==survivor && retired->type!=VT_UNDEFINED,
                         "future resource query failure did not restore capture preview authority");GT_OK();
+                }
+                if(computer && paid) {
+                    const auto random=fixture.GameplayRandom();
+                    GT_ASSERT(Rejects([&]{fixture.MoveEvent(GSE_CALL,actor,target->GetTile());}) && fixture.Snapshot()==before
+                        && fixture.GameplayRandom()==random && fixture.Updates().empty(),"Unproven computer HQ relocation changed authority or RNG");GT_OK();
                 }
                 um->ValidateConventionalMove(actor,target->GetTile(),0);
                 GT_ASSERT(*game->GetMap()->GetTerritoryTopology()->LandmarkDetails()==shared_details,"capture preview rewrote raw shared detail");
@@ -2455,7 +2461,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     "capture cleared the independent partial marker or foreign control");
                 saved=fixture.Snapshot();GT_OK();
             });if(!result.empty()) {return "capture: "+result;}
-            if(scenario==0 || scenario==3 || scenario==5 || scenario==7) {
+            if(!(computer && paid) && (scenario==0 || scenario==3 || scenario==5 || scenario==7)) {
                 ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true);restored.BasePresentationRoles(names);
                 const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
                     restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(702);
@@ -2476,6 +2482,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         && game->GetBM()->GetBase(703)->GetProductionState()->hurry_partial_paid,"captured paid marker lost through actual Start");
                     GT_ASSERT(base->GetSmacUpkeepCache() && base->GetSmacUpkeepCache()->calculation.nutrients.demand==static_cast<int32_t>(final_population*2),"actual Start lost the captured population's resource cache");
                     if(paid) {GT_ASSERT(game->GetBM()->GetBase(scenario==7 ? 704 : 703)->m_facilities.count("capture-hq"),"actual Start lost relocated Headquarters");}
+                    bool controls=false;restored.ResourceState([&](auto& state){controls=state.human_membership==(computer?2:6) && state.roster[1].active;});
+                    GT_ASSERT(controls,"Capture/actual Start changed the independently admitted computer defender control");
                     base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},SmacMoraleMode::Mode0);
                     GT_ASSERT(base->GetSmacResourceContext().conquest==std::optional<SmacConquestState>({liberation ? 1:2,static_cast<uint8_t>(liberation ? 0:49)}),"captured and reloaded Base did not reach the next assimilation tail");
                     if(with_native) {

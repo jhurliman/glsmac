@@ -40,7 +40,7 @@ sprite::Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size,
 	ASSERT( size < 4, "base size overflow ( " + std::to_string( size ) + " >= 4 )" );
 	ASSERT( perimeter_level < 3, "base perimeter level overflow ( " + std::to_string( perimeter_level ) + " >= 3 )" );
     const auto& layout=m_render.bases_render;
-    const bool native=native_projection && !is_water && layout.grid_x==1 && layout.grid_y==1 &&
+    const bool native=native_projection && layout.grid_x==1 && layout.grid_y==1 &&
         layout.cell_width==100 && layout.cell_height==75 && layout.cell_padding==1 &&
         layout.cell_cx==50 && layout.cell_cy==37 && layout.scale_x==1 && layout.scale_y==1;
 	const uint8_t index = ( is_water

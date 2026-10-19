@@ -7,6 +7,11 @@ controlled equivalent scene for the gameplay-map/console target, not an import o
 the supplied GOG screenshot or proof of the gameplay which would earn this state.
 No original asset or campaign bytes belong in Git.
 
+The source Scout is selected by owned conventional design plan3, rather than by
+the lowest conventional Unit ID. A preceding Colony Pod, Former or foreign Scout
+cannot replace it. The asset-free regression exercises those three preceding
+records, unchanged saved-world bytes during selection, and an absent owned Scout.
+
 Supply an idle local SMAC campaign with an owned canonical Base, ordinary Scout,
 complete worker knowledge and the default population presentation catalog. Input
 and output are explicit environment paths; output must not already exist. Run:
@@ -41,3 +46,9 @@ map render RNG constructor/restore behavior has its separate regression.
 The reference layout/zoom and original lossless framebuffer remain independent
 acceptance dependencies. This fixture supplies repeatable populated model state;
 it does not prove original projection, climate, lighting, models, fonts or UI.
+
+After the selection correction, the actual owned-input export and mixed-unit
+regression pass with allocation tracking. The new exported world and roster are
+byte-identical to the prior developed scene; only the inherited settings format
+changes from the intervening optional faction-summary catalog update. Existing
+scene captures therefore remain valid for this fixture-only correction.

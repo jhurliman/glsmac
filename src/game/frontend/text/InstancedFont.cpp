@@ -175,6 +175,7 @@ InstancedFont::InstancedFont( sprite::InstancedSpriteManager* ism, const types::
 }
 
 InstancedFont::~InstancedFont() {
+	for ( const auto& entry:m_base_names ) { m_ism->RemoveInstancedSpriteByKey(entry.second.sprite->key); }
 	for ( const auto& it : m_color_textures ) {
 		DELETE( it.second );
 	}
@@ -185,16 +186,18 @@ const std::string& InstancedFont::GetFontName() const {
 	return m_name;
 }
 
-const std::vector< sprite::InstancedSprite* > InstancedFont::GetSymbolSprites( const std::string& text, const types::Color& color, const types::Color& shadow_color ) {
+std::vector< sprite::InstancedSprite* > InstancedFont::AcquireSymbolSprites( const std::string& text, const types::Color& color, const types::Color& shadow_color ) {
 	if ( m_pixel_base_names ) {
 		if ( text.empty() ) { return {}; }
+		std::vector<sprite::InstancedSprite*> result;result.reserve(1);
 		const auto key=std::to_string(color.GetRGBA())+":"+std::to_string(shadow_color.GetRGBA())+":"+text;
 		const auto found=m_base_names.find(key);
-		if(found!=m_base_names.end()) {return {found->second};}
+		if(found!=m_base_names.end()) {++found->second.references;result.push_back(found->second.sprite);return result;}
 		auto raster=base::MakeSmacBaseNameRaster(text,*m_font,color,shadow_color);
 		auto* sprite=m_ism->GetPixelTextSprite(m_name+":"+key,std::move(raster.texture),raster.pixel_center);
-		m_base_names.emplace(key,sprite);
-		return {sprite};
+		try {m_base_names.emplace(key,BaseName{sprite,1});}
+		catch(...) {m_ism->RemoveInstancedSpriteByKey(sprite->key);throw;}
+		result.push_back(sprite);return result;
 	}
 	std::vector< sprite::InstancedSprite* > sprites = {};
 	auto* texture = GetColorizedTexture( color, shadow_color );
@@ -218,6 +221,21 @@ const std::vector< sprite::InstancedSprite* > InstancedFont::GetSymbolSprites( c
 		);
 	}
 	return sprites;
+}
+
+void InstancedFont::ReleaseSymbolSprites(const std::vector<sprite::InstancedSprite*>& sprites) {
+	if(!m_pixel_base_names || sprites.empty()) {return;}
+	ASSERT(sprites.size()==1,"whole Base name must own exactly one sprite");
+	for(auto it=m_base_names.begin();it!=m_base_names.end();++it) {
+		if(it->second.sprite==sprites.front()) {
+			ASSERT(it->second.references,"Base name reference underflow");
+			if(!--it->second.references) {
+				m_ism->RemoveInstancedSpriteByKey(it->second.sprite->key);m_base_names.erase(it);
+			}
+			return;
+		}
+	}
+	THROW("releasing unknown Base name sprite");
 }
 
 const std::vector< types::Vec2< float > > InstancedFont::GetSymbolOffsets( const std::string& text ) const {

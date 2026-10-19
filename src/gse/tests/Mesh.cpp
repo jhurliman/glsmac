@@ -882,7 +882,7 @@ void AddMeshTests( task::gsetests::GSETests* task ) {
         scene.SetWorldInstancePositions({{0,0,0}});
         game::frontend::sprite::InstancedSpriteManager sprites(&scene);
         game::frontend::text::InstancedFont labels(&sprites,&font,true);
-        const auto first=labels.GetSymbolSprites("iiiWWW",foreground,shadow),second=labels.GetSymbolSprites("iiiWWW",foreground,shadow);
+        const auto first=labels.AcquireSymbolSprites("iiiWWW",foreground,shadow),second=labels.AcquireSymbolSprites("iiiWWW",foreground,shadow);
         GT_ASSERT(first.size()==1 && first==second,"whole name did not reuse a single owned sprite");
         auto* actor=first[0]->actor->GetSpriteActor();
         const types::Vec3 anchor{2,3,4};
@@ -891,10 +891,26 @@ void AddMeshTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(actor->GetDimensions().x==raster.texture->GetWidth() && actor->GetDimensions().y==raster.texture->GetHeight(),
             "Base label bitmap was scaled before rendering");
         {game::frontend::text::InstancedText label("iiiWWW",&labels,foreground,shadow);label.ShowAt(anchor);label.Hide();}
-        GT_ASSERT(labels.GetSymbolSprites("",foreground,shadow).empty(),"empty Base name allocated a sprite");
+        GT_ASSERT(labels.AcquireSymbolSprites("",foreground,shadow).empty(),"empty Base name allocated a sprite");
         std::weak_ptr<types::texture::Texture> owned=first[0]->texture_owner;
-        const auto key=first[0]->key;sprites.RemoveInstancedSpriteByKey(key);
+        labels.ReleaseSymbolSprites(first);
+        GT_ASSERT(!owned.expired(),"shared Base name retired before its last label");
+        labels.ReleaseSymbolSprites(second);
         GT_ASSERT(owned.expired(),"retired Base name actor retained its texture");
+        std::weak_ptr<types::texture::Texture> last_owner;
+        {
+            game::frontend::text::InstancedText label("ji",&labels,foreground,shadow);label.ShowAt(anchor);
+            const auto probe=labels.AcquireSymbolSprites("ji",foreground,shadow);last_owner=probe[0]->texture_owner;
+            labels.ReleaseSymbolSprites(probe);
+            GT_ASSERT(!last_owner.expired(),"live InstancedText lost its shared name texture");
+        }
+        GT_ASSERT(last_owner.expired(),"destroying the final InstancedText did not evict its name");
+        for(int rename=0;rename<64;++rename) {
+            const auto unique=labels.AcquireSymbolSprites("i"+std::to_string(rename),foreground,shadow);
+            std::weak_ptr<types::texture::Texture> retired=unique[0]->texture_owner;
+            labels.ReleaseSymbolSprites(unique);
+            GT_ASSERT(retired.expired(),"successive Base rename retained an unused texture/actor");
+        }
         GT_OK();
     });
     task->AddTest("test instanced labels advance narrow glyphs without accumulating bearings",GT(){
@@ -908,12 +924,12 @@ void AddMeshTests( task::gsetests::GSETests* task ) {
         game::frontend::text::InstancedFont text(&sprites,&font);
         const auto narrow=text.GetSymbolOffsets("iii"),negative=text.GetSymbolOffsets("jjj");
         const auto wide=text.GetSymbolOffsets("WWW"),space=text.GetSymbolOffsets("i i");
-        const auto near=[](float a,float b){return std::abs(a-b)<0.000001f;};
-        GT_ASSERT(near(narrow[1].x-narrow[0].x,0.009f) && near(narrow[2].x-narrow[1].x,0.009f),
+        const auto close_float=[](float a,float b){return std::abs(a-b)<0.000001f;};
+        GT_ASSERT(close_float(narrow[1].x-narrow[0].x,0.009f) && close_float(narrow[2].x-narrow[1].x,0.009f),
             "narrow label characters accumulated bitmap left bearings instead of font advances");
-        GT_ASSERT(near(negative[1].x-negative[0].x,0.009f) && near(wide[1].x-wide[0].x,0.030f),
+        GT_ASSERT(close_float(negative[1].x-negative[0].x,0.009f) && close_float(wide[1].x-wide[0].x,0.030f),
             "negative bearing or wide glyph changed pen advance");
-        GT_ASSERT(near(space[2].x-space[0].x,0.021f),"space lost its own advance or inherited glyph padding");
+        GT_ASSERT(close_float(space[2].x-space[0].x,0.021f),"space lost its own advance or inherited glyph padding");
         GT_ASSERT(text.GetSymbolOffsets("").empty(),"empty label invented glyph offsets");
         GT_OK();
     });

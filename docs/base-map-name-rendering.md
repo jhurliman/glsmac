@@ -11,7 +11,9 @@ camera-dependent scaling. `RF_PIXEL_SPRITE` projects only the map anchor, snaps
 it to the nearest framebuffer pixel boundary, and places the bitmap's vertices
 in screen pixels. It preserves horizontal map wrapping through ordinary scene
 instances and disables texture smoothing. Generated texture ownership remains
-with the sprite manager until its actor retires. Name/owner changes use the
+with the sprite manager until its actor retires. Labels acquire shared name
+references; destroying the final label evicts its actor and bitmap immediately,
+so successive renames cannot accumulate unused scene actors or GPU textures. Name/owner changes use the
 existing Base identity refresh path; the legacy ruleset retains its old style.
 
 This implements the checked zoom0 name prefix. The current continuous camera has
@@ -24,7 +26,8 @@ as such in the contract; they are not original live screenshots.
 
 Focused regression covers three-pixel narrow advances, negative bearings,
 odd-width centering, whole-string shadow order, single-sprite cache reuse,
-unscaled geometry, unchanged world anchors and owned texture retirement. The
+unscaled geometry, unchanged world anchors, shared-label retirement, final
+InstancedText destruction and64successive unique-name evictions. The
 existing legacy-spacing and frontend Base owner/name refresh groups also pass
 with allocation tracking.
 

@@ -9,14 +9,17 @@ namespace frontend {
 namespace text {
 
 InstancedText::InstancedText( const std::string& text, InstancedFont* font, const types::Color& color, const types::Color& shadow_color )
-	: m_text( text ) {
-	m_text_sprites = font->GetSymbolSprites( m_text, color, shadow_color );
-	m_offsets = font->GetSymbolOffsets( m_text );
-	m_instance_ids.reserve( m_text_sprites.size() );
+	: m_text( text ), m_font(font) {
+	m_text_sprites = font->AcquireSymbolSprites( m_text, color, shadow_color );
+	try {
+		m_offsets = font->GetSymbolOffsets( m_text );
+		m_instance_ids.reserve( m_text_sprites.size() );
+	} catch(...) {m_font->ReleaseSymbolSprites(m_text_sprites);throw;}
 }
 
 InstancedText::~InstancedText() {
 	Hide();
+	m_font->ReleaseSymbolSprites(m_text_sprites);
 }
 
 void InstancedText::ShowAt( const types::Vec3& coords ) {

@@ -49,6 +49,9 @@ return (game) => {
 		},
 	});
 	const check = (condition, reason) => { if (!condition) { throw TestError(reason); } };
+	check(bottom_bar.pp.format_points(3, 3) == '1' && bottom_bar.pp.format_points(2, 3) == '0 2/3'
+		&& bottom_bar.pp.format_points(1, 3) == '0 1/3' && bottom_bar.pp.format_points(5, 3) == '1 2/3'
+		&& bottom_bar.pp.format_points(2, 4) == '0 2/4', 'Native movement fraction formatting differs');
 	let previous_item = null;
 	let previous_unit = null;
 	let previous_list = null;
@@ -66,12 +69,24 @@ return (game) => {
 			previous_item = null;
 			return;
 		}
+		const terrain = sections.tile_preview;
+		check(terrain.preview.left == 2 && terrain.preview.top == 1 && terrain.preview.width == 80 && terrain.preview.height == 40,
+			'terrain preview lost native80x40 extent/anchor');
+		check(terrain.lines.children[0].top + terrain.lines.children[0].measure().height == 56
+			&& terrain.bottom_line.top + terrain.bottom_line.measure().height == 113, 'terrain baselines drifted into preview');
 		const lines = sections.object_preview.lines.children;
-		check(#sizeof(lines) == (unit.is_immovable ? 3 : 4), 'wrong preview line count');
+		const held = unit.is_conventional && unit.get_conventional_state().order == 2;
+		check(#sizeof(lines) == (unit.is_immovable ? 4 : (held ? 6 : 5)), 'wrong preview line count');
+		check(lines[0].font == 'arialbd.ttf:12:mono' && lines[1].font == 'arial.ttf:12:mono', 'unit card lost native font distinction');
+		check(lines[0].top + lines[0].measure().height == 73 && lines[1].top + lines[1].measure().height == 86, 'unit card baselines drifted');
+		if (unit.is_conventional) { check(lines[3].text == (#is_defined(expected.home) ? expected.home : 'Independent'), 'unit home row is stale: ' + lines[3].text); }
+		if (held) { check(lines[5].text == 'Hold', 'live Hold order row missing'); }
 		check(lines[0].text == unit.get_def().name, 'wrong unit name');
-		check(lines[1].text == expected.stats, 'wrong preview stats: ' + lines[1].text);
+		const legacy_artillery = !unit.is_conventional && !unit.is_native && unit.get_def().id == 'SporeLauncher';
+		check(lines[1].text == (legacy_artillery ? expected.stats : '(' + expected.stats + ')'), 'wrong preview stats: ' + lines[1].text);
 		check(lines[2].text == expected.morale, 'wrong preview morale: ' + lines[2].text);
-		if (!unit.is_immovable) { check(lines[3].text == expected.moves, 'wrong remaining movement: ' + lines[3].text); }
+		if (!unit.is_immovable) { check(lines[4].text == expected.moves, 'wrong remaining movement: ' + lines[4].text); }
+		if (expected.moves == 'ALREADY MOVED') { check(lines[4].color == 'rgb(255,0,0)', 'Exhaustion lost native red warning'); }
 		check(sections.object_preview.preview.data.unit == unit, 'preview points at a different Unit');
 		const key = #to_string(unit.id);
 		const entry = sections.objects_list.units[key];

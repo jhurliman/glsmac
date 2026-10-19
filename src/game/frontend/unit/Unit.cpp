@@ -375,6 +375,10 @@ const bool Unit::IsMoving() const {
 	return m_mover.IsRunning();
 }
 
+sprite::InstancedSprite* Unit::GetCardSprite( bool roster ) const {
+	return m_def->GetCardSprite( roster );
+}
+
 const Unit::render_data_t& Unit::GetRenderData() const {
 	return m_render_data;
 }

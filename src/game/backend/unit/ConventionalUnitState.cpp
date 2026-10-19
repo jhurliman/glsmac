@@ -113,7 +113,8 @@ ConventionalUnitStats QueryConventionalUnit( const ConventionalUnitState& state,
 	const auto full = SmacConventionalAllowance( { context.basic_allowance, context.quantum, SmacMovementDomain::Land,
 		context.reactor, state.damage, allowance_morale, false, false } );
 	return { morale( mode ), allowance_morale, context.quantum, context.basic_allowance, full,
-		std::max( full - static_cast< int32_t >( state.spent ), 0 ), 10 * context.reactor - state.damage, 10 * context.reactor };
+		std::max( full - static_cast< int32_t >( state.spent ), 0 ), 10 * context.reactor - state.damage, 10 * context.reactor,
+		context.offense_rating, context.defense_rating };
 }
 
 }

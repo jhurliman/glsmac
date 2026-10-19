@@ -54,6 +54,7 @@ return {
 				class: 'bottombar-object-preview',
 				type: type,
 				data: data,
+				height: cls == 'Unit' ? 176 : 68,
 			});
 		} else {
 			this.preview.data = data;
@@ -71,26 +72,21 @@ return {
 			return;
 		}
 
-		this.lines = this.frame.listview({
-			left: 3,
-			right: 3,
-			top: 65,
-			bottom: 3,
-			itemsize: 13,
-		});
+		this.lines = this.frame.area({left: 0, right: 0, top: 0, bottom: 0});
+		let row = 0;
 
 		const f_line = (text, size, align) => {
-			let left = #undefined;
-			if (align == 'left') {
-				left = 3;
-			}
-			return this.lines.text({
+			const line = this.lines.text({
 				align: 'top ' + align,
 				color: 'rgb(116,156,56)',
-				font: 'arialnb.ttf:' + #to_string(size) + ':mono',
+				font: (size == 16 ? 'arialbd.ttf' : 'arial.ttf') + ':12:mono',
 				text: text,
-				left: left,
+				left: align == 'left' ? 0 : #undefined,
 			});
+			// Native baseline 139, then 13-pixel rows; clip origin is y=66.
+			line.top = 73 + row * 13 - line.measure().height;
+			row++;
+			return line;
 		};
 
 		switch (#classof(object)) {
@@ -99,19 +95,45 @@ return {
 
 				f_line(def.name, 16, 'center');
 
-				f_line(this.p.get_stats_str(object), 14, 'center');
+				const tuple = this.p.get_stats_str(object);
+				// Retain the legacy artillery offense decoration without nesting it.
+				const legacy_artillery = !object.is_conventional && !object.is_native && def.id == 'SporeLauncher';
+				f_line(legacy_artillery ? tuple : '(' + tuple + ')', 14, 'center');
 
 				if (object.is_conventional) {
 					const state = object.get_conventional_state();
 					const stats = object.query_conventional_stats(state.render_morale_mode);
 					f_line(stats.morale_name, 14, 'left');
-					f_line('Moves: ' + this.format_movement(#to_float(stats.remaining_allowance) / #to_float(stats.quantum)), 14, 'left');
+					let home = 'Independent';
+					if (state.home == 'base') {
+						home = 'Home unavailable';
+						for (base of this.p.game.get_bm().get_bases()) {
+							if (base.id == state.home_base_id) { home = base.name; }
+						}
+					}
+					f_line(home, 14, 'left');
+					const remaining = stats.remaining_allowance > 999 ? 999 : stats.remaining_allowance;
+					if (remaining > 0) {
+						f_line('Moves: ' + this.p.format_points(remaining, stats.quantum), 14, 'left');
+					} else {
+						const exhausted = f_line('ALREADY MOVED', 14, 'left');
+						exhausted.color = 'rgb(255,0,0)';
+					}
+					if (state.order == 2) { f_line('Hold', 14, 'left'); }
 				} else if (object.is_native) {
 					const stats = object.query_native_stats(0);
 					f_line(stats.morale_name, 14, 'left');
-					f_line('Moves: ' + this.format_movement(#to_float(stats.remaining_allowance) / #to_float(stats.quantum)), 14, 'left');
+					f_line('', 14, 'left');
+					const native_remaining = stats.remaining_allowance > 999 ? 999 : stats.remaining_allowance;
+					if (native_remaining > 0) {
+						f_line('Moves: ' + this.p.format_points(native_remaining, stats.quantum), 14, 'left');
+					} else {
+						const native_exhausted = f_line('ALREADY MOVED', 14, 'left');
+						native_exhausted.color = 'rgb(255,0,0)';
+					}
 				} else {
 					f_line(this.get_morale('NATIVE', object.morale), 14, 'left');
+					f_line('', 14, 'left');
 					if (!object.is_immovable) {
 						f_line('Moves: ' + this.format_movement(object.movement), 14, 'left');
 					}
@@ -175,22 +197,24 @@ return {
 		this.um = p.game.get_um();
 
 		p.ui.class('bottombar-object-preview').set({
-			align: 'top center',
-			top: 12,
-			width: 100,
-			height: 56,
+			align: 'top left',
+			top: 0,
+			left: 0,
+			width: 116,
+			height: 68,
 		});
 
 		const frame_outer = p.el.panel({
 			class: 'bottombar-panel',
 			align: 'top left',
-			top: 59,
-			bottom: 7,
-			left: 6,
-			width: 129,
+			top: 60,
+			bottom: 9,
+			left: 8,
+			width: 128,
 		});
 		this.frame = frame_outer.panel({
 			class: 'bottombar-panel-inner',
+			left: 6, right: 6, top: 6, bottom: 6,
 		});
 
 		p.map.on('unit_preview', (e) => {
@@ -202,6 +226,9 @@ return {
 		this.frame.listen(p.game, 'update_base', (e) => {
 			if (this.object_class == 'Base' && this.object_id == e.base.id) {
 				this.show(e.base);
+			} else if (this.object_class == 'Unit' && #is_defined(this.object) && this.object.is_conventional) {
+				const home = this.object.get_conventional_state().home_base_id;
+				if (#is_defined(home) && home == e.base.id) { this.show(this.object); }
 			}
 		});
 		this.frame.listen(p.game, 'base_despawn', (e) => {

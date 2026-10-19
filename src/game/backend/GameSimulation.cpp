@@ -450,6 +450,8 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
 	const auto ground = design.chassis == 0 ? Ground::Infantry : Ground::Speeder;
 	unit::ConventionalUnitContext result{ ground, movement->Quantum(), movement->OrdinaryGroundAllowance( ground, chassis.speed ),
 		std::nullopt, design.reactor };
+	result.offense_rating=weapon.offense;
+	result.defense_rating=defense.rating;
 	if ( former ) {
 		result.package = unit::ConventionalUnitContext::Package::Former;
 		result.presentation = unit::ConventionalUnitContext::Presentation::FormerMarker;

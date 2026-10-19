@@ -12,6 +12,7 @@
 #include "CvrSpartanRoverRenderer.h"
 #include "loader/cvr/CvrSpartanRoverRenderer.h"
 #include "game/backend/unit/CvrScoutRender.h"
+#include "game/backend/unit/FormerMarkerRender.h"
 #include "game/frontend/unit/Unit.h"
 #include "game/frontend/unit/UnitDef.h"
 #include "game/frontend/unit/UnitManager.h"
@@ -2313,8 +2314,58 @@ public:
 			GT_ASSERT( frontend.m_widget_relations.at( ::ui::WT_UNIT_PREVIEW ).at( widget ) == 1 && widget->GetTexture( 1 ),
 				"retained widget did not replace its retired update callback" );
 			presenter->Update( widget, unit.get() ); // real repeated clear/update
-			auto* scout_texture = actor->GetTexture();
-			std::weak_ptr< types::texture::Texture > retained = instanced->texture_owner;
+			auto* selected_card = unit->GetCardSprite( false );
+			auto* roster_card = unit->GetCardSprite( true );
+			GT_ASSERT( selected_card != instanced && roster_card != selected_card
+				&& selected_card == unit->GetCardSprite( false ) && roster_card == unit->GetCardSprite( true ),
+				"native card zoom/facing reused the world actor or missed immutable cache reuse" );
+			// Inspect actual DOM mesh coordinates: the 256-square source is
+			// translated by wrapper-(128,128), not shrunk into this 32px widget.
+			bool native_extent = false;
+			graphics.ui_scene->WithActors( [ & ]( const auto& actors ) {
+				for ( const auto* candidate : actors ) {
+					const auto* mesh_actor = dynamic_cast< const scene::actor::Mesh* >( candidate );
+					if ( mesh_actor && mesh_actor->GetTexture() == selected_card->texture_owner.get() ) {
+						const auto* mesh = static_cast< const types::mesh::Render* >( mesh_actor->GetMesh() );
+						types::Vec3 first, last; mesh->GetVertexCoord( 0, &first ); mesh->GetVertexCoord( 2, &last );
+						const auto& preview_area = widget->GetGeometry()->m_area;
+						native_extent = first.x == ui->ClampX( std::round( preview_area.left - 71 ) ) && first.y == ui->ClampY( std::round( preview_area.top + 165 ) )
+							&& last.x == ui->ClampX( std::round( preview_area.left + 185 ) ) && last.y == ui->ClampY( std::round( preview_area.top - 91 ) );
+					}
+				}
+			} );
+			GT_ASSERT( native_extent, "selected card fitted transparent work surface instead of native pixel translation" );
+			{
+				StaticDef marker_source( "FALLBACK_FORMER", manager->GetMoraleSet( "SCOUT_TEST" ), "Explicit port marker", MT_LAND, 1,
+					new FormerMarkerRender() );
+				game::frontend::unit::UnitDef marker_def( ism.get(), &marker_source );
+				game::frontend::unit::Unit marker( um.get(), badges.get(), 199, &marker_def, &slot, &tile, {}, true, 1, 0, "Rank", 1 );
+				GT_ASSERT( !marker.GetCardSprite( false ), "port marker unexpectedly admitted as a CVR body" );
+				widget->GetGeometry()->SetHeight( 176 );
+				presenter->Update( widget, &marker );
+				bool compact = false;
+				graphics.ui_scene->WithActors( [ & ]( const auto& actors ) {
+					for ( const auto* candidate : actors ) {
+						const auto* image = dynamic_cast< const scene::actor::Mesh* >( candidate );
+						if ( image && image->GetTexture() == marker.GetRenderData().unit.texture ) {
+							const auto* mesh = static_cast< const types::mesh::Render* >( image->GetMesh() );
+							float top = 1e9f, bottom = -1e9f;
+							for ( size_t i = 0; i < mesh->GetVertexCount(); ++i ) {
+								types::Vec3 point; mesh->GetVertexCoord( i, &point );
+								top = std::min( top, point.y ); bottom = std::max( bottom, point.y );
+							}
+							const auto& region = widget->GetGeometry()->m_area;
+							compact = top == ui->ClampY( region.top + 68 ) && bottom == ui->ClampY( region.top );
+						}
+					}
+				} );
+				GT_ASSERT( compact, "non-CVR portrait stretched through selected card text rows" );
+				widget->GetGeometry()->SetHeight( 32 );
+				presenter->Update( widget, unit.get() );
+			}
+			auto* scout_texture = selected_card->texture_owner.get();
+			const auto card_baseline = std::string( reinterpret_cast< char* >( scout_texture->GetBitmap() ), scout_texture->GetBitmapSize() );
+			std::weak_ptr< types::texture::Texture > retained = selected_card->texture_owner;
 			auto* badge_copy = widget->GetTexture( 1 ); auto* health_copy = widget->GetTexture( 2 );
 			GT_ASSERT( badge_copy != unit->GetRenderData().badge.texture && health_copy != unit->GetRenderData().healthbar.texture,
 				"retained Scout preview still borrows badge manager textures" );
@@ -2342,7 +2393,7 @@ public:
             GT_ASSERT(order_badge_owner.expired(),"Order badge texture survived its actor bank retirement");
 			GT_ASSERT( !retained.expired() && graphics.Count( scout_texture ) == before_scout,
 				"scene/cache retirement released a still-borrowed Scout image" );
-			GT_ASSERT( std::string( reinterpret_cast< char* >( scout_texture->GetBitmap() ), scout_texture->GetBitmapSize() ) == baseline,
+			GT_ASSERT( std::string( reinterpret_cast< char* >( scout_texture->GetBitmap() ), scout_texture->GetBitmapSize() ) == card_baseline,
 				"preview image changed after native owner retirement" );
 			size_t preview_actors = 0;
 			graphics.ui_scene->WithActors( [ & ]( const auto& actors ) {

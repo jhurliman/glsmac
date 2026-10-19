@@ -71,10 +71,11 @@ return {
 				data: {
 					tile: tile,
 				},
-				align: 'top center',
-				top: 5,
-				width: 84,
-				height: 52,
+				align: 'top left',
+				left: 2,
+				top: 1,
+				width: 80,
+				height: 40,
 			});
 		} else {
 			this.preview.data = {
@@ -84,11 +85,13 @@ return {
 	},
 
 	line: (text) => {
-		this.lines.text({
+		const label = this.lines.text({
 			class: 'tile-preview-line',
 			text: text,
-			left: 3,
+			left: 0,
 		});
+		label.top = 56 + this.row * 13 - label.measure().height;
+		this.row = this.row + 1;
 	},
 
 	set_lines: () => {
@@ -96,23 +99,15 @@ return {
 		if (#is_defined(this.lines)) {
 			this.lines.remove(); // TODO: fix .clear()
 		}
-		this.lines = this.frame.listview({
-			left: 3,
-			right: 3,
-			top: 52,
-			bottom: 3,
-			itemsize: 13,
-		});
+		this.lines = this.frame.area({left: 0, right: 0, top: 0, bottom: 0});
+		this.row = 0;
 
 		if (this.show_resources) {
 
 			const resources = tile.get_resources();
 			this.line('Nutrients: ' + #to_string(resources.NUTRIENTS));
-			this.line(''); // TODO: hints
 			this.line('Minerals: ' + #to_string(resources.MINERALS));
-			this.line(''); // TODO: hints
 			this.line('Energy: ' + #to_string(resources.ENERGY));
-			this.line(''); // TODO: hints
 
 		} else {
 
@@ -154,20 +149,22 @@ return {
 
 		}
 
-		this.line(''); // tmp workaround for 'cut-off' bottom in listview
 
 		const txt = '(' + #to_string(tile.x) + ' , ' + #to_string(tile.y) + ')';
 		if (!#is_defined(this.bottom_line)) {
 			this.bottom_line = this.frame.text({
 				class: 'tile-preview-line',
 				align: 'bottom right',
-				bottom: 3,
-				right: 3,
+				bottom: 4,
+				right: 0,
 				text: txt,
 			});
 		} else {
 			this.bottom_line.text = txt;
 		}
+		this.bottom_line.align = 'top right';
+		this.bottom_line.bottom = #undefined;
+		this.bottom_line.top = 113 - this.bottom_line.measure().height;
 	},
 
 	init: (p) => {
@@ -176,19 +173,20 @@ return {
 
 		p.ui.class('tile-preview-line').set({
 			color: 'rgb(116,156,56)',
-			font: 'arialnb.ttf:14:mono',
+			font: 'arial.ttf:12:mono',
 		});
 
 		const frame_outer = p.el.panel({
 			class: 'bottombar-panel',
 			align: 'top left',
-			top: 59,
-			bottom: 67,
-			left: 137,
-			width: 106,
+			top: 60,
+			bottom: 68,
+			left: 140,
+			width: 101,
 		});
 		this.frame = frame_outer.panel({
 			class: 'bottombar-panel-inner',
+			left: 6, right: 6, top: 6, bottom: 6,
 		});
 
 		p.map.on('tile_preview', (e) => {

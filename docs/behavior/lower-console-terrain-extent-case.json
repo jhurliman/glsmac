@@ -1,0 +1,68 @@
+{
+  "scope": "Original console terrain call arguments executed to completion of base geometry; raster observation sinks, not painted-pixel bounds.",
+  "coordinates": "Console-local at 1024x768; screen y adds511. Coordinate extrema are geometric endpoints, not half-open raster bounds.",
+  "fixture": "Uniform band3 flat ordinary land; contour60; viewer3; tile8,8; renderer view argument0.",
+  "anchor": [
+    148,
+    67
+  ],
+  "scale_override": [
+    85,
+    100
+  ],
+  "clip": [
+    146,
+    66,
+    235,
+    183
+  ],
+  "mesh_center": [
+    188,
+    87
+  ],
+  "mesh_size": [
+    80,
+    40
+  ],
+  "mesh_coordinate_extrema": [
+    148,
+    67,
+    228,
+    107
+  ],
+  "triangles": [
+    [
+      188,
+      87,
+      148,
+      87,
+      188,
+      67
+    ],
+    [
+      188,
+      87,
+      188,
+      67,
+      228,
+      87
+    ],
+    [
+      188,
+      87,
+      228,
+      87,
+      188,
+      107
+    ],
+    [
+      188,
+      87,
+      188,
+      107,
+      148,
+      87
+    ]
+  ],
+  "painted_pixel_bounds": null
+}

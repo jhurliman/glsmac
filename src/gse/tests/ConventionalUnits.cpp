@@ -696,6 +696,8 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					auto* wrapper = target->Wrap( GSE_CALL );
 					// These are the production frontend's published event names and actual
 					// native wrapper identities; DOM.listen registered the real callbacks.
+					auto* tile_wrapper = target->GetTile()->Wrap( GSE_CALL );
+					game->GetState()->TriggerObject( game->GetMap(), "tile_preview", ARGS_F( &tile_wrapper ) { { "tile", tile_wrapper } }; } );
 					game->GetState()->TriggerObject( game->GetMap(), "unit_preview", ARGS_F( &wrapper ) { { "unit", wrapper } }; } );
 					game->GetState()->TriggerObject( game, "unit_select", ARGS_F( &wrapper ) { { "unit", wrapper } }; } );
 					check->Run( GSE_CALL, { wrapper, new value::Object( GSE_CALL, {
@@ -704,37 +706,42 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					GT_ASSERT( fixture.Snapshot() == before && game->GetRandom()->GetStateString() == jsf && fixture.GameplayRandom() == random
 						&& Unit::GetNextId() == id && fixture.Updates().empty(), "bottom bar changed authoritative world, RNG, ID or presentation queue" ); GT_OK();
 				};
-				auto error = inspect( legacy, "(?) - ? - 2", "native4", "Moves: 1.25" ); if ( !error.empty() ) { return error; }
-				error = inspect( unit, rover ? "? - ? - 2.0" : "? - ? - 1.0", "level1", rover ? "Moves: 2.0" : "Moves: 1.0" ); if ( !error.empty() ) { return error; }
+				auto error = inspect( legacy, "(?)-?-2", "native4", "Moves: 1.25" ); if ( !error.empty() ) { return error; }
+				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level1", rover ? "Moves: 2" : "Moves: 1" ); if ( !error.empty() ) { return error; }
 				auto* copied_stats = static_cast< value::Object* >( Call( GSE_CALL, static_cast< value::Object* >( unit->Wrap( GSE_CALL ) ),
 					"query_conventional_stats", { VALUE( value::Int,, 0 ) } ) );
+				GT_ASSERT(static_cast<value::Int*>(copied_stats->Get("offense_rating"))->value==1
+					&& static_cast<value::Int*>(copied_stats->Get("defense_rating"))->value==1,"checked preview lost owned weapon/armor ratings");
 				record.spent = 1; manager->UpdateConventionalUnit( GSE_CALL, unit, record );
-				error = inspect( unit, rover ? "? - ? - 2.0" : "? - ? - 1.0", "level1", rover ? "Moves: 1.67" : "Moves: 0.67" ); if ( !error.empty() ) { return error; }
+				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level1", rover ? "Moves: 1 2/3" : "Moves: 0 2/3" ); if ( !error.empty() ) { return error; }
 				record.stored_morale = 6; manager->UpdateConventionalUnit( GSE_CALL, unit, record );
-				error = inspect( unit, rover ? "? - ? - 3.0" : "? - ? - 2.0", "level6", rover ? "Moves: 2.67" : "Moves: 1.67" ); if ( !error.empty() ) { return error; }
+				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level6", rover ? "Moves: 2 2/3" : "Moves: 1 2/3" ); if ( !error.empty() ) { return error; }
 				GT_ASSERT( static_cast< value::String* >( copied_stats->Get( "morale_name" ) )->value == "level1", "query label did not remain an owned snapshot" );
 				record.damage = 5; manager->UpdateConventionalUnit( GSE_CALL, unit, record );
-				error = inspect( unit, rover ? "? - ? - 2.0" : "? - ? - 1.0", "level6", rover ? "Moves: 1.67" : "Moves: 0.67" ); if ( !error.empty() ) { return error; }
+				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level6", rover ? "Moves: 1 2/3" : "Moves: 0 2/3" ); if ( !error.empty() ) { return error; }
 				record.spent = 255; manager->UpdateConventionalUnit( GSE_CALL, unit, record );
-				error = inspect( unit, rover ? "? - ? - 2.0" : "? - ? - 1.0", "level6", "Moves: 0.0" ); if ( !error.empty() ) { return error; }
+				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level6", "ALREADY MOVED" ); if ( !error.empty() ) { return error; }
+				record.order = ConventionalUnitState::Order::Hold; manager->UpdateConventionalUnit( GSE_CALL, unit, record );
+				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level6", "ALREADY MOVED" ); if ( !error.empty() ) { return error; }
+				record.order = ConventionalUnitState::Order::None;
 				if ( !rover ) {
 					record.stored_morale = 1; record.damage = 0; record.spent = 0; fixture.RetainedMorale( -4, 7 );
 					manager->UpdateConventionalUnit( GSE_CALL, unit, record );
-					error = inspect( unit, "? - ? - 1.0", "level0", "Moves: 1.0" ); if ( !error.empty() ) { return error; }
+					error = inspect( unit, "1-1-1", "level0", "Moves: 1" ); if ( !error.empty() ) { return error; }
 					// Both explicit modes are accepted. They coincide for the admitted
 					// homeless context; no rioting-home distinction is invented here.
 					record.render_morale_mode = SmacMoraleMode::Mode1;
 					auto* alternate = Spawn( GSE_CALL, fixture, record, 73 );
-					error = inspect( alternate, "? - ? - 1.0", "level0", "Moves: 1.0" ); if ( !error.empty() ) { return error; }
+					error = inspect( alternate, "1-1-1", "level0", "Moves: 1" ); if ( !error.empty() ) { return error; }
 				}
 				legacy->Legacy().movement = 0.5f; legacy->Legacy().morale = 6;
-				error = inspect( legacy, "(?) - ? - 2", "native6", "Moves: 0.5" ); if ( !error.empty() ) { return error; }
+				error = inspect( legacy, "(?)-?-2", "native6", "Moves: 0.5" ); if ( !error.empty() ) { return error; }
 				auto* tower_def = new StaticDef( "FungalTower", manager->GetMoraleSet( "NATIVE" ), "Immovable fixture", MT_IMMOVABLE, 0.0f,
 					new CvrScoutRender( 2, 0, 0, 1, { 1.0f, 1.0f }, { 128.0f, 128.0f } ) );
 				manager->DefineUnit( tower_def );
 				auto* tower = new Unit( GSE_CALL, manager, 74, tower_def, legacy->m_owner, unit->GetTile(), 0.0f, 2, 1.0f, false );
 				manager->SpawnUnit( GSE_CALL, tower );
-				error = inspect( tower, "? - ? - 0", "native2", "unused" ); if ( !error.empty() ) { return error; }
+				error = inspect( tower, "?-?-0", "native2", "unused" ); if ( !error.empty() ) { return error; }
 				const auto retired_id = tower->m_id;
 				manager->DespawnUnit( GSE_CALL, retired_id );
 				game->GetState()->TriggerObject( game, "unit_despawn", ARGS_F( retired_id ) {
@@ -743,7 +750,35 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				check->Run( GSE_CALL, { legacy->Wrap( GSE_CALL ), new value::Object( GSE_CALL, {
 					{ "retired_id", VALUE( value::Int,, retired_id ) }
 				} ) } );
-				error = inspect( legacy, "(?) - ? - 2", "native6", "Moves: 0.5" ); if ( !error.empty() ) { return error; }
+				error = inspect( legacy, "(?)-?-2", "native6", "Moves: 0.5" ); if ( !error.empty() ) { return error; }
+				// A Base identity event must refresh the already selected homed
+				// Unit, without a unit-preview/reselection event doing it for us.
+				auto* home = new base::Base( game, 701, unit->m_owner, unit->m_owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 0, 0 ),
+					"Original home", {}, {}, 1, 0, {}, base::SmacBaseResourceContext{ record.owner_simulation_id, false, 0, 0, 0, false } );
+				game->GetBM()->SpawnBase( GSE_CALL, home );
+				record.home = ConventionalUnitState::Home::Base; record.home_base_id = 701;
+				record.stored_morale = 1; record.damage = 0; record.spent = 0; record.order = ConventionalUnitState::Order::None;
+				// Home is immutable identity in the admitted command profile.
+				unit = Spawn( GSE_CALL, fixture, record, 75, rover ? 2 : 0, rover ? "EXPLICIT_ROVER" : "EXPLICIT_SCOUT" );
+				auto* selected = unit->Wrap( GSE_CALL );
+				game->GetState()->TriggerObject( game->GetMap(), "unit_preview", ARGS_F( &selected ) { { "unit", selected } }; } );
+				game->GetState()->TriggerObject( game, "unit_select", ARGS_F( &selected ) { { "unit", selected } }; } );
+				const auto check_home = [&]( const std::string& name ) {
+					check->Run( GSE_CALL, { selected, new value::Object( GSE_CALL, {
+						{ "stats", VALUE( value::String,, rover ? "1-1-2" : "1-1-1" ) },
+						{ "morale", VALUE( value::String,, "level" + std::to_string(unit->QueryStats(record.render_morale_mode).effective_morale) ) },
+						{ "moves", VALUE( value::String,, rover ? "Moves: 2" : "Moves: 1" ) },
+						{ "home", VALUE( value::String,, name ) }
+					} ) } );
+				};
+				check_home( "Original home" );
+				home->m_name = "Renamed home"; fixture.Updates();
+				const auto before_home_read = fixture.Snapshot(), before_home_random = game->GetRandom()->GetStateString();
+				auto* home_wrapper = home->Wrap( GSE_CALL );
+				game->GetState()->TriggerObject( game, "update_base", ARGS_F( &home_wrapper ) { { "base", home_wrapper } }; } );
+				check_home( "Renamed home" );
+				GT_ASSERT( fixture.Snapshot() == before_home_read && game->GetRandom()->GetStateString() == before_home_random
+					&& fixture.Updates().empty(), "home identity read mutated the world or published a Unit refresh" );
 				// Losing an admitted query context must fail afresh rather than render
 				// cached values or invent retained morale. No full-world rollback claim.
 				fixture.Early(); const auto stored = unit->Conventional(); const auto random = fixture.GameplayRandom();

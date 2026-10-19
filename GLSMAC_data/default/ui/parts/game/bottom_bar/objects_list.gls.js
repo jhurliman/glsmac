@@ -24,7 +24,8 @@ return {
 			case 'Unit': {
 				type = 'unit-preview';
 				data.unit = object;
-				top = -2;
+				data.roster = true;
+				top = 0;
 				break;
 			}
 			case 'Base': {
@@ -107,11 +108,11 @@ return {
 			this.bases = {};
 		}
 		this.list = this.frame.scrollview({
-			left: 2,
-			right: 2,
-			top: 1,
+			left: 0,
+			right: 0,
+			top: 0,
 			bottom: -8,
-			padding: 2,
+			padding: 0,
 			has_hscroll: true,
 			has_vscroll: false,
 		});
@@ -144,11 +145,11 @@ return {
 
 		this.p = p;
 
-		this.object_width = 57;
+		this.object_width = 65;
 
 		p.ui.class('bottombar-objects-list-item').set({
 			width: parent.object_width,
-			height: 46,
+			height: 48,
 			_hover: {
 				border: 'rgb(14,40,49),1',
 			},
@@ -159,26 +160,27 @@ return {
 
 		p.ui.class('bottombar-objects-list-item-preview').set({
 			width: parent.object_width,
-			height: 40,
+			height: 38,
 		});
 
 		p.ui.class('bottombar-objects-list-item-text').set({
-			font: 'arialnb.ttf:12',
+			font: 'arial.ttf:12:mono',
 			color: 'rgb(235,235,235)',
 			align: 'bottom center',
-			bottom: 4,
+			bottom: 2,
 		});
 
 		const frame_outer = p.el.panel({
 			class: 'bottombar-panel',
 			align: 'bottom',
-			bottom: 7,
-			left: 137,
-			right: 258,
-			height: 58,
+			bottom: 9,
+			left: 139,
+			right: 260,
+			height: 56,
 		});
 		this.frame = frame_outer.panel({
 			class: 'bottombar-panel-inner',
+			left: 4, right: 4, top: 4, bottom: 4,
 		});
 
 		this.frame.listen(p.map, 'unit_preview', (e) => {

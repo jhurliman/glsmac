@@ -26,6 +26,7 @@ namespace frontend {
 
 namespace sprite {
 class InstancedSpriteManager;
+class InstancedSprite;
 }
 
 namespace unit {
@@ -38,6 +39,8 @@ public:
 	const bool IsArtillery() const;
 
 	sprite::Sprite* GetSprite( const backend::unit::morale_t morale );
+	// Native console draws use fixed facing/zoom, independent of the map.
+	sprite::InstancedSprite* GetCardSprite( bool roster ) const;
 
 	const bool IsImmovable() const;
 

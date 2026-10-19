@@ -331,6 +331,8 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 		const auto stats = QueryStats( static_cast< SmacMoraleMode >( mode ) );
 		return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
 			{ "effective_morale", VALUE( gse::value::Int,, stats.effective_morale ) }, { "allowance_morale", VALUE( gse::value::Int,, stats.allowance_morale ) },
+			{ "offense_rating", stats.offense_rating ? static_cast<gse::Value*>(VALUE(gse::value::Int,,*stats.offense_rating)) : VALUE(gse::value::Undefined) },
+			{ "defense_rating", stats.defense_rating ? static_cast<gse::Value*>(VALUE(gse::value::Int,,*stats.defense_rating)) : VALUE(gse::value::Undefined) },
 			{ "morale_name", VALUE( gse::value::String,, m_def->m_moraleset->m_morale_values.at( stats.effective_morale ).m_name ) },
 			{ "quantum", VALUE( gse::value::Int,, stats.quantum ) }, { "basic_allowance", VALUE( gse::value::Int,, stats.basic_allowance ) },
 			{ "full_allowance", VALUE( gse::value::Int,, stats.full_allowance ) }, { "remaining_allowance", VALUE( gse::value::Int,, stats.remaining_allowance ) },

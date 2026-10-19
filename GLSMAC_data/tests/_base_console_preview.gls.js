@@ -8,9 +8,10 @@ return (game) => {
 		if (!#is_defined(result.width)) { result.width = 129; }
 		result.remove = () => {};
 		result.listen = (object, name, callback) => { object.on(name, callback); };
-		result.measure = () => { return {width: #sizeof(#split(result.text, ' ')) * 40}; };
+		result.measure = () => { return {width: #sizeof(#split(result.text, ' ')) * 40, height: 10}; };
 		const child = (properties) => { const value = node(properties); result.children :+ value; return value; };
 		result.panel = child;
+		result.area = child;
 		result.widget = child;
 		result.listview = child;
 		if (!#is_defined(result.text)) { result.text = child; }

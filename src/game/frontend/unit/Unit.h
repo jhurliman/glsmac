@@ -74,6 +74,7 @@ public:
 	const size_t GetSelectionWeight() const;
 
 	sprite::Sprite* GetSprite() const;
+	sprite::InstancedSprite* GetCardSprite( bool roster ) const;
 	sprite::Sprite* GetBadgeSprite() const;
 	sprite::Sprite* GetBadgeHealthbarSprite() const;
 

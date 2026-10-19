@@ -2,7 +2,7 @@
 
 The lower console now uses the full233x23 original `turn.flc` artwork at
 console-local[783,61,1016,84), Arial bold14 with baseline78, and the active
-common software palette. Index0 leaves the retained console backing visible.
+common software palette (common entries10..245 capped at235; reserved colors preserved). Index0 leaves the retained console backing visible.
 The original asset and palette remain external; the embedded animation palette
 is deliberately ignored. The decoder admits only the measured19 declared frames
 and empty physical ring; menu playback is unchanged.

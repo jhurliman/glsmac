@@ -53,8 +53,9 @@ std::shared_ptr<const SmacTurnFrames> SDL2::GetSmacTurnFrames() {
     std::vector<uint8_t> bytes;util::FS::ReadFile(bytes,animation);
     const auto indexed=loader::flic::DecodeTurnComplete(bytes);
     util::FS::ReadFile(bytes,palette);
-    const auto colors=loader::cvr::CvrActorMaterial::ReadSoftwareColors(
-        std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));
+    using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
+    Surface common(load_image(bytes),SDL_FreeSurface);
+    const auto colors=MakeSmacSoftwarePalette(common && common->format ? common->format->palette : nullptr);
     auto result=std::make_shared<SmacTurnFrames>();
     for(size_t f=0;f<19;++f) {
         auto& rgba=result->rgba[f];rgba.resize(233*23*4);

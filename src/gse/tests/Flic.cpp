@@ -5,6 +5,7 @@
 
 #include "loader/flic/FlicReader.h"
 #include "loader/flic/TurnComplete.h"
+#include "loader/texture/SmacPalette.h"
 #include "util/FS.h"
 #include <cstdlib>
 #include "Mesh.h"
@@ -84,6 +85,24 @@ std::string CheckFrames() {
 		third.palette[ 11 ] == ( std::array< uint8_t, 3 >{ 88, 99, 110 } ) && third.palette[ 12 ] == first.palette[ 12 ], "palette-only frame lost retained state" );
 	GT_ASSERT( Rejects( [ & ] { loader::flic::FlicReader::ReadFrame( fixture.bytes, 3 ); } ), "physical ring frame became a declared frame" );
 	GT_OK();
+}
+
+std::string CheckTurnPalette() {
+    const std::unique_ptr<SDL_Palette,decltype(&SDL_FreePalette)> common(SDL_AllocPalette(256),SDL_FreePalette);
+    GT_ASSERT(common,"could not allocate common palette fixture");
+    std::array<SDL_Color,256> colors{};
+    colors[0]={255,1,240,255};colors[92]={252,104,24,255};colors[235]={250,251,255,255};
+    GT_ASSERT(SDL_SetPaletteColors(common.get(),colors.data(),0,256)==0,"could not set common fixture");
+    const auto active=loader::texture::MakeSmacSoftwarePalette(common.get());
+    GT_ASSERT(active[10]==(std::array<uint8_t,3>{235,1,235}) &&
+        active[102]==(std::array<uint8_t,3>{235,104,24}) &&
+        active[245]==(std::array<uint8_t,3>{235,235,235}),"turn common entries bypassed Gamma100 cap");
+    GT_ASSERT(active[9]==(std::array<uint8_t,3>{9,0,0}) &&
+        active[246]==(std::array<uint8_t,3>{245,0,0}) &&
+        active[249]==(std::array<uint8_t,3>{255,0,0}) &&
+        active[255]==(std::array<uint8_t,3>{255,255,255}),"common cap changed measured reserved colors");
+    GT_ASSERT(Rejects([&]{loader::texture::MakeSmacSoftwarePalette(nullptr);}),"missing common palette admitted");
+    GT_OK();
 }
 
 std::string CheckTurnSurface() {
@@ -201,6 +220,7 @@ std::string CheckMenu() {
 }
 
 void AddFlicTests( task::gsetests::GSETests* task ) {
+    task->AddTest("FLC Turn Complete Gamma100 caps common entries and preserves reserved colors",GT(){return CheckTurnPalette();});
     task->AddTest("FLC Turn Complete surface retains one texture and refreshes UI actor",GT(){return CheckTurnSurface();});
     task->AddTest("FLC Turn Complete native frames and explicit empty ring admission",GT(){
         try {return CheckTurnComplete();} catch(const std::exception& error) {GT_FAIL(error.what());}

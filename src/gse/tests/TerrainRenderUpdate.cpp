@@ -146,7 +146,7 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         }
         GT_OK();
     });
-    task->AddTest("SMAC ordinary land finalizer shares display picking and sprite heights without jitter",GT(){
+    task->AddTest("SMAC ordinary land finalizer shares display picking and retained tile heights without jitter",GT(){
         {TerrainRenderFixture f;GT_ASSERT(f.CheckNativeFinalizer(false),"Interior fan or visual RNG schedule differs");}
         {TerrainRenderFixture f;GT_ASSERT(f.CheckNativeFinalizer(true),"Coastal picking replaced native shared heights");}
         GT_OK();

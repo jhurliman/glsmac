@@ -217,6 +217,12 @@ public:
             live->terraforming=tile::TERRAFORMING_FARM;
             const auto farm=local.CopyNativeTerrain();
             if(!farm->tiles[40*40+20].ordinary || farm->tiles[40*40+20].items!=0x8020) return false;
+            live->features|=tile::FEATURE_RIVER;wire[record+9]=2;
+            local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+            const auto river=local.CopyNativeTerrain();
+            if(!river->tiles[40*40+20].ordinary || river->tiles[40*40+20].items!=0x82a0) return false;
+            live->features&=~tile::FEATURE_RIVER;wire[record+9]=0;
+            local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
             live->terraforming=tile::TERRAFORMING_ROAD;
             const auto updated=local.CopyNativeTerrain();
             if(updated->tiles[40*40+20].ordinary || updated->tiles[40*40+20].items!=0x20 || !before.ordinary) return false;
@@ -324,6 +330,27 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         const auto ocean=native::Render(world,source,view,0);
         center.items=0;
         GT_ASSERT(ocean.rgba==native::Render(world,source,view,0).rgba,"Ocean Fungus bypassed shelf admission");GT_OK();
+    });
+
+    task->AddTest("SMAC native terrain connects River after land and preserves display flag and extra pass",GT(){
+        namespace native=game::frontend::native_terrain;
+        ::game::native_terrain::World world;
+        for(auto& tile:world.tiles) {tile.band=3;tile.contour=70;tile.ordinary=true;}
+        native::Source source{{1024,768,std::vector<uint8_t>(1024*768,9)},{}};
+        source.palette[9]={1,2,3};source.palette[32]={77,88,99};
+        source.coast_mask={56,56,std::vector<uint8_t>(56*56,0)};
+        const std::vector<native::Placement> view{{{{40,40}},{{576,288}},44*(40*40+20)}};
+        auto& center=world.tiles[40*40+20];center.items=0x80;
+        const auto disabled=native::Render(world,source,view,0,{{0,0}},1);
+        const auto keyed=native::Render(world,source,view,0);
+        GT_ASSERT(keyed.rgba==disabled.rgba && keyed.writes==disabled.writes,"River key erased underlying land");
+        for(int y=259;y<315;++y) {std::fill_n(source.loaded.pixels.begin()+y*1024+280,56,32);}
+        const auto river=native::Render(world,source,view,0);
+        GT_ASSERT(river.writes>disabled.writes && river.rgba[(288*1024+575)*4]==77,"Connected River did not paint after land");
+        GT_ASSERT(native::Render(world,source,view,0,{{0,0}},1).rgba==disabled.rgba,"Disabled River display flag still painted");
+        center.items|=0x200;
+        const auto extra=native::Render(world,source,view,0);
+        GT_ASSERT(extra.rgba==river.rgba && extra.writes-river.writes==river.writes-disabled.writes,"Raw extra River pass was omitted or reordered");GT_OK();
     });
 
     task->AddTest("SMAC indexed terrain generates759 actual native spans from vertices",GT(){

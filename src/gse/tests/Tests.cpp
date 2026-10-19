@@ -6,6 +6,7 @@
 #include "TerrainRenderUpdate.h"
 #include "SmacTerrainPolygonRaster.h"
 #include "SmacWaterCoast.h"
+#include "SmacRiver.h"
 #include "SmacLandMaterial.h"
 #include "SmacTerrainLighting.h"
 #include "Async.h"
@@ -159,6 +160,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddTerrainRenderUpdateTests( task );
 		tests::AddSmacTerrainPolygonRasterTests( task );
         tests::AddSmacWaterCoastTests(task);
+        tests::AddSmacRiverTests(task);
 		tests::AddSmacLandMaterialTests( task );
 		tests::AddSmacTerrainLightingTests( task );
 		tests::AddRosterRecordTests( task );

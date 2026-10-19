@@ -1,5 +1,6 @@
 #include "NativeTerrainRenderer.h"
 #include "SmacWaterCoast.h"
+#include "SmacRiver.h"
 #include "game/backend/map/SmacTerrainGeometry.h"
 #include "game/backend/map/SmacTerrainLighting.h"
 #include <algorithm>
@@ -38,7 +39,7 @@ std::vector<Placement> View(int x,int y,bool wrap) {
     return result;
 }
 
-Frame Render(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset) {
+Frame Render(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags) {
     if(source.loaded.width<=0 || source.loaded.height<=0 ||
         uint64_t(source.loaded.width)*static_cast<uint32_t>(source.loaded.height)!=source.loaded.pixels.size()) {
         throw std::invalid_argument("Invalid indexed terrain source");
@@ -119,6 +120,10 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             commands.push_back(command);
         }
         append_water(x,y,points);
+        for(const auto& pass:smac_river::Select(x,y,points,*light,cells,display_flags)) {
+            raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
+            command.shader=pass.shader;command.shade_limits=pass.shade_limits;commands.push_back(command);
+        }
         ++frame.tiles;
     }
     const raster::Bitmap background{1024,511,std::vector<uint8_t>(1024*511)};

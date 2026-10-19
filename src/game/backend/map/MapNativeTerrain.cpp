@@ -18,6 +18,8 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         output.moisture=live->moisture?live->moisture-1:0;
         output.rockiness=live->rockiness?live->rockiness-1:0;
         if(live->features&tile::FEATURE_XENOFUNGUS) {output.items|=0x20;}
+        if(live->features&tile::FEATURE_RIVER) {output.items|=0x80;}
+        output.items|=original.Items()&0x200u; // retained raw extra-River conditional
         if(live->terraforming&tile::TERRAFORMING_FARM) {output.items|=0x8000;}
         if(live->terraforming&tile::TERRAFORMING_FOREST) {output.items|=0x200000;}
         // These landmark-specific geometric branches still need translation.
@@ -33,9 +35,9 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         //1/2/0x100 also select special art and stay excluded on sea.
         const uint32_t sea_memberships=output.band<3?0xd0u:0u;
         const auto unsupported_landmark_materials=landmarks&~(0xff400000u|0xa00u|4u|8u|0x400u|sea_memberships);
-        // Roads, rivers and other paint continuations are not overwritten by
+        // Roads and other unsupported paint continuations are not overwritten by
         // the ordinary land prefix. Existing GPU terrain remains underneath.
-        const auto unsupported_features=tile::FEATURE_RIVER|tile::FEATURE_JUNGLE|tile::FEATURE_VOLCANO|
+        const auto unsupported_features=tile::FEATURE_JUNGLE|tile::FEATURE_VOLCANO|
             tile::FEATURE_GARLAND_CRATER|tile::FEATURE_FOSSIL_FIELD_RIDGE|tile::FEATURE_DUNES;
         const auto unsupported_work=live->terraforming&~(tile::TERRAFORMING_FOREST|tile::TERRAFORMING_FARM);
         output.ordinary=!output.deformed && !unsupported_landmark_materials && !(live->features&unsupported_features) && !unsupported_work;

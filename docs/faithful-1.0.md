@@ -31,7 +31,7 @@ to load them from a user-supplied installation. See
 
 ## Current checkpoint — 2026-10-19
 
-Integration checkpoint: `26d293c3` (through [#361](https://github.com/jhurliman/glsmac/pull/361)).
+Integration checkpoint: `bd931ed7` (through [#369](https://github.com/jhurliman/glsmac/pull/369)).
 The dated notes below retain historical evidence; this checkpoint supersedes
 older implementation status. No milestone or release gate is declared complete.
 
@@ -50,18 +50,28 @@ older implementation status. No milestone or release gate is declared complete.
   See [comparison scope and commands](behavior/viewport-pixel-comparison.md).
   These controls have empty rosters and explicit allocation/visibility inputs;
   they do not establish complete game screens, fog, arbitrary cameras or GPU parity.
-- The Detail minimap has its own observer-aware terrain geometry and navigation
-  ([#357](https://github.com/jhurliman/glsmac/pull/357)). Original Base body,
-  defense/HQ and population-label controls are connected there
-  ([#360](https://github.com/jhurliman/glsmac/pull/360)). Main-map Base body
-  metadata is in [#362](https://github.com/jhurliman/glsmac/pull/362), still
-  awaiting integration at this checkpoint. Captured-city art family, complete
-  label/font parity and a matched populated original scene remain open.
+- The Detail minimap has observer-aware terrain geometry and navigation (#357),
+  with Base body, defense/HQ and population controls (#360). Main-map Base
+  metadata (#362), captured Base art from its former owner (#364), native
+  population geometry (#366), and full-canvas CVR body placement (#367) are
+  integrated. Complete label/font parity, unit shadows and a matched populated
+  original viewport remain open. Native terrain replacement remains behind the
+  inspector flag; the ordinary map is not yet a proven original viewport match.
 - The live dominance graph uses saved native faction identities/history (#345).
-  Legacy whole movement no longer prints a decimal suffix (#361). The lower
-  console terrain preview still uses the legacy tinted mesh; original preview
-  paint/lighting controls are the next reference dependency. Aircraft state,
-  remaining console actions and full screen matching remain open.
+  Whole movement no longer prints a decimal suffix (#361). The lower console
+  now uses the native flat-tile preview painter and owned texture cache (#365):
+  seven original controls pass, and an actual bare-tile upload matches all
+  1,600 opaque framebuffer pixels. Optional inspector geometry is excluded from
+  ordinary preview snapshots. Actual selected/roster Scout body dimensions are
+  15 by 33 and 11 by 23 pixels; full console composition, aircraft state and
+  remaining console actions are not established by those measurements.
+- Retained conquest distinguishes liberation to the former owner (#368).
+  Ordinary population-one capture removes a Base rather than retaining it at
+  zero population (#369), including homed Unit repair, territory, loot, history,
+  rollback and actual Start reload. Last population-one Base disposition is in
+  [#370](https://github.com/jhurliman/glsmac/pull/370), not integrated at this
+  checkpoint. Its original reference ends at a window-cleanup boundary; full
+  ending UI and executed movement-return parity remain unproven.
 - Earlier Mac interactive checks passed. Focused checks and selected CI do not
   replace release hardware, frame pacing, audio or complete campaign acceptance.
 - GitHub Codex review credit is exhausted; the user waived that merge requirement.

@@ -879,7 +879,7 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareConventionalUnit( GSE_
 	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
 	m_game->RequireSmacProductionOwner(owner);
-	if ( !m_game->IsRunning() || gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) {
+	if ( !m_game->IsRunning() || m_game->GetTurnId()==0 || gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) {
 		THROW( "Prepared unit creation requires its running owning accumulation" );
 	}
 	RequireConventionalUnitsReady();
@@ -946,6 +946,7 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareManufacturedConvention
 Unit* UnitManager::SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state ) {
 	m_game->RequireSmacGameplayActive();
 	m_game->CheckRW( GSE_CALL );
+    if(m_game->GetTurnId()==0) {THROW("Starting Units require the authenticated pending factory");}
 	m_game->RequireSmacProductionOwner(owner);
 	if ( m_game->IsRunning() ) {
 		auto prepared = PrepareConventionalUnit( GSE_CALL, id, def, owner, tile, state );

@@ -1,0 +1,497 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Two native complete setup-controller invocations in the same guest; actual per-owner social refresh between them, no gameplay commands or menu navigation. Second invocation uses actual Planet reload/preparation and original setup writers.",
+  "initial_storage": [
+    {
+      "owner": 0,
+      "field": "current",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 0,
+      "field": "retained",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 0,
+      "field": "third",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 0,
+      "field": "intrinsic",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 1,
+      "field": "current",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 1,
+      "field": "retained",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 1,
+      "field": "third",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 1,
+      "field": "intrinsic",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 2,
+      "field": "current",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 2,
+      "field": "retained",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 2,
+      "field": "third",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 2,
+      "field": "intrinsic",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 3,
+      "field": "current",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 3,
+      "field": "retained",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 3,
+      "field": "third",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 3,
+      "field": "intrinsic",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 4,
+      "field": "current",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 4,
+      "field": "retained",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 4,
+      "field": "third",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 4,
+      "field": "intrinsic",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 5,
+      "field": "current",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 5,
+      "field": "retained",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 5,
+      "field": "third",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 5,
+      "field": "intrinsic",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 6,
+      "field": "current",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 6,
+      "field": "retained",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 6,
+      "field": "third",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 6,
+      "field": "intrinsic",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 7,
+      "field": "current",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 7,
+      "field": "retained",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 7,
+      "field": "third",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    },
+    {
+      "owner": 7,
+      "field": "intrinsic",
+      "section": ".data",
+      "storage": "loader_zero_fill",
+      "file_hex": null
+    }
+  ],
+  "first_setup": {
+    "0": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    "1": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [0, 2, 0, 0, -1, -1, 0, 1, 0, 0, 0]
+    },
+    "2": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [-2, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0]
+    },
+    "3": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 2]
+    },
+    "4": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    "5": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [0, 0, 0, 0, 2, 1, 0, 0, 0, -1, 0]
+    },
+    "6": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [0, 0, 2, 0, 0, 0, 0, -1, 1, 0, -2]
+    },
+    "7": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  },
+  "previous_world_after_native_refresh": {
+    "0": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    "1": {
+      "current": [0, 2, 0, 0, -1, -1, 0, 1, 0, 0, 0],
+      "retained": [0, 2, 0, 0, -1, -1, 0, 1, 0, 0, 0],
+      "third": [0, 2, 0, 0, -1, -1, 0, 1, 0, 0, 0],
+      "intrinsic": [0, 2, 0, 0, -1, -1, 0, 1, 0, 0, 0]
+    },
+    "2": {
+      "current": [-2, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+      "retained": [-2, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+      "third": [-2, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+      "intrinsic": [-2, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0]
+    },
+    "3": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 2],
+      "retained": [0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 2],
+      "third": [0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 2],
+      "intrinsic": [0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 2]
+    },
+    "4": {
+      "current": [1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    "5": {
+      "current": [0, 0, 0, 0, 2, 1, 0, 0, 0, -1, 0],
+      "retained": [0, 0, 0, 0, 2, 1, 0, 0, 0, -1, 0],
+      "third": [0, 0, 0, 0, 2, 1, 0, 0, 0, -1, 0],
+      "intrinsic": [0, 0, 0, 0, 2, 1, 0, 0, 0, -1, 0]
+    },
+    "6": {
+      "current": [0, 0, 2, 0, 0, 0, 0, -1, 1, 0, -2],
+      "retained": [0, 0, 2, 0, 0, 0, 0, -1, 1, 0, -2],
+      "third": [0, 0, 2, 0, 0, 0, 0, -1, 1, 0, -2],
+      "intrinsic": [0, 0, 2, 0, 0, 0, 0, -1, 1, 0, -2]
+    },
+    "7": {
+      "current": [0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  },
+  "second_setup": {
+    "0": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    "1": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 2, 0, 0, -1, -1, 0, 1, 0, 0, 0],
+      "third": [0, 2, 0, 0, -1, -1, 0, 1, 0, 0, 0],
+      "intrinsic": [0, 2, 0, 0, -1, -1, 0, 1, 0, 0, 0]
+    },
+    "2": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [-2, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+      "third": [-2, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0],
+      "intrinsic": [-2, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0]
+    },
+    "3": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 2],
+      "third": [0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 2],
+      "intrinsic": [0, 0, 0, 0, 0, 0, 0, 0, -2, 0, 2]
+    },
+    "4": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0]
+    },
+    "5": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 0, 0, 2, 1, 0, 0, 0, -1, 0],
+      "third": [0, 0, 0, 0, 2, 1, 0, 0, 0, -1, 0],
+      "intrinsic": [0, 0, 0, 0, 2, 1, 0, 0, 0, -1, 0]
+    },
+    "6": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, 0, 2, 0, 0, 0, 0, -1, 1, 0, -2],
+      "third": [0, 0, 2, 0, 0, 0, 0, -1, 1, 0, -2],
+      "intrinsic": [0, 0, 2, 0, 0, 0, 0, -1, 1, 0, -2]
+    },
+    "7": {
+      "current": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "retained": [0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "third": [0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "intrinsic": [0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  },
+  "write_counts": [
+    {
+      "stage": "fresh_setup",
+      "field": "current",
+      "pc": "0x5c8bbf",
+      "count": 88
+    },
+    {
+      "stage": "fresh_setup",
+      "field": "intrinsic",
+      "pc": "0x5ca16d",
+      "count": 77
+    },
+    {
+      "stage": "fresh_setup",
+      "field": "intrinsic",
+      "pc": "0x5ca1b4",
+      "count": 19
+    },
+    {
+      "stage": "refresh_previous_world",
+      "field": "current",
+      "pc": "0x5cb9b6",
+      "count": 77
+    },
+    {
+      "stage": "refresh_previous_world",
+      "field": "current",
+      "pc": "0x5cbade",
+      "count": 308
+    },
+    {
+      "stage": "refresh_previous_world",
+      "field": "current",
+      "pc": "0x5cbbb5",
+      "count": 77
+    },
+    {
+      "stage": "refresh_previous_world",
+      "field": "current",
+      "pc": "0x5cbc20",
+      "count": 1
+    },
+    {
+      "stage": "refresh_previous_world",
+      "field": "retained",
+      "pc": "0x5cb9b6",
+      "count": 77
+    },
+    {
+      "stage": "refresh_previous_world",
+      "field": "retained",
+      "pc": "0x5cbade",
+      "count": 308
+    },
+    {
+      "stage": "refresh_previous_world",
+      "field": "retained",
+      "pc": "0x5cbbb5",
+      "count": 77
+    },
+    {
+      "stage": "refresh_previous_world",
+      "field": "retained",
+      "pc": "0x5cbc20",
+      "count": 1
+    },
+    {
+      "stage": "refresh_previous_world",
+      "field": "third",
+      "pc": "0x5cb9b6",
+      "count": 77
+    },
+    {
+      "stage": "refresh_previous_world",
+      "field": "third",
+      "pc": "0x5cbade",
+      "count": 308
+    },
+    {
+      "stage": "refresh_previous_world",
+      "field": "third",
+      "pc": "0x5cbbb5",
+      "count": 77
+    },
+    {
+      "stage": "refresh_previous_world",
+      "field": "third",
+      "pc": "0x5cbc20",
+      "count": 1
+    },
+    {
+      "stage": "second_setup",
+      "field": "current",
+      "pc": "0x5c8bbf",
+      "count": 88
+    },
+    {
+      "stage": "second_setup",
+      "field": "intrinsic",
+      "pc": "0x5ca16d",
+      "count": 77
+    },
+    {
+      "stage": "second_setup",
+      "field": "intrinsic",
+      "pc": "0x5ca1b4",
+      "count": 19
+    }
+  ],
+  "verified": {
+    "all_axes_all_slots": true,
+    "both_setups_write_no_retained_or_third": true,
+    "current_clear_each_setup_88_DWORDs": true,
+    "complete_social_write_journal_reconstructs_all_stages": true,
+    "whole_process_entry_or_main_menu_navigation": false
+  }
+}

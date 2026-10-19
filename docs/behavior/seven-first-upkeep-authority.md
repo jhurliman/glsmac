@@ -83,8 +83,9 @@ Validation checks the prior Gaia/Hive boundaries, every current/retained social 
 ## Port integration checkpoint
 
 The live default SMAC startup now publishes each owner's intrinsic vector after
-initial Base/Scout creation and before compensation, without exposing refreshed
-current/retained ratings to founding. The owned social producer also supports an
+initial Base/Scout creation and before compensation, without refreshing
+current ratings at founding. [Snapshot lifetime](social-snapshot-lifetime.md)
+establishes retained/third baseline availability separately from refresh phase. The owned social producer also supports an
 explicit saved-owner refresh. Tests compare all eleven intrinsic/current axes at
 each of the seven native command boundaries and the retained snapshot of every
 processed owner, including social-record round-trip and no replay.

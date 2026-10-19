@@ -6,6 +6,12 @@ namespace game::backend::faction {
 
 using SmacSocialRatings = std::array< int32_t, 11 >;
 
+struct SmacSocialSnapshots {
+    std::optional<SmacSocialRatings> retained,third;
+    bool operator==(const SmacSocialSnapshots& other) const {return retained==other.retained && third==other.third;}
+};
+using SmacSocialSnapshotStorage=std::array<SmacSocialSnapshots,8>;
+
 struct SmacFactionSocialState {
 	enum class Phase : int32_t { Early, Refreshed };
 	SmacSimulationAdmission admission;
@@ -15,6 +21,7 @@ struct SmacFactionSocialState {
 	// explicit when a new port world has no previously bound value to preserve.
 	std::optional< SmacSocialRatings > intrinsic, retained;
 	Phase phase = Phase::Early;
+    std::optional<SmacSocialRatings> third; // separate mode1 output, never an alias of retained
 	bool operator==( const SmacFactionSocialState& other ) const;
 };
 
@@ -29,8 +36,11 @@ struct SmacSocialState {
 	// Reset only the fields written by the original early reset. This is not a
 	// world-retirement or restore operation and preserves supplied snapshots.
 	static void ResetForStartup( SmacFactionSocialState& faction ) noexcept;
+    static SmacSocialSnapshotStorage FreshImageSnapshots();
+    void PreserveSnapshots(SmacSocialSnapshotStorage& storage) const;
 	static SmacSocialState NewWorld( const std::vector< SmacSimulationAdmission >& admissions,
-		const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles );
+		const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles,
+        const SmacSocialSnapshotStorage* snapshots=nullptr );
 
 	// Supported context: the four frozen neutral model-zero rows, no project or
 	// Nexus effects. Duplicate IMMUNITY records retain their shared-slot cost;

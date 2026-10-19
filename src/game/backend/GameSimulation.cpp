@@ -119,7 +119,7 @@ void Game::PrepareNewSimulation() {
 	}
 	try {
 		technology = faction::SmacTechnologyState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
-		social = faction::SmacSocialState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
+		social = faction::SmacSocialState::NewWorld( admissions, *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules(), &m_smac_cross_world_social );
 		if(!settings.GetSmacCombatRules() || (!settings.GetSmacCampaignRules() && !settings.IsOrdinarySmacCampaign())) {
 			throw std::runtime_error("New capability state requires frozen combat and campaign rules");
 		}
@@ -358,7 +358,7 @@ unit::ConventionalUnitState Game::PrepareStartingConventionalUnit( const slot::S
 		if ( &m_state->m_slots->GetSlot( participant.slot ) != owner ) { continue; }
 		const auto* social = m_simulation->value.social.Find( participant.simulation_id );
 		const auto* designs = m_simulation->value.designs.Find( participant.simulation_id );
-		if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Early || social->retained || !designs ) {
+		if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Early || !designs ) {
 			throw std::runtime_error( "Starting conventional unit requires unrefreshed admitted startup state" );
 		}
 		unit::ConventionalUnitState result{ designs->starting_scout, participant.simulation_id, 1, 0, 0, false,
@@ -379,9 +379,10 @@ unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::Convent
 unit::ConventionalUnitContext Game::ResolveConventionalUnit( const unit::ConventionalUnitState& state, const slot::Slot* owner, const BoundSimulation& simulation, bool defer_home ) const {
 	auto result = ResolveConventionalIdentity( state, owner, simulation );
 	const auto* social = simulation.value.social.Find( state.owner_simulation_id );
-	if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Refreshed || !social->retained ) {
-		throw std::runtime_error( "Conventional units require refreshed retained social state" );
-	}
+	if(!social || !social->retained || (social->phase!=faction::SmacFactionSocialState::Phase::Early
+        && social->phase!=faction::SmacFactionSocialState::Phase::Refreshed)) {
+        throw std::runtime_error("Conventional units require owned retained social state");
+    }
 	result.retained_morale = social->retained->at( 4 );
 	if ( state.home == unit::ConventionalUnitState::Home::Base ) {
 		// The complete downloaded Base records load after Units. Do not bind a
@@ -529,7 +530,7 @@ gse::Value* Game::CopySocialState( GSE_CALLABLE, const Player* player ) const {
 		{ "faction_id", VALUE( gse::value::String,, participant.faction_id ) },
 		{ "phase", VALUE( gse::value::String,, state.phase == faction::SmacFactionSocialState::Phase::Early ? "early" : "refreshed" ) },
 		{ "selected_models", array( state.selected ) }, { "pending_models", array( state.pending ) },
-		{ "current", array( state.current ) }, { "intrinsic", optional( state.intrinsic ) }, { "retained", optional( state.retained ) }
+		{ "current", array( state.current ) }, { "intrinsic", optional( state.intrinsic ) }, { "retained", optional( state.retained ) }, { "third", optional( state.third ) }
 	} ) );
 }
 

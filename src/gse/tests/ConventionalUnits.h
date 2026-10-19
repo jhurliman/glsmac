@@ -70,7 +70,8 @@ public:
 	static std::string WithCampaignMapSources(const std::function<std::string()>& check);
 	std::string CheckCampaignFrontendCancellation();
 	std::string CheckCampaignCallbackFailure(const std::string& path);
-	std::string CheckCampaignRestore(const std::string& path, const std::string& saved_world);
+	std::string CheckCampaignRestore(const std::string& path, const std::string& saved_world,
+		std::string* decoded_random = nullptr, bool advance = true);
 	static std::string WithControllerViewport( const std::function<std::string()>& check );
 	std::string CheckUnitCommandCompletion( game::backend::unit::Unit* actor, game::backend::unit::Unit* helper );
 	std::string CheckSelectedWorkController( game::backend::unit::Unit* actor );

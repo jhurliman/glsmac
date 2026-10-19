@@ -2900,7 +2900,8 @@ public:
         GT_OK();
     }
 
-    std::string CheckCampaignRestore(const std::string& path,const std::string& expected_world) {
+    std::string CheckCampaignRestore(const std::string& path,const std::string& expected_world,
+        std::string* decoded_random=nullptr,bool advance=true) {
         using namespace game::backend;
         const auto saved=campaign::Read(path);
         const auto before_turn=m_game.GetTurnId();
@@ -2940,6 +2941,7 @@ public:
             for(int i=0;i<4;++i){m_game.Iterate();}
             GT_ASSERT(m_game.m_active_admission && m_game.m_active_admission->stage==Game::StartupStage::InitializeMap
                 && m_game.m_pending_snapshot_turn && !m_game.m_simulation,"campaign did not use staged saved decode");
+            if(decoded_random) {*decoded_random=m_game.GetRandom()->GetStateString();}
             // Asset-free fixture skips only renderer construction. Decode and
             // the actual claimed Start/InitComplete consumer remain production.
             m_game.m_game_state=Game::GS_STARTING;
@@ -2976,8 +2978,10 @@ public:
             };
             GT_ASSERT(normalize_definition_order(m_game.SerializeWorldSnapshot())==normalize_definition_order(expected_world),
                 "campaign restore changed world bytes or population definition values");
-            m_game.Event(GSE_CALL,"complete_turn",{});ProcessEvents();
-            GT_ASSERT(m_game.GetTurnId()==before_turn+1 && !m_game.m_canonical_turn_failed,"restored campaign did not advance the next actual turn");
+            if(advance) {
+                m_game.Event(GSE_CALL,"complete_turn",{});ProcessEvents();
+                GT_ASSERT(m_game.GetTurnId()==before_turn+1 && !m_game.m_canonical_turn_failed,"restored campaign did not advance the next actual turn");
+            }
             GT_OK();
         });
     }
@@ -5890,7 +5894,8 @@ std::string ConventionalUnitFixture::CheckCampaignRejectedLoad(GSE_CALLABLE,cons
 std::string ConventionalUnitFixture::WithCampaignMapSources(const std::function<std::string()>& check) { return BackendFixture::WithCampaignMapSources(check); }
 std::string ConventionalUnitFixture::CheckCampaignCallbackFailure(const std::string& path) { return fixture->CheckCampaignCallbackFailure(path); }
 std::string ConventionalUnitFixture::CheckCampaignFrontendCancellation() { return fixture->CheckCampaignFrontendCancellation(); }
-std::string ConventionalUnitFixture::CheckCampaignRestore(const std::string& path,const std::string& world) {return fixture->CheckCampaignRestore(path,world);}
+std::string ConventionalUnitFixture::CheckCampaignRestore(const std::string& path,const std::string& world,
+    std::string* decoded_random,bool advance) {return fixture->CheckCampaignRestore(path,world,decoded_random,advance);}
 std::string ConventionalUnitFixture::WithControllerViewport( const std::function<std::string()>& check ) { return BackendFixture::WithControllerViewport( check ); }
 std::string ConventionalUnitFixture::CheckUnitCommandCompletion( game::backend::unit::Unit* actor, game::backend::unit::Unit* helper ) { return fixture->CheckUnitCommandCompletion( actor, helper ); }
 std::string ConventionalUnitFixture::CheckSelectedWorkController( game::backend::unit::Unit* actor ) { return fixture->CheckSelectedWorkController( actor ); }

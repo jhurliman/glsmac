@@ -11,7 +11,7 @@ struct Vertex { Point screen, uv; int32_t light; };
 using Triangle = std::array<Vertex, 3>;
 struct Polygon {std::array<Vertex,4> vertices{};uint8_t count=0;};
 using OwnerClut=std::array<std::array<uint8_t,256>,8>;
-enum class Shader {OpaqueShaded,KeyedShaded,KeyedUnlit,WaterDepth16,CoastMapped,OwnerClut};
+enum class Shader {OpaqueShaded,KeyedShaded,KeyedUnlit,WaterDepth16,CoastMapped,OwnerClut,Sprite,SpriteShadow};
 // Left/top inclusive, right/bottom exclusive, in the target bitmap.
 using Clip = std::array<int32_t, 4>;
 struct Span {
@@ -40,6 +40,8 @@ struct Command {
     std::array<uint8_t,53> mask_mapping{};
     const OwnerClut* owner_clut=nullptr;
     std::array<uint8_t,10> owner_mapping{};
+    Point sprite_origin{}; // top-left of the retained indexed bitmap
+    const std::array<uint8_t,256>* shadow_lookup=nullptr; // synchronous borrowed table
 };
 
 // Ordinary integer triangles only; preserves native winding, tie selection,

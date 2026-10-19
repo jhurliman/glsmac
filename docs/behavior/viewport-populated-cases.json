@@ -1,0 +1,2960 @@
+{
+  "scope": "Complete original normal viewport paint, native terrain then object dispatcher, three declared University Bases and two held Scouts. Full native model raster and final indexed target copy, native population/H/health overlays. Two independent first/repeat/east/back sequences: TextOutA suppressed with actual host font metrics, and current Windows indexed GDI glyph presentation. Explicit raw Planet fixture and controlled software3D/window memory initialization; not a naturally played start or historical Windows font parity. Nested geometry/helper diagnostic traces disabled; no native geometry/material/gameplay/raster return substituted.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "asset_hashes": {
+    "maps/planet.MP": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+    "TEXTURE.PCX": "3dfa56f9eaa2a13af4fac199a0ac9ff3bf59effed17871a24f15b1b553b7c0ab",
+    "TER1.PCX": "82ef33e48f40d00a60e08fbcc403b1ecd9b340bd065830e2658ba3bacbf5b327",
+    "UNIV.PCX": "84ccbaa954808a6fe14dc6f3f41850fbb37350f1af34359a21b8820ecf3019a5",
+    "PALETTE.PCX": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "UNITS.PCX": "1da9f262b4a90c6d26378e1421cc7bcc9dc561491337c1d8c111793a82b8285d",
+    "VI.cvr": "d2044c1f77a0e0377bc79c2dcbedc7fc3813d9c5e434a042a0e52fc9f0b779f1",
+    "viptr00.cvr": "572ca9d55ad49c2ab32a90ae8d3e1b1bc9a78e7901cf4387d26d0dde205a4cee",
+    "alpha.txt": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4"
+  },
+  "map_base_low16": 48992,
+  "flags": 67297,
+  "prior_terrain_flags": 67105,
+  "viewer": 3,
+  "all_map_revelation": 512,
+  "exploration_mask": 8,
+  "camera": [
+    22,
+    38
+  ],
+  "zoom": 0,
+  "size": [
+    1024,
+    511
+  ],
+  "pitch": 1024,
+  "initial_backing": 73,
+  "clear_index": 65,
+  "roster": {
+    "bases": [
+      {
+        "id": 0,
+        "tile": [
+          20,
+          36
+        ],
+        "population": 8,
+        "facilities": [],
+        "name": "University Eight"
+      },
+      {
+        "id": 1,
+        "tile": [
+          24,
+          38
+        ],
+        "population": 9,
+        "facilities": [
+          1
+        ],
+        "name": "University Nine"
+      },
+      {
+        "id": 2,
+        "tile": [
+          28,
+          40
+        ],
+        "population": 10,
+        "facilities": [],
+        "name": "University Ten"
+      }
+    ],
+    "units": [
+      {
+        "id": 0,
+        "tile": [
+          20,
+          36
+        ],
+        "damage": 3,
+        "facing": 0,
+        "home": 0
+      },
+      {
+        "id": 1,
+        "tile": [
+          24,
+          40
+        ],
+        "damage": 6,
+        "facing": 2,
+        "home": -1
+      }
+    ],
+    "base_records_hex": "14002400030308000000080000000800000000556e6976657273697479204569676874000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018002600030309000000080000000900000000556e6976657273697479204e696e650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001c00280003030a000000080000000a00000000556e69766572736974792054656e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "unit_records_hex": "140024000000000000000200000003000302000000000000000000000000000000000000010000080000000000000000ffffffff18002800000000000000020000000300060200000000000000000000000000000000000001000008000200000000ffffffffffff",
+    "design2_hex": "53636f757420506174726f6c000000000000000000000000000000000000000000000000000000010001030a00ffff000100ffff",
+    "tile_changes": [
+      {
+        "tile": [
+          20,
+          36
+        ],
+        "before": "694e5f0f084080ff00000000000040ff00000000000000000000000000000000000000000000000000000000",
+        "after": "694e530f084080ff01000000000040ff00000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "tile": [
+          24,
+          38
+        ],
+        "before": "6a40af0f080000ff00001040000040ff00001040000010400000104000001040000010400000104000001040",
+        "after": "6a40a30f080000ff01001040000040ff00001040000010400000104000001040000010400000104000001040"
+      },
+      {
+        "tile": [
+          28,
+          40
+        ],
+        "before": "6a4ecf0f084000ff000010000100402b00000000000000000000000000000000000000000000000000000000",
+        "after": "6a4ec30f084000ff010010000100402b00000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "tile": [
+          20,
+          36
+        ],
+        "before": "694e530f084080ff01000000000040ff00000000000000000000000000000000000000000000000000000000",
+        "after": "694e530f084080ff03000000000040ff00000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "tile": [
+          24,
+          40
+        ],
+        "before": "69474f0f084080ff00001040000040ff00000000000000000000000000000000000000000000000000000000",
+        "after": "6947430f084080ff02001040000040ff00000000000000000000000000000000000000000000000000000000"
+      }
+    ]
+  },
+  "palette_sha256": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6",
+  "fonts": [
+    {
+      "handle": 1077197952,
+      "font": {
+        "id": 100,
+        "LOGFONT_hex": "f4ffffff000000000000000000000000000000000000000007000000417269616c0000000000000009186600000000006c6b9b0078a12a40a4775f00",
+        "height": -12,
+        "weight": 0,
+        "face": "Arial",
+        "text_height": 15,
+        "ascent": 12,
+        "descent": 3,
+        "internal_leading": 3,
+        "metrics_hex": "0f0000000c0000000300000003000000000000000500000020000000900100000000000060000000600000001eff1f200000002700000000"
+      }
+    },
+    {
+      "handle": 1077197968,
+      "font": {
+        "id": 101,
+        "LOGFONT_hex": "f4ffffff000000000000000000000000000000000100000007000000417269616c0000000000000009186600000000006c6b9b0078a12a40a4775f00",
+        "height": -12,
+        "weight": 0,
+        "face": "Arial",
+        "text_height": 15,
+        "ascent": 12,
+        "descent": 3,
+        "internal_leading": 3,
+        "metrics_hex": "0f0000000c0000000300000003000000000000000500000017000000900100000000000060000000600000001eff1f20ff00002700000000"
+      }
+    },
+    {
+      "handle": 1077197984,
+      "font": {
+        "id": 102,
+        "LOGFONT_hex": "f4ffffff000000000000000000000000bc0200000000000007000000417269616c0000000000000009186600000000006c6b9b0078a12a40a4775f00",
+        "height": -12,
+        "weight": 700,
+        "face": "Arial",
+        "text_height": 15,
+        "ascent": 12,
+        "descent": 3,
+        "internal_leading": 3,
+        "metrics_hex": "0f0000000c0000000300000003000000000000000600000020000000bc0200000000000060000000600000001eff1f200000002700000000"
+      }
+    },
+    {
+      "handle": 1084475664,
+      "font": {
+        "id": 103,
+        "LOGFONT_hex": "f0ffffff000000000000000000000000bc0200000000000007000000417269616c000000b6010000c70000000d0200000101000001000000b6010000",
+        "height": -16,
+        "weight": 700,
+        "face": "Arial",
+        "text_height": 19,
+        "ascent": 15,
+        "descent": 4,
+        "internal_leading": 3,
+        "metrics_hex": "130000000f000000040000000300000001000000080000002a000000bc0200000000000060000000600000001eff1f200000002700000000"
+      }
+    },
+    {
+      "handle": 1084580608,
+      "font": {
+        "id": 104,
+        "LOGFONT_hex": "f4ffffff000000000000000000000000bc0200000000000007000000417269616c0000807402000024010000870200003e0100000000000074020000",
+        "height": -12,
+        "weight": 700,
+        "face": "Arial",
+        "text_height": 15,
+        "ascent": 12,
+        "descent": 3,
+        "internal_leading": 3,
+        "metrics_hex": "0f0000000c0000000300000003000000000000000600000020000000bc0200000000000060000000600000001eff1f200000002700000000"
+      }
+    }
+  ],
+  "Arial_bold_file_sha256": "e8f4e3baf6cc35fed6fcce3a540e8b39e8f6cda1d22a28f2ec8f526fef7a43f5",
+  "native_model_initialization": {
+    "fragment": [
+      "0x632ccc",
+      "0x632e2f"
+    ],
+    "color_bitmap": "0x9c1600",
+    "shadow_bitmap": "0x9c1ba8",
+    "depth_pointer": "0x50044560",
+    "context": "0x50066920",
+    "surface_descriptor_hex": "f0cca34060450450e066a540000100000001000000010000000100000001000001000000",
+    "models": [
+      {
+        "file": "VI.cvr",
+        "model": "0x7af6c8",
+        "loaded": "0x50000000",
+        "objects": 58,
+        "frames": 17,
+        "palette": "0x50000070",
+        "geometry_descriptors": "0x50001f50"
+      },
+      {
+        "file": "viptr00.cvr",
+        "model": "0x7af820",
+        "loaded": "0x5002ec40",
+        "objects": 1,
+        "frames": 32,
+        "palette": "0x5002ecb0",
+        "geometry_descriptors": "0x50030800"
+      }
+    ],
+    "constructor_calls": [
+      {
+        "return_to": "0x4d8987",
+        "model": "0x7af6c8",
+        "frame": 0,
+        "offset": [
+          -400.0,
+          200.0,
+          0.0
+        ]
+      },
+      {
+        "return_to": "0x4d888d",
+        "model": "0x7af820",
+        "frame": 0,
+        "offset": [
+          -400.0,
+          200.0,
+          0.0
+        ]
+      }
+    ],
+    "initial_color": 9,
+    "initial_depth": 65535,
+    "animation_counter": 0
+  },
+  "native_receipt_sha256": "32c5f2ff27d1626ca49c74f945f2bfddc0c7e4b8a55ac102e40871d0d5b23b44",
+  "fresh_initialization_receipt_sha256": "24cee0cab5c4acb14f8ef5ebb5216396169def09b5344b93260d77ba573ae42d",
+  "native_stores_checked": 7175964,
+  "host_glyph_changed_bytes_checked": 478,
+  "cases": [
+    {
+      "id": "indexed_first",
+      "host_fonts": false,
+      "context": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "43671e3251c4a856005c32c4d5a03aa36c347c90c35b848ccdb49b703404a03e",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "5eaf4b0306d1d3e9af7a177c70bc7760ed479c43c971bef9c00c44f7e8f96347",
+      "store_count": 1248947,
+      "store_sha256": "f687beeb7100a2a52d16e2587c349d2930d3f6a8bd4559037e62caa3362fb5fa",
+      "cache_sha256": "66d1dcc591d6a64c459e6e476f4ad0abe4a703c655b873d1b61645a5f7af935d",
+      "boundaries": [
+        {
+          "kind": "terrain_pass_start",
+          "file": "indexed_first.terrain_pass_start.bin",
+          "store_count": 523264,
+          "sha256": "f9cae6b6e135f68ac497c89bce33fcdb9d95c3e6c058227d91fde74aa234c54a",
+          "last_operation": "clear"
+        },
+        {
+          "kind": "terrain_complete",
+          "store_count": 1236125,
+          "sha256": "6f0767ae1eb7cc6c3d4658e9bcfd6ab0166295b32f3a31973f219859d4b65cd0"
+        }
+      ],
+      "object_calls": [
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            0,
+            432,
+            191,
+            0,
+            0
+          ],
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1236125
+        },
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            1,
+            624,
+            239,
+            0,
+            0
+          ],
+          "tile": [
+            24,
+            38
+          ],
+          "store_count": 1239887
+        },
+        {
+          "entry": "0x56fd50",
+          "caller": "0x47379f",
+          "args": [
+            9566532,
+            1,
+            624,
+            288,
+            0,
+            3,
+            1
+          ],
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244231
+        },
+        {
+          "entry": "0x4d7860",
+          "caller": "0x5701d1",
+          "args": [
+            9566532,
+            1,
+            624,
+            288,
+            3,
+            0,
+            1
+          ],
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244231
+        },
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            2,
+            816,
+            275,
+            0,
+            0
+          ],
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 1245335
+        }
+      ],
+      "text_calls": [
+        {
+          "text": "8",
+          "x": 435,
+          "y": 205,
+          "font": 103,
+          "COLORREF": 285147136,
+          "rgb": [
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            9,
+            19
+          ],
+          "native_store_count": 1239887
+        },
+        {
+          "text": "9",
+          "x": 627,
+          "y": 253,
+          "font": 103,
+          "COLORREF": 285147291,
+          "rgb": [
+            216,
+            224,
+            235
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            9,
+            19
+          ],
+          "native_store_count": 1244231
+        },
+        {
+          "text": "H",
+          "x": 635,
+          "y": 304,
+          "font": 104,
+          "COLORREF": 285147136,
+          "rgb": [
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            8,
+            15
+          ],
+          "native_store_count": 1245335
+        },
+        {
+          "text": "10",
+          "x": 819,
+          "y": 289,
+          "font": 103,
+          "COLORREF": 285147291,
+          "rgb": [
+            216,
+            224,
+            235
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            18,
+            19
+          ],
+          "native_store_count": 1248947
+        }
+      ],
+      "object_snapshots": [
+        {
+          "unit": 1,
+          "animation_counter": 0,
+          "fpu_control_word": 895,
+          "renderer_mode": 1,
+          "context_flags": 0,
+          "scene_flags": 1,
+          "unit_record": "18002800000000000000020000000300060200000000000000000000000000000000000001000008000200000000ffffffffffff"
+        }
+      ],
+      "object_paint_inputs": [
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1236125,
+          "bank": "0x7c7d4c",
+          "args": [
+            9566532,
+            9,
+            432,
+            191,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            87,
+            58
+          ],
+          "offset": [
+            6,
+            8
+          ],
+          "source_sha256": "cb046e5f888fec1d7240ce34a1ea7e509be228230be627f5a9eaa5314bb19b9c"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x572137",
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1239663,
+          "rect": [
+            432,
+            191,
+            446,
+            207
+          ],
+          "args": [
+            0,
+            0
+          ]
+        },
+        {
+          "entry": "0x5f8ad0",
+          "caller": "0x57216f",
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1239719,
+          "rect": [
+            433,
+            192,
+            445,
+            206
+          ],
+          "args": [
+            255
+          ]
+        },
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            24,
+            38
+          ],
+          "store_count": 1239887,
+          "bank": "0x7c7dd0",
+          "args": [
+            9566532,
+            9,
+            624,
+            239,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            91,
+            67
+          ],
+          "offset": [
+            2,
+            0
+          ],
+          "source_sha256": "21fc49ed0688b82659cb7e3cd5091927362d19e72456e919c52a3f498bc37978"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x57223e",
+          "tile": [
+            24,
+            38
+          ],
+          "store_count": 1244175,
+          "rect": [
+            624,
+            239,
+            638,
+            255
+          ],
+          "args": [
+            0,
+            0
+          ]
+        },
+        {
+          "entry": "0x5fd9e0",
+          "caller": "0x5fd9ca",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244453,
+          "bank": "0x9bbf38",
+          "args": [
+            9566532,
+            9,
+            546,
+            210
+          ],
+          "ratio": [
+            1,
+            1
+          ],
+          "size": [
+            256,
+            256
+          ],
+          "offset": [
+            0,
+            0
+          ],
+          "source_sha256": "fa26b8ac45a18a91c2027fd619114f2e16e2bcca1754da4794716ccd7f57ab0d"
+        },
+        {
+          "entry": "0x5fd9e0",
+          "caller": "0x5703e4",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244856,
+          "bank": "0x77ef30",
+          "args": [
+            9566532,
+            9,
+            624,
+            288
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            19,
+            26
+          ],
+          "offset": [
+            4,
+            4
+          ],
+          "source_sha256": "1b504ea09983c82efc8448124c50b337e4e988b3c0497b8da22b3512be72a531"
+        },
+        {
+          "entry": "0x5f8ad0",
+          "caller": "0x5704bc",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1245277,
+          "rect": [
+            630,
+            294,
+            632,
+            315
+          ],
+          "args": [
+            0
+          ]
+        },
+        {
+          "entry": "0x5f8ad0",
+          "caller": "0x570669",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1245319,
+          "rect": [
+            630,
+            294,
+            632,
+            302
+          ],
+          "args": [
+            249
+          ]
+        },
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 1245335,
+          "bank": "0x7c7d4c",
+          "args": [
+            9566532,
+            9,
+            816,
+            275,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            87,
+            58
+          ],
+          "offset": [
+            6,
+            8
+          ],
+          "source_sha256": "cb046e5f888fec1d7240ce34a1ea7e509be228230be627f5a9eaa5314bb19b9c"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x57223e",
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 1248873,
+          "rect": [
+            816,
+            275,
+            839,
+            291
+          ],
+          "args": [
+            0,
+            0
+          ]
+        }
+      ],
+      "clock": [],
+      "model_frame_records": 59,
+      "model_kernels": 65
+    },
+    {
+      "id": "indexed_repeat",
+      "host_fonts": false,
+      "context": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "43671e3251c4a856005c32c4d5a03aa36c347c90c35b848ccdb49b703404a03e",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "5eaf4b0306d1d3e9af7a177c70bc7760ed479c43c971bef9c00c44f7e8f96347",
+      "store_count": 1248947,
+      "store_sha256": "f687beeb7100a2a52d16e2587c349d2930d3f6a8bd4559037e62caa3362fb5fa",
+      "cache_sha256": "66d1dcc591d6a64c459e6e476f4ad0abe4a703c655b873d1b61645a5f7af935d",
+      "boundaries": [
+        {
+          "kind": "terrain_pass_start",
+          "file": "indexed_repeat.terrain_pass_start.bin",
+          "store_count": 523264,
+          "sha256": "f9cae6b6e135f68ac497c89bce33fcdb9d95c3e6c058227d91fde74aa234c54a",
+          "last_operation": "clear"
+        },
+        {
+          "kind": "terrain_complete",
+          "store_count": 1236125,
+          "sha256": "6f0767ae1eb7cc6c3d4658e9bcfd6ab0166295b32f3a31973f219859d4b65cd0"
+        }
+      ],
+      "object_calls": [
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            0,
+            432,
+            191,
+            0,
+            0
+          ],
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1236125
+        },
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            1,
+            624,
+            239,
+            0,
+            0
+          ],
+          "tile": [
+            24,
+            38
+          ],
+          "store_count": 1239887
+        },
+        {
+          "entry": "0x56fd50",
+          "caller": "0x47379f",
+          "args": [
+            9566532,
+            1,
+            624,
+            288,
+            0,
+            3,
+            1
+          ],
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244231
+        },
+        {
+          "entry": "0x4d7860",
+          "caller": "0x5701d1",
+          "args": [
+            9566532,
+            1,
+            624,
+            288,
+            3,
+            0,
+            1
+          ],
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244231
+        },
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            2,
+            816,
+            275,
+            0,
+            0
+          ],
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 1245335
+        }
+      ],
+      "text_calls": [
+        {
+          "text": "8",
+          "x": 435,
+          "y": 205,
+          "font": 103,
+          "COLORREF": 285147136,
+          "rgb": [
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            9,
+            19
+          ],
+          "native_store_count": 1239887
+        },
+        {
+          "text": "9",
+          "x": 627,
+          "y": 253,
+          "font": 103,
+          "COLORREF": 285147291,
+          "rgb": [
+            216,
+            224,
+            235
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            9,
+            19
+          ],
+          "native_store_count": 1244231
+        },
+        {
+          "text": "H",
+          "x": 635,
+          "y": 304,
+          "font": 104,
+          "COLORREF": 285147136,
+          "rgb": [
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            8,
+            15
+          ],
+          "native_store_count": 1245335
+        },
+        {
+          "text": "10",
+          "x": 819,
+          "y": 289,
+          "font": 103,
+          "COLORREF": 285147291,
+          "rgb": [
+            216,
+            224,
+            235
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            18,
+            19
+          ],
+          "native_store_count": 1248947
+        }
+      ],
+      "object_snapshots": [
+        {
+          "unit": 1,
+          "animation_counter": 0,
+          "fpu_control_word": 895,
+          "renderer_mode": 1,
+          "context_flags": 0,
+          "scene_flags": 1,
+          "unit_record": "18002800000000000000020000000300060200000000000000000000000000000000000001000008000200000000ffffffffffff"
+        }
+      ],
+      "object_paint_inputs": [
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1236125,
+          "bank": "0x7c7d4c",
+          "args": [
+            9566532,
+            9,
+            432,
+            191,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            87,
+            58
+          ],
+          "offset": [
+            6,
+            8
+          ],
+          "source_sha256": "cb046e5f888fec1d7240ce34a1ea7e509be228230be627f5a9eaa5314bb19b9c"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x572137",
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1239663,
+          "rect": [
+            432,
+            191,
+            446,
+            207
+          ],
+          "args": [
+            0,
+            0
+          ]
+        },
+        {
+          "entry": "0x5f8ad0",
+          "caller": "0x57216f",
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1239719,
+          "rect": [
+            433,
+            192,
+            445,
+            206
+          ],
+          "args": [
+            255
+          ]
+        },
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            24,
+            38
+          ],
+          "store_count": 1239887,
+          "bank": "0x7c7dd0",
+          "args": [
+            9566532,
+            9,
+            624,
+            239,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            91,
+            67
+          ],
+          "offset": [
+            2,
+            0
+          ],
+          "source_sha256": "21fc49ed0688b82659cb7e3cd5091927362d19e72456e919c52a3f498bc37978"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x57223e",
+          "tile": [
+            24,
+            38
+          ],
+          "store_count": 1244175,
+          "rect": [
+            624,
+            239,
+            638,
+            255
+          ],
+          "args": [
+            0,
+            0
+          ]
+        },
+        {
+          "entry": "0x5fd9e0",
+          "caller": "0x5fd9ca",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244453,
+          "bank": "0x9bbf38",
+          "args": [
+            9566532,
+            9,
+            546,
+            210
+          ],
+          "ratio": [
+            1,
+            1
+          ],
+          "size": [
+            256,
+            256
+          ],
+          "offset": [
+            0,
+            0
+          ],
+          "source_sha256": "fa26b8ac45a18a91c2027fd619114f2e16e2bcca1754da4794716ccd7f57ab0d"
+        },
+        {
+          "entry": "0x5fd9e0",
+          "caller": "0x5703e4",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244856,
+          "bank": "0x77ef30",
+          "args": [
+            9566532,
+            9,
+            624,
+            288
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            19,
+            26
+          ],
+          "offset": [
+            4,
+            4
+          ],
+          "source_sha256": "1b504ea09983c82efc8448124c50b337e4e988b3c0497b8da22b3512be72a531"
+        },
+        {
+          "entry": "0x5f8ad0",
+          "caller": "0x5704bc",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1245277,
+          "rect": [
+            630,
+            294,
+            632,
+            315
+          ],
+          "args": [
+            0
+          ]
+        },
+        {
+          "entry": "0x5f8ad0",
+          "caller": "0x570669",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1245319,
+          "rect": [
+            630,
+            294,
+            632,
+            302
+          ],
+          "args": [
+            249
+          ]
+        },
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 1245335,
+          "bank": "0x7c7d4c",
+          "args": [
+            9566532,
+            9,
+            816,
+            275,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            87,
+            58
+          ],
+          "offset": [
+            6,
+            8
+          ],
+          "source_sha256": "cb046e5f888fec1d7240ce34a1ea7e509be228230be627f5a9eaa5314bb19b9c"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x57223e",
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 1248873,
+          "rect": [
+            816,
+            275,
+            839,
+            291
+          ],
+          "args": [
+            0,
+            0
+          ]
+        }
+      ],
+      "clock": [],
+      "model_frame_records": 59,
+      "model_kernels": 65
+    },
+    {
+      "id": "indexed_pan_east",
+      "host_fonts": false,
+      "context": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "43671e3251c4a856005c32c4d5a03aa36c347c90c35b848ccdb49b703404a03e",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "89267ccff3c6b73980768e309263584ee90c55546033fe5b5942df85ee1ca4f5",
+      "store_count": 544622,
+      "store_sha256": "25cc6c758718ae8779eb3697e1163bec0272d86448c18bf2bbf2641209fa92b6",
+      "cache_sha256": "66d1dcc591d6a64c459e6e476f4ad0abe4a703c655b873d1b61645a5f7af935d",
+      "boundaries": [
+        {
+          "kind": "after_scroll",
+          "file": "indexed_pan_east.after_scroll.bin",
+          "store_count": 474208,
+          "sha256": "38239e86a43899ca0ec88efe3feeea21152759c1b9d349a8dd968260a929a3e6",
+          "last_operation": "scroll"
+        },
+        {
+          "kind": "terrain_pass_start",
+          "file": "indexed_pan_east.terrain_pass_start.bin",
+          "store_count": 474208,
+          "sha256": "38239e86a43899ca0ec88efe3feeea21152759c1b9d349a8dd968260a929a3e6",
+          "last_operation": "scroll"
+        },
+        {
+          "kind": "terrain_complete",
+          "store_count": 544622,
+          "sha256": "89267ccff3c6b73980768e309263584ee90c55546033fe5b5942df85ee1ca4f5"
+        }
+      ],
+      "object_calls": [
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            2,
+            720,
+            275,
+            0,
+            0
+          ],
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 544622
+        }
+      ],
+      "text_calls": [
+        {
+          "text": "10",
+          "x": 723,
+          "y": 289,
+          "font": 103,
+          "COLORREF": 285147291,
+          "rgb": [
+            216,
+            224,
+            235
+          ],
+          "clip": [
+            928,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            18,
+            19
+          ],
+          "native_store_count": 544622
+        }
+      ],
+      "object_snapshots": [],
+      "object_paint_inputs": [
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 544622,
+          "bank": "0x7c7d4c",
+          "args": [
+            9566532,
+            9,
+            720,
+            275,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            87,
+            58
+          ],
+          "offset": [
+            6,
+            8
+          ],
+          "source_sha256": "cb046e5f888fec1d7240ce34a1ea7e509be228230be627f5a9eaa5314bb19b9c"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x57223e",
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 544622,
+          "rect": [
+            720,
+            275,
+            743,
+            291
+          ],
+          "args": [
+            0,
+            0
+          ]
+        }
+      ],
+      "clock": [],
+      "model_frame_records": 0,
+      "model_kernels": 0
+    },
+    {
+      "id": "indexed_pan_back",
+      "host_fonts": false,
+      "context": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "43671e3251c4a856005c32c4d5a03aa36c347c90c35b848ccdb49b703404a03e",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "5eaf4b0306d1d3e9af7a177c70bc7760ed479c43c971bef9c00c44f7e8f96347",
+      "store_count": 545466,
+      "store_sha256": "c1712fcdd216ac1c9047e3cdadc450fe8bc81024bfd3343618ceb2c7dfed8e46",
+      "cache_sha256": "66d1dcc591d6a64c459e6e476f4ad0abe4a703c655b873d1b61645a5f7af935d",
+      "boundaries": [
+        {
+          "kind": "after_scroll",
+          "file": "indexed_pan_back.after_scroll.bin",
+          "store_count": 474208,
+          "sha256": "7710f22fc20aa40482492fa6327938786a3a8bbadb15f4abdcafd8e3b0fdd8fb",
+          "last_operation": "scroll"
+        },
+        {
+          "kind": "terrain_pass_start",
+          "file": "indexed_pan_back.terrain_pass_start.bin",
+          "store_count": 474208,
+          "sha256": "7710f22fc20aa40482492fa6327938786a3a8bbadb15f4abdcafd8e3b0fdd8fb",
+          "last_operation": "scroll"
+        },
+        {
+          "kind": "terrain_complete",
+          "store_count": 545466,
+          "sha256": "5eaf4b0306d1d3e9af7a177c70bc7760ed479c43c971bef9c00c44f7e8f96347"
+        }
+      ],
+      "object_calls": [],
+      "text_calls": [],
+      "object_snapshots": [],
+      "object_paint_inputs": [],
+      "clock": [],
+      "model_frame_records": 0,
+      "model_kernels": 0
+    },
+    {
+      "id": "presented_first",
+      "host_fonts": true,
+      "context": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "43671e3251c4a856005c32c4d5a03aa36c347c90c35b848ccdb49b703404a03e",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "d899b01f70605a92432f3f04b5ac92aeaaaac0996a4dfe22e8174fd55cc58398",
+      "store_count": 1248947,
+      "store_sha256": "f687beeb7100a2a52d16e2587c349d2930d3f6a8bd4559037e62caa3362fb5fa",
+      "cache_sha256": "66d1dcc591d6a64c459e6e476f4ad0abe4a703c655b873d1b61645a5f7af935d",
+      "boundaries": [
+        {
+          "kind": "terrain_pass_start",
+          "file": "presented_first.terrain_pass_start.bin",
+          "store_count": 523264,
+          "sha256": "f9cae6b6e135f68ac497c89bce33fcdb9d95c3e6c058227d91fde74aa234c54a",
+          "last_operation": "clear"
+        },
+        {
+          "kind": "terrain_complete",
+          "store_count": 1236125,
+          "sha256": "6f0767ae1eb7cc6c3d4658e9bcfd6ab0166295b32f3a31973f219859d4b65cd0"
+        }
+      ],
+      "object_calls": [
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            0,
+            432,
+            191,
+            0,
+            0
+          ],
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1236125
+        },
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            1,
+            624,
+            239,
+            0,
+            0
+          ],
+          "tile": [
+            24,
+            38
+          ],
+          "store_count": 1239887
+        },
+        {
+          "entry": "0x56fd50",
+          "caller": "0x47379f",
+          "args": [
+            9566532,
+            1,
+            624,
+            288,
+            0,
+            3,
+            1
+          ],
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244231
+        },
+        {
+          "entry": "0x4d7860",
+          "caller": "0x5701d1",
+          "args": [
+            9566532,
+            1,
+            624,
+            288,
+            3,
+            0,
+            1
+          ],
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244231
+        },
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            2,
+            816,
+            275,
+            0,
+            0
+          ],
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 1245335
+        }
+      ],
+      "text_calls": [
+        {
+          "text": "8",
+          "x": 435,
+          "y": 205,
+          "font": 103,
+          "COLORREF": 285147136,
+          "rgb": [
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            9,
+            19
+          ],
+          "native_store_count": 1239887,
+          "changed_bytes": 56,
+          "changes_sha256": "07e314ee4a157105cac0ff6d55cd8f54e52a984e507a9e97c54bda3f3fa0acbe"
+        },
+        {
+          "text": "9",
+          "x": 627,
+          "y": 253,
+          "font": 103,
+          "COLORREF": 285147291,
+          "rgb": [
+            216,
+            224,
+            235
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            9,
+            19
+          ],
+          "native_store_count": 1244231,
+          "changed_bytes": 58,
+          "changes_sha256": "3dcd3322b0e9dc1da531ef82c2b69113d50c65a562497fff11e328ef0c013cdc"
+        },
+        {
+          "text": "H",
+          "x": 635,
+          "y": 304,
+          "font": 104,
+          "COLORREF": 285147136,
+          "rgb": [
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            8,
+            15
+          ],
+          "native_store_count": 1245335,
+          "changed_bytes": 39,
+          "changes_sha256": "349801728fc9ba017e69c16c1482383d97b1a6c333cf420755149e4a95e4b8ac"
+        },
+        {
+          "text": "10",
+          "x": 819,
+          "y": 289,
+          "font": 103,
+          "COLORREF": 285147291,
+          "rgb": [
+            216,
+            224,
+            235
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            18,
+            19
+          ],
+          "native_store_count": 1248947,
+          "changed_bytes": 86,
+          "changes_sha256": "d0142bc9d35d6324dcb4533c8361376f689265a35c6e7857d0887bd18c14b79e"
+        }
+      ],
+      "object_snapshots": [
+        {
+          "unit": 1,
+          "animation_counter": 0,
+          "fpu_control_word": 895,
+          "renderer_mode": 1,
+          "context_flags": 0,
+          "scene_flags": 1,
+          "unit_record": "18002800000000000000020000000300060200000000000000000000000000000000000001000008000200000000ffffffffffff"
+        }
+      ],
+      "object_paint_inputs": [
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1236125,
+          "bank": "0x7c7d4c",
+          "args": [
+            9566532,
+            9,
+            432,
+            191,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            87,
+            58
+          ],
+          "offset": [
+            6,
+            8
+          ],
+          "source_sha256": "cb046e5f888fec1d7240ce34a1ea7e509be228230be627f5a9eaa5314bb19b9c"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x572137",
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1239663,
+          "rect": [
+            432,
+            191,
+            446,
+            207
+          ],
+          "args": [
+            0,
+            0
+          ]
+        },
+        {
+          "entry": "0x5f8ad0",
+          "caller": "0x57216f",
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1239719,
+          "rect": [
+            433,
+            192,
+            445,
+            206
+          ],
+          "args": [
+            255
+          ]
+        },
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            24,
+            38
+          ],
+          "store_count": 1239887,
+          "bank": "0x7c7dd0",
+          "args": [
+            9566532,
+            9,
+            624,
+            239,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            91,
+            67
+          ],
+          "offset": [
+            2,
+            0
+          ],
+          "source_sha256": "21fc49ed0688b82659cb7e3cd5091927362d19e72456e919c52a3f498bc37978"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x57223e",
+          "tile": [
+            24,
+            38
+          ],
+          "store_count": 1244175,
+          "rect": [
+            624,
+            239,
+            638,
+            255
+          ],
+          "args": [
+            0,
+            0
+          ]
+        },
+        {
+          "entry": "0x5fd9e0",
+          "caller": "0x5fd9ca",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244453,
+          "bank": "0x9bbf38",
+          "args": [
+            9566532,
+            9,
+            546,
+            210
+          ],
+          "ratio": [
+            1,
+            1
+          ],
+          "size": [
+            256,
+            256
+          ],
+          "offset": [
+            0,
+            0
+          ],
+          "source_sha256": "fa26b8ac45a18a91c2027fd619114f2e16e2bcca1754da4794716ccd7f57ab0d"
+        },
+        {
+          "entry": "0x5fd9e0",
+          "caller": "0x5703e4",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244856,
+          "bank": "0x77ef30",
+          "args": [
+            9566532,
+            9,
+            624,
+            288
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            19,
+            26
+          ],
+          "offset": [
+            4,
+            4
+          ],
+          "source_sha256": "1b504ea09983c82efc8448124c50b337e4e988b3c0497b8da22b3512be72a531"
+        },
+        {
+          "entry": "0x5f8ad0",
+          "caller": "0x5704bc",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1245277,
+          "rect": [
+            630,
+            294,
+            632,
+            315
+          ],
+          "args": [
+            0
+          ]
+        },
+        {
+          "entry": "0x5f8ad0",
+          "caller": "0x570669",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1245319,
+          "rect": [
+            630,
+            294,
+            632,
+            302
+          ],
+          "args": [
+            249
+          ]
+        },
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 1245335,
+          "bank": "0x7c7d4c",
+          "args": [
+            9566532,
+            9,
+            816,
+            275,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            87,
+            58
+          ],
+          "offset": [
+            6,
+            8
+          ],
+          "source_sha256": "cb046e5f888fec1d7240ce34a1ea7e509be228230be627f5a9eaa5314bb19b9c"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x57223e",
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 1248873,
+          "rect": [
+            816,
+            275,
+            839,
+            291
+          ],
+          "args": [
+            0,
+            0
+          ]
+        }
+      ],
+      "clock": [],
+      "model_frame_records": 59,
+      "model_kernels": 65
+    },
+    {
+      "id": "presented_repeat",
+      "host_fonts": true,
+      "context": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "43671e3251c4a856005c32c4d5a03aa36c347c90c35b848ccdb49b703404a03e",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "d899b01f70605a92432f3f04b5ac92aeaaaac0996a4dfe22e8174fd55cc58398",
+      "store_count": 1248947,
+      "store_sha256": "f687beeb7100a2a52d16e2587c349d2930d3f6a8bd4559037e62caa3362fb5fa",
+      "cache_sha256": "66d1dcc591d6a64c459e6e476f4ad0abe4a703c655b873d1b61645a5f7af935d",
+      "boundaries": [
+        {
+          "kind": "terrain_pass_start",
+          "file": "presented_repeat.terrain_pass_start.bin",
+          "store_count": 523264,
+          "sha256": "f9cae6b6e135f68ac497c89bce33fcdb9d95c3e6c058227d91fde74aa234c54a",
+          "last_operation": "clear"
+        },
+        {
+          "kind": "terrain_complete",
+          "store_count": 1236125,
+          "sha256": "6f0767ae1eb7cc6c3d4658e9bcfd6ab0166295b32f3a31973f219859d4b65cd0"
+        }
+      ],
+      "object_calls": [
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            0,
+            432,
+            191,
+            0,
+            0
+          ],
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1236125
+        },
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            1,
+            624,
+            239,
+            0,
+            0
+          ],
+          "tile": [
+            24,
+            38
+          ],
+          "store_count": 1239887
+        },
+        {
+          "entry": "0x56fd50",
+          "caller": "0x47379f",
+          "args": [
+            9566532,
+            1,
+            624,
+            288,
+            0,
+            3,
+            1
+          ],
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244231
+        },
+        {
+          "entry": "0x4d7860",
+          "caller": "0x5701d1",
+          "args": [
+            9566532,
+            1,
+            624,
+            288,
+            3,
+            0,
+            1
+          ],
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244231
+        },
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            2,
+            816,
+            275,
+            0,
+            0
+          ],
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 1245335
+        }
+      ],
+      "text_calls": [
+        {
+          "text": "8",
+          "x": 435,
+          "y": 205,
+          "font": 103,
+          "COLORREF": 285147136,
+          "rgb": [
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            9,
+            19
+          ],
+          "native_store_count": 1239887,
+          "changed_bytes": 56,
+          "changes_sha256": "07e314ee4a157105cac0ff6d55cd8f54e52a984e507a9e97c54bda3f3fa0acbe"
+        },
+        {
+          "text": "9",
+          "x": 627,
+          "y": 253,
+          "font": 103,
+          "COLORREF": 285147291,
+          "rgb": [
+            216,
+            224,
+            235
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            9,
+            19
+          ],
+          "native_store_count": 1244231,
+          "changed_bytes": 58,
+          "changes_sha256": "3dcd3322b0e9dc1da531ef82c2b69113d50c65a562497fff11e328ef0c013cdc"
+        },
+        {
+          "text": "H",
+          "x": 635,
+          "y": 304,
+          "font": 104,
+          "COLORREF": 285147136,
+          "rgb": [
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            8,
+            15
+          ],
+          "native_store_count": 1245335,
+          "changed_bytes": 39,
+          "changes_sha256": "349801728fc9ba017e69c16c1482383d97b1a6c333cf420755149e4a95e4b8ac"
+        },
+        {
+          "text": "10",
+          "x": 819,
+          "y": 289,
+          "font": 103,
+          "COLORREF": 285147291,
+          "rgb": [
+            216,
+            224,
+            235
+          ],
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            18,
+            19
+          ],
+          "native_store_count": 1248947,
+          "changed_bytes": 86,
+          "changes_sha256": "d0142bc9d35d6324dcb4533c8361376f689265a35c6e7857d0887bd18c14b79e"
+        }
+      ],
+      "object_snapshots": [
+        {
+          "unit": 1,
+          "animation_counter": 0,
+          "fpu_control_word": 895,
+          "renderer_mode": 1,
+          "context_flags": 0,
+          "scene_flags": 1,
+          "unit_record": "18002800000000000000020000000300060200000000000000000000000000000000000001000008000200000000ffffffffffff"
+        }
+      ],
+      "object_paint_inputs": [
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1236125,
+          "bank": "0x7c7d4c",
+          "args": [
+            9566532,
+            9,
+            432,
+            191,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            87,
+            58
+          ],
+          "offset": [
+            6,
+            8
+          ],
+          "source_sha256": "cb046e5f888fec1d7240ce34a1ea7e509be228230be627f5a9eaa5314bb19b9c"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x572137",
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1239663,
+          "rect": [
+            432,
+            191,
+            446,
+            207
+          ],
+          "args": [
+            0,
+            0
+          ]
+        },
+        {
+          "entry": "0x5f8ad0",
+          "caller": "0x57216f",
+          "tile": [
+            20,
+            36
+          ],
+          "store_count": 1239719,
+          "rect": [
+            433,
+            192,
+            445,
+            206
+          ],
+          "args": [
+            255
+          ]
+        },
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            24,
+            38
+          ],
+          "store_count": 1239887,
+          "bank": "0x7c7dd0",
+          "args": [
+            9566532,
+            9,
+            624,
+            239,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            91,
+            67
+          ],
+          "offset": [
+            2,
+            0
+          ],
+          "source_sha256": "21fc49ed0688b82659cb7e3cd5091927362d19e72456e919c52a3f498bc37978"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x57223e",
+          "tile": [
+            24,
+            38
+          ],
+          "store_count": 1244175,
+          "rect": [
+            624,
+            239,
+            638,
+            255
+          ],
+          "args": [
+            0,
+            0
+          ]
+        },
+        {
+          "entry": "0x5fd9e0",
+          "caller": "0x5fd9ca",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244453,
+          "bank": "0x9bbf38",
+          "args": [
+            9566532,
+            9,
+            546,
+            210
+          ],
+          "ratio": [
+            1,
+            1
+          ],
+          "size": [
+            256,
+            256
+          ],
+          "offset": [
+            0,
+            0
+          ],
+          "source_sha256": "fa26b8ac45a18a91c2027fd619114f2e16e2bcca1754da4794716ccd7f57ab0d"
+        },
+        {
+          "entry": "0x5fd9e0",
+          "caller": "0x5703e4",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1244856,
+          "bank": "0x77ef30",
+          "args": [
+            9566532,
+            9,
+            624,
+            288
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            19,
+            26
+          ],
+          "offset": [
+            4,
+            4
+          ],
+          "source_sha256": "1b504ea09983c82efc8448124c50b337e4e988b3c0497b8da22b3512be72a531"
+        },
+        {
+          "entry": "0x5f8ad0",
+          "caller": "0x5704bc",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1245277,
+          "rect": [
+            630,
+            294,
+            632,
+            315
+          ],
+          "args": [
+            0
+          ]
+        },
+        {
+          "entry": "0x5f8ad0",
+          "caller": "0x570669",
+          "tile": [
+            24,
+            40
+          ],
+          "store_count": 1245319,
+          "rect": [
+            630,
+            294,
+            632,
+            302
+          ],
+          "args": [
+            249
+          ]
+        },
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 1245335,
+          "bank": "0x7c7d4c",
+          "args": [
+            9566532,
+            9,
+            816,
+            275,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            87,
+            58
+          ],
+          "offset": [
+            6,
+            8
+          ],
+          "source_sha256": "cb046e5f888fec1d7240ce34a1ea7e509be228230be627f5a9eaa5314bb19b9c"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x57223e",
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 1248873,
+          "rect": [
+            816,
+            275,
+            839,
+            291
+          ],
+          "args": [
+            0,
+            0
+          ]
+        }
+      ],
+      "clock": [],
+      "model_frame_records": 59,
+      "model_kernels": 65
+    },
+    {
+      "id": "presented_pan_east",
+      "host_fonts": true,
+      "context": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "43671e3251c4a856005c32c4d5a03aa36c347c90c35b848ccdb49b703404a03e",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "cad307c681b17dba7f55cdc6464c9d940ae56eabd2189d7536cc1cc48ec93ce3",
+      "store_count": 544622,
+      "store_sha256": "9a1b862ef7072b118b39ad6feb6bb6eeec29558d6fe7e6341e9de35d29baf6ff",
+      "cache_sha256": "66d1dcc591d6a64c459e6e476f4ad0abe4a703c655b873d1b61645a5f7af935d",
+      "boundaries": [
+        {
+          "kind": "after_scroll",
+          "file": "presented_pan_east.after_scroll.bin",
+          "store_count": 474208,
+          "sha256": "11629fadab6b21e0861182b4e47af102039065f27ac62d403c732250bc56d806",
+          "last_operation": "scroll"
+        },
+        {
+          "kind": "terrain_pass_start",
+          "file": "presented_pan_east.terrain_pass_start.bin",
+          "store_count": 474208,
+          "sha256": "11629fadab6b21e0861182b4e47af102039065f27ac62d403c732250bc56d806",
+          "last_operation": "scroll"
+        },
+        {
+          "kind": "terrain_complete",
+          "store_count": 544622,
+          "sha256": "cad307c681b17dba7f55cdc6464c9d940ae56eabd2189d7536cc1cc48ec93ce3"
+        }
+      ],
+      "object_calls": [
+        {
+          "entry": "0x5719b0",
+          "caller": "0x4738c7",
+          "args": [
+            9566532,
+            2,
+            720,
+            275,
+            0,
+            0
+          ],
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 544622
+        }
+      ],
+      "text_calls": [
+        {
+          "text": "10",
+          "x": 723,
+          "y": 289,
+          "font": 103,
+          "COLORREF": 285147291,
+          "rgb": [
+            216,
+            224,
+            235
+          ],
+          "clip": [
+            928,
+            0,
+            1024,
+            511
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "metrics": [
+            18,
+            19
+          ],
+          "native_store_count": 544622,
+          "changed_bytes": 0,
+          "changes_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "object_snapshots": [],
+      "object_paint_inputs": [
+        {
+          "entry": "0x5fe680",
+          "caller": "0x571e44",
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 544622,
+          "bank": "0x7c7d4c",
+          "args": [
+            9566532,
+            9,
+            720,
+            275,
+            7461656
+          ],
+          "ratio": [
+            16,
+            16
+          ],
+          "size": [
+            87,
+            58
+          ],
+          "offset": [
+            6,
+            8
+          ],
+          "source_sha256": "cb046e5f888fec1d7240ce34a1ea7e509be228230be627f5a9eaa5314bb19b9c"
+        },
+        {
+          "entry": "0x5fc003",
+          "caller": "0x57223e",
+          "tile": [
+            28,
+            40
+          ],
+          "store_count": 544622,
+          "rect": [
+            720,
+            275,
+            743,
+            291
+          ],
+          "args": [
+            0,
+            0
+          ]
+        }
+      ],
+      "clock": [],
+      "model_frame_records": 0,
+      "model_kernels": 0
+    },
+    {
+      "id": "presented_pan_back",
+      "host_fonts": true,
+      "context": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "43671e3251c4a856005c32c4d5a03aa36c347c90c35b848ccdb49b703404a03e",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "d899b01f70605a92432f3f04b5ac92aeaaaac0996a4dfe22e8174fd55cc58398",
+      "store_count": 545466,
+      "store_sha256": "d012e19b1360006a6aa62f08d6e8b46007470c84fe2e5fa885ca5ebcc034e3b9",
+      "cache_sha256": "66d1dcc591d6a64c459e6e476f4ad0abe4a703c655b873d1b61645a5f7af935d",
+      "boundaries": [
+        {
+          "kind": "after_scroll",
+          "file": "presented_pan_back.after_scroll.bin",
+          "store_count": 474208,
+          "sha256": "d55d087e4dc2f45bcdb56bcbf88273bdb1c042891fddaa31aea8a8a6630c53b7",
+          "last_operation": "scroll"
+        },
+        {
+          "kind": "terrain_pass_start",
+          "file": "presented_pan_back.terrain_pass_start.bin",
+          "store_count": 474208,
+          "sha256": "d55d087e4dc2f45bcdb56bcbf88273bdb1c042891fddaa31aea8a8a6630c53b7",
+          "last_operation": "scroll"
+        },
+        {
+          "kind": "terrain_complete",
+          "store_count": 545466,
+          "sha256": "d899b01f70605a92432f3f04b5ac92aeaaaac0996a4dfe22e8174fd55cc58398"
+        }
+      ],
+      "object_calls": [],
+      "text_calls": [],
+      "object_snapshots": [],
+      "object_paint_inputs": [],
+      "clock": [],
+      "model_frame_records": 0,
+      "model_kernels": 0
+    }
+  ],
+  "interface_state": {
+    "human_mask": 8,
+    "active_mask": 8,
+    "turn": 1,
+    "controller": 0,
+    "selected_unit": -1,
+    "unit_drawing_enabled": 1,
+    "blink_state": 0,
+    "project_base_ids": {
+      "cdf": -1,
+      "empath": -1,
+      "governor": -1
+    }
+  },
+  "model_angle_inputs_f32": [
+    0.7853981852531433,
+    0.0,
+    0.0
+  ],
+  "model_slope_switch": 0,
+  "coordinate_override": -1
+}

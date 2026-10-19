@@ -63,15 +63,23 @@ InstancedSprite* InstancedSpriteManager::GetPortWorkerMarkerSprite( const std::s
 	return &inserted->second;
 }
 
-InstancedSprite* InstancedSpriteManager::GetScoutSprite( const std::string& name, const backend::unit::CvrScoutRender& descriptor ) {
-	const auto key = "Scout:" + std::to_string( name.size() ) + ":" + name + ":" + descriptor.PlacementKey();
+InstancedSprite* InstancedSpriteManager::GetScoutSprite( const std::string& name, const backend::unit::CvrScoutRender& descriptor, bool native_projection ) {
+	const auto key = "Scout:" + std::to_string( name.size() ) + ":" + name + ":" + descriptor.PlacementKey() + (native_projection?":native":"");
 	const auto existing = m_instanced_sprites.find( key );
 	if ( existing != m_instanced_sprites.end() ) { return &existing->second; }
 	if ( !m_scout_cache ) { m_scout_cache = std::make_unique< ScoutSpriteCache >(); }
 	auto texture = m_scout_cache->Get( *g_engine->GetResourceManager(), descriptor );
 	const auto delete_sprite = []( scene::actor::Sprite* value ) { DELETE( value ); };
 	const auto delete_actor = []( scene::actor::Instanced* value ) { DELETE( value ); };
-	NEWV( sprite, scene::actor::Sprite, name, descriptor.size, texture.get(), { { 0, 0 }, { 1, 1 } }, descriptor.Offset() );
+    auto size=descriptor.size,offset=descriptor.Offset();
+    if(native_projection) {
+        const auto target=m_scout_cache->GetTargetAnchor(*g_engine->GetResourceManager(),descriptor);
+        size={256.0f/96,256.0f/48};
+        // The native dispatcher starts at tile center minus48 pixels. The
+        // model's returned anchor is relative to that dispatcher, not128.
+        offset={(target[0]-48)/96.0f,(48-target[1])/48.0f};
+    }
+	NEWV( sprite, scene::actor::Sprite, name, size, texture.get(), { { 0, 0 }, { 1, 1 } }, offset );
 	std::unique_ptr< scene::actor::Sprite, decltype( delete_sprite ) > sprite_owner( sprite, delete_sprite );
 	NEWV( actor, scene::actor::Instanced, sprite );
 	sprite_owner.release();

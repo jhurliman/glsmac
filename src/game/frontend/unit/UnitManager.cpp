@@ -182,7 +182,8 @@ void UnitManager::DefineUnit( const backend::unit::Def* def ) {
 			def->m_id,
 			new UnitDef(
 				m_ism,
-				def
+				def,
+                m_game->UsesNativeMapProjection()
 			)
 		}
 	);

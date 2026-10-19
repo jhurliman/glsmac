@@ -21,10 +21,15 @@ std::string ReadAsset( const std::string& path ) {
 }
 }
 
+std::array<int32_t,2> ScoutSpriteCache::GetTargetAnchor(resource::ResourceManager& resources,const backend::unit::CvrScoutRender& descriptor) {
+    Get(resources,descriptor);
+    return m_textures.at(descriptor.PixelKey()).target_anchor;
+}
+
 std::shared_ptr< types::texture::Texture > ScoutSpriteCache::Get( resource::ResourceManager& resources, const backend::unit::CvrScoutRender& descriptor ) {
 	const auto key = descriptor.PixelKey();
 	const auto existing = m_textures.find( key );
-	if ( existing != m_textures.end() ) { return existing->second; }
+	if ( existing != m_textures.end() ) { return existing->second.texture; }
 	if ( m_textures.size() >= MAX_VIEWS ) { throw std::runtime_error( "Scout scene view cache is full" ); }
 	if ( descriptor.composition == backend::unit::CvrScoutRender::Composition::SpartanRover ) {
 		if ( !m_rover ) {
@@ -35,7 +40,7 @@ std::shared_ptr< types::texture::Texture > ScoutSpriteCache::Get( resource::Reso
 		}
 		const auto image = m_rover->Render( descriptor.view );
 		std::shared_ptr< types::texture::Texture > texture( image.CreateTexture() );
-		return m_textures.emplace( key, std::move( texture ) ).first->second;
+		return m_textures.emplace( key, Cached{std::move(texture),image.target_anchor} ).first->second.texture;
 	}
 	if ( descriptor.composition == backend::unit::CvrScoutRender::Composition::InitializedScout ) {
 		if ( !m_initialized ) {
@@ -47,7 +52,7 @@ std::shared_ptr< types::texture::Texture > ScoutSpriteCache::Get( resource::Reso
 		}
 		const auto image = m_initialized->Render( descriptor.view );
 		std::shared_ptr< types::texture::Texture > texture( image.CreateTexture() );
-		return m_textures.emplace( key, std::move( texture ) ).first->second;
+		return m_textures.emplace( key, Cached{std::move(texture),image.target_anchor} ).first->second.texture;
 	}
 	if ( !m_renderer ) {
 		// The serialized descriptor cannot choose paths. Use normal installed/mod resolution.
@@ -57,7 +62,7 @@ std::shared_ptr< types::texture::Texture > ScoutSpriteCache::Get( resource::Reso
 	}
 	const auto image = m_renderer->Render( descriptor.view );
 	std::shared_ptr< types::texture::Texture > texture( image.CreateTexture() );
-	return m_textures.emplace( key, std::move( texture ) ).first->second;
+	return m_textures.emplace( key, Cached{std::move(texture),image.target_anchor} ).first->second.texture;
 }
 
 }

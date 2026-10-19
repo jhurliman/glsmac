@@ -1,5 +1,8 @@
 # Ordinary map object anchors
 
+> Semantic correction, revision2: original improvement names were wrong. Use the corrected raw-mask table and contexts in [the correction handoff](ordinary-map-improvement-semantic-correction.md). Frozen v1 coordinate evidence is retained; its old feature labels are superseded. Base/Scout rules are unchanged.
+
+
 Pinned stock SMAC; actual ordinary map iteration and its object consumers were executed in a controlled1024×511 map viewport, camera(40,40), tile(40,40), zoom0, round80×80 world. Adjacent cases contain48 assertions, four native Base/name/Scout fixtures, four native model surface setups, and20 admitted improvement sprite calls. No production code changed.
 
 Let F=(576,288) be this fixture's flat diamond center, H=floor((W+N+E+S)/4), and P=(F.x−48,F.y−24−H), the original projector result. The actual ordinary map caller supplies **O=(P.x,P.y−24)** to Base and Unit dispatch. The independent Base repaint pass makes the same subtraction. These offsets belong to zoom0; other zooms were not generalized here.
@@ -19,7 +22,7 @@ The native predefined Scout Patrol design2, Hold order, damage3 and singleton st
 
 The same actual Unit draw paints black health[O.x+6,O.y+6,O.x+8,O.y+27), then damage3 colored fill[O.x+6,O.y+6,O.x+8,O.y+20). Native Hold text starts O.x+11 with baseline O.y+16. The four cases include final coordinates, not only relative formulas. Body, badge, health and order share O before their individual renderer offsets.
 
-Sensor, bunker, farm, mine and solar sprite callers instead receive **P**, without the object's extra−24. The terrain feature continuation executes its own height adjustments before these calls; they are observed consumer results, not inferred from the terrain fan. All20 admitted calls use this rule across the four worlds. The normal viewer reads remembered improvement bits from its tile snapshot unless its revelation status selects live bits; this fixture explicitly sets viewer3's snapshot to the live feature bits. A forest-bit control produces no call to these sprite helpers; its terrain rendering is outside this sprite supplement.
+Bunker, airbase, mine, solar and condenser sprite callers instead receive **P**, without the object's extra−24. The terrain feature continuation executes its own height adjustments before these calls; they are observed consumer results, not inferred from the terrain fan. All20 admitted calls use this rule across the four worlds. The normal viewer reads remembered improvement bits from its tile snapshot unless its revelation status selects live bits; this fixture explicitly sets viewer3's snapshot to the live feature bits. A river-bit control produces no call to these sprite helpers; its terrain rendering is outside this sprite supplement.
 
 An ordinary nonselected Unit sharing a valid Base tile was suppressed by the actual dispatch in this fixture. The Scout-only cases remove the Base marker and execute the same native map loop again. Do not use these receipts as proof that every occupied Base always draws a separate Scout model. Selected-unit exceptions and blink/timing retain their existing contracts.
 

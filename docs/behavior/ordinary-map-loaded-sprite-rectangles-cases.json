@@ -1,0 +1,578 @@
+{
+  "scope": "Original TER1 PCX load and actual atlas extraction fragment45e1e4..45e5c4; full University faction PCX sprite extraction; actor/cache4297e0 is a sink. Original sprite helper executes through unscaled destination rectangle construction, before clipping/pixel copy. Native ordinary caller coordinates replayed with loaded metadata. Repeated donor-absent palette substitutions are identity services. No opaque ink bounds claim.",
+  "base_fixture": "University owner3, former/original artwork owner3, population3/size0, land, style0 and no facility art flags. Native artwork bank initializer and original5719b0 selector execute. Earlier coordinate fixture used former-owner byte0; this art supplement explicitly selects3. Its coordinate rules are unchanged.",
+  "failure_history": [
+    {
+      "attempt": "full atlas / repeated bitmap replacement",
+      "outcome": "instruction cap exhausted inside native5f7380 palette scan at5f74c2; no native game defect or incorrect clipping established"
+    },
+    {
+      "attempt": "loaded faction extraction without artwork pointer initializer",
+      "outcome": "selected Base bank pointer remained0; failed assertion; preserved development log"
+    },
+    {
+      "correction": "original45ee50 binds sprite pointer table; native extraction/layout execute. Repeated palette substitutions are skipped only after verifying the donor byte is absent from the entire bitmap; supplied no-op cannot change its pixels."
+    }
+  ],
+  "semantic_revision": {
+    "revision": 2,
+    "reason": "V1 improvement names were wrong; raw masks/coordinates retained. All six originally named improvement controls are corrected.",
+    "raw_masks": {
+      "mine": 16,
+      "solar": 64,
+      "farm": 32768,
+      "forest": 2097152,
+      "river": 128,
+      "condenser": 4194304,
+      "bunker": 2048,
+      "airbase": 262144,
+      "sensor": 2147483648
+    },
+    "prior_names_to_correct_names": {
+      "sensor": "bunker",
+      "bunker": "airbase",
+      "farm": "mine",
+      "mine": "solar",
+      "solar": "condenser",
+      "forest": "river"
+    },
+    "source": "Original item-mask action/ecology authority, native map render branch tests, native TER1 extraction and existing port atlas constants.",
+    "frozen_v1": "Preserved unchanged; semantic feature labels are superseded by this revision."
+  },
+  "cases": [
+    {
+      "id": "uniform3_base",
+      "feature_bits": null,
+      "caller_anchor": [
+        528,
+        240
+      ],
+      "sprite_offset": [
+        27,
+        17
+      ],
+      "sprite_size": [
+        41,
+        38
+      ],
+      "unclipped_destination": [
+        555,
+        257,
+        596,
+        295
+      ]
+    },
+    {
+      "id": "uniform4_base",
+      "feature_bits": null,
+      "caller_anchor": [
+        528,
+        215
+      ],
+      "sprite_offset": [
+        27,
+        17
+      ],
+      "sprite_size": [
+        41,
+        38
+      ],
+      "unclipped_destination": [
+        555,
+        232,
+        596,
+        270
+      ]
+    },
+    {
+      "id": "single_hill_base",
+      "feature_bits": null,
+      "caller_anchor": [
+        528,
+        234
+      ],
+      "sprite_offset": [
+        27,
+        17
+      ],
+      "sprite_size": [
+        41,
+        38
+      ],
+      "unclipped_destination": [
+        555,
+        251,
+        596,
+        289
+      ]
+    },
+    {
+      "id": "coast_base",
+      "feature_bits": null,
+      "caller_anchor": [
+        528,
+        237
+      ],
+      "sprite_offset": [
+        27,
+        17
+      ],
+      "sprite_size": [
+        41,
+        38
+      ],
+      "unclipped_destination": [
+        555,
+        254,
+        596,
+        292
+      ]
+    },
+    {
+      "id": "uniform3_bunker",
+      "feature_bits": 2048,
+      "caller_anchor": [
+        528,
+        264
+      ],
+      "sprite_offset": [
+        40,
+        18
+      ],
+      "sprite_size": [
+        50,
+        29
+      ],
+      "unclipped_destination": [
+        568,
+        282,
+        618,
+        311
+      ]
+    },
+    {
+      "id": "uniform3_airbase",
+      "feature_bits": 262144,
+      "caller_anchor": [
+        528,
+        264
+      ],
+      "sprite_offset": [
+        26,
+        12
+      ],
+      "sprite_size": [
+        43,
+        26
+      ],
+      "unclipped_destination": [
+        554,
+        276,
+        597,
+        302
+      ]
+    },
+    {
+      "id": "uniform3_mine",
+      "feature_bits": 16,
+      "caller_anchor": [
+        528,
+        264
+      ],
+      "sprite_offset": [
+        22,
+        1
+      ],
+      "sprite_size": [
+        57,
+        43
+      ],
+      "unclipped_destination": [
+        550,
+        265,
+        607,
+        308
+      ]
+    },
+    {
+      "id": "uniform3_solar",
+      "feature_bits": 64,
+      "caller_anchor": [
+        528,
+        264
+      ],
+      "sprite_offset": [
+        25,
+        17
+      ],
+      "sprite_size": [
+        49,
+        23
+      ],
+      "unclipped_destination": [
+        553,
+        281,
+        602,
+        304
+      ]
+    },
+    {
+      "id": "uniform3_condenser",
+      "feature_bits": 4194304,
+      "caller_anchor": [
+        528,
+        264
+      ],
+      "sprite_offset": [
+        16,
+        2
+      ],
+      "sprite_size": [
+        63,
+        38
+      ],
+      "unclipped_destination": [
+        544,
+        266,
+        607,
+        304
+      ]
+    },
+    {
+      "id": "uniform4_bunker",
+      "feature_bits": 2048,
+      "caller_anchor": [
+        528,
+        239
+      ],
+      "sprite_offset": [
+        40,
+        18
+      ],
+      "sprite_size": [
+        50,
+        29
+      ],
+      "unclipped_destination": [
+        568,
+        257,
+        618,
+        286
+      ]
+    },
+    {
+      "id": "uniform4_airbase",
+      "feature_bits": 262144,
+      "caller_anchor": [
+        528,
+        239
+      ],
+      "sprite_offset": [
+        26,
+        12
+      ],
+      "sprite_size": [
+        43,
+        26
+      ],
+      "unclipped_destination": [
+        554,
+        251,
+        597,
+        277
+      ]
+    },
+    {
+      "id": "uniform4_mine",
+      "feature_bits": 16,
+      "caller_anchor": [
+        528,
+        239
+      ],
+      "sprite_offset": [
+        22,
+        1
+      ],
+      "sprite_size": [
+        57,
+        43
+      ],
+      "unclipped_destination": [
+        550,
+        240,
+        607,
+        283
+      ]
+    },
+    {
+      "id": "uniform4_solar",
+      "feature_bits": 64,
+      "caller_anchor": [
+        528,
+        239
+      ],
+      "sprite_offset": [
+        25,
+        17
+      ],
+      "sprite_size": [
+        49,
+        23
+      ],
+      "unclipped_destination": [
+        553,
+        256,
+        602,
+        279
+      ]
+    },
+    {
+      "id": "uniform4_condenser",
+      "feature_bits": 4194304,
+      "caller_anchor": [
+        528,
+        239
+      ],
+      "sprite_offset": [
+        16,
+        2
+      ],
+      "sprite_size": [
+        63,
+        38
+      ],
+      "unclipped_destination": [
+        544,
+        241,
+        607,
+        279
+      ]
+    },
+    {
+      "id": "single_hill_bunker",
+      "feature_bits": 2048,
+      "caller_anchor": [
+        528,
+        258
+      ],
+      "sprite_offset": [
+        40,
+        18
+      ],
+      "sprite_size": [
+        50,
+        29
+      ],
+      "unclipped_destination": [
+        568,
+        276,
+        618,
+        305
+      ]
+    },
+    {
+      "id": "single_hill_airbase",
+      "feature_bits": 262144,
+      "caller_anchor": [
+        528,
+        258
+      ],
+      "sprite_offset": [
+        26,
+        12
+      ],
+      "sprite_size": [
+        43,
+        26
+      ],
+      "unclipped_destination": [
+        554,
+        270,
+        597,
+        296
+      ]
+    },
+    {
+      "id": "single_hill_mine",
+      "feature_bits": 16,
+      "caller_anchor": [
+        528,
+        258
+      ],
+      "sprite_offset": [
+        22,
+        1
+      ],
+      "sprite_size": [
+        57,
+        43
+      ],
+      "unclipped_destination": [
+        550,
+        259,
+        607,
+        302
+      ]
+    },
+    {
+      "id": "single_hill_solar",
+      "feature_bits": 64,
+      "caller_anchor": [
+        528,
+        258
+      ],
+      "sprite_offset": [
+        25,
+        17
+      ],
+      "sprite_size": [
+        49,
+        23
+      ],
+      "unclipped_destination": [
+        553,
+        275,
+        602,
+        298
+      ]
+    },
+    {
+      "id": "single_hill_condenser",
+      "feature_bits": 4194304,
+      "caller_anchor": [
+        528,
+        258
+      ],
+      "sprite_offset": [
+        16,
+        2
+      ],
+      "sprite_size": [
+        63,
+        38
+      ],
+      "unclipped_destination": [
+        544,
+        260,
+        607,
+        298
+      ]
+    },
+    {
+      "id": "coast_bunker",
+      "feature_bits": 2048,
+      "caller_anchor": [
+        528,
+        261
+      ],
+      "sprite_offset": [
+        40,
+        18
+      ],
+      "sprite_size": [
+        50,
+        29
+      ],
+      "unclipped_destination": [
+        568,
+        279,
+        618,
+        308
+      ]
+    },
+    {
+      "id": "coast_airbase",
+      "feature_bits": 262144,
+      "caller_anchor": [
+        528,
+        261
+      ],
+      "sprite_offset": [
+        26,
+        12
+      ],
+      "sprite_size": [
+        43,
+        26
+      ],
+      "unclipped_destination": [
+        554,
+        273,
+        597,
+        299
+      ]
+    },
+    {
+      "id": "coast_mine",
+      "feature_bits": 16,
+      "caller_anchor": [
+        528,
+        261
+      ],
+      "sprite_offset": [
+        22,
+        1
+      ],
+      "sprite_size": [
+        57,
+        43
+      ],
+      "unclipped_destination": [
+        550,
+        262,
+        607,
+        305
+      ]
+    },
+    {
+      "id": "coast_solar",
+      "feature_bits": 64,
+      "caller_anchor": [
+        528,
+        261
+      ],
+      "sprite_offset": [
+        25,
+        17
+      ],
+      "sprite_size": [
+        49,
+        23
+      ],
+      "unclipped_destination": [
+        553,
+        278,
+        602,
+        301
+      ]
+    },
+    {
+      "id": "coast_condenser",
+      "feature_bits": 4194304,
+      "caller_anchor": [
+        528,
+        261
+      ],
+      "sprite_offset": [
+        16,
+        2
+      ],
+      "sprite_size": [
+        63,
+        38
+      ],
+      "unclipped_destination": [
+        544,
+        263,
+        607,
+        301
+      ]
+    }
+  ],
+  "validation": {
+    "native_loaded_sprite_rectangles": 24,
+    "rectangle_field_assertions": 72,
+    "unchanged_v1_raw_rectangle_cases": 24
+  },
+  "expanded_supplement": "ordinary-map-improvement-expanded-contexts-cases.json"
+}

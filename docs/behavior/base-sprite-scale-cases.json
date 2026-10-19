@@ -1,0 +1,506 @@
+{
+  "scope": "Actual full5fe680 retained land-pop1 Base art copy at12/16 and8/16, unclipped plus clipped replay; no Base UI reruns. Portable frame and every source coordinate/index match; two earlier art hashes match. All800 native step entries per ratio match portable recurrence.",
+  "source": {
+    "asset": "UNIV.PCX",
+    "crop": [
+      1,
+      1,
+      100,
+      75
+    ],
+    "retained_offset": [
+      27,
+      17
+    ],
+    "retained_size": [
+      41,
+      38
+    ],
+    "sha256": "0204ab74c99df04da0a16f52466643d811968cbd8c7b3cf8cddf65f0da10f6ce",
+    "zero_lookup_sha256": "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1",
+    "zero_lookup_uniform_value": 0
+  },
+  "canvas": [
+    1024,
+    768
+  ],
+  "background": 100,
+  "cases": [
+    {
+      "id": "selected",
+      "anchor": [
+        34,
+        66
+      ],
+      "ratio": [
+        12,
+        16
+      ],
+      "clip": [
+        0,
+        0,
+        1024,
+        768
+      ],
+      "destination": [
+        54,
+        78,
+        84,
+        106
+      ],
+      "frame_sha256": "e5d2754e3ec93cf99ab46e0a336b13e291c72db1cca953b6d12e130d5aa4c9e6",
+      "attempts": 840,
+      "attempt_sha256": "be78493e50bfee5ef75471a592ab568af76d87687aa75fe213e3a3fa904be1ac",
+      "key9_samples": 273,
+      "zero_remap_samples": 63,
+      "changed_pixels": 565,
+      "changed_bbox": [
+        55,
+        78,
+        84,
+        106
+      ],
+      "first_samples": [
+        [
+          54,
+          78,
+          0,
+          0,
+          9
+        ],
+        [
+          55,
+          78,
+          2,
+          0,
+          9
+        ],
+        [
+          56,
+          78,
+          3,
+          0,
+          9
+        ],
+        [
+          57,
+          78,
+          4,
+          0,
+          9
+        ],
+        [
+          58,
+          78,
+          6,
+          0,
+          9
+        ],
+        [
+          59,
+          78,
+          7,
+          0,
+          9
+        ],
+        [
+          60,
+          78,
+          8,
+          0,
+          9
+        ],
+        [
+          61,
+          78,
+          10,
+          0,
+          9
+        ]
+      ],
+      "first24_steps": [
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "selected_clip",
+      "anchor": [
+        34,
+        66
+      ],
+      "ratio": [
+        12,
+        16
+      ],
+      "clip": [
+        58,
+        83,
+        77,
+        97
+      ],
+      "destination": [
+        54,
+        78,
+        84,
+        106
+      ],
+      "frame_sha256": "c1d6d7f205f2c0b53af6e045b147b82eaf3b08ecccf8b60b8341e9390589c987",
+      "attempts": 266,
+      "attempt_sha256": "1a5492c2b4b31035cac4e7cba263ada26f5cca48532c87423ee9ac281dacfbf8",
+      "key9_samples": 14,
+      "zero_remap_samples": 48,
+      "changed_pixels": 250,
+      "changed_bbox": [
+        58,
+        83,
+        77,
+        97
+      ],
+      "first_samples": [
+        [
+          58,
+          83,
+          6,
+          7,
+          9
+        ],
+        [
+          59,
+          83,
+          7,
+          7,
+          9
+        ],
+        [
+          60,
+          83,
+          8,
+          7,
+          9
+        ],
+        [
+          61,
+          83,
+          10,
+          7,
+          9
+        ],
+        [
+          62,
+          83,
+          11,
+          7,
+          9
+        ],
+        [
+          63,
+          83,
+          12,
+          7,
+          9
+        ],
+        [
+          64,
+          83,
+          14,
+          7,
+          38
+        ],
+        [
+          65,
+          83,
+          15,
+          7,
+          145
+        ]
+      ],
+      "first24_steps": [
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "roster",
+      "anchor": [
+        156,
+        197
+      ],
+      "ratio": [
+        8,
+        16
+      ],
+      "clip": [
+        0,
+        0,
+        1024,
+        768
+      ],
+      "destination": [
+        169,
+        205,
+        189,
+        224
+      ],
+      "frame_sha256": "3893fff6465f6167cd58eb5b30a4e8bd010e258fa29d13e505b0b79158603a04",
+      "attempts": 380,
+      "attempt_sha256": "eb10fa1956b3ae09b91958b6f2ce8c78c03a1fba4fcd414b0d1fbfee562ed3ba",
+      "key9_samples": 130,
+      "zero_remap_samples": 28,
+      "changed_pixels": 249,
+      "changed_bbox": [
+        170,
+        205,
+        189,
+        224
+      ],
+      "first_samples": [
+        [
+          169,
+          205,
+          0,
+          0,
+          9
+        ],
+        [
+          170,
+          205,
+          2,
+          0,
+          9
+        ],
+        [
+          171,
+          205,
+          4,
+          0,
+          9
+        ],
+        [
+          172,
+          205,
+          6,
+          0,
+          9
+        ],
+        [
+          173,
+          205,
+          8,
+          0,
+          9
+        ],
+        [
+          174,
+          205,
+          10,
+          0,
+          9
+        ],
+        [
+          175,
+          205,
+          12,
+          0,
+          9
+        ],
+        [
+          176,
+          205,
+          14,
+          0,
+          9
+        ]
+      ],
+      "first24_steps": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "id": "roster_clip",
+      "anchor": [
+        156,
+        197
+      ],
+      "ratio": [
+        8,
+        16
+      ],
+      "clip": [
+        180,
+        214,
+        199,
+        228
+      ],
+      "destination": [
+        169,
+        205,
+        189,
+        224
+      ],
+      "frame_sha256": "b858869bab69983d159e74246de0dedadc543899e6394189abe74546873ed574",
+      "attempts": 90,
+      "attempt_sha256": "d817e49934a1cf6f524aba31d2302361ef5ec78cf842607daeaffe05a9eb568f",
+      "key9_samples": 13,
+      "zero_remap_samples": 0,
+      "changed_pixels": 77,
+      "changed_bbox": [
+        180,
+        214,
+        189,
+        224
+      ],
+      "first_samples": [
+        [
+          180,
+          214,
+          22,
+          18,
+          14
+        ],
+        [
+          181,
+          214,
+          24,
+          18,
+          48
+        ],
+        [
+          182,
+          214,
+          26,
+          18,
+          46
+        ],
+        [
+          183,
+          214,
+          28,
+          18,
+          46
+        ],
+        [
+          184,
+          214,
+          30,
+          18,
+          71
+        ],
+        [
+          185,
+          214,
+          32,
+          18,
+          64
+        ],
+        [
+          186,
+          214,
+          34,
+          18,
+          122
+        ],
+        [
+          187,
+          214,
+          36,
+          18,
+          33
+        ]
+      ],
+      "first24_steps": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    }
+  ]
+}

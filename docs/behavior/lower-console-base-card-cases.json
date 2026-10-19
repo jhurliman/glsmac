@@ -1,0 +1,2542 @@
+{
+  "scope": "Native selected Base card and complete lower-console roster builder on explicit singleton Base fixtures. Full original loaded University Base art and population draw; current-Windows-GDI font metrics and TextOutA captures. Neutral facility/art-status queries supplied; terrain preview raster is a sink. No naturally played session or historical font parity.",
+  "screen": [
+    1024,
+    768
+  ],
+  "console_origin": [
+    0,
+    511
+  ],
+  "coordinates": "Console-local; add511 to Y for this full-screen profile.",
+  "fixture": "University owner3 and original/former artwork owner3, own empty Base, no facility art variants, native rules/predefined designs, singleton Base at8,8. Roster runtime/session gate enabled. Populations1/9/10 on land and sea, plus long-name/production wrapping control.",
+  "cases": [
+    {
+      "id": "selected_land_pop1",
+      "body": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 64,
+        "clip": [
+          0,
+          0,
+          1024,
+          768
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            1,
+            1,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          27,
+          17
+        ],
+        "source_retained_size": [
+          41,
+          38
+        ],
+        "scale_ratio": [
+          12,
+          16
+        ],
+        "native_destination": [
+          54,
+          78,
+          84,
+          106
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          55,
+          78,
+          84,
+          106
+        ],
+        "changed_pixels_on_index100": 565
+      },
+      "population": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          34,
+          66,
+          48,
+          82
+        ],
+        "text": {
+          "text": "1",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            38,
+            68,
+            43,
+            80
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "1",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            38,
+            68,
+            43,
+            80
+          ]
+        },
+        {
+          "text": "New Austin",
+          "x": 40,
+          "baseline_y": 139,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Producing: Scout ",
+          "x": 24,
+          "baseline_y": 152,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Patrol (4/10)",
+          "x": 38,
+          "baseline_y": 165,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        }
+      ],
+      "first_roster_cell_rect": null
+    },
+    {
+      "id": "roster_land_pop1",
+      "body": {
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 64,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            1,
+            1,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          27,
+          17
+        ],
+        "source_retained_size": [
+          41,
+          38
+        ],
+        "scale_ratio": [
+          8,
+          16
+        ],
+        "native_destination": [
+          169,
+          205,
+          189,
+          224
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          170,
+          205,
+          189,
+          224
+        ],
+        "changed_pixels_on_index100": 249
+      },
+      "population": {
+        "anchor": [
+          145,
+          197
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          145,
+          197,
+          159,
+          213
+        ],
+        "text": {
+          "text": "1",
+          "x": 148,
+          "baseline_y": 211,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": [
+            143,
+            196,
+            208,
+            244
+          ],
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            149,
+            199,
+            154,
+            211
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "1",
+          "x": 148,
+          "baseline_y": 211,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": [
+            143,
+            196,
+            208,
+            244
+          ],
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            149,
+            199,
+            154,
+            211
+          ]
+        }
+      ],
+      "first_roster_cell_rect": [
+        143,
+        196,
+        208,
+        244
+      ]
+    },
+    {
+      "id": "selected_land_pop9",
+      "body": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 64,
+        "clip": [
+          0,
+          0,
+          1024,
+          768
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            203,
+            1,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          6,
+          8
+        ],
+        "source_retained_size": [
+          87,
+          58
+        ],
+        "scale_ratio": [
+          12,
+          16
+        ],
+        "native_destination": [
+          38,
+          72,
+          103,
+          115
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          38,
+          72,
+          103,
+          115
+        ],
+        "changed_pixels_on_index100": 1983
+      },
+      "population": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          34,
+          66,
+          48,
+          82
+        ],
+        "text": {
+          "text": "9",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            37,
+            68,
+            45,
+            80
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "9",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            37,
+            68,
+            45,
+            80
+          ]
+        },
+        {
+          "text": "New Austin",
+          "x": 40,
+          "baseline_y": 139,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Producing: Scout ",
+          "x": 24,
+          "baseline_y": 152,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Patrol (4/10)",
+          "x": 38,
+          "baseline_y": 165,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        }
+      ],
+      "first_roster_cell_rect": null
+    },
+    {
+      "id": "roster_land_pop9",
+      "body": {
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 64,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            203,
+            1,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          6,
+          8
+        ],
+        "source_retained_size": [
+          87,
+          58
+        ],
+        "scale_ratio": [
+          8,
+          16
+        ],
+        "native_destination": [
+          159,
+          201,
+          202,
+          230
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          159,
+          201,
+          202,
+          230
+        ],
+        "changed_pixels_on_index100": 876
+      },
+      "population": {
+        "anchor": [
+          145,
+          197
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          145,
+          197,
+          159,
+          213
+        ],
+        "text": {
+          "text": "9",
+          "x": 148,
+          "baseline_y": 211,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": [
+            143,
+            196,
+            208,
+            244
+          ],
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            148,
+            199,
+            156,
+            211
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "9",
+          "x": 148,
+          "baseline_y": 211,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": [
+            143,
+            196,
+            208,
+            244
+          ],
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            148,
+            199,
+            156,
+            211
+          ]
+        }
+      ],
+      "first_roster_cell_rect": [
+        143,
+        196,
+        208,
+        244
+      ]
+    },
+    {
+      "id": "selected_land_pop10",
+      "body": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 64,
+        "clip": [
+          0,
+          0,
+          1024,
+          768
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            203,
+            1,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          6,
+          8
+        ],
+        "source_retained_size": [
+          87,
+          58
+        ],
+        "scale_ratio": [
+          12,
+          16
+        ],
+        "native_destination": [
+          38,
+          72,
+          103,
+          115
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          38,
+          72,
+          103,
+          115
+        ],
+        "changed_pixels_on_index100": 1983
+      },
+      "population": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          34,
+          66,
+          57,
+          82
+        ],
+        "text": {
+          "text": "10",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            38,
+            68,
+            54,
+            80
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "10",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            38,
+            68,
+            54,
+            80
+          ]
+        },
+        {
+          "text": "New Austin",
+          "x": 40,
+          "baseline_y": 139,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Producing: Scout ",
+          "x": 24,
+          "baseline_y": 152,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Patrol (4/10)",
+          "x": 38,
+          "baseline_y": 165,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        }
+      ],
+      "first_roster_cell_rect": null
+    },
+    {
+      "id": "roster_land_pop10",
+      "body": {
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 64,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            203,
+            1,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          6,
+          8
+        ],
+        "source_retained_size": [
+          87,
+          58
+        ],
+        "scale_ratio": [
+          8,
+          16
+        ],
+        "native_destination": [
+          159,
+          201,
+          202,
+          230
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          159,
+          201,
+          202,
+          230
+        ],
+        "changed_pixels_on_index100": 876
+      },
+      "population": {
+        "anchor": [
+          145,
+          197
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          145,
+          197,
+          168,
+          213
+        ],
+        "text": {
+          "text": "10",
+          "x": 148,
+          "baseline_y": 211,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": [
+            143,
+            196,
+            208,
+            244
+          ],
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            149,
+            199,
+            165,
+            211
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "10",
+          "x": 148,
+          "baseline_y": 211,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": [
+            143,
+            196,
+            208,
+            244
+          ],
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            149,
+            199,
+            165,
+            211
+          ]
+        }
+      ],
+      "first_roster_cell_rect": [
+        143,
+        196,
+        208,
+        244
+      ]
+    },
+    {
+      "id": "selected_sea_pop1",
+      "body": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 64,
+        "clip": [
+          0,
+          0,
+          1024,
+          768
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            1,
+            229,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          18,
+          17
+        ],
+        "source_retained_size": [
+          75,
+          57
+        ],
+        "scale_ratio": [
+          12,
+          16
+        ],
+        "native_destination": [
+          47,
+          78,
+          103,
+          120
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          47,
+          78,
+          103,
+          120
+        ],
+        "changed_pixels_on_index100": 1358
+      },
+      "population": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          34,
+          66,
+          48,
+          82
+        ],
+        "text": {
+          "text": "1",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            38,
+            68,
+            43,
+            80
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "1",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            38,
+            68,
+            43,
+            80
+          ]
+        },
+        {
+          "text": "New Austin",
+          "x": 40,
+          "baseline_y": 139,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Producing: Scout ",
+          "x": 24,
+          "baseline_y": 152,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Patrol (4/10)",
+          "x": 38,
+          "baseline_y": 165,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        }
+      ],
+      "first_roster_cell_rect": null
+    },
+    {
+      "id": "roster_sea_pop1",
+      "body": {
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 64,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            1,
+            229,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          18,
+          17
+        ],
+        "source_retained_size": [
+          75,
+          57
+        ],
+        "scale_ratio": [
+          8,
+          16
+        ],
+        "native_destination": [
+          165,
+          205,
+          202,
+          233
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          165,
+          205,
+          202,
+          233
+        ],
+        "changed_pixels_on_index100": 596
+      },
+      "population": {
+        "anchor": [
+          145,
+          197
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          145,
+          197,
+          159,
+          213
+        ],
+        "text": {
+          "text": "1",
+          "x": 148,
+          "baseline_y": 211,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": [
+            143,
+            196,
+            208,
+            244
+          ],
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            149,
+            199,
+            154,
+            211
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "1",
+          "x": 148,
+          "baseline_y": 211,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": [
+            143,
+            196,
+            208,
+            244
+          ],
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            149,
+            199,
+            154,
+            211
+          ]
+        }
+      ],
+      "first_roster_cell_rect": [
+        143,
+        196,
+        208,
+        244
+      ]
+    },
+    {
+      "id": "selected_sea_pop9",
+      "body": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 64,
+        "clip": [
+          0,
+          0,
+          1024,
+          768
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            203,
+            229,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          0,
+          8
+        ],
+        "source_retained_size": [
+          97,
+          67
+        ],
+        "scale_ratio": [
+          12,
+          16
+        ],
+        "native_destination": [
+          34,
+          72,
+          106,
+          122
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          34,
+          72,
+          106,
+          122
+        ],
+        "changed_pixels_on_index100": 2716
+      },
+      "population": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          34,
+          66,
+          48,
+          82
+        ],
+        "text": {
+          "text": "9",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            37,
+            68,
+            45,
+            80
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "9",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            37,
+            68,
+            45,
+            80
+          ]
+        },
+        {
+          "text": "New Austin",
+          "x": 40,
+          "baseline_y": 139,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Producing: Scout ",
+          "x": 24,
+          "baseline_y": 152,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Patrol (4/10)",
+          "x": 38,
+          "baseline_y": 165,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        }
+      ],
+      "first_roster_cell_rect": null
+    },
+    {
+      "id": "roster_sea_pop9",
+      "body": {
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 64,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            203,
+            229,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          0,
+          8
+        ],
+        "source_retained_size": [
+          97,
+          67
+        ],
+        "scale_ratio": [
+          8,
+          16
+        ],
+        "native_destination": [
+          156,
+          201,
+          204,
+          234
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          156,
+          201,
+          204,
+          234
+        ],
+        "changed_pixels_on_index100": 1213
+      },
+      "population": {
+        "anchor": [
+          145,
+          197
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          145,
+          197,
+          159,
+          213
+        ],
+        "text": {
+          "text": "9",
+          "x": 148,
+          "baseline_y": 211,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": [
+            143,
+            196,
+            208,
+            244
+          ],
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            148,
+            199,
+            156,
+            211
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "9",
+          "x": 148,
+          "baseline_y": 211,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": [
+            143,
+            196,
+            208,
+            244
+          ],
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            148,
+            199,
+            156,
+            211
+          ]
+        }
+      ],
+      "first_roster_cell_rect": [
+        143,
+        196,
+        208,
+        244
+      ]
+    },
+    {
+      "id": "selected_sea_pop10",
+      "body": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 64,
+        "clip": [
+          0,
+          0,
+          1024,
+          768
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            203,
+            229,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          0,
+          8
+        ],
+        "source_retained_size": [
+          97,
+          67
+        ],
+        "scale_ratio": [
+          12,
+          16
+        ],
+        "native_destination": [
+          34,
+          72,
+          106,
+          122
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          34,
+          72,
+          106,
+          122
+        ],
+        "changed_pixels_on_index100": 2716
+      },
+      "population": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          34,
+          66,
+          57,
+          82
+        ],
+        "text": {
+          "text": "10",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            38,
+            68,
+            54,
+            80
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "10",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            38,
+            68,
+            54,
+            80
+          ]
+        },
+        {
+          "text": "New Austin",
+          "x": 40,
+          "baseline_y": 139,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Producing: Scout ",
+          "x": 24,
+          "baseline_y": 152,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Patrol (4/10)",
+          "x": 38,
+          "baseline_y": 165,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        }
+      ],
+      "first_roster_cell_rect": null
+    },
+    {
+      "id": "roster_sea_pop10",
+      "body": {
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 64,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            203,
+            229,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          0,
+          8
+        ],
+        "source_retained_size": [
+          97,
+          67
+        ],
+        "scale_ratio": [
+          8,
+          16
+        ],
+        "native_destination": [
+          156,
+          201,
+          204,
+          234
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          156,
+          201,
+          204,
+          234
+        ],
+        "changed_pixels_on_index100": 1213
+      },
+      "population": {
+        "anchor": [
+          145,
+          197
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          145,
+          197,
+          168,
+          213
+        ],
+        "text": {
+          "text": "10",
+          "x": 148,
+          "baseline_y": 211,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": [
+            143,
+            196,
+            208,
+            244
+          ],
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            149,
+            199,
+            165,
+            211
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "10",
+          "x": 148,
+          "baseline_y": 211,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": [
+            143,
+            196,
+            208,
+            244
+          ],
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            149,
+            199,
+            165,
+            211
+          ]
+        }
+      ],
+      "first_roster_cell_rect": [
+        143,
+        196,
+        208,
+        244
+      ]
+    },
+    {
+      "id": "selected_long_name_production",
+      "body": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 64,
+        "clip": [
+          0,
+          0,
+          1024,
+          768
+        ],
+        "source": {
+          "asset": "UNIV.PCX",
+          "source_crop": [
+            203,
+            1,
+            100,
+            75
+          ],
+          "key": 9,
+          "flags": 0
+        },
+        "source_frame_size": [
+          100,
+          75
+        ],
+        "source_retained_offset": [
+          6,
+          8
+        ],
+        "source_retained_size": [
+          87,
+          58
+        ],
+        "scale_ratio": [
+          12,
+          16
+        ],
+        "native_destination": [
+          38,
+          72,
+          103,
+          115
+        ],
+        "native_changed_pixel_bbox_on_index100": [
+          38,
+          72,
+          103,
+          115
+        ],
+        "changed_pixels_on_index100": 1601
+      },
+      "population": {
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": 0,
+        "flags": 6144,
+        "box": [
+          34,
+          66,
+          57,
+          82
+        ],
+        "text": {
+          "text": "10",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            38,
+            68,
+            54,
+            80
+          ]
+        }
+      },
+      "text_rows": [
+        {
+          "text": "10",
+          "x": 37,
+          "baseline_y": 80,
+          "font": {
+            "face": "Arial",
+            "height": -16,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            255,
+            255,
+            255
+          ],
+          "current_GDI_glyph_ink": [
+            38,
+            68,
+            54,
+            80
+          ]
+        },
+        {
+          "text": "University Research ",
+          "x": 14,
+          "baseline_y": 139,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "City",
+          "x": 61,
+          "baseline_y": 152,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 700
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Producing: Isle of the ",
+          "x": 13,
+          "baseline_y": 165,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        },
+        {
+          "text": "Deep (74/80)",
+          "x": 36,
+          "baseline_y": 178,
+          "font": {
+            "face": "Arial",
+            "height": -12,
+            "weight": 0
+          },
+          "clip": null,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "current_GDI_glyph_ink": null
+        }
+      ],
+      "first_roster_cell_rect": null
+    }
+  ],
+  "validation": {
+    "contexts": 13,
+    "field_assertions": 85,
+    "distinct_body_contexts": 13,
+    "land_sea_population_profiles": 6
+  },
+  "retained_art_indexed_hash_controls": [
+    {
+      "context": "selected",
+      "canvas": [
+        1024,
+        768
+      ],
+      "background": 100,
+      "sha256": "e5d2754e3ec93cf99ab46e0a336b13e291c72db1cca953b6d12e130d5aa4c9e6",
+      "scope": "Actual full indexed canvas immediately after native retained art draw, land-pop1; includes any prior population overlay in call order. Private bytes, not whole100x75 resampling parity."
+    },
+    {
+      "context": "roster",
+      "canvas": [
+        1024,
+        768
+      ],
+      "background": 100,
+      "sha256": "3893fff6465f6167cd58eb5b30a4e8bd010e258fa29d13e505b0b79158603a04",
+      "scope": "Actual full indexed canvas immediately after native retained art draw, land-pop1; includes any prior population overlay in call order. Private bytes, not whole100x75 resampling parity."
+    }
+  ],
+  "current_GDI_ASCII_metrics": [
+    {
+      "face": "Arial",
+      "height": -12,
+      "weight": 0,
+      "first_codepoint": 32,
+      "last_codepoint": 126,
+      "advances": [
+        3,
+        3,
+        4,
+        7,
+        7,
+        11,
+        8,
+        2,
+        4,
+        4,
+        5,
+        7,
+        3,
+        4,
+        3,
+        3,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        3,
+        3,
+        7,
+        7,
+        7,
+        7,
+        12,
+        7,
+        8,
+        9,
+        9,
+        8,
+        7,
+        9,
+        9,
+        3,
+        6,
+        8,
+        7,
+        9,
+        9,
+        9,
+        8,
+        9,
+        9,
+        8,
+        7,
+        9,
+        7,
+        11,
+        7,
+        7,
+        7,
+        3,
+        3,
+        3,
+        5,
+        7,
+        4,
+        7,
+        7,
+        6,
+        7,
+        7,
+        3,
+        7,
+        7,
+        3,
+        3,
+        6,
+        3,
+        11,
+        7,
+        7,
+        7,
+        7,
+        4,
+        7,
+        3,
+        7,
+        5,
+        9,
+        5,
+        5,
+        5,
+        4,
+        3,
+        4,
+        7
+      ],
+      "pair_check": "All9025 printable-ASCII pairs equal sum of individual advances in current GetTextExtentPoint32A service; no explicit kerning applied.",
+      "string_checks": [
+        {
+          "text": "University Research",
+          "width": 110,
+          "sum_advances": 110
+        },
+        {
+          "text": "University Research ",
+          "width": 113,
+          "sum_advances": 113
+        },
+        {
+          "text": "University Research City",
+          "width": 133,
+          "sum_advances": 133
+        },
+        {
+          "text": "Producing: Isle of the",
+          "width": 115,
+          "sum_advances": 115
+        },
+        {
+          "text": "Producing: Isle of the ",
+          "width": 118,
+          "sum_advances": 118
+        },
+        {
+          "text": "Producing: Isle of the Deep",
+          "width": 148,
+          "sum_advances": 148
+        },
+        {
+          "text": "AV To Wa",
+          "width": 52,
+          "sum_advances": 52
+        }
+      ]
+    },
+    {
+      "face": "Arial",
+      "height": -12,
+      "weight": 700,
+      "first_codepoint": 32,
+      "last_codepoint": 126,
+      "advances": [
+        3,
+        3,
+        6,
+        7,
+        7,
+        9,
+        9,
+        3,
+        4,
+        4,
+        5,
+        7,
+        3,
+        4,
+        3,
+        3,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        3,
+        3,
+        7,
+        7,
+        7,
+        7,
+        12,
+        8,
+        8,
+        8,
+        8,
+        7,
+        6,
+        8,
+        8,
+        3,
+        7,
+        8,
+        7,
+        10,
+        8,
+        9,
+        8,
+        9,
+        8,
+        8,
+        7,
+        8,
+        8,
+        12,
+        8,
+        7,
+        7,
+        4,
+        3,
+        4,
+        7,
+        7,
+        4,
+        7,
+        7,
+        7,
+        7,
+        7,
+        4,
+        7,
+        7,
+        3,
+        3,
+        7,
+        3,
+        11,
+        7,
+        7,
+        7,
+        7,
+        5,
+        7,
+        4,
+        7,
+        6,
+        10,
+        7,
+        6,
+        6,
+        5,
+        3,
+        5,
+        7
+      ],
+      "pair_check": "All9025 printable-ASCII pairs equal sum of individual advances in current GetTextExtentPoint32A service; no explicit kerning applied.",
+      "string_checks": [
+        {
+          "text": "University Research",
+          "width": 114,
+          "sum_advances": 114
+        },
+        {
+          "text": "University Research ",
+          "width": 117,
+          "sum_advances": 117
+        },
+        {
+          "text": "University Research City",
+          "width": 138,
+          "sum_advances": 138
+        },
+        {
+          "text": "Producing: Isle of the",
+          "width": 119,
+          "sum_advances": 119
+        },
+        {
+          "text": "Producing: Isle of the ",
+          "width": 122,
+          "sum_advances": 122
+        },
+        {
+          "text": "Producing: Isle of the Deep",
+          "width": 151,
+          "sum_advances": 151
+        },
+        {
+          "text": "AV To Wa",
+          "width": 55,
+          "sum_advances": 55
+        }
+      ]
+    }
+  ],
+  "plain_text_wrap_supplement": {
+    "width": 116,
+    "decision": "Accumulate whole-string measured chunks ending before the next separator; later chunks include their leading space. Equality fits. On next-word overflow, retain previous trailing separator in painted substring. Center using full painted substring width including that separator.",
+    "measurements": [
+      {
+        "font": 107,
+        "text": "8",
+        "width": 9,
+        "height": 19
+      },
+      {
+        "font": 107,
+        "text": "1",
+        "width": 9,
+        "height": 19
+      },
+      {
+        "font": 102,
+        "text": "University",
+        "width": 56,
+        "height": 15
+      },
+      {
+        "font": 102,
+        "text": " Research",
+        "width": 58,
+        "height": 15
+      },
+      {
+        "font": 102,
+        "text": " City",
+        "width": 24,
+        "height": 15
+      },
+      {
+        "font": 102,
+        "text": "University Research ",
+        "width": 117,
+        "height": 15
+      },
+      {
+        "font": 102,
+        "text": "University Research ",
+        "width": 117,
+        "height": 15
+      },
+      {
+        "font": 102,
+        "text": "City",
+        "width": 21,
+        "height": 15
+      },
+      {
+        "font": 102,
+        "text": "City",
+        "width": 21,
+        "height": 15
+      },
+      {
+        "font": 102,
+        "text": "City",
+        "width": 21,
+        "height": 15
+      },
+      {
+        "font": 100,
+        "text": "Producing:",
+        "width": 59,
+        "height": 15
+      },
+      {
+        "font": 100,
+        "text": " Isle",
+        "width": 23,
+        "height": 15
+      },
+      {
+        "font": 100,
+        "text": " of",
+        "width": 13,
+        "height": 15
+      },
+      {
+        "font": 100,
+        "text": " the",
+        "width": 20,
+        "height": 15
+      },
+      {
+        "font": 100,
+        "text": " Deep",
+        "width": 33,
+        "height": 15
+      },
+      {
+        "font": 100,
+        "text": "Producing: Isle of the ",
+        "width": 118,
+        "height": 15
+      },
+      {
+        "font": 100,
+        "text": "Producing: Isle of the ",
+        "width": 118,
+        "height": 15
+      },
+      {
+        "font": 100,
+        "text": "Deep",
+        "width": 30,
+        "height": 15
+      },
+      {
+        "font": 100,
+        "text": " (74/80)",
+        "width": 42,
+        "height": 15
+      },
+      {
+        "font": 100,
+        "text": "Deep (74/80)",
+        "width": 72,
+        "height": 15
+      },
+      {
+        "font": 100,
+        "text": "Deep (74/80)",
+        "width": 72,
+        "height": 15
+      }
+    ],
+    "native_text_events": [
+      {
+        "kind": "TextOutA",
+        "text": "1",
+        "x": 37,
+        "y": 80,
+        "font": 107,
+        "COLORREF": 285147391,
+        "rgb": [
+          255,
+          255,
+          255
+        ],
+        "alignment": 24,
+        "background_mode": 1,
+        "clip": null
+      },
+      {
+        "kind": "TextOutA",
+        "text": "University Research ",
+        "x": 14,
+        "y": 139,
+        "font": 102,
+        "COLORREF": 285147288,
+        "rgb": [
+          116,
+          156,
+          56
+        ],
+        "alignment": 24,
+        "background_mode": 1,
+        "clip": null
+      },
+      {
+        "kind": "TextOutA",
+        "text": "City",
+        "x": 61,
+        "y": 152,
+        "font": 102,
+        "COLORREF": 285147288,
+        "rgb": [
+          116,
+          156,
+          56
+        ],
+        "alignment": 24,
+        "background_mode": 1,
+        "clip": null
+      },
+      {
+        "kind": "TextOutA",
+        "text": "Producing: Isle of the ",
+        "x": 13,
+        "y": 165,
+        "font": 100,
+        "COLORREF": 285147288,
+        "rgb": [
+          116,
+          156,
+          56
+        ],
+        "alignment": 24,
+        "background_mode": 1,
+        "clip": null
+      },
+      {
+        "kind": "TextOutA",
+        "text": "Deep (74/80)",
+        "x": 36,
+        "y": 178,
+        "font": 100,
+        "COLORREF": 285147288,
+        "rgb": [
+          116,
+          156,
+          56
+        ],
+        "alignment": 24,
+        "background_mode": 1,
+        "clip": null
+      }
+    ],
+    "scope": "Closed for observed plain-space labels. Markup/control tokens and overlong-word edge paths are not claimed closed here. Current-GDI metrics, not historical font raster parity."
+  }
+}

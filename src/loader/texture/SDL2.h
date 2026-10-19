@@ -13,11 +13,13 @@ namespace texture {
 
 struct SmacMenuSource;
 struct SmacNativeBadgeSource;
+struct SmacBaseCardSource;
 
 CLASS( SDL2, TextureLoader )
 	virtual ~SDL2();
 
 	types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant) override;
+    std::shared_ptr<const SmacBaseCard> GetSmacNativeBaseCard(const std::string& faction,size_t x,size_t y,bool roster) override;
     std::shared_ptr<types::texture::Texture> GetSmacEffectTexture(bool death) override;
 	void Start() override;
 	void Stop() override;
@@ -38,6 +40,8 @@ private:
 	std::unordered_map< std::string, std::shared_ptr< SmacMenuSource > > m_smac_menu_sources;
 	std::unordered_map<std::string,std::shared_ptr<SmacNativeBadgeSource>> m_native_badge_sources;
     std::unordered_map<bool,std::weak_ptr<types::texture::Texture>> m_effect_sources;
+    std::unordered_map<std::string,std::shared_ptr<SmacBaseCardSource>> m_base_card_sources;
+    std::unordered_map<std::string,std::shared_ptr<const SmacBaseCard>> m_base_cards;
 	void FixTransparency( types::texture::Texture* texture ) const;
 	void FixYellowShadows( types::texture::Texture* texture ) const;
 	void FixTexture( types::texture::Texture* texture ) const;

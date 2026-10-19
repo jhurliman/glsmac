@@ -2,6 +2,8 @@
 #include "SmacPalette.h"
 #include "SmacEffect.h"
 #include "SmacNativeBadge.h"
+#include "SmacBaseCard.h"
+#include "loader/cvr/CvrActorMaterial.h"
 #include "loader/flic/MenuCompositor.h"
 #include <algorithm>
 
@@ -38,6 +40,41 @@ SDL_Surface* load_image( const std::vector< unsigned char >& buffer ) {
 	SDL_RWops* rw = SDL_RWFromConstMem( buffer.data(), buffer.size() );
 	ASSERT( rw, "rw is null" );
 	return IMG_Load_RW( rw, 1 );
+}
+
+struct SmacBaseCardSource {
+    size_t width,height;
+    std::vector<uint8_t> indexed;
+    std::array<types::Color::rgba_t,256> palette;
+};
+std::shared_ptr<const SmacBaseCard> SDL2::GetSmacNativeBaseCard(const std::string& faction,size_t x,size_t y,bool roster) {
+    const auto faction_path=GetCustomFilename(faction),palette_path=GetCustomFilename("palette.pcx");
+    const auto source_key=faction_path+":"+palette_path;
+    const auto key=source_key+":"+std::to_string(x)+":"+std::to_string(y)+(roster?":roster":":selected");
+    const auto cached=m_base_cards.find(key);if(cached!=m_base_cards.end()) {return cached->second;}
+    auto source=m_base_card_sources.find(source_key);
+    if(source==m_base_card_sources.end()) {
+        std::vector<unsigned char> bytes;
+        using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
+        util::FS::ReadFile(bytes,faction_path);Surface image(load_image(bytes),SDL_FreeSurface);
+        if(!image || !image->format || image->format->BitsPerPixel!=8 || !image->pixels
+            || image->w<=0 || image->h<=0 || image->w>2048 || image->h>2048 || image->pitch<image->w) {return {};}
+        auto decoded=std::make_shared<SmacBaseCardSource>();
+        decoded->width=image->w;decoded->height=image->h;decoded->indexed.resize(decoded->width*decoded->height);
+        for(size_t row=0;row<decoded->height;++row) {for(size_t col=0;col<decoded->width;++col) {
+            const auto raw=static_cast<const uint8_t*>(image->pixels)[row*size_t(image->pitch)+col];
+            decoded->indexed[row*decoded->width+col]=static_cast<uint8_t>(raw+10);
+        }}
+        util::FS::ReadFile(bytes,palette_path);
+        const auto colors=loader::cvr::CvrActorMaterial::ReadSoftwareColors(
+            std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));
+        for(size_t c=0;c<256;++c) {decoded->palette[c]=types::Color::RGB(colors[c][0],colors[c][1],colors[c][2]);}
+        source=m_base_card_sources.emplace(source_key,std::move(decoded)).first;
+    }
+    const auto& data=*source->second;
+    auto card=MakeSmacIndexedBaseCard(data.indexed,data.width,data.height,x,y,roster,data.palette);
+    if(!card) {return {};}
+    return m_base_cards.emplace(key,std::make_shared<const SmacBaseCard>(std::move(*card))).first->second;
 }
 
 struct SmacNativeBadgeSource {std::array<SmacNativeBadge,14> badges;};

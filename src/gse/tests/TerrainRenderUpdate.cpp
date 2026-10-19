@@ -369,7 +369,9 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         cell.landmarks=0x02002000;
         GT_ASSERT(ink(draw(0x20))!=50,"Empty Nexus detail2 slot drew a sprite");
         world.tiles[40*40+21].deformed=true;
-        GT_ASSERT(!draw(0x20).landmark_tiles[40*40+20],"Skipped terrain stencil consumed legacy markers");GT_OK();
+        GT_ASSERT(!draw(0x20).landmark_tiles[40*40+20],"Skipped terrain stencil consumed legacy markers");
+        cell.heights=std::array<int,5>{{0,0,0,0,0}};cell.lighting=std::array<int,5>{{0,0,0,0,0}};
+        GT_ASSERT(draw(0x20).landmark_tiles[40*40+20],"Validated owned geometry retained the obsolete broad neighbor veto");GT_OK();
     });
     task->AddTest("SMAC native landmark quads compose before Forest and sea Fungus",GT(){
         namespace native=game::frontend::native_terrain;

@@ -171,14 +171,17 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             frame.developed_tiles[static_cast<size_t>(y)*40+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
             ++frame.tiles;continue;
         }
-        // Neighbor landmark deformation has not been translated. Do not feed
-        // an ordinary lighting/height model through an unsupported stencil.
-        bool ordinary=true;
-        for(int dy=-4;dy<=4;++dy) {for(int dx=-4;dx<=4;++dx) {if((dx-dy)%2) {continue;}
-            const auto* neighbor=At(world,x+dx,y+dy);
-            if(neighbor && neighbor->band>=3 && neighbor->deformed) {ordinary=false;}
-        }}
-        if(!ordinary) {continue;}
+        // Owned backend geometry already authenticates the exact height and
+        // lighting inputs. Only the legacy ordinary fallback needs this broad
+        // guard against unimplemented neighboring profile stencils.
+        if(!tile.heights || !tile.lighting) {
+            bool ordinary=true;
+            for(int dy=-4;dy<=4;++dy) {for(int dx=-4;dx<=4;++dx) {if((dx-dy)%2) {continue;}
+                const auto* neighbor=At(world,x+dx,y+dy);
+                if(neighbor && neighbor->band>=3 && neighbor->deformed) {ordinary=false;}
+            }}
+            if(!ordinary) {continue;}
+        }
         const auto light=tile.lighting?tile.lighting:terrain::OrdinaryLighting(x,y,bands);if(!light) {continue;}
         const auto heights=tile.heights?*tile.heights:terrain::OrdinaryHeights(x,y,bands);
         frame.landmark_tiles[static_cast<size_t>(y)*40+x/2]=!source.ter1.pixels.empty();

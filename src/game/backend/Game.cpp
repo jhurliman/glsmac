@@ -3011,9 +3011,19 @@ void Game::DecodeWorldSnapshot(GSE_CALLABLE,const std::string& bytes) {
 	world_snapshot::ValidateMapDimensions( map_payload, m_state->m_settings.global );
 	world_snapshot::ValidateWorkerKnowledgeGeometry( worker_knowledge, map_payload );
 	world_snapshot::ValidateTerritoryGeometry( territory, map_payload, worker_knowledge.has_value() );
+	// Coastline modules draw their Perlin seeds in Map's constructor. Restore
+	// before that constructor, not only after Initialize/instance publication.
+	// InitComplete still reinstalls the exact saved gameplay continuation.
+	const auto previous_random=m_random->GetState();
+	bool decoded=false;
+	util::FinallyGuard restore_failed_random([this,previous_random,&decoded] {
+		if(!decoded) {m_random->SetState(previous_random);}
+	});
+	m_random->SetState(random_state);
 	NEW( m_map, map::Map, this );
 	DeserializeWorldSnapshotBody( GSE_CALL, buf, map_payload, random_state, turn_state, std::move( simulation ), map_policy, std::move( worker_knowledge ), std::move( territory ) );
     if(buf.lenr!=buf.lenw) {THROW("Trailing world snapshot bytes");}
+	decoded=true;
 }
 
 bool Game::DecodeInitializationDownload( GSE_CALLABLE, connection::Client* connection, const std::string& bytes ) {

@@ -4,6 +4,7 @@
 #include "game/backend/CampaignFile.h"
 #include "game/backend/Game.h"
 #include "game/backend/Player.h"
+#include "game/backend/Random.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/SmacPlanetMap.h"
@@ -63,7 +64,12 @@ void AddCampaignPersistenceTests(task::gsetests::GSETests* task) {
             // Replacing an existing file is the same atomic publication path.
             fixture.SaveCampaign(path);GT_ASSERT(campaign::Read(path).world==snapshot,"replacement changed snapshot");GT_OK();
         });if(!setup.empty()){return setup;}
-        const auto restored=fixture.CheckCampaignRestore(path,snapshot);if(!restored.empty()){return restored;}
+        std::string first_decode,second_decode;
+        fixture.Game()->GetRandom()->SetSeed(1);
+        const auto first=fixture.CheckCampaignRestore(path,snapshot,&first_decode,false);if(!first.empty()){return first;}
+        fixture.Game()->GetRandom()->SetSeed(987654321);
+        const auto restored=fixture.CheckCampaignRestore(path,snapshot,&second_decode);if(!restored.empty()){return restored;}
+        GT_ASSERT(first_decode==second_decode,"Saved map construction depends on the new process random seed");
         return fixture.CheckCampaignCallbackFailure(path);
         });
         });

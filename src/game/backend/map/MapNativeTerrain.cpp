@@ -25,7 +25,7 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         // the ordinary land prefix. Existing GPU terrain remains underneath.
         const auto unsupported_features=tile::FEATURE_RIVER|tile::FEATURE_JUNGLE|tile::FEATURE_VOLCANO|
             tile::FEATURE_GARLAND_CRATER|tile::FEATURE_FOSSIL_FIELD_RIDGE|tile::FEATURE_DUNES;
-        const auto unsupported_work=live->terraforming&~tile::TERRAFORMING_FOREST;
+        const auto unsupported_work=live->terraforming&~(tile::TERRAFORMING_FOREST|tile::TERRAFORMING_FARM);
         output.ordinary=!output.deformed && !(live->features&unsupported_features) && !unsupported_work;
     }}
     return result;

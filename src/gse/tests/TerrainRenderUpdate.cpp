@@ -190,6 +190,9 @@ public:
             if(!retained || retained->horizontal_wrap) return false;
             const auto& before=retained->tiles[40*40+20];
             if(before.band!=3 || before.moisture!=2 || before.rockiness!=1 || before.items!=0x200020 || !before.ordinary) return false;
+            live->terraforming=tile::TERRAFORMING_FARM;
+            const auto farm=local.CopyNativeTerrain();
+            if(!farm->tiles[40*40+20].ordinary || farm->tiles[40*40+20].items!=0x8020) return false;
             live->terraforming=tile::TERRAFORMING_ROAD;
             const auto updated=local.CopyNativeTerrain();
             if(updated->tiles[40*40+20].ordinary || updated->tiles[40*40+20].items!=0x20 || !before.ordinary) return false;

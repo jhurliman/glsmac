@@ -1686,7 +1686,197 @@
     "dib_color_table_sha256": "7f6bb71482f2d10b82558e93a5243c3fb4d89e8ca15e8bba3576a2a6a084e786",
     "native_texture_load_preserves_active_palette": true,
     "matched_common_entries": 236,
-    "matched_dib_entries": 256
+    "matched_dib_entries": 256,
+    "native_palette_sha256_format": "1024 bytes:256 PALETTEENTRY records R,G,B,flags; fourth byte is not alpha",
+    "active_rgb_sha256": "13c35381385725ae2858ad34c26ed918d5e62a493a0363b21126ec20e5c22e8c",
+    "active_rgb_sha256_format": "768 bytes:256 packed R,G,B triples in index order",
+    "reserved_software_entries": [
+      {
+        "index": 0,
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 1,
+        "rgb": [
+          128,
+          0,
+          0
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 2,
+        "rgb": [
+          0,
+          128,
+          0
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 3,
+        "rgb": [
+          128,
+          128,
+          0
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 4,
+        "rgb": [
+          0,
+          0,
+          128
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 5,
+        "rgb": [
+          128,
+          0,
+          128
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 6,
+        "rgb": [
+          0,
+          128,
+          128
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 7,
+        "rgb": [
+          192,
+          192,
+          192
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 8,
+        "rgb": [
+          8,
+          0,
+          0
+        ],
+        "common_palette_entry_flag": 2
+      },
+      {
+        "index": 9,
+        "rgb": [
+          9,
+          0,
+          0
+        ],
+        "common_palette_entry_flag": 2
+      },
+      {
+        "index": 246,
+        "rgb": [
+          245,
+          0,
+          0
+        ],
+        "common_palette_entry_flag": 2
+      },
+      {
+        "index": 247,
+        "rgb": [
+          246,
+          0,
+          0
+        ],
+        "common_palette_entry_flag": 2
+      },
+      {
+        "index": 248,
+        "rgb": [
+          128,
+          128,
+          128
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 249,
+        "rgb": [
+          255,
+          0,
+          0
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 250,
+        "rgb": [
+          0,
+          255,
+          0
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 251,
+        "rgb": [
+          255,
+          255,
+          0
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 252,
+        "rgb": [
+          0,
+          0,
+          255
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 253,
+        "rgb": [
+          255,
+          0,
+          255
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 254,
+        "rgb": [
+          0,
+          255,
+          255
+        ],
+        "common_palette_entry_flag": 4
+      },
+      {
+        "index": 255,
+        "rgb": [
+          255,
+          255,
+          255
+        ],
+        "common_palette_entry_flag": 4
+      }
+    ],
+    "reserved_provenance": "Common palette6174d0 ->617560 software branch9c0670=0, fixed executable tables and explicit8/9/246/247 overrides;617e10(0) constructs matching software logical palette. Exact match with frozen Scout effect software DIB profile; not synthetic tagging. Natural monitor/device realization or system-palette branch not established.",
+    "native_palette_encoding": "256 consecutive PALETTEENTRY records: uint8 R,G,B,flags",
+    "native_palette_byte_length": 1024,
+    "active_rgb_encoding": "256 consecutive uint8 R,G,B triples in palette-index order",
+    "active_rgb_byte_length": 768
   },
   "cases": [
     {

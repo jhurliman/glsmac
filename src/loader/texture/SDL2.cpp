@@ -154,14 +154,20 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, con
 		using Surface = std::unique_ptr< SDL_Surface, decltype( &SDL_FreeSurface ) >;
 		Surface image( load_image( buffer ), SDL_FreeSurface );
 		if ( !image ) { THROW( IMG_GetError() ); }
-		if ( flags & types::texture::TF_SMAC_PALETTE ) {
-			if ( !m_transparent_colors.empty() || m_fix_yellow_shadows ) {
+		if ( flags & (types::texture::TF_SMAC_PALETTE | types::texture::TF_SMAC_SOFTWARE_TERRAIN) ) {
+            const bool terrain=flags & types::texture::TF_SMAC_SOFTWARE_TERRAIN;
+            if(terrain && ((flags & types::texture::TF_SMAC_PALETTE) || m_fix_yellow_shadows)) {
+                THROW("Conflicting indexed terrain texture profiles");
+            }
+			if ( !terrain && (!m_transparent_colors.empty() || m_fix_yellow_shadows) ) {
 				THROW( "SMAC display palette currently requires an opaque source" );
 			}
 			std::vector< unsigned char > palette_buffer;
 			util::FS::ReadFile( palette_buffer, GetCustomFilename( "palette.pcx" ) );
 			Surface palette_image( load_image( palette_buffer ), SDL_FreeSurface );
-			ApplySmacPalette( image.get(), palette_image ? palette_image->format->palette : nullptr );
+            const auto* common=palette_image && palette_image->format ? palette_image->format->palette : nullptr;
+            if(terrain) {ApplySmacTerrainPalette(image.get(),common);}
+            else {ApplySmacPalette(image.get(),common);}
 		}
 		if ( image->format->format != SDL_PIXELFORMAT_RGBA32 ) {
 			// we must have all images in same format
@@ -178,7 +184,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, con
 
 		FixTexture( texture ); // some pcx files have strange artifacts that we need to fix procedurally
 
-		FixTransparency( texture );
+		if(!(flags & types::texture::TF_SMAC_SOFTWARE_TERRAIN)) {FixTransparency( texture );}
 		FixYellowShadows( texture );
 
 		m_textures.insert(
@@ -238,7 +244,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& name, const s
 		}
 		
 		// needed?
-		FixTransparency( subtexture );
+		if(!(texture_flags & types::texture::TF_SMAC_SOFTWARE_TERRAIN)) {FixTransparency( subtexture );}
 		//FixYellowShadows( subtexture );
 
 		m_subtextures[ subtexture_key ] = subtexture;

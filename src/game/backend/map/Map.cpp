@@ -57,7 +57,9 @@ Map::Map( Game* game )
 	InitTextureVariants();
 
 	// main source textures
-	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTexture( ::resource::PCX_TEXTURE );
+    const bool smac=game && game->GetState() && game->GetState()->m_settings.global.GetRulesetId()=="smac";
+	m_textures.source.texture_pcx = g_engine->GetTextureLoader()->LoadTexture( ::resource::PCX_TEXTURE,
+        smac?types::texture::TF_SMAC_SOFTWARE_TERRAIN:types::texture::TF_NONE );
 	m_textures.source.ter1_pcx = g_engine->GetTextureLoader()->LoadTexture( ::resource::PCX_TER1 );
 
 	// add map modules

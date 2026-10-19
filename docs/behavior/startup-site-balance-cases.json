@@ -1,0 +1,3335 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "receipt_sha256": "7f68f3fbefc85e2433196c9d7db56838d91eb726d9d6c18bc3a27b230b2b62c6",
+  "scope": "Source-derived complete balancing score/deficit/resource-item reference checked against original full startup and four isolated complete balancing executions. Fresh original map/search preparation retained. Site-search admission/refinement trace is observed; full candidate-generation/admission reference remains a separate audit.",
+  "inputs": {
+    "difficulty": 3,
+    "human_mask": 2,
+    "active_mask": 255,
+    "pattern": 27067,
+    "pattern_multipliers": [
+      61,
+      11
+    ],
+    "initial_balance_crt": 531966586,
+    "dimensions": [
+      80,
+      80
+    ],
+    "source_map_asset_external": true
+  },
+  "cases": [
+    {
+      "variant": "unchanged",
+      "components": [
+        {
+          "faction": 1,
+          "position": [
+            17,
+            61
+          ],
+          "region": 14,
+          "region_area": 469,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 16,
+          "terrain_component": 8,
+          "region_component": 3,
+          "score": 9
+        },
+        {
+          "faction": 2,
+          "position": [
+            34,
+            36
+          ],
+          "region": 15,
+          "region_area": 285,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 11,
+          "terrain_component": 5,
+          "region_component": 3,
+          "score": 6
+        },
+        {
+          "faction": 3,
+          "position": [
+            24,
+            38
+          ],
+          "region": 15,
+          "region_area": 285,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 19,
+          "terrain_component": 8,
+          "region_component": 3,
+          "score": 9
+        },
+        {
+          "faction": 4,
+          "position": [
+            59,
+            23
+          ],
+          "region": 13,
+          "region_area": 455,
+          "nearest_normalized_spacing": 9999,
+          "spacing_component": 8,
+          "terrain_counter": 22,
+          "terrain_component": 8,
+          "region_component": 3,
+          "score": 19
+        },
+        {
+          "faction": 5,
+          "position": [
+            29,
+            25
+          ],
+          "region": 15,
+          "region_area": 285,
+          "nearest_normalized_spacing": 9,
+          "spacing_component": -2,
+          "terrain_counter": 11,
+          "terrain_component": 5,
+          "region_component": 3,
+          "score": 6
+        },
+        {
+          "faction": 6,
+          "position": [
+            4,
+            64
+          ],
+          "region": 14,
+          "region_area": 469,
+          "nearest_normalized_spacing": 10,
+          "spacing_component": -1,
+          "terrain_counter": 15,
+          "terrain_component": 7,
+          "region_component": 3,
+          "score": 9
+        },
+        {
+          "faction": 7,
+          "position": [
+            15,
+            71
+          ],
+          "region": 14,
+          "region_area": 469,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 10,
+          "terrain_component": 5,
+          "region_component": 3,
+          "score": 6
+        }
+      ],
+      "maximum": 19,
+      "deficits": [
+        {
+          "faction": 1,
+          "maximum": 19,
+          "scores": [
+            9,
+            6,
+            9,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 10
+        },
+        {
+          "faction": 2,
+          "maximum": 19,
+          "scores": [
+            9,
+            6,
+            9,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 13
+        },
+        {
+          "faction": 3,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            9,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 10
+        },
+        {
+          "faction": 4,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            8,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 0
+        },
+        {
+          "faction": 5,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            8,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 13
+        },
+        {
+          "faction": 6,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            8,
+            19,
+            5,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 10
+        },
+        {
+          "faction": 7,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            8,
+            19,
+            5,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 13
+        }
+      ],
+      "pod_owners": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        7
+      ],
+      "terrain_writes": [
+        {
+          "faction": 1,
+          "position": [
+            15,
+            63
+          ],
+          "offset": 111196,
+          "mask": 67108864,
+          "value": 68161536
+        },
+        {
+          "faction": 1,
+          "position": [
+            14,
+            62
+          ],
+          "offset": 109436,
+          "mask": 67108864,
+          "value": 68161536
+        },
+        {
+          "faction": 1,
+          "position": [
+            19,
+            59
+          ],
+          "offset": 104244,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 1,
+          "position": [
+            18,
+            64
+          ],
+          "offset": 113044,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 1,
+          "position": [
+            17,
+            65
+          ],
+          "offset": 114760,
+          "mask": 134217728,
+          "value": 135266336
+        },
+        {
+          "faction": 2,
+          "position": [
+            36,
+            34
+          ],
+          "offset": 60640,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 2,
+          "position": [
+            35,
+            39
+          ],
+          "offset": 69396,
+          "mask": 67108864,
+          "value": 335548448
+        },
+        {
+          "faction": 2,
+          "position": [
+            34,
+            40
+          ],
+          "offset": 71156,
+          "mask": 134217728,
+          "value": 135266336
+        },
+        {
+          "faction": 2,
+          "position": [
+            37,
+            35
+          ],
+          "offset": 62400,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 2,
+          "position": [
+            38,
+            36
+          ],
+          "offset": 64204,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 2,
+          "position": [
+            32,
+            34
+          ],
+          "offset": 60552,
+          "mask": 134217728,
+          "value": 135270432
+        },
+        {
+          "faction": 2,
+          "position": [
+            31,
+            35
+          ],
+          "offset": 62268,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 2,
+          "position": [
+            36,
+            38
+          ],
+          "offset": 67680,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 3,
+          "position": [
+            23,
+            41
+          ],
+          "offset": 72652,
+          "mask": 67108864,
+          "value": 68161536
+        },
+        {
+          "faction": 3,
+          "position": [
+            24,
+            34
+          ],
+          "offset": 60376,
+          "mask": 67108864,
+          "value": 67108896
+        },
+        {
+          "faction": 3,
+          "position": [
+            27,
+            39
+          ],
+          "offset": 69220,
+          "mask": 134217728,
+          "value": 135270432
+        },
+        {
+          "faction": 3,
+          "position": [
+            20,
+            38
+          ],
+          "offset": 67328,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 3,
+          "position": [
+            25,
+            35
+          ],
+          "offset": 62136,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 5,
+          "position": [
+            32,
+            24
+          ],
+          "offset": 42952,
+          "mask": 67108864,
+          "value": 67113120
+        },
+        {
+          "faction": 5,
+          "position": [
+            33,
+            25
+          ],
+          "offset": 44712,
+          "mask": 67108864,
+          "value": 1140850720
+        },
+        {
+          "faction": 5,
+          "position": [
+            27,
+            23
+          ],
+          "offset": 41060,
+          "mask": 134217728,
+          "value": 134352896
+        },
+        {
+          "faction": 5,
+          "position": [
+            26,
+            24
+          ],
+          "offset": 42820,
+          "mask": 134217728,
+          "value": 134221824
+        },
+        {
+          "faction": 5,
+          "position": [
+            31,
+            27
+          ],
+          "offset": 48188,
+          "mask": 134217728,
+          "value": 134221824
+        },
+        {
+          "faction": 5,
+          "position": [
+            28,
+            28
+          ],
+          "offset": 49904,
+          "mask": 134217728,
+          "value": 134221952
+        },
+        {
+          "faction": 5,
+          "position": [
+            29,
+            21
+          ],
+          "offset": 37584,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 5,
+          "position": [
+            32,
+            26
+          ],
+          "offset": 46472,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 6,
+          "position": [
+            1,
+            65
+          ],
+          "offset": 114408,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 6,
+          "position": [
+            6,
+            62
+          ],
+          "offset": 109260,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 6,
+          "position": [
+            5,
+            67
+          ],
+          "offset": 118016,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 6,
+          "position": [
+            4,
+            68
+          ],
+          "offset": 119776,
+          "mask": 134217728,
+          "value": 134217728
+        },
+        {
+          "faction": 6,
+          "position": [
+            7,
+            63
+          ],
+          "offset": 111020,
+          "mask": 134217728,
+          "value": 134221824
+        },
+        {
+          "faction": 7,
+          "position": [
+            12,
+            72
+          ],
+          "offset": 126992,
+          "mask": 67108864,
+          "value": 67112992
+        },
+        {
+          "faction": 7,
+          "position": [
+            17,
+            69
+          ],
+          "offset": 121800,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 7,
+          "position": [
+            16,
+            74
+          ],
+          "offset": 130600,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 7,
+          "position": [
+            15,
+            75
+          ],
+          "offset": 132316,
+          "mask": 134217728,
+          "value": 134217728
+        },
+        {
+          "faction": 7,
+          "position": [
+            18,
+            70
+          ],
+          "offset": 123604,
+          "mask": 134217728,
+          "value": 1207963648
+        },
+        {
+          "faction": 7,
+          "position": [
+            19,
+            71
+          ],
+          "offset": 125364,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 7,
+          "position": [
+            13,
+            69
+          ],
+          "offset": 121712,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 7,
+          "position": [
+            12,
+            70
+          ],
+          "offset": 123472,
+          "mask": 134217728,
+          "value": 134221856
+        }
+      ],
+      "crt_before": 531966586,
+      "crt_after": 1537134187,
+      "tile_item_fields_checked": 3200
+    },
+    {
+      "variant": "gaia_dry_neighborhood",
+      "components": [
+        {
+          "faction": 1,
+          "position": [
+            17,
+            61
+          ],
+          "region": 14,
+          "region_area": 469,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 0,
+          "terrain_component": 0,
+          "region_component": 3,
+          "score": 1
+        },
+        {
+          "faction": 2,
+          "position": [
+            34,
+            36
+          ],
+          "region": 15,
+          "region_area": 285,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 11,
+          "terrain_component": 5,
+          "region_component": 3,
+          "score": 6
+        },
+        {
+          "faction": 3,
+          "position": [
+            24,
+            38
+          ],
+          "region": 15,
+          "region_area": 285,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 19,
+          "terrain_component": 8,
+          "region_component": 3,
+          "score": 9
+        },
+        {
+          "faction": 4,
+          "position": [
+            59,
+            23
+          ],
+          "region": 13,
+          "region_area": 455,
+          "nearest_normalized_spacing": 9999,
+          "spacing_component": 8,
+          "terrain_counter": 22,
+          "terrain_component": 8,
+          "region_component": 3,
+          "score": 19
+        },
+        {
+          "faction": 5,
+          "position": [
+            29,
+            25
+          ],
+          "region": 15,
+          "region_area": 285,
+          "nearest_normalized_spacing": 9,
+          "spacing_component": -2,
+          "terrain_counter": 11,
+          "terrain_component": 5,
+          "region_component": 3,
+          "score": 6
+        },
+        {
+          "faction": 6,
+          "position": [
+            4,
+            64
+          ],
+          "region": 14,
+          "region_area": 469,
+          "nearest_normalized_spacing": 10,
+          "spacing_component": -1,
+          "terrain_counter": 15,
+          "terrain_component": 7,
+          "region_component": 3,
+          "score": 9
+        },
+        {
+          "faction": 7,
+          "position": [
+            15,
+            71
+          ],
+          "region": 14,
+          "region_area": 469,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 10,
+          "terrain_component": 5,
+          "region_component": 3,
+          "score": 6
+        }
+      ],
+      "maximum": 19,
+      "deficits": [
+        {
+          "faction": 1,
+          "maximum": 19,
+          "scores": [
+            1,
+            6,
+            9,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 18
+        },
+        {
+          "faction": 2,
+          "maximum": 19,
+          "scores": [
+            1,
+            6,
+            9,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 13
+        },
+        {
+          "faction": 3,
+          "maximum": 19,
+          "scores": [
+            1,
+            5,
+            9,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 10
+        },
+        {
+          "faction": 4,
+          "maximum": 19,
+          "scores": [
+            1,
+            5,
+            8,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 0
+        },
+        {
+          "faction": 5,
+          "maximum": 19,
+          "scores": [
+            1,
+            5,
+            8,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 13
+        },
+        {
+          "faction": 6,
+          "maximum": 19,
+          "scores": [
+            1,
+            5,
+            8,
+            19,
+            5,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 10
+        },
+        {
+          "faction": 7,
+          "maximum": 19,
+          "scores": [
+            1,
+            5,
+            8,
+            19,
+            5,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 13
+        }
+      ],
+      "pod_owners": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        7
+      ],
+      "terrain_writes": [
+        {
+          "faction": 1,
+          "position": [
+            15,
+            63
+          ],
+          "offset": 111196,
+          "mask": 67108864,
+          "value": 68161536
+        },
+        {
+          "faction": 1,
+          "position": [
+            14,
+            62
+          ],
+          "offset": 109436,
+          "mask": 67108864,
+          "value": 68161536
+        },
+        {
+          "faction": 1,
+          "position": [
+            19,
+            59
+          ],
+          "offset": 104244,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 1,
+          "position": [
+            18,
+            64
+          ],
+          "offset": 113044,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 1,
+          "position": [
+            17,
+            65
+          ],
+          "offset": 114760,
+          "mask": 134217728,
+          "value": 135266336
+        },
+        {
+          "faction": 1,
+          "position": [
+            20,
+            60
+          ],
+          "offset": 106048,
+          "mask": 134217728,
+          "value": 135270432
+        },
+        {
+          "faction": 1,
+          "position": [
+            21,
+            61
+          ],
+          "offset": 107808,
+          "mask": 134217728,
+          "value": 135266304
+        },
+        {
+          "faction": 1,
+          "position": [
+            15,
+            59
+          ],
+          "offset": 104156,
+          "mask": 134217728,
+          "value": 1209012224
+        },
+        {
+          "faction": 1,
+          "position": [
+            14,
+            60
+          ],
+          "offset": 105916,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 1,
+          "position": [
+            19,
+            63
+          ],
+          "offset": 111284,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 1,
+          "position": [
+            16,
+            64
+          ],
+          "offset": 113000,
+          "mask": 134217728,
+          "value": 135270432
+        },
+        {
+          "faction": 1,
+          "position": [
+            17,
+            57
+          ],
+          "offset": 100680,
+          "mask": 134217728,
+          "value": 135266304
+        },
+        {
+          "faction": 1,
+          "position": [
+            20,
+            62
+          ],
+          "offset": 109568,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 2,
+          "position": [
+            36,
+            34
+          ],
+          "offset": 60640,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 2,
+          "position": [
+            35,
+            39
+          ],
+          "offset": 69396,
+          "mask": 67108864,
+          "value": 335548448
+        },
+        {
+          "faction": 2,
+          "position": [
+            34,
+            40
+          ],
+          "offset": 71156,
+          "mask": 134217728,
+          "value": 135266336
+        },
+        {
+          "faction": 2,
+          "position": [
+            37,
+            35
+          ],
+          "offset": 62400,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 2,
+          "position": [
+            38,
+            36
+          ],
+          "offset": 64204,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 2,
+          "position": [
+            32,
+            34
+          ],
+          "offset": 60552,
+          "mask": 134217728,
+          "value": 135270432
+        },
+        {
+          "faction": 2,
+          "position": [
+            31,
+            35
+          ],
+          "offset": 62268,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 2,
+          "position": [
+            36,
+            38
+          ],
+          "offset": 67680,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 3,
+          "position": [
+            23,
+            41
+          ],
+          "offset": 72652,
+          "mask": 67108864,
+          "value": 68161536
+        },
+        {
+          "faction": 3,
+          "position": [
+            24,
+            34
+          ],
+          "offset": 60376,
+          "mask": 67108864,
+          "value": 67108896
+        },
+        {
+          "faction": 3,
+          "position": [
+            27,
+            39
+          ],
+          "offset": 69220,
+          "mask": 134217728,
+          "value": 135270432
+        },
+        {
+          "faction": 3,
+          "position": [
+            20,
+            38
+          ],
+          "offset": 67328,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 3,
+          "position": [
+            25,
+            35
+          ],
+          "offset": 62136,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 5,
+          "position": [
+            32,
+            24
+          ],
+          "offset": 42952,
+          "mask": 67108864,
+          "value": 67113120
+        },
+        {
+          "faction": 5,
+          "position": [
+            33,
+            25
+          ],
+          "offset": 44712,
+          "mask": 67108864,
+          "value": 1140850720
+        },
+        {
+          "faction": 5,
+          "position": [
+            27,
+            23
+          ],
+          "offset": 41060,
+          "mask": 134217728,
+          "value": 134352896
+        },
+        {
+          "faction": 5,
+          "position": [
+            26,
+            24
+          ],
+          "offset": 42820,
+          "mask": 134217728,
+          "value": 134221824
+        },
+        {
+          "faction": 5,
+          "position": [
+            31,
+            27
+          ],
+          "offset": 48188,
+          "mask": 134217728,
+          "value": 134221824
+        },
+        {
+          "faction": 5,
+          "position": [
+            28,
+            28
+          ],
+          "offset": 49904,
+          "mask": 134217728,
+          "value": 134221952
+        },
+        {
+          "faction": 5,
+          "position": [
+            29,
+            21
+          ],
+          "offset": 37584,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 5,
+          "position": [
+            32,
+            26
+          ],
+          "offset": 46472,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 6,
+          "position": [
+            1,
+            65
+          ],
+          "offset": 114408,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 6,
+          "position": [
+            6,
+            62
+          ],
+          "offset": 109260,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 6,
+          "position": [
+            5,
+            67
+          ],
+          "offset": 118016,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 6,
+          "position": [
+            4,
+            68
+          ],
+          "offset": 119776,
+          "mask": 134217728,
+          "value": 134217728
+        },
+        {
+          "faction": 6,
+          "position": [
+            7,
+            63
+          ],
+          "offset": 111020,
+          "mask": 134217728,
+          "value": 134221824
+        },
+        {
+          "faction": 7,
+          "position": [
+            12,
+            72
+          ],
+          "offset": 126992,
+          "mask": 67108864,
+          "value": 67112992
+        },
+        {
+          "faction": 7,
+          "position": [
+            17,
+            69
+          ],
+          "offset": 121800,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 7,
+          "position": [
+            16,
+            74
+          ],
+          "offset": 130600,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 7,
+          "position": [
+            15,
+            75
+          ],
+          "offset": 132316,
+          "mask": 134217728,
+          "value": 134217728
+        },
+        {
+          "faction": 7,
+          "position": [
+            18,
+            70
+          ],
+          "offset": 123604,
+          "mask": 134217728,
+          "value": 1207963648
+        },
+        {
+          "faction": 7,
+          "position": [
+            19,
+            71
+          ],
+          "offset": 125364,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 7,
+          "position": [
+            13,
+            69
+          ],
+          "offset": 121712,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 7,
+          "position": [
+            12,
+            70
+          ],
+          "offset": 123472,
+          "mask": 134217728,
+          "value": 134221856
+        }
+      ],
+      "crt_before": 531966586,
+      "crt_after": 1537134187,
+      "tile_item_fields_checked": 3200
+    },
+    {
+      "variant": "gaia_UNIT_pod_credit",
+      "components": [
+        {
+          "faction": 1,
+          "position": [
+            17,
+            61
+          ],
+          "region": 14,
+          "region_area": 469,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 16,
+          "terrain_component": 8,
+          "region_component": 3,
+          "score": 9
+        },
+        {
+          "faction": 2,
+          "position": [
+            34,
+            36
+          ],
+          "region": 15,
+          "region_area": 285,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 11,
+          "terrain_component": 5,
+          "region_component": 3,
+          "score": 6
+        },
+        {
+          "faction": 3,
+          "position": [
+            24,
+            38
+          ],
+          "region": 15,
+          "region_area": 285,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 19,
+          "terrain_component": 8,
+          "region_component": 3,
+          "score": 9
+        },
+        {
+          "faction": 4,
+          "position": [
+            59,
+            23
+          ],
+          "region": 13,
+          "region_area": 455,
+          "nearest_normalized_spacing": 9999,
+          "spacing_component": 8,
+          "terrain_counter": 22,
+          "terrain_component": 8,
+          "region_component": 3,
+          "score": 19
+        },
+        {
+          "faction": 5,
+          "position": [
+            29,
+            25
+          ],
+          "region": 15,
+          "region_area": 285,
+          "nearest_normalized_spacing": 9,
+          "spacing_component": -2,
+          "terrain_counter": 11,
+          "terrain_component": 5,
+          "region_component": 3,
+          "score": 6
+        },
+        {
+          "faction": 6,
+          "position": [
+            4,
+            64
+          ],
+          "region": 14,
+          "region_area": 469,
+          "nearest_normalized_spacing": 10,
+          "spacing_component": -1,
+          "terrain_counter": 15,
+          "terrain_component": 7,
+          "region_component": 3,
+          "score": 9
+        },
+        {
+          "faction": 7,
+          "position": [
+            15,
+            71
+          ],
+          "region": 14,
+          "region_area": 469,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 10,
+          "terrain_component": 5,
+          "region_component": 3,
+          "score": 6
+        }
+      ],
+      "maximum": 19,
+      "deficits": [
+        {
+          "faction": 1,
+          "maximum": 19,
+          "scores": [
+            9,
+            6,
+            9,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 3,
+          "deficit": 7
+        },
+        {
+          "faction": 2,
+          "maximum": 19,
+          "scores": [
+            9,
+            6,
+            9,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 13
+        },
+        {
+          "faction": 3,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            9,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 10
+        },
+        {
+          "faction": 4,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            8,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 0
+        },
+        {
+          "faction": 5,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            8,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 13
+        },
+        {
+          "faction": 6,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            8,
+            19,
+            5,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 10
+        },
+        {
+          "faction": 7,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            8,
+            19,
+            5,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 13
+        }
+      ],
+      "pod_owners": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        7
+      ],
+      "terrain_writes": [
+        {
+          "faction": 1,
+          "position": [
+            15,
+            63
+          ],
+          "offset": 111196,
+          "mask": 67108864,
+          "value": 68161536
+        },
+        {
+          "faction": 1,
+          "position": [
+            14,
+            62
+          ],
+          "offset": 109436,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 1,
+          "position": [
+            19,
+            59
+          ],
+          "offset": 104244,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 2,
+          "position": [
+            36,
+            34
+          ],
+          "offset": 60640,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 2,
+          "position": [
+            35,
+            39
+          ],
+          "offset": 69396,
+          "mask": 67108864,
+          "value": 335548448
+        },
+        {
+          "faction": 2,
+          "position": [
+            34,
+            40
+          ],
+          "offset": 71156,
+          "mask": 134217728,
+          "value": 135266336
+        },
+        {
+          "faction": 2,
+          "position": [
+            37,
+            35
+          ],
+          "offset": 62400,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 2,
+          "position": [
+            38,
+            36
+          ],
+          "offset": 64204,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 2,
+          "position": [
+            32,
+            34
+          ],
+          "offset": 60552,
+          "mask": 134217728,
+          "value": 135270432
+        },
+        {
+          "faction": 2,
+          "position": [
+            31,
+            35
+          ],
+          "offset": 62268,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 2,
+          "position": [
+            36,
+            38
+          ],
+          "offset": 67680,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 3,
+          "position": [
+            23,
+            41
+          ],
+          "offset": 72652,
+          "mask": 67108864,
+          "value": 68161536
+        },
+        {
+          "faction": 3,
+          "position": [
+            24,
+            34
+          ],
+          "offset": 60376,
+          "mask": 67108864,
+          "value": 67108896
+        },
+        {
+          "faction": 3,
+          "position": [
+            27,
+            39
+          ],
+          "offset": 69220,
+          "mask": 134217728,
+          "value": 135270432
+        },
+        {
+          "faction": 3,
+          "position": [
+            20,
+            38
+          ],
+          "offset": 67328,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 3,
+          "position": [
+            25,
+            35
+          ],
+          "offset": 62136,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 5,
+          "position": [
+            32,
+            24
+          ],
+          "offset": 42952,
+          "mask": 67108864,
+          "value": 67113120
+        },
+        {
+          "faction": 5,
+          "position": [
+            33,
+            25
+          ],
+          "offset": 44712,
+          "mask": 67108864,
+          "value": 1140850720
+        },
+        {
+          "faction": 5,
+          "position": [
+            27,
+            23
+          ],
+          "offset": 41060,
+          "mask": 134217728,
+          "value": 134352896
+        },
+        {
+          "faction": 5,
+          "position": [
+            26,
+            24
+          ],
+          "offset": 42820,
+          "mask": 134217728,
+          "value": 134221824
+        },
+        {
+          "faction": 5,
+          "position": [
+            31,
+            27
+          ],
+          "offset": 48188,
+          "mask": 134217728,
+          "value": 134221824
+        },
+        {
+          "faction": 5,
+          "position": [
+            28,
+            28
+          ],
+          "offset": 49904,
+          "mask": 134217728,
+          "value": 134221952
+        },
+        {
+          "faction": 5,
+          "position": [
+            29,
+            21
+          ],
+          "offset": 37584,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 5,
+          "position": [
+            32,
+            26
+          ],
+          "offset": 46472,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 6,
+          "position": [
+            1,
+            65
+          ],
+          "offset": 114408,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 6,
+          "position": [
+            6,
+            62
+          ],
+          "offset": 109260,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 6,
+          "position": [
+            5,
+            67
+          ],
+          "offset": 118016,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 6,
+          "position": [
+            4,
+            68
+          ],
+          "offset": 119776,
+          "mask": 134217728,
+          "value": 134217728
+        },
+        {
+          "faction": 6,
+          "position": [
+            7,
+            63
+          ],
+          "offset": 111020,
+          "mask": 134217728,
+          "value": 134221824
+        },
+        {
+          "faction": 7,
+          "position": [
+            12,
+            72
+          ],
+          "offset": 126992,
+          "mask": 67108864,
+          "value": 67112992
+        },
+        {
+          "faction": 7,
+          "position": [
+            17,
+            69
+          ],
+          "offset": 121800,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 7,
+          "position": [
+            16,
+            74
+          ],
+          "offset": 130600,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 7,
+          "position": [
+            15,
+            75
+          ],
+          "offset": 132316,
+          "mask": 134217728,
+          "value": 134217728
+        },
+        {
+          "faction": 7,
+          "position": [
+            18,
+            70
+          ],
+          "offset": 123604,
+          "mask": 134217728,
+          "value": 1207963648
+        },
+        {
+          "faction": 7,
+          "position": [
+            19,
+            71
+          ],
+          "offset": 125364,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 7,
+          "position": [
+            13,
+            69
+          ],
+          "offset": 121712,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 7,
+          "position": [
+            12,
+            70
+          ],
+          "offset": 123472,
+          "mask": 134217728,
+          "value": 134221856
+        }
+      ],
+      "crt_before": 531966586,
+      "crt_after": 1537134187,
+      "tile_item_fields_checked": 3200
+    },
+    {
+      "variant": "gaia_UNIT_scout_credit",
+      "components": [
+        {
+          "faction": 1,
+          "position": [
+            17,
+            61
+          ],
+          "region": 14,
+          "region_area": 469,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 16,
+          "terrain_component": 8,
+          "region_component": 3,
+          "score": 9
+        },
+        {
+          "faction": 2,
+          "position": [
+            34,
+            36
+          ],
+          "region": 15,
+          "region_area": 285,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 11,
+          "terrain_component": 5,
+          "region_component": 3,
+          "score": 6
+        },
+        {
+          "faction": 3,
+          "position": [
+            24,
+            38
+          ],
+          "region": 15,
+          "region_area": 285,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 19,
+          "terrain_component": 8,
+          "region_component": 3,
+          "score": 9
+        },
+        {
+          "faction": 4,
+          "position": [
+            59,
+            23
+          ],
+          "region": 13,
+          "region_area": 455,
+          "nearest_normalized_spacing": 9999,
+          "spacing_component": 8,
+          "terrain_counter": 22,
+          "terrain_component": 8,
+          "region_component": 3,
+          "score": 19
+        },
+        {
+          "faction": 5,
+          "position": [
+            29,
+            25
+          ],
+          "region": 15,
+          "region_area": 285,
+          "nearest_normalized_spacing": 9,
+          "spacing_component": -2,
+          "terrain_counter": 11,
+          "terrain_component": 5,
+          "region_component": 3,
+          "score": 6
+        },
+        {
+          "faction": 6,
+          "position": [
+            4,
+            64
+          ],
+          "region": 14,
+          "region_area": 469,
+          "nearest_normalized_spacing": 10,
+          "spacing_component": -1,
+          "terrain_counter": 15,
+          "terrain_component": 7,
+          "region_component": 3,
+          "score": 9
+        },
+        {
+          "faction": 7,
+          "position": [
+            15,
+            71
+          ],
+          "region": 14,
+          "region_area": 469,
+          "nearest_normalized_spacing": 8,
+          "spacing_component": -2,
+          "terrain_counter": 10,
+          "terrain_component": 5,
+          "region_component": 3,
+          "score": 6
+        }
+      ],
+      "maximum": 19,
+      "deficits": [
+        {
+          "faction": 1,
+          "maximum": 19,
+          "scores": [
+            9,
+            6,
+            9,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 1,
+          "deficit": 9
+        },
+        {
+          "faction": 2,
+          "maximum": 19,
+          "scores": [
+            9,
+            6,
+            9,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 13
+        },
+        {
+          "faction": 3,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            9,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 10
+        },
+        {
+          "faction": 4,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            8,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 0
+        },
+        {
+          "faction": 5,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            8,
+            19,
+            6,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 13
+        },
+        {
+          "faction": 6,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            8,
+            19,
+            5,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 10
+        },
+        {
+          "faction": 7,
+          "maximum": 19,
+          "scores": [
+            9,
+            5,
+            8,
+            19,
+            5,
+            9,
+            6
+          ],
+          "unit_credit": 0,
+          "deficit": 13
+        }
+      ],
+      "pod_owners": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        7
+      ],
+      "terrain_writes": [
+        {
+          "faction": 1,
+          "position": [
+            15,
+            63
+          ],
+          "offset": 111196,
+          "mask": 67108864,
+          "value": 68161536
+        },
+        {
+          "faction": 1,
+          "position": [
+            14,
+            62
+          ],
+          "offset": 109436,
+          "mask": 67108864,
+          "value": 68161536
+        },
+        {
+          "faction": 1,
+          "position": [
+            19,
+            59
+          ],
+          "offset": 104244,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 1,
+          "position": [
+            18,
+            64
+          ],
+          "offset": 113044,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 2,
+          "position": [
+            36,
+            34
+          ],
+          "offset": 60640,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 2,
+          "position": [
+            35,
+            39
+          ],
+          "offset": 69396,
+          "mask": 67108864,
+          "value": 335548448
+        },
+        {
+          "faction": 2,
+          "position": [
+            34,
+            40
+          ],
+          "offset": 71156,
+          "mask": 134217728,
+          "value": 135266336
+        },
+        {
+          "faction": 2,
+          "position": [
+            37,
+            35
+          ],
+          "offset": 62400,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 2,
+          "position": [
+            38,
+            36
+          ],
+          "offset": 64204,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 2,
+          "position": [
+            32,
+            34
+          ],
+          "offset": 60552,
+          "mask": 134217728,
+          "value": 135270432
+        },
+        {
+          "faction": 2,
+          "position": [
+            31,
+            35
+          ],
+          "offset": 62268,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 2,
+          "position": [
+            36,
+            38
+          ],
+          "offset": 67680,
+          "mask": 134217728,
+          "value": 135270400
+        },
+        {
+          "faction": 3,
+          "position": [
+            23,
+            41
+          ],
+          "offset": 72652,
+          "mask": 67108864,
+          "value": 68161536
+        },
+        {
+          "faction": 3,
+          "position": [
+            24,
+            34
+          ],
+          "offset": 60376,
+          "mask": 67108864,
+          "value": 67108896
+        },
+        {
+          "faction": 3,
+          "position": [
+            27,
+            39
+          ],
+          "offset": 69220,
+          "mask": 134217728,
+          "value": 135270432
+        },
+        {
+          "faction": 3,
+          "position": [
+            20,
+            38
+          ],
+          "offset": 67328,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 3,
+          "position": [
+            25,
+            35
+          ],
+          "offset": 62136,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 5,
+          "position": [
+            32,
+            24
+          ],
+          "offset": 42952,
+          "mask": 67108864,
+          "value": 67113120
+        },
+        {
+          "faction": 5,
+          "position": [
+            33,
+            25
+          ],
+          "offset": 44712,
+          "mask": 67108864,
+          "value": 1140850720
+        },
+        {
+          "faction": 5,
+          "position": [
+            27,
+            23
+          ],
+          "offset": 41060,
+          "mask": 134217728,
+          "value": 134352896
+        },
+        {
+          "faction": 5,
+          "position": [
+            26,
+            24
+          ],
+          "offset": 42820,
+          "mask": 134217728,
+          "value": 134221824
+        },
+        {
+          "faction": 5,
+          "position": [
+            31,
+            27
+          ],
+          "offset": 48188,
+          "mask": 134217728,
+          "value": 134221824
+        },
+        {
+          "faction": 5,
+          "position": [
+            28,
+            28
+          ],
+          "offset": 49904,
+          "mask": 134217728,
+          "value": 134221952
+        },
+        {
+          "faction": 5,
+          "position": [
+            29,
+            21
+          ],
+          "offset": 37584,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 5,
+          "position": [
+            32,
+            26
+          ],
+          "offset": 46472,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 6,
+          "position": [
+            1,
+            65
+          ],
+          "offset": 114408,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 6,
+          "position": [
+            6,
+            62
+          ],
+          "offset": 109260,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 6,
+          "position": [
+            5,
+            67
+          ],
+          "offset": 118016,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 6,
+          "position": [
+            4,
+            68
+          ],
+          "offset": 119776,
+          "mask": 134217728,
+          "value": 134217728
+        },
+        {
+          "faction": 6,
+          "position": [
+            7,
+            63
+          ],
+          "offset": 111020,
+          "mask": 134217728,
+          "value": 134221824
+        },
+        {
+          "faction": 7,
+          "position": [
+            12,
+            72
+          ],
+          "offset": 126992,
+          "mask": 67108864,
+          "value": 67112992
+        },
+        {
+          "faction": 7,
+          "position": [
+            17,
+            69
+          ],
+          "offset": 121800,
+          "mask": 67108864,
+          "value": 67112960
+        },
+        {
+          "faction": 7,
+          "position": [
+            16,
+            74
+          ],
+          "offset": 130600,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 7,
+          "position": [
+            15,
+            75
+          ],
+          "offset": 132316,
+          "mask": 134217728,
+          "value": 134217728
+        },
+        {
+          "faction": 7,
+          "position": [
+            18,
+            70
+          ],
+          "offset": 123604,
+          "mask": 134217728,
+          "value": 1207963648
+        },
+        {
+          "faction": 7,
+          "position": [
+            19,
+            71
+          ],
+          "offset": 125364,
+          "mask": 134217728,
+          "value": 134217760
+        },
+        {
+          "faction": 7,
+          "position": [
+            13,
+            69
+          ],
+          "offset": 121712,
+          "mask": 134217728,
+          "value": 134221856
+        },
+        {
+          "faction": 7,
+          "position": [
+            12,
+            70
+          ],
+          "offset": 123472,
+          "mask": 134217728,
+          "value": 134221856
+        }
+      ],
+      "crt_before": 531966586,
+      "crt_after": 1537134187,
+      "tile_item_fields_checked": 3200
+    }
+  ],
+  "site_search_and_refinement": [
+    {
+      "faction": 1,
+      "attempts": 573,
+      "accepted_search_center": [
+        16,
+        58
+      ],
+      "final_start_position": [
+        17,
+        61
+      ],
+      "selected_refinement_index": 16,
+      "selected_refinement_score": 16,
+      "evaluated_refinement_rows": [
+        {
+          "faction": 1,
+          "index": 0,
+          "position": [
+            16,
+            58
+          ],
+          "score": 8,
+          "old_best": -1
+        },
+        {
+          "faction": 1,
+          "index": 4,
+          "position": [
+            16,
+            60
+          ],
+          "score": 9,
+          "old_best": 8
+        },
+        {
+          "faction": 1,
+          "index": 5,
+          "position": [
+            15,
+            59
+          ],
+          "score": 10,
+          "old_best": 9
+        },
+        {
+          "faction": 1,
+          "index": 6,
+          "position": [
+            14,
+            58
+          ],
+          "score": 9,
+          "old_best": 10
+        },
+        {
+          "faction": 1,
+          "index": 8,
+          "position": [
+            16,
+            56
+          ],
+          "score": 2,
+          "old_best": 10
+        },
+        {
+          "faction": 1,
+          "index": 10,
+          "position": [
+            18,
+            60
+          ],
+          "score": 11,
+          "old_best": 10
+        },
+        {
+          "faction": 1,
+          "index": 15,
+          "position": [
+            19,
+            59
+          ],
+          "score": 4,
+          "old_best": 11
+        },
+        {
+          "faction": 1,
+          "index": 16,
+          "position": [
+            17,
+            61
+          ],
+          "score": 16,
+          "old_best": 11
+        },
+        {
+          "faction": 1,
+          "index": 17,
+          "position": [
+            15,
+            61
+          ],
+          "score": 1,
+          "old_best": 16
+        },
+        {
+          "faction": 1,
+          "index": 19,
+          "position": [
+            13,
+            57
+          ],
+          "score": 11,
+          "old_best": 16
+        }
+      ]
+    },
+    {
+      "faction": 2,
+      "attempts": 587,
+      "accepted_search_center": [
+        35,
+        37
+      ],
+      "final_start_position": [
+        34,
+        36
+      ],
+      "selected_refinement_index": 7,
+      "selected_refinement_score": 9,
+      "evaluated_refinement_rows": [
+        {
+          "faction": 2,
+          "index": 0,
+          "position": [
+            35,
+            37
+          ],
+          "score": 6,
+          "old_best": -1
+        },
+        {
+          "faction": 2,
+          "index": 1,
+          "position": [
+            36,
+            36
+          ],
+          "score": 8,
+          "old_best": 6
+        },
+        {
+          "faction": 2,
+          "index": 2,
+          "position": [
+            37,
+            37
+          ],
+          "score": 6,
+          "old_best": 8
+        },
+        {
+          "faction": 2,
+          "index": 3,
+          "position": [
+            36,
+            38
+          ],
+          "score": 8,
+          "old_best": 8
+        },
+        {
+          "faction": 2,
+          "index": 7,
+          "position": [
+            34,
+            36
+          ],
+          "score": 9,
+          "old_best": 8
+        },
+        {
+          "faction": 2,
+          "index": 8,
+          "position": [
+            35,
+            35
+          ],
+          "score": 5,
+          "old_best": 9
+        },
+        {
+          "faction": 2,
+          "index": 10,
+          "position": [
+            37,
+            39
+          ],
+          "score": 4,
+          "old_best": 9
+        },
+        {
+          "faction": 2,
+          "index": 11,
+          "position": [
+            33,
+            39
+          ],
+          "score": 7,
+          "old_best": 9
+        }
+      ]
+    },
+    {
+      "faction": 3,
+      "attempts": 567,
+      "accepted_search_center": [
+        24,
+        38
+      ],
+      "final_start_position": [
+        24,
+        38
+      ],
+      "selected_refinement_index": 0,
+      "selected_refinement_score": 11,
+      "evaluated_refinement_rows": [
+        {
+          "faction": 3,
+          "index": 0,
+          "position": [
+            24,
+            38
+          ],
+          "score": 11,
+          "old_best": -1
+        },
+        {
+          "faction": 3,
+          "index": 4,
+          "position": [
+            24,
+            40
+          ],
+          "score": 5,
+          "old_best": 11
+        },
+        {
+          "faction": 3,
+          "index": 9,
+          "position": [
+            26,
+            36
+          ],
+          "score": 5,
+          "old_best": 11
+        },
+        {
+          "faction": 3,
+          "index": 12,
+          "position": [
+            22,
+            36
+          ],
+          "score": 4,
+          "old_best": 11
+        },
+        {
+          "faction": 3,
+          "index": 17,
+          "position": [
+            23,
+            41
+          ],
+          "score": 2,
+          "old_best": 11
+        },
+        {
+          "faction": 3,
+          "index": 20,
+          "position": [
+            23,
+            35
+          ],
+          "score": 6,
+          "old_best": 11
+        }
+      ]
+    },
+    {
+      "faction": 4,
+      "attempts": 493,
+      "accepted_search_center": [
+        59,
+        23
+      ],
+      "final_start_position": [
+        59,
+        23
+      ],
+      "selected_refinement_index": 0,
+      "selected_refinement_score": 8,
+      "evaluated_refinement_rows": [
+        {
+          "faction": 4,
+          "index": 0,
+          "position": [
+            59,
+            23
+          ],
+          "score": 8,
+          "old_best": -1
+        },
+        {
+          "faction": 4,
+          "index": 2,
+          "position": [
+            61,
+            23
+          ],
+          "score": 0,
+          "old_best": 8
+        },
+        {
+          "faction": 4,
+          "index": 3,
+          "position": [
+            60,
+            24
+          ],
+          "score": 7,
+          "old_best": 8
+        },
+        {
+          "faction": 4,
+          "index": 6,
+          "position": [
+            57,
+            23
+          ],
+          "score": 8,
+          "old_best": 8
+        },
+        {
+          "faction": 4,
+          "index": 7,
+          "position": [
+            58,
+            22
+          ],
+          "score": 5,
+          "old_best": 8
+        },
+        {
+          "faction": 4,
+          "index": 12,
+          "position": [
+            57,
+            21
+          ],
+          "score": 2,
+          "old_best": 8
+        },
+        {
+          "faction": 4,
+          "index": 14,
+          "position": [
+            62,
+            22
+          ],
+          "score": 6,
+          "old_best": 8
+        },
+        {
+          "faction": 4,
+          "index": 19,
+          "position": [
+            56,
+            22
+          ],
+          "score": 6,
+          "old_best": 8
+        },
+        {
+          "faction": 4,
+          "index": 20,
+          "position": [
+            58,
+            20
+          ],
+          "score": 6,
+          "old_best": 8
+        }
+      ]
+    },
+    {
+      "faction": 5,
+      "attempts": 532,
+      "accepted_search_center": [
+        29,
+        27
+      ],
+      "final_start_position": [
+        29,
+        25
+      ],
+      "selected_refinement_index": 8,
+      "selected_refinement_score": 13,
+      "evaluated_refinement_rows": [
+        {
+          "faction": 5,
+          "index": 0,
+          "position": [
+            29,
+            27
+          ],
+          "score": 8,
+          "old_best": -1
+        },
+        {
+          "faction": 5,
+          "index": 2,
+          "position": [
+            31,
+            27
+          ],
+          "score": 7,
+          "old_best": 8
+        },
+        {
+          "faction": 5,
+          "index": 3,
+          "position": [
+            30,
+            28
+          ],
+          "score": 0,
+          "old_best": 8
+        },
+        {
+          "faction": 5,
+          "index": 4,
+          "position": [
+            29,
+            29
+          ],
+          "score": 7,
+          "old_best": 8
+        },
+        {
+          "faction": 5,
+          "index": 5,
+          "position": [
+            28,
+            28
+          ],
+          "score": 6,
+          "old_best": 8
+        },
+        {
+          "faction": 5,
+          "index": 6,
+          "position": [
+            27,
+            27
+          ],
+          "score": 8,
+          "old_best": 8
+        },
+        {
+          "faction": 5,
+          "index": 7,
+          "position": [
+            28,
+            26
+          ],
+          "score": 10,
+          "old_best": 8
+        },
+        {
+          "faction": 5,
+          "index": 8,
+          "position": [
+            29,
+            25
+          ],
+          "score": 13,
+          "old_best": 10
+        },
+        {
+          "faction": 5,
+          "index": 10,
+          "position": [
+            31,
+            29
+          ],
+          "score": 6,
+          "old_best": 13
+        },
+        {
+          "faction": 5,
+          "index": 11,
+          "position": [
+            27,
+            29
+          ],
+          "score": 4,
+          "old_best": 13
+        },
+        {
+          "faction": 5,
+          "index": 15,
+          "position": [
+            32,
+            28
+          ],
+          "score": 4,
+          "old_best": 13
+        },
+        {
+          "faction": 5,
+          "index": 18,
+          "position": [
+            26,
+            28
+          ],
+          "score": 5,
+          "old_best": 13
+        }
+      ]
+    },
+    {
+      "faction": 6,
+      "attempts": 407,
+      "accepted_search_center": [
+        4,
+        64
+      ],
+      "final_start_position": [
+        4,
+        64
+      ],
+      "selected_refinement_index": 0,
+      "selected_refinement_score": 9,
+      "evaluated_refinement_rows": [
+        {
+          "faction": 6,
+          "index": 0,
+          "position": [
+            4,
+            64
+          ],
+          "score": 9,
+          "old_best": -1
+        },
+        {
+          "faction": 6,
+          "index": 1,
+          "position": [
+            5,
+            63
+          ],
+          "score": 9,
+          "old_best": 9
+        },
+        {
+          "faction": 6,
+          "index": 2,
+          "position": [
+            6,
+            64
+          ],
+          "score": 7,
+          "old_best": 9
+        },
+        {
+          "faction": 6,
+          "index": 3,
+          "position": [
+            5,
+            65
+          ],
+          "score": 5,
+          "old_best": 9
+        },
+        {
+          "faction": 6,
+          "index": 9,
+          "position": [
+            6,
+            62
+          ],
+          "score": 7,
+          "old_best": 9
+        },
+        {
+          "faction": 6,
+          "index": 10,
+          "position": [
+            6,
+            66
+          ],
+          "score": 6,
+          "old_best": 9
+        },
+        {
+          "faction": 6,
+          "index": 11,
+          "position": [
+            2,
+            66
+          ],
+          "score": 4,
+          "old_best": 9
+        },
+        {
+          "faction": 6,
+          "index": 13,
+          "position": [
+            5,
+            61
+          ],
+          "score": 2,
+          "old_best": 9
+        },
+        {
+          "faction": 6,
+          "index": 14,
+          "position": [
+            7,
+            63
+          ],
+          "score": 4,
+          "old_best": 9
+        },
+        {
+          "faction": 6,
+          "index": 15,
+          "position": [
+            7,
+            65
+          ],
+          "score": 5,
+          "old_best": 9
+        },
+        {
+          "faction": 6,
+          "index": 18,
+          "position": [
+            1,
+            65
+          ],
+          "score": 7,
+          "old_best": 9
+        },
+        {
+          "faction": 6,
+          "index": 19,
+          "position": [
+            1,
+            63
+          ],
+          "score": 3,
+          "old_best": 9
+        }
+      ]
+    },
+    {
+      "faction": 7,
+      "attempts": 588,
+      "accepted_search_center": [
+        13,
+        71
+      ],
+      "final_start_position": [
+        15,
+        71
+      ],
+      "selected_refinement_index": 2,
+      "selected_refinement_score": 8,
+      "evaluated_refinement_rows": [
+        {
+          "faction": 7,
+          "index": 0,
+          "position": [
+            13,
+            71
+          ],
+          "score": 7,
+          "old_best": -1
+        },
+        {
+          "faction": 7,
+          "index": 2,
+          "position": [
+            15,
+            71
+          ],
+          "score": 8,
+          "old_best": 7
+        },
+        {
+          "faction": 7,
+          "index": 3,
+          "position": [
+            14,
+            72
+          ],
+          "score": 8,
+          "old_best": 8
+        },
+        {
+          "faction": 7,
+          "index": 11,
+          "position": [
+            11,
+            73
+          ],
+          "score": 7,
+          "old_best": 8
+        },
+        {
+          "faction": 7,
+          "index": 12,
+          "position": [
+            11,
+            69
+          ],
+          "score": 7,
+          "old_best": 8
+        },
+        {
+          "faction": 7,
+          "index": 14,
+          "position": [
+            16,
+            70
+          ],
+          "score": 6,
+          "old_best": 8
+        },
+        {
+          "faction": 7,
+          "index": 18,
+          "position": [
+            10,
+            72
+          ],
+          "score": 5,
+          "old_best": 8
+        },
+        {
+          "faction": 7,
+          "index": 20,
+          "position": [
+            12,
+            68
+          ],
+          "score": 5,
+          "old_best": 8
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "score_rows": 28,
+    "deficits": 28,
+    "terrain_item_writes": 161,
+    "tile_item_comparisons": 12800,
+    "crt_draws_per_balance": 7,
+    "unchanged_replay_matches_native_startup": true
+  },
+  "limits": [
+    "UNIT credit counterfactuals change only first Gaia bonus descriptor at the balancing boundary; no extra initial Unit is constructed by these counterfactual inputs.",
+    "Unit construction/visibility side effects execute natively and remain with existing engine Unit factory; reference models score, deficit, Pod decision, RNG and terrain item edits.",
+    "No new full site-search admission or cache-generation algorithm claimed by this balancing handoff.",
+    "No captured score or deficit is used as an input to the reference. Installed map tile bytes stay in private receipts."
+  ]
+}

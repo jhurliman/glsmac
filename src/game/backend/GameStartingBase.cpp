@@ -6,6 +6,11 @@
 #include "map/Map.h"
 #include "map/SmacPlanetMap.h"
 #include "map/SmacTerritoryRules.h"
+#include "map/SmacStartingSite.h"
+#include "map/SmacRestartPreprocessing.h"
+#include "unit/Unit.h"
+#include "slot/Slots.h"
+#include <algorithm>
 #include "unit/UnitManager.h"
 #include "Player.h"
 #include "slot/Slot.h"
@@ -18,7 +23,7 @@ namespace game::backend {
 
 bool Game::HandleCanonicalStartupEvent(GSE_CALLABLE,const std::string& name,
     const gse::value::object_properties_t& args,size_t caller,bool apply) {
-    if(name!="spawn_starting_smac_base" && name!="spawn_starting_conventional_unit") {return false;}
+    if(name!="spawn_starting_smac_factions" && name!="spawn_starting_smac_base" && name!="spawn_starting_conventional_unit") {return false;}
     // Enqueue happens in create_world before GS_RUNNING. Only this exact
     // claimed new-world Start can queue these native commands; dispatch then
     // uses the stricter ordinary raw-startup producer guard.
@@ -37,6 +42,82 @@ bool Game::HandleCanonicalStartupEvent(GSE_CALLABLE,const std::string& name,
     if(!claimed || caller!=m_slot_num || m_current_turn.GetId()!=0 || gc_space!=GetGCSpace()
         || !gc_space->IsAccumulating() || m_canonical_turn_failed || m_canonical_turn_in_progress) {
         throw std::runtime_error("Canonical startup commands require the authenticated claimed local Start");
+    }
+    if(name=="spawn_starting_smac_factions") {
+        if(!args.empty() || !m_simulation || !m_map || !m_map->GetResourcePolicy() || !m_bm->GetBases().empty() || !m_um->GetUnits().empty()) {
+            throw std::runtime_error("Native faction startup requires an empty admitted world and no supplied state");
+        }
+        const auto& global=m_state->m_settings.global;const auto ocean=global.map.GetSmacOceanCoverage();
+        const auto& rules=global.GetSmacCampaignRules();
+        // The legacy no-rule-word port profile explicitly creates an immediate
+        // HQ/Scout. It is not relabeled original Standard during this transition.
+        if(!ocean || (rules && (rules->primary&0x10))) {throw std::runtime_error("Native immediate-HQ startup requires known ocean category and Look First off");}
+        std::vector<const faction::SmacSimulationParticipant*> participants;
+        for(const auto& p:m_simulation->value.roster) {
+            if(!p.active) {continue;}
+            RequireSmacLocalHumanOwner(&m_state->m_slots->GetSlot(p.slot));participants.push_back(&p);
+        }
+        std::sort(participants.begin(),participants.end(),[](const auto* a,const auto* b){return a->simulation_id<b->simulation_id;});
+        if(!apply) {return true;}
+        CheckRW(GSE_CALL);RequireConventionalStartupClaim();
+        const auto& configured=GetSmacBasePresentations();std::array<std::string,7> specialists;
+        for(size_t i=0;i<7;++i) {specialists[i]=configured[i+1];}
+        auto topology=m_map->GetTerritoryTopology() ? *m_map->GetTerritoryTopology():m_map->PrepareFreshTerritoryTopology();
+        if(!topology.Areas() || !topology.Postpass() || !topology.SiteRatings() || !topology.LandmarkDetails()) {
+            throw std::runtime_error("Native starting sites require owned geography, wet counts, rating history and landmark detail");
+        }
+        // Original preparation clears imported ratings once; subsequent searches
+        // retain exclusion/cache history produced by the preceding Base factory.
+        topology=m_map->PrepareSiteRatingRefill(topology.WithSiteRatings(topology.SiteRatings()->ClearRatings()),{},0);
+        m_map->m_territory_topology=std::move(topology);
+        for(const auto* participant:participants) {
+            auto* owner=&m_state->m_slots->GetSlot(participant->slot);RequireSmacLocalHumanOwner(owner);
+            auto prepared=*m_map->GetTerritoryTopology();
+            map::smac_start::Input input{};
+            input.geometry={prepared.Width(),prepared.Height(),prepared.Wraps()};
+            input.scale=map::smac_restart::ScaleFromGeometry(input.geometry);input.ocean=*ocean;
+            input.difficulty=m_simulation->value.designs.global_difficulty;input.human=m_simulation->value.IsHuman(participant->simulation_id);
+            input.look_first=false; // admitted immediate-HQ profile above
+            for(size_t r=0;r<128;++r) {
+                input.regions[r]={prepared.Areas()->at(r),prepared.Postpass()->fertility.at(r),0};
+                for(const auto& peer:m_simulation->value.economy) {
+                    if(!peer.second.regional_base_counts) {throw std::runtime_error("Starting site lacks retained regional Base presence");}
+                    if(peer.second.regional_base_counts->at(r)) {input.regions[r].presence|=uint8_t(1u<<peer.first);}
+                }
+            }
+            std::vector<map::smac_site::Coordinate> centers;
+            for(const auto id:m_bm->GetBaseRecordOrder()) {const auto* base=m_bm->GetBase(id);
+                const map::smac_site::Coordinate p{{static_cast<int32_t>(base->GetTile()->coord.x),static_cast<int32_t>(base->GetTile()->coord.y)}};
+                input.bases.push_back({static_cast<int64_t>(id),p});centers.push_back(p);
+            }
+            for(const auto& row:m_um->GetUnits()) {const auto* unit=row.second;
+                if(!unit->IsConventional()) {throw std::runtime_error("Starting site encountered an unexpected nonconventional Unit");}
+                input.units.push_back({unit->Conventional().owner_simulation_id,{{static_cast<int32_t>(unit->GetTile()->coord.x),static_cast<int32_t>(unit->GetTile()->coord.y)}}});
+            }
+            const auto index=[&](auto p){return size_t(p[1])*(input.geometry.width/2)+p[0]/2;};
+            const auto selected=map::smac_start::Select(input,m_simulation->value.gameplay_random,[&](auto p) {
+                const auto* tile=m_map->GetTile(p[0],p[1]);
+                return map::smac_start::Tile{static_cast<uint8_t>(m_map->GetResourcePolicy()->Altitude(*tile)),
+                    static_cast<uint8_t>(tile->is_water_tile ? 0:tile->moisture-map::tile::MOISTURE_ARID),
+                    static_cast<uint8_t>(tile->is_water_tile ? 0:tile->rockiness-map::tile::ROCKINESS_FLAT),
+                    prepared.Regions().at(index(p)),prepared.LandmarkDetails()->at(index(p)),bool(tile->features&map::tile::FEATURE_XENOFUNGUS),tile->base || !tile->units.empty()};
+            },[&](auto p) {
+                if(prepared.SiteRatings()->Excluded(p)) {return 0;}
+                if(const auto cached=prepared.SiteRatings()->Rating(p)) {return int32_t(cached);}
+                prepared=m_map->PrepareSiteRatingQuery(prepared,centers,0,p);return int32_t(prepared.SiteRatings()->Rating(p));
+            },{},{},[&] {
+                std::lock_guard lock(m_admission_mutex);
+                return !m_active_admission || m_active_admission->cancelled || !m_owner_transition
+                    || m_owner_transition->admission!=m_active_admission;
+            });
+            if(!selected.site) {throw std::runtime_error("Native faction starting-site search refused its candidate budget");}
+            m_simulation->value.gameplay_random=selected.random;m_map->m_territory_topology=std::move(prepared);
+            auto* tile=m_map->GetTile((*selected.site)[0],(*selected.site)[1]);
+            m_bm->SpawnStartingSmacBase(GSE_CALL,owner,tile,configured[0],specialists);
+            const auto raw=PrepareStartingConventionalUnit(owner,unit::SmacMoraleMode::Mode0);
+            m_um->SpawnStartingConventionalUnit(GSE_CALL,ResolveSmacProductionPresentation(owner,raw.design_id),owner,tile,unit::SmacMoraleMode::Mode0);
+        }
+        return true;
     }
     const auto owner_arg=args.find("owner"),tile_arg=args.find("tile");
     if(args.size()!=2 || owner_arg==args.end() || tile_arg==args.end() || !owner_arg->second || !tile_arg->second) {

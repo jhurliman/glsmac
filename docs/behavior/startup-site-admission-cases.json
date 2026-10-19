@@ -1,0 +1,935 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "receipt_sha256": "1c8219945045aab06cc9b5981ee5b010fa1173e36f6f2a0d19ae686ff2a5607c",
+  "scope": "Complete seven-faction original startup search/reference comparison: generated coordinates and RNG, precomputed metrics, exact rejected branch, cache misses/setters,21-candidate refinement and all resulting tile bytes. Initial preparation clears all ratings and native territory refill values independently match existing land/sea/turn0 quality models. Installed prepared map inputs stay private.",
+  "cases": [
+    {
+      "faction": 1,
+      "attempts": 573,
+      "crt_before": 1924036713,
+      "crt_after": 83770627,
+      "crt_draws": 1146,
+      "accepted_center": [
+        16,
+        58
+      ],
+      "final_position": [
+        17,
+        61
+      ],
+      "rejection_counts": {
+        "good_tiles": 77,
+        "elevation_low": 299,
+        "site_rating": 29,
+        "fungus": 137,
+        "rocky": 11,
+        "landmark_distance": 13,
+        "elevation_high": 6,
+        "admitted": 1
+      },
+      "ordered_candidates_sha256": "4919b8a584ef3d1c5f20f6cd6e145950fe619008c7c3691a05ea27fd58e17721",
+      "uncached_queries": [
+        {
+          "caller": "0x5c99be",
+          "position": [
+            15,
+            61
+          ],
+          "value": 0,
+          "attempt": 573
+        }
+      ],
+      "cache_writes": [
+        {
+          "offset": 107670,
+          "before": 6,
+          "value": 6
+        }
+      ],
+      "refinements": [
+        {
+          "index": 0,
+          "position": [
+            16,
+            58
+          ],
+          "score": 8,
+          "old_best": -1
+        },
+        {
+          "index": 4,
+          "position": [
+            16,
+            60
+          ],
+          "score": 9,
+          "old_best": 8
+        },
+        {
+          "index": 5,
+          "position": [
+            15,
+            59
+          ],
+          "score": 10,
+          "old_best": 9
+        },
+        {
+          "index": 6,
+          "position": [
+            14,
+            58
+          ],
+          "score": 9,
+          "old_best": 10
+        },
+        {
+          "index": 8,
+          "position": [
+            16,
+            56
+          ],
+          "score": 2,
+          "old_best": 10
+        },
+        {
+          "index": 10,
+          "position": [
+            18,
+            60
+          ],
+          "score": 11,
+          "old_best": 10
+        },
+        {
+          "index": 15,
+          "position": [
+            19,
+            59
+          ],
+          "score": 4,
+          "old_best": 11
+        },
+        {
+          "index": 16,
+          "position": [
+            17,
+            61
+          ],
+          "score": 16,
+          "old_best": 11
+        },
+        {
+          "index": 17,
+          "position": [
+            15,
+            61
+          ],
+          "score": 1,
+          "old_best": 16
+        },
+        {
+          "index": 19,
+          "position": [
+            13,
+            57
+          ],
+          "score": 11,
+          "old_best": 16
+        }
+      ],
+      "all_candidate_metrics_checked": true,
+      "all_tile_bytes_match": true
+    },
+    {
+      "faction": 2,
+      "attempts": 587,
+      "crt_before": 2747273108,
+      "crt_after": 2999018338,
+      "crt_draws": 1174,
+      "accepted_center": [
+        35,
+        37
+      ],
+      "final_position": [
+        34,
+        36
+      ],
+      "rejection_counts": {
+        "good_tiles": 68,
+        "elevation_low": 310,
+        "rocky": 7,
+        "landmark_distance": 28,
+        "elevation_high": 4,
+        "fungus": 126,
+        "site_rating": 32,
+        "initial_distance": 8,
+        "relaxed_distance": 3,
+        "admitted": 1
+      },
+      "ordered_candidates_sha256": "862332ea9148be67e8dd07256e4115872d5afee3def742e7208bbc35f98ebe05",
+      "uncached_queries": [],
+      "cache_writes": [],
+      "refinements": [
+        {
+          "index": 0,
+          "position": [
+            35,
+            37
+          ],
+          "score": 6,
+          "old_best": -1
+        },
+        {
+          "index": 1,
+          "position": [
+            36,
+            36
+          ],
+          "score": 8,
+          "old_best": 6
+        },
+        {
+          "index": 2,
+          "position": [
+            37,
+            37
+          ],
+          "score": 6,
+          "old_best": 8
+        },
+        {
+          "index": 3,
+          "position": [
+            36,
+            38
+          ],
+          "score": 8,
+          "old_best": 8
+        },
+        {
+          "index": 7,
+          "position": [
+            34,
+            36
+          ],
+          "score": 9,
+          "old_best": 8
+        },
+        {
+          "index": 8,
+          "position": [
+            35,
+            35
+          ],
+          "score": 5,
+          "old_best": 9
+        },
+        {
+          "index": 10,
+          "position": [
+            37,
+            39
+          ],
+          "score": 4,
+          "old_best": 9
+        },
+        {
+          "index": 11,
+          "position": [
+            33,
+            39
+          ],
+          "score": 7,
+          "old_best": 9
+        }
+      ],
+      "all_candidate_metrics_checked": true,
+      "all_tile_bytes_match": true
+    },
+    {
+      "faction": 3,
+      "attempts": 567,
+      "crt_before": 2467506715,
+      "crt_after": 1606597513,
+      "crt_draws": 1134,
+      "accepted_center": [
+        24,
+        38
+      ],
+      "final_position": [
+        24,
+        38
+      ],
+      "rejection_counts": {
+        "elevation_low": 283,
+        "fungus": 116,
+        "site_rating": 16,
+        "good_tiles": 88,
+        "landmark_distance": 27,
+        "initial_distance": 16,
+        "relaxed_distance": 9,
+        "elevation_high": 3,
+        "rocky": 8,
+        "admitted": 1
+      },
+      "ordered_candidates_sha256": "ef9ab5a751ce946874125ea18827a684a97a44bf2ef06540a51be0f72fce07d1",
+      "uncached_queries": [],
+      "cache_writes": [],
+      "refinements": [
+        {
+          "index": 0,
+          "position": [
+            24,
+            38
+          ],
+          "score": 11,
+          "old_best": -1
+        },
+        {
+          "index": 4,
+          "position": [
+            24,
+            40
+          ],
+          "score": 5,
+          "old_best": 11
+        },
+        {
+          "index": 9,
+          "position": [
+            26,
+            36
+          ],
+          "score": 5,
+          "old_best": 11
+        },
+        {
+          "index": 12,
+          "position": [
+            22,
+            36
+          ],
+          "score": 4,
+          "old_best": 11
+        },
+        {
+          "index": 17,
+          "position": [
+            23,
+            41
+          ],
+          "score": 2,
+          "old_best": 11
+        },
+        {
+          "index": 20,
+          "position": [
+            23,
+            35
+          ],
+          "score": 6,
+          "old_best": 11
+        }
+      ],
+      "all_candidate_metrics_checked": true,
+      "all_tile_bytes_match": true
+    },
+    {
+      "faction": 4,
+      "attempts": 493,
+      "crt_before": 588491700,
+      "crt_after": 2790980390,
+      "crt_draws": 986,
+      "accepted_center": [
+        59,
+        23
+      ],
+      "final_position": [
+        59,
+        23
+      ],
+      "rejection_counts": {
+        "elevation_low": 263,
+        "fungus": 109,
+        "initial_distance": 20,
+        "good_tiles": 61,
+        "site_rating": 16,
+        "rocky": 6,
+        "relaxed_distance": 9,
+        "landmark_distance": 7,
+        "elevation_high": 1,
+        "admitted": 1
+      },
+      "ordered_candidates_sha256": "3f794625e812ba301069dd1a05c1b3b4affd4e1cd6bbb457840783146994f5e3",
+      "uncached_queries": [
+        {
+          "caller": "0x5c99be",
+          "position": [
+            61,
+            23
+          ],
+          "value": 0,
+          "attempt": 493
+        }
+      ],
+      "cache_writes": [
+        {
+          "offset": 41802,
+          "before": 15,
+          "value": 15
+        }
+      ],
+      "refinements": [
+        {
+          "index": 0,
+          "position": [
+            59,
+            23
+          ],
+          "score": 8,
+          "old_best": -1
+        },
+        {
+          "index": 2,
+          "position": [
+            61,
+            23
+          ],
+          "score": 0,
+          "old_best": 8
+        },
+        {
+          "index": 3,
+          "position": [
+            60,
+            24
+          ],
+          "score": 7,
+          "old_best": 8
+        },
+        {
+          "index": 6,
+          "position": [
+            57,
+            23
+          ],
+          "score": 8,
+          "old_best": 8
+        },
+        {
+          "index": 7,
+          "position": [
+            58,
+            22
+          ],
+          "score": 5,
+          "old_best": 8
+        },
+        {
+          "index": 12,
+          "position": [
+            57,
+            21
+          ],
+          "score": 2,
+          "old_best": 8
+        },
+        {
+          "index": 14,
+          "position": [
+            62,
+            22
+          ],
+          "score": 6,
+          "old_best": 8
+        },
+        {
+          "index": 19,
+          "position": [
+            56,
+            22
+          ],
+          "score": 6,
+          "old_best": 8
+        },
+        {
+          "index": 20,
+          "position": [
+            58,
+            20
+          ],
+          "score": 6,
+          "old_best": 8
+        }
+      ],
+      "all_candidate_metrics_checked": true,
+      "all_tile_bytes_match": true
+    },
+    {
+      "faction": 5,
+      "attempts": 532,
+      "crt_before": 2629701330,
+      "crt_after": 3555158266,
+      "crt_draws": 1064,
+      "accepted_center": [
+        29,
+        27
+      ],
+      "final_position": [
+        29,
+        25
+      ],
+      "rejection_counts": {
+        "initial_distance": 23,
+        "fungus": 116,
+        "elevation_low": 276,
+        "good_tiles": 68,
+        "rocky": 8,
+        "relaxed_distance": 16,
+        "elevation_high": 3,
+        "site_rating": 14,
+        "landmark_distance": 7,
+        "admitted": 1
+      },
+      "ordered_candidates_sha256": "be9ca2c27675ad9c86e5e20afd62e847c4454794a8dfcc1a11433daa4cacff03",
+      "uncached_queries": [
+        {
+          "caller": "0x5c99be",
+          "position": [
+            30,
+            28
+          ],
+          "value": 0,
+          "attempt": 532
+        }
+      ],
+      "cache_writes": [
+        {
+          "offset": 49942,
+          "before": 15,
+          "value": 15
+        }
+      ],
+      "refinements": [
+        {
+          "index": 0,
+          "position": [
+            29,
+            27
+          ],
+          "score": 8,
+          "old_best": -1
+        },
+        {
+          "index": 2,
+          "position": [
+            31,
+            27
+          ],
+          "score": 7,
+          "old_best": 8
+        },
+        {
+          "index": 3,
+          "position": [
+            30,
+            28
+          ],
+          "score": 0,
+          "old_best": 8
+        },
+        {
+          "index": 4,
+          "position": [
+            29,
+            29
+          ],
+          "score": 7,
+          "old_best": 8
+        },
+        {
+          "index": 5,
+          "position": [
+            28,
+            28
+          ],
+          "score": 6,
+          "old_best": 8
+        },
+        {
+          "index": 6,
+          "position": [
+            27,
+            27
+          ],
+          "score": 8,
+          "old_best": 8
+        },
+        {
+          "index": 7,
+          "position": [
+            28,
+            26
+          ],
+          "score": 10,
+          "old_best": 8
+        },
+        {
+          "index": 8,
+          "position": [
+            29,
+            25
+          ],
+          "score": 13,
+          "old_best": 10
+        },
+        {
+          "index": 10,
+          "position": [
+            31,
+            29
+          ],
+          "score": 6,
+          "old_best": 13
+        },
+        {
+          "index": 11,
+          "position": [
+            27,
+            29
+          ],
+          "score": 4,
+          "old_best": 13
+        },
+        {
+          "index": 15,
+          "position": [
+            32,
+            28
+          ],
+          "score": 4,
+          "old_best": 13
+        },
+        {
+          "index": 18,
+          "position": [
+            26,
+            28
+          ],
+          "score": 5,
+          "old_best": 13
+        }
+      ],
+      "all_candidate_metrics_checked": true,
+      "all_tile_bytes_match": true
+    },
+    {
+      "faction": 6,
+      "attempts": 407,
+      "crt_before": 3717841811,
+      "crt_after": 297940225,
+      "crt_draws": 814,
+      "accepted_center": [
+        4,
+        64
+      ],
+      "final_position": [
+        4,
+        64
+      ],
+      "rejection_counts": {
+        "elevation_low": 212,
+        "good_tiles": 50,
+        "initial_distance": 28,
+        "fungus": 86,
+        "elevation_high": 3,
+        "relaxed_distance": 15,
+        "rocky": 4,
+        "site_rating": 6,
+        "landmark_distance": 2,
+        "admitted": 1
+      },
+      "ordered_candidates_sha256": "739a5452d6d9b1ea7544476227927fe78105951d9aa1991ee9b561eca5c741c2",
+      "uncached_queries": [],
+      "cache_writes": [],
+      "refinements": [
+        {
+          "index": 0,
+          "position": [
+            4,
+            64
+          ],
+          "score": 9,
+          "old_best": -1
+        },
+        {
+          "index": 1,
+          "position": [
+            5,
+            63
+          ],
+          "score": 9,
+          "old_best": 9
+        },
+        {
+          "index": 2,
+          "position": [
+            6,
+            64
+          ],
+          "score": 7,
+          "old_best": 9
+        },
+        {
+          "index": 3,
+          "position": [
+            5,
+            65
+          ],
+          "score": 5,
+          "old_best": 9
+        },
+        {
+          "index": 9,
+          "position": [
+            6,
+            62
+          ],
+          "score": 7,
+          "old_best": 9
+        },
+        {
+          "index": 10,
+          "position": [
+            6,
+            66
+          ],
+          "score": 6,
+          "old_best": 9
+        },
+        {
+          "index": 11,
+          "position": [
+            2,
+            66
+          ],
+          "score": 4,
+          "old_best": 9
+        },
+        {
+          "index": 13,
+          "position": [
+            5,
+            61
+          ],
+          "score": 2,
+          "old_best": 9
+        },
+        {
+          "index": 14,
+          "position": [
+            7,
+            63
+          ],
+          "score": 4,
+          "old_best": 9
+        },
+        {
+          "index": 15,
+          "position": [
+            7,
+            65
+          ],
+          "score": 5,
+          "old_best": 9
+        },
+        {
+          "index": 18,
+          "position": [
+            1,
+            65
+          ],
+          "score": 7,
+          "old_best": 9
+        },
+        {
+          "index": 19,
+          "position": [
+            1,
+            63
+          ],
+          "score": 3,
+          "old_best": 9
+        }
+      ],
+      "all_candidate_metrics_checked": true,
+      "all_tile_bytes_match": true
+    },
+    {
+      "faction": 7,
+      "attempts": 588,
+      "crt_before": 2272240294,
+      "crt_after": 1523811262,
+      "crt_draws": 1176,
+      "accepted_center": [
+        13,
+        71
+      ],
+      "final_position": [
+        15,
+        71
+      ],
+      "rejection_counts": {
+        "elevation_low": 290,
+        "fungus": 122,
+        "good_tiles": 73,
+        "site_rating": 14,
+        "initial_distance": 50,
+        "rocky": 7,
+        "relaxed_distance": 14,
+        "landmark_distance": 13,
+        "elevation_high": 4,
+        "admitted": 1
+      },
+      "ordered_candidates_sha256": "423aee85df556a2cc2a47b3b9ee4d329ab87b21d8913851f0f6f3845d82559c2",
+      "uncached_queries": [],
+      "cache_writes": [],
+      "refinements": [
+        {
+          "index": 0,
+          "position": [
+            13,
+            71
+          ],
+          "score": 7,
+          "old_best": -1
+        },
+        {
+          "index": 2,
+          "position": [
+            15,
+            71
+          ],
+          "score": 8,
+          "old_best": 7
+        },
+        {
+          "index": 3,
+          "position": [
+            14,
+            72
+          ],
+          "score": 8,
+          "old_best": 8
+        },
+        {
+          "index": 11,
+          "position": [
+            11,
+            73
+          ],
+          "score": 7,
+          "old_best": 8
+        },
+        {
+          "index": 12,
+          "position": [
+            11,
+            69
+          ],
+          "score": 7,
+          "old_best": 8
+        },
+        {
+          "index": 14,
+          "position": [
+            16,
+            70
+          ],
+          "score": 6,
+          "old_best": 8
+        },
+        {
+          "index": 18,
+          "position": [
+            10,
+            72
+          ],
+          "score": 5,
+          "old_best": 8
+        },
+        {
+          "index": 20,
+          "position": [
+            12,
+            68
+          ],
+          "score": 5,
+          "old_best": 8
+        }
+      ],
+      "all_candidate_metrics_checked": true,
+      "all_tile_bytes_match": true
+    }
+  ],
+  "initial_cache_producer": {
+    "native_clear": "0x5dd550 -> 0x5dd850",
+    "native_refill_query": "0x538e80 -> 0x539168 -> 0x5dcf80",
+    "clear_writes": 3200,
+    "independent_queries_and_stores": 3200,
+    "region_wet_counts_checked": 128,
+    "ordered_ratings_sha256": "138fc302891aa52d0177650d2923cf805da4da1f9f0a633867fb7ac455024be4",
+    "rating_histogram": {
+      "0": 1260,
+      "3": 72,
+      "2": 95,
+      "1": 1158,
+      "4": 86,
+      "5": 95,
+      "7": 79,
+      "6": 80,
+      "9": 37,
+      "8": 58,
+      "11": 28,
+      "13": 7,
+      "15": 73,
+      "14": 11,
+      "10": 38,
+      "12": 23
+    },
+    "first_search_cache_matches": true,
+    "later_quality_callers": {
+      "0x539168": 11851,
+      "0x5c99be": 3
+    }
+  },
+  "verification": {
+    "candidates": 3747,
+    "crt_draws": 7494,
+    "uncached_search_queries": 3,
+    "search_cache_writes": 3,
+    "initial_cache_queries": 3200,
+    "scored_refinements": 65,
+    "rejection_counts": {
+      "good_tiles": 485,
+      "elevation_low": 1933,
+      "site_rating": 127,
+      "fungus": 812,
+      "rocky": 51,
+      "landmark_distance": 97,
+      "elevation_high": 24,
+      "admitted": 7,
+      "initial_distance": 145,
+      "relaxed_distance": 66
+    },
+    "actors": 7,
+    "complete_map_comparisons": 7
+  },
+  "limits": [
+    "Original terrain/climate/regions and runtime current cache bytes are inputs; initial cache producer is independently checked rather than supplied as captured scores.",
+    "Turn0 ordinary Standard Planet setup, local human1 plus computer2..7, fixed native admission seed lifecycle.",
+    "Malformed or tiny geometry, general nonzero-turn restart and human infinite-search exhaustion behavior are not runtime-established by these seven controls.",
+    "Baseline finite controls exercise reached rejection branches; unreached source alternatives remain separately identified."
+  ]
+}

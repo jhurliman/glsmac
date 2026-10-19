@@ -5,17 +5,16 @@
 return (game) => {
 
 	// variables
+	if (game.get_ruleset() == 'smac' && game.get_player().is_single_player) {
+        game.event('spawn_starting_smac_factions', {});
+        return;
+    }
 	const players = game.get_players();
-	const conventional_start = game.get_ruleset() == 'smac' && game.get_player().is_single_player;
 	const players_count = #sizeof(players);
 	const tm = game.get_tm();
 	const map_width = tm.get_map_width();
 	const map_height = tm.get_map_height();
-	// Provisional GLSMAC placement: ordinary land with an exit, and enough
-	// separation that another starting HQ/Scout cannot block that first step.
-	// The current foreign-sight producer requires clear interior centers.
-	// Terrain is preserved; this is not original site-balancing fidelity.
-	const minimum_base_distance = conventional_start ? 4 : 2;
+	const minimum_base_distance = 2;
 	const optimal_base_distance = #max((map_width + map_height) / 2 / players_count, minimum_base_distance);
 	let tiles_with_bases = [];
 
@@ -41,18 +40,7 @@ return (game) => {
 				continue;
 			}
 			const tile = tm.get_tile(x, y);
-			let supported_site = tile.is_water == is_naval_faction;
-			if (conventional_start) {
-				supported_site = false;
-				if (tile.is_clear_land && x >= 2 && x + 2 < map_width && y >= 2 && y + 2 < map_height) {
-					for (neighbor of tile.get_surrounding_tiles()) {
-						if (neighbor != tile && neighbor.is_ordinary_conventional_land) {
-							supported_site = true;
-							break;
-						}
-					}
-				}
-			}
+			const supported_site = tile.is_water == is_naval_faction;
 			if (supported_site) { // naval factions start in water, others on land
 				// check that no existing bases are too close
 				let is_ok = true;
@@ -87,14 +75,6 @@ return (game) => {
 		const tile = get_good_starting_base_location(faction.is_naval);
 
 		tiles_with_bases :+tile;
-
-		if (conventional_start) {
-			// Native producers resolve actual owner/design and presentation after
-			// definition events, still inside the authenticated turn-zero Start.
-			game.event('spawn_starting_smac_base', {owner: player, tile: tile});
-			game.event('spawn_starting_conventional_unit', {owner: player, tile: tile});
-			continue;
-		}
 
 		game.event('spawn_base', {owner: player, tile: tile, facilities: ['HEADQUARTERS']});
 

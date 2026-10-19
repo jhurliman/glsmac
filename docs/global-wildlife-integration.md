@@ -25,5 +25,11 @@ query budget and factory RNG, and no-Base ambush/empty-land/omniscience guards.
 The test factory models only the state needed by these structural controls; it
 is not proof of original constructor effects or live gameplay. Production-file
 analysis and focused two-file ASan/UBSan pass (other linked objects normal,
-leak detection disabled). Full original-receipt comparison is still pending the
-completed reverse-engineering handoff; these tests do not claim that comparison.
+leak detection disabled). The opt-in `GLSMAC_GLOBAL_WILDLIFE_REFERENCE` test compares all 30 frozen
+original policy returns: exact ordered constructor/sentry/head requests, sea/land
+coordinate streams, final count and RNG after flora. Point this variable to the
+frozen bundle's `tmp/reference` directory. The independent native checker also
+passes all 30 returns and reconstructs complete captured write journals. That
+constructor evidence does not make the structural C++ test factory a complete
+live publisher. Frozen 29-file manifest SHA256:
+`47a8927904222c3d49e2ae6790b3b5228b30b4068f91b9ea487950148feec9cd`.

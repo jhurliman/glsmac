@@ -2,6 +2,10 @@
 #include "game/backend/map/SmacGlobalWildlife.h"
 #include "task/gsetests/GSETests.h"
 #include <stdexcept>
+#include <cstdlib>
+#include <map>
+#include <yaml-cpp/yaml.h>
+#include "game/backend/resource/SmacSiteSignal.h"
 
 namespace gse::tests {
 namespace {
@@ -37,6 +41,66 @@ struct World {
 Coord Sample(Random& rng) {int x=int(rng.NextCrtRaw15())%80;int y=int(rng.NextCrtRaw15())%80;x+=(y&1)-(x&1);return {{x,y}};}
 }
 void AddSmacGlobalWildlifeTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC global wildlife matches thirty original policy returns when supplied",GT(){
+        const auto* directory=std::getenv("GLSMAC_GLOBAL_WILDLIFE_REFERENCE");if(!directory || !*directory) {GT_OK();}
+        const std::string root(directory);
+        const auto fixtures=YAML::LoadFile("docs/behavior/global-wildlife-closure-cases.json");
+        const auto bytes=[](const std::string& hex) {
+            std::vector<uint8_t> out;out.reserve(hex.size()/2);
+            if(hex.size()%2) {throw std::runtime_error("Odd reference hex");}
+            for(size_t i=0;i<hex.size();i+=2) {out.push_back(uint8_t(std::stoul(hex.substr(i,2),nullptr,16)));}return out;
+        };
+        const auto word=[](const std::vector<uint8_t>& raw,size_t p) {uint32_t n=0;for(size_t k=0;k<4;++k) {n|=uint32_t(raw.at(p+k))<<(8*k);}return n;};
+        size_t checked=0;std::map<std::string,YAML::Node> documents;
+        for(const auto& fixture:fixtures["cases"]) {
+            const auto filename=fixture["source_receipt"].as<std::string>();
+            auto found=documents.find(filename);if(found==documents.end()) {found=documents.emplace(filename,YAML::LoadFile(root+"/"+filename)).first;}
+            const auto document=found->second;
+            YAML::Node row;for(size_t j=0;j<document["cases"].size();++j) {const auto candidate=document["cases"][j];if(candidate["variant"].as<std::string>()==fixture["variant"].as<std::string>()) {row=candidate;break;}}
+            GT_ASSERT(row && row["pc"].as<std::string>()=="0x53a820","Missing complete native producer return");
+            const auto a=row["before"];const auto b=row["after"];wildlife::Input input{};
+            input.geometry={a["width"].as<int32_t>(),a["height"].as<int32_t>(),!a["map_flat"].as<int32_t>()};
+            input.turn=a["turn"].as<int32_t>();input.life=a["life"].as<int32_t>();input.difficulty=a["difficulty"].as<int32_t>();
+            input.rules=a["rules"].as<uint32_t>();input.secondary=a["secondary"].as<uint32_t>();input.voice_marker=a["Voice_marker"].as<int32_t>();input.unit_count=a["unit_count"].as<int32_t>();
+            for(size_t i=0;i<128;++i) {input.region_areas[i]=a["region_areas"][i].as<int32_t>();}
+            for(size_t i=0;i<2;++i) {input.locust_technology_masks[i]=a["technology_native_masks"][i].as<uint32_t>();}
+            const auto factions=bytes(a["raw_factions_hex"].as<std::string>()),native=bytes(a["faction0_hex"].as<std::string>());
+            input.observer_status[0]=word(native,0);
+            for(size_t i=1;i<8;++i) {input.observer_status[i]=word(factions,(i-1)*0x20bc);}
+            for(size_t i=0;i<8;++i) {input.native_diplomacy[i]=word(native,0x18+4*i);}
+            for(const auto& base:a["bases"]) {input.bases.push_back({base["id"].as<int32_t>(),{{base["position"][0].as<int32_t>(),base["position"][1].as<int32_t>()}}});}
+            const auto raw=bytes(a["raw_map_hex"].as<std::string>());std::vector<Tile> terrain(raw.size()/44);
+            for(size_t i=0;i<raw.size();++i) {terrain[i/44].bytes[i%44]=raw[i];}
+            game::backend::map::smac_spread::Input flora{input.geometry,a["tile_count"].as<int32_t>(),input.turn,input.observer_status,terrain};
+            const Random initial(a["shared"].as<uint32_t>(),a["crt"].as<uint32_t>());
+            const auto growth=game::backend::map::smac_spread::Prepare(flora,initial);terrain=growth.tiles;
+            GT_ASSERT(growth.changes.empty(),"Wildlife fixture unexpectedly contains flora changes");
+            const auto tile=[&](Coord p)->Tile& {return terrain.at(size_t(p[1])*(input.geometry.width/2)+size_t(p[0])/2);};
+            int next=input.unit_count;
+            wildlife::Hooks hooks;
+            hooks.tile=[&](Coord p){return tile(p);};
+            hooks.site=[&](Coord p){const auto t=tile(p);return int(game::backend::resource::smac::ResolveSiteSignal({p[0],p[1],game::backend::resource::smac::AltitudeBand(t.Climate()>>5),t.Items(),bool(input.rules&0x2000u),27067,11,61}));};
+            // Structural stock-profile factory. Complete original constructor writes
+            // are verified by the private native checker, not synthesized here.
+            hooks.create=[&](int,Coord p,Random&){if(next>=2048) {return -1;}auto& t=tile(p);if(!(t.Items()&3u)) {t.bytes[2]&=0xf0;}Items(t,t.Items()|2u);return next++;};
+            hooks.capacity=[](int){return 2;};hooks.sentry=[](int,Random&){};hooks.promote_stack=[](int,Random&){};
+            const auto result=wildlife::Produce(input,growth.random,hooks);
+            GT_ASSERT(result.random.Crt()==b["crt"].as<uint32_t>() && result.random.Shared()==initial.Shared() && result.unit_count==b["unit_count"].as<int32_t>(),"Native final RNG or birth count differs");
+            GT_ASSERT(result.actions.size()==fixture["actions"].size(),"Native ordered action count differs");
+            for(size_t i=0;i<result.actions.size();++i) {
+                const auto& actual=result.actions[i];const auto expected=fixture["actions"][i];const auto op=expected["op"].as<std::string>();
+                if(op=="create") {
+                    GT_ASSERT(actual.kind==wildlife::Action::Kind::Create && actual.design==expected["design"].as<int>() && actual.unit==expected["result"].as<int>() && actual.point==Coord({expected["position"][0].as<int>(),expected["position"][1].as<int>()}),"Native constructor request differs");
+                } else {GT_ASSERT(actual.unit==expected["unit"].as<int>() && actual.kind==(op=="sentry" ? wildlife::Action::Kind::Sentry:wildlife::Action::Kind::PromoteStack),"Native order/head action differs");}
+            }
+            std::vector<Coord> sea,land;
+            for(const auto& event:row["details"]) {if(event["pc"].as<std::string>()=="0x537cbe") {sea.push_back({{event["registers"]["esi"].as<int>(),event["registers"]["edi"].as<int>()}});}}
+            for(const auto& event:row["events"]) {if(event["pc"].as<std::string>()=="0x537e74") {const auto stack=bytes(event["stack_hex"].as<std::string>());land.push_back({{int(word(stack,0x10)),int(word(stack,0x18))}});}}
+            GT_ASSERT(result.sea_samples==sea && result.land_samples==land,"Native coordinate stream differs");++checked;
+        }
+        GT_ASSERT(checked==30,"Incomplete original wildlife controls");GT_OK();
+    });
+
     task->AddTest("SMAC global wildlife gates do not consume RNG or invoke factories",GT(){
         for(int gate=0;gate<3;++gate) {
             World world;if(gate==0) {world.input.rules=0x200000;}if(gate==1) {world.input.voice_marker=0;}if(gate==2) {world.input.unit_count=1792;}

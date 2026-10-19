@@ -90,8 +90,7 @@ def empty_land_wildlife(raw_map, *, width, height, turn, life, rules,
             if data[at(width,bx,by)+3] != region:continue
             d=distance(x,y,bx,by,width,flat)
             if d<=best:best=d;selected=base['id']
-        if selected is None:
-            raise NotImplementedError('No-Base branch preserves prior native distance output')
+        # Filtered nearest resets its output to9999 even without a Base.
         if flags&2 and owner<8:
             if owner==0 or best<=2:continue
             raise NotImplementedError('Occupied positive-owner ambush branch')

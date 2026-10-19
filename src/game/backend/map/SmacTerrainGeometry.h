@@ -5,18 +5,13 @@
 #include <optional>
 
 #include "tile/Types.h"
+#include "SmacTerrainCorners.h"
 
 namespace game::backend::map::smac_terrain {
 
 // Stock ordinary terrain only. Contour controls depth/climate, not land height.
 // C,W,N,E,S; see docs/behavior/ordinary-terrain-projection.md.
 using Heights = std::array<int, 5>;
-inline constexpr int CORNERS[4][4][2] = {
-    {{-2,0},{-1,-1},{0,0},{-1,1}},
-    {{-1,-1},{0,-2},{1,-1},{0,0}},
-    {{0,0},{1,-1},{2,0},{1,1}},
-    {{-1,1},{0,0},{1,1},{0,2}}
-};
 
 // The accessor returns an altitude band, or absence at a clipped boundary.
 // Topology belongs to the accessor; this algorithm never wraps polar rows.

@@ -14,6 +14,7 @@ SET( SRC ${SRC}
 	${PWD}/TerrainRenderUpdate.cpp
 	${PWD}/SmacTerrainPolygonRaster.cpp
 	${PWD}/SmacLandMaterial.cpp
+	${PWD}/SmacTerrainLighting.cpp
 	${PWD}/SmacGroundEdgeCost.cpp
 	${PWD}/SmacScoutKeyboardAdmission.cpp
 	${PWD}/Async.cpp

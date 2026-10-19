@@ -5,6 +5,7 @@
 
 #include "tile/Tile.h"
 #include "SmacPlanetMap.h"
+#include "SmacGlobalSpread.h"
 #include "SmacClimate.h"
 #include "game/backend/resource/SmacSiteSignal.h"
 
@@ -42,6 +43,11 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::RetainedClimatePlanetV2(SmacPla
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const {
     if(!m_planet || !world.horizontal_wrap) {throw std::runtime_error("Climate publication requires installed wrapped Planet authority");}
     return RetainedClimatePlanetV2(m_planet->WithClimateTerrain(world,sea_level_offset,climate_extra),m_automatic_land_resources);
+}
+
+GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const {
+    if(!m_planet || !before.geometry.wrap) {throw std::invalid_argument("Global spread publication requires wrapped installed terrain authority");}
+    auto result=*this;result.m_planet=std::make_shared<const SmacPlanetMap>(m_planet->WithGlobalSpread(before,plan));return result;
 }
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithStartingBalance(const smac_balance::Result& plan) const {

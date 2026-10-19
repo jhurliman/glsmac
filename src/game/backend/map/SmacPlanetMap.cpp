@@ -1,6 +1,7 @@
 #include "SmacPlanetMap.h"
 #include "SmacClimate.h"
 #include "SmacStartingBalance.h"
+#include "SmacGlobalSpread.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -41,6 +42,43 @@ std::string SmacPlanetMap::Encode() const {
     result.append(reinterpret_cast<const char*>(m_header.data()), m_header.size());
     for (const auto& tile : m_tiles) { result.append(reinterpret_cast<const char*>(tile.bytes.data()), tile.bytes.size()); }
     result.append(reinterpret_cast<const char*>(m_trailer.data()), m_trailer.size());
+    return result;
+}
+
+SmacPlanetMap SmacPlanetMap::WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const {
+    if(before.geometry.width!=int32_t(WIDTH) || before.geometry.height!=int32_t(HEIGHT)
+        || before.tiles.size()!=TILE_COUNT || plan.tiles.size()!=TILE_COUNT || m_tiles.size()!=TILE_COUNT) {
+        throw std::invalid_argument("Global spread publication requires the bound standard Planet terrain");
+    }
+    for(size_t i=0;i<TILE_COUNT;++i) {
+        if(before.tiles[i].bytes!=m_tiles[i].bytes) {throw std::invalid_argument("Stale global spread terrain input");}
+    }
+    const auto valid=[](const auto& p) {return p[0]>=0 && p[0]<int32_t(WIDTH) && p[1]>=0 && p[1]<int32_t(HEIGHT) && !((p[0]^p[1])&1);};
+    const auto put=[](Tile& tile,size_t offset,uint32_t value) {for(size_t i=0;i<4;++i) {tile.bytes[offset+i]=uint8_t(value>>(8*i));}};
+    auto result=*this;int32_t previous=-1;
+    for(const auto& change:plan.changes) {
+        if(change.iteration<=previous || size_t(change.iteration)>=plan.samples.size() || !valid(change.source) || !valid(change.target)
+            || plan.samples[change.iteration]!=change.source) {throw std::invalid_argument("Invalid global spread journal order or coordinates");}
+        previous=change.iteration;
+        const auto& source=result.At(change.source[0],change.source[1]);
+        auto& target=result.m_tiles[size_t(change.target[1])*(WIDTH/2)+change.target[0]/2];
+        const uint32_t feature=(source.Climate()>>5)<3 ? 0x8000u:0x200000u;
+        if(change.feature!=feature || !(source.Items()&feature) || (target.Items()&feature)
+            || change.source==change.target || target.bytes!=change.before.bytes) {
+            throw std::invalid_argument("Stale global spread source or target journal");
+        }
+        auto expected=target;put(expected,8,(target.Items()|feature)&~0x20u);
+        for(size_t owner=1;owner<=7;++owner) {
+            if(!(before.observer_status[owner]&0x200u) && !(source.bytes[4]&(1u<<owner))) {continue;}
+            const auto offset=12+4*owner;
+            if(Read32(source.bytes.data()+offset)&feature) {put(expected,offset,(Read32(target.bytes.data()+offset)|feature)&~0x20u);}
+        }
+        if(expected.bytes!=change.after.bytes) {throw std::invalid_argument("Global spread journal changed unrelated terrain authority");}
+        target=expected;
+    }
+    for(size_t i=0;i<TILE_COUNT;++i) {
+        if(result.m_tiles[i].bytes!=plan.tiles[i].bytes) {throw std::invalid_argument("Global spread terrain differs from its ordered journal");}
+    }
     return result;
 }
 

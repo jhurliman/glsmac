@@ -99,3 +99,16 @@ it with real wildlife generation and the remaining global maintenance in their
 native order, publish terrain/knowledge/render updates and any notifications,
 and bind the RNG transition exactly once. No empty wildlife handler or fixed
 draw burn is supplied by this slice.
+
+`SmacPlanetMap::WithGlobalSpread` publishes a prepared result into a detached
+native terrain container. It checks the complete captured input plane against
+the current source, replays ordered item/remembered-item mutations, rejects
+unrelated byte changes and requires the final plane to agree with the journal.
+The resource-policy wrapper preserves its existing wire kind, automatic-resource
+setting and original header/trailer. Publication failures leave the old immutable
+source untouched, and both fresh V1 and retained occupied V2 policies round-trip.
+
+This interface requires a bound native terrain plane. Projecting current live
+terrain, occupancy, exploration and remembered knowledge into that plane remains
+part of the future owning Game transaction. The publisher alone does not admit
+those inputs, post frontend changes or authorize an RNG/turn transition.

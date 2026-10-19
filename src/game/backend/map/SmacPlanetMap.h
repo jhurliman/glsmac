@@ -11,6 +11,7 @@ namespace game::backend::base { class SmacBloomTerrainPlan; }
 namespace game::backend::map {
 namespace smac_climate { struct World; }
 namespace smac_balance {struct Result;}
+namespace smac_spread {struct Input;struct Result;}
 
 // Bounded reader for the installed standard Planet v5 container. Keeps every
 // original byte: decoding a record is distinct from admitting gameplay rules
@@ -43,6 +44,7 @@ public:
     smac_climate::World ExportClimateTerrain(bool horizontal_wrap) const;
     SmacPlanetMap WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const;
     SmacPlanetMap WithStartingBalance(const smac_balance::Result& plan) const;
+    SmacPlanetMap WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const;
     int32_t ResourcePattern() const;
     int32_t WorldSizeCategory() const;
     int32_t OceanCoverageCategory() const;

@@ -1,6 +1,7 @@
 #pragma once
 #include "SmacTerrainRaster.h"
 #include "SmacLandmarkArtTables.h"
+#include "SmacLandMaterialTables.h"
 #include <stdexcept>
 #include <optional>
 
@@ -13,6 +14,28 @@ struct Pass {
     std::array<int32_t,2> shade_limits;
 };
 using Crop=std::array<int,4>;
+struct Neighbor {uint8_t band;uint32_t landmarks;};
+inline std::optional<Pass> Jungle(uint32_t word,bool land,
+    const std::array<raster::Point,5>& points,const std::array<std::optional<Neighbor>,8>& neighbors) {
+    if(!land || (word&0x80000004u)!=4u) {return {};}
+    unsigned mask=0;
+    for(unsigned bit=0;bit<8;++bit) {
+        const auto& cell=neighbors[(bit+7)&7];
+        if(cell && cell->band>=3 && (cell->landmarks&0x80000004u)==4u) {mask|=1u<<bit;}
+    }
+    const auto& pattern=smac_land_material::tables::PATTERN[mask];
+    const int index=pattern[0];
+    Pass pass{{526+57*(index%4),259+57*(index/4),56,56},{},raster::Shader::KeyedUnlit,{{-4,4}}};
+    pass.polygon.count=4;
+    for(unsigned v=0;v<4;++v) {
+        pass.polygon.vertices[v]={points[v+1],smac_land_material::tables::CANONICAL_UV[(pattern[1]+v)&3][1],0};
+    }
+    return pass;
+}
+inline std::optional<Crop> Dunes(uint32_t word,bool land,uint32_t selected_items,uint32_t flags) {
+    if(!land || !(word&0x40u) || ((flags&1u) && (selected_items&0x8000u))) {return {};}
+    return Crop{{229,1,56,56}};
+}
 inline std::optional<Crop> EarlyMarker(uint32_t word,uint32_t flags) {
     if(!(flags&0x200u)) {return {};}
     if((word&0x80000008u)==8u) {return Crop{{822,253,100,62}};}

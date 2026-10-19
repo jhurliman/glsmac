@@ -83,7 +83,7 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         // Geometry-only0x200/0x800 have no sea profile. The named quads
         // are now composed on land and sea with their distinct scalar rules.
         const uint32_t sea_memberships=output.band<3?0xd0u:0u;
-        const auto unsupported_landmark_materials=landmarks&~(0xff400000u|0xb03u|4u|8u|0x400u|0x2000u|sea_memberships);
+        const auto unsupported_landmark_materials=landmarks&~(0xff400000u|0xb03u|4u|8u|0x40u|0x400u|0x2000u|sea_memberships);
         const auto art_detail=landmarks>>24;
         const bool unsupported_art_detail=((landmarks&0x103u) && art_detail>=49 && art_detail<128) ||
             ((landmarks&0x80002000u)==0x2000u && art_detail>8);
@@ -94,9 +94,12 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         // ridge still lacks the retained source authority needed for admission.
         const auto unsupported_ridge=(landmarks&0x800u) && output.heights
             ?0u:static_cast<unsigned>(tile::FEATURE_FOSSIL_FIELD_RIDGE);
-        const auto unsupported_quads=(landmarks&0x103u) && (output.band<3 || output.heights)
-            ?0u:static_cast<unsigned>(tile::FEATURE_VOLCANO|tile::FEATURE_GARLAND_CRATER);
-        const auto unsupported_features=tile::FEATURE_JUNGLE|unsupported_quads|unsupported_ridge|tile::FEATURE_DUNES;
+        const bool quad_geometry=output.band<3 || output.heights;
+        const auto unsupported_quads=((landmarks&2u) && quad_geometry?0u:static_cast<unsigned>(tile::FEATURE_VOLCANO)) |
+            ((landmarks&1u) && quad_geometry?0u:static_cast<unsigned>(tile::FEATURE_GARLAND_CRATER));
+        const auto unsupported_jungle=(landmarks&4u)?0u:static_cast<unsigned>(tile::FEATURE_JUNGLE);
+        const auto unsupported_dunes=(landmarks&0x40u)?0u:static_cast<unsigned>(tile::FEATURE_DUNES);
+        const auto unsupported_features=unsupported_jungle|unsupported_quads|unsupported_ridge|unsupported_dunes;
         const auto unsupported_work=live->terraforming&~((1u<<13)-1);
         output.ordinary=!output.deformed && !unsupported_art_detail && !unsupported_landmark_materials && !(live->features&unsupported_features) && !unsupported_work;
     }}

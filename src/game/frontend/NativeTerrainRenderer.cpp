@@ -108,6 +108,15 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         int sum=0;for(unsigned v=1;v<5;++v) {sum+=points[v][1];}
         append_marker(smac_landmark_art::EarlyMarker(tile.landmarks,display_flags),
             {{points[0][0]-48,-terrain::LandmarkGeometry::FloorQuarter(-sum)-24}});
+        std::array<std::optional<smac_landmark_art::Neighbor>,8> neighbors{};
+        for(unsigned n=0;n<8;++n) {
+            const auto& offset=smac_land_material::tables::NEIGHBORS[n];
+            if(const auto* cell=At(world,x+offset[0],y+offset[1])) {neighbors[n]={{cell->band,cell->landmarks}};}
+        }
+        if(const auto pass=smac_landmark_art::Jungle(tile.landmarks,tile.band>=3,points,neighbors)) {
+            raster::Command command;command.texture=crop(pass->crop);command.polygon=pass->polygon;
+            command.shader=pass->shader;command.shade_limits=pass->shade_limits;commands.push_back(command);
+        }
     };
     const auto append_water=[&](int x,int y,const std::array<Point,5>& points) {
         const bool sea=At(world,x,y)->band<3;bool quads=false;
@@ -181,7 +190,8 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             if(!quads && (pass.role==material::Role::Forest || pass.role==material::Role::Fungus)) {
                 append_quads(x,y,points,*light);quads=true;
             }
-            raster::Command command;command.texture=crop(pass.crop);command.polygon.count=pass.vertices;
+            const auto dunes=smac_landmark_art::Dunes(tile.landmarks,true,tile.selected_known?tile.selected_items:tile.items,display_flags);
+            raster::Command command;command.texture=crop(pass.role==material::Role::Base && dunes?*dunes:pass.crop);command.polygon.count=pass.vertices;
             command.shader=pass.role==material::Role::Base?raster::Shader::OpaqueShaded:
                 pass.role==material::Role::Fungus?raster::Shader::KeyedUnlit:raster::Shader::KeyedShaded;
             for(size_t v=0;v<pass.vertices;++v) {

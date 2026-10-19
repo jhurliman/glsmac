@@ -4,7 +4,9 @@ Implementation checkpoint: the C++ quad selector is validated against the 358
 original caller contexts. Live quad composition passes land/sea and Forest/sea
 Fungus ordering controls. Uranium/Geothermal/Nexus marker selection, live
 composition and separate legacy-instance replacement are connected and tested.
-Jungle/Dunes and complete indexed-frame verification remain pending. The contract below describes the
+Jungle adjacency and Dunes/Farm precedence match all 76 additional original
+material contexts and are connected to live composition. Complete indexed-frame
+verification and a runtime visual capture remain pending. The contract below describes the
 original executable; it is not a production-completion claim.
 
 This closes the normal named-art continuation at zoom0 with known viewer3,

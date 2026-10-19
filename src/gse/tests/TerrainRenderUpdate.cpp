@@ -317,6 +317,33 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         const auto skipped=raster::DrawBatch(initial,{command},{{0,0,8,8}},true);
         GT_ASSERT(skipped.writes==0 && std::all_of(skipped.coverage.begin(),skipped.coverage.end(),[](auto n){return !n;}),"Transparent key wrote coverage");GT_OK();
     });
+    task->AddTest("SMAC native Jungle and Dunes preserve live material order and Farm precedence",GT(){
+        namespace native=game::frontend::native_terrain;
+        ::game::native_terrain::World world;
+        for(auto& cell:world.tiles) {cell.band=3;cell.ordinary=true;}
+        auto& cell=world.tiles[40*40+20];
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,10)};
+        source.coast_mask={56,56,std::vector<uint8_t>(56*56,0)};
+        for(unsigned i=0;i<256;++i) {source.palette[i]={uint8_t(i),0,0};}
+        const auto fill=[&](int x,int y,uint8_t color) {for(int dy=0;dy<56;++dy) {for(int dx=0;dx<56;++dx) {
+            source.loaded.pixels[(y+dy)*1024+x+dx]=color;
+        }}};
+        for(int i=0;i<15;++i) {fill(526+57*(i%4),259+57*(i/4),60);}
+        fill(229,1,70);
+        const std::vector<native::Placement> view{{{{40,40}},{{576,288}},44*(40*40+20)}};
+        const auto ink=[&](uint32_t flags) {return native::Render(world,source,view,0,{{0,0}},flags).rgba[(288*1024+575)*4];};
+        cell.landmarks=0x44;
+        GT_ASSERT(ink(1)==60 && ink(0)==60,"Jungle lost unlit quad or acquired a terrain-display gate");
+        cell.items=0x200000;
+        GT_ASSERT(ink(1)==10,"Jungle drew over later Forest");
+        cell.items=0;cell.landmarks=0x80000044u;
+        GT_ASSERT(ink(1)==70,"Suppressed Jungle also suppressed the Dunes base");
+        cell.landmarks=0x40;cell.selected_known=true;cell.selected_items=0x8000;
+        GT_ASSERT(ink(1)==10 && ink(0)==70,"Farm did not precede Dunes only under terrain flag1");
+        cell.landmarks=4;cell.selected_items=0;
+        for(auto& water:world.tiles) {water.band=2;water.contour=40;}
+        GT_ASSERT(ink(1)!=60,"Jungle drew on sea");GT_OK();
+    });
     task->AddTest("SMAC native landmark markers preserve priority gates and replacement coverage",GT(){
         namespace native=game::frontend::native_terrain;
         ::game::native_terrain::World world;

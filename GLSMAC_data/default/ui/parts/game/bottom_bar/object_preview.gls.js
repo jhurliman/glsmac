@@ -13,7 +13,9 @@ return {
 	},
 
 	format_movement: (movement) => {
-		return #to_string(#to_float(#round(movement * 100.0)) / 100.0);
+		const rounded = #round(movement * 100.0);
+		if (rounded % 100 == 0) { return #to_string(rounded / 100); }
+		return #to_string(#to_float(rounded) / 100.0);
 	},
 
 	set_image: (object) => {

@@ -53,3 +53,20 @@ pending = request; handlers.research_choice({});
 ui.reset(); test.assert(resets == 1 && #sizeof(events) == 2);
 ui.key('Q', {ctrl: true, shift: true});
 test.assert(resets == 2 && #sizeof(events) == 2);
+
+// Blind questions expose priorities rather than a technology pool. No repaint draw.
+pending = {request_id: 60, owner_slot: 0, owner_name: 'Gaians', bonus: false,
+    blind: true, priorities: [2, (0 - 1), 0, 3], choices: []};
+handlers.research_choice({});
+test.assert(#sizeof(ui.state().labels) == 4 && #sizeof(events) == 2);
+test.assert(ui.state().labels[0].text == '[X] Explore' && ui.state().labels[2].text == '[ ] Build');
+ui.choose(0); ui.choose(1); ui.choose(3); ui.confirm();
+test.assert(events[2] == {name: 'set_research_priorities', args: {request_id: 60, mask: 0}});
+ui.confirm(); ui.key('ESCAPE', {}); test.assert(#sizeof(events) == 3);
+const retired_priority = ui.state().labels[2].handlers.click;
+pending = {request_id: 61, owner_slot: 0, owner_name: 'Gaians', bonus: true,
+    blind: true, priorities: [2, (0 - 1), 0, 3], choices: []};
+handlers.research_choice({});retired_priority({});
+ui.key('ESCAPE', {});
+test.assert(events[3] == {name: 'set_research_priorities', args: {request_id: 61, mask: null}});
+test.assert(resets == 2);

@@ -3,7 +3,7 @@ return (game, settings, smac) => {
 	const check = (ok, message) => { if (!ok) { throw TestError(message); } };
 	const randomize = #include('../default/ui/parts/mainmenu/map_randomization');
 	for (let attempt = 0; attempt < 12; attempt++) {
-		randomize(settings);
+		randomize(settings, game.get_ruleset());
 		const ocean = settings.map.ocean_coverage;
 		check(smac ? (ocean == 0.4 || ocean == 0.6 || ocean == 0.8) : (ocean >= 0.4 && ocean <= 0.8), 'random setup lost its ruleset ocean domain');
 	}

@@ -19,6 +19,12 @@
 
 namespace game::backend {
 namespace {
+std::optional<int32_t> OriginalGeneratedCategory(float choice) {
+    if(choice==0.25f) {return 0;}
+    if(choice==0.5f) {return 1;}
+    if(choice==0.75f) {return 2;}
+    return {}; // Arbitrary port sliders do not establish an original category.
+}
 int32_t OriginalGlobalDifficulty( const settings::GlobalSettings& settings ) {
 	const auto& names = settings.rules.m_difficulty_levels.GetVK();
 	if ( settings.difficulty_level < INT32_MIN || settings.difficulty_level > INT32_MAX ) { throw std::runtime_error( "Unknown SMAC global difficulty encoding" ); }
@@ -141,6 +147,15 @@ void Game::PrepareNewSimulation() {
 			ecology_world=faction::SmacEcologyWorld{planet->NativeLifeCategory(),planet->CloudCoverCategory(),planet->CumulativeSeaLevelOffset()};
 			ecology_world->Validate();
 		}
+        else if(settings.map.type==settings::MapSettings::MT_RANDOM || settings.map.type==settings::MapSettings::MT_CUSTOM) {
+            const auto life=OriginalGeneratedCategory(settings.map.native_lifeforms);
+            const auto clouds=OriginalGeneratedCategory(settings.map.cloud_cover);
+            if(life && clouds) {
+                // Freeze accepted setup choices, never infer categories from
+                // generated terrain. A fresh blank map starts with sea offset0.
+                ecology_world=faction::SmacEcologyWorld{*life,*clouds,0};
+            }
+        }
 	}
 	const auto shared = m_gameplay_entropy_word_source();
 	const auto crt = m_gameplay_entropy_word_source();

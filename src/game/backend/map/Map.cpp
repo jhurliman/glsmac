@@ -696,12 +696,12 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 		map_settings->erosive_forces = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_EROSIVE )
 			? c->GetQuickstartMapErosiveForces()
 			: random->GetFloat( 0.2f, 0.8f );
-		map_settings->native_lifeforms = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_LIFEFORMS )
-			? c->GetQuickstartMapNativeLifeforms()
-			: random->GetFloat( 0.2f, 0.8f );
-		map_settings->cloud_cover = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_CLOUDS )
-			? c->GetQuickstartMapCloudCover()
-			: random->GetFloat( 0.2, 0.8f );
+		if(c->HasLaunchFlag(config::Config::LF_QUICKSTART_MAP_LIFEFORMS)) {
+			map_settings->native_lifeforms=c->GetQuickstartMapNativeLifeforms();
+		} else if(!policy) {map_settings->native_lifeforms=random->GetFloat(0.2f,0.8f);}
+		if(c->HasLaunchFlag(config::Config::LF_QUICKSTART_MAP_CLOUDS)) {
+			map_settings->cloud_cover=c->GetQuickstartMapCloudCover();
+		} else if(!policy) {map_settings->cloud_cover=random->GetFloat(0.2f,0.8f);}
 	}
 	m_game->GetState()->m_settings.global.ValidateWorldSize();
 	Log( "Generating map of size " + std::to_string( map_settings->size_x ) + "x" + std::to_string( map_settings->size_y ) );

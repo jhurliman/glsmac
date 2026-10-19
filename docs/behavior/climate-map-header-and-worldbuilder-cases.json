@@ -1,0 +1,146 @@
+{
+  "research_id": "RE-SMAC-CLIMATE-MAP-WORLDBUILDER-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "map_header_control": {
+    "id": "nonzero_signed_map_climate_extra",
+    "before": 777,
+    "in_memory_header_value": -7,
+    "after": -7,
+    "header_offset": 16,
+    "file_offset": 31,
+    "load_return": 0,
+    "RNG_calls": 0,
+    "scope": "Installed map copied in memory; only climate-extra word changed. Complete original map loader return; no installed asset writes."
+  },
+  "worldbuilder_domains": [
+    {
+      "row": 11,
+      "lower": 1,
+      "upper": 64
+    },
+    {
+      "row": 12,
+      "lower": 1,
+      "upper": 64
+    },
+    {
+      "row": 13,
+      "lower": 1,
+      "upper": 64
+    },
+    {
+      "row": 14,
+      "lower": 1,
+      "upper": 64
+    },
+    {
+      "row": 16,
+      "lower": 0,
+      "upper": 20
+    },
+    {
+      "row": 17,
+      "lower": 0,
+      "upper": 20
+    },
+    {
+      "row": 18,
+      "lower": 0,
+      "upper": 8
+    }
+  ],
+  "worldbuilder_controls": [
+    {
+      "id": "installed",
+      "rows": [
+        11,
+        12,
+        13,
+        14,
+        16,
+        17,
+        18
+      ],
+      "numeric_inputs": [
+        14,
+        14,
+        8,
+        8,
+        5,
+        3,
+        1
+      ],
+      "retained": [
+        14,
+        14,
+        8,
+        8,
+        5,
+        3,
+        1
+      ]
+    },
+    {
+      "id": "below_lower",
+      "rows": [
+        11,
+        12,
+        13,
+        14,
+        16,
+        17,
+        18
+      ],
+      "numeric_inputs": [
+        0,
+        -1,
+        -2147483648,
+        0,
+        -1,
+        -2147483648,
+        -1
+      ],
+      "retained": [
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "above_upper",
+      "rows": [
+        11,
+        12,
+        13,
+        14,
+        16,
+        17,
+        18
+      ],
+      "numeric_inputs": [
+        65,
+        2147483647,
+        65,
+        100,
+        21,
+        2147483647,
+        9
+      ],
+      "retained": [
+        64,
+        64,
+        64,
+        64,
+        20,
+        20,
+        8
+      ]
+    }
+  ],
+  "scope": "Complete map loader with one edited in-memory header word; original numeric rules-loader block with supplied parsed signed token returns. No new complete text-parser, climate-pass or campaign run.",
+  "passed": true
+}

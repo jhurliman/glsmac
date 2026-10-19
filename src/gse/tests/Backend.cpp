@@ -2744,6 +2744,8 @@ public:
         return check(); // The fixture and restored Map retire before these borrowed sources.
     }
 
+    game::backend::faction::SmacHumanResearchInputs HumanResearchInputs(int32_t owner,bool blind) {return m_game.PrepareCanonicalHumanResearchInputs(owner,blind);}
+
     std::string SaveCampaign(const std::string& path) {
         const auto ticket=FixtureWorldTicket();
         const auto id=m_game.QueueCampaignSave(m_state->CaptureGameSession(),path);
@@ -4294,6 +4296,25 @@ public:
 	}
 
 
+    std::string CheckGeneratedEcologyChoices(int scenario) {
+        using namespace game::backend;
+        const std::array<float,3> choices{{0.25f,0.5f,0.75f}};
+        auto& map_settings=m_state->m_settings.global.map;
+        map_settings.type=settings::MapSettings::MT_RANDOM;
+        map_settings.native_lifeforms=scenario<9 ? choices.at(scenario/3):0.4f;
+        map_settings.cloud_cover=choices.at(scenario<9 ? scenario%3:1);
+        m_map->m_resource_policy=map::GlsmacResourceMapPolicy::DisplayedTerrainV1();
+        const auto result=CheckSimulationStartup(false,0,true);
+        if(!result.empty()) {return result;}
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            const auto& world=m_game.m_simulation->value.ecology_world;
+            if(scenario<9) {
+                GT_ASSERT((world==std::optional<faction::SmacEcologyWorld>{faction::SmacEcologyWorld{scenario/3,scenario%3,0}}),
+                    "Generated claimed Start lost accepted life/cloud categories or blank-map sea offset");
+            } else {GT_ASSERT(!world,"Continuous generated choice was silently quantized");}
+            GT_OK();
+        });
+    }
 	std::string CheckCanonicalFirstBase( int scenario, bool queued, int32_t original_difficulty = 3, bool installed_planet = false ) {
 		using namespace game::backend;
 		using namespace game::backend::base;
@@ -4307,7 +4328,15 @@ public:
 				for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<10;x+=2) {map->GetTile(x,y)->Update();}}
 			});
 		}
-		const auto source=[multiple](const std::string& filename) {return CanonicalStartupSource(filename,multiple);};
+		const auto source=[multiple,installed_planet](const std::string& filename) {
+            auto text=CanonicalStartupSource(filename,multiple);
+            if(installed_planet) {
+                // The generic parser fixture permits unresolved prerequisite
+                // names; live Blind valuation needs a complete valid catalog.
+                size_t at=0;while((at=text.find("UnknownTech",at))!=std::string::npos) {text.replace(at,11,"Tech");at+=4;}
+            }
+            return text;
+        };
 		const auto definitions=[&](GSE_CALLABLE) {
 			for(const auto* name:{"define_base_pop","define_base_facility"}) {
 				auto* handlers=static_cast<value::Object*>(RunScript(GSE_CALL,std::string("./GLSMAC_data/default/game/event/")+name));
@@ -4421,7 +4450,7 @@ public:
 			if(installed_planet) {
 				GT_ASSERT((m_game.m_simulation->value.ecology_world==std::optional<faction::SmacEcologyWorld>{faction::SmacEcologyWorld{1,2,12}}),
 					"Imported Planet simulation did not own independent header globals");
-			} else {GT_ASSERT(!m_game.m_simulation->value.ecology_world,"Generated continuous settings invented native ecology categories");}
+			} else {GT_ASSERT(!m_game.m_simulation->value.ecology_world,"Late fixture map policy retroactively invented ecology history");}
 			bool repeated=false;try{m_game.AdvanceTurn(1);}catch(const std::exception&){repeated=true;}
 			GT_ASSERT(repeated && m_game.GetTurnId()==1 && m_game.GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge,"repeated first transition changed turn/knowledge");
 			for(const auto id:created) {
@@ -4716,6 +4745,11 @@ public:
 		// Canonical Base upkeep can pause for the first real research target.
 		// Answer the offered request before expecting the final turn notification;
 		// never bypass the continuation by assigning technology state directly.
+        if(m_game.m_simulation) {
+            GT_ASSERT(m_game.m_simulation->value.gameplay_random==expected_random,
+                "Startup before research differs from exact native-initializer RNG continuation");
+        }
+        bool blind_answered=false;
 		if ( m_game.m_research_request ) {
 			const auto answered = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 				size_t answers = 0;
@@ -4724,13 +4758,18 @@ public:
 						&& m_game.GetTurnId() == 1 && m_game.m_canonical_continuation && social_turns == 0,
 						"first research choice lost its suspended startup or repeated an owner" );
 					const auto request = *m_game.m_research_request;
-					GT_ASSERT( !request.bonus && !request.choices.empty(), "startup did not offer an ordinary research target" );
+					GT_ASSERT( !request.bonus && (request.blind || !request.choices.empty()), "startup did not offer an ordinary research target" );
 					const auto& continuation = *m_game.m_canonical_continuation;
 					auto* base = m_game.GetBM()->GetBase( continuation.owners.at( continuation.owner_index ).second.at( continuation.base_index ) );
 					const auto minerals = base->GetProductionState()->minerals;
 					const auto food = base->GetAccumulatedNutrients();
-					m_game.Event( GSE_CALL, "choose_research", { { "request_id", VALUE( value::Int,, request.id ) },
-						{ "technology_id", VALUE( value::Int,, request.choices.front() ) } } );
+                    if(request.blind) {
+                        blind_answered=true;
+                        m_game.Event(GSE_CALL,"set_research_priorities",{{"request_id",VALUE(value::Int,,request.id)},{"mask",VALUE(value::Null)}});
+                    } else {
+					    m_game.Event( GSE_CALL, "choose_research", { { "request_id", VALUE( value::Int,, request.id ) },
+						    { "technology_id", VALUE( value::Int,, request.choices.front() ) } } );
+                    }
 					m_game.ProcessEvents();
 					GT_ASSERT( base->GetProductionState()->minerals == minerals && base->GetAccumulatedNutrients() == food,
 						"research answer replayed the already posted Base resources" );
@@ -4786,7 +4825,14 @@ public:
 		GT_ASSERT( m_game.GetRandom()->GetStateString() == before_rng, "simulation admission consumed JSF" );
 		GT_ASSERT( entropy_calls == ( cancellation == 1 ? 0u : 2u ) && random_observations == ( cancellation == 1 ? 0u : 2u ) && random_valid,
 			"claimed Start sampled repeatedly, reordered/reseeded zero, or published before complete RNG construction" );
-		if ( m_game.m_simulation ) { GT_ASSERT( m_game.m_simulation->value.gameplay_random == expected_random, "startup/first turn differs from exact native-initializer RNG continuation" ); }
+		if ( m_game.m_simulation ) {
+            // Blind selection owns additional shared draws, independently covered
+            // by the original selector traces and live continuation regressions.
+            // It must never consume CRT or perturb the initializer prefix.
+            GT_ASSERT(blind_answered ? m_game.m_simulation->value.gameplay_random.Crt()==expected_random.Crt()
+                : m_game.m_simulation->value.gameplay_random==expected_random,
+                "First turn changed an RNG stream outside its admitted research producer");
+        }
 		if ( cancellation ) {
 			if ( cancellation == 2 ) { m_game.Iterate(); }
 			GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS && !m_game.m_simulation && !m_game.m_pending_simulation, "reset retained admitted or staged simulation state" );
@@ -5837,6 +5883,7 @@ void ConventionalUnitFixture::Restore( GSE_CALLABLE, const std::string& snapshot
 void ConventionalUnitFixture::RestoreThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start ) { fixture->RestoreKnowledgeThroughStart( GSE_CALL, snapshot, on_start ); }
 void ConventionalUnitFixture::QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback ) { fixture->QueueKnowledgeProbeEvent( GSE_CALL, callback ); }
 void ConventionalUnitFixture::DrainEvents() { fixture->ProcessEvents(); }
+game::backend::faction::SmacHumanResearchInputs ConventionalUnitFixture::HumanResearchInputs(int32_t owner,bool blind) {return fixture->HumanResearchInputs(owner,blind);}
 std::string ConventionalUnitFixture::SaveCampaign(const std::string& path) {return fixture->SaveCampaign(path);}
 std::string ConventionalUnitFixture::CheckCampaignSaveOwnership(const std::string& path,const std::string& cancelled) {return fixture->CheckCampaignSaveOwnership(path,cancelled);}
 std::string ConventionalUnitFixture::CheckCampaignRejectedLoad(GSE_CALLABLE,const std::string& path) {return fixture->CheckCampaignRejectedLoad(GSE_CALL,path);}
@@ -8602,10 +8649,11 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			types::Buffer manager_frames( managers );
 			for ( size_t i = 0 ; i < 4 ; ++i ) { old_body.WriteString( manager_frames.ReadString() ); }
 			// V31 appends one versioned, absent continuation after the managers.
-			// Continuation V4 retains ordered citizens after V3 ecology and V2 research/V1 Colony choices.
+			// Continuation V6 adds Blind research stages; an idle world still
+			// carries only its version and absent-continuation Boolean.
 			// The preceding map/manager payload and ordering stay unchanged.
 			types::Buffer idle_continuation;
-			idle_continuation.WriteInt( 5 ); idle_continuation.WriteBool( false );
+			idle_continuation.WriteInt( 6 ); idle_continuation.WriteBool( false );
 			old_body.WriteString( idle_continuation.ToString() );
 			game->GetRandom()->GetUInt();
 			const auto before_rng = game->GetRandom()->GetStateString();
@@ -10596,6 +10644,12 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 			BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, false, 2, false, failure );
 		} );
 	}
+    task->AddTest("SMAC generated ecology choices survive claimed Start without quantizing continuous settings",GT() {
+        for(int scenario=0;scenario<10;++scenario) {
+            BackendFixture fixture;const auto result=fixture.CheckGeneratedEcologyChoices(scenario);
+            if(!result.empty()) {return "category scenario "+std::to_string(scenario)+": "+result;}
+        } GT_OK();
+    });
 	task->AddTest( "SMAC gameplay RNG claimed Start advances explicit zero seed through native initialization", GT() {
 		BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, false, 2, false, 0, false, true );
 	} );

@@ -62,6 +62,7 @@ BaseManager::PreparedSmacFloods::Outcome BaseManager::PreparedSmacFloods::Flood(
         if(rules && rules->objective_facility<34 && id==rules->objective_facility) {objective_facility=true;}
     }
     if(dome) {return Outcome::Unchanged;}
+    if(!base.m_allocation || !base.m_production) {THROW("Flood damage requires complete native allocation and production authority");}
     const auto context=base.GetSmacResourceContext();const auto owner=context.owner_simulation_id;
     const auto& state=game->m_simulation->value;
     if(!rules || !context.retained_status_word || !data.status.at(owner) || !data.totals) {

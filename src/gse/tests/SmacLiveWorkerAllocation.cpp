@@ -356,7 +356,32 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
 
-
+    task->AddTest("SMAC flood rejects incomplete native Base authority before RNG or retained population",[](GSE*,context::Context*)->std::string {
+        for(const bool allocation:{false,true}) {for(const bool production:{false,true}) {
+            if(allocation && production) {continue;}
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(FloodSource,"GAIANS");
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* bm=game->GetBM();auto* control=Populate(GSE_CALL,fixture,true);
+                game->GetState()->m_settings.global.SelectSmacCampaignRules(false);
+                auto context=control->GetSmacResourceContext();context.retained_status_word=0;
+                bm->DefineFacility(new FacilityDef("flood-dome","Pressure Dome","",80,{},26));
+                Base::pops_t pops;for(size_t i=0;i<12;++i) {pops.emplace(std::piecewise_construct,std::forward_as_tuple(100+i),std::forward_as_tuple(nullptr,100+i,bm->GetPopDef(Roles().specialists[1]),1));}
+                SmacBaseAllocationState workers{1,{{},12}};workers.specialists.types.fill(1);
+                auto* base=new Base(game,702,control->m_owner,control->m_faction,game->GetMap()->GetTile(20,16),"Incomplete flood",{},pops,112,7,
+                    production ? std::optional<ProductionState>(Production()):std::nullopt,context,
+                    allocation ? std::optional<SmacBaseAllocationState>(workers):std::nullopt);
+                bm->SpawnBase(GSE_CALL,base);
+                fixture.ResourceState([](auto& state){state.retained_base_totals=faction::SmacBaseTotals{};state.retained_base_totals->at(1)=9;state.faction_status.values[1]=0x1000u;});
+                const auto before=fixture.Snapshot();const auto original=fixture.GameplayRandom();auto random=original;map::smac_climate::Streams streams{random};
+                auto plan=bm->PrepareSmacFloods(GSE_CALL);
+                GT_ASSERT(Rejects([&]{plan.Flood(GSE_CALL,*base,3,2,streams);}) && random==original && streams.crt_draws==0 && streams.shared_draws==0,
+                    "Incomplete flood consumed RNG or accepted an unsaveable retained population");
+                plan.CommitSurvivors(GSE_CALL);
+                GT_ASSERT(fixture.Snapshot()==before && base->GetPopulation()==12 && !base->m_facilities.count("flood-dome"),
+                    "Rejected flood left staged Base or owner changes");GT_OK();
+            });if(!error.empty()) {return error;}
+        }}GT_OK();
+    });
     task->AddTest("SMAC owning flood preparation preserves allocation and stages Dome damage before publication",[](GSE*,context::Context*)->std::string {
         using Floods=BaseManager::PreparedSmacFloods;
         std::string flooded_save;

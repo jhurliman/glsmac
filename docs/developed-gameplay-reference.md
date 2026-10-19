@@ -25,7 +25,7 @@ The recipe replaces entities in the isolated fixture only: three nearby land
 sites retain the source terrain; Bases named New Chicago, New Austin and Hilton
 Head contain9/8/10 Doctor specialists and copied production state; three actual
 Scouts retain the source design and owner, clear damage/spent movement/home and
-hold indefinitely. Adjacent land receives roads and alternating forest or
+hold indefinitely on separate adjacent land tiles. Adjacent land receives roads and alternating forest or
 farm/solar improvements. Population is explicit fixture setup, not simulated
 growth. This is not a balanced economy: the specialist-only Bases can starve if
 ordinary turns advance. All-map knowledge, memory, occupancy and native territory

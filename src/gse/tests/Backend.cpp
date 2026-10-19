@@ -2957,7 +2957,11 @@ public:
                     for(auto* tile:sites[i]->neighbours) {if(!tile->is_water_tile) {tile->features=0;tile->terraforming=map::tile::TERRAFORMING_ROAD|((tile->coord.y%4)==0?map::tile::TERRAFORMING_FOREST:map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOLAR);}}
                     auto state=unit_state;state.home=ConventionalUnitState::Home::None;state.spent=0;state.damage=0;
                     state.home_base_id.reset();state.order=ConventionalUnitState::Order::Hold;state.order_countdown=0;
-                    um->SpawnConventionalUnit(GSE_CALL,Unit::GetNextId(),definition,m_game.m_slot,sites[i],state);
+                    const auto position=std::find_if(sites[i]->neighbours.begin(),sites[i]->neighbours.end(),[&](const auto* tile) {
+                        return !tile->is_water_tile && tile->units.empty() && std::find(sites.begin(),sites.end(),tile)==sites.end();
+                    });
+                    if(position==sites[i]->neighbours.end()) {throw std::runtime_error("Reference Base has no separate land tile for its held Scout");}
+                    um->SpawnConventionalUnit(GSE_CALL,Unit::GetNextId(),definition,m_game.m_slot,*position,state);
                 }
             });
             m_game.WithRW([&]{

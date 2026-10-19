@@ -1,0 +1,6291 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "setup_receipt_sha256": "2bcc882b06e814c2d382943ade0eebcf8af5d292dad70e58823ff22094a2d1a2",
+  "schedule_receipt_sha256": "0605786c71561362a38ac4d73bf62397db45fa27165c29e7c3c2b43b5246ff9f",
+  "inputs": {
+    "difficulty": 3,
+    "difficulty_name": "Librarian",
+    "rules": 6670,
+    "secondary": 0,
+    "network": false,
+    "human_slot": 1,
+    "faction_order": [
+      "GAIANS",
+      "HIVE",
+      "UNIV",
+      "MORGAN",
+      "SPARTANS",
+      "BELIEVE",
+      "PEACE"
+    ],
+    "constructor_seed_lifecycle": "Explicit CRT/shared seeds1 supplied after native Planet preparation, before actual difficulty/rules/faction setup entry; full frontend entropy lifecycle not claimed.",
+    "map_asset_sha256": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+    "world_size_category": 4,
+    "ocean_category": 1,
+    "resource_pattern": 27067
+  },
+  "scope": "Fresh actual map loader/search-buffer initialization/terrain-region preparation, original setup choice/rule writers, full eight-slot initializer and balancing to frontend return boundary. Complete initial local controller through global advance, empty wildlife0 upkeep/turn and human1 upkeep to first human command entry. Separate admitted next-slot continuation runs computer2 upkeep and stops before AI body. No human command or ordinary computer turn body executed. Presentation/intro/storage services are supplied as recorded; original data/map assets remain external.",
+  "pre_balance": {
+    "turn": 0,
+    "year": 0,
+    "active": 255,
+    "human": 2,
+    "focus": 1,
+    "scheduled": 0,
+    "rules": 6670,
+    "secondary": 0,
+    "base_count": 7,
+    "unit_count": 7,
+    "crt": 531966586,
+    "shared": 1,
+    "bases": [
+      {
+        "id": 0,
+        "owner": 1,
+        "former": 1,
+        "population": 1,
+        "position": [
+          17,
+          61
+        ],
+        "food": 0,
+        "minerals": 10,
+        "target": 1,
+        "facilities": [
+          1
+        ]
+      },
+      {
+        "id": 1,
+        "owner": 2,
+        "former": 2,
+        "population": 1,
+        "position": [
+          34,
+          36
+        ],
+        "food": 0,
+        "minerals": 5,
+        "target": 2,
+        "facilities": [
+          1,
+          4
+        ]
+      },
+      {
+        "id": 2,
+        "owner": 3,
+        "former": 3,
+        "population": 1,
+        "position": [
+          24,
+          38
+        ],
+        "food": 0,
+        "minerals": 5,
+        "target": 2,
+        "facilities": [
+          1,
+          8
+        ]
+      },
+      {
+        "id": 3,
+        "owner": 4,
+        "former": 4,
+        "population": 1,
+        "position": [
+          59,
+          23
+        ],
+        "food": 0,
+        "minerals": 5,
+        "target": 2,
+        "facilities": [
+          1
+        ]
+      },
+      {
+        "id": 4,
+        "owner": 5,
+        "former": 5,
+        "population": 1,
+        "position": [
+          29,
+          25
+        ],
+        "food": 0,
+        "minerals": 5,
+        "target": 2,
+        "facilities": [
+          1
+        ]
+      },
+      {
+        "id": 5,
+        "owner": 6,
+        "former": 6,
+        "population": 1,
+        "position": [
+          4,
+          64
+        ],
+        "food": 0,
+        "minerals": 5,
+        "target": 2,
+        "facilities": [
+          1
+        ]
+      },
+      {
+        "id": 6,
+        "owner": 7,
+        "former": 7,
+        "population": 1,
+        "position": [
+          15,
+          71
+        ],
+        "food": 0,
+        "minerals": 5,
+        "target": 2,
+        "facilities": [
+          1
+        ]
+      }
+    ],
+    "units": [
+      {
+        "id": 0,
+        "owner": 1,
+        "design": 2,
+        "position": [
+          17,
+          61
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 1,
+        "owner": 2,
+        "design": 2,
+        "position": [
+          34,
+          36
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 2,
+        "owner": 3,
+        "design": 2,
+        "position": [
+          24,
+          38
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 3,
+        "owner": 4,
+        "design": 2,
+        "position": [
+          59,
+          23
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 4,
+        "owner": 5,
+        "design": 320,
+        "position": [
+          29,
+          25
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 5,
+        "owner": 6,
+        "design": 2,
+        "position": [
+          4,
+          64
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 6,
+        "owner": 7,
+        "design": 2,
+        "position": [
+          15,
+          71
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      }
+    ],
+    "factions": [
+      {
+        "slot": 1,
+        "filename": "GAIANS",
+        "human": true,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 10,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1
+      },
+      {
+        "slot": 2,
+        "filename": "HIVE",
+        "human": false,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 10,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1
+      },
+      {
+        "slot": 3,
+        "filename": "UNIV",
+        "human": false,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 10,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1
+      },
+      {
+        "slot": 4,
+        "filename": "MORGAN",
+        "human": false,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 110,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1
+      },
+      {
+        "slot": 5,
+        "filename": "SPARTANS",
+        "human": false,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 10,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1
+      },
+      {
+        "slot": 6,
+        "filename": "BELIEVE",
+        "human": false,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 10,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1
+      },
+      {
+        "slot": 7,
+        "filename": "PEACE",
+        "human": false,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 10,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1
+      }
+    ]
+  },
+  "after_setup": {
+    "turn": 0,
+    "year": 0,
+    "active": 255,
+    "human": 2,
+    "focus": 1,
+    "scheduled": 0,
+    "rules": 6670,
+    "secondary": 0,
+    "base_count": 7,
+    "unit_count": 13,
+    "crt": 1537134187,
+    "shared": 1,
+    "bases": [
+      {
+        "id": 0,
+        "owner": 1,
+        "former": 1,
+        "population": 1,
+        "position": [
+          17,
+          61
+        ],
+        "food": 0,
+        "minerals": 10,
+        "target": 1,
+        "facilities": [
+          1
+        ]
+      },
+      {
+        "id": 1,
+        "owner": 2,
+        "former": 2,
+        "population": 1,
+        "position": [
+          34,
+          36
+        ],
+        "food": 0,
+        "minerals": 5,
+        "target": 2,
+        "facilities": [
+          1,
+          4
+        ]
+      },
+      {
+        "id": 2,
+        "owner": 3,
+        "former": 3,
+        "population": 1,
+        "position": [
+          24,
+          38
+        ],
+        "food": 0,
+        "minerals": 5,
+        "target": 2,
+        "facilities": [
+          1,
+          8
+        ]
+      },
+      {
+        "id": 3,
+        "owner": 4,
+        "former": 4,
+        "population": 1,
+        "position": [
+          59,
+          23
+        ],
+        "food": 0,
+        "minerals": 5,
+        "target": 2,
+        "facilities": [
+          1
+        ]
+      },
+      {
+        "id": 4,
+        "owner": 5,
+        "former": 5,
+        "population": 1,
+        "position": [
+          29,
+          25
+        ],
+        "food": 0,
+        "minerals": 5,
+        "target": 2,
+        "facilities": [
+          1
+        ]
+      },
+      {
+        "id": 5,
+        "owner": 6,
+        "former": 6,
+        "population": 1,
+        "position": [
+          4,
+          64
+        ],
+        "food": 0,
+        "minerals": 5,
+        "target": 2,
+        "facilities": [
+          1
+        ]
+      },
+      {
+        "id": 6,
+        "owner": 7,
+        "former": 7,
+        "population": 1,
+        "position": [
+          15,
+          71
+        ],
+        "food": 0,
+        "minerals": 5,
+        "target": 2,
+        "facilities": [
+          1
+        ]
+      }
+    ],
+    "units": [
+      {
+        "id": 0,
+        "owner": 1,
+        "design": 2,
+        "position": [
+          17,
+          61
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 1,
+        "owner": 2,
+        "design": 2,
+        "position": [
+          34,
+          36
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 2,
+        "owner": 3,
+        "design": 2,
+        "position": [
+          24,
+          38
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 3,
+        "owner": 4,
+        "design": 2,
+        "position": [
+          59,
+          23
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 4,
+        "owner": 5,
+        "design": 320,
+        "position": [
+          29,
+          25
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 5,
+        "owner": 6,
+        "design": 2,
+        "position": [
+          4,
+          64
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 6,
+        "owner": 7,
+        "design": 2,
+        "position": [
+          15,
+          71
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 7,
+        "owner": 1,
+        "design": 0,
+        "position": [
+          17,
+          61
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 8,
+        "owner": 2,
+        "design": 0,
+        "position": [
+          34,
+          36
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 9,
+        "owner": 3,
+        "design": 0,
+        "position": [
+          24,
+          38
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 10,
+        "owner": 5,
+        "design": 0,
+        "position": [
+          29,
+          25
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 11,
+        "owner": 6,
+        "design": 0,
+        "position": [
+          4,
+          64
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      },
+      {
+        "id": 12,
+        "owner": 7,
+        "design": 0,
+        "position": [
+          15,
+          71
+        ],
+        "damage": 0,
+        "order": 0,
+        "morale": 1,
+        "spent": 0,
+        "home": -1
+      }
+    ],
+    "factions": [
+      {
+        "slot": 1,
+        "filename": "GAIANS",
+        "human": true,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 10,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1,
+        "owned_tech": [
+          6
+        ],
+        "research_cache": -1,
+        "discount": 0,
+        "deferred": 0,
+        "pending_secret": false,
+        "social_current": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "slot": 2,
+        "filename": "HIVE",
+        "human": false,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 10,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1,
+        "owned_tech": [
+          43
+        ],
+        "research_cache": -1,
+        "discount": 0,
+        "deferred": 0,
+        "pending_secret": false,
+        "social_current": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "slot": 3,
+        "filename": "UNIV",
+        "human": false,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 10,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1,
+        "owned_tech": [
+          2
+        ],
+        "research_cache": -1,
+        "discount": 0,
+        "deferred": 0,
+        "pending_secret": false,
+        "social_current": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "slot": 4,
+        "filename": "MORGAN",
+        "human": false,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 110,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1,
+        "owned_tech": [
+          1
+        ],
+        "research_cache": -1,
+        "discount": 0,
+        "deferred": 0,
+        "pending_secret": false,
+        "social_current": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "slot": 5,
+        "filename": "SPARTANS",
+        "human": false,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 10,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1,
+        "owned_tech": [
+          5
+        ],
+        "research_cache": -1,
+        "discount": 0,
+        "deferred": 0,
+        "pending_secret": false,
+        "social_current": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "slot": 6,
+        "filename": "BELIEVE",
+        "human": false,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 10,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1,
+        "owned_tech": [
+          4
+        ],
+        "research_cache": -1,
+        "discount": 0,
+        "deferred": 0,
+        "pending_secret": false,
+        "social_current": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "slot": 7,
+        "filename": "PEACE",
+        "human": false,
+        "active": true,
+        "stored_difficulty": 3,
+        "credits": 10,
+        "debit": 0,
+        "psych": 0,
+        "labs": 5,
+        "research_target": -1,
+        "research_labs": 0,
+        "research_fraction": 0,
+        "technology_score": 0,
+        "base_total": 1,
+        "owned_tech": [
+          0
+        ],
+        "research_cache": -1,
+        "discount": 0,
+        "deferred": 0,
+        "pending_secret": false,
+        "social_current": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "resume": 0,
+    "controller_flags": 0,
+    "movement_rng_selector": 0,
+    "calendar_start": 2100,
+    "calendar_end": 2500
+  },
+  "first_human": {
+    "pc": "0x527eb0",
+    "caller": "0x53cb4f",
+    "state": {
+      "turn": 1,
+      "year": 2101,
+      "active": 255,
+      "human": 2,
+      "focus": 1,
+      "scheduled": 1,
+      "rules": 6670,
+      "secondary": 0,
+      "base_count": 7,
+      "unit_count": 13,
+      "crt": 2856588626,
+      "shared": 1,
+      "bases": [
+        {
+          "id": 0,
+          "owner": 1,
+          "former": 1,
+          "population": 1,
+          "position": [
+            17,
+            61
+          ],
+          "food": 2,
+          "minerals": 12,
+          "target": 1,
+          "facilities": [
+            1
+          ]
+        },
+        {
+          "id": 1,
+          "owner": 2,
+          "former": 2,
+          "population": 1,
+          "position": [
+            34,
+            36
+          ],
+          "food": 0,
+          "minerals": 5,
+          "target": 2,
+          "facilities": [
+            1,
+            4
+          ]
+        },
+        {
+          "id": 2,
+          "owner": 3,
+          "former": 3,
+          "population": 1,
+          "position": [
+            24,
+            38
+          ],
+          "food": 0,
+          "minerals": 5,
+          "target": 2,
+          "facilities": [
+            1,
+            8
+          ]
+        },
+        {
+          "id": 3,
+          "owner": 4,
+          "former": 4,
+          "population": 1,
+          "position": [
+            59,
+            23
+          ],
+          "food": 0,
+          "minerals": 5,
+          "target": 2,
+          "facilities": [
+            1
+          ]
+        },
+        {
+          "id": 4,
+          "owner": 5,
+          "former": 5,
+          "population": 1,
+          "position": [
+            29,
+            25
+          ],
+          "food": 0,
+          "minerals": 5,
+          "target": 2,
+          "facilities": [
+            1
+          ]
+        },
+        {
+          "id": 5,
+          "owner": 6,
+          "former": 6,
+          "population": 1,
+          "position": [
+            4,
+            64
+          ],
+          "food": 0,
+          "minerals": 5,
+          "target": 2,
+          "facilities": [
+            1
+          ]
+        },
+        {
+          "id": 6,
+          "owner": 7,
+          "former": 7,
+          "population": 1,
+          "position": [
+            15,
+            71
+          ],
+          "food": 0,
+          "minerals": 5,
+          "target": 2,
+          "facilities": [
+            1
+          ]
+        }
+      ],
+      "units": [
+        {
+          "id": 0,
+          "owner": 1,
+          "design": 2,
+          "position": [
+            17,
+            61
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 1,
+          "owner": 2,
+          "design": 2,
+          "position": [
+            34,
+            36
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 2,
+          "owner": 3,
+          "design": 2,
+          "position": [
+            24,
+            38
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 3,
+          "owner": 4,
+          "design": 2,
+          "position": [
+            59,
+            23
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 4,
+          "owner": 5,
+          "design": 320,
+          "position": [
+            29,
+            25
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 5,
+          "owner": 6,
+          "design": 2,
+          "position": [
+            4,
+            64
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 6,
+          "owner": 7,
+          "design": 2,
+          "position": [
+            15,
+            71
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 7,
+          "owner": 1,
+          "design": 0,
+          "position": [
+            17,
+            61
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 8,
+          "owner": 2,
+          "design": 0,
+          "position": [
+            34,
+            36
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 9,
+          "owner": 3,
+          "design": 0,
+          "position": [
+            24,
+            38
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 10,
+          "owner": 5,
+          "design": 0,
+          "position": [
+            29,
+            25
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 11,
+          "owner": 6,
+          "design": 0,
+          "position": [
+            4,
+            64
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 12,
+          "owner": 7,
+          "design": 0,
+          "position": [
+            15,
+            71
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        }
+      ],
+      "factions": [
+        {
+          "slot": 1,
+          "filename": "GAIANS",
+          "human": true,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 11,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            6
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            2,
+            0,
+            0,
+            -1,
+            -1,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "slot": 2,
+          "filename": "HIVE",
+          "human": false,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 10,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            43
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "slot": 3,
+          "filename": "UNIV",
+          "human": false,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 10,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            2
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "slot": 4,
+          "filename": "MORGAN",
+          "human": false,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 110,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            1
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "slot": 5,
+          "filename": "SPARTANS",
+          "human": false,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 10,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            5
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "slot": 6,
+          "filename": "BELIEVE",
+          "human": false,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 10,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            4
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "slot": 7,
+          "filename": "PEACE",
+          "human": false,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 10,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            0
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "resume": 0,
+      "controller_flags": 0,
+      "movement_rng_selector": 0,
+      "calendar_start": 2100,
+      "calendar_end": 2500
+    }
+  },
+  "isolated_computer_continuation": {
+    "pc": "0x58f6b0",
+    "caller": "0x53cb67",
+    "state": {
+      "turn": 1,
+      "year": 2101,
+      "active": 255,
+      "human": 2,
+      "focus": 1,
+      "scheduled": 2,
+      "rules": 6670,
+      "secondary": 0,
+      "base_count": 7,
+      "unit_count": 13,
+      "crt": 1459234509,
+      "shared": 1,
+      "bases": [
+        {
+          "id": 0,
+          "owner": 1,
+          "former": 1,
+          "population": 1,
+          "position": [
+            17,
+            61
+          ],
+          "food": 2,
+          "minerals": 12,
+          "target": 1,
+          "facilities": [
+            1
+          ]
+        },
+        {
+          "id": 1,
+          "owner": 2,
+          "former": 2,
+          "population": 1,
+          "position": [
+            34,
+            36
+          ],
+          "food": 1,
+          "minerals": 7,
+          "target": 2,
+          "facilities": [
+            1,
+            4
+          ]
+        },
+        {
+          "id": 2,
+          "owner": 3,
+          "former": 3,
+          "population": 1,
+          "position": [
+            24,
+            38
+          ],
+          "food": 0,
+          "minerals": 5,
+          "target": 2,
+          "facilities": [
+            1,
+            8
+          ]
+        },
+        {
+          "id": 3,
+          "owner": 4,
+          "former": 4,
+          "population": 1,
+          "position": [
+            59,
+            23
+          ],
+          "food": 0,
+          "minerals": 5,
+          "target": 2,
+          "facilities": [
+            1
+          ]
+        },
+        {
+          "id": 4,
+          "owner": 5,
+          "former": 5,
+          "population": 1,
+          "position": [
+            29,
+            25
+          ],
+          "food": 0,
+          "minerals": 5,
+          "target": 2,
+          "facilities": [
+            1
+          ]
+        },
+        {
+          "id": 5,
+          "owner": 6,
+          "former": 6,
+          "population": 1,
+          "position": [
+            4,
+            64
+          ],
+          "food": 0,
+          "minerals": 5,
+          "target": 2,
+          "facilities": [
+            1
+          ]
+        },
+        {
+          "id": 6,
+          "owner": 7,
+          "former": 7,
+          "population": 1,
+          "position": [
+            15,
+            71
+          ],
+          "food": 0,
+          "minerals": 5,
+          "target": 2,
+          "facilities": [
+            1
+          ]
+        }
+      ],
+      "units": [
+        {
+          "id": 0,
+          "owner": 1,
+          "design": 2,
+          "position": [
+            17,
+            61
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 1,
+          "owner": 2,
+          "design": 2,
+          "position": [
+            34,
+            36
+          ],
+          "damage": 0,
+          "order": 24,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 2,
+          "owner": 3,
+          "design": 2,
+          "position": [
+            24,
+            38
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 3,
+          "owner": 4,
+          "design": 2,
+          "position": [
+            59,
+            23
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 4,
+          "owner": 5,
+          "design": 320,
+          "position": [
+            29,
+            25
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 5,
+          "owner": 6,
+          "design": 2,
+          "position": [
+            4,
+            64
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 6,
+          "owner": 7,
+          "design": 2,
+          "position": [
+            15,
+            71
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 7,
+          "owner": 1,
+          "design": 0,
+          "position": [
+            17,
+            61
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 8,
+          "owner": 2,
+          "design": 0,
+          "position": [
+            34,
+            36
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 9,
+          "owner": 3,
+          "design": 0,
+          "position": [
+            24,
+            38
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 10,
+          "owner": 5,
+          "design": 0,
+          "position": [
+            29,
+            25
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 11,
+          "owner": 6,
+          "design": 0,
+          "position": [
+            4,
+            64
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        },
+        {
+          "id": 12,
+          "owner": 7,
+          "design": 0,
+          "position": [
+            15,
+            71
+          ],
+          "damage": 0,
+          "order": 0,
+          "morale": 1,
+          "spent": 0,
+          "home": -1
+        }
+      ],
+      "factions": [
+        {
+          "slot": 1,
+          "filename": "GAIANS",
+          "human": true,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 11,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            6
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            2,
+            0,
+            0,
+            -1,
+            -1,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "slot": 2,
+          "filename": "HIVE",
+          "human": false,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 10,
+          "debit": 0,
+          "psych": 0,
+          "labs": 4,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            43
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            -2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "slot": 3,
+          "filename": "UNIV",
+          "human": false,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 10,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            2
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "slot": 4,
+          "filename": "MORGAN",
+          "human": false,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 110,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            1
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "slot": 5,
+          "filename": "SPARTANS",
+          "human": false,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 10,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            5
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "slot": 6,
+          "filename": "BELIEVE",
+          "human": false,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 10,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            4
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "slot": 7,
+          "filename": "PEACE",
+          "human": false,
+          "active": true,
+          "stored_difficulty": 3,
+          "credits": 10,
+          "debit": 0,
+          "psych": 0,
+          "labs": 5,
+          "research_target": -1,
+          "research_labs": 0,
+          "research_fraction": 0,
+          "technology_score": 0,
+          "base_total": 1,
+          "owned_tech": [
+            0
+          ],
+          "research_cache": -1,
+          "discount": 0,
+          "deferred": 0,
+          "pending_secret": false,
+          "social_current": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "resume": 0,
+      "controller_flags": 0,
+      "movement_rng_selector": 0,
+      "calendar_start": 2100,
+      "calendar_end": 2500
+    }
+  },
+  "balance_deficits": [
+    {
+      "faction": 1,
+      "deficit": 10,
+      "difficulty": 3,
+      "human": true
+    },
+    {
+      "faction": 2,
+      "deficit": 13,
+      "difficulty": 3,
+      "human": false
+    },
+    {
+      "faction": 3,
+      "deficit": 10,
+      "difficulty": 3,
+      "human": false
+    },
+    {
+      "faction": 4,
+      "deficit": 0,
+      "difficulty": 3,
+      "human": false
+    },
+    {
+      "faction": 5,
+      "deficit": 13,
+      "difficulty": 3,
+      "human": false
+    },
+    {
+      "faction": 6,
+      "deficit": 10,
+      "difficulty": 3,
+      "human": false
+    },
+    {
+      "faction": 7,
+      "deficit": 13,
+      "difficulty": 3,
+      "human": false
+    }
+  ],
+  "balance_pod_calls": [
+    {
+      "design": 0,
+      "owner": 1,
+      "position": [
+        17,
+        61
+      ]
+    },
+    {
+      "design": 0,
+      "owner": 2,
+      "position": [
+        34,
+        36
+      ]
+    },
+    {
+      "design": 0,
+      "owner": 3,
+      "position": [
+        24,
+        38
+      ]
+    },
+    {
+      "design": 0,
+      "owner": 5,
+      "position": [
+        29,
+        25
+      ]
+    },
+    {
+      "design": 0,
+      "owner": 6,
+      "position": [
+        4,
+        64
+      ]
+    },
+    {
+      "design": 0,
+      "owner": 7,
+      "position": [
+        15,
+        71
+      ]
+    }
+  ],
+  "setup_sequence": [
+    "0x5cadb0",
+    "0x5c8650",
+    "0x5cb08c",
+    "0x5c8650",
+    "0x5cb0c3",
+    "0x5c8650",
+    "0x5cb0c3",
+    "0x5c8650",
+    "0x5cb0c3",
+    "0x5c8650",
+    "0x5cb0c3",
+    "0x5c8650",
+    "0x5cb0c3",
+    "0x5c8650",
+    "0x5cb0c3",
+    "0x5c8650",
+    "0x5cb0c3",
+    "0x5c7c90"
+  ],
+  "schedule_events": [
+    {
+      "pc": "0x53a530",
+      "caller": "0x53bf46",
+      "phase": "first_human",
+      "arguments": [
+        0
+      ],
+      "state": {
+        "turn": 0,
+        "year": 0,
+        "active": 255,
+        "human": 2,
+        "focus": 1,
+        "scheduled": 0,
+        "rules": 6670,
+        "secondary": 0,
+        "base_count": 7,
+        "unit_count": 13,
+        "crt": 1537134187,
+        "shared": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "design": 2,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "design": 2,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "design": 2,
+            "position": [
+              59,
+              23
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "design": 320,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "design": 2,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "design": 2,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 7,
+            "owner": 1,
+            "design": 0,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 8,
+            "owner": 2,
+            "design": 0,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 9,
+            "owner": 3,
+            "design": 0,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 10,
+            "owner": 5,
+            "design": 0,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 11,
+            "owner": 6,
+            "design": 0,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 12,
+            "owner": 7,
+            "design": 0,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          }
+        ],
+        "factions": [
+          {
+            "slot": 1,
+            "filename": "GAIANS",
+            "human": true,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              6
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 2,
+            "filename": "HIVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              43
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 3,
+            "filename": "UNIV",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              2
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 4,
+            "filename": "MORGAN",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 110,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              1
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 5,
+            "filename": "SPARTANS",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              5
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 6,
+            "filename": "BELIEVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              4
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 7,
+            "filename": "PEACE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              0
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "resume": 0,
+        "controller_flags": 0,
+        "movement_rng_selector": 1,
+        "calendar_start": 2100,
+        "calendar_end": 2500
+      }
+    },
+    {
+      "pc": "0x53bb60",
+      "caller": "0x53caf2",
+      "phase": "first_human",
+      "arguments": [
+        0
+      ],
+      "state": {
+        "turn": 1,
+        "year": 2101,
+        "active": 255,
+        "human": 2,
+        "focus": 1,
+        "scheduled": 0,
+        "rules": 6670,
+        "secondary": 0,
+        "base_count": 7,
+        "unit_count": 13,
+        "crt": 1551285371,
+        "shared": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "design": 2,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "design": 2,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "design": 2,
+            "position": [
+              59,
+              23
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "design": 320,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "design": 2,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "design": 2,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 7,
+            "owner": 1,
+            "design": 0,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 8,
+            "owner": 2,
+            "design": 0,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 9,
+            "owner": 3,
+            "design": 0,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 10,
+            "owner": 5,
+            "design": 0,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 11,
+            "owner": 6,
+            "design": 0,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 12,
+            "owner": 7,
+            "design": 0,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          }
+        ],
+        "factions": [
+          {
+            "slot": 1,
+            "filename": "GAIANS",
+            "human": true,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              6
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 2,
+            "filename": "HIVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              43
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 3,
+            "filename": "UNIV",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              2
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 4,
+            "filename": "MORGAN",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 110,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              1
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 5,
+            "filename": "SPARTANS",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              5
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 6,
+            "filename": "BELIEVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              4
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 7,
+            "filename": "PEACE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              0
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "resume": 0,
+        "controller_flags": 0,
+        "movement_rng_selector": 1,
+        "calendar_start": 2100,
+        "calendar_end": 2500
+      }
+    },
+    {
+      "pc": "0x58f6b0",
+      "caller": "0x53cb67",
+      "phase": "first_human",
+      "arguments": [
+        0
+      ],
+      "state": {
+        "turn": 1,
+        "year": 2101,
+        "active": 255,
+        "human": 2,
+        "focus": 1,
+        "scheduled": 0,
+        "rules": 6670,
+        "secondary": 0,
+        "base_count": 7,
+        "unit_count": 13,
+        "crt": 1551285371,
+        "shared": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "design": 2,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "design": 2,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "design": 2,
+            "position": [
+              59,
+              23
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "design": 320,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "design": 2,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "design": 2,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 7,
+            "owner": 1,
+            "design": 0,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 8,
+            "owner": 2,
+            "design": 0,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 9,
+            "owner": 3,
+            "design": 0,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 10,
+            "owner": 5,
+            "design": 0,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 11,
+            "owner": 6,
+            "design": 0,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 12,
+            "owner": 7,
+            "design": 0,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          }
+        ],
+        "factions": [
+          {
+            "slot": 1,
+            "filename": "GAIANS",
+            "human": true,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              6
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 2,
+            "filename": "HIVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              43
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 3,
+            "filename": "UNIV",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              2
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 4,
+            "filename": "MORGAN",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 110,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              1
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 5,
+            "filename": "SPARTANS",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              5
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 6,
+            "filename": "BELIEVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              4
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 7,
+            "filename": "PEACE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              0
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "resume": 0,
+        "controller_flags": 0,
+        "movement_rng_selector": 0,
+        "calendar_start": 2100,
+        "calendar_end": 2500
+      }
+    },
+    {
+      "pc": "0x53bb60",
+      "caller": "0x53caf2",
+      "phase": "first_human",
+      "arguments": [
+        1
+      ],
+      "state": {
+        "turn": 1,
+        "year": 2101,
+        "active": 255,
+        "human": 2,
+        "focus": 1,
+        "scheduled": 1,
+        "rules": 6670,
+        "secondary": 0,
+        "base_count": 7,
+        "unit_count": 13,
+        "crt": 1551285371,
+        "shared": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "design": 2,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "design": 2,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "design": 2,
+            "position": [
+              59,
+              23
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "design": 320,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "design": 2,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "design": 2,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 7,
+            "owner": 1,
+            "design": 0,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 8,
+            "owner": 2,
+            "design": 0,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 9,
+            "owner": 3,
+            "design": 0,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 10,
+            "owner": 5,
+            "design": 0,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 11,
+            "owner": 6,
+            "design": 0,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 12,
+            "owner": 7,
+            "design": 0,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          }
+        ],
+        "factions": [
+          {
+            "slot": 1,
+            "filename": "GAIANS",
+            "human": true,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              6
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 2,
+            "filename": "HIVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              43
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 3,
+            "filename": "UNIV",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              2
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 4,
+            "filename": "MORGAN",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 110,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              1
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 5,
+            "filename": "SPARTANS",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              5
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 6,
+            "filename": "BELIEVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              4
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 7,
+            "filename": "PEACE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              0
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "resume": 0,
+        "controller_flags": 0,
+        "movement_rng_selector": 1,
+        "calendar_start": 2100,
+        "calendar_end": 2500
+      }
+    },
+    {
+      "pc": "0x50c760",
+      "caller": "0x53b956",
+      "phase": "first_human",
+      "arguments": [
+        0
+      ],
+      "state": {
+        "turn": 1,
+        "year": 2101,
+        "active": 255,
+        "human": 2,
+        "focus": 1,
+        "scheduled": 1,
+        "rules": 6670,
+        "secondary": 0,
+        "base_count": 7,
+        "unit_count": 13,
+        "crt": 1551285371,
+        "shared": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "design": 2,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "design": 2,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "design": 2,
+            "position": [
+              59,
+              23
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "design": 320,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "design": 2,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "design": 2,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 7,
+            "owner": 1,
+            "design": 0,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 8,
+            "owner": 2,
+            "design": 0,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 9,
+            "owner": 3,
+            "design": 0,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 10,
+            "owner": 5,
+            "design": 0,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 11,
+            "owner": 6,
+            "design": 0,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 12,
+            "owner": 7,
+            "design": 0,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          }
+        ],
+        "factions": [
+          {
+            "slot": 1,
+            "filename": "GAIANS",
+            "human": true,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              6
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              2,
+              0,
+              0,
+              -1,
+              -1,
+              0,
+              1,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 2,
+            "filename": "HIVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              43
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 3,
+            "filename": "UNIV",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              2
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 4,
+            "filename": "MORGAN",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 110,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              1
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 5,
+            "filename": "SPARTANS",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              5
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 6,
+            "filename": "BELIEVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              4
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 7,
+            "filename": "PEACE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              0
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "resume": 0,
+        "controller_flags": 0,
+        "movement_rng_selector": 1,
+        "calendar_start": 2100,
+        "calendar_end": 2500
+      }
+    },
+    {
+      "pc": "0x53bb60",
+      "caller": "0x53caf2",
+      "phase": "isolated_AI2_continuation",
+      "arguments": [
+        2
+      ],
+      "state": {
+        "turn": 1,
+        "year": 2101,
+        "active": 255,
+        "human": 2,
+        "focus": 1,
+        "scheduled": 2,
+        "rules": 6670,
+        "secondary": 0,
+        "base_count": 7,
+        "unit_count": 13,
+        "crt": 2856588626,
+        "shared": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 2,
+            "minerals": 12,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "design": 2,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "design": 2,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "design": 2,
+            "position": [
+              59,
+              23
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "design": 320,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "design": 2,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "design": 2,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 7,
+            "owner": 1,
+            "design": 0,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 8,
+            "owner": 2,
+            "design": 0,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 9,
+            "owner": 3,
+            "design": 0,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 10,
+            "owner": 5,
+            "design": 0,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 11,
+            "owner": 6,
+            "design": 0,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 12,
+            "owner": 7,
+            "design": 0,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          }
+        ],
+        "factions": [
+          {
+            "slot": 1,
+            "filename": "GAIANS",
+            "human": true,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 11,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              6
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              2,
+              0,
+              0,
+              -1,
+              -1,
+              0,
+              1,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 2,
+            "filename": "HIVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              43
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 3,
+            "filename": "UNIV",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              2
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 4,
+            "filename": "MORGAN",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 110,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              1
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 5,
+            "filename": "SPARTANS",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              5
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 6,
+            "filename": "BELIEVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              4
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 7,
+            "filename": "PEACE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              0
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "resume": 0,
+        "controller_flags": 0,
+        "movement_rng_selector": 1,
+        "calendar_start": 2100,
+        "calendar_end": 2500
+      }
+    },
+    {
+      "pc": "0x50c760",
+      "caller": "0x53b956",
+      "phase": "isolated_AI2_continuation",
+      "arguments": [
+        1
+      ],
+      "state": {
+        "turn": 1,
+        "year": 2101,
+        "active": 255,
+        "human": 2,
+        "focus": 1,
+        "scheduled": 2,
+        "rules": 6670,
+        "secondary": 0,
+        "base_count": 7,
+        "unit_count": 13,
+        "crt": 2856588626,
+        "shared": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 2,
+            "minerals": 12,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "design": 2,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "design": 2,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "design": 2,
+            "position": [
+              59,
+              23
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "design": 320,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "design": 2,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "design": 2,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 7,
+            "owner": 1,
+            "design": 0,
+            "position": [
+              17,
+              61
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 8,
+            "owner": 2,
+            "design": 0,
+            "position": [
+              34,
+              36
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 9,
+            "owner": 3,
+            "design": 0,
+            "position": [
+              24,
+              38
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 10,
+            "owner": 5,
+            "design": 0,
+            "position": [
+              29,
+              25
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 11,
+            "owner": 6,
+            "design": 0,
+            "position": [
+              4,
+              64
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          },
+          {
+            "id": 12,
+            "owner": 7,
+            "design": 0,
+            "position": [
+              15,
+              71
+            ],
+            "damage": 0,
+            "order": 0,
+            "morale": 1,
+            "spent": 0,
+            "home": -1
+          }
+        ],
+        "factions": [
+          {
+            "slot": 1,
+            "filename": "GAIANS",
+            "human": true,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 11,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              6
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              2,
+              0,
+              0,
+              -1,
+              -1,
+              0,
+              1,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 2,
+            "filename": "HIVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              43
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              -2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              1,
+              0
+            ]
+          },
+          {
+            "slot": 3,
+            "filename": "UNIV",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              2
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 4,
+            "filename": "MORGAN",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 110,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              1
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 5,
+            "filename": "SPARTANS",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              5
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 6,
+            "filename": "BELIEVE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              4
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "slot": 7,
+            "filename": "PEACE",
+            "human": false,
+            "active": true,
+            "stored_difficulty": 3,
+            "credits": 10,
+            "debit": 0,
+            "psych": 0,
+            "labs": 5,
+            "research_target": -1,
+            "research_labs": 0,
+            "research_fraction": 0,
+            "technology_score": 0,
+            "base_total": 1,
+            "owned_tech": [
+              0
+            ],
+            "research_cache": -1,
+            "discount": 0,
+            "deferred": 0,
+            "pending_secret": false,
+            "social_current": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "resume": 0,
+        "controller_flags": 0,
+        "movement_rng_selector": 1,
+        "calendar_start": 2100,
+        "calendar_end": 2500
+      }
+    }
+  ],
+  "unanswered_boundaries": [],
+  "map_search_storage": {
+    "native_initializer": "0x5b1ab0",
+    "visited_bytes": 12800,
+    "x_queue_bytes": 6400,
+    "y_queue_bytes": 6400,
+    "null_write_guard": true
+  },
+  "excluded_exploration": "v1..v5 omitted map-search scratch initialization and are not accepted for region-dependent placement/compensation. v6 corrected this; v7 additionally executes all native canonical reset writers and records balancing deficits."
+}

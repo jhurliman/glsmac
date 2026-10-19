@@ -29,6 +29,13 @@ No original assets or binaries belong in this repository. The engine continues
 to load them from a user-supplied installation. See
 [reference validation](reference-validation.md) for provenance and evidence.
 
+## Next gameplay integration
+
+The [local faction controller plan](local-faction-controller.md) connects the
+verified seven-faction Planet startup and per-owner upkeep boundaries to the
+current engine. Computer admission, owner scheduling and actual decisions are
+required before the local conquest milestone can be claimed.
+
 ## Current checkpoint — 2026-10-19
 
 Integration checkpoint: `bd931ed7` (through [#369](https://github.com/jhurliman/glsmac/pull/369)).

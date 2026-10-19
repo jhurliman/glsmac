@@ -12,12 +12,18 @@ text, and black frame; Spartans use their measured secondary frame and text44.
 The existing unoccupied style uses a transparent interior and faction text
 entry. Colors come from the installed software palette through its existing
 bounded decoder. Stock identity selects colors independently of transport slot.
+The resolved Base artwork's primary/secondary/text metadata must match the stock
+indices, and its imported text/shadow/border colors must match the configured
+Faction. Replacing a PCX under the same ID or overriding colors in script falls
+back to the configured renderer. Common software-palette channels are capped235
+at gamma100; system-reserved colors such as University white remain exact.
 The sprite uses the Unit flag's pixel scale and keeps its first corner fixed
 as the population becomes two digits. Existing Base refresh and sprite retirement
 remain the callers. Other rulesets and custom faction identities retain their
 existing renderer.
 
-The native test pins the measured widths, baseline, digit advances, border and
+The native tests pin resolved stock/mod/script color admission and the software
+common-color cap, plus measured widths, baseline, digit advances, border and
 transparent/filled interiors independently of host font availability. The cached
 incremental build passes this test, the health-bar groups and frontend Base
 ownership/retirement navigation. Five affected production translation units pass
@@ -30,7 +36,8 @@ A real software-rendered session loads the retained research question through
 Title → Load Game, accepts empty priorities and displays Gaia's occupied
 population1 badge. The log confirms actual Arial Bold16 loading and14x16 texture
 creation. Normal Menu → Game → Quit exits0 with no tracked OpenGL leaks. Private
-capture: `.codex-validation/population-live-capture/accepted.png`; the earlier
+capture at d290eead (before the metadata/color-cap review follow-up):
+`.codex-validation/population-live-capture/accepted.png`; the earlier
 automated attempt timed out during loading and is not a successful capture.
 Audio was disabled; heap allocations and hardware frame rate were not checked.
 

@@ -63,6 +63,33 @@ bool StepMatches( const fixture::Step& e, const model::Survivor& s, const model:
 }
 
 void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC population badge admits resolved stock metadata and preserves mod colors",GT(){
+        std::array<types::Color,256> palette{};
+        palette[241]=types::Color::FromRGB(0,252,0);palette[32]=types::Color::FromRGB(45,72,41);
+        palette[242]=types::Color::FromRGB(16,228,0);palette[255]=types::Color::FromRGB(255,255,255);
+        types::texture::Texture asset(162,764);
+        asset.SetPixel(4,739,palette[241]);asset.SetPixel(4,747,palette[32]);asset.SetPixel(4,755,palette[242]);
+        asset.SetPixel(4,763,palette[32]);asset.SetPixel(161,749,palette[241]);
+        const std::array<types::Color,3> configured{palette[242],palette[32],palette[241]};
+        const auto admitted=[&]{return game::frontend::base::MatchesSmacPopulationMetadata(asset,palette,241,32,242,configured);};
+        GT_ASSERT(admitted(),"Measured stock metadata was rejected");
+        for(const auto y:{739,747,755}) {
+            const auto saved=asset.GetPixel(4,y);asset.SetPixel(4,y,types::Color::FromRGB(123,45,67));
+            GT_ASSERT(!admitted(),"Replacement faction color was mistaken for stock metadata");asset.SetPixel(4,y,saved);
+        }
+        for(size_t field=0;field<configured.size();++field) {
+            auto changed=configured;changed[field]=types::Color::FromRGB(123,45,67);
+            GT_ASSERT(!game::frontend::base::MatchesSmacPopulationMetadata(asset,palette,241,32,242,changed),
+                "Scripted faction colors were replaced by stock styling");
+        }
+        types::texture::Texture short_asset(5,755);
+        GT_ASSERT(!game::frontend::base::MatchesSmacPopulationMetadata(short_asset,palette,241,32,242,configured),
+            "Small custom artwork admitted out-of-bounds color metadata");
+        GT_ASSERT(game::frontend::base::SmacPopulationDisplayColor(palette,241).GetRGBA()==types::Color::FromRGB(0,235,0).GetRGBA()
+            && game::frontend::base::SmacPopulationDisplayColor(palette,255).GetRGBA()==palette[255].GetRGBA(),
+            "Software common-color cap changed reserved white or stock green");
+        GT_OK();
+    });
     task->AddTest("SMAC population badge preserves original one and two digit layout",GT(){
         types::Font font("population layout fixture");
         // Pin the measured original advance and baseline independently of host fonts.

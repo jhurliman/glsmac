@@ -4,8 +4,32 @@
 #include "types/texture/Texture.h"
 #include <memory>
 #include <stdexcept>
+#include <array>
+#include <cmath>
 
 namespace game::frontend::base {
+
+inline bool MatchesSmacPopulationMetadata(const types::texture::Texture& faction,
+    const std::array<types::Color,256>& palette, uint8_t primary, uint8_t secondary, uint8_t text,
+    const std::array<types::Color,3>& configured) {
+    return faction.GetWidth()>161 && faction.GetHeight()>763
+        && faction.GetPixel(4,739)==palette[primary].GetRGBA()
+        && faction.GetPixel(4,747)==palette[secondary].GetRGBA()
+        && faction.GetPixel(4,755)==palette[text].GetRGBA()
+        && faction.GetPixel(4,755)==configured[0].GetRGBA()
+        && faction.GetPixel(4,763)==configured[1].GetRGBA()
+        && faction.GetPixel(161,749)==configured[2].GetRGBA();
+}
+
+inline types::Color SmacPopulationDisplayColor(const std::array<types::Color,256>& palette,uint8_t index) {
+    const auto rgba=palette[index].GetRGBA();
+    if(index<10 || index>245) {return palette[index];}
+    const auto clamp=[](uint8_t channel){return channel>235 ? uint8_t(235):channel;};
+    // Software gamma100 caps common colors; system-reserved entries stay exact.
+    const auto color=types::Color::FromRGBA(rgba).value;
+    return types::Color::FromRGB(clamp(static_cast<uint8_t>(std::lround(color.red*255))),
+        clamp(static_cast<uint8_t>(std::lround(color.green*255))),clamp(static_cast<uint8_t>(std::lround(color.blue*255))));
+}
 
 // RE-SMAC-MAP-OVERLAYS-001, zoom0. The caller supplies the actual palette
 // colors and occupancy style; font layout never adds shadows or glyph padding.

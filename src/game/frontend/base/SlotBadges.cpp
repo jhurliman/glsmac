@@ -9,6 +9,8 @@
 #include "scene/actor/Instanced.h"
 #include "types/texture/Texture.h"
 #include "SmacPopulationBadge.h"
+#include "engine/Engine.h"
+#include "loader/texture/TextureLoader.h"
 
 namespace game {
 namespace frontend {
@@ -41,6 +43,9 @@ SlotBadges::SlotBadges(
 		{"BELIEVERS",102,109,98},{"PEACEKEEPERS",235,186,235}};
 	if(m_bm->m_smac_population) {
 		for(const auto& row:colors) {if(m_faction->m_id==row.id) {
+			const auto* asset=g_engine->GetTextureLoader()->TryLoadCustomTexture(m_faction->GetBaseFilename());
+			if(!asset || !MatchesSmacPopulationMetadata(*asset,m_bm->GetSmacPopulationPalette(),row.primary,row.secondary,row.text,
+				{m_faction->m_colors.text,m_faction->m_colors.text_shadow,m_faction->m_colors.border})) {break;}
 			m_smac_population=true;m_primary=row.primary;m_secondary=row.secondary;m_population_text=row.text;break;
 		}}
 	}
@@ -108,9 +113,9 @@ sprite::InstancedSprite* SlotBadges::GetBadgeSprite( const size_t population, co
 			const auto& palette=m_bm->GetSmacPopulationPalette();
 			const bool spartan=m_faction->m_id=="SPARTANS";
 			auto texture=MakeSmacPopulationBadge(population,*m_bm->GetSmacPopulationFont(),
-				is_guarded ? palette[m_primary]:types::Color::FromRGBA(0,0,0,0),
-				palette[is_guarded ? (spartan ? 44:0):m_population_text],
-				palette[is_guarded && spartan ? m_secondary:0]);
+				is_guarded ? SmacPopulationDisplayColor(palette,m_primary):types::Color::FromRGBA(0,0,0,0),
+				SmacPopulationDisplayColor(palette,is_guarded ? (spartan ? 44:0):m_population_text),
+				SmacPopulationDisplayColor(palette,is_guarded && spartan ? m_secondary:0));
 			const auto width=static_cast<uint32_t>(texture->GetWidth());
 			const auto height=static_cast<uint32_t>(texture->GetHeight());
 			// NormalizePosition adds (pivot/size - 1/2)*dimensions to the

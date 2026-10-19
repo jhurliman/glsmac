@@ -83,13 +83,12 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
                 if(valid) {output.heights=heights;output.lighting=*light;output.deformed=false;}
             }
         }
-        // Keep unimplemented material memberships separate from geometry.
-        // Preserve the prior Jungle/Uranium/Geothermal admission here; live
-        // feature gates below still reject unsupported special land paint.
-        // Geometry-only0x200/0x800 have no sea profile. The named quads
-        // are now composed on land and sea with their distinct scalar rules.
-        const uint32_t sea_memberships=output.band<3?0xd0u:0u;
-        const auto unsupported_landmark_materials=landmarks&~(0xff400000u|0xb03u|4u|8u|0x40u|0x400u|0x2000u|sea_memberships);
+        // Passive memberships add no independent terrain art. Preserve their
+        // words: live Monolith items and the Borehole Cluster variant are
+        // composed separately, rather than erased with the admission mask.
+        // Geometry and named art retain their own bounds below.
+        constexpr uint32_t passive_memberships=0x10u|0x20u|0x80u|0x1000u|0x4000u;
+        const auto unsupported_landmark_materials=landmarks&~(0xff400000u|0xb03u|4u|8u|0x40u|0x400u|0x2000u|passive_memberships);
         const auto art_detail=landmarks>>24;
         const bool unsupported_art_detail=((landmarks&0x103u) && art_detail>=49 && art_detail<128) ||
             ((landmarks&0x80002000u)==0x2000u && art_detail>8);

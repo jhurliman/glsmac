@@ -33,7 +33,7 @@ runs. It does not consume either random stream.
 
 ## Boundaries still to close
 
-- Roads, rivers and further land continuations.
+- Roads, territory coloration and further land continuations.
 - Named landmark deformation/shading and neighboring affected stencils.
 - Original observer/fog admission, complete object occlusion and animated water.
 - Full native view/camera-origin/scrolling behavior and other zooms/viewports.
@@ -98,3 +98,23 @@ See [87 geometry controls](behavior/terrain-landmark-field-admission.md) and
 [27 complete-renderer sea controls](behavior/sea-landmark-material-admission.md).
 These clarify the existing flags1/zoom0 inspector; they do not implement other
 landmark profiles, optional object overlays or dirty-only redraw scheduling.
+
+## River continuation
+
+The inspector now uses the explicit ordinary display profile0x401: base painting
+plus River flag0x400. The River pass reads live item0x80, uses four diagonal live
+neighbors (including River-bearing sea neighbors), paints the native shaded quad
+after coast, and repeats mask0 for retained raw item0x200. Sea centers draw no
+River and can keep their ordinary water prefix even when the River item is set.
+Disabling0x400 suppresses River without erasing the underlying material. This
+extension does not imply support for any other arbitrary display-flag combination.
+
+[Original rules and cases](behavior/ordinary-river.md) cover33 contexts and37
+composed indexed frames; the earlier alleged river/color-map branch is territory
+coloration and remains separate. The production C++ replay uses owned assets:
+
+```
+python tools/reference/verify_native_rivers.py --texture-pcx PATH/TEXTURE.PCX --rainfall-pcx PATH/RAINFALL.PCX
+```
+
+Add `--sanitize --cxx clang++` for the focused indexed-raster replay.

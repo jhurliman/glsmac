@@ -180,6 +180,8 @@ void Game::PrepareNewSimulation() {
 	value.regional_strategy=m_smac_cross_world_strategy;
 	value.ranking_scores=m_smac_cross_world_scores;
     value.dominance_history.emplace(); // native whole-new-world reset, independent of retained working scores
+    value.dominance_native_keys.emplace();
+    for(size_t slot=1;slot<8;++slot) {value.dominance_native_keys->at(slot)=settings.GetSmacFactionStartupRules()->factions[slot-1].section;}
 	value.ecology_history=m_smac_cross_world_ecology;
 	value.faction_status=m_smac_cross_world_faction_status;
 	value.ecology_warming_count=0; // measured global new-world reset, independent of faction initialization

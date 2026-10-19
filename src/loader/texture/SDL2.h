@@ -23,6 +23,7 @@ CLASS( SDL2, TextureLoader )
     std::shared_ptr<const game::frontend::native_terrain::Source> GetSmacTerrainSource(const std::array<std::string,8>& faction_files={}) override;
     std::shared_ptr<types::texture::Texture> GetSmacEffectTexture(bool death) override;
     std::shared_ptr<const SmacTurnFrames> GetSmacTurnFrames() override;
+    std::shared_ptr<const SmacGraphPalette> GetSmacGraphPalette() override;
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
@@ -46,6 +47,7 @@ private:
     std::unordered_map<std::string,std::shared_ptr<SmacBaseCardSource>> m_base_card_sources;
     std::unordered_map<std::string,std::shared_ptr<const SmacBaseCard>> m_base_cards;
     std::unordered_map<std::string,std::shared_ptr<const SmacTurnFrames>> m_turn_frames;
+    std::unordered_map<std::string,std::shared_ptr<const SmacGraphPalette>> m_graph_palettes;
 	void FixTransparency( types::texture::Texture* texture ) const;
 	void FixYellowShadows( types::texture::Texture* texture ) const;
 	void FixTexture( types::texture::Texture* texture ) const;

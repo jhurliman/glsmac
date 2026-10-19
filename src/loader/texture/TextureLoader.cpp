@@ -331,6 +331,8 @@ std::shared_ptr<types::texture::Texture> TextureLoader::GetSmacEffectTexture(boo
 
 std::shared_ptr<const SmacBaseCard> TextureLoader::GetSmacNativeBaseCard(const std::string&,size_t,size_t,bool) {return {};}
 
+std::shared_ptr<const SmacGraphPalette> TextureLoader::GetSmacGraphPalette() {THROW("Dominance graph colors are unsupported by this texture backend");}
+
 std::shared_ptr<const SmacTurnFrames> TextureLoader::GetSmacTurnFrames() {THROW("Turn Complete decoding is unsupported by this texture backend");}
 
 types::texture::Texture* TextureLoader::CreateSmacNativeBadgeTexture(int,int) {THROW("Native badge decoding is not supported by this texture loader");}

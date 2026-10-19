@@ -785,6 +785,14 @@ WRAPIMPL_BEGIN( Game )
 				catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
 			} )
 		},
+        {
+            "request_smac_dominance_graph",
+            NATIVE_CALL(this) {
+                N_EXPECT_ARGS(1);N_GETVALUE(request,0,Int);
+                try {return VALUE(gse::value::Bool,,RequestLocalDominanceGraph(GSE_CALL,request));}
+                catch(const std::exception& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+            })
+        },
 		{
 			"get_smac_minimap",
 			NATIVE_CALL(this) {
@@ -2029,6 +2037,12 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 			const std::string* errptr = nullptr;
 			bool encountered_pause=m_canonical_continuation.has_value();
 			for ( const auto& event : batch->events ) {
+                if(event->GetSource()==event::Event::ES_LOCAL && event->GetEventName()=="_rebuild_smac_dominance") {
+                    const auto* args=static_cast<gse::value::Object*>(event->GetData().at("data"));
+                    if(HandleDominanceGraphEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),false)) {
+                        WithRW([&]{HandleDominanceGraphEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),true);});continue;
+                    }
+                }
 				if(m_simulation && m_simulation->value.human_defeat_request) {continue;} // queued gameplay cannot outlive the ending request
 				const auto& data = event->GetData();
 				const auto* args = static_cast< gse::value::Object* >( data.at( "data" ) );

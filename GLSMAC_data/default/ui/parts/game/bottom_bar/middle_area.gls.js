@@ -65,6 +65,7 @@ return {
 			});
 			s.button.on('off', (e) => {
 				page.hide();
+                if (#is_defined(s.on_hide)) { s.on_hide(); }
 				return true;
 			});
 		}

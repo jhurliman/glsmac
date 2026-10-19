@@ -9,6 +9,9 @@ return (game) => {
 		result.listen = (object, name, callback) => { object.on(name, callback); };
 		result.panel = node;
 		result.button = node;
+        result.surface = node;
+        result.hide = () => {}; result.show = () => {};
+        result.smacdominancegraph = (frame) => { return true; };
 		result.measure = () => {
 			let width = 100;
 			if (result.text == 'Integrity: ') { width = 48; }

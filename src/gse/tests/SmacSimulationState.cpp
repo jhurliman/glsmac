@@ -91,7 +91,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=31,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=32,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -185,6 +185,7 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=31,bool
             suffix.WriteString(packed);
         }
     }
+    if(version>=32) {suffix.WriteBool(value.dominance_native_keys.has_value());if(value.dominance_native_keys) {for(const auto& key:*value.dominance_native_keys) {suffix.WriteString(key);}}}
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -202,6 +203,18 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC dominance V32 freezes seven native identities and preserves V31 dense payload",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();value.dominance_history.emplace();value.dominance_native_keys.emplace();
+        for(size_t slot=1;slot<8;++slot) {value.dominance_native_keys->at(slot)=profiles.factions[slot-1].section;}
+        value.dominance_history->samples[17][7]=-1234;value.dominance_history->samples[999][3]=INT16_MIN;
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"V32 lost all-slot identity or retained payload");
+        auto legacy=value;legacy.dominance_native_keys.reset();
+        GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(value,31),technologies,profiles,units)==legacy,"V31 dense history was reinterpreted or unknown future bits lost");
+        std::swap(value.dominance_native_keys->at(1),value.dominance_native_keys->at(3));
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(CurrentWire(value),technologies,profiles,units);}),"Wrong source-slot identity accepted");GT_OK();
+    });
     task->AddTest("SMAC dominance V31 matches independent wire and retains V30 absence",GT(){
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
         auto value=State();value.dominance_history.emplace();

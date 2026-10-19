@@ -8,6 +8,7 @@
 #include "SmacNativeBadge.h"
 #include "SmacBaseCard.h"
 #include "SmacTurnFrames.h"
+#include "SmacGraphPalette.h"
 #include "loader/flic/TurnComplete.h"
 #include "loader/cvr/CvrActorMaterial.h"
 #include "loader/flic/MenuCompositor.h"
@@ -46,6 +47,26 @@ SDL_Surface* load_image( const std::vector< unsigned char >& buffer ) {
 	SDL_RWops* rw = SDL_RWFromConstMem( buffer.data(), buffer.size() );
 	ASSERT( rw, "rw is null" );
 	return IMG_Load_RW( rw, 1 );
+}
+
+std::shared_ptr<const SmacGraphPalette> SDL2::GetSmacGraphPalette() {
+    const auto path=GetCustomFilename("palette.pcx");
+    const auto cached=m_graph_palettes.find(path);if(cached!=m_graph_palettes.end()) {return cached->second;}
+    std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,path);
+    using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
+    Surface image(load_image(bytes),SDL_FreeSurface);
+    if(!image || !image->format || image->format->BitsPerPixel!=8 || !image->pixels
+        || image->w<637 || image->h<32 || image->w>2048 || image->h>2048 || image->pitch<image->w) {
+        THROW("Dominance graph palette metadata unavailable");
+    }
+    auto result=std::make_shared<SmacGraphPalette>();
+    const auto colors=MakeSmacSoftwarePalette(image->format->palette);
+    for(size_t index=0;index<256;++index) {for(size_t channel=0;channel<3;++channel) {result->colors[index][channel]=colors[index][channel];}}
+    for(size_t slot=0;slot<8;++slot) {
+        result->normal[slot]=static_cast<uint8_t>(static_cast<const uint8_t*>(image->pixels)[23*size_t(image->pitch)+580+8*slot]+10);
+        result->alternate[slot]=static_cast<uint8_t>(static_cast<const uint8_t*>(image->pixels)[31*size_t(image->pitch)+580+8*slot]+10);
+    }
+    return m_graph_palettes.emplace(path,std::move(result)).first->second;
 }
 
 std::shared_ptr<const SmacTurnFrames> SDL2::GetSmacTurnFrames() {

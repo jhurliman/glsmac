@@ -74,6 +74,32 @@ int main(int argc,char** argv) {
         const auto placement=std::find_if(view.begin(),view.end(),[&](const auto& p){return p.tile==native::Point{{x,y}};});
         if(placement==view.end()) {throw std::runtime_error("Captured center is outside native view");}
         const auto frame=native::Render(world,source,{*placement},uint16_t(seed-placement->record_offset),{{0,0}},flags,250);
+        native::ViewGeometry::Terrain submission{};submission.placement=*placement;submission.flat_center=placement->flat_center;
+        if(tile.heights) {submission.heights=*tile.heights;submission.lighting=*tile.lighting;}
+        submission.projector={{submission.flat_center[0]-48,submission.flat_center[1]-24-
+            geometry::LandmarkGeometry::FloorQuarter(submission.heights[1]+submission.heights[2]+submission.heights[3]+submission.heights[4])}};
+        native::ViewGeometry::Plan plan;plan.terrain.push_back(submission);
+        // The prepared path must consume its owned geometry, even if backend
+        // arrays have different values by the time rendering occurs.
+        auto detached=world;detached.tiles[size_t(y)*40+x/2].heights=std::array<int,5>{{99,99,99,99,99}};
+        detached.tiles[size_t(y)*40+x/2].lighting=std::array<int,5>{{-4,-4,-4,-4,-4}};
+        const auto prepared=native::RenderPrepared(detached,source,plan,uint16_t(seed-placement->record_offset),flags,250);
+        if(prepared.indexed!=frame.indexed || prepared.coverage!=frame.coverage || prepared.rgba!=frame.rgba ||
+            prepared.attempts!=frame.attempts || prepared.writes!=frame.writes) {throw std::runtime_error("Prepared renderer differs from original tile control");}
+        if(c==0) {for(const int dx:{-96,96}) {
+            native::ViewGeometry::Plan dirty;dirty.regions=native::ViewRegions{};dirty.scroll={{dx,0}};
+            dirty.clip=dx<0?std::array<int,4>{{928,0,1024,511}}:std::array<int,4>{{0,0,96,511}};
+            const auto shifted=native::RenderPrepared(world,source,dirty,0,flags,250,&prepared);
+            for(int py=0;py<511;++py) {for(int px=0;px<1024;++px) {
+                const size_t dest=size_t(py)*1024+px;const int sx=px-dx;const bool retained=sx>=0 && sx<1024;
+                const auto value=retained?prepared.indexed[size_t(py)*1024+sx]:250;
+                const auto coverage=retained?prepared.coverage[size_t(py)*1024+sx]:0;
+                if(shifted.indexed[dest]!=value || shifted.coverage[dest]!=coverage || shifted.rgba[4*dest+3]!=(coverage?255:0)) {
+                    throw std::runtime_error("Native retained bitmap lost indexed pixels or coverage");}
+            }}
+            bool rejected=false;try {native::RenderPrepared(world,source,dirty,0,flags,250);}catch(const std::invalid_argument&) {rejected=true;}
+            if(!rejected) {throw std::runtime_error("Dirty plan accepted missing bitmap history");}
+        }}
         std::vector<uint8_t> indexed(1024*511,250);
         for(size_t i=0;i<indexed.size();++i) {if(frame.rgba[4*i+3]) {indexed[i]=frame.rgba[4*i];}}
         std::ofstream output(dir+"/frame-"+std::to_string(c)+".bin",std::ios::binary);

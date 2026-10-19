@@ -23,6 +23,8 @@ public:
     struct Object {Point tile,projector,dispatcher;};
     struct Plan {
         std::optional<ViewRegions> regions;
+        Point scroll{{0,0}};
+        std::array<int,4> clip{{0,0,1024,511}};
         std::vector<Terrain> terrain;
         std::vector<Object> objects;
     };
@@ -38,6 +40,9 @@ public:
         if(incremental && previous_ && zoom==zoom_ && relief==relief_) {
             result.regions=HorizontalPan(*previous_,view);
             if(!result.regions) {throw std::invalid_argument("Unmeasured incremental native view");}
+            result.scroll={{(previous_->first[0]-view.first[0])*4*view.unit,0}};
+            const int dx=result.scroll[0];
+            result.clip=dx<0?std::array<int,4>{{1024+dx,0,1024,511}}:std::array<int,4>{{0,0,dx,511}};
             for(const auto& tile:{view.first,previous_->first}) {
                 Projector(view,tile,observer);
                 for(unsigned v=4;v>0;--v) {Height(tile,v,observer);}

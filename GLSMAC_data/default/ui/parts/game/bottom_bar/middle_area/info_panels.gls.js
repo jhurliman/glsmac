@@ -34,6 +34,16 @@ return {
 		this.labels[1].text = leader;
 		this.place(this.labels[0], 0, 5);
 		this.place(this.labels[1], 1, 5);
+		for (let value_row = 0; value_row < 3; value_row++) { this.values[value_row].text = 'unavailable'; }
+		const summary = this.game.get_smac_faction_summary();
+		if (#is_defined(summary)) {
+			if (#is_defined(summary.integrity)) { this.values[0].text = summary.integrity; }
+			if (#is_defined(summary.might)) { this.values[1].text = summary.might; }
+			if (#is_defined(summary.council_votes)) { this.values[2].text = #to_string(summary.council_votes); }
+		}
+		for (let placed_value = 0; placed_value < 3; placed_value++) {
+			this.place(this.values[placed_value], placed_value + 2, 5 + this.labels[placed_value + 2].measure().width);
+		}
 	},
 
 	on_show: () => {
@@ -55,8 +65,8 @@ return {
 		for (let label_index = 0; label_index < 5; label_index++) {
 			this.labels :+ this.panels[0].text({class: 'bottombar-info-text', text: ''});
 		}
-		// Current ranking words are not a historical graph, and integrity/might
-		// adjectives have no admitted source projection yet.
+		// Current ranking words are not a historical graph. Values stay absent
+		// unless the real local participant query supplies their authority.
 		this.labels[2].text = 'Integrity: ';
 		this.labels[3].text = 'Might: ';
 		this.labels[4].text = 'Planetary Council Votes: ';
@@ -75,6 +85,9 @@ return {
 		this.page.on('resize', (e) => { this.refresh(this.get_width()); return true; });
 		this.page.listen(p.game, 'turn', (e) => { this.refresh_data(); });
 		this.page.listen(p.game, 'player_update', (e) => { this.refresh_data(); });
+		this.page.listen(p.game, 'update_base', (e) => { this.refresh_data(); });
+		this.page.listen(p.game, 'base_despawn', (e) => { this.refresh_data(); });
+		this.page.listen(p.game.get_bm(), 'base_spawn', (e) => { this.refresh_data(); });
 		this.refresh(this.get_width());
 		this.refresh_data();
 	},

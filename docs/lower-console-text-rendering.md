@@ -24,10 +24,11 @@ visible fallback warning if unavailable; no font is bundled. Label color is
 preserving the native colon and space. Faction Dominance uses the same regular
 font, label color and first-row baseline.
 
-Faction/leader identity remains retained source metadata. Integrity, Might,
-Council Votes and historical curves have no admitted live model projection yet;
-the panel explicitly displays unavailable values. This change does not invent
-ratings, zero votes or history. Original partial-reveal timing and alternate-color
+Faction/leader identity remains retained source metadata. Integrity, Might and
+Council Votes now use the [local summary query](faction-console-summary.md) when
+its retained model and label authorities are available. Missing values and
+historical curves remain explicitly unavailable. No default ratings, zero votes
+or history replace absent authority. Original partial-reveal timing and alternate-color
 phase scheduling are not measured; the current page shows the fully revealed
 normal phase. The source-only800-pixel font branch and special-game dominance
 caption are outside this1024-pixel parity target.

@@ -12,6 +12,7 @@
 #include "SmacResourceRules.h"
 #include "SmacCampaignRules.h"
 #include "SmacCouncilRules.h"
+#include "SmacFactionSummaryLabels.h"
 #include "SmacEcologyRules.h"
 #include "SmacSpecialistRules.h"
 #include "SmacTerraformingRules.h"
@@ -129,6 +130,7 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	void SelectSmacCampaignRules( bool current );
 	const std::optional< SmacCampaignRules >& GetSmacCampaignRules() const;
 	const std::optional< SmacCouncilRules >& GetSmacCouncilRules() const {return m_smac_council_rules;}
+	const std::optional< SmacFactionSummaryLabels >& GetSmacFactionSummaryLabels() const {return m_smac_faction_summary_labels;}
 	const std::optional< SmacEcologyRules >& GetSmacEcologyRules() const {return m_smac_ecology_rules;}
 	bool IsOrdinarySmacCampaign() const;
 	void RestoreSmacWorldSize( int64_t category, int64_t width, int64_t height );
@@ -164,6 +166,7 @@ private:
 	std::optional< SmacProductionRules > m_smac_production_rules;
 	std::optional< SmacTechnologyRules > m_smac_technology_rules;
 	std::optional< SmacCouncilRules > m_smac_council_rules;
+	std::optional< SmacFactionSummaryLabels > m_smac_faction_summary_labels;
 	std::optional< SmacEcologyRules > m_smac_ecology_rules;
 	std::optional< SmacWorldSizeRules > m_smac_world_size_rules;
 	std::optional< SmacFactionStartupRules > m_smac_faction_startup_rules;

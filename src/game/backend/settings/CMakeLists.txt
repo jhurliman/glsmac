@@ -3,6 +3,7 @@ SET( SRC ${SRC}
 	${PWD}/Settings.cpp
 	${PWD}/SmacCampaignRules.cpp
 	${PWD}/SmacCouncilRules.cpp
+	${PWD}/SmacFactionSummaryLabels.cpp
 	${PWD}/SmacEcologyRules.cpp
 	${PWD}/SmacProductionRules.cpp
 	${PWD}/SmacMovementRules.cpp

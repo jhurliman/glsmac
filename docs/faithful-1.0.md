@@ -29,6 +29,33 @@ No original assets or binaries belong in this repository. The engine continues
 to load them from a user-supplied installation. See
 [reference validation](reference-validation.md) for provenance and evidence.
 
+## Current checkpoint — 2026-10-19
+
+Integration checkpoint: `729c496917d1c8d6d99e400b7ad5e5a48d491a3d`.
+The dated notes below retain historical evidence; they do not describe the
+current implementation where this checkpoint supersedes them. No milestone or
+golden release gate is declared complete by this update.
+
+- Bounded conventional movement, founding, production, research, terraforming,
+  combat and capture paths now exist. Focused rule and caller tests establish
+  individual behavior, not the complete M2 local/network conquest scenario.
+- The native terrain inspector composes original indexed land, water/coast,
+  fungus, rivers, territory boundaries and Road/Tube passes. Latest integration:
+  [#341](https://github.com/jhurliman/glsmac/pull/341) and
+  [#343](https://github.com/jhurliman/glsmac/pull/343). Its explicit Planet/map,
+  viewport and zoom scope remains bounded; unsupported improvements and landmark
+  geometry retain legacy rendering. Primitive pixel controls and real runtime
+  captures do not establish whole-screen parity with the supplied GOG image.
+- Console card sizing, movement formatting and terrain spacing have corrections;
+  Base card palette and Turn Complete presentation also have native controls.
+  [#342](https://github.com/jhurliman/glsmac/pull/342) saves dominance history;
+  the live graph and native faction identity migration are still in progress.
+  Remaining console functionality and full original screen matching stay open.
+- Earlier Mac interactive checks passed. Current selected CI and focused checks
+  do not replace release hardware, performance, audio or full campaign acceptance.
+- GitHub Codex review credit is exhausted. The user explicitly waived that merge
+  requirement while credit is exhausted; the workflow below records the change.
+
 ## Starting evidence — 2026-10-15
 
 Audit baseline: upstream `c602cef43a99b984a01f801ae40d254bc9362ff2`, with the
@@ -103,18 +130,11 @@ finished single-player or satisfy the 1.0 AI gate.
 
 ## Immediate PR queue
 
-| ID | Slice | Acceptance / dependency |
-| --- | --- | --- |
-| F01 | Integrate the narrow macOS baseline | Fork PR #1; Codex review, upstream recorded limitations, interactive/GPU checks before completion |
-| F02 | Make GSE failures fail CI; register CTest; platform regression workflow | A passing script, deliberately failing script, missing script and complete suite report correctly; no proprietary assets needed |
-| F03 | Repair population removal and rollback bookkeeping | Real event handlers tested for nutrient restoration and both worker/tile links; guard undefined rollback base; growth/starvation and specialist cases |
-| F04 | Pin reference installations and approve this release plan | Reproducible metadata-only inventory, synthetic tool tests, original-versus-patched executable distinctions |
-| F05 | Reproduce and repair GSE GC lifetime/concurrency failures | Minimized failing regression and full suite on macOS/Linux/Windows; sanitizer evidence where available; do not disable GC to pass |
-| F06 | Introduce semantic backend scenario tests | Real backend events/state, no render dependency; deterministic seed and normalized state output; distinguish mocked rule tests from integration |
-| F07 | Repair and version base/population/facility snapshots | F06; definitions restored before instances; stable IDs and all authoritative links/state preserved; malformed/older format policy explicit |
-| F08 | Finish deterministic turn/snapshot/replay contract | F07; RNG, faction and entity state preserved; checksum divergence diagnosed; simulations independent of animation timing |
-| F09 | Implement conventional unit definitions and colony founding | F08 plus referenced costs/stats/start setup; real rendering and command feedback |
-| F10 | Complete production, research and terraforming slices | F09; separate PRs per mechanic with reference and replay tests |
+| Slice | Acceptance / dependency |
+| --- | --- |
+| Ordinary improvement composition and landmark geometry | Use original executable continuations to establish selected/live authority, crops, shading and draw order. Remove legacy terrain exclusions only after indexed composition matches; retain actual runtime captures. |
+| Live dominance graph and remaining console callers | Preserve V31 history without guessing faction identities; retain native identities in the new format. Connect authenticated score refresh, original palette and indexed line rendering. Capture a fresh world after real turns, then close remaining console actions with source contracts. |
+| Complete M2 conquest acceptance | Exercise the whole scenario below through actual gameplay callers, including checkpoint save/reload, local and network play. Fix exposed gaps and introduce a legal initial opponent; individual native rule cases do not satisfy campaign acceptance. |
 
 Keep the next three actionable slices specified in enough detail to implement.
 Expand later milestones into PRs when their prerequisites and reference cases
@@ -138,14 +158,16 @@ loops; keep validation notes proportionate to the change.
   contributions separate from the larger gameplay effort.
 - Each PR describes the observable problem, the resulting behavior, the reference
   evidence when applicable, and tests actually run. Mark unrun checks explicitly.
-- Request **Codex code review on GitHub** for every PR. Record the reviewed head
-  commit; address findings and request another review when the fix changes it.
-  A posted request is not a completed review. If integration is unavailable,
-  leave the PR pending and record the blocker.
+- Use **Codex code review on GitHub** when credit is available. Record the
+  reviewed head and resolve findings. While credit is exhausted, the user's
+  explicit waiver removes review as a merge gate: continue focused validation
+  and relevant CI without repeatedly requesting quota-failed reviews or waiting
+  for credit. Never report an unavailable review as approval.
 - Keep changes independent where possible. For stacked PRs, name the dependency
   and use the preceding branch as base so reviewers see only the new slice.
   Retarget after the dependency merges; rerun affected validation.
-- Merge only when relevant checks and review findings are resolved. Never merge
+- Merge only when relevant checks and any actual review findings are resolved.
+  Guard the merge against the validated head commit. Never merge
   merely to move the queue or to make a milestone appear complete.
 - `.gls.js` is GSE, not JavaScript: follow `AGENTS.md` and
   `tools/js-vs-glsjs-cheatsheet.md`, then run the actual engine's tests.
@@ -220,7 +242,7 @@ platform suites are reserved for platform changes, playable integration
 milestones and releases. The scoped CI policy is in
 [PR #168](https://github.com/jhurliman/glsmac/pull/168).
 
-## Current status — 2026-10-17
+## Historical checkpoint — 2026-10-17
 
 M0 and M1 remain in progress. There is no complete conquest match, and no
 milestone is declared complete. The integration branch combines tested slices
@@ -482,7 +504,7 @@ operation before its sign checks/clamps. The Release/UBSan probe matches all
 422 scenarios. This calculator result does not claim reachability of synthetic
 extreme social/resource inputs or a complete base economy.
 
-### Current gameplay batch and next implementation slices
+### Historical gameplay batch and implementation slices
 
 The [Former/controller integration](validation/former-controller-2026-10-17.md)
 now passes its affected cached Linux checks, including ordinary work, owned
@@ -622,7 +644,10 @@ original startup/controller evidence establishes the first-command morale
 refresh, without proving or inventing an earlier retained-zero reset. These
 bounded components are not a complete conventional unit or campaign.
 
-### Review and evidence discipline
+### Historical review and evidence discipline
+
+The October 19 review-credit waiver above supersedes the waiting requirement
+in these historical notes. Actual unresolved findings still require fixes.
 
 GitHub Codex review became available again on October 17 after the retained
 October 16 quota failures. New reviews identified x87-only rounding validation,

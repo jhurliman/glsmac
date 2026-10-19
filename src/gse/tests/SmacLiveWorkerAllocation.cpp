@@ -2175,22 +2175,24 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
     task->AddTest("SMAC last Base capture joins native failed restart cleanup ending and actual Start",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
-        for(const int design:{1,0}) {for(const bool rollback:{false,true}) {
-            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(BattleSource,true,64,32);fixture.BasePresentationRoles(names);std::string saved;
+        for(const int design:{1,0,2,3,4}) {for(const bool rollback:{false,true}) {
+            const bool with_native=design>=3,raze=design==2 || design==3;if(design>=2 && rollback) {continue;}const int remote_design=raze || with_native ? 1:design;
+            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(BattleSource,true,64,32);fixture.BasePresentationRoles(names);std::string saved,own_record,native_wire,native_factory;size_t native_id=0;
             const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
                 auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);
                 auto* bm=game->GetBM();auto* um=game->GetUM();auto* actor=um->GetUnit(91);auto* foreign=&game->GetState()->m_slots->GetSlot(6);
                 own->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");foreign->GetPlayer()->SetDifficultyLevel("Librarian");game->AdvanceTurn(6);
                 const auto scout=game->MakeSmacProductionItem(own->m_owner,ProductionItemKind::Unit,2);
                 own->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
-                Base::pops_t pops;for(size_t p=0;p<2;++p) {pops.emplace(std::piecewise_construct,std::forward_as_tuple(19+p),std::forward_as_tuple(nullptr,19+p,bm->GetPopDef(Roles().specialists[1]),0));}
+                Base::pops_t pops;for(size_t p=0;p<(raze ? 1u:2u);++p) {pops.emplace(std::piecewise_construct,std::forward_as_tuple(19+p),std::forward_as_tuple(nullptr,19+p,bm->GetPopDef(Roles().specialists[1]),0));}
                 const auto former=game->MakeSmacProductionItem(foreign,ProductionItemKind::Unit,1);
+                auto context=SmacBaseResourceContext{2,false,0,0,0x1000040u,false};if(raze) {context.uncaptured_former_owner=2;}
                 auto* target=new Base(game,702,foreign,foreign->GetPlayer()->GetFaction(),game->GetMap()->GetTile(20,16),"Last capture",{},pops,41,5,
-                    ProductionState{former,7,former,7,std::vector<ProductionItem>{former}},SmacBaseResourceContext{2,false,0,0,0x1000040u,false});
-                bm->SpawnBase(GSE_CALL,target);target->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},2}},Roles());
+                    ProductionState{former,7,former,7,std::vector<ProductionItem>{former}},context);
+                bm->SpawnBase(GSE_CALL,target);target->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},raze ? 1:2}},Roles());
                 actor->SetTile(GSE_CALL,game->GetMap()->GetTile(19,15));
-                ConventionalUnitState remote{design,2,1,0,0,false,ConventionalUnitState::Home::Base,SmacMoraleMode::Mode0};remote.home_base_id=702;
-                auto* homed=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef(design ? "choice-former" : "choice-colony"),foreign,game->GetMap()->GetTile(30,16),remote);
+                ConventionalUnitState remote{remote_design,2,1,0,0,false,ConventionalUnitState::Home::Base,SmacMoraleMode::Mode0};remote.home_base_id=702;
+                auto* homed=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef(remote_design ? "choice-former" : "choice-colony"),foreign,game->GetMap()->GetTile(30,16),remote);
                 // Also exercise disposition's remaining-unit cleanup.
                 um->SpawnConventionalUnit(GSE_CALL,93,um->GetUnitDef("choice-scout"),foreign,game->GetMap()->GetTile(40,16),
                     {2,2,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
@@ -2198,12 +2200,26 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 knowledge.units={{91,6,false},{92,6,false},{93,6,false}};for(auto& tile:knowledge.tiles) {tile.explored_by=6;}
                 game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
                 for(size_t y=0;y<32;++y) {for(size_t x=y&1;x<64;x+=2) {game->GetMap()->GetTile(x,y)->moisture=MOISTURE_RAINY;}}
-                fixture.ResourceState([](auto& state) {
+                if(with_native) {
+                    MoraleSet::morale_values_t native_names;for(int level=0;level<7;++level) {native_names.emplace_back("Native"+std::to_string(level));}
+                    um->DefineMoraleSet(new MoraleSet("last-capture-native",native_names));
+                    um->DefineUnit(new StaticDef("MindWorms",um->GetMoraleSet("last-capture-native"),"Mind Worms",MT_LAND,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
+                    fixture.ResourceState([](auto& state){if(!state.native_factory) {state.native_factory=faction::SmacNativeFactoryState::Initialize(0,state.gameplay_random);}});
+                    const auto plan=PrepareSmacNativeSpawn({{{40,20},64,32,true},1,7,9,1},{{{16,16},1}},[](int32_t,int32_t){return SmacNativeSpawnTile{3,false,1,1,false,15};});
+                    auto birth=um->PrepareEcologyNativeBirths(GSE_CALL,plan);GT_ASSERT(birth.Size()==1,"Last-capture fixture did not create its independent native body");
+                    native_id=birth.Candidate(0).m_id;birth.Commit();birth.Notify(GSE_CALL);GT_ASSERT(um->GetUnit(native_id)->Native().id==3,"Native pool fixture does not follow its three earlier Units");
+                    // Removing dense rows1 and1 repairs surviving native row3 to1.
+                    auto expected=um->GetUnit(native_id)->Native();
+                    GT_ASSERT(expected.stack_next==-1 && expected.stack_previous==-1 && expected.order!=1,"Native fixture unexpectedly has repaired links/orders");
+                    expected.id=1;native_wire=expected.Serialize().ToString();
+                    fixture.ResourceState([&](auto& state){native_factory=state.native_factory->Serialize().ToString();});
+                }
+                fixture.ResourceState([&](auto& state) {
                     state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
-                    state.economy.at(1).credits=100;state.economy.at(2).credits=200;state.economy.at(2).population_aggregate=2;
+                    state.economy.at(1).credits=100;state.economy.at(2).credits=200;state.economy.at(2).population_aggregate=raze ? 1:2;
                     state.economy.at(1).regional_base_counts->at(1)=3;state.economy.at(2).regional_base_counts->at(1)=2;
                 });fixture.GameplayRandom({3,3});fixture.Updates();
-                auto* retained=homed->Wrap(GSE_CALL);auto* citizen=target->m_pops.at(19).Wrap(GSE_CALL);
+                auto* target_tile=target->GetTile();auto* base_wrapper=target->Wrap(GSE_CALL);auto* retained=homed->Wrap(GSE_CALL);auto* citizen=target->m_pops.at(19).Wrap(GSE_CALL);
                 const auto before=fixture.Snapshot();const auto id=Unit::GetNextId();const auto jsf=game->GetRandom()->GetStateString();
                 um->ValidateConventionalMove(actor,target->GetTile(),0);
                 GT_ASSERT(fixture.Snapshot()==before && Unit::GetNextId()==id && Unit::Unwrap(retained)==homed,"capture query view published removal RNG IDs or ownership");
@@ -2212,32 +2228,41 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     GT_ASSERT(Rejects([&]{fixture.MoveEvent(GSE_CALL,actor,target->GetTile());}) && fixture.Snapshot()==before && Unit::GetNextId()==id
                         && Unit::Unwrap(retained)==homed && Pop::Unwrap(citizen)==&target->m_pops.at(19),"late last-capture failure published prepared retirement or faction authority");GT_OK();
                 }
+                own_record=Base::Serialize(own).ToString();
                 fixture.MoveEvent(GSE_CALL,actor,target->GetTile());
                 const auto& native=smac_restart_fixture::cases.back();
-                GT_ASSERT(um->GetUnits().size()==1 && um->GetUnit(91)==actor && !um->GetUnit(92) && !um->GetUnit(93) && retained->type==VT_UNDEFINED
-                    && Unit::GetNextId()==id && actor->GetTile()==target->GetTile() && actor->Conventional().spent==3,"capture kept old homed/remaining Units or made replacements after failed search");
-                GT_ASSERT(target->m_owner==own->m_owner && target->m_pops.size()==1 && target->GetSmacResourceContext().conquest==std::optional<SmacConquestState>({2,50})
-                    && target->GetAccumulatedNutrients()==5 && target->GetProductionState()->minerals==0 && Pop::Unwrap(citizen)==&target->m_pops.at(19),"last capture lost retained Base/citizen state");
-                GT_ASSERT(fixture.GameplayRandom()==SmacGameplayRandomState(3,native.final_crt) && game->GetRandom()->GetStateString()==jsf,
+                GT_ASSERT(um->GetUnits().size()==(with_native ? 2u:1u) && um->GetUnit(91)==actor && !um->GetUnit(92) && !um->GetUnit(93) && retained->type==VT_UNDEFINED
+                    && Unit::GetNextId()==id && actor->GetTile()==target_tile && actor->Conventional().spent==3,"capture kept old homed/remaining Units or made replacements after failed search");
+                if(raze) {
+                    GT_ASSERT(!bm->GetBase(702) && !target_tile->base && citizen->type==VT_UNDEFINED && base_wrapper->type==VT_UNDEFINED
+                        && bm->GetBases().size()==1 && Base::Serialize(own).ToString()==own_record,"last size-one capture retained a Base/Pop or changed the surviving Base");
+                } else {GT_ASSERT(target->m_owner==own->m_owner && target->m_pops.size()==1 && target->GetSmacResourceContext().conquest==std::optional<SmacConquestState>({2,50})
+                    && target->GetAccumulatedNutrients()==5 && target->GetProductionState()->minerals==0 && Pop::Unwrap(citizen)==&target->m_pops.at(19),"last capture lost retained Base/citizen state");}
+                GT_ASSERT(fixture.GameplayRandom()==SmacGameplayRandomState(3,raze ? 124333717u:native.final_crt) && game->GetRandom()->GetStateString()==jsf,
                     "capture and failed restart did not consume original37+2050 CRT draws");
-                bool exact=false;fixture.ResourceState([&](auto& state) {exact=state.economy.at(1).credits==233 && state.economy.at(2).credits==77
+                if(with_native) {std::string factory;fixture.ResourceState([&](auto& state){factory=state.native_factory->Serialize().ToString();});
+                    GT_ASSERT(um->GetUnit(native_id)->Native().Serialize().ToString()==native_wire && factory==native_factory,"Last-Base disposition changed unrelated native life or its factory");}
+                bool exact=false;fixture.ResourceState([&](auto& state) {exact=state.economy.at(1).credits==(raze ? 200:233) && state.economy.at(2).credits==(raze ? 110:77)
                     && !state.roster[1].active && state.human_defeat_request==std::optional<int32_t>(2) && state.roster[0].active
-                    && state.economy.at(1).regional_base_counts->at(1)==3 && state.economy.at(2).regional_base_counts->at(1)==2;});
+                    && state.economy.at(1).regional_base_counts->at(1)==3 && state.economy.at(2).regional_base_counts->at(1)==(raze ? 1:2);});
                 GT_ASSERT(exact && game->GetSlotNum()==0,"native last-capture loot initialization stale counts activity ending or controller differs");
                 size_t selections=0;bool refreshed=false;
                 for(const auto& request:fixture.Updates()) {
                     if(request.type==game::FrontendRequest::FR_BASE_UPDATE && request.data.base_update.base_id==702 && request.data.base_update.slot_index==0) {refreshed=true;}
                     if(request.type==game::FrontendRequest::FR_BASE_SELECT && request.data.base_select.base_id==702) {GT_ASSERT(refreshed,"last-capture screen preceded ownership refresh");++selections;}
                 }
-                GT_ASSERT(selections==1,"ending request omitted or duplicated captured-Base screen entry");
+                GT_ASSERT(selections==(raze ? 0u:1u),"ending request omitted or duplicated captured-Base screen entry");
                 saved=fixture.Snapshot();GT_OK();
             });if(!result.empty()) {return "last capture "+std::to_string(design)+(rollback ? " rollback: " : ": ")+result;}
             if(!rollback) {
                 ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(BattleSource,true,64,32);restored.BasePresentationRoles(names);
                 const auto result=restored.Run([&](GSE_CALLABLE)->std::string {
                     restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();
-                    GT_ASSERT(game->GetBM()->GetBases().size()==2 && game->GetUM()->GetUnits().size()==1 && game->GetBM()->GetBase(702)->m_owner->GetIndex()==0
-                        && restored.GameplayRandom()==SmacGameplayRandomState(3,smac_restart_fixture::cases.back().final_crt),"actual Start replayed last-capture disposition");GT_OK();
+                    GT_ASSERT(game->GetBM()->GetBases().size()==(raze ? 1u:2u) && game->GetUM()->GetUnits().size()==(with_native ? 2u:1u) && (raze ? !game->GetBM()->GetBase(702):game->GetBM()->GetBase(702)->m_owner->GetIndex()==0)
+                        && restored.GameplayRandom()==SmacGameplayRandomState(3,raze ? 124333717u:smac_restart_fixture::cases.back().final_crt),"actual Start replayed last-capture disposition");
+                    if(with_native) {std::string factory;restored.ResourceState([&](auto& state){factory=state.native_factory->Serialize().ToString();});
+                        GT_ASSERT(game->GetUM()->GetUnit(native_id)->Native().Serialize().ToString()==native_wire && factory==native_factory,"Last-capture Start lost native identity/factory state");}
+                    GT_OK();
                 });if(!result.empty()) {return result;}
             }
         }}GT_OK();

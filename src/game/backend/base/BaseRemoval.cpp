@@ -72,7 +72,15 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareSmacFactionDisposition(slot
     for(const auto point:centers) {occupied[index(point)]=true;}
     for(const auto& entry:m_game->GetUM()->GetUnits()) {
         const auto* current=entry.second;if(current->m_owner==owner_slot) {continue;}
-        current->RequireConventionalReady();const auto* tile=current->GetTile();
+        // Native life occupies restart sites too, but has no conventional
+        // design/reactor state to authenticate. Validate its actual membership.
+        if(current->IsConventional()) {current->RequireConventionalReady();}
+        else if(!current->IsNative()) {THROW("Restart occupancy requires typed conventional or native Units");}
+        const auto* tile=current->GetTile();
+        if(!tile || tile->tiles!=map->GetTilesPtr() || tile->coord.x>=map->GetWidth() || tile->coord.y>=map->GetHeight()
+            || map->GetTile(tile->coord.x,tile->coord.y)!=tile || !tile->units.count(current->m_id) || tile->units.at(current->m_id)!=current) {
+            THROW("Restart occupancy has an unregistered Unit position");
+        }
         occupied[index({{static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)}})]=true;
     }
     const auto altitude=[&](const map::tile::Tile* tile) {

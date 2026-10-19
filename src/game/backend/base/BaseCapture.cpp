@@ -199,7 +199,6 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	}
 	std::optional<unit::UnitManager::PreparedConventionalRemoval> leaving;
 	if(!replacement) {
-		if(raze) {THROW("Last size-one capture requires its completed removal/disposition continuation");}
 		std::vector<size_t> ids;for(const auto id:um->GetUnitRecordOrder()) {if(um->GetUnit(id)->m_owner==captured->m_owner) {ids.push_back(id);}}
 		leaving.emplace(um->PrepareRemovalForQuery(ids));
 	}

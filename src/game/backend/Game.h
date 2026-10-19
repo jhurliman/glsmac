@@ -470,9 +470,11 @@ private:
 		int32_t owner;
 		bool bonus;
 		std::vector<int32_t> choices;
+        bool blind=false;
+        std::array<int32_t,4> priorities{};
 	};
 	struct CanonicalTurnContinuation {
-		enum class Stage { Base, ResearchStart, ResearchBonus, ResearchFinish, Credit, Colony, Screen, FormerOwner };
+		enum class Stage { Base, ResearchStart, ResearchBonus, ResearchFinish, Credit, Colony, Screen, FormerOwner, ResearchOrdinarySelect, ResearchOrdinaryReset, ResearchBonusSelect };
 		size_t turn, owner_index=0, base_index=0;
 		std::vector<std::pair<int32_t,std::vector<size_t>>> owners;
 		Stage stage=Stage::Base;
@@ -482,6 +484,7 @@ private:
 		std::optional<unit::SmacMoraleMode> former_abandonment_tail;
 		std::optional<size_t> screen_base;
 		std::optional<int64_t> screen_request_id;
+        bool research_legacy_manual=false; // pre-V6 suspended manual question only
 		bool screen_after_transfer=false; // ephemeral; close resumes the normalized old-owner cursor
 	};
 	std::optional<CanonicalTurnContinuation> m_canonical_continuation;
@@ -517,12 +520,15 @@ private:
 	void ContinueCanonicalTurn(GSE_CALLABLE);
 	bool ContinueCanonicalResearch(GSE_CALLABLE);
 	faction::SmacHumanResearchInputs PrepareCanonicalHumanResearchInputs(int32_t owner,bool blind) const;
+    bool IsCanonicalBlindResearch() const;
+    void ApplyCanonicalBlindResearch(int32_t owner,std::optional<uint8_t> mask);
+    void ValidateCanonicalResearchQuestion(const CanonicalResearchRequest& request) const;
 	bool RequestCanonicalResearch(GSE_CALLABLE,int32_t owner,bool bonus);
 	bool HandleSmacResearchEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	gse::Value* GetPendingSmacResearch(GSE_CALLABLE) const;
 	void NotifyCanonicalResearch(GSE_CALLABLE);
 	int32_t GetCanonicalResearchCost(int32_t owner,const faction::SmacTechnologyState& technology) const;
-	void GrantCanonicalResearch(int32_t owner,int32_t technology,bool clear_labs);
+	void GrantCanonicalResearch(int32_t owner,int32_t technology,bool clear_labs,bool defer_threshold=false);
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 

@@ -27,7 +27,7 @@ types::Buffer Game::SerializeCanonicalContinuation() const {
     if(m_canonical_turn_in_progress || m_canonical_turn_failed || m_pending_canonical_continuation) {
         throw std::runtime_error("Canonical transition is not at a stable snapshot boundary");
     }
-    types::Buffer buffer;buffer.WriteInt(5);buffer.WriteBool(m_canonical_continuation.has_value());
+    types::Buffer buffer;buffer.WriteInt(6);buffer.WriteBool(m_canonical_continuation.has_value());
     if(!m_canonical_continuation) {
         if(m_colony_request || m_research_request) {throw std::runtime_error("Orphaned canonical choice cannot be saved");}
         return buffer;
@@ -42,12 +42,14 @@ types::Buffer Game::SerializeCanonicalContinuation() const {
         const auto owner=next.owners.at(next.owner_index).first;
         if(m_colony_request || !m_research_request || m_research_request->owner!=owner ||
             bool(next.screen_base)!=bool(next.screen_request_id) ||
-            m_research_request->bonus!=(next.stage==CanonicalTurnContinuation::Stage::ResearchBonus) ||
-            m_research_request->choices!=faction::SmacManualResearchPool(*m_simulation->value.technology.Find(owner),*m_state->m_settings.global.GetSmacTechnologyRules())) {
+            m_research_request->bonus!=(next.stage==CanonicalTurnContinuation::Stage::ResearchBonus)) {
             throw std::runtime_error("Saved research question differs from its suspended turn");
         }
+        ValidateCanonicalResearchQuestion(*m_research_request);
     }
-    buffer.WriteInt(former?3:colony?0:next.stage==CanonicalTurnContinuation::Stage::ResearchBonus?2:1);
+    buffer.WriteInt(former?3:colony?0:next.stage==CanonicalTurnContinuation::Stage::ResearchOrdinarySelect?4
+        :next.stage==CanonicalTurnContinuation::Stage::ResearchBonusSelect?5:next.stage==CanonicalTurnContinuation::Stage::ResearchBonus?2:1);
+    if(!former && !colony) {buffer.WriteBool(next.research_legacy_manual);}
     buffer.WriteInt(next.turn);buffer.WriteInt(next.owner_index);buffer.WriteInt(next.base_index);
     buffer.WriteInt(next.owners.size());
     for(const auto& owner:next.owners) {
@@ -70,7 +72,7 @@ types::Buffer Game::SerializeCanonicalContinuation() const {
 
 std::optional<Game::CanonicalTurnContinuation> Game::ReadCanonicalContinuation(types::Buffer buffer,size_t turn) const {
     const auto version=buffer.ReadInt();
-    if(version!=1 && version!=2 && version!=3 && version!=4 && version!=5) {throw std::runtime_error("Unsupported canonical continuation");}
+    if(version!=1 && version!=2 && version!=3 && version!=4 && version!=5 && version!=6) {throw std::runtime_error("Unsupported canonical continuation");}
     std::optional<CanonicalTurnContinuation> result;
     if(buffer.ReadBool()) {
         if(!m_state || m_state->GetConnection() || m_state->m_settings.global.GetRulesetId()!="smac") {
@@ -78,9 +80,14 @@ std::optional<Game::CanonicalTurnContinuation> Game::ReadCanonicalContinuation(t
         }
         result=CanonicalTurnContinuation{turn};auto& next=*result;
         const auto kind=version==1?0:buffer.ReadInt();
-        if(kind<0 || kind>(version>=5?3:2)) {throw std::runtime_error("Invalid saved canonical choice kind");}
-        next.stage=kind==3?CanonicalTurnContinuation::Stage::FormerOwner:kind==0?CanonicalTurnContinuation::Stage::Colony:kind==1?
-            CanonicalTurnContinuation::Stage::ResearchFinish:CanonicalTurnContinuation::Stage::ResearchBonus;
+        if(kind<0 || kind>(version>=6?5:version>=5?3:2)) {throw std::runtime_error("Invalid saved canonical choice kind");}
+        next.stage=kind==3?CanonicalTurnContinuation::Stage::FormerOwner:kind==0?CanonicalTurnContinuation::Stage::Colony
+            :kind==4?CanonicalTurnContinuation::Stage::ResearchOrdinarySelect:kind==5?CanonicalTurnContinuation::Stage::ResearchBonusSelect
+            :kind==1?CanonicalTurnContinuation::Stage::ResearchFinish:CanonicalTurnContinuation::Stage::ResearchBonus;
+        if(kind!=0 && kind!=3) {
+            next.research_legacy_manual=version>=6 ? buffer.ReadBool():true;
+            if(kind>=4 && next.research_legacy_manual) {throw std::runtime_error("Blind research tail cannot be a legacy manual question");}
+        }
         next.turn=ReadIdentity(buffer);next.owner_index=ReadIdentity(buffer);next.base_index=ReadIdentity(buffer);
         const auto owners=ReadIdentity(buffer);
         if(next.turn!=turn || !turn || turn>INT32_MAX || !owners || owners>7 || next.owner_index>=owners) {
@@ -133,7 +140,8 @@ std::optional<Game::CanonicalTurnContinuation> Game::ReadCanonicalContinuation(t
 void Game::ValidateCanonicalContinuation(const CanonicalTurnContinuation& next) const {
     const bool colony=next.stage==CanonicalTurnContinuation::Stage::Colony;
     const bool former=next.stage==CanonicalTurnContinuation::Stage::FormerOwner;
-    const bool research=next.stage==CanonicalTurnContinuation::Stage::ResearchFinish || next.stage==CanonicalTurnContinuation::Stage::ResearchBonus;
+    const bool research=next.stage==CanonicalTurnContinuation::Stage::ResearchFinish || next.stage==CanonicalTurnContinuation::Stage::ResearchBonus
+        || next.stage==CanonicalTurnContinuation::Stage::ResearchOrdinarySelect || next.stage==CanonicalTurnContinuation::Stage::ResearchBonusSelect;
     if(!m_simulation || m_simulation->value.human_defeat_request || (!colony && !research && !former) ||
         (next.screen_after_transfer || (former ? (bool(next.energy) || bool(next.screen_base) || bool(next.screen_request_id) || bool(next.colony)!=bool(next.former_colony_choice) || (next.colony && next.former_abandonment_tail))
             : (next.former_colony_choice || next.former_abandonment_tail || (colony?(!next.colony || bool(next.energy) || bool(next.screen_base) || bool(next.screen_request_id)):(bool(next.colony) || !next.energy)))))
@@ -200,9 +208,20 @@ void Game::ValidateCanonicalContinuation(const CanonicalTurnContinuation& next) 
     }
     else {
         const auto* technology=m_simulation->value.technology.Find(owner.first);
+        const auto& rules=m_state->m_settings.global.GetSmacCampaignRules();
+        const bool blind=rules && rules->BlindResearch() && !next.research_legacy_manual;
+        const bool blind_tail=next.stage==CanonicalTurnContinuation::Stage::ResearchOrdinarySelect
+            || next.stage==CanonicalTurnContinuation::Stage::ResearchBonusSelect;
+        if((blind_tail && !blind) || (blind && (!technology ||
+            owner.first!=RequireSimulationParticipant(m_player).simulation_id ||
+            !(GetTurnId()<=11 || (technology->score/2)%5==1)))) {
+            // Restoring a question must never execute an automatic selection.
+            throw std::runtime_error("Saved Blind research question is outside its original prompt gate");
+        }
         if(!technology || technology->target || (next.screen_base && *next.screen_base!=base->m_id) ||
             (next.screen_request_id && (!next.screen_base || *next.screen_request_id<1)) || next.energy->raw_intake!=cache->calculation.raw_intake[2] ||
-            faction::SmacManualResearchPool(*technology,*m_state->m_settings.global.GetSmacTechnologyRules()).empty()) {
+            (!blind
+                && faction::SmacManualResearchPool(*technology,*m_state->m_settings.global.GetSmacTechnologyRules()).empty())) {
             throw std::runtime_error("Saved research question has no current target selection boundary");
         }
         types::Buffer energy;base::WriteSmacBaseEnergy(energy,*next.energy);

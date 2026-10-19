@@ -7,6 +7,7 @@
 #include "base/FacilityDef.h"
 #include "faction/SmacResearch.h"
 #include "faction/SmacResearchValue.h"
+#include "faction/SmacAutomaticResearch.h"
 #include "faction/SmacDominance.h"
 #include "map/Map.h"
 #include "gc/Space.h"
@@ -64,7 +65,7 @@ int32_t Game::GetCanonicalResearchCost(int32_t owner,const faction::SmacTechnolo
 	return faction::CalculateSmacResearchCost(inputs);
 }
 
-void Game::GrantCanonicalResearch(int32_t owner,int32_t id,bool clear_labs) {
+void Game::GrantCanonicalResearch(int32_t owner,int32_t id,bool clear_labs,bool defer_threshold) {
 	if(!m_canonical_turn_in_progress || !m_canonical_continuation || GetTurnId()==0 || id<0 || id>=89) {
 		throw std::runtime_error("Research acquisition requires the owning normal-turn continuation");
 	}
@@ -80,8 +81,7 @@ void Game::GrantCanonicalResearch(int32_t owner,int32_t id,bool clear_labs) {
 	if(target.discount>0) {target.discount=std::max(0,target.discount-2);}
 	if(first && (catalog.technologies[id].flags & 1)) {target.pending_secrets=true;}
 	if(clear_labs) {target.labs=0;}
-	target.cached_threshold.reset();
-	target.cached_threshold=GetCanonicalResearchCost(owner,next);
+	if(!defer_threshold) {target.cached_threshold.reset();target.cached_threshold=GetCanonicalResearchCost(owner,next);}
 	next.Validate(catalog,*global.GetSmacFactionStartupRules());
 	std::optional<map::SmacWorkerKnowledge> revelation;
 	if(catalog.technologies[id].flags & 8) {revelation=PrepareSmacTechnologyReveal(owner);}
@@ -164,13 +164,45 @@ faction::SmacHumanResearchInputs Game::PrepareCanonicalHumanResearchInputs(int32
     return input; // Query only: never refresh summaries, grant ownership or draw RNG.
 }
 
+bool Game::IsCanonicalBlindResearch() const {
+    const auto& rules=m_state->m_settings.global.GetSmacCampaignRules();
+    return rules && rules->BlindResearch() && !(m_canonical_continuation && m_canonical_continuation->research_legacy_manual);
+}
+void Game::ApplyCanonicalBlindResearch(int32_t owner,std::optional<uint8_t> mask) {
+    auto input=PrepareCanonicalHumanResearchInputs(owner,true);
+    auto priorities=m_simulation->value.strategy->at(owner);priorities.ApplyResearchPriorities(mask);
+    input.priorities=priorities.priorities;auto random=m_simulation->value.gameplay_random;
+    const faction::SmacAutomaticResearchInputs selection{owner,true,true,input.technologies,input.priorities,input.former_prerequisite};
+    const auto selected=faction::SelectSmacAutomaticResearch(selection,random,[&](int32_t id){return faction::CalculateSmacHumanResearchValue(input,id);});
+    auto& technology=Owner(m_simulation->value.technology,owner);
+    m_simulation->value.strategy->at(owner)=priorities;m_simulation->value.gameplay_random=random;
+    technology.target=selected<0 ? std::nullopt:std::optional<int32_t>(selected);
+}
+void Game::ValidateCanonicalResearchQuestion(const CanonicalResearchRequest& request) const {
+    if(request.blind!=IsCanonicalBlindResearch()) {throw std::runtime_error("Research question mode changed while suspended");}
+    if(request.blind) {
+        const auto input=PrepareCanonicalHumanResearchInputs(request.owner,true);
+        if(!request.choices.empty() || input.priorities!=request.priorities) {throw std::runtime_error("Research priorities changed while suspended");}
+    } else if(request.choices!=faction::SmacManualResearchPool(*m_simulation->value.technology.Find(request.owner),*m_state->m_settings.global.GetSmacTechnologyRules())) {
+        throw std::runtime_error("Research choice context changed while suspended");
+    }
+}
+
 bool Game::RequestCanonicalResearch(GSE_CALLABLE,int32_t owner,bool bonus) {
 	const auto* state=m_simulation->value.technology.Find(owner);
 	if(!state) {throw std::runtime_error("Research choice has no current owner");}
-	auto choices=faction::SmacManualResearchPool(*state,*m_state->m_settings.global.GetSmacTechnologyRules());
-	if(choices.empty()) {return false;} // the measured no-choice answer awards nothing
+    const bool blind=IsCanonicalBlindResearch();
+    std::vector<int32_t> choices;std::array<int32_t,4> priorities{};
+    if(blind) {
+        if(owner!=RequireSimulationParticipant(m_player).simulation_id) {throw std::runtime_error("Blind research requires the focused local human; hotseat focus is not implemented");}
+        const auto input=PrepareCanonicalHumanResearchInputs(owner,true);priorities=input.priorities;
+        if(!(GetTurnId()<=11 || (state->score/2)%5==1)) {ApplyCanonicalBlindResearch(owner,std::nullopt);return false;}
+    } else {
+        choices=faction::SmacManualResearchPool(*state,*m_state->m_settings.global.GetSmacTechnologyRules());
+        if(choices.empty()) {return false;}
+    }
 	if(m_next_research_request==INT64_MAX) {throw std::overflow_error("Research request identity exhausted");}
-	m_research_request=CanonicalResearchRequest{++m_next_research_request,owner,bonus,std::move(choices)};
+	m_research_request=CanonicalResearchRequest{++m_next_research_request,owner,bonus,std::move(choices),blind,priorities};
 	SetTurnStatus(turn::TS_PLEASE_WAIT);
 	NotifyCanonicalResearch(GSE_CALL);
 	return true;
@@ -199,18 +231,38 @@ bool Game::ContinueCanonicalResearch(GSE_CALLABLE) {
 		if(scaled.increment<=0) {return true;}
 		continuation.stage=Stage::ResearchFinish;
 		if(had_target) {
-			if(labs>=threshold) {GrantCanonicalResearch(owner,*technology.target,true);}
+			if(labs>=threshold) {
+                if(IsCanonicalBlindResearch()) {GrantCanonicalResearch(owner,*technology.target,false,true);continuation.stage=Stage::ResearchOrdinarySelect;}
+                else {GrantCanonicalResearch(owner,*technology.target,true);}
+            }
 			// Grant may replace the vector, so reacquire its owned record.
 			auto& after=Owner(m_simulation->value.technology,owner);
-			if(after.pending_secrets) {after.pending_secrets=false; continuation.stage=Stage::ResearchBonus;}
+			if(continuation.stage==Stage::ResearchFinish && after.pending_secrets) {after.pending_secrets=false; continuation.stage=Stage::ResearchBonus;}
 		}
 	}
-	if(continuation.stage==Stage::ResearchBonus) {
-		const auto selected=Owner(m_simulation->value.technology,owner).target;
-		if(selected) {GrantCanonicalResearch(owner,*selected,false);}
-		else if(RequestCanonicalResearch(GSE_CALL,owner,true)) {return false;}
-		continuation.stage=Stage::ResearchFinish;
-	}
+    if(continuation.stage==Stage::ResearchOrdinarySelect) {
+        if(RequestCanonicalResearch(GSE_CALL,owner,false)) {return false;}
+        continuation.stage=Stage::ResearchOrdinaryReset;
+    }
+    if(continuation.stage==Stage::ResearchOrdinaryReset) {
+        auto& after=Owner(m_simulation->value.technology,owner);after.labs=0;after.cached_threshold.reset();
+        after.cached_threshold=GetCanonicalResearchCost(owner,m_simulation->value.technology);
+        continuation.stage=Stage::ResearchFinish;
+        if(after.pending_secrets) {after.pending_secrets=false;continuation.stage=Stage::ResearchBonus;}
+    }
+    if(continuation.stage==Stage::ResearchBonus) {
+        auto selected=Owner(m_simulation->value.technology,owner).target;
+        if(!selected) {
+            if(RequestCanonicalResearch(GSE_CALL,owner,true)) {return false;}
+            selected=Owner(m_simulation->value.technology,owner).target;
+        }
+        if(selected) {GrantCanonicalResearch(owner,*selected,false);}
+        continuation.stage=selected && IsCanonicalBlindResearch() ? Stage::ResearchBonusSelect:Stage::ResearchFinish;
+    }
+    if(continuation.stage==Stage::ResearchBonusSelect) {
+        if(RequestCanonicalResearch(GSE_CALL,owner,false)) {return false;}
+        continuation.stage=Stage::ResearchFinish;
+    }
 	if(continuation.stage==Stage::ResearchFinish) {
 		const auto& technology=Owner(m_simulation->value.technology,owner);
 		if(technology.labs>=0 && !technology.target && RequestCanonicalResearch(GSE_CALL,owner,false)) {return false;}
@@ -241,7 +293,9 @@ gse::Value* Game::GetPendingSmacResearch(GSE_CALLABLE) const {
 		};
 		choices.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,properties));
 	}
+    gse::value::array_elements_t priorities;for(const auto value:request.priorities) {priorities.push_back(VALUE(gse::value::Int,,value));}
 	gse::value::object_properties_t properties{
+        {"blind",VALUE(gse::value::Bool,,request.blind)}, {"priorities",VALUE(gse::value::Array,,priorities)},
 		{"request_id",VALUE(gse::value::Int,,request.id)}, {"owner_slot",VALUE(gse::value::Int,,owner->GetIndex())},
 		{"owner_name",VALUE(gse::value::String,,owner->GetPlayer()->GetPlayerName())},
 		{"bonus",VALUE(gse::value::Bool,,request.bonus)}, {"choices",VALUE(gse::value::Array,,choices)}
@@ -251,6 +305,34 @@ gse::Value* Game::GetPendingSmacResearch(GSE_CALLABLE) const {
 
 bool Game::HandleSmacResearchEvent(GSE_CALLABLE,const std::string& name,
 	const gse::value::object_properties_t& args,size_t caller,bool apply) {
+    if(name=="set_research_priorities") {
+        const auto request=args.find("request_id"),answer=args.find("mask");
+        if(caller!=m_slot_num || args.size()!=2 || request==args.end() || answer==args.end() || !request->second
+            || request->second->type!=gse::VT_INT || !answer->second || (answer->second->type!=gse::VT_INT && answer->second->type!=gse::VT_NULL)) {
+            throw std::runtime_error("Research priorities require an authenticated request and mask or cancel");
+        }
+        const auto id=static_cast<gse::value::Int*>(request->second)->value;std::optional<uint8_t> mask;
+        if(answer->second->type==gse::VT_INT) {const auto value=static_cast<gse::value::Int*>(answer->second)->value;
+            if(value<0 || value>15) {throw std::runtime_error("Research priority mask is outside four axes");}mask=static_cast<uint8_t>(value);}
+        if(id<1) {throw std::runtime_error("Invalid priority request identity");}
+        if(m_canonical_turn_failed || m_canonical_turn_in_progress) {throw std::runtime_error("Research priorities are not available");}
+        if(!m_research_request || m_research_request->id!=id) {return true;}
+        if(!IsRunning() || !m_canonical_continuation || !m_research_request->blind) {throw std::runtime_error("No suspended Blind priority question");}
+        ValidateCanonicalResearchQuestion(*m_research_request);
+        if(!apply) {return true;}
+        if(!GetGCSpace()->IsAccumulating()) {throw std::runtime_error("Research priorities require the owning accumulation");}
+        m_canonical_turn_in_progress=true;util::FinallyGuard finished([&]{m_canonical_turn_in_progress=false;});
+        try {
+            const auto pending=*m_research_request;const auto stage=m_canonical_continuation->stage;
+            ApplyCanonicalBlindResearch(pending.owner,mask);
+            using Stage=CanonicalTurnContinuation::Stage;
+            m_canonical_continuation->stage=pending.bonus ? Stage::ResearchBonus:stage==Stage::ResearchOrdinarySelect ? Stage::ResearchOrdinaryReset
+                :stage==Stage::ResearchBonusSelect ? Stage::ResearchFinish:Stage::Credit;
+            m_research_request.reset();ContinueCanonicalTurn(GSE_CALL);if(!m_research_request) {NotifyCanonicalResearch(GSE_CALL);}
+        } catch(const std::exception& error) {FailCanonicalTurn(error.what());throw;}
+        catch(...) {FailCanonicalTurn("Unknown Blind continuation failure");throw;}
+        return true;
+    }
 	if(name!="choose_research") {return false;}
 	const auto request=args.find("request_id"),choice=args.find("technology_id");
 	if(caller!=m_slot_num || args.size()!=2 || request==args.end() || choice==args.end()
@@ -265,6 +347,7 @@ bool Game::HandleSmacResearchEvent(GSE_CALLABLE,const std::string& name,
 	if(!m_canonical_continuation || !IsRunning()) {throw std::runtime_error("Research selection has no suspended turn");}
 	ValidateCurrentSimulation(); RequireSmacLocalHumanOwner(m_slot);
 	const auto& pending=*m_research_request;
+    if(pending.blind) {throw std::runtime_error("Blind research accepts priorities, not a chosen technology");}
 	if(std::find(pending.choices.begin(),pending.choices.end(),selected)==pending.choices.end()) {throw std::runtime_error("Technology was not offered by this request");}
 	const auto pool=faction::SmacManualResearchPool(*m_simulation->value.technology.Find(pending.owner),*m_state->m_settings.global.GetSmacTechnologyRules());
 	if(pool!=pending.choices) {throw std::runtime_error("Research choice context changed while suspended");}
@@ -277,7 +360,7 @@ bool Game::HandleSmacResearchEvent(GSE_CALLABLE,const std::string& name,
 		if(bonus) {GrantCanonicalResearch(owner,static_cast<int32_t>(selected),false);}
 		else {Owner(m_simulation->value.technology,owner).target=static_cast<int32_t>(selected);}
 		m_canonical_continuation->stage=bonus?CanonicalTurnContinuation::Stage::ResearchFinish:CanonicalTurnContinuation::Stage::Credit;
-		m_research_request.reset();
+		m_research_request.reset();m_canonical_continuation->research_legacy_manual=false;
 		ContinueCanonicalTurn(GSE_CALL);
 		if(!m_research_request) {NotifyCanonicalResearch(GSE_CALL);}
 	} catch(const std::exception& error) {FailCanonicalTurn(error.what()); throw;}

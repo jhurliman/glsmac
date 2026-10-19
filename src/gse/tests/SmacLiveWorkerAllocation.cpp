@@ -7,6 +7,11 @@
 #include "fixtures/SmacCaptureRestart.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
+#include "game/backend/WorldSnapshotRules.h"
+#include "game/backend/WorldSnapshotRandom.h"
+#include "game/backend/WorldSnapshotTurn.h"
+#include "game/backend/WorldSnapshotWorkerKnowledge.h"
+#include "game/backend/WorldSnapshotTerritory.h"
 #include "game/backend/Player.h"
 #include "game/backend/Random.h"
 #include "game/backend/base/Base.h"
@@ -36,6 +41,7 @@
 #include "gse/value/Bool.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Int.h"
+#include "gse/value/Null.h"
 #include "gse/value/String.h"
 #include "gse/value/Undefined.h"
 #include "types/Buffer.h"
@@ -52,6 +58,38 @@ using namespace game::backend::map::tile;
 using Knowledge = map::SmacWorkerKnowledge;
 
 bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( const std::exception& ) { return true; } return false; }
+
+// Base definition registries are unordered. Normalize only their named entries;
+// retain exact definitions, Base record order and all remaining world bytes.
+std::string ResearchSnapshot(Game* game,const std::string& bytes) {
+    types::Buffer world(bytes);const auto& settings=game->GetState()->m_settings.global;
+    world_snapshot::ValidateHeader(world,settings);
+    (void)world_snapshot::ReadRandomState(world);
+    (void)world_snapshot::ReadTurnState(world,game->GetState()->m_slots->GetSlots());
+    if(world.ReadBool()) {(void)world.ReadString();}
+    (void)map::GlsmacResourceMapPolicy::ReadOptional(world,true);
+    (void)world_snapshot::ReadWorkerKnowledge(world,true);
+    (void)world_snapshot::ReadTerritoryTopology(world,true);
+    for(int i=0;i<3;++i) {(void)world.ReadString();} // map, resources, units
+    const auto prefix=bytes.substr(0,world.lenr);types::Buffer bases(world.ReadString()),canonical;
+    canonical.WriteString(bases.ReadString());
+    for(int table=0;table<2;++table) {
+        const auto count=bases.ReadInt();
+        if(count<0 || count>1024) {throw std::runtime_error("Invalid research fixture definition count");}
+        std::map<std::string,std::string> entries;
+        for(int64_t i=0;i<count;++i) {
+            std::string name,wire;
+            if(table==0) {name=bases.ReadString();wire=bases.ReadString();}
+            else {wire=bases.ReadString();types::Buffer definition(wire);name=definition.ReadString();}
+            if(!entries.emplace(name,wire).second) {throw std::runtime_error("Duplicate research fixture definition");}
+        }
+        canonical.WriteInt(count);
+        for(const auto& entry:entries) {if(table==0) {canonical.WriteString(entry.first);}canonical.WriteString(entry.second);}
+    }
+    // Preserve all Base bodies and the next ID without reinterpreting them.
+    types::Buffer framed;framed.WriteString(canonical.ToString()+bases.ToString().substr(bases.lenr));
+    return prefix+framed.ToString()+bytes.substr(world.lenr);
+}
 
 // Independent typed fixture: deliberately retained history, not a query of any
 // current world. Marking order is unrelated to numeric Unit identity.
@@ -2364,6 +2402,98 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 					&& saved.last_base_expansion_or_advice_turn[2]==777 && saved.economic_deadlines[1]==777 && saved.economic_paid_costs[1]==777;});
             GT_ASSERT(exact && history,"actual faction-tail initialization reset economic history or touched an unrelated pair");GT_OK();
         });
+    });
+
+    task->AddTest("SMAC live Blind research priorities and discovery tails resume once through actual Start",[](GSE*,context::Context*)->std::string {
+        const auto provider=[](const std::string& filename) {
+            auto source=UpkeepSource(filename);size_t at=0;
+            while((at=source.find("UnknownTech",at))!=std::string::npos) {source.replace(at,11,"Tech");at+=4;}
+            return source;
+        };
+        const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
+        for(int scenario=0;scenario<7;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(provider,"GAIANS");fixture.BasePresentationRoles(names);
+            std::vector<std::string> paused;std::string completed,completed_base,completed_unit,completed_jsf;std::optional<game::backend::faction::SmacSimulationState> final_state;
+            const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+                // Turn 14 exercises the late research gate without the separate
+                // four-turn territory producer, which this fixture does not own.
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true);game->AdvanceTurn(scenario>=5 ? 13:6);
+                game->GetState()->m_settings.global.SelectSmacCampaignRules(true);
+                // Late-turn controls are beyond the original starvation grace.
+                base->SetAccumulatedNutrients(scenario>=5 ? 20:0);
+                const auto stock=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+                base->SetProductionState(GSE_CALL,ProductionState{stock,0,stock,0,std::vector<ProductionItem>{}});
+                fixture.ResourceState([&](auto& state){
+                    state.ecology_world=game::backend::faction::SmacEcologyWorld{1,1,0};
+                    state.strategy->at(1).priorities={2,-1,0,3};
+                    auto& tech=state.technology.factions.front();tech.labs=scenario>=2 && scenario<=4 ? 99:0;tech.score=scenario==6 ? 2:0;
+                    tech.target=scenario>=2 && scenario<=4 ? std::optional<int32_t>(scenario==2 ? 0:1):std::nullopt;
+                    tech.cached_threshold=scenario==3 ? 10000:1;tech.pending_secrets=scenario==3;
+                    state.economy.at(1).rates={0,5};state.economy.at(1).credits=100;
+                });
+                std::vector<bool> sea(128*64/2,false);
+                auto topology=game::backend::map::GlsmacTerritoryTopology::Build(128,64,true,sea);
+                fixture.TerritoryTopology(topology.WithTerritorySummary({}).Serialize());
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+                fixture.GameplayRandom({1234,5678});game->Event(GSE_CALL,"complete_turn",{});GT_OK();
+            });if(!setup.empty()) {return setup;}fixture.DrainEvents();
+            const auto finish=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* wrapper=static_cast<value::Object*>(game->Wrap(GSE_CALL));
+                int questions=0;
+                while(true) {
+                    auto* pending=Call(GSE_CALL,wrapper,"get_pending_smac_research");if(pending->type==VT_NULL) {break;}
+                    GT_ASSERT(pending->type==VT_OBJECT && questions<3,"Blind research repeated a question or exposed invalid data");
+                    auto* request=static_cast<value::Object*>(pending);
+                    GT_ASSERT(static_cast<value::Bool*>(request->Get("blind"))->value && static_cast<value::Array*>(request->Get("choices"))->value.empty(),
+                        "Standard Rules still exposed the manual technology pool");
+                    if(questions==0 && scenario==2) {
+                        bool exact=false;fixture.ResourceState([&](const auto& state){const auto& tech=state.technology.factions.front();exact=tech.owned[0] && tech.score==2 && tech.labs>=100;});
+                        GT_ASSERT(exact,"Post-discovery question reset labs early or omitted ownership");
+                    }
+                    if(scenario==6) {
+                        const auto random=fixture.GameplayRandom();
+                        fixture.ResourceState([](auto& state){state.technology.factions.front().score=0;});
+                        GT_ASSERT(Rejects([&]{(void)fixture.Snapshot();}) && fixture.GameplayRandom()==random,
+                            "Saving an invalid late Blind question drew RNG or accepted an automatic-selection boundary");
+                        fixture.ResourceState([](auto& state){state.technology.factions.front().score=2;});
+                    }
+                    paused.push_back(fixture.Snapshot());
+                    const auto id=request->Get("request_id");
+                    const value::object_properties_t answer{{"request_id",id},{"mask",scenario==1 ? static_cast<Value*>(VALUE(value::Null)):VALUE(value::Int,,0)}};
+                    game->Event(GSE_CALL,"set_research_priorities",answer);game->Event(GSE_CALL,"set_research_priorities",answer);
+                    fixture.DrainEvents();++questions;
+                }
+                if(questions==0 && scenario!=5) {
+                    for(const auto& fr:fixture.QueuedFrontendRequests()) {if(fr.type==game::FrontendRequest::FR_ERROR) {return *fr.data.error.what;}}
+                    std::string diagnostic;fixture.ResourceState([&](const auto& state){const auto& tech=state.technology.factions.front();diagnostic="labs="+std::to_string(tech.labs)+" target="+std::to_string(tech.target.value_or(-1))+" turn="+std::to_string(game->GetTurnId());});
+                    return "No Blind question: "+diagnostic;
+                }
+                GT_ASSERT(questions==(scenario==5 ? 0:scenario==4 ? 2:1),"Blind discovery/Secrets selected an incorrect number of times at scenario "+std::to_string(scenario));
+                bool exact=false;fixture.ResourceState([&](const auto& state){const auto& tech=state.technology.factions.front();
+                    exact=tech.target.has_value() && tech.score==(scenario==4 ? 4:(scenario>=2 && scenario<=3) || scenario==6 ? 2:0)
+                        && (scenario==1 || scenario==5 ? state.strategy->at(1).priorities==std::array<int32_t,4>{2,-1,0,3}:state.strategy->at(1).priorities==std::array<int32_t,4>{0,0,0,0})
+                        && (scenario==2 || scenario==4 ? tech.labs==0:tech.labs>0) && (scenario!=3 || tech.pending_secrets);
+                });GT_ASSERT(exact,"Blind selection lost cancellation, labs, bounded Secrets or score at scenario "+std::to_string(scenario));
+                completed=fixture.Snapshot();completed_base=Base::Serialize(game->GetBM()->GetBase(701)).ToString();completed_unit=game::backend::unit::Unit::Serialize(game->GetUM()->GetUnit(91)).ToString();completed_jsf=game->GetRandom()->GetStateString();fixture.ResourceState([&](const auto& state){final_state=state;});GT_OK();
+            });if(!finish.empty()) {return finish;}
+            for(size_t checkpoint=0;checkpoint<paused.size();++checkpoint) {
+                ConventionalUnitFixture restored;restored.ConfigureProduction(provider,"GAIANS");restored.BasePresentationRoles(names);
+                const auto resumed=restored.Run([&](GSE_CALLABLE)->std::string {
+                    auto* game=restored.Game();game->GetState()->m_settings.global.SelectSmacCampaignRules(true);
+                    restored.RestoreThroughStart(GSE_CALL,paused[checkpoint],[](GSE_CALLABLE){});
+                    auto* wrapper=static_cast<value::Object*>(game->Wrap(GSE_CALL));size_t count=0;
+                    while(true) {
+                        auto* pending=Call(GSE_CALL,wrapper,"get_pending_smac_research");if(pending->type==VT_NULL) {break;}
+                        GT_ASSERT(pending->type==VT_OBJECT && ++count<4,"Restored Blind choice did not finish");auto* request=static_cast<value::Object*>(pending);
+                        game->Event(GSE_CALL,"set_research_priorities",{{"request_id",request->Get("request_id")},{"mask",scenario==1 ? static_cast<Value*>(VALUE(value::Null)):VALUE(value::Int,,0)}});
+                        restored.DrainEvents();
+                    }
+                    const auto actual=restored.Snapshot();size_t difference=0;while(difference<actual.size() && difference<completed.size() && actual[difference]==completed[difference]) {++difference;}
+                    bool same=false;restored.ResourceState([&](const auto& state){same=state==*final_state;});
+                    GT_ASSERT(ResearchSnapshot(game,actual)==ResearchSnapshot(game,completed),"Blind Save/Start replayed a stage or changed target, labs, priorities or RNG at scenario "+std::to_string(scenario)+"/"+std::to_string(checkpoint)+" first="+std::to_string(difference)+" lengths="+std::to_string(actual.size())+"/"+std::to_string(completed.size())+" simulation_equal="+std::to_string(same)+" base="+std::to_string(Base::Serialize(game->GetBM()->GetBase(701)).ToString()==completed_base)+" unit="+std::to_string(game::backend::unit::Unit::Serialize(game->GetUM()->GetUnit(91)).ToString()==completed_unit)+" jsf="+std::to_string(game->GetRandom()->GetStateString()==completed_jsf));GT_OK();
+                });if(!resumed.empty()) {return resumed;}
+            }
+        }GT_OK();
     });
 
     task->AddTest("SMAC live human research binds retained histories without refreshing or drawing",[](GSE*,context::Context*)->std::string {

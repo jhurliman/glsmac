@@ -240,3 +240,35 @@ This is an integration dependency, not completed Blind dispatch. The live reques
 still uses the manual pool until the priority question, automatic selection and
 discovery/Secrets continuation are connected. Save/Start of that new suspended
 question must be implemented and tested before claiming Standard Rules parity.
+
+## Live dispatch and continuation checkpoint (2026-10-18)
+
+Standard Rules now routes the focused local human through the automatic selector
+and the four-axis priority question. Accept writes the exact checkbox mask,
+including zero; cancel preserves the original signed priority integers and still
+selects a target. Later turns without the original dialog gate select directly.
+The UI exposes these actions and Save Campaign. It is a functional integration,
+not an original-dialog pixel-fidelity claim.
+
+Ordinary discovery publishes ownership before selecting the next target, then
+resets labs and refreshes the threshold. A pending Secrets award is consumed once;
+below-threshold awards retain labs and a newly generated Secrets flag survives.
+Continuation V6 distinguishes ordinary and bonus post-acquisition questions.
+V1-V5 manual questions retain their prior manual mode until answered. New Blind
+tails cannot claim legacy mode, and saved questions outside the original prompt
+gate reject before restoration could perform automatic selection.
+
+Seven live scenarios cover initial selection, cancellation of signed priorities,
+ordinary discovery, below-threshold Secrets, ordinary Secrets plus replacement,
+late automatic selection and late score-gated priorities. Every actual question
+is saved and restored through Start, then compared to uninterrupted completion.
+Only unordered named Base definition tables are normalized for comparison;
+their contents, all simulation/Base/unit records, ordering and RNG remain exact.
+Duplicate answers do not replay a stage. Invalid late prompt saves reject
+without consuming RNG. All 16 native research groups, the focused dialog GSE
+script and targeted GameResearch/GameCanonicalSnapshot correctness analysis pass.
+
+Outstanding admission limits remain: hotseat focus, project-dependent valuation,
+and generated worlds without retained categorical cloud authority are not supplied
+by this change. Native interactive capture and GitHub exact-head review are still
+required before this checkpoint is promoted as a validated release milestone.

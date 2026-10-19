@@ -12,6 +12,7 @@ SET( SRC ${SRC}
 	${PWD}/Sound.cpp
 	${PWD}/Flic.cpp
 	${PWD}/TerrainRenderUpdate.cpp
+	${PWD}/SmacTerrainPolygonRaster.cpp
 	${PWD}/SmacLandMaterial.cpp
 	${PWD}/SmacGroundEdgeCost.cpp
 	${PWD}/SmacScoutKeyboardAdmission.cpp

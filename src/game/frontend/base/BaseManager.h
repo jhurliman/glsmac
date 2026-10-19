@@ -96,6 +96,7 @@ private:
 	text::InstancedFont* GetBadgeFont() const;
 	const types::Font* GetSmacPopulationFont();
 	const std::array<types::Color,256>& GetSmacPopulationPalette();
+	text::InstancedText* CreateNameLabel(const faction::Faction* faction,const std::string& name);
 
 private:
 

@@ -855,6 +855,12 @@ void AddMeshTests( task::gsetests::GSETests* task ) {
         };
         glyph('i',3,1,1);glyph('j',3,-1,0);glyph('W',11,0,1);glyph('H',65,0,1);glyph('f',0,-3,2);
         const auto foreground=types::Color::FromRGB(216,224,235),shadow=types::Color::FromRGB(27,33,31);
+        std::array<types::Color,256> palette{};palette[155]=types::Color::FromRGB(216,224,244);
+        const auto imported=palette[155].GetRGBA();
+        GT_ASSERT(game::frontend::base::SmacBaseNameDisplayColor(types::Color::FromRGBA(imported),imported,palette).GetRGBA()==foreground.GetRGBA(),
+            "imported Base name color lost opacity or gamma100 palette cap");
+        const auto custom=types::Color(0.2f,0.3f,0.4f,0.5f);
+        GT_ASSERT(!(game::frontend::base::SmacBaseNameDisplayColor(custom,imported,palette)!=custom),"explicit Base name color was replaced with asset metadata");
         const auto raster=game::frontend::base::MakeSmacBaseNameRaster("iiiWWW",font,foreground,shadow);
         GT_ASSERT(raster.advance==42,"native name advance added bearings or applied pair kerning");
         const auto left=raster.pixel_center.x-raster.texture->GetWidth()/2.0f;

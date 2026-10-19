@@ -24,6 +24,8 @@
 #include "loader/cvr/CvrActorMaterial.h"
 #include "resource/ResourceManager.h"
 #include "util/FS.h"
+#include "loader/texture/TextureLoader.h"
+#include "SmacBaseNameRaster.h"
 
 namespace game {
 namespace frontend {
@@ -117,12 +119,7 @@ void BaseManager::SpawnBase(
 		tile,
 		slot_index == m_game->GetMySlotIndex(),
 		render_coords,
-		m_game->GetITM()->CreateInstancedText(
-			name,
-			m_name_font,
-			faction->m_colors.text,
-			faction->m_colors.text_shadow
-		)
+		CreateNameLabel(faction,name)
 	);
 
 	m_bases.insert(
@@ -177,7 +174,7 @@ void BaseManager::UpdateBaseIdentity( Base* base, size_t owner_slot, faction::Fa
 	if(base->GetOwnerSlot()==owner_slot && base->GetFaction()==faction && base->GetName()==name) {return;}
 	auto* owner=m_game->GetSlot(owner_slot);
 	const auto* colors=owner->GetFaction();
-	std::unique_ptr<text::InstancedText> label(m_game->GetITM()->CreateInstancedText(name,m_name_font,colors->m_colors.text,colors->m_colors.text_shadow));
+	std::unique_ptr<text::InstancedText> label(CreateNameLabel(colors,name));
 	auto records=m_owner_base_ids;
 	auto old=records.find(base->GetOwnerSlot());
 	ASSERT(old!=records.end() && old->second.count(base->GetId())==1,"missing old Base owner");
@@ -273,6 +270,19 @@ Base* BaseManager::GetBaseAfter( Base* base ) const {
 
 text::InstancedFont* BaseManager::GetBadgeFont() const {
 	return m_badge_font;
+}
+
+text::InstancedText* BaseManager::CreateNameLabel(const faction::Faction* faction,const std::string& name) {
+	auto text=faction->m_colors.text,shadow=faction->m_colors.text_shadow;
+	if(m_smac_population) {
+		const auto* asset=g_engine->GetTextureLoader()->TryLoadCustomTexture(faction->GetBaseFilename());
+		if(asset && asset->GetWidth()>4 && asset->GetHeight()>763) {
+			const auto& palette=GetSmacPopulationPalette();
+			text=SmacBaseNameDisplayColor(text,asset->GetPixel(4,755),palette);
+			shadow=SmacBaseNameDisplayColor(shadow,asset->GetPixel(4,763),palette);
+		}
+	}
+	return m_game->GetITM()->CreateInstancedText(name,m_name_font,text,shadow);
 }
 
 const types::Font* BaseManager::GetSmacPopulationFont() {

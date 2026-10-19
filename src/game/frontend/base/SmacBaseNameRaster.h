@@ -3,6 +3,7 @@
 #include "types/Font.h"
 #include "types/texture/Texture.h"
 #include "types/Vec2.h"
+#include "SmacPopulationBadge.h"
 #include <algorithm>
 #include <cstdint>
 #include <memory>
@@ -10,6 +11,18 @@
 #include <string>
 
 namespace game::frontend::base {
+
+inline types::Color SmacBaseNameDisplayColor(const types::Color& configured,uint32_t imported,
+    const std::array<types::Color,256>& palette) {
+    // Only normalize a color demonstrably imported from this very asset.
+    // Explicit script colors retain their alpha and RGB values.
+    if(types::Color::FromRGBA(imported)!=configured) {return configured;}
+    for(size_t i=0;i<palette.size();++i) {
+        if(palette[i].GetRGBA()==imported) {return SmacPopulationDisplayColor(palette,static_cast<uint8_t>(i));}
+    }
+    return types::Color::FromRGBA(static_cast<uint8_t>(imported),static_cast<uint8_t>(imported>>8),
+        static_cast<uint8_t>(imported>>16),static_cast<uint8_t>(imported>>24));
+}
 
 struct SmacBaseNameRaster {
     std::shared_ptr<types::texture::Texture> texture;

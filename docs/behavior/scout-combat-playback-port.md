@@ -52,14 +52,38 @@ Validation:
   is disabled. The GPU control uses software GL and proves neither hardware
   frame rate nor audible playback.
 
-An installed-asset hidden-window quickstart capture also reached the map,
-accepted the real research picker, selected and moved the Scout, and shut down
-with no tracked OpenGL leaks. It did not exercise battle: AddSinglePlayerSlot
-creates only slot 0, so get_players supplied no opposing starting Unit to the
-external worldscript. Do not use this capture as battle evidence. The next
-rendered battle setup must supply a genuine second canonical participant.
+Installed-asset graphical validation now also covers a genuine two-participant
+battle in an external capture build of checkpoint85b102af. The only application
+source difference is AddSinglePlayerSlot additionally calling CreatePlayerSlot
+for a University peer with Role::Player, unique GSID/CID and the current
+Librarian difficulty before normal startup. All remaining objects are the cached
+normal build. The external worldscript uses real starting Base/Scout commands,
+finds adjacent is_clear_land sites, accepts pending research through the real
+choose_research command, selects the local Scout and submits move_unit against
+the peer. This is a capture fixture, not a shipped opponent/AI setup feature.
+The ordinary executable still creates only the local faction.
 
-Remaining before review: actual graphical battle capture and cancellation,
+The first completed battle capture renders hit effects, health changes and an
+XF death explosion using the user's installed XI/XF and WAV assets. A further
+seeded1:2:3:4, size1, erosive100/lifeforms0 run waits until effect drawing has
+stopped for three seconds, and shows the local casualty removed, the foreign
+survivor retained, selection repaired and the deferred queue drained. Its
+process exits0 with no tracked OpenGL leaks. A separate actual window-close
+control injects SDL_QUIT after the fourth indexed-effect framebuffer copy on
+texture unit2; it also exits0 with no tracked OpenGL leaks. These runs do not
+enable heap tracking or establish audible output, hardware performance, exact
+original projection or a full original-executable screenshot diff. Software GL
+and periodic readback are capture machinery, not a frame-rate benchmark.
+
+The index252 follow-up now establishes a measured initialized SMAC software
+compatibility mapping and reserved RGB colors, including opaque cyan for the
+background44→index6 case. The current renderer still uses its documented
+transparent fallback until that explicit profile is ported. SMAX initialization,
+physical display behavior and later bitmap lifetime remain separate open limits.
+See [index252](scout-effect-index252.md) and
+[reserved software RGB](scout-effect-reserved-rgb.md).
+
+Remaining before review: port the pinned SMAC index252/software color profile,
 projection/zoom alignment, audible sound/channel behavior, preference/skip
 policy, and resolving or explicitly accepting the documented compositor limits.
 Separate CVR body/facing clips and broader combat domains remain open.

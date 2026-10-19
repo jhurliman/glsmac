@@ -2114,7 +2114,7 @@ public:
 			manager->DefineMoraleSet( new MoraleSet( "SCOUT_TEST", morale ) );
 			auto* descriptor = new value::Object( GSE_CALL, {
 				{ "type", new value::String( gc_space, rover ? "cvr_spartan_rover" : initialized ? "cvr_initialized_scout" : "cvr_scout" ) },
-				{ "facing", new value::Int( gc_space, 0 ) }, { "zoom", new value::Int( gc_space, 0 ) },
+				{ "facing", new value::Int( gc_space, initialized ? 2 : 0 ) }, { "zoom", new value::Int( gc_space, 0 ) },
 				{ "scale_numerator", new value::Int( gc_space, 1 ) }, { "scale_denominator", new value::Int( gc_space, 1 ) },
 				{ "world_width", new value::Float( gc_space, 2 ) }, { "world_height", new value::Float( gc_space, 4 ) },
 				{ "center_x", new value::Float( gc_space, 64 ) }, { "center_y", new value::Float( gc_space, 192 ) }
@@ -2449,6 +2449,21 @@ public:
 			presenter->Update( widget, unit.get() ); // real repeated clear/update
 			auto* selected_card = unit->GetCardSprite( false );
 			auto* roster_card = unit->GetCardSprite( true );
+			if ( initialized ) {
+				// Real UnitDef -> console caller must preserve the retained facing,
+				// while applying each card's independent native zoom/scale.
+				for ( const int facing : { 2, 5 } ) {
+					StaticDef source( "CARD_FACING", manager->GetMoraleSet( "SCOUT_TEST" ), "Retained facing", MT_LAND, 1,
+						new CvrScoutRender( facing, 7, 3, 2, { 2, 4 }, { 64, 192 }, profile ) );
+					game::frontend::unit::UnitDef presentation( ism.get(), &source );
+					for ( const bool roster : { false, true } ) {
+						const CvrScoutRender expected( facing, roster ? -8 : -4, 0, 1, { 1, 1 }, { 128, 128 }, profile );
+						GT_ASSERT( presentation.GetCardSprite( roster )->texture_owner ==
+							ism->GetScoutSprite( "ExpectedCardFacing", expected )->texture_owner,
+							"Initialized console card discarded retained facing or reused map zoom/scale" );
+					}
+				}
+			}
 			GT_ASSERT( selected_card != instanced && roster_card != selected_card
 				&& selected_card == unit->GetCardSprite( false ) && roster_card == unit->GetCardSprite( true ),
 				"native card zoom/facing reused the world actor or missed immutable cache reuse" );

@@ -171,7 +171,12 @@ sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
 
 sprite::InstancedSprite* UnitDef::GetCardSprite( bool roster ) const {
 	if ( !m_scout_render ) { return nullptr; }
-	const backend::unit::CvrScoutRender descriptor( 0, roster ? -8 : -4, 0, 1,
+	// The initialized original card dispatcher preserves the Unit facing.
+	// Until per-Unit facing is transported, honor the admitted presentation
+	// descriptor instead of silently replacing it with the old facing-0 fixture.
+	const auto facing = m_scout_render->composition == backend::unit::CvrScoutRender::Composition::InitializedScout
+		? m_scout_render->view.facing : 0;
+	const backend::unit::CvrScoutRender descriptor( facing, roster ? -8 : -4, 0, 1,
 		{ 1, 1 }, { 128, 128 }, m_scout_render->composition );
 	return m_ism->GetScoutSprite( "UnitCard_" + m_id, descriptor );
 }

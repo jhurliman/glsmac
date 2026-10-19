@@ -40,7 +40,8 @@ public:
 
 	sprite::Sprite* GetSprite( const backend::unit::morale_t morale );
     bool UsesNativeMapPlacement() const;
-	// Native console draws use fixed facing/zoom, independent of the map.
+	// Native console zoom is independent of the map; initialized Infantry keeps
+	// its retained presentation facing. Legacy profiles retain their fixture view.
 	sprite::InstancedSprite* GetCardSprite( bool roster ) const;
 
 	const bool IsImmovable() const;

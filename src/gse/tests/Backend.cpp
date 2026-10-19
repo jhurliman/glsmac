@@ -1,4 +1,5 @@
 #include "Backend.h"
+#include "util/String.h"
 #include "SmacFirstBase.h"
 #include "game/backend/WorldSnapshotWorkerKnowledge.h"
 #include "game/backend/WorldSnapshotTerritory.h"
@@ -8185,6 +8186,14 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 			// real native add callable and populates the State's FactionManager.
 			auto* imports = new value::Object( GSE_CALL, {
 				{ "add", wrapped->Get( "add" ) },
+				{ "import_display_identity", NATIVE_CALL() {
+					N_EXPECT_ARGS(2);N_GETVALUE(filename,0,String);N_GETVALUE(section,1,String);
+					return new value::Object(GSE_CALL,{
+						{"faction_name",VALUE(value::String,,filename)},
+						{"leader_title",VALUE(value::String,,"Commander")},
+						{"leader_name",VALUE(value::String,,section)}
+					});
+				}) },
 				{ "import_colors", NATIVE_CALL() {
 					N_EXPECT_ARGS( 1 );
 					N_GETVALUE( filename, 0, String );
@@ -8222,6 +8231,9 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 				for ( size_t i = 0 ; i < count ; i++ ) {
 					const auto* faction = factions.at( i );
 					GT_ASSERT( faction->m_name == names.at( i ), "production faction order/name changed" );
+					auto section=files.at(i);util::String::ToUpperCase(section);
+					GT_ASSERT(faction->m_display_identity && faction->m_display_identity->faction_name==files.at(i)+".txt"
+						&& faction->m_display_identity->leader_title=="Commander" && faction->m_display_identity->leader_name==section,"native add lost source display identity");
 					GT_ASSERT( faction->m_bases_render.file == files.at( i ) + ".pcx", "faction selected the wrong sprite file" );
 					GT_ASSERT( faction->m_base_names.land == std::vector< std::string >{ files.at( i ) + ".txt" }, "faction selected the wrong names file" );
 					const auto flags = i == 8 ? Faction::FF_NAVAL : i >= 12 ? Faction::FF_PROGENITOR : Faction::FF_NONE;

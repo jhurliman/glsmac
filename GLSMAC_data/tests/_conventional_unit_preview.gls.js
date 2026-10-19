@@ -41,7 +41,7 @@ return (game) => {
 	style.extend = (name) => { return style; };
 	bottom_bar.init({
 		game: game, map: game.get_map(), root: node({}),
-		ui: { class: (name) => { return style; } },
+		ui: { get_width: () => { return 1024; }, class: (name) => { return style; } },
 		modules: {
 			menu: { on_close: (callback) => {} },
 			popup: { hide: (name) => {} },

@@ -29,12 +29,13 @@ return {
 	},
 
 	on_show: () => {
-		this.refresh(this.page.width);
+		this.refresh(this.get_width());
 		this.refresh_data();
 	},
 
 	init: (p) => {
 		this.game = p.game;
+		this.get_width = p.get_info_width;
 		this.panels = [];
 		this.labels = [];
 		p.ui.class('bottombar-info-panel').extend('bottombar-panel-inner').set({top: 0, bottom: 0});
@@ -51,10 +52,10 @@ return {
 		this.panels[1].text({class: 'bottombar-info-text', top: 4, text: 'Faction Dominance'});
 		this.panels[1].text({class: 'bottombar-info-text', top: 20, text: 'History unavailable'});
 		this.button = p.frame.button({class: 'bottombar-panel-page-button', align: 'bottom right', bottom: 5, right: 5, text: 'I', group: 'pages'});
-		this.page.on('resize', (e) => { this.refresh(e.width); });
+		this.page.on('resize', (e) => { this.refresh(this.get_width()); });
 		this.page.listen(p.game, 'turn', (e) => { this.refresh_data(); });
 		this.page.listen(p.game, 'player_update', (e) => { this.refresh_data(); });
-		this.refresh(this.page.width);
+		this.refresh(this.get_width());
 		this.refresh_data();
 	},
 };

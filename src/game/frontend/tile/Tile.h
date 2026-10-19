@@ -75,6 +75,7 @@ public:
 
 	const types::Vec2< size_t > m_coords;
 
+    struct TerrainSpriteInstance {size_t id;std::string actor,name;};
 	struct render_data_t {
 		types::Vec3 coords = {};
         std::optional<types::Vec3> name_anchor;
@@ -82,6 +83,7 @@ public:
 		std::vector< types::mesh::Render* > preview_meshes = {};
 		std::vector< std::string > preview_lines = {};
 		std::vector< std::string > sprites = {};
+        std::vector<TerrainSpriteInstance> terrain_instances;
 	};
 
 	const render_data_t& GetRenderData() const;

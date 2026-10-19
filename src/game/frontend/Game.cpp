@@ -991,12 +991,16 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			const auto& update = *request->data.update_terrain.update;
 			for ( const auto& [key, actor] : update.actors ) GetTerrainInstancedSprite( actor );
 			update.ApplyTexture( *m_textures.terrain );
+            if(m_native_inspector) {m_native_frame_dirty=true;}
 			for ( const auto& [id, key] : update.removed ) {
+                m_native_legacy_instances.erase(id);m_native_hidden_instances.erase(id);
 				auto* actor = m_ism->GetInstancedSpriteByKey( key )->actor;
 				if ( actor->HasInstance( id ) ) actor->RemoveInstance( id );
 			}
-			for ( const auto& instance : update.added )
+			for ( const auto& instance : update.added ) {
+                if(m_native_inspector) {m_native_legacy_instances[instance.id]={instance.actor,instance.coords};}
 				m_ism->GetInstancedSpriteByKey( instance.actor )->actor->SetInstance( instance.id, instance.coords );
+            }
 			break;
 		}
 		case FrontendRequest::FR_UPDATE_TILES: {
@@ -1422,6 +1426,7 @@ void Game::Initialize(
 		ASSERT( actor, "sprite actor not found" );
 		ASSERT( !actor->HasInstance( instance.first ), "actor instance already exists" );
 		actor->SetInstance( instance.first, instance.second.second );
+        if(m_native_inspector) {m_native_legacy_instances.emplace(instance.first,instance.second);}
 	}
 
 	// process tiles

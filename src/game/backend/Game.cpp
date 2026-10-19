@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "game/NativeTerrainWorld.h"
+#include "map/SmacNativeTerrainItems.h"
 
 #include "engine/Engine.h"
 #include "types/Exception.h"
@@ -1369,8 +1370,8 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
                         const auto& remembered=knowledge.remembered[snapshot->viewer];
                         if(!remembered.empty()) {
                             for(size_t i=0;i<snapshot->tiles.size();++i) {if(const auto& memory=remembered.at(i)) {
-                                if(memory->terraforming&map::tile::TERRAFORMING_ROAD) {snapshot->tiles[i].selected_items|=4;}
-                                if(memory->terraforming&map::tile::TERRAFORMING_MAG_TUBE) {snapshot->tiles[i].selected_items|=8;}
+                                snapshot->tiles[i].selected_items=map::NativeTerrainItems(memory->terraforming,memory->features);
+                                snapshot->tiles[i].selected_known=snapshot->tiles[i].developed_ready=true;
                             }}
                         }
                         for(const auto& base:knowledge.bases) {base_visibility.emplace(base.id,base.known_by);}
@@ -1380,6 +1381,13 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
                     }
                 }
                 if(snapshot && snapshot->viewer>0) {
+                    for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
+                        auto& tile=snapshot->tiles[static_cast<size_t>(y)*40+x/2];
+                        if(!tile.developed_ready || tile.band<3 || !(tile.selected_items&0x8000)) {continue;}
+                        const auto nutrients=tile.center_known?GetNativeTerrainNutrients(*m_map->GetTile(x,y),snapshot->viewer,tile.base_present,tile.cached_affiliation):std::nullopt;
+                        if(nutrients) {tile.nutrients=*nutrients;}else {tile.developed_ready=false;}
+                    }}
+
                     for(const auto& entry:m_bm->GetBases()) {
                         const auto* base=entry.second;const auto* tile=base->GetTile();
                         if(!base->HasSmacResourceContext() || !tile || tile->base!=base || tile->coord.x>=80 || tile->coord.y>=80) {continue;}

@@ -45,8 +45,10 @@ When selected Farm and flag `0x20` are present at zoom >-8, the caller evaluates
 base `-1`, tile coordinates and mode0. Flag `0x1000` can independently request
 this query. Its result reads **live** terrain, items, technology and resource
 state; it is not computed from remembered Farm/Soil bits. The evaluating faction
-comes from the renderer viewer, resolved through tile byte5 low bits and the
-global viewer when those low bits are zero.
+is the nonnegative renderer viewer unchanged. Only a negative viewer resolves
+through tile byte5 low bits, then the global viewer when those bits are zero.
+The [base-less context handoff](baseless-tile-nutrient-context.md) corrects the
+earlier ambiguous fallback description.
 
 Farm tier is `clamp(nutrients-1,0,3)`. Selected Soil chooses the Soil Farm bank;
 otherwise the ordinary Farm bank. A result >=5 appends Soil tier0 after Borehole,
@@ -138,9 +140,37 @@ entries, and frame attempt/store counts. Native engine groups additionally
 exercise empty trim, extreme nutrient values, negative-origin clipping, lookup
 validation and coverage of literal0 versus key9.
 
-This is the composition layer. The live inspector has not yet replaced its
-legacy improvement sprites: it still needs the complete remembered-word copy,
-live base-less nutrient query, TER1 source/cache binding and coordinated legacy
-instance visibility. Merely admitting improved terrain while both sprite paths
-remain active would double-render the art. Those caller changes are the next
-integration slice; this checkpoint does not claim new live screenshot parity.
+## Live inspector integration
+
+The opt-in native inspector now binds the complete viewer memory word, TER1
+indexed source and active-palette shadow table. Land Farm art queries the current
+faction/tile through the [base-less context](baseless-tile-nutrient-context.md).
+The saved occupancy plane supplies live center presence and cached affiliation;
+a missing legacy plane does not invent a non-center result. Sprite admission
+continues to use memory even when live Soil or other improvements differ.
+
+The frame reports tiles whose developed prefix actually rendered. The frontend
+suppresses only corresponding legacy improvement instance IDs, keeping their
+owned actor keys/positions for restoration on zoom/viewport fallback. Resource,
+Monolith and other unimplemented sprite families remain untouched. Terrain
+replacement removes old IDs from the visibility registry before new IDs enter;
+world retirement restores then clears the registry. No backend Tile pointers,
+SDL surfaces or borrowed sprite pixels escape into this owned presentation data.
+
+Focused engine tests exercise the actual backend snapshot query and real scene
+instances, in addition to the indexed selector/pixel controls. The synthetic
+backend rules deliberately give Farm zero extra nutrients: its rainy Soil+
+Condenser result is4, unlike6 under the separately tested original rules. This
+verifies use of the campaign's frozen rules rather than installed defaults.
+
+Landmark deformation, resource/Monolith composition, other zooms, ordinary fog
+presentation and a matched original full-screen scene remain open fidelity work.
+
+Runtime validation at production commit `da40ae21` loaded the existing owned
+developed9/8/10-Base campaign, navigated to the same fixed minimap position,
+selected its held Scout and exited through normal Menu/Quit with status0.
+The comparison against343 changes22,239 map pixels;21,997 of those equal the
+new uploaded indexed layer. Foreground objects and remaining legacy paths
+account for other differences. This is integration evidence, not a matched
+original-world screenshot. The software-rendered run disabled sound; tracked
+OpenGL allocations were clean, while heap tracking was not enabled in that run.

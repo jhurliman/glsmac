@@ -2,6 +2,7 @@
 #include "SmacPalette.h"
 #include "util/FinallyGuard.h"
 #include "game/frontend/NativeTerrainRenderer.h"
+#include "game/frontend/SmacDevelopedOverlay.h"
 #include "game/frontend/SmacWaterCoast.h"
 #include "SmacEffect.h"
 #include "SmacNativeBadge.h"
@@ -108,10 +109,10 @@ std::shared_ptr<const SmacBaseCard> SDL2::GetSmacNativeBaseCard(const std::strin
 struct SmacNativeBadgeSource {std::array<SmacNativeBadge,14> badges;};
 std::shared_ptr<const game::frontend::native_terrain::Source> SDL2::GetSmacTerrainSource(const std::array<std::string,8>& faction_files) {
     const auto path=GetCustomFilename("texture.pcx"),common_path=GetCustomFilename("palette.pcx");
-    const auto rainfall_path=GetCustomFilename("rainfall.pcx");
+    const auto rainfall_path=GetCustomFilename("rainfall.pcx"),ter1_path=GetCustomFilename("ter1.pcx");
     const auto system_path=GetCustomFilename("system.txt");
     std::array<std::string,8> faction_paths{};
-    auto key=path+":"+common_path+":"+rainfall_path+":"+system_path;
+    auto key=path+":"+common_path+":"+rainfall_path+":"+system_path+":"+ter1_path;
     for(size_t i=0;i<8;++i) {
         if(!faction_files[i].empty()) {faction_paths[i]=GetCustomFilename(faction_files[i]);}
         key+=":"+std::to_string(faction_paths[i].size())+":"+faction_paths[i];
@@ -132,6 +133,17 @@ std::shared_ptr<const game::frontend::native_terrain::Source> SDL2::GetSmacTerra
     for(int y=0;y<image->h;++y) {
         const auto* row=static_cast<const uint8_t*>(image->pixels)+y*image->pitch;
         for(int x=0;x<image->w;++x) {source->loaded.pixels[static_cast<size_t>(y)*static_cast<size_t>(image->w)+static_cast<size_t>(x)]=static_cast<uint8_t>(row[x]+10);}
+    }
+    source->shadow_lookup=game::frontend::smac_developed_overlay::ShadowLookup(source->palette);
+    util::FS::ReadFile(bytes,ter1_path);Surface ter1(load_image(bytes),SDL_FreeSurface);
+    if(!ter1 || !ter1->format || ter1->format->BitsPerPixel!=8 || ter1->w<1023 || ter1->h<704 ||
+        ter1->w>=32767 || ter1->h>=32767 || ter1->pitch<ter1->w) {THROW("Unsupported native developed atlas source");}
+    source->ter1={ter1->w,ter1->h,std::vector<uint8_t>(static_cast<size_t>(ter1->w)*static_cast<size_t>(ter1->h))};
+    if(SDL_LockSurface(ter1.get())!=0) {THROW(SDL_GetError());}
+    util::FinallyGuard unlock_ter1([&]{SDL_UnlockSurface(ter1.get());});
+    for(int y=0;y<ter1->h;++y) {
+        const auto* row=static_cast<const uint8_t*>(ter1->pixels)+static_cast<size_t>(y)*static_cast<size_t>(ter1->pitch);
+        for(int x=0;x<ter1->w;++x) {source->ter1.pixels[static_cast<size_t>(y)*static_cast<size_t>(ter1->w)+static_cast<size_t>(x)]=static_cast<uint8_t>(row[x]+10);}
     }
     // Coast masks depend on source indices, not converted RGBA colors.
     util::FS::ReadFile(bytes,rainfall_path);Surface rainfall(load_image(bytes),SDL_FreeSurface);

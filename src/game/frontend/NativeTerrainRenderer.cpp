@@ -2,6 +2,7 @@
 #include "SmacWaterCoast.h"
 #include "SmacRiver.h"
 #include "SmacRoadTube.h"
+#include "SmacDevelopedOverlay.h"
 #include "game/backend/map/SmacTerrainGeometry.h"
 #include "game/backend/map/SmacTerrainLighting.h"
 #include <algorithm>
@@ -53,7 +54,7 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
     };
     const material::TileAt materials=[&](int x,int y)->std::optional<material::Tile> {
         const auto* tile=At(world,x,y);if(!tile) {return {};}
-        return material::Tile{tile->band,tile->moisture,tile->rockiness,tile->items};
+        return material::Tile{tile->band,tile->moisture,tile->rockiness,tile->selected_known?tile->selected_items:tile->items};
     };
     const smac_water_coast::CellAt cells=[&](int x,int y)->std::optional<smac_water_coast::Cell> {
         const auto* tile=At(world,x,y);return tile?std::optional<smac_water_coast::Cell>{{tile->band,tile->contour,tile->items}}:std::nullopt;
@@ -84,6 +85,7 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         return &found->second;
     };
     Frame frame;
+    std::map<material::Crop,smac_developed_overlay::Sprite> sprites;
     std::vector<raster::Command> commands;commands.reserve(placements.size()*14);
     const auto append_water=[&](int x,int y,const std::array<Point,5>& points) {
         for(const auto& pass:smac_water_coast::Select(x,y,points,cells)) {
@@ -101,6 +103,20 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         command.shader=raster::Shader::OwnerClut;command.shade_limits=pass->shade_limits;
         command.owner_clut=&source.owner_clut;command.owner_mapping=pass->mapping;commands.push_back(command);
     };
+    const auto append_developed=[&](const ::game::native_terrain::Tile& tile,const Point& anchor,bool kelp) {
+        if(!tile.developed_ready || source.ter1.pixels.empty()) {return;}
+        for(const auto& pick:smac_developed_overlay::Select(tile.selected_items,tile.band,tile.nutrients,tile.landmarks,display_flags)) {
+            const bool is_kelp=tile.band<3 && pick.crop==material::Crop{{607,190,100,62}};
+            if(is_kelp!=kelp) {continue;}
+            auto found=sprites.find(pick.crop);
+            if(found==sprites.end()) {found=sprites.emplace(pick.crop,smac_developed_overlay::Decode(source.ter1,pick.crop)).first;}
+            const auto& sprite=found->second;if(sprite.bitmap.pixels.empty()) {continue;}
+            raster::Command command;command.texture=&sprite.bitmap;
+            command.sprite_origin={anchor[0]+sprite.offset[0],anchor[1]+sprite.offset[1]};
+            command.shader=pick.shadow?raster::Shader::SpriteShadow:raster::Shader::Sprite;
+            command.shadow_lookup=&source.shadow_lookup;commands.push_back(command);
+        }
+    };
     for(const auto& placement:placements) {
         const auto x=placement.tile[0],y=placement.tile[1];
         if(x<0 || x>=80 || y<0 || y>=80 || ((x^y)&1) ||
@@ -112,7 +128,10 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         const auto fx=placement.flat_center[0]+offset[0],fy=placement.flat_center[1]+offset[1];
         if(tile.band<3) {
             const std::array<Point,5> points{{{{fx,fy}},{{fx-48,fy}},{{fx,fy-24}},{{fx+48,fy}},{{fx,fy+24}}}};
-            append_water(x,y,points);append_boundary(x,y,points);++frame.tiles;continue;
+            append_water(x,y,points);append_boundary(x,y,points);
+            append_developed(tile,{{fx-48,fy-24}},true);append_developed(tile,{{fx-48,fy-24}},false);
+            frame.developed_tiles[static_cast<size_t>(y)*40+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
+            ++frame.tiles;continue;
         }
         // Neighbor landmark deformation has not been translated. Do not feed
         // an ordinary lighting/height model through an unsupported stencil.
@@ -147,6 +166,9 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
             command.shader=pass.shader;command.shade_limits=pass.shade_limits;commands.push_back(command);
         }
+        const Point anchor{{fx-48,fy-24-(heights[1]+heights[2]+heights[3]+heights[4])/4}};
+        append_developed(tile,anchor,false);
+        frame.developed_tiles[static_cast<size_t>(y)*40+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
         ++frame.tiles;
     }
     const raster::Bitmap background{1024,511,std::vector<uint8_t>(1024*511)};

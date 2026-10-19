@@ -5407,6 +5407,73 @@ public:
         });
     }
 
+    std::string CheckNativeDevelopedSnapshot() {
+        using namespace game::backend;
+        const auto initial=CheckNativeBoundaryMetadata();if(!initial.empty()) {return initial;}
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            int viewer=0;for(const auto& owner:m_game.m_simulation->value.roster) {if(owner.slot==int32_t(m_game.m_slot_num)) {viewer=owner.simulation_id;}}
+            auto data=m_game.m_map->m_worker_knowledge->CopyData();
+            data.occupancy=map::SmacOccupancyCache::Blank(80,80,data.horizontal_wrap);
+            auto* live=m_game.m_map->GetTile(40,40);
+            live->moisture=map::tile::MOISTURE_RAINY;live->rockiness=map::tile::ROCKINESS_FLAT;
+            live->terraforming=map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOIL_ENRICHER|map::tile::TERRAFORMING_CONDENSER;
+            live->features=0;
+            data.remembered[viewer][40*40+20]=map::SmacWorkerKnowledge::Improvements{0,map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOIL_ENRICHER|map::tile::TERRAFORMING_SOLAR,false,false};
+            const auto inspect=[&]()->std::unique_ptr<::game::native_terrain::World> {
+                m_game.m_map->m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);
+                const auto id=m_game.MT_GetNativeTerrain(FixtureWorldTicket());ProcessRequests();auto response=m_game.MT_GetResponse(id);
+                util::FinallyGuard destroy([&]{m_game.MT_DestroyResponse(response);});
+                if(response.result!=R_SUCCESS || !response.data.native_terrain) {throw std::runtime_error("Actual developed terrain snapshot unavailable");}
+                auto result=std::unique_ptr<::game::native_terrain::World>(response.data.native_terrain);response.data.native_terrain=nullptr;return result;
+            };
+            const auto first=inspect();const auto& target=first->tiles[40*40+20];
+            GT_ASSERT(m_state->m_settings.global.GetSmacResourceRules()->TileNutrients().improved_land==0,"Snapshot fixture no longer uses its custom zero Farm rule");
+            GT_ASSERT(target.band>=3 && target.developed_ready && target.selected_known && target.center_known,"Live query discarded actual viewer/occupancy/nutrient authority");
+            GT_ASSERT(target.selected_items==0x88040 && target.items==0x488000 && target.nutrients==4,"Farm art mixed remembered admission with live nutrients: "+std::to_string(target.selected_items)+"/"+std::to_string(target.items)+"/"+std::to_string(target.nutrients));
+            data.remembered[viewer][40*40+20]->terraforming=map::tile::TERRAFORMING_FARM;
+            GT_ASSERT(inspect()->tiles[40*40+20].nutrients==4,"Removing remembered Soil changed live nutrient query");
+            data.occupancy->FoundBase({40,40},viewer);
+            const auto center=inspect();
+            GT_ASSERT(center->tiles[40*40+20].nutrients==m_state->m_settings.global.GetSmacResourceRules()->BaseSquare().base_square[0]
+                && !center->tiles[40*40+20].admitted_base,"Art center cache was replaced by real Base lookup or admitted a fabricated Base sprite");
+            data.occupancy.reset();const auto unknown=inspect();
+            GT_ASSERT(!unknown->tiles[40*40+20].developed_ready && unknown->tiles[40*40+20].selected_known,"Legacy missing occupancy invented non-center nutrient context");
+            GT_ASSERT(target.nutrients==4 && target.selected_items==0x88040,"Owned snapshot borrowed later tile/knowledge state");GT_OK();
+        });
+    }
+    std::string CheckNativeDevelopedVisibility() {
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+            util::FinallyGuard close_ui([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
+            game::frontend::Game frontend(m_glsmac.get(),m_state,ui,{},{});
+            scene::Scene scene("Native improvement visibility",scene::SCENE_TYPE_WORLD);
+            game::frontend::sprite::InstancedSpriteManager sprites(&scene);
+            game::frontend::tile::TileManager tiles(&frontend);tiles.InitTiles({80,80});
+            types::texture::Texture texture(100,62,types::texture::TF_CPU_ONLY);
+            auto* solar=sprites.GetInstancedSprite("test Solar",&texture,{0,0},{100,62},{50,25},{1,1},game::frontend::ZL_TERRAIN);
+            auto* monolith=sprites.GetInstancedSprite("test Monolith",&texture,{0,0},{100,62},{50,25},{1,1},game::frontend::ZL_TERRAIN);
+            frontend.m_tm=&tiles;frontend.m_ism=&sprites;frontend.m_map_data.width=80;frontend.m_map_data.height=80;
+            util::FinallyGuard detach([&]{frontend.ClearNativeTerrain();frontend.m_tm=nullptr;frontend.m_ism=nullptr;});
+            solar->actor->SetInstance(11,{1,2,3});monolith->actor->SetInstance(12,{4,5,6});
+            frontend.m_native_legacy_instances={{11,{solar->key,{1,2,3}}},{12,{monolith->key,{4,5,6}}}};
+            // Owned tile presentation input; controller consumes these exact IDs.
+            auto& render=const_cast<game::frontend::tile::Tile::render_data_t&>(tiles.GetTile(40,40)->GetRenderData());
+            render.terrain_instances={{11,solar->key,"SolarLand"},{12,monolith->key,"Monolith"}};
+            std::array<bool,3200> covered{};covered[40*40+20]=true;
+            frontend.UpdateNativeTerrainSpriteVisibility(&covered);
+            GT_ASSERT(!solar->actor->HasInstance(11) && monolith->actor->HasInstance(12),"Native pass double-rendered improvement or hid an unimplemented family");
+            frontend.UpdateNativeTerrainSpriteVisibility(nullptr);
+            GT_ASSERT(solar->actor->HasInstance(11) && monolith->actor->HasInstance(12),"Zoom/viewport fallback failed to restore legacy instances");
+            frontend.UpdateNativeTerrainSpriteVisibility(&covered);
+            frontend.m_native_legacy_instances.erase(11);frontend.m_native_hidden_instances.erase(11);
+            solar->actor->SetInstance(13,{7,8,9});frontend.m_native_legacy_instances[13]={solar->key,{7,8,9}};
+            render.terrain_instances[0].id=13;frontend.UpdateNativeTerrainSpriteVisibility(&covered);
+            GT_ASSERT(!solar->actor->HasInstance(13),"Replacement terrain instance escaped native visibility");
+            frontend.ClearNativeTerrain();
+            GT_ASSERT(solar->actor->HasInstance(13) && !solar->actor->HasInstance(11) && frontend.m_native_hidden_instances.empty(),"Retirement resurrected removed instance or lost replacement");GT_OK();
+        });
+    }
+
     std::string CheckNativeBoundaryMetadata() {
         using namespace game::backend;
         const auto startup=CheckSimulationStartup(true,0,true,false,2,false,0,false,false,{},{},"UNIVERSITY",{},false,true);
@@ -7744,6 +7811,12 @@ public:
 };
 
 static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
+    task->AddTest("world admission native terrain binds remembered improvements to live base-less nutrients",GT(){
+        BackendFixture fixture;return fixture.CheckNativeDevelopedSnapshot();
+    });
+    task->AddTest("world admission native terrain suppresses and restores actual legacy instances",GT(){
+        BackendFixture fixture;return fixture.CheckNativeDevelopedVisibility();
+    });
     task->AddTest("world admission native terrain requires the actual owned Base record and marker",GT(){
         BackendFixture fixture;return fixture.CheckNativeRoadBaseAdmission();
     });

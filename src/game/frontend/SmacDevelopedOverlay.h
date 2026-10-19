@@ -1,6 +1,7 @@
 #pragma once
 #include "SmacTerrainRaster.h"
 #include "SmacLandMaterial.h"
+#include <string_view>
 
 namespace game::frontend::smac_developed_overlay {
 using Crop=smac_land_material::Crop;
@@ -13,5 +14,6 @@ std::vector<Selection> Select(uint32_t selected,uint8_t band,int64_t nutrients,
 struct Sprite {smac_terrain_raster::Bitmap bitmap;smac_terrain_raster::Point offset;};
 // Input already uses the original loaded index rebase (+10 modulo256).
 Sprite Decode(const smac_terrain_raster::Bitmap& atlas,const Crop& crop);
+bool ReplacesLegacySprite(std::string_view name);
 std::array<uint8_t,256> ShadowLookup(const Palette& active_palette);
 }

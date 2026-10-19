@@ -12,6 +12,8 @@ struct Placement {Point tile,flat_center;uint32_t record_offset;};
 std::vector<Placement> View(int camera_x,int camera_y,bool horizontal_wrap);
 struct Source {
     smac_terrain_raster::Bitmap loaded;
+    smac_terrain_raster::Bitmap ter1{};
+    std::array<uint8_t,256> shadow_lookup{};
     smac_land_material::Palette palette;
     smac_terrain_raster::Bitmap coast_mask{},boundary_mask{};
     smac_terrain_raster::OwnerClut owner_clut{};
@@ -21,6 +23,7 @@ struct Frame {
     std::vector<uint8_t> rgba;
     uint64_t attempts=0,writes=0;
     size_t tiles=0;
+    std::array<bool,3200> developed_tiles{};
 };
 // Explicit reference allocation-base low16; never a coordinate hash or a
 // gameplay RNG stream. Offset translates a visible copy without changing UVs.

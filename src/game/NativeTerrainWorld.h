@@ -14,6 +14,10 @@ struct Tile {
     uint8_t band=0,moisture=0,rockiness=0,contour=0;
     uint32_t items=0,selected_items=0;
     bool admitted_base=false;
+    bool developed_ready=false,selected_known=false,center_known=false,base_present=false;
+    uint8_t cached_affiliation=15;
+    int64_t nutrients=0;
+    uint32_t landmarks=0;
     uint8_t region=0;
     int8_t owner=-1;
     bool ordinary=false,deformed=false;

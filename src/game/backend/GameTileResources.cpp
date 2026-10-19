@@ -336,4 +336,30 @@ int64_t Game::CalculateCanonicalNutrientDemand( const base::Base& base, const si
 	return rate * static_cast< int64_t >( population );
 }
 
+std::optional<int64_t> Game::GetNativeTerrainNutrients(const map::tile::Tile& tile,int viewer,bool base_present,uint8_t affiliation) const {
+    using namespace map::tile;
+    if(!m_simulation || !m_map || !m_state || !m_map->GetResourcePolicy() || viewer<1 || viewer>7
+        || m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {return {};}
+    const auto& settings=m_state->m_settings.global;
+    const auto& rules=settings.GetSmacResourceRules();const auto& technologies=settings.GetSmacTechnologyRules();
+    const auto& profiles=settings.GetSmacFactionStartupRules();
+    const auto* social=m_simulation->value.social.Find(viewer);const auto* owned=m_simulation->value.technology.Find(viewer);
+    if(!rules || !technologies || !profiles || !social || !owned || tile.tiles!=m_map->GetTilesPtr()
+        || tile.coord.x>=80 || tile.coord.y>=80 || m_map->GetTile(tile.coord.x,tile.coord.y)!=&tile
+        || tile.moisture<MOISTURE_ARID || tile.moisture>MOISTURE_RAINY
+        || tile.rockiness<ROCKINESS_FLAT || tile.rockiness>ROCKINESS_ROCKY) {return {};}
+    const auto& policy=*m_map->GetResourcePolicy();
+    const auto fungus=m_simulation->value.technology.FungalCapabilities(viewer,*technologies,*profiles);
+    const auto references=rules->TechnologyReferences(*technologies);
+    const auto has=[&](terraforming_t flag){return bool(tile.terraforming&flag);};
+    const auto feature=[&](feature_t flag){return bool(tile.features&flag);};
+    const TileNutrientInputs live{
+        {policy.Altitude(tile),static_cast<Moisture>(tile.moisture-MOISTURE_ARID),static_cast<Rockiness>(tile.rockiness-ROCKINESS_FLAT),
+            policy.Bonus(tile),policy.LandmarkBonuses(tile)[0],has(TERRAFORMING_FOREST),feature(FEATURE_XENOFUNGUS),has(TERRAFORMING_BOREHOLE),feature(FEATURE_MONOLITH)},
+        {has(TERRAFORMING_FARM),has(TERRAFORMING_MINE),has(TERRAFORMING_SOIL_ENRICHER),has(TERRAFORMING_CONDENSER)},
+        {false,false,HasConfiguredTechnology(references[0],*technologies,*owned),fungus.nutrients,social->current[7],false,false}
+    };
+    return CalculateBaselessTileNutrients(rules->TileNutrients(),rules->BaseSquare().base_square[0],base_present,affiliation,live).nutrients;
+}
+
 }

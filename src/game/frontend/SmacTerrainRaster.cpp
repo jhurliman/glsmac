@@ -53,6 +53,13 @@ void ValidateBitmap(const Bitmap& bitmap) {
     if(bitmap.width<=0 || bitmap.height<=0 || bitmap.width>=32767 || bitmap.height>=32767 ||
         static_cast<uint64_t>(bitmap.width)*static_cast<uint32_t>(bitmap.height)!=bitmap.pixels.size()) {Invalid();}
 }
+Polygon TrianglePolygon(const Triangle& triangle) {
+    Polygon result;result.count=3;
+    std::copy(triangle.begin(),triangle.end(),result.vertices.begin());return result;
+}
+Clip Intersection(const Clip& a,const Clip& b) {
+    return {{std::max(a[0],b[0]),std::max(a[1],b[1]),std::min(a[2],b[2]),std::min(a[3],b[3])}};
+}
 }
 
 bool Span::operator==(const Span& b) const {
@@ -60,37 +67,46 @@ bool Span::operator==(const Span& b) const {
 }
 
 std::vector<Span> GenerateSpans(const Triangle& triangle,const Clip& clip) {
-    std::array<int32_t,3> light{};
+    return GeneratePolygonSpans(TrianglePolygon(triangle),clip,true,{{-256,256}});
+}
+
+std::vector<Span> GeneratePolygonSpans(const Polygon& polygon,const Clip& clip,bool shaded,std::array<int32_t,2> shade_limits) {
+    const size_t count=polygon.count;
+    if((count!=3 && count!=4) || shade_limits[0]< -256 || shade_limits[1]>256 || shade_limits[0]>shade_limits[1]) {Invalid();}
+    const auto& vertices=polygon.vertices;
+    const int bias=shaded?32768:0;
+    std::array<int32_t,4> light{};
     size_t low=0,high=0;
-    for(size_t i=0;i<3;++i) {
-        const auto& v=triangle[i];
+    for(size_t i=0;i<count;++i) {
+        const auto& v=vertices[i];
         for(auto coordinate:v.screen) {if(coordinate<=-32765 || coordinate>=32767) {Invalid();}}
         for(auto coordinate:v.uv) {if(coordinate< -8192 || coordinate>=8192) {Invalid();}}
-        light[i]=std::clamp(v.light,-256,256);
-        if(v.screen[1]<triangle[low].screen[1]) {low=i;}
-        if(v.screen[1]>triangle[high].screen[1]) {high=i;}
+        light[i]=shaded?std::clamp(v.light,shade_limits[0],shade_limits[1]):0;
+        if(v.screen[1]<vertices[low].screen[1]) {low=i;}
+        if(v.screen[1]>vertices[high].screen[1]) {high=i;}
     }
     for(size_t axis=0;axis<2;++axis) {
-        const auto bounds=std::minmax({triangle[0].screen[axis],triangle[1].screen[axis],triangle[2].screen[axis]});
-        if(bounds.second-bounds.first>=32768) {Invalid();}
+        auto minimum=vertices[0].screen[axis],maximum=minimum;
+        for(size_t i=1;i<count;++i) {minimum=std::min(minimum,vertices[i].screen[axis]);maximum=std::max(maximum,vertices[i].screen[axis]);}
+        if(maximum-minimum>=32768) {Invalid();}
     }
     std::vector<Span> result;
-    const auto y0=triangle[low].screen[1],y1=triangle[high].screen[1];
+    const auto y0=vertices[low].screen[1],y1=vertices[high].screen[1];
     if(y0==y1 || clip[0]>=clip[2] || clip[1]>=clip[3]) {return result;}
     const auto edge=[&](size_t start,int direction)->std::optional<Edge> {
         if(start==high) {return {};}
-        const auto next=[&](size_t index) {return static_cast<size_t>((static_cast<int>(index)+direction+3)%3);};
+        const auto next=[&](size_t index) {return static_cast<size_t>((static_cast<int>(index)+direction+static_cast<int>(count))%static_cast<int>(count));};
         auto end=next(start);
-        while(triangle[end].screen[1]==triangle[start].screen[1]) {
+        while(vertices[end].screen[1]==vertices[start].screen[1]) {
             start=end;if(start==high) {return {}; }end=next(start);
         }
-        const auto dy=triangle[end].screen[1]-triangle[start].screen[1];
+        const auto dy=vertices[end].screen[1]-vertices[start].screen[1];
         if(dy<=0) {return {};}
-        const auto dx=triangle[end].screen[0]-triangle[start].screen[0];
-        const auto u=triangle[start].uv[0]*65536+32768,v=triangle[start].uv[1]*65536+32768,s=light[start]*65536;
-        return Edge{end,direction,dy,dy,triangle[start].screen[0],dx/dy,
+        const auto dx=vertices[end].screen[0]-vertices[start].screen[0];
+        const auto u=vertices[start].uv[0]*65536+bias,v=vertices[start].uv[1]*65536+bias,s=light[start]*65536;
+        return Edge{end,direction,dy,dy,vertices[start].screen[0],dx/dy,
             (dx<0?-dx:dx)%dy,dx<0?1-dy:0,dx<0?-1:1,u,v,s,
-            (triangle[end].uv[0]*65536-u)/dy,(triangle[end].uv[1]*65536-v)/dy,(light[end]*65536-s)/dy};
+            (vertices[end].uv[0]*65536-u)/dy,(vertices[end].uv[1]*65536-v)/dy,(light[end]*65536-s)/dy};
     };
     const auto advance=[&](std::optional<Edge> e)->std::optional<Edge> {
         if(!e) {return {};}
@@ -120,19 +136,37 @@ std::vector<Span> GenerateSpans(const Triangle& triangle,const Clip& clip) {
 }
 
 Result Draw(const Bitmap& initial,const Bitmap& texture,const std::vector<Triangle>& triangles,const Clip& clip) {
-    ValidateBitmap(initial);ValidateBitmap(texture);
-    const Clip bounded{{std::max(0,clip[0]),std::max(0,clip[1]),std::min(initial.width,clip[2]),std::min(initial.height,clip[3])}};
+    ValidateBitmap(texture);
+    std::vector<Command> commands;commands.reserve(triangles.size());
+    for(const auto& triangle:triangles) {commands.push_back({TrianglePolygon(triangle),&texture,Shader::OpaqueShaded,clip,{{-256,256}}});}
+    return DrawBatch(initial,commands,clip);
+}
+
+Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,const Clip& clip) {
+    ValidateBitmap(initial);
+    for(const auto& command:commands) {
+        if(!command.texture || (command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded && command.shader!=Shader::KeyedUnlit)) {Invalid();}
+        ValidateBitmap(*command.texture);
+    }
+    const auto bounded=Intersection(clip,{{0,0,initial.width,initial.height}});
     Result result{initial,0};
-    for(const auto& triangle:triangles) {
-        for(const auto& span:GenerateSpans(triangle,bounded)) {
+    for(const auto& command:commands) {
+        const auto& texture=*command.texture;
+        const bool shaded=command.shader!=Shader::KeyedUnlit,keyed=command.shader!=Shader::OpaqueShaded;
+        for(const auto& span:GeneratePolygonSpans(command.polygon,Intersection(command.clip,bounded),shaded,command.shade_limits)) {
             int64_t u=span.u,v=span.v;
             auto shade=span.shade;
             for(auto x=span.left;x<span.right;++x) {
                 const auto offset=Floor(v,65536)*texture.width+Floor(u,65536);
                 if(offset<0 || static_cast<uint64_t>(offset)>=texture.pixels.size()) {Invalid();}
-                result.bitmap.pixels[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]=
-                    static_cast<uint8_t>(texture.pixels[static_cast<size_t>(offset)]+(shade>>8));
-                ++result.writes;u+=span.du;v+=span.dv;shade=static_cast<uint16_t>(shade+span.dshade);
+                const auto loaded=texture.pixels[static_cast<size_t>(offset)];
+                ++result.attempts;
+                if(!keyed || loaded!=9) {
+                    result.bitmap.pixels[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]=
+                        static_cast<uint8_t>(loaded+(shaded?(shade>>8):0));
+                    ++result.writes;
+                }
+                u+=span.du;v+=span.dv;shade=static_cast<uint16_t>(shade+span.dshade);
                 Signed32(u);Signed32(v);
             }
         }

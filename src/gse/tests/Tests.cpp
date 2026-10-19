@@ -4,6 +4,7 @@
 #include "UIClass.h"
 #include "SmacOrdinaryLandExploration.h"
 #include "TerrainRenderUpdate.h"
+#include "SmacTerrainPolygonRaster.h"
 #include "SmacLandMaterial.h"
 #include "SmacTerrainLighting.h"
 #include "Async.h"
@@ -154,6 +155,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		AddUIClassTests( task );
 		tests::AddSmacOrdinaryLandExplorationTests( task );
 		tests::AddTerrainRenderUpdateTests( task );
+		tests::AddSmacTerrainPolygonRasterTests( task );
 		tests::AddSmacLandMaterialTests( task );
 		tests::AddSmacTerrainLightingTests( task );
 		tests::AddRosterRecordTests( task );

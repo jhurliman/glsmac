@@ -1,0 +1,1487 @@
+{
+  "scope": "Native preview pixel controls, independently reproduced polygons and scaled sprite stores; owned pixels excluded.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "native_receipt_sha256": "2685f48c268f16875601b0e5d5be6dcec1d2fe0dcf40d2ba1310283199f9828f",
+  "canvas": [
+    1024,
+    257
+  ],
+  "pitch": 1024,
+  "backing": 73,
+  "clip": [
+    146,
+    66,
+    235,
+    183
+  ],
+  "scale_override": [
+    85,
+    100
+  ],
+  "tile": [
+    8,
+    8
+  ],
+  "anchor": [
+    148,
+    67
+  ],
+  "renderer_view": 0,
+  "viewer": 3,
+  "flags": 1569,
+  "map_base_low16": 48992,
+  "palette_sha256": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6",
+  "cases": [
+    {
+      "input": {
+        "id": "flat"
+      },
+      "frame_sha256": "66deb2ddb64f731f55ab6e037f0fcda33342d03dab46afbb05e2c81758aa8e95",
+      "painted_pixel_bounds": [
+        148,
+        68,
+        228,
+        107
+      ],
+      "store_count": 1600,
+      "store_sha256": "bb884b30530a54001416004102f8261397219d61c3f8d15b86fc118c36e45443",
+      "selected_items": [
+        {
+          "tile": [
+            8,
+            8
+          ],
+          "viewer": 3,
+          "source_offset": 24,
+          "selected_items": 0,
+          "live_items": 0,
+          "landmark": 0,
+          "raw_moisture": 0,
+          "raw_rockiness": 0,
+          "claim_raw": 0
+        }
+      ],
+      "geometry_cache_changed_bytes": 0,
+      "commands": [
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            148,
+            87,
+            188,
+            67
+          ],
+          "uv": [
+            27,
+            28,
+            0,
+            55,
+            0,
+            1
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "84afd75152c3c6e1724ff242f92b6c276a45c508ccf1e5a6cdc5a2f963a9cd22",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            67,
+            228,
+            87
+          ],
+          "uv": [
+            27,
+            27,
+            0,
+            0,
+            54,
+            0
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "fe3b198187f56a8b1a9bbc5a6567cd4ac735fb5c82eed64ee381d27ae747e6a8",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            228,
+            87,
+            188,
+            107
+          ],
+          "uv": [
+            28,
+            27,
+            55,
+            1,
+            55,
+            53
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "62d4145773f8fc03aba48104590284d92b242482a1022657601a05c7a57dbc07",
+          "span_count": 20
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            107,
+            148,
+            87
+          ],
+          "uv": [
+            28,
+            29,
+            55,
+            55,
+            2,
+            55
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "41b774793d76d74442a7a996c982ba960b2b30fdd3aa6655e69aa2d1fdba8cf1",
+          "span_count": 20
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "sloped",
+        "slope": true
+      },
+      "frame_sha256": "66deb2ddb64f731f55ab6e037f0fcda33342d03dab46afbb05e2c81758aa8e95",
+      "painted_pixel_bounds": [
+        148,
+        68,
+        228,
+        107
+      ],
+      "store_count": 1600,
+      "store_sha256": "bb884b30530a54001416004102f8261397219d61c3f8d15b86fc118c36e45443",
+      "selected_items": [
+        {
+          "tile": [
+            8,
+            8
+          ],
+          "viewer": 3,
+          "source_offset": 24,
+          "selected_items": 0,
+          "live_items": 0,
+          "landmark": 0,
+          "raw_moisture": 0,
+          "raw_rockiness": 0,
+          "claim_raw": 0
+        }
+      ],
+      "geometry_cache_changed_bytes": 0,
+      "commands": [
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            148,
+            87,
+            188,
+            67
+          ],
+          "uv": [
+            27,
+            28,
+            0,
+            55,
+            0,
+            1
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "84afd75152c3c6e1724ff242f92b6c276a45c508ccf1e5a6cdc5a2f963a9cd22",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            67,
+            228,
+            87
+          ],
+          "uv": [
+            27,
+            27,
+            0,
+            0,
+            54,
+            0
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "fe3b198187f56a8b1a9bbc5a6567cd4ac735fb5c82eed64ee381d27ae747e6a8",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            228,
+            87,
+            188,
+            107
+          ],
+          "uv": [
+            28,
+            27,
+            55,
+            1,
+            55,
+            53
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "62d4145773f8fc03aba48104590284d92b242482a1022657601a05c7a57dbc07",
+          "span_count": 20
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            107,
+            148,
+            87
+          ],
+          "uv": [
+            28,
+            29,
+            55,
+            55,
+            2,
+            55
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "41b774793d76d74442a7a996c982ba960b2b30fdd3aa6655e69aa2d1fdba8cf1",
+          "span_count": 20
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "road",
+        "items": 4
+      },
+      "frame_sha256": "932972048eed491c8b4431d36a988ee9710891ecb4ac2ec1e2aa80d7517581b7",
+      "painted_pixel_bounds": [
+        148,
+        68,
+        228,
+        107
+      ],
+      "store_count": 1834,
+      "store_sha256": "b443dfc084042e43963eba21ef839d5d0b74f29c45ea5de5c6fd90d080305b45",
+      "selected_items": [
+        {
+          "tile": [
+            8,
+            8
+          ],
+          "viewer": 3,
+          "source_offset": 24,
+          "selected_items": 4,
+          "live_items": 4,
+          "landmark": 0,
+          "raw_moisture": 0,
+          "raw_rockiness": 0,
+          "claim_raw": 0
+        }
+      ],
+      "geometry_cache_changed_bytes": 0,
+      "commands": [
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            148,
+            87,
+            188,
+            67
+          ],
+          "uv": [
+            27,
+            28,
+            0,
+            55,
+            0,
+            1
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "84afd75152c3c6e1724ff242f92b6c276a45c508ccf1e5a6cdc5a2f963a9cd22",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            67,
+            228,
+            87
+          ],
+          "uv": [
+            27,
+            27,
+            0,
+            0,
+            54,
+            0
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "fe3b198187f56a8b1a9bbc5a6567cd4ac735fb5c82eed64ee381d27ae747e6a8",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            228,
+            87,
+            188,
+            107
+          ],
+          "uv": [
+            28,
+            27,
+            55,
+            1,
+            55,
+            53
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "62d4145773f8fc03aba48104590284d92b242482a1022657601a05c7a57dbc07",
+          "span_count": 20
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            107,
+            148,
+            87
+          ],
+          "uv": [
+            28,
+            29,
+            55,
+            55,
+            2,
+            55
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "41b774793d76d74442a7a996c982ba960b2b30fdd3aa6655e69aa2d1fdba8cf1",
+          "span_count": 20
+        },
+        {
+          "mode": "keyed_shaded",
+          "source_crop": [
+            775,
+            395,
+            56,
+            56
+          ],
+          "vertices": [
+            148,
+            87,
+            188,
+            67,
+            228,
+            87,
+            188,
+            107
+          ],
+          "uv": [
+            0,
+            0,
+            55,
+            0,
+            55,
+            55,
+            0,
+            55
+          ],
+          "values": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "c854bce9f922949f22b85c3a602ad64cdc10e0fbe586262c6bdee3f41f314d56",
+          "store_count": 234,
+          "store_sha256": "c666525ff76ad4ec1212ea6f98a9eed414f0209b0d70e4484ae2a7443735704c",
+          "span_count": 39
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "fungus",
+        "items": 32
+      },
+      "frame_sha256": "2beed0054a1413225ea1d7f9f095f4c0197ad746c21a38ef9caa2151dfc2a20a",
+      "painted_pixel_bounds": [
+        148,
+        68,
+        228,
+        107
+      ],
+      "store_count": 2229,
+      "store_sha256": "e95ffbe2dc6f1c8711f53e65b5efa8b9e66e03a15986536700005d5271826185",
+      "selected_items": [
+        {
+          "tile": [
+            8,
+            8
+          ],
+          "viewer": 3,
+          "source_offset": 24,
+          "selected_items": 32,
+          "live_items": 32,
+          "landmark": 0,
+          "raw_moisture": 0,
+          "raw_rockiness": 0,
+          "claim_raw": 0
+        }
+      ],
+      "geometry_cache_changed_bytes": 0,
+      "commands": [
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            148,
+            87,
+            188,
+            67
+          ],
+          "uv": [
+            27,
+            28,
+            0,
+            55,
+            0,
+            1
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "84afd75152c3c6e1724ff242f92b6c276a45c508ccf1e5a6cdc5a2f963a9cd22",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            67,
+            228,
+            87
+          ],
+          "uv": [
+            27,
+            27,
+            0,
+            0,
+            54,
+            0
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "fe3b198187f56a8b1a9bbc5a6567cd4ac735fb5c82eed64ee381d27ae747e6a8",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            228,
+            87,
+            188,
+            107
+          ],
+          "uv": [
+            28,
+            27,
+            55,
+            1,
+            55,
+            53
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "62d4145773f8fc03aba48104590284d92b242482a1022657601a05c7a57dbc07",
+          "span_count": 20
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            107,
+            148,
+            87
+          ],
+          "uv": [
+            28,
+            29,
+            55,
+            55,
+            2,
+            55
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "41b774793d76d74442a7a996c982ba960b2b30fdd3aa6655e69aa2d1fdba8cf1",
+          "span_count": 20
+        },
+        {
+          "mode": "keyed_unlit",
+          "source_crop": [
+            280,
+            516,
+            56,
+            56
+          ],
+          "vertices": [
+            148,
+            87,
+            188,
+            67,
+            228,
+            87,
+            188,
+            107
+          ],
+          "uv": [
+            0,
+            55,
+            0,
+            0,
+            55,
+            1,
+            55,
+            55
+          ],
+          "values": [],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "6ccb74271230695de942978fc61590e4afeb368177d930338f4c2519d54633e8",
+          "store_count": 629,
+          "store_sha256": "12fcef3a1d97f54d50b61fbdb20640b8a8b7b38b1a3551563c317ba2c9473cc4",
+          "span_count": 39
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "resource",
+        "items": 536871936
+      },
+      "frame_sha256": "bb5c5ebeecb2d9994908ed394e38c1c777a5ddbb03c40c162c4964e2d164ff0f",
+      "painted_pixel_bounds": [
+        148,
+        68,
+        228,
+        107
+      ],
+      "store_count": 2045,
+      "store_sha256": "d5f2e952f532194513b17fea6d1df76ac49250aa619b24ed1798a67bf762df41",
+      "selected_items": [
+        {
+          "tile": [
+            8,
+            8
+          ],
+          "viewer": 3,
+          "source_offset": 24,
+          "selected_items": 536871936,
+          "live_items": 536871936,
+          "landmark": 0,
+          "raw_moisture": 0,
+          "raw_rockiness": 0,
+          "claim_raw": 0
+        }
+      ],
+      "geometry_cache_changed_bytes": 0,
+      "commands": [
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            148,
+            87,
+            188,
+            67
+          ],
+          "uv": [
+            27,
+            28,
+            0,
+            55,
+            0,
+            1
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "84afd75152c3c6e1724ff242f92b6c276a45c508ccf1e5a6cdc5a2f963a9cd22",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            67,
+            228,
+            87
+          ],
+          "uv": [
+            27,
+            27,
+            0,
+            0,
+            54,
+            0
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "fe3b198187f56a8b1a9bbc5a6567cd4ac735fb5c82eed64ee381d27ae747e6a8",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            228,
+            87,
+            188,
+            107
+          ],
+          "uv": [
+            28,
+            27,
+            55,
+            1,
+            55,
+            53
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "62d4145773f8fc03aba48104590284d92b242482a1022657601a05c7a57dbc07",
+          "span_count": 20
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            107,
+            148,
+            87
+          ],
+          "uv": [
+            28,
+            29,
+            55,
+            55,
+            2,
+            55
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "41b774793d76d74442a7a996c982ba960b2b30fdd3aa6655e69aa2d1fdba8cf1",
+          "span_count": 20
+        },
+        {
+          "mode": "sprite_shadow",
+          "source_crop": [
+            203,
+            253,
+            100,
+            62
+          ],
+          "offset": [
+            27,
+            7
+          ],
+          "size": [
+            48,
+            27
+          ],
+          "anchor": [
+            148,
+            67
+          ],
+          "ratio": [
+            85,
+            100
+          ],
+          "source_sha256": "2a2f29acdefd17da20d6823b12f89c8d02f759dc386bad36ba1cacc82b0e5fd6",
+          "store_count": 445,
+          "store_sha256": "8e50f7948475c7a0c6a1096efac5ac08c4556981cb59bc2c108962471047eb66",
+          "span_count": 0
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "remembered_fungus",
+        "items": 0,
+        "remembered": 32
+      },
+      "frame_sha256": "2beed0054a1413225ea1d7f9f095f4c0197ad746c21a38ef9caa2151dfc2a20a",
+      "painted_pixel_bounds": [
+        148,
+        68,
+        228,
+        107
+      ],
+      "store_count": 2229,
+      "store_sha256": "e95ffbe2dc6f1c8711f53e65b5efa8b9e66e03a15986536700005d5271826185",
+      "selected_items": [
+        {
+          "tile": [
+            8,
+            8
+          ],
+          "viewer": 3,
+          "source_offset": 24,
+          "selected_items": 32,
+          "live_items": 0,
+          "landmark": 0,
+          "raw_moisture": 0,
+          "raw_rockiness": 0,
+          "claim_raw": 0
+        }
+      ],
+      "geometry_cache_changed_bytes": 0,
+      "commands": [
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            148,
+            87,
+            188,
+            67
+          ],
+          "uv": [
+            27,
+            28,
+            0,
+            55,
+            0,
+            1
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "84afd75152c3c6e1724ff242f92b6c276a45c508ccf1e5a6cdc5a2f963a9cd22",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            67,
+            228,
+            87
+          ],
+          "uv": [
+            27,
+            27,
+            0,
+            0,
+            54,
+            0
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "fe3b198187f56a8b1a9bbc5a6567cd4ac735fb5c82eed64ee381d27ae747e6a8",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            228,
+            87,
+            188,
+            107
+          ],
+          "uv": [
+            28,
+            27,
+            55,
+            1,
+            55,
+            53
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "62d4145773f8fc03aba48104590284d92b242482a1022657601a05c7a57dbc07",
+          "span_count": 20
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            107,
+            148,
+            87
+          ],
+          "uv": [
+            28,
+            29,
+            55,
+            55,
+            2,
+            55
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "41b774793d76d74442a7a996c982ba960b2b30fdd3aa6655e69aa2d1fdba8cf1",
+          "span_count": 20
+        },
+        {
+          "mode": "keyed_unlit",
+          "source_crop": [
+            280,
+            516,
+            56,
+            56
+          ],
+          "vertices": [
+            148,
+            87,
+            188,
+            67,
+            228,
+            87,
+            188,
+            107
+          ],
+          "uv": [
+            0,
+            55,
+            0,
+            0,
+            55,
+            1,
+            55,
+            55
+          ],
+          "values": [],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "6ccb74271230695de942978fc61590e4afeb368177d930338f4c2519d54633e8",
+          "store_count": 629,
+          "store_sha256": "12fcef3a1d97f54d50b61fbdb20640b8a8b7b38b1a3551563c317ba2c9473cc4",
+          "span_count": 39
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "live_only_fungus",
+        "items": 32,
+        "remembered": 0
+      },
+      "frame_sha256": "66deb2ddb64f731f55ab6e037f0fcda33342d03dab46afbb05e2c81758aa8e95",
+      "painted_pixel_bounds": [
+        148,
+        68,
+        228,
+        107
+      ],
+      "store_count": 1600,
+      "store_sha256": "bb884b30530a54001416004102f8261397219d61c3f8d15b86fc118c36e45443",
+      "selected_items": [
+        {
+          "tile": [
+            8,
+            8
+          ],
+          "viewer": 3,
+          "source_offset": 24,
+          "selected_items": 0,
+          "live_items": 32,
+          "landmark": 0,
+          "raw_moisture": 0,
+          "raw_rockiness": 0,
+          "claim_raw": 0
+        }
+      ],
+      "geometry_cache_changed_bytes": 0,
+      "commands": [
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            148,
+            87,
+            188,
+            67
+          ],
+          "uv": [
+            27,
+            28,
+            0,
+            55,
+            0,
+            1
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "84afd75152c3c6e1724ff242f92b6c276a45c508ccf1e5a6cdc5a2f963a9cd22",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            67,
+            228,
+            87
+          ],
+          "uv": [
+            27,
+            27,
+            0,
+            0,
+            54,
+            0
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 380,
+          "store_sha256": "fe3b198187f56a8b1a9bbc5a6567cd4ac735fb5c82eed64ee381d27ae747e6a8",
+          "span_count": 19
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            228,
+            87,
+            188,
+            107
+          ],
+          "uv": [
+            28,
+            27,
+            55,
+            1,
+            55,
+            53
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "62d4145773f8fc03aba48104590284d92b242482a1022657601a05c7a57dbc07",
+          "span_count": 20
+        },
+        {
+          "mode": "opaque_shaded",
+          "source_crop": [
+            1,
+            58,
+            56,
+            56
+          ],
+          "vertices": [
+            188,
+            87,
+            188,
+            107,
+            148,
+            87
+          ],
+          "uv": [
+            28,
+            29,
+            55,
+            55,
+            2,
+            55
+          ],
+          "values": [
+            0,
+            0,
+            0
+          ],
+          "shade_limits": [
+            -4,
+            4
+          ],
+          "source_sha256": "407b796d7865aad1cbb3e8b1a0aa7d930539dcead73f4bab08bd645f2a04a4d0",
+          "store_count": 420,
+          "store_sha256": "41b774793d76d74442a7a996c982ba960b2b30fdd3aa6655e69aa2d1fdba8cf1",
+          "span_count": 20
+        }
+      ]
+    }
+  ]
+}

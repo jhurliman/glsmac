@@ -10,6 +10,7 @@
 #include "SmacDevelopedOverlay.h"
 #include "SmacRoadTube.h"
 #include "SmacTerritoryBoundary.h"
+#include "SmacTilePreview.h"
 #include "SmacLandMaterial.h"
 #include "SmacTerrainLighting.h"
 #include "Async.h"
@@ -171,7 +172,8 @@ void AddTests( task::gsetests::GSETests* task ) {
         tests::AddSmacDevelopedOverlayTests(task);
         tests::AddSmacRoadTubeTests(task);
         tests::AddSmacTerritoryBoundaryTests(task);
-		tests::AddSmacLandMaterialTests( task );
+		tests::AddSmacTilePreviewTests( task );
+	AddSmacLandMaterialTests( task );
 		tests::AddSmacTerrainLightingTests( task );
 		tests::AddRosterRecordTests( task );
 		tests::AddSmacGameplayRandomStateTests( task );

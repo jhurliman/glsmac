@@ -20,6 +20,7 @@ SET( SRC ${SRC}
     ${PWD}/SmacRoadTube.cpp
     ${PWD}/SmacTerritoryBoundary.cpp
 	${PWD}/NativeTerrainRenderer.cpp
+    ${PWD}/SmacTilePreview.cpp
     ${PWD}/GameNativeTerrain.cpp
 	${PWD}/Slot.cpp
 	${PWD}/TileObject.cpp

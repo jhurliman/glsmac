@@ -191,6 +191,7 @@ CLASS( Game, common::Module )
 	resource::ResourceManager* GetRM() const;
 	sprite::InstancedSpriteManager* GetISM() const;
     bool UsesNativeMapProjection() const {return m_map_data.native_projection;}
+    std::shared_ptr<types::texture::Texture> GetNativeTilePreview(int x,int y);
 	text::InstancedTextManager* GetITM() const;
 
 	types::texture::Texture* GetSourceTexture( const ::resource::resource_t res );
@@ -299,6 +300,8 @@ private:
     bool m_native_inspector=false,m_native_snapshot_dirty=false,m_native_frame_dirty=false;
     std::unique_ptr<::game::native_terrain::World> m_native_world;
     std::shared_ptr<const native_terrain::Source> m_native_source;
+    std::optional<std::array<int,2>> m_native_preview_tile;
+    std::shared_ptr<types::texture::Texture> m_native_preview_texture;
     std::shared_ptr<native_terrain::Session> m_native_view;
     scene::actor::Mesh* m_native_actor=nullptr;
     types::texture::Texture* m_native_texture=nullptr;

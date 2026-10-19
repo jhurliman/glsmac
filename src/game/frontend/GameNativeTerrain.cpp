@@ -3,6 +3,8 @@
 #include "NativeTerrainRenderer.h"
 #include "NativeTerrainSession.h"
 #include "SmacDevelopedOverlay.h"
+#include "SmacTilePreview.h"
+#include "widget/TilePreview.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "game/frontend/sprite/InstancedSprite.h"
 #include "scene/actor/Instanced.h"
@@ -21,6 +23,23 @@
 #include <cmath>
 
 namespace game::frontend {
+std::shared_ptr<types::texture::Texture> Game::GetNativeTilePreview(int x,int y) {
+    if(m_world_retired || !m_native_world) {return {};}
+    const std::array<int,2> tile{{x,y}};
+    if(m_native_preview_tile==tile) {return m_native_preview_texture;}
+    m_native_preview_tile=tile;m_native_preview_texture.reset();
+    if(!m_native_source || m_native_source->faction_files!=m_native_world->faction_files) {
+        m_native_source=g_engine->GetTextureLoader()->GetSmacTerrainSource(m_native_world->faction_files);
+    }
+    if(!m_native_source) {return {};}
+    const smac_terrain_raster::Bitmap backing{89,117,std::vector<uint8_t>(89*117,0)};
+    const auto frame=smac_tile_preview::Paint(*m_native_world,*m_native_source,x,y,
+        g_engine->GetConfig()->GetNativeTerrainBaseLow16(),backing);
+    if(!frame) {return {};}
+    auto texture=std::make_shared<types::texture::Texture>("Native console tile preview",89,117);
+    std::copy(frame->rgba.begin(),frame->rgba.end(),texture->GetBitmap());
+    m_native_preview_texture=std::move(texture);return m_native_preview_texture;
+}
 void Game::UpdateNativeTerrainSpriteVisibility(const std::array<bool,3200>* covered,const std::array<bool,3200>* landmarks,const std::array<bool,3200>* resources) {
     std::unordered_set<size_t> hidden;
     if((covered || landmarks || resources) && m_tm && m_map_data.width==80 && m_map_data.height==80) {
@@ -59,10 +78,11 @@ void Game::ClearNativeTerrain() {
     if(m_native_actor) {m_world_scene->RemoveActor(m_native_actor);DELETE(m_native_actor);m_native_actor=nullptr;}
     if(m_native_texture) {DELETE(m_native_texture);m_native_texture=nullptr;}
     m_native_world.reset();m_native_source.reset();
+    m_native_preview_tile.reset();m_native_preview_texture.reset();
     m_native_inspector=m_native_snapshot_dirty=m_native_frame_dirty=false;
 }
 void Game::UpdateNativeTerrain() {
-    if(!m_native_inspector || m_world_retired) {return;}
+    if(!m_map_data.native_projection || m_world_retired) {return;}
     if(m_mt_ids.native_terrain) {
         auto response=m_game->MT_GetResponse(m_mt_ids.native_terrain);
         if(response.result!=backend::R_NONE) {
@@ -76,6 +96,10 @@ void Game::UpdateNativeTerrain() {
                     else {m_native_view->frame.reset();m_native_view->layout.reset();}
                 }
                 response.data.native_terrain=nullptr;m_native_frame_dirty=true;
+                // Cache input identity includes this complete owned snapshot,
+                // viewer and asset-family table. No old-world result survives.
+                m_native_preview_tile.reset();m_native_preview_texture.reset();
+                if(m_widgets.TilePreview) {m_widgets.TilePreview->Refresh();}
             }
             m_game->MT_DestroyResponse(response);
         }
@@ -84,6 +108,7 @@ void Game::UpdateNativeTerrain() {
         m_native_snapshot_dirty=false;
         m_mt_ids.native_terrain=m_game->MT_GetNativeTerrain(m_world_ticket);
     }
+    if(!m_native_inspector) {return;}
     const bool admitted=m_native_world && m_viewport.window_width==1024 && m_viewport.window_height==768
         && std::abs(m_camera_position.z-0.125f)<0.000001f;
     if(!admitted) {RestoreNativeTerrainProjection();if(m_native_actor) {m_native_actor->Hide();}UpdateNativeTerrainSpriteVisibility(nullptr);return;}

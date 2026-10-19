@@ -72,10 +72,10 @@ return {
 					tile: tile,
 				},
 				align: 'top left',
-				left: 2,
-				top: 1,
-				width: 80,
-				height: 40,
+				left: 0,
+				top: 0,
+				width: 89,
+				height: 117,
 			});
 		} else {
 			this.preview.data = {

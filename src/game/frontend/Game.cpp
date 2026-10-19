@@ -1372,7 +1372,7 @@ void Game::Initialize(
 	NEW( m_camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
     m_map_data.native_projection=native_projection;
     m_native_inspector=native_projection && g_engine->GetConfig()->HasLaunchFlag(config::Config::LF_NATIVE_TERRAIN_INSPECTOR);
-    m_native_snapshot_dirty=m_native_inspector;
+    m_native_snapshot_dirty=native_projection;
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
 	UpdateCameraAngle();
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SmacWorkerMapFrame.h"
+#include "SmacOccupancyCache.h"
 
 namespace game::backend::map {
 
@@ -56,6 +57,9 @@ public:
 		// Sparse acquired Base memory. Missing record/value is unavailable;
 		// known bits and population snapshots are separate saved authorities.
 		std::vector< BaseObservation > bases;
+        // V4 port saves have no live occupancy history. Never reconstruct it
+        // from current entities or imported territorial claims on migration.
+        std::optional<SmacOccupancyCache> occupancy;
 		bool operator==( const Data& other ) const noexcept;
 	};
 	struct LiveUnit {

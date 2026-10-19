@@ -1,0 +1,1007 @@
+{
+  "research_id": "RE-SMAC-CLIMATE-INITIAL-OCCUPANT-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "newgame_schedule_reset": {
+    "pending_steps": 0,
+    "increment": 0,
+    "divisor": 0,
+    "accumulator": 0
+  },
+  "blank_map_reset": {
+    "climate_extra": 0,
+    "sea_offset": 0
+  },
+  "temperature_category": {
+    "standard_Planet": 1,
+    "header_offset": 2624,
+    "file_offset": 2639
+  },
+  "cases": [
+    {
+      "id": "human_factory_empty",
+      "returned": 1,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 16,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 16,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 522,
+          "before": {
+            "cached_occupant": 0,
+            "site_rating": 1,
+            "presence": 0
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "native_factory_empty",
+      "returned": 2,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 16,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 16,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 2,
+            "owner": 0,
+            "design": 8,
+            "x": 24,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 524,
+          "before": {
+            "cached_occupant": 0,
+            "site_rating": 1,
+            "presence": 0
+          },
+          "after": {
+            "cached_occupant": 0,
+            "site_rating": 1,
+            "presence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "human_delete_last",
+      "returned": 0,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 16,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 2,
+            "owner": 0,
+            "design": 8,
+            "x": 24,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 16,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 8,
+            "x": 24,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 522,
+          "before": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 2
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "native_delete_last",
+      "returned": 0,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 16,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 8,
+            "x": 24,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 16,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 524,
+          "before": {
+            "cached_occupant": 0,
+            "site_rating": 1,
+            "presence": 2
+          },
+          "after": {
+            "cached_occupant": 0,
+            "site_rating": 1,
+            "presence": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "Scout_ordinary_move",
+      "returned": 1,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 16,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 18,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 520,
+          "before": {
+            "cached_occupant": 1,
+            "site_rating": 0,
+            "presence": 3
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 0,
+            "presence": 1
+          }
+        },
+        {
+          "tile_index": 521,
+          "before": {
+            "cached_occupant": 0,
+            "site_rating": 0,
+            "presence": 0
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 0,
+            "presence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "Scout_leave_nonBase_tile",
+      "returned": 1,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 18,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 521,
+          "before": {
+            "cached_occupant": 1,
+            "site_rating": 0,
+            "presence": 2
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 0,
+            "presence": 0
+          }
+        },
+        {
+          "tile_index": 522,
+          "before": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 0
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "Pod_factory_empty",
+      "returned": 1,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 0,
+            "x": 20,
+            "y": 20
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 650,
+          "before": {
+            "cached_occupant": 0,
+            "site_rating": 1,
+            "presence": 0
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "Base_found_from_Pod",
+      "returned": 1,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 0,
+            "x": 20,
+            "y": 20
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          }
+        ],
+        "Base_count": 2
+      },
+      "tile_changes": [
+        {
+          "tile_index": 650,
+          "before": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 2
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "Base_remove",
+      "returned": 3,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          }
+        ],
+        "Base_count": 2
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 650,
+          "before": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 1
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "human_factory_for_mixed_stack",
+      "returned": 1,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "x": 28,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 526,
+          "before": {
+            "cached_occupant": 0,
+            "site_rating": 1,
+            "presence": 0
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "native_joins_human_stack",
+      "returned": 2,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "x": 28,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "x": 28,
+            "y": 16
+          },
+          {
+            "id": 2,
+            "owner": 0,
+            "design": 8,
+            "x": 28,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": []
+    },
+    {
+      "id": "delete_human_leaves_native_cached_human",
+      "returned": 0,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 1,
+            "design": 2,
+            "x": 28,
+            "y": 16
+          },
+          {
+            "id": 2,
+            "owner": 0,
+            "design": 8,
+            "x": 28,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 8,
+            "x": 28,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": []
+    },
+    {
+      "id": "postload_Unit_repair_replaces_stale_human_with_native",
+      "returned": 268480512,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 8,
+            "x": 28,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 8,
+            "x": 28,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 526,
+          "before": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 2
+          },
+          "after": {
+            "cached_occupant": 0,
+            "site_rating": 1,
+            "presence": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "delete_last_native_keeps_cached_human",
+      "returned": 0,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 8,
+            "x": 28,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 526,
+          "before": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 2
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 1,
+            "presence": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "native_factory_on_human_Base",
+      "returned": 1,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 8,
+            "x": 16,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 520,
+          "before": {
+            "cached_occupant": 1,
+            "site_rating": 0,
+            "presence": 1
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 0,
+            "presence": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "postload_Unit_repair_preserves_Base_marker_affiliation",
+      "returned": 268480512,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 8,
+            "x": 16,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 8,
+            "x": 16,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": []
+    },
+    {
+      "id": "postload_Base_repair_sets_Base_owner",
+      "returned": 268480512,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 8,
+            "x": 16,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 8,
+            "x": 16,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 520,
+          "before": {
+            "cached_occupant": 7,
+            "site_rating": 10,
+            "presence": 3
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 10,
+            "presence": 3
+          }
+        }
+      ]
+    },
+    {
+      "id": "delete_native_from_human_Base",
+      "returned": 0,
+      "before_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          },
+          {
+            "id": 1,
+            "owner": 0,
+            "design": 8,
+            "x": 16,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "after_entities": {
+        "units": [
+          {
+            "id": 0,
+            "owner": 1,
+            "design": 2,
+            "x": 20,
+            "y": 16
+          }
+        ],
+        "Base_count": 1
+      },
+      "tile_changes": [
+        {
+          "tile_index": 520,
+          "before": {
+            "cached_occupant": 1,
+            "site_rating": 0,
+            "presence": 3
+          },
+          "after": {
+            "cached_occupant": 1,
+            "site_rating": 0,
+            "presence": 1
+          }
+        }
+      ]
+    }
+  ],
+  "ordinary_storage": {
+    "before": [
+      {
+        "affiliation": 167,
+        "items": 0
+      },
+      {
+        "affiliation": 176,
+        "items": 1
+      },
+      {
+        "affiliation": 200,
+        "items": 2
+      },
+      {
+        "affiliation": 223,
+        "items": 3
+      }
+    ],
+    "after": [
+      {
+        "affiliation": 167,
+        "items": 0
+      },
+      {
+        "affiliation": 176,
+        "items": 0
+      },
+      {
+        "affiliation": 200,
+        "items": 0
+      },
+      {
+        "affiliation": 223,
+        "items": 0
+      }
+    ],
+    "RNG_calls": 0
+  },
+  "admissions": [
+    "Second Scout move explicitly renews movement allowance.",
+    "Mixed owner stacks are factory controls.",
+    "Repair controls fork/restore native state; real Base marker diagnostic cache is set to 7.",
+    "Ordinary file codec uses zero entity registries and deliberate retained map bytes."
+  ],
+  "passed": true
+}

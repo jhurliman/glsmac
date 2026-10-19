@@ -125,6 +125,7 @@ Base* BaseManager::FoundSmacBase(GSE_CALLABLE,unit::Unit& colony,const std::arra
     if (observation==data.units.end()) {THROW("Founding Pod has no observation record");}
     frame.units.erase(frame.units.begin()+std::distance(data.units.begin(),observation));
     data.units.erase(observation);
+    if(data.occupancy) {data.occupancy->RemoveUnit({static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},tile->units.size()==1 && tile->units.count(colony.m_id));}
     const map::SmacWorkerMapFrame::Coordinate center{static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)};
     frame.bases.push_back({simulation_id,center,0});
     const auto unavailable=map::SmacWorkerMapFrame::Create(frame).Evaluate(frame.bases.size()-1).unavailable;

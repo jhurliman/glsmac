@@ -64,9 +64,13 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareBaseTerritory( const base
 	if ( seen.size() != m_bm->GetBases().size() || !found_removed ) { throw std::runtime_error( "Territory Base order is incomplete" ); }
 	if ( added ) { append( added, true ); }
 	auto replacement=map::smac_territory::ReplaceClaims( *m_map->m_worker_knowledge, input );
-	if ( removed ) {
-		auto data=replacement.CopyData();
-		data.bases.erase(std::remove_if(data.bases.begin(),data.bases.end(),[&](const auto& observation){return observation.id==removed->m_id;}),data.bases.end());
+    if (added || removed) {
+        auto data=replacement.CopyData();
+        if(data.occupancy) {
+            if(added) {const auto* tile=added->GetTile();data.occupancy->FoundBase({static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},added->m_resource_context->owner_simulation_id);}
+            if(removed) {const auto* tile=removed->GetTile();data.occupancy->RemoveBase({static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)});}
+        }
+        if(removed) {data.bases.erase(std::remove_if(data.bases.begin(),data.bases.end(),[&](const auto& observation){return observation.id==removed->m_id;}),data.bases.end());}
 		replacement=map::SmacWorkerKnowledge::Create(data);
 	}
 	if(prepared_topology) {

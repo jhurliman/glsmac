@@ -119,6 +119,38 @@ bool Unchanged( ConventionalUnitFixture& fixture, const World& world, const Save
 }
 
 void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC occupancy cache retains source history and repairs Units before Bases",GT() {
+        using Cache=map::SmacOccupancyCache;
+        auto cache=Cache::Blank(8,8,true);
+        GT_ASSERT((cache.At({0,0})==Cache::Cell{15,0}),"Blank cache inferred an owner");
+        cache.PlaceUnit({0,0},1,true);cache.PlaceUnit({0,0},0,false);cache.RemoveUnit({0,0},false);
+        GT_ASSERT((cache.At({0,0})==Cache::Cell{1,2}),"Mixed stack recounted surviving native affiliation");
+        cache.RemoveUnit({0,0},true);
+        GT_ASSERT((cache.At({0,0})==Cache::Cell{1,0}),"Last departure cleared cached affiliation");
+        cache.FoundBase({2,2},2);cache.PlaceUnit({2,2},1,true);cache.SetAffiliation({2,2},7);
+        cache.PlaceUnit({4,4},1,true);cache.SetAffiliation({6,6},3);
+        cache.Repair({{{2,2},1},{{4,4},0}},{{{2,2},2}});
+        GT_ASSERT((cache.At({2,2})==Cache::Cell{2,3} && cache.At({4,4})==Cache::Cell{0,2} && cache.At({6,6})==Cache::Cell{3,0}),"Load repair lost incoming Base marker, native owner, or empty history");
+        auto incoming=Cache::Blank(8,8,true);
+        incoming.FoundBase({0,0},2);incoming.SetAffiliation({0,0},7);incoming.Repair({{{0,0},1}},{});
+        GT_ASSERT((incoming.At({0,0})==Cache::Cell{7,2}),"Unit repair ignored incoming Base flag before Base repair cleared it");
+        cache.RemoveBase({2,2});
+        GT_ASSERT((cache.At({2,2})==Cache::Cell{2,2} && cache.At({-4,4})==cache.At({4,4})),"Base removal cleared affiliation or wrapping changed cell");
+        const auto before=cache.Serialize();
+        GT_ASSERT(Rejects([&]{cache.Repair({{{4,4},1},{{1,0},1}},{});}) && cache.Serialize()==before,"Invalid repair partially changed history");
+        GT_ASSERT(Cache::Deserialize(before)==cache,"Cache wire changed semantic cells");
+        for(size_t i=0;i<before.size();++i) {GT_ASSERT(Rejects([&]{Cache::Deserialize(before.substr(0,i));}),"Truncated cache accepted");}
+        auto bad=before;bad[17]=64;
+        GT_ASSERT(Rejects([&]{Cache::Deserialize(bad);}) && Rejects([&]{Cache::Deserialize(before+"x");}),"Malformed or trailing cache accepted");
+        Knowledge::Data data{8,8,true,true,0,{},{},{}};data.tiles.resize(32);data.observers[1]=Knowledge::Observer{};
+        const auto legacy=Knowledge::Create(data).Serialize();
+        GT_ASSERT(!Knowledge::Deserialize(legacy).CopyData().occupancy && Knowledge::Deserialize(legacy).Serialize()==legacy,"V4 restore invented occupancy history");
+        data.occupancy=cache;const auto current=Knowledge::Create(data).Serialize();
+        GT_ASSERT(Knowledge::Deserialize(current).CopyData()==data,"V5 restore lost occupancy or neighboring knowledge");
+        data.occupancy=Cache::Blank(16,8,true);
+        GT_ASSERT(Rejects([&]{Knowledge::Create(data);}),"Knowledge accepted mismatched occupancy geometry");GT_OK();
+    });
+
 	task->AddTest("SMAC technology reveal stages actual map and Base snapshots and restores exactly",GT() {
 		ConventionalUnitFixture fixture; fixture.Configure(); std::string snapshot, knowledge;
 		const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
@@ -309,6 +341,7 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 			// Retained supplied history: neither stationary flag is reconstructed
 			// from the current separated positions before the actual move event.
 			data.units={{71,4,false},{72,2,false}};data.remembered[1].resize(4096);data.remembered[1][0]=Knowledge::Improvements{1,2,true,true};
+            data.occupancy=map::SmacOccupancyCache::Blank(128,64,true);data.occupancy->PlaceUnit({32,16},1,true);data.occupancy->PlaceUnit({48,16},2,true);data.occupancy->SetAffiliation({0,0},7);
 			game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
 			const auto before_attempt=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();
 			auto random=source.GameplayRandom();
@@ -324,6 +357,7 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 			const auto actual=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
 			GT_ASSERT(local->GetTile()==destination && local->Conventional().spent==3 && actual.units[0].visible_to==0 && actual.units[1].visible_to==2, "actual movement globally rebuilt visibility or omitted mover clear");
 			GT_ASSERT(actual.remembered[1][16*64+30/2]->unit_present && !actual.remembered[1][16*64+32/2]->unit_present && actual.remembered[1][0]==data.remembered[1][0], "movement memory missed membership timing or refreshed unrelated old memory");
+            GT_ASSERT((actual.occupancy && actual.occupancy->At({32,16})==map::SmacOccupancyCache::Cell{1,0} && actual.occupancy->At({30,16})==map::SmacOccupancyCache::Cell{1,2} && actual.occupancy->At({0,0})==map::SmacOccupancyCache::Cell{7,0}),"Actual move lost cached affiliation history or membership");
 			GT_ASSERT(source.GameplayRandom()==random, "ordinary full move consumed a sight RNG draw");
 			knowledge=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();snapshot=source.Snapshot();
 			GT_ASSERT(Rejects([&]{game->GetUM()->MoveConventionalUnit(GSE_CALL,local,game->GetMap()->GetTile(28,16),0);}) && game->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge, "exhausted command changed sight");

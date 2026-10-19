@@ -4,6 +4,7 @@
 #include "base/BaseManager.h"
 #include "base/SmacWorkedSquareCollection.h"
 #include "map/Map.h"
+#include "map/SmacPlanetMap.h"
 #include "map/SmacTerritoryRules.h"
 #include "unit/UnitManager.h"
 #include "Player.h"
@@ -95,6 +96,14 @@ Game::StartingBaseKnowledge Game::PrepareStartingBaseKnowledge( const base::Base
         data.width = m_map->GetWidth(); data.height = m_map->GetHeight();
         data.horizontal_wrap = true; data.ordinary_local_mode = true; data.all_map_revealed = 0;
         data.tiles.resize(sea.size(),{0,std::nullopt});
+        auto occupancy=map::SmacOccupancyCache::Blank(data.width,data.height,true);
+        if(const auto* original=m_map->GetResourcePolicy()->OriginalPlanet()) {
+            std::vector<map::SmacOccupancyCache::Cell> cells;cells.reserve(sea.size());
+            for(int32_t y=0;y<data.height;++y) {for(int32_t x=y&1;x<data.width;x+=2) {cells.push_back({original->At(x,y).CachedOccupant(),0});}}
+            occupancy=map::SmacOccupancyCache::Create(data.width,data.height,true,cells);
+        }
+        data.occupancy=std::move(occupancy);
+
         for ( const auto& participant : m_simulation->value.roster ) {
             data.observers[participant.simulation_id] = map::SmacWorkerKnowledge::Observer{false,{},uint8_t(0)};
             data.remembered[participant.simulation_id].resize(sea.size());
@@ -114,6 +123,7 @@ Game::StartingBaseKnowledge Game::PrepareStartingBaseKnowledge( const base::Base
         data.tiles[position].explored_by |= uint8_t(1u<<owner);
         remembered[position] = map::SmacWorkerKnowledge::Improvements{tile->features,tile->terraforming,tile->base!=nullptr,!tile->units.empty()};
     }
+    if(data.occupancy) {data.occupancy->FoundBase(radius.center,owner);}
     auto knowledge = map::SmacWorkerKnowledge::Create(data);
     map::smac_territory::Input territory{data.width,data.height,true,rules->BorderDistance(),{}, {}};
     territory.tiles.reserve(sea.size());

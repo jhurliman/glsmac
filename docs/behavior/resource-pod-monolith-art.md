@@ -8,7 +8,10 @@ stages and independently replaces/restores legacy resource sprites. All 46
 affected native groups, targeted analysis and focused eleven-TU ASan/UBSan pass.
 Site pickup state changes remain separate gameplay work; this presentation pass
 reads current retained policy flags and does not implement pickup outcomes.
-Runtime capture and full live-assembler comparison remain pending. The source contract below is not a production-completion claim.
+The 56 resource frames and 443 landmark frames (499 total) replay exactly
+through the production indexed rasterizer under ASan/UBSan with owned external
+assets. This replays captured commands, not the live scene assembler. Runtime
+capture and full live-assembler comparison remain pending. The source contract below is not a production-completion claim.
 
 The ordinary renderer's flag `0x200` enables this display continuation.
 The [cases](resource-pod-monolith-art-cases.json) and

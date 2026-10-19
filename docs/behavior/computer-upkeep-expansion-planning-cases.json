@@ -1,0 +1,1108 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "production_controls": [
+    {
+      "variant": "baseline",
+      "target": 0,
+      "goals_before": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          2,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          0,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          25,
+          2,
+          25,
+          39,
+          2
+        ],
+        [
+          9,
+          2,
+          23,
+          41,
+          2
+        ],
+        [
+          9,
+          1,
+          25,
+          33,
+          2
+        ]
+      ],
+      "goals_after": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          2,
+          -1,
+          25,
+          35,
+          -1
+        ],
+        [
+          0,
+          -1,
+          25,
+          35,
+          -1
+        ],
+        [
+          25,
+          -2,
+          25,
+          39,
+          2
+        ],
+        [
+          9,
+          -2,
+          23,
+          41,
+          2
+        ],
+        [
+          9,
+          -1,
+          25,
+          33,
+          2
+        ]
+      ],
+      "scout": {
+        "position": [
+          24,
+          38
+        ],
+        "state": 1073741824,
+        "order": 24,
+        "automation": 0,
+        "waypoint_control": 0,
+        "waypoint": [
+          25,
+          35
+        ],
+        "spent": 0,
+        "status": 49
+      },
+      "candidate_costs": [
+        {
+          "design": 0,
+          "cost": 1600
+        },
+        {
+          "design": 2,
+          "cost": 12288
+        }
+      ],
+      "former_ceiling": []
+    },
+    {
+      "variant": "Ecology",
+      "target": 1,
+      "goals_before": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          2,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          0,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          25,
+          2,
+          25,
+          39,
+          2
+        ],
+        [
+          9,
+          2,
+          23,
+          41,
+          2
+        ],
+        [
+          9,
+          1,
+          25,
+          33,
+          2
+        ]
+      ],
+      "goals_after": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          2,
+          -1,
+          25,
+          35,
+          -1
+        ],
+        [
+          0,
+          -1,
+          25,
+          35,
+          -1
+        ],
+        [
+          25,
+          -2,
+          25,
+          39,
+          2
+        ],
+        [
+          9,
+          -2,
+          23,
+          41,
+          2
+        ],
+        [
+          9,
+          -1,
+          25,
+          33,
+          2
+        ]
+      ],
+      "scout": {
+        "position": [
+          24,
+          38
+        ],
+        "state": 1073741824,
+        "order": 24,
+        "automation": 0,
+        "waypoint_control": 0,
+        "waypoint": [
+          25,
+          35
+        ],
+        "spent": 0,
+        "status": 49
+      },
+      "candidate_costs": [
+        {
+          "design": 0,
+          "cost": 1600
+        },
+        {
+          "design": 1,
+          "cost": 64
+        },
+        {
+          "design": 2,
+          "cost": 12288
+        }
+      ],
+      "former_ceiling": [
+        {
+          "census": 0,
+          "regional_bases": 1
+        }
+      ]
+    },
+    {
+      "variant": "Ecology_and_Former",
+      "target": 0,
+      "goals_before": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          2,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          0,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          25,
+          2,
+          25,
+          39,
+          2
+        ],
+        [
+          9,
+          2,
+          23,
+          41,
+          2
+        ],
+        [
+          9,
+          1,
+          25,
+          33,
+          2
+        ]
+      ],
+      "goals_after": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          2,
+          -1,
+          25,
+          35,
+          -1
+        ],
+        [
+          0,
+          -1,
+          25,
+          35,
+          -1
+        ],
+        [
+          25,
+          -2,
+          25,
+          39,
+          2
+        ],
+        [
+          9,
+          -2,
+          23,
+          41,
+          2
+        ],
+        [
+          9,
+          -1,
+          25,
+          33,
+          2
+        ]
+      ],
+      "scout": {
+        "position": [
+          24,
+          38
+        ],
+        "state": 1073741824,
+        "order": 24,
+        "automation": 0,
+        "waypoint_control": 0,
+        "waypoint": [
+          25,
+          35
+        ],
+        "spent": 0,
+        "status": 49
+      },
+      "candidate_costs": [
+        {
+          "design": 0,
+          "cost": 1600
+        },
+        {
+          "design": 2,
+          "cost": 12288
+        }
+      ],
+      "former_ceiling": [
+        {
+          "census": 1,
+          "regional_bases": 1
+        }
+      ]
+    },
+    {
+      "variant": "Ecology_and_extra_Pod",
+      "target": 1,
+      "goals_before": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          2,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          0,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          25,
+          2,
+          25,
+          39,
+          2
+        ],
+        [
+          9,
+          2,
+          23,
+          41,
+          2
+        ],
+        [
+          9,
+          1,
+          25,
+          33,
+          2
+        ]
+      ],
+      "goals_after": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          2,
+          -1,
+          25,
+          35,
+          -1
+        ],
+        [
+          0,
+          -1,
+          25,
+          35,
+          -1
+        ],
+        [
+          25,
+          -2,
+          25,
+          39,
+          2
+        ],
+        [
+          9,
+          -2,
+          23,
+          41,
+          2
+        ],
+        [
+          9,
+          -1,
+          25,
+          33,
+          2
+        ]
+      ],
+      "scout": {
+        "position": [
+          24,
+          38
+        ],
+        "state": 1073741824,
+        "order": 24,
+        "automation": 0,
+        "waypoint_control": 0,
+        "waypoint": [
+          25,
+          35
+        ],
+        "spent": 0,
+        "status": 49
+      },
+      "candidate_costs": [
+        {
+          "design": 0,
+          "cost": 1600
+        },
+        {
+          "design": 1,
+          "cost": 64
+        },
+        {
+          "design": 2,
+          "cost": 12288
+        }
+      ],
+      "former_ceiling": [
+        {
+          "census": 0,
+          "regional_bases": 1
+        }
+      ]
+    },
+    {
+      "variant": "fully_explored",
+      "target": 0,
+      "goals_before": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          2,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          0,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          25,
+          2,
+          25,
+          39,
+          2
+        ],
+        [
+          9,
+          2,
+          23,
+          41,
+          2
+        ],
+        [
+          9,
+          1,
+          25,
+          33,
+          2
+        ],
+        [
+          3,
+          1,
+          29,
+          35,
+          -1
+        ],
+        [
+          3,
+          1,
+          26,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          32,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          22,
+          48,
+          -1
+        ]
+      ],
+      "goals_after": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          2,
+          -1,
+          25,
+          35,
+          -1
+        ],
+        [
+          0,
+          -1,
+          25,
+          35,
+          -1
+        ],
+        [
+          25,
+          -2,
+          25,
+          39,
+          2
+        ],
+        [
+          9,
+          -2,
+          23,
+          41,
+          2
+        ],
+        [
+          9,
+          -1,
+          25,
+          33,
+          2
+        ],
+        [
+          3,
+          1,
+          29,
+          35,
+          -1
+        ],
+        [
+          3,
+          1,
+          26,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          32,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          22,
+          48,
+          -1
+        ]
+      ],
+      "scout": {
+        "position": [
+          24,
+          38
+        ],
+        "state": 1073741824,
+        "order": 24,
+        "automation": 0,
+        "waypoint_control": 0,
+        "waypoint": [
+          25,
+          35
+        ],
+        "spent": 0,
+        "status": 49
+      },
+      "candidate_costs": [
+        {
+          "design": 0,
+          "cost": 1600
+        },
+        {
+          "design": 2,
+          "cost": 12288
+        }
+      ],
+      "former_ceiling": []
+    }
+  ],
+  "visibility_controls": [
+    {
+      "variant": "rebuild_visible",
+      "target": 0,
+      "goals_before": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ]
+      ],
+      "goals_after": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ]
+      ],
+      "scout": {
+        "position": [
+          24,
+          38
+        ],
+        "state": 1073741824,
+        "order": 24,
+        "automation": 0,
+        "waypoint_control": 0,
+        "waypoint": [
+          25,
+          35
+        ],
+        "spent": 0,
+        "status": 49
+      },
+      "native_ranks_checked_against_distance_formula": [
+        {
+          "goal": 0,
+          "distance_cost": 512,
+          "remaining_priority": 1,
+          "rank": 512
+        }
+      ]
+    },
+    {
+      "variant": "rebuild_hidden",
+      "target": 2,
+      "goals_before": [],
+      "goals_after": [],
+      "scout": {
+        "position": [
+          24,
+          38
+        ],
+        "state": 0,
+        "order": 0,
+        "automation": 0,
+        "waypoint_control": 0,
+        "waypoint": [
+          -1,
+          -1
+        ],
+        "spent": 0,
+        "status": 0
+      },
+      "native_ranks_checked_against_distance_formula": []
+    },
+    {
+      "variant": "rebuild_hidden_difficulty4",
+      "target": 2,
+      "goals_before": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          3,
+          1,
+          29,
+          35,
+          -1
+        ],
+        [
+          3,
+          1,
+          26,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          32,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          22,
+          48,
+          -1
+        ]
+      ],
+      "goals_after": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          3,
+          1,
+          29,
+          35,
+          -1
+        ],
+        [
+          3,
+          1,
+          26,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          32,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          22,
+          48,
+          -1
+        ]
+      ],
+      "scout": {
+        "position": [
+          24,
+          38
+        ],
+        "state": 1073741824,
+        "order": 24,
+        "automation": 0,
+        "waypoint_control": 0,
+        "waypoint": [
+          25,
+          35
+        ],
+        "spent": 0,
+        "status": 49
+      },
+      "native_ranks_checked_against_distance_formula": [
+        {
+          "goal": 0,
+          "distance_cost": 512,
+          "remaining_priority": 1,
+          "rank": 512
+        },
+        {
+          "goal": 1,
+          "distance_cost": 1024,
+          "remaining_priority": 1,
+          "rank": 1024
+        },
+        {
+          "goal": 2,
+          "distance_cost": 1536,
+          "remaining_priority": 1,
+          "rank": 1536
+        },
+        {
+          "goal": 3,
+          "distance_cost": 2048,
+          "remaining_priority": 1,
+          "rank": 2048
+        },
+        {
+          "goal": 4,
+          "distance_cost": 2048,
+          "remaining_priority": 1,
+          "rank": 2048
+        }
+      ]
+    },
+    {
+      "variant": "rebuild_all_visible",
+      "target": 0,
+      "goals_before": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          3,
+          1,
+          29,
+          35,
+          -1
+        ],
+        [
+          3,
+          1,
+          26,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          32,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          22,
+          48,
+          -1
+        ]
+      ],
+      "goals_after": [
+        [
+          3,
+          1,
+          25,
+          35,
+          -1
+        ],
+        [
+          3,
+          1,
+          29,
+          35,
+          -1
+        ],
+        [
+          3,
+          1,
+          26,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          32,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          22,
+          48,
+          -1
+        ]
+      ],
+      "scout": {
+        "position": [
+          24,
+          38
+        ],
+        "state": 1073741824,
+        "order": 24,
+        "automation": 0,
+        "waypoint_control": 0,
+        "waypoint": [
+          25,
+          35
+        ],
+        "spent": 0,
+        "status": 49
+      },
+      "native_ranks_checked_against_distance_formula": [
+        {
+          "goal": 0,
+          "distance_cost": 512,
+          "remaining_priority": 1,
+          "rank": 512
+        },
+        {
+          "goal": 1,
+          "distance_cost": 1024,
+          "remaining_priority": 1,
+          "rank": 1024
+        },
+        {
+          "goal": 2,
+          "distance_cost": 1536,
+          "remaining_priority": 1,
+          "rank": 1536
+        },
+        {
+          "goal": 3,
+          "distance_cost": 2048,
+          "remaining_priority": 1,
+          "rank": 2048
+        },
+        {
+          "goal": 4,
+          "distance_cost": 2048,
+          "remaining_priority": 1,
+          "rank": 2048
+        }
+      ]
+    },
+    {
+      "variant": "rebuild_all_visible_remove_nearest",
+      "target": 0,
+      "goals_before": [
+        [
+          3,
+          1,
+          29,
+          35,
+          -1
+        ],
+        [
+          3,
+          1,
+          26,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          32,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          22,
+          48,
+          -1
+        ]
+      ],
+      "goals_after": [
+        [
+          3,
+          1,
+          29,
+          35,
+          -1
+        ],
+        [
+          3,
+          1,
+          26,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          32,
+          46,
+          -1
+        ],
+        [
+          3,
+          1,
+          22,
+          48,
+          -1
+        ]
+      ],
+      "scout": {
+        "position": [
+          24,
+          38
+        ],
+        "state": 1073741824,
+        "order": 24,
+        "automation": 0,
+        "waypoint_control": 0,
+        "waypoint": [
+          29,
+          35
+        ],
+        "spent": 0,
+        "status": 49
+      },
+      "native_ranks_checked_against_distance_formula": [
+        {
+          "goal": 0,
+          "distance_cost": 1024,
+          "remaining_priority": 1,
+          "rank": 1024
+        },
+        {
+          "goal": 1,
+          "distance_cost": 1536,
+          "remaining_priority": 1,
+          "rank": 1536
+        },
+        {
+          "goal": 2,
+          "distance_cost": 2048,
+          "remaining_priority": 1,
+          "rank": 2048
+        },
+        {
+          "goal": 3,
+          "distance_cost": 2048,
+          "remaining_priority": 1,
+          "rank": 2048
+        }
+      ]
+    }
+  ]
+}

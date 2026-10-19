@@ -62,6 +62,7 @@
 #include "SmacFungalCapabilities.h"
 #include "SmacSocialState.h"
 #include "SmacFactionTurn.h"
+#include "SmacComputerGoals.h"
 #include "SmacSimulationState.h"
 #include "SmacStartupDesignState.h"
 #include "SmacRestartUnitPackage.h"
@@ -397,6 +398,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacFungalCapabilitiesTests( task );
 		tests::AddSmacSocialStateTests( task );
         tests::AddSmacFactionTurnTests( task );
+        tests::AddSmacComputerGoalsTests( task );
 	AddSmacSimulationStateTests( task );
 	AddSmacStartupDesignStateTests( task );
 	AddSmacRestartUnitPackageTests( task );

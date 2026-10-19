@@ -11,6 +11,7 @@ SET( SRC ${SRC}
 	${PWD}/ConventionalMovement.cpp
 	${PWD}/ConventionalCombat.cpp
 	${PWD}/ConventionalWork.cpp
+	${PWD}/ConventionalOrders.cpp
 	${PWD}/Def.cpp
 	${PWD}/StaticDef.cpp
 	${PWD}/Render.cpp

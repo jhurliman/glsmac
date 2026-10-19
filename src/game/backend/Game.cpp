@@ -3320,7 +3320,8 @@ void Game::ResetGame() {
 
 bool Game::IsLocalTurnComplete() const {
 	for ( const auto& unit : m_um->GetUnits() ) {
-		if ( unit.second->m_owner == m_slot && unit.second->HasMovesLeft() ) {
+		if ( unit.second->m_owner == m_slot && unit.second->HasMovesLeft()
+            && !(unit.second->IsConventional() && unit.second->Conventional().IsHeld()) ) {
 			return false;
 		}
 	}

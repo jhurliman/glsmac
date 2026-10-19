@@ -69,6 +69,7 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
 		(void)defending_base->GetSmacResourceContext();
 		if(m_game->GetBM()->m_dispatching_updates) {throw std::runtime_error("Scout Base battle cannot reenter Base update dispatch");}
 	}
+	if(actor->Conventional().IsHeld()) {throw std::runtime_error("Activate held attacker before directional combat");}
 	const auto& rules=*state->m_settings.global.GetSmacPredefinedUnitRules();
 	const auto admit=[&](const Unit& unit) {
 		const auto& record=unit.Conventional();const auto context=ResolveConventional(record,unit.m_owner);

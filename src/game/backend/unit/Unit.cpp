@@ -173,7 +173,7 @@ void Unit::Place( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement ) {
 const types::Buffer Unit::Serialize( const Unit* unit ) {
 	if ( unit->IsConventional() ) { unit->QueryStats( unit->Conventional().render_morale_mode ); }
 	types::Buffer buf;
-	buf.WriteInt( unit->IsNative() ? 5 : unit->IsConventional() && unit->Conventional().HasStateHistory() ? 6 : 4 );
+	buf.WriteInt( unit->IsNative() ? 5 : unit->IsConventional() && unit->Conventional().HasOrderState() ? 7 : unit->IsConventional() && unit->Conventional().HasStateHistory() ? 6 : 4 );
 	buf.WriteInt( unit->IsNative() ? 2 : unit->IsConventional() ? 1 : 0 );
 	buf.WriteInt( unit->m_id );
 	buf.WriteString( unit->m_def->m_id );
@@ -181,7 +181,7 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	buf.WriteInt( unit->m_tile->coord.x );
 	buf.WriteInt( unit->m_tile->coord.y );
 	if ( unit->IsNative() ) { buf.WriteString(unit->Native().Serialize().ToString()); }
-	else if ( unit->IsConventional() ) { unit->Conventional().Serialize( buf, unit->Conventional().HasStateHistory() ); }
+	else if ( unit->IsConventional() ) { unit->Conventional().Serialize( buf, unit->Conventional().HasStateHistory() || unit->Conventional().HasOrderState(), unit->Conventional().HasOrderState() ); }
 	else {
 		const auto& state = unit->Legacy();
 		buf.WriteFloat( state.movement ); buf.WriteInt( state.morale );
@@ -193,9 +193,9 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, const ConventionalUnitResolver& resolver, bool defer_home ) {
 	if ( !um || !um->GetMap() ) { THROW( "unit snapshot requires a manager and map" ); }
 	const auto version=buf.ReadInt();
-	if ( version!=4 && version!=5 && version!=6 ) { THROW( "unsupported unit record version" ); }
+	if ( version!=4 && version!=5 && version!=6 && version!=7 ) { THROW( "unsupported unit record version" ); }
 	const auto kind = buf.ReadInt();
-	if ( !((kind==0 && version==4) || (kind==1 && (version==4 || version==6)) || (kind==2 && version==5)) ) { THROW( "unsupported unit record kind" ); }
+	if ( !((kind==0 && version==4) || (kind==1 && (version==4 || version==6 || version==7)) || (kind==2 && version==5)) ) { THROW( "unsupported unit record kind" ); }
 	const auto id = buf.ReadInt();
 	const auto def_id = buf.ReadString();
 	const auto owner = buf.ReadInt();
@@ -205,7 +205,7 @@ Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, cons
 	std::optional< SmacNativeUnitRecord > native;
 	LegacyState legacy{};
 	if ( kind == 2 ) {native=SmacNativeUnitRecord::Deserialize(buf.ReadString());}
-	else if ( kind == 1 ) { conventional = ConventionalUnitState::Deserialize( buf, version>=6 ); }
+	else if ( kind == 1 ) { conventional = ConventionalUnitState::Deserialize( buf, version>=6, version>=7 ); }
 	else {
 		legacy.movement = static_cast< movement_t >( buf.ReadFloat() ); legacy.morale = buf.ReadInt();
 		legacy.health = static_cast< health_t >( buf.ReadFloat() ); legacy.moved_this_turn = buf.ReadBool();
@@ -275,6 +275,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			{ "design_id", VALUE( gse::value::Int,, state.design_id ) }, { "owner_simulation_id", VALUE( gse::value::Int,, state.owner_simulation_id ) },
 			{ "stored_morale", VALUE( gse::value::Int,, state.stored_morale ) }, { "damage", VALUE( gse::value::Int,, state.damage ) },
 			{ "spent", VALUE( gse::value::Int,, state.spent ) }, { "failed_move", VALUE( gse::value::Bool,, state.failed_move ) },
+            { "order", VALUE(gse::value::Int,,static_cast<int32_t>(state.order)) }, { "order_countdown", VALUE(gse::value::Int,,state.order_countdown) },
 			{ "home", VALUE( gse::value::String,, state.home_base_id ? "base" : "none" ) },
 			{ "home_base_id", state.home_base_id ? static_cast< gse::Value* >( VALUE( gse::value::Int,, static_cast< int64_t >( *state.home_base_id ) ) ) : VALUE( gse::value::Undefined ) }, { "render_morale_mode", VALUE( gse::value::Int,, static_cast< int32_t >( state.render_morale_mode ) ) }
 		} ) );
@@ -319,7 +320,9 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			{ "full_allowance", VALUE( gse::value::Int,, stats.full_allowance ) }, { "remaining_allowance", VALUE( gse::value::Int,, stats.remaining_allowance ) },
 			{ "hit_points", VALUE( gse::value::Int,, stats.hit_points ) }, { "maximum_hit_points", VALUE( gse::value::Int,, stats.maximum_hit_points ) },
 			{ "work_order", VALUE( gse::value::Int,, static_cast< int32_t >( Conventional().work_order ) ) },
-			{ "work_progress", VALUE( gse::value::Int,, Conventional().work_progress ) }
+			{ "work_progress", VALUE( gse::value::Int,, Conventional().work_progress ) },
+            { "held", VALUE(gse::value::Bool,,Conventional().IsHeld()) },
+            { "order_countdown", VALUE(gse::value::Int,,Conventional().order_countdown) }
 		} ) );
 	} ) },
 	{ "query_conventional_commands", NATIVE_CALL( this ) {
@@ -328,12 +331,14 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 		gse::value::array_elements_t actions;
 		for ( const auto action : commands.actions ) { actions.push_back( VALUE( gse::value::Int,, action ) ); }
 		const auto kind = commands.package == ConventionalUnitContext::Package::Former ? "former"
-			: commands.package == ConventionalUnitContext::Package::Colony ? "colony" : "none";
+			: commands.package == ConventionalUnitContext::Package::Colony ? "colony" : IsConventional() && Conventional().IsHeld() ? "unit" : "none";
 		return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
 			{ "kind", VALUE( gse::value::String,, kind ) },
+            { "turn_id", VALUE(gse::value::Int,,m_um->m_game->GetTurnId()) },
 			{ "actions", VALUE( gse::value::Array,, actions ) },
 			{ "work_order", VALUE( gse::value::Int,, IsConventional() ? static_cast<int32_t>(Conventional().work_order) : 0 ) },
-			{ "work_progress", VALUE( gse::value::Int,, IsConventional() ? Conventional().work_progress : 0 ) }
+			{ "work_progress", VALUE( gse::value::Int,, IsConventional() ? Conventional().work_progress : 0 ) },
+            { "held", VALUE(gse::value::Bool,,IsConventional() && Conventional().IsHeld()) }
 		} ) );
 	} ) },
 	WRAPIMPL_GET_CUSTOM( "is_immovable", Bool, m_def->GetMovementType() == MT_IMMOVABLE )

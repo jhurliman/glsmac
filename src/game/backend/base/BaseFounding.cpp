@@ -27,7 +27,7 @@ void BaseManager::ValidateSmacFounding(const unit::Unit& colony) const {
     m_game->RequireSmacLocalHumanOwner(colony.m_owner);
     colony.RequireConventionalReady();
     const auto resolved=m_game->ResolveConventionalUnit(colony.Conventional(),colony.m_owner);
-    if (resolved.package!=unit::ConventionalUnitContext::Package::Colony || !colony.HasMovesLeft() || colony.m_animation_id) {
+    if (resolved.package!=unit::ConventionalUnitContext::Package::Colony || !colony.HasMovesLeft() || colony.Conventional().IsHeld() || colony.m_animation_id) {
         THROW("Founding requires an available ordinary land Colony Pod");
     }
     const auto& global=m_game->GetState()->m_settings.global;

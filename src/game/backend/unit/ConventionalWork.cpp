@@ -56,6 +56,10 @@ UnitManager::ConventionalCommands UnitManager::QueryConventionalCommands(Unit* a
         if(!m_game->IsRunning() || m_game->m_canonical_turn_failed || m_game->m_canonical_turn_in_progress
             || m_game->m_canonical_continuation || actor->m_owner->GetIndex()!=m_game->GetSlotNum()
             || actor->m_owner->GetPlayer()!=m_game->GetPlayer()){return result;}
+        if(actor->Conventional().IsHeld()) {
+            (void)PrepareHumanOrder(actor,HumanOrderCommand::Activate,m_game->GetSlotNum());
+            result.actions.push_back(7);return result;
+        }
         if(result.package==ConventionalUnitContext::Package::Former) {
             for(const auto order:{Order::Farm,Order::Road,Order::Forest,Order::Solar,Order::Mine,Order::None}) {
                 if(order==Order::None && actor->Conventional().work_order==Order::None){continue;}
@@ -96,6 +100,7 @@ UnitManager::PreparedConventionalWork UnitManager::PrepareConventionalWork(Unit*
     }
     PreparedConventionalWork result{tile,{},std::nullopt,std::nullopt};
     auto next=actor->Conventional();
+    if(next.IsHeld()) {throw std::runtime_error("Activate held Former before work commands");}
     if(!dispatch && requested==Order::None) {
         next.work_order=Order::None; result.units.emplace_back(actor,next); return result;
     }

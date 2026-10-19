@@ -1095,7 +1095,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		}
 		case FrontendRequest::FR_UNIT_SELECT: {
 			auto* const unit = m_um->GetUnitById( request->data.unit_select.unit_id );
-			if ( unit && unit->IsActive() ) {
+			if ( unit && (unit->IsActive() || (unit->IsOwned() && unit->IsHeld())) ) {
 				m_um->SelectUnit( unit, true );
 				ScrollToTile( unit->GetTile(), true );
 			}
@@ -1143,6 +1143,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				d.health, d.conventional, d.has_moves, d.full_movement, d.native
 			);
             m_um->GetUnitById(d.unit_id)->SetMaximumHitPoints(d.maximum_hit_points);
+            m_um->GetUnitById(d.unit_id)->SetHeld(d.held);
             m_um->GetUnitById(d.unit_id)->Refresh();
 			break;
 		}
@@ -1158,6 +1159,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
             unit->SetMaximumHitPoints(d.maximum_hit_points);
 			unit->SetHealth( d.health );
 			unit->SetActionability( d.conventional, d.has_moves, d.full_movement );
+            unit->SetHeld(d.held);
 			unit->SetMorale( d.morale, *d.morale_string );
 			const auto& c = unit->GetTile()->GetCoords();
 			if ( d.tile_coords.x != c.x || d.tile_coords.y != c.y ) {
@@ -1575,6 +1577,17 @@ void Game::Initialize(
 
 			switch ( event.type ) {
 				case input::EV_KEY_DOWN: {
+                    if(event.data.key.code==input::K_H && (event.data.key.modifiers==input::KM_NONE || event.data.key.modifiers==input::KM_SHIFT)) {
+                        const auto* selected=m_um->GetSelectedUnit();
+                        if(selected) {
+                            const auto id=selected->GetId(); const auto input_turn=m_turn_id; const bool ten=event.data.key.modifiers==input::KM_SHIFT;
+                            m_glsmac->WithGSE([game,id,ten,input_turn](GSE_CALLABLE) {
+                                auto* actor=game->GetUM()->GetUnit(id);
+                                if(actor && actor->IsConventional()) {game->Event(GSE_CALL,ten?"unit_hold_ten":"unit_hold",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(gse::value::Int,,input_turn)}});}
+                            });
+                        }
+                        return true;
+                    }
 					if ( !event.data.key.modifiers ) {
 						auto* selected_tile = m_tm->GetSelectedTile();
 						if ( selected_tile ) {
@@ -1635,22 +1648,18 @@ void Game::Initialize(
                                     }
                                     break;
                                 }
-								case input::K_SPACE: {
-									auto* unit = m_um->GetSelectedUnit();
-									if ( unit ) {
-										m_glsmac->WithGSE(
-											[ &game, &unit ]( GSE_CALLABLE ) {
-												auto* u = game->GetUM()->GetUnit( unit->GetId() );
-												game->Event(
-													GSE_CALL, "unit_skip_turn", {
-														{ "unit", u->Wrap( GSE_CALL ) },
-													}
-												);
-											}
-										);
-									}
-									break;
-								}
+                                case input::K_SPACE: {
+                                    const auto* selected=m_um->GetSelectedUnit();
+                                    if(selected) {
+                                        const auto id=selected->GetId();const auto input_turn=m_turn_id;
+                                        m_glsmac->WithGSE([game,id,input_turn](GSE_CALLABLE) {
+                                            auto* actor=game->GetUM()->GetUnit(id);if(!actor){return;}
+                                            if(actor->IsConventional()) {game->Event(GSE_CALL,"unit_skip_turn",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(gse::value::Int,,input_turn)}});}
+                                            else {game->Event(GSE_CALL,"unit_skip_turn",{{"unit",actor->Wrap(GSE_CALL)}});}
+                                        });
+                                    }
+                                    break;
+                                }
 								case input::K_ENTER: {
 									if ( m_turn_status == backend::turn::TS_TURN_COMPLETE ) {
 										CompleteTurn();
@@ -1973,7 +1982,8 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 			m_tile_at_query_purpose = backend::TQP_NONE;
 		}
 		else if ( selected_object->GetType() == TileObject::TOT_UNIT ) {
-			if ( ( (unit::Unit*)selected_object )->IsActive() ) {
+			const auto* inspected=static_cast<unit::Unit*>(selected_object);
+			if ( inspected->IsActive() || (inspected->IsOwned() && inspected->IsHeld()) ) {
 				m_tile_at_query_purpose = backend::TQP_UNIT_SELECT;
 			}
 			else {

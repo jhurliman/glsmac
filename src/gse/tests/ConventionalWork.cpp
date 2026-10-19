@@ -3,6 +3,7 @@
 #include "fixtures/SmacStartupSource.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
+#include "game/FrontendRequest.h"
 #include "game/backend/Player.h"
 #include "game/backend/Random.h"
 #include "game/backend/slot/Slots.h"
@@ -86,6 +87,117 @@ void Event(GSE_CALLABLE,ConventionalUnitFixture& fixture,Unit* actor,Order order
 }
 }
 void AddConventionalWorkTests(task::gsetests::GSETests* task) {
+    task->AddTest("Human order queued behind actual turn end cannot mutate next turn",GT(){
+        for(const char* name:{"unit_hold","unit_hold_ten","unit_skip_turn","unit_activate"}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string{
+                auto* actor=Populate(GSE_CALL,fixture);auto* game=fixture.Game();
+                if(std::string(name)=="unit_activate") {
+                    game->Event(GSE_CALL,"unit_hold",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});fixture.DrainEvents();
+                }
+                const auto old_turn=game->GetTurnId();
+                game->Event(GSE_CALL,"complete_turn",{});
+                game->Event(GSE_CALL,name,{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,old_turn)}});fixture.DrainEvents();
+                GT_ASSERT(game->GetTurnId()==old_turn+1 && actor->Conventional().spent==0 && actor->Conventional().order_countdown==0
+                    && actor->Conventional().IsHeld()==(std::string(name)=="unit_activate"),"Old queued input consumed next-turn allowance or changed its order");
+                GT_OK();
+            });if(!error.empty()){return error;}
+        }
+        GT_OK();
+    });
+    task->AddTest("Human Hold codec preserves signed countdown and rejects unsupported orders",GT(){
+        ConventionalUnitState plain{2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
+        for(const int count:{INT16_MIN,-1,0,1,10,INT16_MAX}) {
+            auto state=plain;state.order=ConventionalUnitState::Order::Hold;state.order_countdown=static_cast<int16_t>(count);
+            state.retained_state_word=0x80000000u;types::Buffer wire;state.Serialize(wire,true,true);
+            const auto copy=ConventionalUnitState::Deserialize(wire,true,true);
+            GT_ASSERT(copy==state && wire.lenr==wire.lenw,"Order codec lost signed countdown or opaque state");
+            types::Buffer downgrade;GT_ASSERT(Rejects([&]{state.Serialize(downgrade,true,false);}) && downgrade.lenw==0,"Legacy downgrade silently discarded Hold");
+        }
+        for(const auto invalid:std::vector<std::pair<int,int>>{{1,0},{3,0},{2,32768},{2,-32769}}) {
+            types::Buffer wire;plain.Serialize(wire,false,false);wire.WriteInt(invalid.first);wire.WriteInt(invalid.second);
+            GT_ASSERT(Rejects([&]{ConventionalUnitState::Deserialize(wire,false,true);}),"Unsupported order/countdown admitted");
+        }
+        GT_OK();
+    });
+    task->AddTest("Human Hold retains Former progress movement and selected controller through restore",GT(){
+        ConventionalUnitFixture source;source.ConfigureProduction(Source,"GAIANS");std::string snapshot;
+        auto first=source.Run([&](GSE_CALLABLE)->std::string{
+            auto* actor=Populate(GSE_CALL,source,1);auto* game=source.Game();auto* um=game->GetUM();
+            const auto command=[&](const char* name){game->Event(GSE_CALL,name,{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});source.DrainEvents();};
+            Event(GSE_CALL,source,actor,Order::Farm);Event(GSE_CALL,source,actor,Order::None,true);
+            const auto random=source.GameplayRandom();command("unit_hold");
+            bool held_update=false;for(const auto& update:source.Updates()) {
+                if(update.type==game::FrontendRequest::FR_UNIT_UPDATE && update.data.unit_update.unit_id==actor->m_id) {held_update=update.data.unit_update.held && update.data.unit_update.movement==0;}
+            }
+            GT_ASSERT(held_update,"Committed Hold did not publish its actual held/spent presentation");
+            GT_ASSERT(actor->Conventional().IsHeld() && actor->Conventional().order_countdown==0 && actor->Conventional().spent==3
+                && actor->Conventional().work_progress==2 && actor->Conventional().work_order==Order::None,"Hold refunded spent movement or rolled back work");
+            game->Event(GSE_CALL,"complete_turn",{});source.DrainEvents();
+            GT_ASSERT(actor->Conventional().IsHeld() && actor->Conventional().spent==0 && actor->HasMovesLeft(),"Hold faked exhaustion or woke on upkeep");
+            GT_ASSERT(game->SelectLocalConventionalUnit(game->GetTurnId(),actor->m_id,actor->m_id,actor->GetTile()->coord,true)==72,"Held current unit defeated next ready selection");
+            const auto before=source.Snapshot();
+            GT_ASSERT(Rejects([&]{source.MoveEvent(GSE_CALL,actor,actor->GetTile()->E);}) && source.Snapshot()==before,"Directional movement implicitly activated Hold");
+            GT_ASSERT(!game->QueueSelectedConventionalWork(GSE_CALL,actor->m_id,game->GetTurnId()),"Held Former continued work");
+            GT_ASSERT(source.GameplayRandom()==random,"Hold/upkeep consumed gameplay random stream");
+            snapshot=source.Snapshot();GT_OK();
+        });if(!first.empty()){return first;}
+        ConventionalUnitFixture restored;restored.ConfigureProduction(Source,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string{
+            restored.Restore(GSE_CALL,snapshot);restored.Updates();auto* game=restored.Game();auto* actor=game->GetUM()->GetUnit(71);
+            std::array<std::string,8> roles;roles[0]="work-worker";for(uint8_t i=0;i<7;++i){roles[i+1]="work-specialist"+std::to_string(i);}restored.BasePresentationRoles(roles);
+            GT_ASSERT(actor->Conventional().IsHeld() && actor->Conventional().work_progress==2 && actor->Conventional().spent==0,"Unit7 restore lost Hold/work");
+            auto* initialize=static_cast<value::Callable*>(restored.Script(GSE_CALL,"./GLSMAC_data/tests/_unit_commands"));
+            auto* ui=static_cast<value::Callable*>(initialize->Run(GSE_CALL,{game->Wrap(GSE_CALL)}));
+            auto* wrapper=actor->Wrap(GSE_CALL);game->GetState()->TriggerObject(game,"unit_select",ARGS_F(&wrapper){{"unit",wrapper}};});
+            ui->Run(GSE_CALL,{VALUE(value::String,,"check"),VALUE(value::String,,"Activate unit"),VALUE(value::String,,"Holding position — stored work: 2")});
+            ui->Run(GSE_CALL,{VALUE(value::String,,"click"),VALUE(value::String,,"Activate unit"),VALUE(value::String,,"")});restored.DrainEvents();
+            GT_ASSERT(!actor->Conventional().IsHeld() && actor->Conventional().work_progress==2,"Activate removed retained work");
+            restored.MoveEvent(GSE_CALL,actor,actor->GetTile()->E);
+            game->Event(GSE_CALL,"complete_turn",{});restored.DrainEvents();
+            Event(GSE_CALL,restored,actor,Order::Solar);Event(GSE_CALL,restored,actor,Order::None,true);
+            GT_ASSERT(actor->Conventional().work_progress==4 && actor->Conventional().spent==3 && actor->GetTile()->coord.x==18,"Hold/Activate/move broke continuous Former work");GT_OK();
+        });
+    });
+    task->AddTest("Human Hold ten expires on tenth actual owning turn and menu preserves countdown",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string{
+            auto* actor=Populate(GSE_CALL,fixture);auto* game=fixture.Game();
+            const auto command=[&](const char* name){game->Event(GSE_CALL,name,{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});fixture.DrainEvents();};
+            command("unit_hold_ten");
+            for(int turn=1;turn<=10;++turn) {
+                game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();
+                GT_ASSERT(actor->Conventional().order_countdown==10-turn && actor->Conventional().IsHeld()==(turn!=10),"Timed Hold expired on the wrong owner turn");
+            }
+            auto state=actor->Conventional();state.order_countdown=-1;game->GetUM()->UpdateConventionalUnit(GSE_CALL,actor,state);
+            command("unit_menu_hold");game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();
+            GT_ASSERT(actor->Conventional().IsHeld() && actor->Conventional().order_countdown==-2,"Menu Hold normalized retained countdown");
+            command("unit_hold");game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();
+            GT_ASSERT(actor->Conventional().IsHeld() && actor->Conventional().order_countdown==0,"Keyboard Hold was not indefinite");
+            state=actor->Conventional();state.order_countdown=INT16_MIN;state.AdvanceOrderUpkeep();
+            GT_ASSERT(state.order_countdown==INT16_MAX && state.IsHeld(),"Countdown word arithmetic invoked signed overflow");GT_OK();
+        });
+    });
+    task->AddTest("Human Skip keeps active work while Hold authenticates actual owner and tile",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string{
+            auto* actor=Populate(GSE_CALL,fixture);auto* game=fixture.Game();auto* um=game->GetUM();
+            Event(GSE_CALL,fixture,actor,Order::Farm);
+            game->Event(GSE_CALL,"unit_skip_turn",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});fixture.DrainEvents();
+            GT_ASSERT(actor->Conventional().work_order==Order::Farm && !actor->Conventional().IsHeld() && actor->Conventional().spent==3,"Space became Hold or cancelled work");
+            const auto before=fixture.Snapshot();using Command=UnitManager::HumanOrderCommand;
+            GT_ASSERT(Rejects([&]{um->PrepareHumanOrder(actor,Command::Hold,1);}) && fixture.Snapshot()==before,"Foreign caller assigned Hold");
+            game->Event(GSE_CALL,"unit_hold",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});fixture.DrainEvents();
+            GT_ASSERT(actor->Conventional().IsHeld() && actor->Conventional().spent==3,"Exhausted unit could not Hold");
+            const auto held=fixture.Snapshot();
+            GT_ASSERT(Rejects([&]{um->PrepareHumanOrder(actor,Command::Skip,0);}) && fixture.Snapshot()==held,"Skip acted on held unit");
+            const auto actions=um->QueryConventionalCommands(actor).actions;
+            GT_ASSERT(actions==std::vector<int32_t>{7},"Held unit lacks sole Activate command");
+            types::Buffer old;auto plain=actor->Conventional();plain.order=ConventionalUnitState::Order::None;plain.order_countdown=0;plain.Serialize(old,false,false);
+            const auto migrated=ConventionalUnitState::Deserialize(old,false,false);
+            GT_ASSERT(migrated==plain && old.lenr==old.lenw,"Unit4 migration invented an order");GT_OK();
+        });
+    });
     task->AddTest("Former command panel refreshes after actual frontend work and cancel updates",GT(){
         return ConventionalUnitFixture::WithControllerViewport([&]()->std::string{
             ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");

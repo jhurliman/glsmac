@@ -65,6 +65,7 @@ public:
 
 	const size_t GetId() const;
 	const bool IsOwned() const;
+	bool IsHeld() const {return m_held;}
 	bool IsConventional() const { return m_conventional; }
 	bool IsNative() const {return m_native;}
 	const bool IsActive() const;
@@ -104,6 +105,7 @@ public:
 	void SetHealth( const backend::unit::health_t health );
     void SetMaximumHitPoints(int32_t maximum);
 	void SetMorale( backend::unit::morale_t morale, const std::string& text );
+	void SetHeld(bool held);
 	void SetActionability( bool conventional, bool has_moves, backend::unit::movement_t full_movement = 0 );
 	const bool CanMove() const;
 
@@ -161,6 +163,7 @@ private:
 	std::string m_morale_string = "";
 	backend::unit::health_t m_health = 0;
     int32_t m_maximum_hit_points = 0;
+	bool m_held = false;
 	bool m_conventional = false, m_has_moves = false;
 	const bool m_native = false;
 	backend::unit::movement_t m_full_movement = 0;

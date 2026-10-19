@@ -76,6 +76,18 @@ public:
         std::unique_ptr<Data> m_data;
     };
     PreparedNativeBirths PrepareEcologyNativeBirths(GSE_CALLABLE, const base::SmacNativeSpawnPlan& plan);
+    // Synchronous C++ producer only; these closures must not escape, yield or
+    // invoke scripts. All operations share one detached factory/sight/stack
+    // transaction. Throwing discards the complete transaction.
+    struct NativeBirthFactory {
+        std::function<int32_t(int32_t,std::array<int32_t,2>,std::optional<uint8_t>)> create;
+        std::function<int32_t(int32_t)> capacity;
+        std::function<void(int32_t)> sentry,promote_stack;
+        std::function<SmacNativeUnitRecord(int32_t)> record;
+    };
+    PreparedNativeBirths PrepareNativeBirths(GSE_CALLABLE,int32_t width,int32_t height,bool horizontal_wrap,
+        const std::function<void(const NativeBirthFactory&)>& produce);
+
 	// Same owning accumulation: no callbacks, yields or world mutations between
 	// preparation and commit. Destruction before commit publishes nothing.
 	class PreparedConventionalUnit {

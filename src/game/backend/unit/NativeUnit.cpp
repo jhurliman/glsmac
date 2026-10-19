@@ -208,6 +208,13 @@ void UnitManager::PreparedNativeBirths::Notify(GSE_CALLABLE) {
     for(auto* unit:d.published) {d.manager->TriggerSpawnHook(GSE_CALL,unit);}
 }
 UnitManager::PreparedNativeBirths UnitManager::PrepareEcologyNativeBirths(GSE_CALLABLE,const base::SmacNativeSpawnPlan& plan) {
+    const auto& geometry=plan.Input().map;
+    return PrepareNativeBirths(GSE_CALL,geometry.width,geometry.height,geometry.horizontal_wrap,[&](const NativeBirthFactory& factory){
+        for(const auto& request:plan.Requests()) {factory.create(request.design,request.coordinate,request.ecology_owner);}
+    });
+}
+UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirths(GSE_CALLABLE,int32_t width,int32_t height,bool horizontal_wrap,
+    const std::function<void(const NativeBirthFactory&)>& produce) {
     m_game->RequireSmacGameplayActive();m_game->CheckRW(GSE_CALL);
     if(!m_game->IsRunning() || gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating()
         || !m_unprocessed_units.empty() || !m_game->m_simulation || !m_game->m_simulation->value.native_factory) {
@@ -216,8 +223,9 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareEcologyNativeBirths(GSE_CA
     m_game->RequireConventionalSightWorld();
     const auto& prior=GetMap()->GetSmacWorkerKnowledge();
     if(!prior) {throw std::runtime_error("Native birth requires retained map knowledge");}
-    auto knowledge=prior->CopyData();const auto& input=plan.Input();
-    if(input.map.width!=knowledge.width || input.map.height!=knowledge.height || input.map.horizontal_wrap!=knowledge.horizontal_wrap
+    auto knowledge=prior->CopyData();
+    if(!produce) {throw std::runtime_error("Native birth requires a synchronous producer");}
+    if(width!=knowledge.width || height!=knowledge.height || horizontal_wrap!=knowledge.horizontal_wrap
         || knowledge.width<10 || knowledge.height<1 || m_units.size()!=m_unit_order.size() || m_units.size()>2048) {
         throw std::runtime_error("Native birth plan geometry or dense registry differs from its world");
     }
@@ -225,8 +233,7 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareEcologyNativeBirths(GSE_CA
     for(const auto id:m_unit_order) {auto* unit=GetUnit(id);if(!unit) {throw std::runtime_error("Native birth has a stale dense identity");}live.push_back(unit);}
     ValidateNativeIndexBindings(live);
     auto d=std::make_unique<PreparedNativeBirths::Data>();d->manager=this;d->factory=m_game->m_simulation->value.native_factory;
-    d->units=m_units;d->order=m_unit_order;d->updates=m_unit_updates;d->candidates.reserve(plan.Requests().size());
-    d->published.reserve(plan.Requests().size());knowledge.units.reserve(knowledge.units.size()+plan.Requests().size());
+    d->units=m_units;d->order=m_unit_order;d->updates=m_unit_updates;
     const auto index=[&](const map::tile::Tile* tile) {return size_t(tile->coord.y)*(knowledge.width/2)+tile->coord.x/2;};
     const auto distance=[&](const map::tile::Tile* a,const map::tile::Tile* b) {
         auto dx=std::abs(int64_t(a->coord.x)-int64_t(b->coord.x));
@@ -247,19 +254,21 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareEcologyNativeBirths(GSE_CA
             if(unit->IsNative()) {auto& value=record(unit);value.observation_mask=sight.visible_to;if(observer>0) {value.flags&=0xfbbfu;}}
         }
     };
-    for(const auto& request:plan.Requests()) {
+    NativeBirthFactory factory;
+    factory.create=[&](int32_t design_id,std::array<int32_t,2> coordinate,std::optional<uint8_t> ecology_owner)->int32_t {
         // Original factory rejects a full source pool before any body, counter,
         // placement, sight or assignment work. Attempts belong to the input plan.
-        if(d->units.size()>=2048) {continue;}
+        if(d->units.size()>=2048) {return -1;}
+        if(ecology_owner && *ecology_owner>7) {throw std::runtime_error("Native ecology attribution exceeds faction domain");}
         if(d->factory->assignment_reference[0]>=0) {throw std::runtime_error("Loaded native assignment tail requires its retained AI producer");}
-        const auto design=NativeDesign(*m_game,request.design);
+        const auto design=NativeDesign(*m_game,design_id);
         auto* def=GetUnitDef(design.presentation);
-        const auto x=request.coordinate[0],y=request.coordinate[1];
+        const auto x=coordinate[0],y=coordinate[1];
         if(x<0 || x>=knowledge.width || y<0 || y>=knowledge.height || ((x^y)&1)) {throw std::runtime_error("Native birth coordinate differs from the staged map");}
         auto* tile=GetMap()->GetTile(x,y);
         const uint64_t next=uint64_t(Unit::GetNextId())+d->candidates.size();
         if(next==0 || next>=uint64_t(INT64_MAX) || next>=SIZE_MAX) {throw std::runtime_error("Native port identity pool exhausted");}
-        auto value=SmacNativeUnitRecord::InitializeWild(static_cast<int32_t>(d->order.size()),request.design,d->factory->definition_morale);
+        auto value=SmacNativeUnitRecord::InitializeWild(static_cast<int32_t>(d->order.size()),design_id,d->factory->definition_morale);
         value.x=static_cast<int16_t>(x);value.y=static_cast<int16_t>(y);
         ValidateNativeCreation(static_cast<size_t>(next),def,tile,value);
         if(tile->base) {throw std::runtime_error("Native birth on an occupied Base requires mixed-owner stack admission");}
@@ -278,7 +287,7 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareEcologyNativeBirths(GSE_CA
             || !d->updates.emplace(born->m_id,unit_update_t{UUO_SPAWN,born}).second) {throw std::runtime_error("Native birth publication identity conflicts");}
         d->order.push_back(born->m_id);d->records.emplace(born,value);knowledge.units.push_back({born->m_id,0,false});
         d->published.push_back(nullptr);d->candidates.push_back(std::move(candidate));
-        d->factory->Adjust(request.design,static_cast<uint8_t>(design.plan),1);
+        d->factory->Adjust(design_id,static_cast<uint8_t>(design.plan),1);
         const auto underfoot=knowledge.tiles[index(tile)].claimant;
         if((tile->terraforming&map::tile::TERRAFORMING_SENSOR) && underfoot && *underfoot==0) {
             throw std::runtime_error("Native-owned underfoot sensor needs its extended sight producer");
@@ -322,8 +331,37 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareEcologyNativeBirths(GSE_CA
             memory[index(tile)]=map::SmacWorkerKnowledge::Improvements{tile->features,tile->terraforming,false,true};
         }}
         // The ecology attribution write is after the full factory return.
-        if(request.ecology_owner) {record(born).ecology_owner_tag=*request.ecology_owner;}
-    }
+        if(ecology_owner) {record(born).ecology_owner_tag=*ecology_owner;}
+        return value.id;
+    };
+    const auto by_index=[&](int32_t id)->Unit* {
+        if(id<0 || size_t(id)>=d->order.size()) {throw std::runtime_error("Native factory operation has an invalid dense index");}
+        auto* unit=d->units.at(d->order[id]);
+        if(!unit->IsNative() || record(unit).id!=id) {throw std::runtime_error("Native factory operation requires a bound native record");}
+        return unit;
+    };
+    factory.capacity=[&](int32_t id) {
+        const auto& value=record(by_index(id));(void)NativeDesign(*m_game,value.design);
+        return value.design==9 ? int32_t(value.stored_morale)+1:0;
+    };
+    factory.sentry=[&](int32_t id) {
+        auto& value=record(by_index(id));value.order=1;value.waypoint_x[0]=-1;value.waypoint_y[0]=0;
+    };
+    factory.promote_stack=[&](int32_t id) {
+        auto* unit=by_index(id);auto& value=record(unit);
+        if(value.stack_previous<0) {return;}
+        auto* head=unit;size_t traversed=0;
+        while(record(head).stack_previous>=0) {
+            if(++traversed>d->order.size()) {throw std::runtime_error("Native promotion encountered a cyclic stack");}
+            head=by_index(record(head).stack_previous);
+            if(head->GetTile()!=unit->GetTile()) {throw std::runtime_error("Native promotion crosses tile boundaries");}
+        }
+        auto* previous=by_index(value.stack_previous);record(previous).stack_next=value.stack_next;
+        if(value.stack_next>=0) {record(by_index(value.stack_next)).stack_previous=value.stack_previous;}
+        value.stack_previous=-1;value.stack_next=record(head).id;record(head).stack_previous=value.id;
+    };
+    factory.record=[&](int32_t id){return record(by_index(id));};
+    produce(factory);
     for(auto& row:d->records) {
         // Candidate queries must expose the final prepared record, not a body
         // whose later stack/sight/tag writes are held only in the transaction.

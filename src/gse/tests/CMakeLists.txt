@@ -67,6 +67,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacTechnologyState.cpp
 	${PWD}/SmacFungalCapabilities.cpp
 	${PWD}/SmacSocialState.cpp
+	${PWD}/SmacFactionTurn.cpp
 	${PWD}/SmacSimulationState.cpp
 	${PWD}/SmacStartupDesignState.cpp
 	${PWD}/SmacRestartUnitPackage.cpp

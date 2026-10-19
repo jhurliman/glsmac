@@ -1,0 +1,679 @@
+{
+  "scope": "Raw native Planet loader, complete5a9f30 preparation,47dc00 cache initialization,46f3b0 geometry; two explicitly ordered all3200tile projector then C/W/N/E/S height and shade traversals, fresh cache each. Not a complete viewport painter or climate preparation receipt.",
+  "negative_mapping": {
+    "-48": [
+      4,
+      3,
+      4,
+      3,
+      5
+    ],
+    "-46": [
+      4,
+      3,
+      7,
+      1,
+      8
+    ],
+    "-45": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "-30": [
+      2,
+      2,
+      5,
+      2,
+      7
+    ],
+    "-28": [
+      10,
+      2,
+      12,
+      0,
+      6
+    ],
+    "-26": [
+      13,
+      0,
+      1,
+      1,
+      1
+    ],
+    "-8": [
+      7,
+      3,
+      7,
+      3,
+      12
+    ],
+    "-1": [
+      3,
+      13,
+      3,
+      14,
+      0
+    ]
+  },
+  "negative_tiles": [
+    {
+      "tile": [
+        9,
+        35
+      ],
+      "word": "0xd3400800",
+      "band": 3
+    },
+    {
+      "tile": [
+        11,
+        35
+      ],
+      "word": "0xd0400800",
+      "band": 4
+    },
+    {
+      "tile": [
+        31,
+        37
+      ],
+      "word": "0xd0400001",
+      "band": 4
+    },
+    {
+      "tile": [
+        32,
+        38
+      ],
+      "word": "0xe6400001",
+      "band": 3
+    },
+    {
+      "tile": [
+        9,
+        39
+      ],
+      "word": "0xf8400800",
+      "band": 3
+    },
+    {
+      "tile": [
+        11,
+        39
+      ],
+      "word": "0xff400800",
+      "band": 4
+    },
+    {
+      "tile": [
+        33,
+        39
+      ],
+      "word": "0xe4400001",
+      "band": 3
+    },
+    {
+      "tile": [
+        34,
+        40
+      ],
+      "word": "0xe2400001",
+      "band": 3
+    },
+    {
+      "tile": [
+        11,
+        43
+      ],
+      "word": "0xd2400800",
+      "band": 4
+    }
+  ],
+  "traversals": [
+    {
+      "reverse": false,
+      "tiles": 3200,
+      "mapping_reads": 551,
+      "result_sha256": "61fe75bbbc77d69e7e45bfd6adaced067e12587d6b82c19efbfc5b99a91f91d0",
+      "negative_results": [
+        {
+          "tile": [
+            9,
+            35
+          ],
+          "projection": [
+            -960,
+            126
+          ],
+          "heights": [
+            0,
+            0,
+            17,
+            33,
+            22
+          ],
+          "shades": [
+            1,
+            0,
+            0,
+            1,
+            3
+          ]
+        },
+        {
+          "tile": [
+            11,
+            35
+          ],
+          "projection": [
+            -864,
+            114
+          ],
+          "heights": [
+            45,
+            33,
+            28,
+            11,
+            48
+          ],
+          "shades": [
+            0,
+            1,
+            -1,
+            -2,
+            -1
+          ]
+        },
+        {
+          "tile": [
+            31,
+            37
+          ],
+          "projection": [
+            96,
+            185
+          ],
+          "heights": [
+            25,
+            6,
+            12,
+            6,
+            6
+          ],
+          "shades": [
+            0,
+            0,
+            -1,
+            -2,
+            -2
+          ]
+        },
+        {
+          "tile": [
+            32,
+            38
+          ],
+          "projection": [
+            144,
+            212
+          ],
+          "heights": [
+            0,
+            6,
+            6,
+            6,
+            0
+          ],
+          "shades": [
+            -1,
+            -2,
+            -2,
+            1,
+            -1
+          ]
+        },
+        {
+          "tile": [
+            9,
+            39
+          ],
+          "projection": [
+            -960,
+            219
+          ],
+          "heights": [
+            20,
+            0,
+            27,
+            33,
+            27
+          ],
+          "shades": [
+            1,
+            0,
+            0,
+            0,
+            3
+          ]
+        },
+        {
+          "tile": [
+            11,
+            39
+          ],
+          "projection": [
+            -864,
+            216
+          ],
+          "heights": [
+            25,
+            33,
+            23,
+            6,
+            37
+          ],
+          "shades": [
+            -1,
+            0,
+            -2,
+            -2,
+            -3
+          ]
+        },
+        {
+          "tile": [
+            33,
+            39
+          ],
+          "projection": [
+            192,
+            237
+          ],
+          "heights": [
+            0,
+            0,
+            6,
+            6,
+            0
+          ],
+          "shades": [
+            0,
+            -1,
+            1,
+            -1,
+            0
+          ]
+        },
+        {
+          "tile": [
+            34,
+            40
+          ],
+          "projection": [
+            240,
+            261
+          ],
+          "heights": [
+            0,
+            0,
+            6,
+            6,
+            0
+          ],
+          "shades": [
+            0,
+            0,
+            -1,
+            1,
+            0
+          ]
+        },
+        {
+          "tile": [
+            11,
+            43
+          ],
+          "projection": [
+            -864,
+            306
+          ],
+          "heights": [
+            45,
+            45,
+            22,
+            11,
+            42
+          ],
+          "shades": [
+            -1,
+            0,
+            -1,
+            -2,
+            -4
+          ]
+        }
+      ],
+      "negative_height_mapping_reads": 18
+    },
+    {
+      "reverse": true,
+      "tiles": 3200,
+      "mapping_reads": 551,
+      "result_sha256": "101143f0d2e4ee5224cd498209fba5687f267421b9d6d4540fa6ea7cd4984bab",
+      "negative_results": [
+        {
+          "tile": [
+            11,
+            43
+          ],
+          "projection": [
+            -864,
+            306
+          ],
+          "heights": [
+            45,
+            45,
+            42,
+            11,
+            22
+          ],
+          "shades": [
+            -1,
+            0,
+            -1,
+            -2,
+            -4
+          ]
+        },
+        {
+          "tile": [
+            34,
+            40
+          ],
+          "projection": [
+            240,
+            261
+          ],
+          "heights": [
+            0,
+            0,
+            6,
+            6,
+            0
+          ],
+          "shades": [
+            0,
+            0,
+            -1,
+            1,
+            0
+          ]
+        },
+        {
+          "tile": [
+            33,
+            39
+          ],
+          "projection": [
+            192,
+            237
+          ],
+          "heights": [
+            0,
+            0,
+            6,
+            6,
+            0
+          ],
+          "shades": [
+            0,
+            -1,
+            1,
+            -1,
+            0
+          ]
+        },
+        {
+          "tile": [
+            11,
+            39
+          ],
+          "projection": [
+            -864,
+            221
+          ],
+          "heights": [
+            25,
+            33,
+            23,
+            6,
+            17
+          ],
+          "shades": [
+            -1,
+            0,
+            -2,
+            -2,
+            -3
+          ]
+        },
+        {
+          "tile": [
+            9,
+            39
+          ],
+          "projection": [
+            -960,
+            214
+          ],
+          "heights": [
+            20,
+            0,
+            47,
+            33,
+            27
+          ],
+          "shades": [
+            1,
+            0,
+            0,
+            0,
+            3
+          ]
+        },
+        {
+          "tile": [
+            32,
+            38
+          ],
+          "projection": [
+            144,
+            212
+          ],
+          "heights": [
+            0,
+            6,
+            6,
+            6,
+            0
+          ],
+          "shades": [
+            -1,
+            -2,
+            -2,
+            1,
+            -1
+          ]
+        },
+        {
+          "tile": [
+            31,
+            37
+          ],
+          "projection": [
+            96,
+            185
+          ],
+          "heights": [
+            25,
+            6,
+            12,
+            6,
+            6
+          ],
+          "shades": [
+            0,
+            0,
+            -1,
+            -2,
+            -2
+          ]
+        },
+        {
+          "tile": [
+            11,
+            35
+          ],
+          "projection": [
+            -864,
+            114
+          ],
+          "heights": [
+            45,
+            33,
+            48,
+            11,
+            28
+          ],
+          "shades": [
+            0,
+            1,
+            -1,
+            -2,
+            -1
+          ]
+        },
+        {
+          "tile": [
+            9,
+            35
+          ],
+          "projection": [
+            -960,
+            126
+          ],
+          "heights": [
+            0,
+            0,
+            17,
+            33,
+            22
+          ],
+          "shades": [
+            1,
+            0,
+            0,
+            1,
+            3
+          ]
+        }
+      ],
+      "negative_height_mapping_reads": 18
+    }
+  ],
+  "order_changed_tiles": [
+    [
+      11,
+      33
+    ],
+    [
+      10,
+      34
+    ],
+    [
+      12,
+      34
+    ],
+    [
+      11,
+      35
+    ],
+    [
+      10,
+      36
+    ],
+    [
+      12,
+      36
+    ],
+    [
+      9,
+      37
+    ],
+    [
+      11,
+      37
+    ],
+    [
+      8,
+      38
+    ],
+    [
+      10,
+      38
+    ],
+    [
+      9,
+      39
+    ],
+    [
+      11,
+      39
+    ],
+    [
+      10,
+      40
+    ],
+    [
+      12,
+      40
+    ],
+    [
+      11,
+      41
+    ],
+    [
+      10,
+      42
+    ],
+    [
+      12,
+      42
+    ],
+    [
+      11,
+      43
+    ],
+    [
+      10,
+      44
+    ],
+    [
+      12,
+      44
+    ],
+    [
+      11,
+      45
+    ]
+  ],
+  "renderer": {
+    "scope": "All127 authored height-bearing tiles, row-major, one shared fresh native cache. Actual46f930 projector then46fd00 entry through pre-feature boundary47102f; raster observation sinks. Observer faction0 exploration is the only tile mutation. Raw loader terrain and full5a9f30 profiles; not full climate/setup/viewport traversal.",
+    "tiles": 127,
+    "primary_triangles": 508,
+    "results_sha256": "b73f3a828638816b883589d858c4d9868af91bf80666630c6275cb46c8dd3de5"
+  }
+}

@@ -1352,6 +1352,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
             if(m_game_state==GS_RUNNING && m_map && m_state && !m_state->GetConnection()
                 && m_state->m_settings.global.GetRulesetId()=="smac") {
                 auto snapshot=m_map->CopyNativeTerrain();
+                std::map<size_t,uint8_t> base_visibility;
                 if(snapshot && m_simulation) {
                     for(const auto& participant:m_simulation->value.roster) {
                         if(participant.simulation_id<=0 || participant.simulation_id>7) {continue;}
@@ -1365,9 +1366,27 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
                     }
                     if(snapshot->viewer>0 && m_map->m_worker_knowledge && m_map->m_worker_knowledge_ready) {
                         const auto knowledge=m_map->m_worker_knowledge->CopyData();
+                        const auto& remembered=knowledge.remembered[snapshot->viewer];
+                        if(!remembered.empty()) {
+                            for(size_t i=0;i<snapshot->tiles.size();++i) {if(const auto& memory=remembered.at(i)) {
+                                if(memory->terraforming&map::tile::TERRAFORMING_ROAD) {snapshot->tiles[i].selected_items|=4;}
+                                if(memory->terraforming&map::tile::TERRAFORMING_MAG_TUBE) {snapshot->tiles[i].selected_items|=8;}
+                            }}
+                        }
+                        for(const auto& base:knowledge.bases) {base_visibility.emplace(base.id,base.known_by);}
                         if(const auto& observer=knowledge.observers[snapshot->viewer]) {
                             for(size_t i=0;i<8;++i) {if(observer->relations[i].territory_recognition) {snapshot->relations[i]|=0x08000008u;}}
                         }
+                    }
+                }
+                if(snapshot && snapshot->viewer>0) {
+                    for(const auto& entry:m_bm->GetBases()) {
+                        const auto* base=entry.second;const auto* tile=base->GetTile();
+                        if(!base->HasSmacResourceContext() || !tile || tile->base!=base || tile->coord.x>=80 || tile->coord.y>=80) {continue;}
+                        const auto owner=base->GetSmacResourceContext().owner_simulation_id;
+                        const auto visible=base_visibility.find(base->m_id);
+                        snapshot->tiles[static_cast<size_t>(tile->coord.y)*40+tile->coord.x/2].admitted_base=
+                            ::game::native_terrain::AdmitsBase(snapshot->viewer,owner,visible==base_visibility.end()?0:visible->second);
                     }
                 }
                 response.data.native_terrain=snapshot.release();

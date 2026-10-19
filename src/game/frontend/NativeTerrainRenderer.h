@@ -25,5 +25,5 @@ struct Frame {
 // Explicit reference allocation-base low16; never a coordinate hash or a
 // gameplay RNG stream. Offset translates a visible copy without changing UVs.
 Frame Render(const ::game::native_terrain::World& world,const Source& source,
-    const std::vector<Placement>& placements,uint16_t variation_base_low16,Point offset={{0,0}},uint32_t display_flags=0x10401);
+    const std::vector<Placement>& placements,uint16_t variation_base_low16,Point offset={{0,0}},uint32_t display_flags=0x10421);
 }

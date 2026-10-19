@@ -1,0 +1,759 @@
+{
+  "scope": "Full real native viewport raster/clear/self-scroll. Four frozen observer0 diagnostic controls (remembered-item alias reads landmark word) and four separate valid faction3 live-item controls via all-map revelation. Same raw imported Planet, flags10621, zoom0, empty rosters, generic unparented backing/window services; initial/reset backing73. No draw lists or raster returns supplied. Not a natural faction-start or parent-window backdrop receipt.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "asset_sha256": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+  "asset_hashes": {
+    "TEXTURE.PCX": "3dfa56f9eaa2a13af4fac199a0ac9ff3bf59effed17871a24f15b1b553b7c0ab",
+    "TER1.PCX": "82ef33e48f40d00a60e08fbcc403b1ecd9b340bd065830e2658ba3bacbf5b327",
+    "RAINFALL.PCX": "03b87d7873f5a9419d8c4ddd6c5a8bd333fe81a6b3ce4730056f129dcb94d364",
+    "PALETTE.PCX": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "alpha.txt": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4"
+  },
+  "map_base_low16": 48992,
+  "allocator": "Declared bump-allocation service, not natural Windows heap",
+  "size": [
+    1024,
+    511
+  ],
+  "pitch": 1024,
+  "palette_sha256": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6",
+  "shadow": [
+    65,
+    201,
+    215,
+    86,
+    190,
+    129,
+    177,
+    210,
+    201,
+    201,
+    19,
+    19,
+    21,
+    22,
+    22,
+    22,
+    22,
+    24,
+    24,
+    25,
+    25,
+    25,
+    25,
+    25,
+    25,
+    25,
+    32,
+    33,
+    33,
+    33,
+    33,
+    35,
+    35,
+    35,
+    36,
+    36,
+    36,
+    38,
+    38,
+    39,
+    40,
+    41,
+    209,
+    210,
+    15,
+    17,
+    17,
+    17,
+    55,
+    55,
+    55,
+    56,
+    56,
+    56,
+    57,
+    57,
+    58,
+    58,
+    59,
+    60,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    209,
+    209,
+    209,
+    210,
+    210,
+    210,
+    210,
+    210,
+    210,
+    79,
+    79,
+    80,
+    80,
+    63,
+    63,
+    63,
+    83,
+    83,
+    84,
+    86,
+    87,
+    136,
+    88,
+    52,
+    209,
+    209,
+    209,
+    210,
+    14,
+    14,
+    217,
+    217,
+    230,
+    230,
+    230,
+    220,
+    230,
+    132,
+    132,
+    109,
+    109,
+    109,
+    109,
+    201,
+    14,
+    14,
+    13,
+    13,
+    120,
+    16,
+    120,
+    19,
+    233,
+    21,
+    233,
+    233,
+    17,
+    17,
+    54,
+    54,
+    55,
+    130,
+    59,
+    61,
+    58,
+    201,
+    200,
+    199,
+    88,
+    135,
+    137,
+    137,
+    143,
+    144,
+    144,
+    145,
+    145,
+    145,
+    146,
+    147,
+    147,
+    148,
+    148,
+    16,
+    140,
+    140,
+    153,
+    215,
+    209,
+    209,
+    77,
+    163,
+    165,
+    167,
+    167,
+    167,
+    164,
+    164,
+    165,
+    167,
+    170,
+    174,
+    174,
+    174,
+    174,
+    174,
+    174,
+    176,
+    176,
+    179,
+    179,
+    179,
+    179,
+    180,
+    182,
+    185,
+    185,
+    185,
+    194,
+    194,
+    194,
+    194,
+    194,
+    192,
+    192,
+    193,
+    194,
+    195,
+    195,
+    195,
+    196,
+    197,
+    198,
+    200,
+    200,
+    201,
+    77,
+    77,
+    77,
+    208,
+    208,
+    208,
+    83,
+    81,
+    82,
+    212,
+    213,
+    213,
+    214,
+    215,
+    217,
+    143,
+    189,
+    133,
+    199,
+    200,
+    76,
+    163,
+    165,
+    240,
+    240,
+    240,
+    240,
+    231,
+    134,
+    199,
+    199,
+    199,
+    77,
+    207,
+    240,
+    240,
+    240,
+    240,
+    240,
+    242,
+    242,
+    138,
+    86,
+    86,
+    109,
+    109,
+    212,
+    109,
+    242,
+    85,
+    190,
+    129,
+    175,
+    209
+  ],
+  "source_receipt_sha256": "145f6452c97c9305512ceabe00551c2175eb5b04b8f8b929a99338af0d41642c",
+  "source_receipt": "viewport-indexed-pixels-v2-original-x86-20261019.json",
+  "profiles": {
+    "0": {
+      "observer0_alias": true,
+      "initial_index": 65,
+      "automatic_resources": false
+    },
+    "3": {
+      "observer0_alias": false,
+      "initial_index": 65,
+      "automatic_resources": false
+    }
+  },
+  "cases": [
+    {
+      "input": {
+        "id": "first"
+      },
+      "viewer": 0,
+      "context": {
+        "display_faction": 0,
+        "faction_status": 0,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          -1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 639,
+        "tile_data_sha256": "cc969df9c4f014e4643fe6a66a5e63bb90d412889e773785e78df774c980b209",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          76,
+          -2
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "b6aaa64aad965a4df1f0be3fc02dfc022fb898bbbcbbdbfab45a8ae7235d4f33",
+      "initial_frame_sha256": "89b28d17fe622a76b6cface81147174d9464ea176d5f4179081245dc19232d30",
+      "store_count": 1870984,
+      "cpu_write_count": 1478536,
+      "paint_store_count": 1347720
+    },
+    {
+      "input": {
+        "id": "repeat"
+      },
+      "viewer": 0,
+      "context": {
+        "display_faction": 0,
+        "faction_status": 0,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          -1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "cc969df9c4f014e4643fe6a66a5e63bb90d412889e773785e78df774c980b209",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "b6aaa64aad965a4df1f0be3fc02dfc022fb898bbbcbbdbfab45a8ae7235d4f33",
+      "initial_frame_sha256": "b6aaa64aad965a4df1f0be3fc02dfc022fb898bbbcbbdbfab45a8ae7235d4f33",
+      "store_count": 1870984,
+      "cpu_write_count": 1478536,
+      "paint_store_count": 1347720
+    },
+    {
+      "input": {
+        "id": "pan_east",
+        "pan": [
+          24,
+          38
+        ]
+      },
+      "viewer": 0,
+      "context": {
+        "display_faction": 0,
+        "faction_status": 0,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          -1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "cc969df9c4f014e4643fe6a66a5e63bb90d412889e773785e78df774c980b209",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "c34ca964f934739af1792006244d2b82e6d6a0aff5471589cc98810ee9e2c736",
+      "initial_frame_sha256": "b6aaa64aad965a4df1f0be3fc02dfc022fb898bbbcbbdbfab45a8ae7235d4f33",
+      "store_count": 596807,
+      "cpu_write_count": 241151,
+      "paint_store_count": 122599
+    },
+    {
+      "input": {
+        "id": "pan_back",
+        "pan": [
+          22,
+          38
+        ]
+      },
+      "viewer": 0,
+      "context": {
+        "display_faction": 0,
+        "faction_status": 0,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          -1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "cc969df9c4f014e4643fe6a66a5e63bb90d412889e773785e78df774c980b209",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "b6aaa64aad965a4df1f0be3fc02dfc022fb898bbbcbbdbfab45a8ae7235d4f33",
+      "initial_frame_sha256": "c34ca964f934739af1792006244d2b82e6d6a0aff5471589cc98810ee9e2c736",
+      "store_count": 600316,
+      "cpu_write_count": 244660,
+      "paint_store_count": 126108
+    },
+    {
+      "input": {
+        "id": "faction3_live_first",
+        "reset": true
+      },
+      "viewer": 3,
+      "context": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          -1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "818722b3285e55c3946220aeea1a2d0fdcde17e7527d8f3325471d4fa4665add",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "6f0767ae1eb7cc6c3d4658e9bcfd6ab0166295b32f3a31973f219859d4b65cd0",
+      "initial_frame_sha256": "89b28d17fe622a76b6cface81147174d9464ea176d5f4179081245dc19232d30",
+      "store_count": 1236125,
+      "cpu_write_count": 843677,
+      "paint_store_count": 712861
+    },
+    {
+      "input": {
+        "id": "faction3_live_repeat"
+      },
+      "viewer": 3,
+      "context": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          -1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "818722b3285e55c3946220aeea1a2d0fdcde17e7527d8f3325471d4fa4665add",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "6f0767ae1eb7cc6c3d4658e9bcfd6ab0166295b32f3a31973f219859d4b65cd0",
+      "initial_frame_sha256": "6f0767ae1eb7cc6c3d4658e9bcfd6ab0166295b32f3a31973f219859d4b65cd0",
+      "store_count": 1236125,
+      "cpu_write_count": 843677,
+      "paint_store_count": 712861
+    },
+    {
+      "input": {
+        "id": "faction3_live_pan_east",
+        "pan": [
+          24,
+          38
+        ]
+      },
+      "viewer": 3,
+      "context": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          -1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "818722b3285e55c3946220aeea1a2d0fdcde17e7527d8f3325471d4fa4665add",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "8799dd6de0918c8f3883beed236489ecb8cb8be80fe37673553b743e1a98a0a4",
+      "initial_frame_sha256": "6f0767ae1eb7cc6c3d4658e9bcfd6ab0166295b32f3a31973f219859d4b65cd0",
+      "store_count": 544622,
+      "cpu_write_count": 188966,
+      "paint_store_count": 70414
+    },
+    {
+      "input": {
+        "id": "faction3_live_pan_back",
+        "pan": [
+          22,
+          38
+        ]
+      },
+      "viewer": 3,
+      "context": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          -1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "818722b3285e55c3946220aeea1a2d0fdcde17e7527d8f3325471d4fa4665add",
+        "clock_deliveries": 0
+      },
+      "before": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "frame_sha256": "6f0767ae1eb7cc6c3d4658e9bcfd6ab0166295b32f3a31973f219859d4b65cd0",
+      "initial_frame_sha256": "8799dd6de0918c8f3883beed236489ecb8cb8be80fe37673553b743e1a98a0a4",
+      "store_count": 545466,
+      "cpu_write_count": 189810,
+      "paint_store_count": 71258
+    }
+  ]
+}

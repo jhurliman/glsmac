@@ -47,6 +47,11 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
     const smac_water_coast::CellAt cells=[&](int x,int y)->std::optional<smac_water_coast::Cell> {
         const auto* tile=At(world,x,y);return tile?std::optional<smac_water_coast::Cell>{{tile->band,tile->contour,tile->items}}:std::nullopt;
     };
+    // Sea Fungus follows the same observer-selected improvement word as land
+    // material. River keeps its separate live-item cell source below.
+    const smac_water_coast::CellAt water_cells=[&](int x,int y)->std::optional<smac_water_coast::Cell> {
+        const auto* tile=At(world,x,y);return tile?std::optional<smac_water_coast::Cell>{{tile->band,tile->contour,tile->selected_known?tile->selected_items:tile->items}}:std::nullopt;
+    };
     const smac_territory_boundary::CellAt territories=[&](int x,int y)->std::optional<smac_territory_boundary::Cell> {
         const auto* tile=At(world,x,y);return tile?std::optional<smac_territory_boundary::Cell>{{tile->band,tile->region,tile->owner}}:std::nullopt;
     };
@@ -107,7 +112,7 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
     };
     const auto append_water=[&](int x,int y,const std::array<Point,5>& points) {
         const bool sea=At(world,x,y)->band<3;bool quads=false;
-        for(const auto& pass:smac_water_coast::Select(x,y,points,cells)) {
+        for(const auto& pass:smac_water_coast::Select(x,y,points,water_cells)) {
             if(sea && !quads && pass.shader==raster::Shader::KeyedUnlit) {
                 append_quads(x,y,points,{});quads=true;
             }

@@ -49,3 +49,25 @@ live state on discard/failure, atomic publication and full world save/reload.
 Existing birth and sight fixtures continue to run through the shared factory.
 Mixed-owner co-location and the broader native assignment/RNG tail still require
 their missing authorities; this API does not silently bypass those guards.
+
+## Conventional stack authority (integration in progress)
+
+Conventional Unit8 optionally retains source-pool ID and next/previous links.
+Unit4/6/7 remain readable and leave this authority unknown. The ordinary codec
+refuses to omit a supplied binding; field and manager graph validation reject
+self-links, out-of-range indices, nonreciprocal links, cycles and missing physical
+members. Native and conventional bindings use the same dense registry order.
+
+Direct and prepared casualties unlink either kind before source-pool compaction.
+Prepared queries/commit include conventional links separately from home changes,
+and copied faction-removal plans preserve that state. Six lifecycle controls
+remove each member of a retained Isle -> Worm -> Scout stack through direct and
+prepared paths, check discard isolation, then roundtrip all surviving Unit bytes
+through the manager codec. These are explicit retained-state fixtures, not a
+claim that the original constructor has already produced that stack in GLSMAC.
+
+Still required before live mixed birth activation: insertion/promotion across
+both kinds; movement out of/into a retained stack; conventional creation and
+restart placement; mixed Base-center cleanup; original co-located observation
+writes; and a genuine factory/whole-world restore comparison with the captured
+Scout/Isle discriminator. Existing mixed-placement guards remain in force.

@@ -107,6 +107,50 @@ void ExploreNine(game::backend::map::SmacWorkerKnowledge::Data& data,int32_t x,i
 
 }
 void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC mixed owner source stacks unlink conventional and native casualties before compaction",GT(){
+        using namespace game::backend;using namespace game::backend::unit;using Knowledge=map::SmacWorkerKnowledge;using Stack=ConventionalUnitState::Stack;
+        for(const bool staged:{false,true}) {for(int removed=0;removed<3;++removed) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* manager=game->GetUM();BirthDefinitions(game);if(staged) {BirthBase(GSE_CALL,game);}
+                types::Buffer definitions;manager->Serialize(definitions);types::Buffer loaded;loaded.WriteString(definitions.ReadString());
+                for(int group=0;group<2;++group) {const auto count=definitions.ReadInt();loaded.WriteInt(count);for(int64_t i=0;i<count;++i) {loaded.WriteString(definitions.ReadString());loaded.WriteString(definitions.ReadString());}}
+                GT_ASSERT(definitions.ReadInt()==0,"Mixed stack fixture already has Units");loaded.WriteInt(3);
+                // Explicit retained state: source stack Isle1 -> Worm2 -> Scout0.
+                // This fixture checks lifecycle consumers, not constructor production.
+                for(int i=0;i<3;++i) {
+                    types::Buffer unit;unit.WriteInt(i==0?8:5);unit.WriteInt(i==0?1:2);unit.WriteInt(71+i);unit.WriteString(i==0?"birth-human":i==1?"IsleOfTheDeep":"MindWorms");unit.WriteInt(i==0?0:-1);unit.WriteInt(40);unit.WriteInt(40);
+                    if(i==0) {ConventionalUnitState human{2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};human.stack=Stack{0,-1,2};human.Serialize(unit,true,true,true);}
+                    else {auto record=Record::InitializeWild(i,i==1?9:8,0);record.x=40;record.y=40;record.stack_next=i==1?2:0;record.stack_previous=i==1?-1:1;unit.WriteString(record.Serialize().ToString());}
+                    loaded.WriteString(unit.ToString());
+                }
+                loaded.WriteInt(74);manager->Clear();manager->Deserialize(GSE_CALL,loaded);
+                if(staged) {
+                    Knowledge::Data data{80,80,true,true,0,{},{},{}};data.observers[1]=Knowledge::Observer{};data.tiles.resize(3200,{0,std::nullopt});
+                    Knowledge::BaseObservation base{901,2,{}};base.population[1]=1;data.bases.push_back(base);ExploreNine(data,16,16,2);
+                    data.units={{71,0,false},{72,0,false},{73,0,false}};game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                }
+                const auto next=Unit::GetNextId();const auto random=fixture.GameplayRandom();
+                if(staged) {
+                    const auto before=fixture.Snapshot();{auto discard=manager->PrepareWorldUnitRemoval(GSE_CALL,{size_t(71+removed)});}
+                    GT_ASSERT(fixture.Snapshot()==before,"Discarded mixed stack casualty changed live state");
+                    auto removal=manager->PrepareWorldUnitRemoval(GSE_CALL,{size_t(71+removed)});removal.Commit();removal.Notify(GSE_CALL);
+                } else {manager->DespawnUnit(GSE_CALL,71+removed);}
+                std::vector<int> chain;for(const auto n:{1,2,0}) {if(n!=removed) {chain.push_back(n);}}
+                for(size_t i=0;i<chain.size();++i) {
+                    auto* unit=manager->GetUnit(71+chain[i]);const auto& n=unit->IsNative()?unit->Native():Record{};
+                    const auto actual=unit->IsNative()?Stack{int16_t(n.id),n.stack_next,n.stack_previous}:*unit->Conventional().stack;
+                    const auto compact=[&](int n){return int16_t(n-(n>removed));};
+                    GT_ASSERT((actual==Stack{compact(chain[i]),i+1<chain.size()?compact(chain[i+1]):int16_t(-1),i?compact(chain[i-1]):int16_t(-1)}),"Mixed stack unlink/reindex differs");
+                }
+                GT_ASSERT(manager->GetUnits().size()==2 && Unit::GetNextId()==next && fixture.GameplayRandom()==random,"Mixed casualty changed allocator/RNG or retained victim");
+                types::Buffer saved;manager->Serialize(saved);std::vector<std::string> wires;for(auto id:manager->GetUnitRecordOrder()) {wires.push_back(Unit::Serialize(manager->GetUnit(id)).ToString());}
+                manager->Clear();game->GetMap()->GetTile(40,40)->units.clear();manager->Deserialize(GSE_CALL,saved);
+                for(size_t i=0;i<wires.size();++i) {GT_ASSERT(Unit::Serialize(manager->GetUnit(manager->GetUnitRecordOrder()[i])).ToString()==wires[i],"Mixed casualty stack failed complete manager restore");}GT_OK();
+            });GT_ASSERT(error.empty(),"Mixed source stack lifecycle: "+error);
+        }}GT_OK();
+    });
+
     task->AddTest("SMAC native factory interleaves brood sentry promotion and restores transaction",GT(){
         using namespace game::backend;using namespace game::backend::unit;using Knowledge=map::SmacWorkerKnowledge;
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);

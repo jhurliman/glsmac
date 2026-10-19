@@ -328,6 +328,7 @@ struct UnitManager::PreparedConventionalRemoval::Data {
     std::vector<std::unique_ptr<Unit>> retired;
     std::vector<std::pair<Unit*,SmacNativeUnitRecord>> native_survivors;
     std::vector<std::pair<Unit*,SmacNativeUnitRecord>> native_retired_states;
+    std::vector<std::pair<Unit*,ConventionalUnitState::Stack>> conventional_stacks;
     std::vector<std::pair<Unit*,ConventionalUnitState>> base_removal_homes;
     std::optional<faction::SmacNativeFactoryState> native_factory;
     bool committed=false;
@@ -491,6 +492,8 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
         if(unit->IsNative()) {
             if(unit->Native().id!=index) {THROW("Native source index differs from live record order");}
             data->native_survivors.emplace_back(unit,unit->Native());
+        } else if(unit->IsConventional() && unit->Conventional().stack) {
+            data->conventional_stacks.emplace_back(unit,*unit->Conventional().stack);
         }
     }
     for(const auto id:ids) {
@@ -513,16 +516,30 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
         occupants.erase(id); data->units.erase(found);
         const auto ordered=std::find(data->order.begin(),data->order.end(),id);
         const auto erased=static_cast<int32_t>(std::distance(data->order.begin(),ordered));
+        std::optional<ConventionalUnitState::Stack> retired_stack;
         if(unit->IsNative()) {
             const auto retiring=std::find_if(data->native_survivors.begin(),data->native_survivors.end(),[&](const auto& row){return row.first==unit;});
             if(retiring==data->native_survivors.end() || retiring->second.id!=erased) {THROW("World casualty has inconsistent staged native index");}
-            const auto record=retiring->second;data->native_retired_states.emplace_back(unit,record);data->native_survivors.erase(retiring);
-            for(auto& survivor:data->native_survivors) {
-                if(survivor.second.stack_next==erased) {survivor.second.stack_next=record.stack_next;}
-                if(survivor.second.stack_previous==erased) {survivor.second.stack_previous=record.stack_previous;}
-            }
+            const auto record=retiring->second;retired_stack=ConventionalUnitState::Stack{int16_t(record.id),record.stack_next,record.stack_previous};
+            data->native_retired_states.emplace_back(unit,record);data->native_survivors.erase(retiring);
+        } else {
+            const auto retiring=std::find_if(data->conventional_stacks.begin(),data->conventional_stacks.end(),[&](const auto& row){return row.first==unit;});
+            if(retiring!=data->conventional_stacks.end()) {retired_stack=retiring->second;data->conventional_stacks.erase(retiring);}
         }
-        for(auto& survivor:data->native_survivors) {survivor.second=survivor.second.AfterUnlinkedIndexErasure(erased);}
+        for(auto& survivor:data->native_survivors) {
+            if(retired_stack) {
+                if(survivor.second.stack_next==erased) {survivor.second.stack_next=retired_stack->next;}
+                if(survivor.second.stack_previous==erased) {survivor.second.stack_previous=retired_stack->previous;}
+            }
+            survivor.second=survivor.second.AfterUnlinkedIndexErasure(erased);
+        }
+        for(auto& survivor:data->conventional_stacks) {
+            if(retired_stack) {
+                if(survivor.second.next==erased) {survivor.second.next=retired_stack->next;}
+                if(survivor.second.previous==erased) {survivor.second.previous=retired_stack->previous;}
+            }
+            survivor.second=survivor.second.AfterUnlinkedIndexErasure(erased);
+        }
         data->order.erase(ordered);
         const auto old=data->updates.find(id);
         if(old!=data->updates.end() && (old->second.ops & UUO_SPAWN)) {data->updates.erase(old);}
@@ -646,13 +663,16 @@ void UnitManager::PreparedConventionalRemoval::QueryWithNativeRecords(const std:
     if(!m_data || m_data->committed) {THROW("Removal query requires an uncommitted plan");}
     const auto& d=*m_data;
     auto previous=d.native_survivors;auto factory=d.native_factory;
+    auto previous_stacks=d.conventional_stacks;for(auto& row:previous_stacks) {row.second=*row.first->Conventional().stack;}
     for(auto& row:previous) {row.second=row.first->Native();}
     util::FinallyGuard restore([&] {
         if(d.native_factory) {d.manager->m_game->m_simulation->value.native_factory.swap(factory);}
         for(const auto& row:previous) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+        for(const auto& row:previous_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     });
     if(d.native_factory) {d.manager->m_game->m_simulation->value.native_factory.swap(factory);}
     for(const auto& row:d.native_survivors) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+    for(const auto& row:d.conventional_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     query();
 }
 void UnitManager::PreparedConventionalRemoval::Query(const std::function<void()>& query) const {
@@ -672,6 +692,7 @@ void UnitManager::PreparedConventionalRemoval::Commit() noexcept {
     d.manager->m_units.swap(d.units); d.manager->m_unit_order.swap(d.order); d.manager->m_unit_updates.swap(d.updates);
     static_assert(std::is_nothrow_copy_assignable_v<SmacNativeUnitRecord>);
     for(const auto& row:d.native_survivors) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+    for(const auto& row:d.conventional_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     for(const auto& row:d.native_retired_states) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
     for(const auto* removed:d.removed) {d.manager->AdjustDesignCount(*removed,-1);}
     if(d.base_updates) {d.manager->m_game->GetBM()->m_base_updates.swap(*d.base_updates);}
@@ -751,7 +772,7 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnitsForQuery(slot:
         // supplied plan may be installed as a read-only nested query view.
         const auto& old=*supplied->m_data;auto copy=std::make_unique<PreparedConventionalRemoval::Data>();
         copy->manager=this;copy->removed=old.removed;copy->removed_ids=old.removed_ids;copy->units=old.units;copy->order=old.order;
-        copy->native_survivors=old.native_survivors;copy->updates=old.updates;copy->occupants=old.occupants;copy->knowledge=old.knowledge;copy->base_updates=old.base_updates;copy->retired.resize(old.removed.size());
+        copy->native_survivors=old.native_survivors;copy->conventional_stacks=old.conventional_stacks;copy->updates=old.updates;copy->occupants=old.occupants;copy->knowledge=old.knowledge;copy->base_updates=old.base_updates;copy->retired.resize(old.removed.size());
         data->removal.emplace(PreparedConventionalRemoval(std::move(copy)));
     } else {data->removal.emplace(PrepareRemovalForQuery(removed,transient));}
     const auto& removal=*data->removal->m_data;
@@ -1103,20 +1124,28 @@ void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 	if ( ordered == m_unit_order.end() ) { THROW( "Unit is missing its record order" ); }
 
     std::vector<std::pair<Unit*,SmacNativeUnitRecord>> native_survivors;
+    std::vector<std::pair<Unit*,ConventionalUnitState::Stack>> conventional_stacks;
     const auto erased=static_cast<int32_t>(std::distance(m_unit_order.begin(),ordered));
     std::vector<Unit*> dense;dense.reserve(m_unit_order.size());
     for(const auto id:m_unit_order) {dense.push_back(m_units.at(id));}
     ValidateNativeIndexBindings(dense);
+    std::optional<ConventionalUnitState::Stack> retiring;
+    if(unit->IsNative()) {const auto& n=unit->Native();retiring=ConventionalUnitState::Stack{int16_t(n.id),n.stack_next,n.stack_previous};}
+    else if(unit->IsConventional()) {retiring=unit->Conventional().stack;}
     for(auto* survivor:dense) {
-        if(survivor==unit || !survivor->IsNative()) {continue;}
-        auto record=survivor->Native();
-        // Stack links refer to the pre-compaction pool. Unlink the retiring
-        // native first, then apply the shared source-index/payload repair.
-        if(unit->IsNative()) {
-            if(record.stack_next==erased) {record.stack_next=unit->Native().stack_next;}
-            if(record.stack_previous==erased) {record.stack_previous=unit->Native().stack_previous;}
+        if(survivor==unit) {continue;}
+        if(survivor->IsNative()) {
+            auto record=survivor->Native();
+            if(retiring) {
+                if(record.stack_next==erased) {record.stack_next=retiring->next;}
+                if(record.stack_previous==erased) {record.stack_previous=retiring->previous;}
+            }
+            native_survivors.emplace_back(survivor,record.AfterUnlinkedIndexErasure(erased));
+        } else if(survivor->IsConventional() && survivor->Conventional().stack) {
+            auto stack=*survivor->Conventional().stack;
+            if(retiring) {if(stack.next==erased) {stack.next=retiring->next;}if(stack.previous==erased) {stack.previous=retiring->previous;}}
+            conventional_stacks.emplace_back(survivor,stack.AfterUnlinkedIndexErasure(erased));
         }
-        native_survivors.emplace_back(survivor,record.AfterUnlinkedIndexErasure(erased));
     }
 
     std::optional<faction::SmacNativeFactoryState> native_factory;
@@ -1137,6 +1166,7 @@ void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 	m_units.erase( it );
 	m_unit_order.erase( ordered );
     for(const auto& row:native_survivors) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+    for(const auto& row:conventional_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     AdjustDesignCount(*unit,-1);
 
 	auto* state = m_game->GetState();

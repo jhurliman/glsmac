@@ -119,35 +119,37 @@ void UnitManager::ValidateNativeCreation(size_t id,const Def* def,const map::til
     }
 }
 void UnitManager::ValidateNativeIndexBindings(const std::vector<Unit*>& ordered) const {
+    using Stack=ConventionalUnitState::Stack;
+    const auto state=[](const Unit* unit)->std::optional<Stack> {
+        if(unit->IsNative()) {const auto& n=unit->Native();return Stack{int16_t(n.id),n.stack_next,n.stack_previous};}
+        if(unit->IsConventional()) {return unit->Conventional().stack;}return std::nullopt;
+    };
     for(size_t index=0;index<ordered.size();++index) {
-        const auto* unit=ordered[index];
-        if(!unit->IsNative()) {continue;}
-        const auto& record=unit->Native();
-        if(ordered.size()>2048 || record.id!=index) {throw std::runtime_error("Native source index differs from dense Unit order");}
+        const auto* unit=ordered[index];const auto binding=state(unit);if(!binding) {continue;}
+        binding->Validate();
+        if(ordered.size()>2048 || binding->id!=index) {throw std::runtime_error("Source stack index differs from dense Unit order");}
         const auto linked=[&](int16_t target)->const Unit* {
             if(target<0) {return nullptr;}
-            if(static_cast<size_t>(target)>=ordered.size() || !ordered[target]->IsNative() || ordered[target]->GetTile()!=unit->GetTile()) {
-                throw std::runtime_error("Native stack reference is not a same-tile native record");
-            }
-            return ordered[target];
+            if(size_t(target)>=ordered.size() || !state(ordered[target]) || state(ordered[target])->id!=target || ordered[target]->GetTile()!=unit->GetTile()) {
+                throw std::runtime_error("Stack reference is not a bound same-tile Unit record");
+            }return ordered[target];
         };
-        const auto* next=linked(record.stack_next);const auto* previous=linked(record.stack_previous);
-        if((next && next->Native().stack_previous!=record.id) || (previous && previous->Native().stack_next!=record.id)) {
-            throw std::runtime_error("Native stack references are not reciprocal");
+        const auto* next=linked(binding->next);const auto* previous=linked(binding->previous);
+        if((next && state(next)->previous!=binding->id) || (previous && state(previous)->next!=binding->id)) {
+            throw std::runtime_error("Source stack references are not reciprocal");
         }
-        if(record.stack_previous==-1) {
+        if(binding->previous==-1) {
             size_t count=0;const Unit* cursor=unit;
             while(cursor) {
-                if(++count>ordered.size()) {throw std::runtime_error("Native stack contains a cycle");}
-                cursor=linked(cursor->Native().stack_next);
+                if(++count>ordered.size()) {throw std::runtime_error("Source stack contains a cycle");}
+                cursor=linked(state(cursor)->next);
             }
-            if(count!=unit->GetTile()->units.size()) {throw std::runtime_error("Native stack omits physical tile members");}
+            if(count!=unit->GetTile()->units.size()) {throw std::runtime_error("Source stack omits physical tile members");}
         } else {
-            // Every node must reach a head, including an otherwise reciprocal cycle.
             size_t count=0;const Unit* cursor=unit;
             while(cursor) {
-                if(++count>ordered.size()) {throw std::runtime_error("Native stack has no head");}
-                cursor=linked(cursor->Native().stack_previous);
+                if(++count>ordered.size()) {throw std::runtime_error("Source stack has no head");}
+                cursor=linked(state(cursor)->previous);
             }
         }
     }

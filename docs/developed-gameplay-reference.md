@@ -7,10 +7,9 @@ controlled equivalent scene for the gameplay-map/console target, not an import o
 the supplied GOG screenshot or proof of the gameplay which would earn this state.
 No original asset or campaign bytes belong in Git.
 
-The source Scout is selected by owned conventional design plan3, rather than by
+The source Scout is selected by owned conventional design plan3 and resolved infantry Scout presentation, rather than by
 the lowest conventional Unit ID. A preceding Colony Pod, Former or foreign Scout
-cannot replace it. The asset-free regression exercises those three preceding
-records, unchanged saved-world bytes during selection, and an absent owned Scout.
+cannot replace it. A lower-ID owned Spartan Rover also cannot replace it. The asset-free regression exercises both roster contexts, unchanged saved-world bytes during selection, and an absent owned Scout.
 
 Supply an idle local SMAC campaign with an owned canonical Base, ordinary Scout,
 complete worker knowledge and the default population presentation catalog. Input
@@ -52,3 +51,7 @@ regression pass with allocation tracking. The new exported world and roster are
 byte-identical to the prior developed scene; only the inherited settings format
 changes from the intervening optional faction-summary catalog update. Existing
 scene captures therefore remain valid for this fixture-only correction.
+
+Further review controls: a locally owned, lower-ID selected Spartan Rover remains in the world when the ordinary Scout is removed; selection returns absence rather than substituting it. Retired Base history is retained, while the opt-in construction restores each declared public scene label after ordinary Spawn registration/territory hooks. The declared name is already registered either by the retired Base or the new spawn. No production name policy or mutation guard changes.
+
+The focused mixed-roster and retired-name regressions pass with allocation tracking. Actual exports from both the original University input and a previously developed three-Base input pass with allocation tracking. Exporting the original input remains byte-identical to developed V4 (SHA256 `4f5bf3435f937b51695b8728655476ac0b82388e5a48d612a8105111c69069da`), so earlier scene images are reused without another graphical/platform run. These review fixes change test-fixture code only; prior sanitizer receipts cover the unchanged ownership path, not a fresh sanitizer run of the new cases.

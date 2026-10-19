@@ -2891,15 +2891,17 @@ public:
         for(const auto& row:m_game.GetUM()->GetUnits()) {
             auto* unit=row.second;
             if(unit->m_owner==m_game.m_slot && unit->IsConventional()
-                && m_game.ResolveConventionalDesign(unit->Conventional(),*m_game.m_simulation).plan==3) {return unit;}
+                && m_game.ResolveConventionalDesign(unit->Conventional(),*m_game.m_simulation).plan==3
+                && m_game.ResolveConventionalUnit(unit->Conventional(),unit->m_owner).presentation
+                    ==game::backend::unit::ConventionalUnitContext::Presentation::Scout) {return unit;}
         }
         return nullptr;
     }
 
-    std::string CheckDevelopedReferenceScoutSelection() {
+    std::string CheckDevelopedReferenceScoutSelection(bool rover=false) {
         using namespace game::backend;
         using namespace game::backend::unit;
-        ConfigureConventional(true,3,false);
+        ConfigureConventional(true,3,rover,rover);
         return WithScriptValues([&](GSE_CALLABLE)->std::string {
             auto* manager=m_game.GetUM();
             MoraleSet::morale_values_t names;for(size_t i=0;i<7;++i) {names.emplace_back("Rank");}
@@ -2910,6 +2912,9 @@ public:
             auto* former=new StaticDef("REFERENCE_FORMER",morale,"Former",MT_LAND,1,new FormerMarkerRender());
             auto* colony=new StaticDef("REFERENCE_COLONY",morale,"Colony",MT_LAND,1,new ColonyMarkerRender());
             manager->DefineUnit(scout);manager->DefineUnit(former);manager->DefineUnit(colony);
+            auto* rover_def=new StaticDef("REFERENCE_ROVER",morale,"Rover",MT_LAND,2,
+                new CvrScoutRender(2,0,100,100,{1,1},{128,128},CvrScoutRender::Composition::SpartanRover));
+            manager->DefineUnit(rover_def);
             auto* tile=m_game.GetMap()->GetTile(2,2);tile->is_water_tile=false;
             Unit* expected=nullptr;
             m_game.WithRW([&] {
@@ -2918,7 +2923,10 @@ public:
                     return manager->SpawnConventionalUnit(GSE_CALL,id,def,&m_state->m_slots->GetSlot(owner),tile,
                         {design,simulation,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
                 };
-                spawn(1,scout,2,6); // foreign Scout must not become the source
+                if(rover) {
+                    const auto simulation=m_game.m_simulation->value.FindSlot(0)->simulation_id;
+                    spawn(1,rover_def,m_game.m_simulation->value.designs.Find(simulation)->starting_scout,0);
+                } else {spawn(1,scout,2,6);} // foreign Scout must not become the source
                 spawn(2,colony,0,0);spawn(3,former,1,0);
                 expected=spawn(4,scout,2,0);
             });
@@ -2927,6 +2935,38 @@ public:
             GT_ASSERT(WorldSnapshot()==before,"reference Scout selection changed saved world or RNG state");
             m_game.WithRW([&] {manager->DespawnUnit(GSE_CALL,expected->m_id);});
             GT_ASSERT(!FindDevelopedReferenceScout(),"reference fixture substituted a worker when no owned Scout exists");
+            GT_OK();
+        });
+    }
+
+    void SpawnDeclaredReferenceBase(GSE_CALLABLE,game::backend::base::Base* base,const std::string& name) {
+        m_game.GetBM()->SpawnBase(GSE_CALL,base);
+        // This opt-in fixture constructs replacement initial state. Spawn still
+        // owns registration and territory hooks. If retired history caused a
+        // suffix, the declared name is already registered by that history;
+        // restore the public scene label before any export. Keep the history.
+        base->m_name=name;
+    }
+    std::string CheckDevelopedReferenceRetiredNames() {
+        using namespace game::backend;
+        ConfigureConventional(true,3,true);
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* bm=m_game.GetBM();auto* tile=m_game.GetMap()->GetTile(2,2);
+            tile->is_water_tile=false;
+            const auto old_id=base::Base::GetNextId();
+            util::FinallyGuard ids([=]{base::Base::SetNextId(old_id);});
+            m_game.WithRW([&] {
+                for(const std::string name:{"New Chicago","New Austin","Hilton Head"}) {
+                    auto* retired=new base::Base(&m_game,base::Base::GetNextId(),m_game.m_slot,m_game.m_player->GetFaction(),tile,name,{},{});
+                    bm->SpawnBase(GSE_CALL,retired);bm->DespawnBase(GSE_CALL,retired->m_id);
+                    auto* replacement=new base::Base(&m_game,base::Base::GetNextId(),m_game.m_slot,m_game.m_player->GetFaction(),tile,name,{},{});
+                    SpawnDeclaredReferenceBase(GSE_CALL,replacement,name);
+                    if(replacement->m_name!=name) {throw std::runtime_error("Retired history changed declared reference name");}
+                    const auto wire=base::Base::Serialize(replacement).ToString();
+                    if(wire.find(name)==std::string::npos || wire.find(name+" 2")!=std::string::npos) {throw std::runtime_error("Reference serialized a suffixed name");}
+                    bm->DespawnBase(GSE_CALL,replacement->m_id);
+                }
+            });
             GT_OK();
         });
     }
@@ -2995,7 +3035,7 @@ public:
                     for(size_t n=1;n<=population[i];++n) {pops.emplace(n,base::Pop(nullptr,n,doctor,n%2));}
                     base::SmacBaseAllocationState allocation{1,{{},static_cast<int32_t>(population[i])}};allocation.specialists.types.fill(1);
                     auto* base=new base::Base(&m_game,base::Base::GetNextId(),m_game.m_slot,m_game.m_player->GetFaction(),sites[i],names[i],i==0?facilities:base::Base::facilities_t{},pops,population[i]+1,0,production,context,allocation);
-                    bm->SpawnBase(GSE_CALL,base);
+                    SpawnDeclaredReferenceBase(GSE_CALL,base,names[i]);
                     sites[i]->features=0;
                     for(auto* tile:sites[i]->neighbours) {if(!tile->is_water_tile) {tile->features=0;tile->terraforming=map::tile::TERRAFORMING_ROAD|((tile->coord.y%4)==0?map::tile::TERRAFORMING_FOREST:map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOLAR);}}
                     auto state=unit_state;state.home=ConventionalUnitState::Home::None;state.spent=0;state.damage=0;
@@ -10876,7 +10916,12 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
     task->AddTest("Developed reference selects owned Scout after lower-ID workers",GT(){
-        BackendFixture fixture;return fixture.CheckDevelopedReferenceScoutSelection();
+        {BackendFixture fixture;const auto error=fixture.CheckDevelopedReferenceScoutSelection();GT_ASSERT(error.empty(),"Mixed foreign/worker selection: "+error);}
+        {BackendFixture fixture;const auto error=fixture.CheckDevelopedReferenceScoutSelection(true);GT_ASSERT(error.empty(),"Mixed Rover/Scout selection: "+error);}
+        GT_OK();
+    });
+    task->AddTest("Developed reference restores declared names after retired Base history",GT(){
+        BackendFixture fixture;return fixture.CheckDevelopedReferenceRetiredNames();
     });
     task->AddTest("Export developed gameplay reference campaign",GT(){
         const auto* input=std::getenv("GLSMAC_REFERENCE_INPUT");const auto* output=std::getenv("GLSMAC_REFERENCE_OUTPUT");

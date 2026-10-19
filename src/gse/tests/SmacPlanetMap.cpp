@@ -1,6 +1,7 @@
 #include "SmacPlanetMap.h"
 #include "game/backend/map/SmacPlanetMap.h"
 #include "game/backend/map/SmacClimate.h"
+#include "game/backend/map/SmacGlobalSpread.h"
 #include "game/backend/settings/Settings.h"
 #include "fixtures/SmacRulesSource.h"
 #include "fixtures/SmacBloomTerrain.h"
@@ -34,6 +35,46 @@ bool Rejects(const std::string& wire) {
 }
 }
 void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Planet global spread publication preserves opaque bytes and rejects stale or altered journals",GT(){
+        namespace spread=game::backend::map::smac_spread;using Policy=game::backend::map::GlsmacResourceMapPolicy;
+        auto wire=Synthetic();Put(wire,15+0xa30,4);
+        for(size_t i=0;i<Planet::TILE_COUNT;++i) {
+            const auto offset=Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES;
+            wire[offset]=96;wire[offset+1]=87;wire[offset+6]=27;wire[offset+7]=static_cast<char>(0xa5);
+        }
+        for(size_t i=wire.size()-Planet::TRAILER_BYTES;i<wire.size();++i) {wire[i]=static_cast<char>(i%256);}
+        const auto address=[](int x,int y) {return Planet::PREFIX_BYTES+Planet::HEADER_BYTES+(size_t(y)*40+x/2)*Planet::RECORD_BYTES;};
+        Put(wire,address(41,67)+8,0x200000);Put(wire,address(41,67)+16,0x200000);
+        Put(wire,address(42,66)+8,0x24);Put(wire,address(42,66)+16,0x24);
+        const auto source=Planet::Decode(wire);const auto policy=Policy::InstalledPlanetV1(source,true);
+        const auto prepare=[](const Planet& planet) {
+            spread::Input input{{80,80,true},3200,1,{},{}};input.observer_status[1]=0x200;
+            for(uint32_t y=0;y<80;++y) {for(uint32_t x=y&1;x<80;x+=2) {input.tiles.push_back(planet.At(x,y));}}
+            return input;
+        };
+        const auto before=prepare(source);const auto plan=spread::Prepare(before,game::backend::SmacGameplayRandomState(123,1));
+        GT_ASSERT(!plan.changes.empty() && plan.changes.front().target==spread::Coordinate({42,66}),"Synthetic publication did not execute actual spread producer");
+        auto expected=wire;
+        for(const auto& change:plan.changes) {for(size_t k=0;k<44;++k) {expected[address(change.target[0],change.target[1])+k]=static_cast<char>(change.after.bytes[k]);}}
+        const auto updated=policy.WithGlobalSpread(before,plan);
+        GT_ASSERT(updated.OriginalPlanet()->Encode()==expected && policy.OriginalPlanet()->Encode()==wire
+            && updated.AutomaticLandResources() && Policy::Deserialize(updated.Serialize().ToString())==updated,"Spread publication changed opaque geometry/source or failed saved policy round trip");
+        const auto rejects=[&](const spread::Input& input,const spread::Result& result) {try {(void)policy.WithGlobalSpread(input,result);}catch(const std::invalid_argument&) {return true;}return false;};
+        auto stale=before;stale.tiles.back().bytes[1]^=1;
+        GT_ASSERT(rejects(stale,plan),"Unrelated stale terrain accepted");
+        auto malformed=plan;malformed.changes.back().after.bytes[1]^=1;
+        GT_ASSERT(rejects(before,malformed) && policy.OriginalPlanet()->Encode()==wire,"Late journal error partly published terrain");
+        malformed=plan;malformed.changes.pop_back();GT_ASSERT(rejects(before,malformed),"Unjournaled final mutation accepted");
+        malformed=plan;malformed.tiles.back().bytes[6]^=1;GT_ASSERT(rejects(before,malformed),"Final terrain escaped its journal");
+        auto flat=before;flat.geometry.wrap=false;GT_ASSERT(rejects(flat,plan),"Flat producer entered wrapped installed policy");
+        bool rejected=false;try {(void)updated.WithGlobalSpread(before,plan);}catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Repeated spread publication replayed on changed terrain");
+        auto world=source.ExportClimateTerrain(true);world.tiles[0].cached_occupant=0;world.tiles[0].items|=1;
+        const auto retained=policy.WithClimateTerrain(world,0,0);const auto retained_before=prepare(*retained.OriginalPlanet());
+        const auto retained_plan=spread::Prepare(retained_before,game::backend::SmacGameplayRandomState(123,1));
+        const auto occupied=retained.WithGlobalSpread(retained_before,retained_plan);
+        GT_ASSERT(occupied.OriginalPlanet()->At(0,0).Items()==1 && Policy::Deserialize(occupied.Serialize().ToString())==occupied,"Spread lost retained V2 occupied authority");GT_OK();
+    });
     task->AddTest("SMAC Planet retained altitude band7 survives policy publication and altitude reconstruction",GT(){
         namespace c=game::backend::map::smac_climate;using Policy=game::backend::map::GlsmacResourceMapPolicy;
         auto wire=Synthetic();Put(wire,15+0xa30,4);

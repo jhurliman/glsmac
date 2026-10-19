@@ -99,9 +99,9 @@ return {
 		this.lines = this.frame.listview({
 			left: 3,
 			right: 3,
-			top: 63,
+			top: 52,
 			bottom: 3,
-			itemsize: 16,
+			itemsize: 13,
 		});
 
 		if (this.show_resources) {
@@ -124,9 +124,9 @@ return {
 				} else {
 					this.line('Ocean Shelf');
 				}
-				this.line('Depth: ' + #to_string(this.SEA_LEVEL - tile.elevation));
+				this.line('Depth: ' + #to_string(this.SEA_LEVEL - tile.elevation) + 'm');
 			} else {
-				this.line('Elev:' + #to_string(tile.elevation - this.SEA_LEVEL));
+				this.line('Elev: ' + #to_string(tile.elevation - this.SEA_LEVEL) + 'm');
 				let tilestr = '';
 				if (tile.rockiness < #sizeof(this.ROCKINESS_LEVELS)) {
 					tilestr += this.ROCKINESS_LEVELS[tile.rockiness];
@@ -176,14 +176,14 @@ return {
 
 		p.ui.class('tile-preview-line').set({
 			color: 'rgb(116,156,56)',
-			font: 'arialnb.ttf:14',
+			font: 'arialnb.ttf:14:mono',
 		});
 
 		const frame_outer = p.el.panel({
 			class: 'bottombar-panel',
 			align: 'top left',
 			top: 59,
-			bottom: 7,
+			bottom: 67,
 			left: 137,
 			width: 106,
 		});

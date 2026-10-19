@@ -1,6 +1,6 @@
 return {
 
-	height: 256,
+	height: 257,
 
 	process_message: (text) => {
 
@@ -20,6 +20,7 @@ return {
 
 		this.pp = {};
 		this.message_fade_timer = null;
+		const console_art = p.game.get_ruleset() == 'smac' ? 'console2.pcx' : 'console2_a.pcx';
 
 		p.ui.class('bottombar-panel').extend('default-panel');
 		p.ui.class('bottombar-panel-inner').extend('default-panel-inner');
@@ -73,19 +74,19 @@ return {
 				zindex: 0.3,
 				align: 'right',
 				width: 520,
-				background: 'console2_a.pcx:crop(504, 0, 1023, 256)',
+				background: console_art + ':crop(504, 0, 1023, 256)',
 			}),
 			left: parent.el.surface({
 				zindex: 0.4,
 				align: 'left',
-				width: 356,
-				background: 'console2_a.pcx:crop(0, 0, 356, 256)',
+				width: 357,
+				background: console_art + ':crop(0, 0, 356, 256)',
 			}),
 			middle: parent.el.surface({
 				zindex: 0.5,
-				left: 356,
+				left: 357,
 				right: 520,
-				background: 'console2_a.pcx:crop(357, 0, 503, 256)',
+				background: console_art + ':crop(357, 0, 503, 256)',
 			}),
 		};
 

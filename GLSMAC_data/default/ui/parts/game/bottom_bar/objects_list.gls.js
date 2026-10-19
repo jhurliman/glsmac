@@ -173,7 +173,7 @@ return {
 			class: 'bottombar-panel',
 			align: 'bottom',
 			bottom: 7,
-			left: 245,
+			left: 137,
 			right: 258,
 			height: 58,
 		});

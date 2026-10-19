@@ -74,9 +74,9 @@ return {
 		this.lines = this.frame.listview({
 			left: 3,
 			right: 3,
-			top: 86,
+			top: 65,
 			bottom: 3,
-			itemsize: 17,
+			itemsize: 13,
 		});
 
 		const f_line = (text, size, align) => {
@@ -84,10 +84,10 @@ return {
 			if (align == 'left') {
 				left = 3;
 			}
-			this.lines.text({
+			return this.lines.text({
 				align: 'top ' + align,
 				color: 'rgb(116,156,56)',
-				font: 'arialnb.ttf:' + #to_string(size),
+				font: 'arialnb.ttf:' + #to_string(size) + ':mono',
 				text: text,
 				left: left,
 			});
@@ -120,10 +120,31 @@ return {
 				break;
 			}
 			case 'Base': {
-
-				f_line(object.name, 14, 'center');
-
-				f_line('Producing:', 14, 'left'); // TODO
+				f_line(object.name, 16, 'center');
+				const production = object.get_production_state();
+				const presentation = object.get_smac_production_presentation();
+				let description = 'Production unavailable';
+				if (#is_defined(presentation)) {
+					description = 'Producing: ' + presentation.name;
+					if (#is_defined(production)) {
+						description += ' (' + #to_string(production.minerals);
+						if (#is_defined(presentation.cost)) { description += '/' + #to_string(presentation.cost); }
+						description += ')';
+					}
+				}
+				// Measure the actual font rather than splitting at a guessed
+				// character count: production names vary considerably in width.
+				let line = f_line('', 14, 'center');
+				let text = '';
+				for (word of #split(description, ' ')) {
+					const candidate = text == '' ? word : text + ' ' + word;
+					line.text = candidate;
+					if (text != '' && line.measure().width > this.frame.width - 12) {
+						line.text = text;
+						line = f_line(word, 14, 'center');
+						text = word;
+					} else { text = candidate; }
+				}
 
 				break;
 			}
@@ -134,6 +155,9 @@ return {
 	},
 
 	show: (object) => {
+		this.object = object;
+		this.object_class = object == null ? null : #classof(object);
+		this.object_id = object == null ? null : object.id;
 		this.set_image(object);
 		this.set_lines(object);
 	},
@@ -141,6 +165,9 @@ return {
 	init: (p) => {
 
 		this.preview = null;
+		this.object = null;
+		this.object_class = null;
+		this.object_id = null;
 		this.last_object_class = null;
 		this.moralesets = {};
 
@@ -151,7 +178,7 @@ return {
 			align: 'top center',
 			top: 12,
 			width: 100,
-			height: 75,
+			height: 56,
 		});
 
 		const frame_outer = p.el.panel({
@@ -171,7 +198,15 @@ return {
 		});
 		p.map.on('base_preview', (e) => {
 			this.show(e.base);
-		})
+		});
+		this.frame.listen(p.game, 'update_base', (e) => {
+			if (this.object_class == 'Base' && this.object_id == e.base.id) {
+				this.show(e.base);
+			}
+		});
+		this.frame.listen(p.game, 'base_despawn', (e) => {
+			if (this.object_class == 'Base' && this.object_id == e.base_id) { this.show(null); }
+		});
 
 	},
 

@@ -92,6 +92,12 @@ static const std::unordered_map< resource::resource_t, TextureLoader::transparen
 		}
 	},
 	{
+		resource::PCX_CONSOLE2,
+		{
+			s_tc_pink,
+		}
+	},
+	{
 		resource::PCX_CONSOLE2_A,
 		{
 			s_tc_darkpurple,

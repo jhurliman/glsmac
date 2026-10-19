@@ -80,10 +80,12 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         // Keep unimplemented material memberships separate from geometry.
         // Preserve the prior Jungle/Uranium/Geothermal admission here; live
         // feature gates below still reject unsupported special land paint.
-        // Geometry-only0x200/0x800 have no sea profile. Memberships
-        //1/2/0x100 also select special art and stay excluded on sea.
+        // Geometry-only0x200/0x800 have no sea profile. The named quads
+        // are now composed on land and sea with their distinct scalar rules.
         const uint32_t sea_memberships=output.band<3?0xd0u:0u;
-        const auto unsupported_landmark_materials=landmarks&~(0xff400000u|0xa00u|4u|8u|0x400u|sea_memberships);
+        const auto unsupported_landmark_materials=landmarks&~(0xff400000u|0xb03u|4u|8u|0x400u|sea_memberships);
+        const auto art_detail=landmarks>>24;
+        const bool unsupported_art_detail=(landmarks&0x103u) && art_detail>=49 && art_detail<128;
         // Unsupported later improvements retain the existing GPU terrain.
         // Road/Tube now compose from the viewer's separately copied memory.
         // Pholus is height-only in this prefix. Its live adapter feature must
@@ -91,10 +93,11 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         // ridge still lacks the retained source authority needed for admission.
         const auto unsupported_ridge=(landmarks&0x800u) && output.heights
             ?0u:static_cast<unsigned>(tile::FEATURE_FOSSIL_FIELD_RIDGE);
-        const auto unsupported_features=tile::FEATURE_JUNGLE|tile::FEATURE_VOLCANO|
-            tile::FEATURE_GARLAND_CRATER|unsupported_ridge|tile::FEATURE_DUNES;
+        const auto unsupported_quads=(landmarks&0x103u) && (output.band<3 || output.heights)
+            ?0u:static_cast<unsigned>(tile::FEATURE_VOLCANO|tile::FEATURE_GARLAND_CRATER);
+        const auto unsupported_features=tile::FEATURE_JUNGLE|unsupported_quads|unsupported_ridge|tile::FEATURE_DUNES;
         const auto unsupported_work=live->terraforming&~((1u<<13)-1);
-        output.ordinary=!output.deformed && !unsupported_landmark_materials && !(live->features&unsupported_features) && !unsupported_work;
+        output.ordinary=!output.deformed && !unsupported_art_detail && !unsupported_landmark_materials && !(live->features&unsupported_features) && !unsupported_work;
     }}
     return result;
 }

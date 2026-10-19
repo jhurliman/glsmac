@@ -3,6 +3,7 @@
 #include "SmacRiver.h"
 #include "SmacRoadTube.h"
 #include "SmacDevelopedOverlay.h"
+#include "SmacLandmarkArt.h"
 #include "game/backend/map/SmacTerrainGeometry.h"
 #include "game/backend/map/SmacLandmarkGeometry.h"
 #include "game/backend/map/SmacTerrainLighting.h"
@@ -88,13 +89,25 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
     Frame frame;
     std::map<material::Crop,smac_developed_overlay::Sprite> sprites;
     std::vector<raster::Command> commands;commands.reserve(placements.size()*14);
+    const auto append_quads=[&](int x,int y,const std::array<Point,5>& points,const std::array<int,5>& light) {
+        const auto& tile=*At(world,x,y);
+        for(const auto& pass:smac_landmark_art::Quads(tile.landmarks,tile.band>=3,points,light)) {
+            raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
+            command.shader=pass.shader;command.shade_limits=pass.shade_limits;commands.push_back(command);
+        }
+    };
     const auto append_water=[&](int x,int y,const std::array<Point,5>& points) {
+        const bool sea=At(world,x,y)->band<3;bool quads=false;
         for(const auto& pass:smac_water_coast::Select(x,y,points,cells)) {
+            if(sea && !quads && pass.shader==raster::Shader::KeyedUnlit) {
+                append_quads(x,y,points,{});quads=true;
+            }
             raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
             command.shader=pass.shader;command.shade_limits=pass.shade_limits;
             if(pass.shader==raster::Shader::CoastMapped) {command.mask=&source.coast_mask;command.mask_mapping=pass.mapping;}
             commands.push_back(command);
         }
+        if(sea && !quads) {append_quads(x,y,points,{});}
     };
     const auto append_boundary=[&](int x,int y,const std::array<Point,5>& points) {
         if(world.viewer<=0) {return;}
@@ -147,7 +160,11 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         const std::array<Point,5> points{{{{fx,fy-heights[0]}},{{fx-48,fy-heights[1]}},
             {{fx,fy-24-heights[2]}},{{fx+48,fy-heights[3]}},{{fx,fy+24-heights[4]}}}};
         const auto seed=static_cast<uint16_t>(base+placement.record_offset);
+        bool quads=false;
         for(const auto& pass:material::Select({{x,y}},materials,seed)) {
+            if(!quads && (pass.role==material::Role::Forest || pass.role==material::Role::Fungus)) {
+                append_quads(x,y,points,*light);quads=true;
+            }
             raster::Command command;command.texture=crop(pass.crop);command.polygon.count=pass.vertices;
             command.shader=pass.role==material::Role::Base?raster::Shader::OpaqueShaded:
                 pass.role==material::Role::Fungus?raster::Shader::KeyedUnlit:raster::Shader::KeyedShaded;
@@ -157,6 +174,7 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             }
             commands.push_back(command);
         }
+        if(!quads) {append_quads(x,y,points,*light);}
         append_boundary(x,y,points);
         append_water(x,y,points);
         for(const auto& pass:smac_river::Select(x,y,points,*light,cells,display_flags)) {

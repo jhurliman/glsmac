@@ -222,8 +222,8 @@ public:
                 for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=static_cast<char>(word>>(8*byte));
                 local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
                 const auto metadata=local.CopyNativeTerrain();const auto& cell=metadata->tiles[40*40+20];
-                const bool special_art=word&0x103u;
-                if(cell.deformed || cell.ordinary==special_art) return false;
+                // Sea heights remain zero and negative detail skips quads.
+                if(cell.deformed || !cell.ordinary) return false;
             }
             wire[record]=char(3<<5);
             for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=0;
@@ -316,6 +316,28 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         std::fill(source.pixels.begin(),source.pixels.end(),9);
         const auto skipped=raster::DrawBatch(initial,{command},{{0,0,8,8}},true);
         GT_ASSERT(skipped.writes==0 && std::all_of(skipped.coverage.begin(),skipped.coverage.end(),[](auto n){return !n;}),"Transparent key wrote coverage");GT_OK();
+    });
+    task->AddTest("SMAC native landmark quads compose before Forest and sea Fungus",GT(){
+        namespace native=game::frontend::native_terrain;
+        ::game::native_terrain::World world;
+        for(auto& cell:world.tiles) {cell.band=3;cell.ordinary=true;}
+        auto& cell=world.tiles[40*40+20];cell.landmarks=2;
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,10)};
+        source.coast_mask={56,56,std::vector<uint8_t>(56*56,0)};
+        for(unsigned i=0;i<256;++i) {source.palette[i]={uint8_t(i),0,0};}
+        for(unsigned y=628;y<684;++y) {for(unsigned x=1;x<57;++x) {source.loaded.pixels[y*1024+x]=50;}}
+        const std::vector<native::Placement> view{{{{40,40}},{{576,288}},44*(40*40+20)}};
+        const auto ink=[&](){return native::Render(world,source,view,0).rgba[(288*1024+575)*4];};
+        GT_ASSERT(ink()==50,"Mount detail0 did not draw its unlit quad after the land base");
+        cell.items=0x200000;
+        GT_ASSERT(ink()==10,"Landmark quad drew over later Forest");
+        for(auto& water:world.tiles) {water.band=2;water.contour=40;}
+        cell.items=0;
+        GT_ASSERT(ink()==50,"Sea landmark quad did not follow the sector base");
+        cell.items=0x20;
+        GT_ASSERT(ink()==10,"Landmark quad drew over later sea Fungus");
+        cell.items=0;cell.landmarks=0x80000002u;
+        GT_ASSERT(ink()!=50,"Negative art detail drew a named quad");GT_OK();
     });
     task->AddTest("SMAC native terrain connected painter owns frame and preserves unsupported holes",GT(){
         namespace native=game::frontend::native_terrain;

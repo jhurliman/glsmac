@@ -269,6 +269,29 @@ without consuming RNG. All 16 native research groups, the focused dialog GSE
 script and targeted GameResearch/GameCanonicalSnapshot correctness analysis pass.
 
 Outstanding admission limits remain: hotseat focus, project-dependent valuation,
-and generated worlds without retained categorical cloud authority are not supplied
-by this change. Native interactive capture and GitHub exact-head review are still
+and legacy continuous worlds without retained categorical cloud authority are not
+supplied by this change. Native interactive capture and GitHub exact-head review are still
 required before this checkpoint is promoted as a validated release milestone.
+
+### Generated-world setup dependency
+
+Fresh SMAC random setup now chooses native-life and cloud cover from the same
+three displayed presets as custom setup. Quickstart preserves those accepted
+choices instead of replacing them with continuous random values. New simulation
+admission freezes exact 0.25/0.5/0.75 choices as native categories0/1/2 and the
+blank-map applied sea offset0. Imported Planet still takes its values, including
+nonzero sea offset, from the owned header. Arbitrary continuous settings remain
+unavailable; no terrain-derived estimate or nearest-category rounding is used.
+The original categories and blank-map reset are supported by
+[Planet inputs](behavior/planet-ecology-global-inputs.md) and
+[blank-map initialization](behavior/climate-map-header-and-worldbuilder.md).
+This does not establish original generated-terrain or generation-RNG fidelity.
+
+Ten claimed-Start controls cover all nine category pairs and a continuous-choice
+rejection. Actual imported-map startup fixtures now answer the Blind question
+through its command, with a complete synthetic prerequisite catalog. Their exact
+initializer RNG prefix is checked before selection; selection cannot draw CRT.
+Existing original selector traces cover its additional shared draws separately.
+The new randomization script test and 24 native research/startup groups pass,
+including all seven Planet factions at all six difficulties. Both additional
+production translation units pass targeted correctness analysis.

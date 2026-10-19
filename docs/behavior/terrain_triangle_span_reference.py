@@ -36,7 +36,7 @@ def generate_spans(vertices,uv,lights,clip=(0,0,1024,511),triangle=0,shade_limit
     light=[max(shade_limits[0],min(shade_limits[1],v)) for v in lights]
     low=min(range(n),key=lambda i:vertices[i][1]);high=max(range(n),key=lambda i:vertices[i][1])
     y0=vertices[low][1];y1=vertices[high][1]
-    if y0==y1:return []
+    if y0==y1 or clip[0]>=clip[2] or clip[1]>=clip[3]:return []
     def edge(start,direction):
         if start==high:return None
         end=(start+direction)%n
@@ -94,6 +94,10 @@ if __name__=='__main__':
             assert got==c['spans'],c['id'];edgecount+=len(got)
         assert horizontal_step(926882,11)==84261
         print('PASS',len(edgecases),'edge cases,',edgecount,'native spans')
+        general=edgecases[0]
+        for empty_clip in [(10,0,10,32),(11,0,10,32),(0,12,32,12),(0,13,32,12)]:
+            assert generate_spans(general['vertices'],general['uv'],general['lights'],empty_clip)==[]
+        print('PASS interior empty/reversed clip guards')
     if args.texture_pcx:
         raster=runpy.run_path(str(Path(__file__).with_name('terrain_triangle_raster_reference.py')))
         tex=raster['pcx_crop'](args.texture_pcx,d['texture']['crop'])

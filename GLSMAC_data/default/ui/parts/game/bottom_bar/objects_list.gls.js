@@ -31,7 +31,8 @@ return {
 			case 'Base': {
 				type = 'base-preview';
 				data.base = object;
-				top = 2;
+				data.roster = true;
+				top = 0;
 				break;
 			}
 			default: {
@@ -49,6 +50,7 @@ return {
 			data: data,
 			class: 'bottombar-objects-list-item-preview',
 			top: top,
+			height: cls == 'Base' ? 48 : 38,
 		});
 		const key = #to_string(object.id);
 		switch (cls) {

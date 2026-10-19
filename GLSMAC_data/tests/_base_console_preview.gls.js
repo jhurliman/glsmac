@@ -27,7 +27,11 @@ return (game) => {
 		const rows = preview.lines.children;
 		if (rows[0].text != base.name) { throw TestError('Console Base name stale'); }
 		let description = '';
-		for (let i = 1; i < #sizeof(rows); i++) { description += (i == 1 ? '' : ' ') + rows[i].text; }
+		for (let i = 1; i < #sizeof(rows); i++) {
+			for (word of #split(rows[i].text, ' ')) {
+				if (word != '') { description += (description == '' ? '' : ' ') + word; }
+			}
+		}
 		if (description != expected) { throw TestError('Wrong production text: ' + description); }
 	};
 };

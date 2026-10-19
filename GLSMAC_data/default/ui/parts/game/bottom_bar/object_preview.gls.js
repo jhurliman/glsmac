@@ -1,3 +1,4 @@
+const wrap_lines = #include('wrapped_lines');
 return {
 
 	get_morale: (type, value) => {
@@ -72,7 +73,9 @@ return {
 			return;
 		}
 
-		this.lines = this.frame.area({left: 0, right: 0, top: 0, bottom: 0});
+		const base_card = #classof(object) == 'Base';
+		// Base text may retain a separator just outside the inner116px box.
+		this.lines = (base_card ? this.outer_frame : this.frame).area({left: 0, right: 0, top: 0, bottom: 0});
 		let row = 0;
 
 		const f_line = (text, size, align) => {
@@ -84,10 +87,22 @@ return {
 				left: align == 'left' ? 0 : #undefined,
 			});
 			// Native baseline 139, then 13-pixel rows; clip origin is y=66.
-			line.top = 73 + row * 13 - line.measure().height;
+			line.top = (base_card ? 79 : 73) + row * 13 - line.measure().height;
 			row++;
 			return line;
 		};
+
+        const f_wrapped = (text, size) => {
+            const first_row = row;
+            const line = f_line('', size, 'center');
+            const rows = wrap_lines(text, (candidate) => {
+                line.text = candidate;
+                return line.measure().width;
+            }, 116);
+            line.text = rows[0];
+            line.top = 79 + first_row * 13 - line.measure().height;
+            for (let i = 1; i < #sizeof(rows); i++) { f_line(rows[i], size, 'center'); }
+        };
 
 		switch (#classof(object)) {
 			case 'Unit': {
@@ -142,7 +157,7 @@ return {
 				break;
 			}
 			case 'Base': {
-				f_line(object.name, 16, 'center');
+				f_wrapped(object.name, 16);
 				const production = object.get_production_state();
 				const presentation = object.get_smac_production_presentation();
 				let description = 'Production unavailable';
@@ -154,19 +169,7 @@ return {
 						description += ')';
 					}
 				}
-				// Measure the actual font rather than splitting at a guessed
-				// character count: production names vary considerably in width.
-				let line = f_line('', 14, 'center');
-				let text = '';
-				for (word of #split(description, ' ')) {
-					const candidate = text == '' ? word : text + ' ' + word;
-					line.text = candidate;
-					if (text != '' && line.measure().width > this.frame.width - 12) {
-						line.text = text;
-						line = f_line(word, 14, 'center');
-						text = word;
-					} else { text = candidate; }
-				}
+				f_wrapped(description, 14);
 
 				break;
 			}
@@ -212,6 +215,7 @@ return {
 			left: 8,
 			width: 128,
 		});
+		this.outer_frame = frame_outer;
 		this.frame = frame_outer.panel({
 			class: 'bottombar-panel-inner',
 			left: 6, right: 6, top: 6, bottom: 6,

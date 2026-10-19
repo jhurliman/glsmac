@@ -21,6 +21,7 @@
 #include "Faction.h"
 #include "SmacFactionSummary.h"
 #include "SmacMinimap.h"
+#include "SmacBaseCard.h"
 #include "Mesh.h"
 #include "SmacBaseSquareYield.h"
 #include "SmacResourceBonus.h"
@@ -346,6 +347,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddFactionTests( task );
 		tests::AddSmacFactionSummaryTests( task );
 		tests::AddSmacMinimapTests( task );
+		tests::AddSmacBaseCardTests( task );
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacResourceBonusTests( task );
 		tests::AddSmacTileNutrientTests( task );

@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "game/NativeTerrainWorld.h"
 
 #include "engine/Engine.h"
 #include "types/Exception.h"

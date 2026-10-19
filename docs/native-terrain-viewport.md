@@ -33,7 +33,7 @@ runs. It does not consume either random stream.
 
 ## Boundaries still to close
 
-- Water/depth/coast painting, roads, rivers and further land continuations.
+- Roads, rivers and further land continuations.
 - Named landmark deformation/shading and neighboring affected stencils.
 - Original observer/fog admission, complete object occlusion and animated water.
 - Full native view/camera-origin/scrolling behavior and other zooms/viewports.
@@ -60,3 +60,25 @@ arbitrary original scrolling phase or dirty-region redraw behavior.
   minimap recenter to two areas, native atlas admission and ordinary menu Quit.
   Quit returns zero with no tracked OpenGL leaks. Audio is disabled; this is not
   hardware-vsync/audio performance acceptance. Captures remain external.
+
+## Water/coast and sea Fungus continuation
+
+The live inspector also copies the retained contour byte and paints ordinary
+water/depth sectors, land coast masks and shelf Fungus. Coast masks are generated
+from the owned indexed RAINFALL.PCX; no original pixels are embedded in this repo.
+Sea Fungus uses its separate atlas bank and keyed unlit shader after the water
+sectors; existing land Fungus remains before coast. The snapshot owns its fields
+and the atlas cache owns its mask, with no retained backend tile pointers.
+
+The measured profile is documented in [water/coast](behavior/ordinary-water-coast.md)
+and [sea Fungus](behavior/ordinary-sea-fungus.md). Production command checks cover
+54 contexts,250 continuation commands and760 contour samples; raster receipts cover
+60 complete indexed frames and7714 spans. To replay the production C++ against
+owned original assets (loaded pixels and output stay in a temporary directory):
+
+```
+python tools/reference/verify_native_water_coast.py --texture-pcx PATH/TEXTURE.PCX --rainfall-pcx PATH/RAINFALL.PCX
+```
+
+Add `--sanitize --cxx clang++` for the focused ASan/UBSan replay. This is static
+terrain material composition, not animated water or whole-map pixel parity.

@@ -6,7 +6,7 @@ namespace game::native_terrain {
 // Owned rendering inputs copied on the backend thread. No Tile/Map pointers,
 // gameplay RNG state, assets or serialization lifetime cross this boundary.
 struct Tile {
-    uint8_t band=0,moisture=0,rockiness=0;
+    uint8_t band=0,moisture=0,rockiness=0,contour=0;
     uint32_t items=0;
     bool ordinary=false,deformed=false;
 };

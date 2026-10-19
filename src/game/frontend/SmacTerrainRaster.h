@@ -10,7 +10,7 @@ using Point = std::array<int32_t, 2>;
 struct Vertex { Point screen, uv; int32_t light; };
 using Triangle = std::array<Vertex, 3>;
 struct Polygon {std::array<Vertex,4> vertices{};uint8_t count=0;};
-enum class Shader {OpaqueShaded,KeyedShaded,KeyedUnlit};
+enum class Shader {OpaqueShaded,KeyedShaded,KeyedUnlit,WaterDepth16,CoastMapped};
 // Left/top inclusive, right/bottom exclusive, in the target bitmap.
 using Clip = std::array<int32_t, 4>;
 struct Span {
@@ -35,6 +35,8 @@ struct Command {
     Shader shader=Shader::OpaqueShaded;
     Clip clip{{0,0,32767,32767}};
     std::array<int32_t,2> shade_limits{{-4,4}};
+    const Bitmap* mask=nullptr; // synchronous borrowed56x56 coast class source
+    std::array<uint8_t,53> mask_mapping{};
 };
 
 // Ordinary integer triangles only; preserves native winding, tie selection,

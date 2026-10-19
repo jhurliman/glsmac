@@ -181,6 +181,7 @@ public:
             wire[11]=5;wire[15]=80;wire[19]=80;wire[15+0xa30]=4;
             for(size_t i=0;i<Planet::TILE_COUNT;++i) {
                 wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES]=char(3<<5);
+                wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES+1]=50;
             }
             local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
             local.m_territory_topology=map::GlsmacTerritoryTopology::Build(80,80,false,std::vector<bool>(3200,false));
@@ -189,7 +190,7 @@ public:
             retained=local.CopyNativeTerrain();
             if(!retained || retained->horizontal_wrap) return false;
             const auto& before=retained->tiles[40*40+20];
-            if(before.band!=3 || before.moisture!=2 || before.rockiness!=1 || before.items!=0x200020 || !before.ordinary) return false;
+            if(before.band!=3 || before.contour!=50 || before.moisture!=2 || before.rockiness!=1 || before.items!=0x200020 || !before.ordinary) return false;
             live->terraforming=tile::TERRAFORMING_FARM;
             const auto farm=local.CopyNativeTerrain();
             if(!farm->tiles[40*40+20].ordinary || farm->tiles[40*40+20].items!=0x8020) return false;
@@ -277,6 +278,30 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(hole.tiles==0 && hole.writes==0 && hole.rgba[(288*1024+575)*4+3]==0,"Unsupported continuation covered legacy terrain");GT_OK();
     });
 
+
+    task->AddTest("SMAC native terrain connects water and keyed sea Fungus through owned snapshots",GT(){
+        namespace native=game::frontend::native_terrain;
+        ::game::native_terrain::World world;
+        for(auto& tile:world.tiles) {tile.band=2;tile.contour=50;tile.ordinary=true;}
+        native::Source source{{1024,768,std::vector<uint8_t>(1024*768,9)},{}};
+        for(size_t i=0;i<source.palette.size();++i) {source.palette[i]={static_cast<uint8_t>(i),0,0};}
+        source.palette[42]={0,255,0};
+        source.coast_mask={56,56,std::vector<uint8_t>(56*56,0)};
+        const std::vector<native::Placement> view{{{{40,40}},{{576,288}},44*(40*40+20)}};
+        const auto water=native::Render(world,source,view,0);
+        GT_ASSERT(water.tiles==1 && water.writes>2000 && water.rgba[(288*1024+575)*4+3]==255,"Live water prefix did not paint opaque source9");
+        auto& center=world.tiles[40*40+20];center.items=0x20;
+        const auto holes=native::Render(world,source,view,0);
+        GT_ASSERT(holes.rgba==water.rgba,"Sea Fungus key did not preserve composed water");
+        for(int y=516;y<572;++y) {std::fill_n(source.loaded.pixels.begin()+y*1024+508,56,42);}
+        const auto fungus=native::Render(world,source,view,0);
+        GT_ASSERT(fungus.rgba[(288*1024+575)*4+1]==255 && fungus.writes>water.writes,"Live sea Fungus did not follow water or used shaded/wrong bank");
+        GT_ASSERT(holes.rgba==water.rgba,"Later source mutation changed an owned frame");
+        center.band=1;
+        const auto ocean=native::Render(world,source,view,0);
+        center.items=0;
+        GT_ASSERT(ocean.rgba==native::Render(world,source,view,0).rgba,"Ocean Fungus bypassed shelf admission");GT_OK();
+    });
 
     task->AddTest("SMAC indexed terrain generates759 actual native spans from vertices",GT(){
         namespace raster=game::frontend::smac_terrain_raster;

@@ -12,6 +12,7 @@ std::vector<Placement> View(int camera_x,int camera_y,bool horizontal_wrap);
 struct Source {
     smac_terrain_raster::Bitmap loaded;
     smac_land_material::Palette palette;
+    smac_terrain_raster::Bitmap coast_mask{};
 };
 struct Frame {
     std::vector<uint8_t> rgba;

@@ -1,4 +1,5 @@
 #include "Map.h"
+#include "game/NativeTerrainWorld.h"
 #include "SmacPlanetMap.h"
 #include "tile/Tile.h"
 
@@ -13,6 +14,7 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         const auto* live=GetTile(x,y);
         auto& output=result->tiles[static_cast<size_t>(y)*40+x/2];
         output.band=original.Climate()>>5;
+        output.contour=original.Contour();
         output.moisture=live->moisture?live->moisture-1:0;
         output.rockiness=live->rockiness?live->rockiness-1:0;
         if(live->features&tile::FEATURE_XENOFUNGUS) {output.items|=0x20;}

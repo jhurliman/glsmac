@@ -1,6 +1,6 @@
 #pragma once
 #include <deque>
-#include "game/NativeTerrainWorld.h"
+namespace game::native_terrain {struct World;}
 #include <memory>
 #include "game/FrontendRequest.h"
 

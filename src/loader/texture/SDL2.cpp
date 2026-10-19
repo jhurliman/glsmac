@@ -2,6 +2,7 @@
 #include "SmacPalette.h"
 #include "util/FinallyGuard.h"
 #include "game/frontend/NativeTerrainRenderer.h"
+#include "game/frontend/SmacWaterCoast.h"
 #include "SmacEffect.h"
 #include "SmacNativeBadge.h"
 #include "SmacBaseCard.h"
@@ -82,7 +83,8 @@ std::shared_ptr<const SmacBaseCard> SDL2::GetSmacNativeBaseCard(const std::strin
 struct SmacNativeBadgeSource {std::array<SmacNativeBadge,14> badges;};
 std::shared_ptr<const game::frontend::native_terrain::Source> SDL2::GetSmacTerrainSource() {
     const auto path=GetCustomFilename("texture.pcx"),common_path=GetCustomFilename("palette.pcx");
-    const auto key=path+":"+common_path;
+    const auto rainfall_path=GetCustomFilename("rainfall.pcx");
+    const auto key=path+":"+common_path+":"+rainfall_path;
     const auto found=m_native_terrain_sources.find(key);if(found!=m_native_terrain_sources.end()) {return found->second;}
     using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
     std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,path);Surface image(load_image(bytes),SDL_FreeSurface);
@@ -100,6 +102,19 @@ std::shared_ptr<const game::frontend::native_terrain::Source> SDL2::GetSmacTerra
         const auto* row=static_cast<const uint8_t*>(image->pixels)+y*image->pitch;
         for(int x=0;x<image->w;++x) {source->loaded.pixels[static_cast<size_t>(y)*static_cast<size_t>(image->w)+static_cast<size_t>(x)]=static_cast<uint8_t>(row[x]+10);}
     }
+    // Coast masks depend on source indices, not converted RGBA colors.
+    util::FS::ReadFile(bytes,rainfall_path);Surface rainfall(load_image(bytes),SDL_FreeSurface);
+    if(!rainfall || !rainfall->format || rainfall->format->BitsPerPixel!=8 || rainfall->w<115 || rainfall->h<389 ||
+        rainfall->w>=32767 || rainfall->h>=32767 || rainfall->pitch<rainfall->w) {THROW("Unsupported native coast mask source");}
+    game::frontend::smac_terrain_raster::Bitmap loaded_rainfall{rainfall->w,rainfall->h,
+        std::vector<uint8_t>(static_cast<size_t>(rainfall->w)*static_cast<size_t>(rainfall->h))};
+    if(SDL_LockSurface(rainfall.get())!=0) {THROW(SDL_GetError());}
+    util::FinallyGuard unlock_rainfall([&]{SDL_UnlockSurface(rainfall.get());});
+    for(int y=0;y<rainfall->h;++y) {
+        const auto* row=static_cast<const uint8_t*>(rainfall->pixels)+static_cast<size_t>(y)*static_cast<size_t>(rainfall->pitch);
+        for(int x=0;x<rainfall->w;++x) {loaded_rainfall.pixels[static_cast<size_t>(y)*static_cast<size_t>(rainfall->w)+static_cast<size_t>(x)]=static_cast<uint8_t>(row[x]+10);}
+    }
+    source->coast_mask=game::frontend::smac_water_coast::CoastMasks(loaded_rainfall)[0];
     m_native_terrain_sources.emplace(key,source);return source;
 }
 types::texture::Texture* SDL2::CreateSmacNativeBadgeTexture(int level,int variant) {

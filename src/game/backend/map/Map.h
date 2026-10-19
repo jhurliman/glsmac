@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/NativeTerrainWorld.h"
+namespace game::native_terrain {struct World;}
 #include <string>
 #include <unordered_map>
 #include <vector>

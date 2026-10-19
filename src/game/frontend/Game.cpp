@@ -1040,6 +1040,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		}
 		case FrontendRequest::FR_TURN_ADVANCE: {
 			m_turn_id = request->data.turn_advance.turn_id;
+            m_native_snapshot_dirty=true; // Current claims and directed relations are turn state.
 			break;
 		}
 		case FrontendRequest::FR_FACTION_DEFINE: {
@@ -1210,6 +1211,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			break;
 		}
 		case FrontendRequest::FR_BASE_SPAWN: {
+            m_native_snapshot_dirty=true;
 			const auto& d = request->data.base_spawn;
 			const auto& tc = d.tile_coords;
 			const auto& rc = d.render_coords;
@@ -1230,10 +1232,12 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			break;
 		}
 		case FrontendRequest::FR_BASE_DESPAWN: {
+            m_native_snapshot_dirty=true;
 			m_bm->DespawnBase( request->data.base_despawn.base_id );
 			break;
 		}
 		case FrontendRequest::FR_BASE_UPDATE: {
+            m_native_snapshot_dirty=true;
 			const auto& d = request->data.base_update;
 			auto* base = m_bm->GetBaseById( d.base_id );
 			ASSERT( base, "base is null" );

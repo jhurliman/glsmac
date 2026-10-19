@@ -1352,6 +1352,18 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
             if(m_game_state==GS_RUNNING && m_map && m_state && !m_state->GetConnection()
                 && m_state->m_settings.global.GetRulesetId()=="smac") {
                 auto snapshot=m_map->CopyNativeTerrain();
+                if(snapshot && m_simulation) {
+                    for(const auto& participant:m_simulation->value.roster) {
+                        if(participant.simulation_id<=0 || participant.simulation_id>7) {continue;}
+                        const auto owner=static_cast<size_t>(participant.simulation_id);
+                        if(const auto* faction=m_state->GetFM()->Get(participant.faction_id)) {snapshot->faction_files[owner]=faction->m_bases_render.file;}
+                        if(participant.slot==static_cast<int32_t>(m_slot_num)) {snapshot->viewer=participant.simulation_id;}
+                    }
+                    const auto viewer=m_simulation->value.hostility.owners.find(snapshot->viewer);
+                    if(viewer!=m_simulation->value.hostility.owners.end()) {
+                        for(size_t i=0;i<8;++i) {snapshot->relations[i]=viewer->second.directions[i].primary;}
+                    }
+                }
                 response.data.native_terrain=snapshot.release();
             }
             break;

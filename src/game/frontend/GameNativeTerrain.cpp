@@ -44,7 +44,7 @@ void Game::UpdateNativeTerrain() {
         && std::abs(m_camera_position.z-0.125f)<0.000001f;
     if(!admitted) {if(m_native_actor) {m_native_actor->Hide();}return;}
     if(!m_native_frame_dirty) {return;}
-    if(!m_native_source) {m_native_source=g_engine->GetTextureLoader()->GetSmacTerrainSource();}
+    if(!m_native_source || m_native_source->faction_files!=m_native_world->faction_files) {m_native_source=g_engine->GetTextureLoader()->GetSmacTerrainSource(m_native_world->faction_files);}
     const auto& matrix=m_camera->GetMatrix().m;
     std::vector<native_terrain::Placement> placements;
     // Preserve the original row/left-to-right painter order. Each horizontal

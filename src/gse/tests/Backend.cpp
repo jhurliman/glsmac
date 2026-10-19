@@ -1,4 +1,5 @@
 #include "Backend.h"
+#include "game/NativeTerrainWorld.h"
 #include "util/String.h"
 #include "loader/txt/FactionTXTLoader.h"
 #include "SmacFirstBase.h"
@@ -5388,6 +5389,35 @@ public:
 		GT_OK();
 	}
 
+    std::string CheckNativeBoundaryMetadata() {
+        using namespace game::backend;
+        const auto startup=CheckSimulationStartup(true,0,true,false,2,false,0,false,false,{},{},"UNIVERSITY",{},false,true);
+        if(!startup.empty()) {return startup;}
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            int viewer=0;
+            for(const auto& row:m_game.m_simulation->value.roster) {
+                if(row.slot==static_cast<int32_t>(m_game.m_slot_num)) {viewer=row.simulation_id;}
+                m_state->GetFM()->Get(row.faction_id)->m_bases_render.file=row.faction_id+".pcx";
+            }
+            GT_ASSERT(viewer>0,"Native snapshot fixture has no actual local participant");
+            auto& relation=m_game.m_simulation->value.hostility.owners.at(viewer).directions[7].primary;
+            relation=0x08000008;
+            const auto ticket=FixtureWorldTicket(),request=m_game.MT_GetNativeTerrain(ticket);ProcessRequests();
+            const auto response=m_game.MT_GetResponse(request);
+            util::FinallyGuard destroy([&]{m_game.MT_DestroyResponse(response);});
+            GT_ASSERT(response.result==R_SUCCESS && response.world_ticket==ticket && response.data.native_terrain,"Actual native metadata request did not return an owned world");
+            const auto& snapshot=*response.data.native_terrain;
+            GT_ASSERT(snapshot.viewer==viewer && snapshot.relations[7]==relation,"Snapshot lost local simulation identity or directed relations");
+            for(const auto& row:m_game.m_simulation->value.roster) {
+                GT_ASSERT(snapshot.faction_files[row.simulation_id]==row.faction_id+".pcx","Snapshot assigned owner colors by transport slot or stock order");
+                m_state->GetFM()->Get(row.faction_id)->m_bases_render.file.clear();
+                GT_ASSERT(!snapshot.faction_files[row.simulation_id].empty(),"Snapshot borrowed mutable faction metadata");
+            }
+            relation=0;
+            GT_ASSERT(snapshot.relations[7]==0x08000008,"Snapshot borrowed mutable diplomacy");GT_OK();
+        });
+    }
+
 	std::string CheckSimulationRestore( const bool queued, const int failure, const bool early = false ) {
 		using namespace game::backend;
 		class Client final : public connection::Client {
@@ -7683,6 +7713,9 @@ public:
 };
 
 static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
+    task->AddTest("world admission native terrain owns local viewer relations and faction metadata",GT(){
+        BackendFixture fixture;return fixture.CheckNativeBoundaryMetadata();
+    });
     task->AddTest("world admission native terrain snapshots reject stale retired and cancelled tickets",GT(){
         using namespace game::backend;
         BackendFixture fixture;

@@ -57,6 +57,12 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
     const smac_water_coast::CellAt cells=[&](int x,int y)->std::optional<smac_water_coast::Cell> {
         const auto* tile=At(world,x,y);return tile?std::optional<smac_water_coast::Cell>{{tile->band,tile->contour,tile->items}}:std::nullopt;
     };
+    const smac_territory_boundary::CellAt territories=[&](int x,int y)->std::optional<smac_territory_boundary::Cell> {
+        const auto* tile=At(world,x,y);return tile?std::optional<smac_territory_boundary::Cell>{{tile->band,tile->region,tile->owner}}:std::nullopt;
+    };
+    // This opt-in inspector reveals terrain; ordinary game fog is not inferred
+    // from explored memory. Owner relations still use the actual local viewer.
+    const smac_territory_boundary::Context boundary_context{world.viewer,world.relations};
     std::map<material::Crop,raster::Bitmap> crops;
     const auto crop=[&](const material::Crop& rect)->const raster::Bitmap* {
         auto found=crops.find(rect);
@@ -83,6 +89,14 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             commands.push_back(command);
         }
     };
+    const auto append_boundary=[&](int x,int y,const std::array<Point,5>& points) {
+        if(world.viewer<=0) {return;}
+        const auto pass=smac_territory_boundary::Select(x,y,points,territories,boundary_context,display_flags);
+        if(!pass) {return;}
+        raster::Command command;command.texture=&source.boundary_mask;command.polygon=pass->polygon;
+        command.shader=raster::Shader::OwnerClut;command.shade_limits=pass->shade_limits;
+        command.owner_clut=&source.owner_clut;command.owner_mapping=pass->mapping;commands.push_back(command);
+    };
     for(const auto& placement:placements) {
         const auto x=placement.tile[0],y=placement.tile[1];
         if(x<0 || x>=80 || y<0 || y>=80 || ((x^y)&1) ||
@@ -94,7 +108,7 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         const auto fx=placement.flat_center[0]+offset[0],fy=placement.flat_center[1]+offset[1];
         if(tile.band<3) {
             const std::array<Point,5> points{{{{fx,fy}},{{fx-48,fy}},{{fx,fy-24}},{{fx+48,fy}},{{fx,fy+24}}}};
-            append_water(x,y,points);++frame.tiles;continue;
+            append_water(x,y,points);append_boundary(x,y,points);++frame.tiles;continue;
         }
         // Neighbor landmark deformation has not been translated. Do not feed
         // an ordinary lighting/height model through an unsupported stencil.
@@ -119,6 +133,7 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             }
             commands.push_back(command);
         }
+        append_boundary(x,y,points);
         append_water(x,y,points);
         for(const auto& pass:smac_river::Select(x,y,points,*light,cells,display_flags)) {
             raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;

@@ -7,6 +7,7 @@
 #include "SmacTerrainPolygonRaster.h"
 #include "SmacWaterCoast.h"
 #include "SmacRiver.h"
+#include "SmacTerritoryBoundary.h"
 #include "SmacLandMaterial.h"
 #include "SmacTerrainLighting.h"
 #include "Async.h"
@@ -161,6 +162,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacTerrainPolygonRasterTests( task );
         tests::AddSmacWaterCoastTests(task);
         tests::AddSmacRiverTests(task);
+        tests::AddSmacTerritoryBoundaryTests(task);
 		tests::AddSmacLandMaterialTests( task );
 		tests::AddSmacTerrainLightingTests( task );
 		tests::AddRosterRecordTests( task );

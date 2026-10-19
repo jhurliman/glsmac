@@ -145,8 +145,9 @@ Result Draw(const Bitmap& initial,const Bitmap& texture,const std::vector<Triang
 Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,const Clip& clip,bool track_coverage) {
     ValidateBitmap(initial);
     for(const auto& command:commands) {
-        if(!command.texture || (command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded && command.shader!=Shader::KeyedUnlit && command.shader!=Shader::WaterDepth16 && command.shader!=Shader::CoastMapped)) {Invalid();}
+        if(!command.texture || (command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded && command.shader!=Shader::KeyedUnlit && command.shader!=Shader::WaterDepth16 && command.shader!=Shader::CoastMapped && command.shader!=Shader::OwnerClut)) {Invalid();}
         ValidateBitmap(*command.texture);
+        if(command.shader==Shader::OwnerClut && (!command.owner_clut || std::any_of(command.owner_mapping.begin(),command.owner_mapping.end(),[](auto selector){return selector>8;}))) {Invalid();}
         if(command.shader==Shader::CoastMapped) {
             if(!command.mask) {Invalid();}
             ValidateBitmap(*command.mask);
@@ -178,11 +179,18 @@ Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,cons
                     if(cls>=command.mask_mapping.size()) {Invalid();}
                     mapped=command.mask_mapping[cls];
                 }
+                uint8_t owner_selector=0;
+                if(command.shader==Shader::OwnerClut) {
+                    if(loaded>=command.owner_mapping.size()) {Invalid();}
+                    owner_selector=command.owner_mapping[loaded];
+                }
                 const bool store=(!keyed || loaded!=9) &&
                     (command.shader!=Shader::WaterDepth16 || signed_shade<16) &&
-                    (command.shader!=Shader::CoastMapped || mapped!=0);
+                    (command.shader!=Shader::CoastMapped || mapped!=0) &&
+                    (command.shader!=Shader::OwnerClut || owner_selector!=0);
                 if(store) {
                     result.bitmap.pixels[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]=
+                        command.shader==Shader::OwnerClut?(*command.owner_clut)[owner_selector-1][result.bitmap.pixels[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]]:
                         command.shader==Shader::CoastMapped && mapped>1?mapped:static_cast<uint8_t>(loaded+(shaded?signed_shade:0));
                     ++result.writes;
                     if(track_coverage) {result.coverage[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]=1;}

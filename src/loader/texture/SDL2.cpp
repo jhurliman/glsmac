@@ -106,10 +106,16 @@ std::shared_ptr<const SmacBaseCard> SDL2::GetSmacNativeBaseCard(const std::strin
 }
 
 struct SmacNativeBadgeSource {std::array<SmacNativeBadge,14> badges;};
-std::shared_ptr<const game::frontend::native_terrain::Source> SDL2::GetSmacTerrainSource() {
+std::shared_ptr<const game::frontend::native_terrain::Source> SDL2::GetSmacTerrainSource(const std::array<std::string,8>& faction_files) {
     const auto path=GetCustomFilename("texture.pcx"),common_path=GetCustomFilename("palette.pcx");
     const auto rainfall_path=GetCustomFilename("rainfall.pcx");
-    const auto key=path+":"+common_path+":"+rainfall_path;
+    const auto system_path=GetCustomFilename("system.txt");
+    std::array<std::string,8> faction_paths{};
+    auto key=path+":"+common_path+":"+rainfall_path+":"+system_path;
+    for(size_t i=0;i<8;++i) {
+        if(!faction_files[i].empty()) {faction_paths[i]=GetCustomFilename(faction_files[i]);}
+        key+=":"+std::to_string(faction_paths[i].size())+":"+faction_paths[i];
+    }
     const auto found=m_native_terrain_sources.find(key);if(found!=m_native_terrain_sources.end()) {return found->second;}
     using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
     std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,path);Surface image(load_image(bytes),SDL_FreeSurface);
@@ -140,6 +146,27 @@ std::shared_ptr<const game::frontend::native_terrain::Source> SDL2::GetSmacTerra
         for(int x=0;x<rainfall->w;++x) {loaded_rainfall.pixels[static_cast<size_t>(y)*static_cast<size_t>(rainfall->w)+static_cast<size_t>(x)]=static_cast<uint8_t>(row[x]+10);}
     }
     source->coast_mask=game::frontend::smac_water_coast::CoastMasks(loaded_rainfall)[0];
+    source->boundary_mask=game::frontend::smac_territory_boundary::Mask(loaded_rainfall);
+    source->faction_files=faction_files;
+    const auto loaded_index=[](SDL_Surface* surface,int x,int y)->uint8_t {
+        if(!surface || !surface->format || surface->format->BitsPerPixel!=8 || !surface->pixels ||
+            x<0 || y<0 || x>=surface->w || y>=surface->h || surface->pitch<surface->w) {THROW("Unsupported native boundary metadata image");}
+        if(SDL_LockSurface(surface)!=0) {THROW(SDL_GetError());}
+        util::FinallyGuard unlock_sample([&]{SDL_UnlockSurface(surface);});
+        return static_cast<uint8_t>(static_cast<const uint8_t*>(surface->pixels)[static_cast<size_t>(y)*static_cast<size_t>(surface->pitch)+static_cast<size_t>(x)]+10);
+    };
+    std::array<uint8_t,8> targets{};
+    for(size_t i=0;i<8;++i) {targets[i]=loaded_index(common.get(),580+8*static_cast<int>(i),56);}
+    util::FS::ReadFile(bytes,system_path);
+    const auto opacities=game::frontend::smac_territory_boundary::ReadOpacities(
+        std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));
+    source->owner_clut=game::frontend::smac_territory_boundary::Rows(source->palette,targets,opacities);
+    for(size_t owner=0;owner<8;++owner) {if(!faction_paths[owner].empty()) {
+        util::FS::ReadFile(bytes,faction_paths[owner]);Surface faction(load_image(bytes),SDL_FreeSurface);
+        const auto target=loaded_index(faction.get(),161,747),encoded=loaded_index(faction.get(),161,757);
+        const int opacity=static_cast<uint8_t>(encoded-10)*100/255;
+        source->owner_clut[owner]=game::frontend::smac_territory_boundary::Row(source->palette,target,opacity);
+    }}
     m_native_terrain_sources.emplace(key,source);return source;
 }
 types::texture::Texture* SDL2::CreateSmacNativeBadgeTexture(int level,int variant) {

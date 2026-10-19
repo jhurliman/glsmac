@@ -241,6 +241,8 @@ public:
 			base_pops_t* pops;
 			bool has_population;
 			size_t population;
+            bool has_native_body;
+            uint8_t body_column,body_row;
 		} base_update;
 		struct {
 			const std::string* serialized_resourcedef; // can be optimized

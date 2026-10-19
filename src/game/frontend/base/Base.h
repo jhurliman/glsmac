@@ -8,6 +8,8 @@
 #include "game/backend/unit/Types.h"
 
 #include "Pop.h"
+#include "game/SmacBaseBody.h"
+#include <optional>
 
 #include "util/Timer.h"
 #include "util/Scroller.h"
@@ -78,6 +80,7 @@ public:
 
 	sprite::Sprite* GetSprite() const;
 
+    void SetNativeBody(std::optional<::game::smac_base_body::Selection> selection);
 	void Show();
 	void Hide();
 	void Update();
@@ -102,6 +105,7 @@ protected:
 	void SetRenderCoords( const types::Vec3& coords ) override;
 
 private:
+    std::optional<::game::smac_base_body::Selection> m_native_body;
 
 	BaseManager* m_bm = nullptr;
 	SlotBadges* m_slot_badges;

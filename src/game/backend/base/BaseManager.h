@@ -1,4 +1,6 @@
 #pragma once
+#include "game/SmacBaseBody.h"
+#include <optional>
 
 #include <unordered_set>
 #include <unordered_map>
@@ -125,6 +127,7 @@ public:
 	const popdefs_t& GetBasePopDefs() const;
 
 	void ProcessUnprocessed( GSE_CALLABLE );
+    std::optional<::game::smac_base_body::Selection> GetSmacBodyPresentation(const Base& base) const;
 	void PushUpdates();
 
 	WRAPDEFS_PTR( BaseManager )

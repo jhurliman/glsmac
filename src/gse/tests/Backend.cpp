@@ -2680,6 +2680,25 @@ public:
                 GT_ASSERT(std::abs(top_left.x-555)<0.001f && std::abs(top_left.y-(257-height))<0.001f &&
                     std::abs(bottom_right.x-596)<0.001f && std::abs(bottom_right.y-(295-height))<0.001f,
                     "Actual Base sprite rectangle differs from original loaded metadata: "+top_left.ToString()+".."+bottom_right.ToString());
+                {
+                    base.SetNativeBody(::game::smac_base_body::Selection{2,1});
+                    auto* perimeter=original_faction->GetBaseSprite(false,2,1,true)->instanced_sprite;
+                    GT_ASSERT(base.GetSprite()->instanced_sprite==perimeter,"Main-map body ignored authenticated defense/size");
+                    game::frontend::tile::Tile second_native_tile({10,2});
+                    auto* second_label=texts.CreateInstancedText("Second",manager.m_name_font,original_faction->m_colors.text,original_faction->m_colors.text_shadow);
+                    game::frontend::base::Base other(&manager,101,"Second",&native_slot,&second_native_tile,false,{1,0,2},second_label);
+                    other.SetNativeBody(::game::smac_base_body::Selection{2,1});
+                    GT_ASSERT(perimeter->actor->GetInstanceMatrices().size()==2,"Body change overwrote another city's actor instance");
+                    base.SetNativeBody(::game::smac_base_body::Selection{3,5});
+                    auto* sea=original_faction->GetBaseSprite(true,3,2,true)->instanced_sprite;
+                    GT_ASSERT(base.GetSprite()->instanced_sprite==sea && perimeter->actor->GetInstanceMatrices().size()==1 &&
+                        sea->actor->GetSpriteActor()->GetDimensions()==types::Vec2<float>(100.0f/96,75.0f/48),"Native sea/defense body lost source extent or old-instance retirement");
+                    base.SetNativeBody(::game::smac_base_body::Selection{2,1});
+                    GT_ASSERT(perimeter->actor->GetInstanceMatrices().size()==2,"Returning body reused another city's instance ID");
+                    base.SetNativeBody(std::nullopt);
+                    GT_ASSERT(base.GetSprite()->instanced_sprite==native,"Removing admitted body did not restore legacy selector");
+                }
+
             }
 
             if(scenario>=0) {
@@ -5402,6 +5421,22 @@ public:
                 return response.data.native_terrain->tiles[tile->coord.y*40+tile->coord.x/2].admitted_base;
             };
             GT_ASSERT(inspect(),"Native Road Base query hid an actual owned Base");
+            const auto original_art=base->m_faction->m_bases_render;
+            util::FinallyGuard restore_art([&]{base->m_faction->m_bases_render=original_art;});
+            base->m_faction->m_bases_render={"univ.pcx",1,1,100,75,50,37,1,1,1};
+            const auto before=::game::backend::base::Base::Serialize(base).ToString();const auto simulation=m_game.m_simulation->value;
+            const auto body=m_game.GetBM()->GetSmacBodyPresentation(*base);
+            GT_ASSERT(body && body->column==1 && body->row==0,"Retained first Base lost native HQ body selection");
+            GT_ASSERT(::game::backend::base::Base::Serialize(base).ToString()==before && m_game.m_simulation->value==simulation,"Body query mutated saved Base or simulation/RNG");
+            m_game.GetBM()->RefreshBase(base);m_game.GetBM()->PushUpdates();
+            const auto& message=m_frontend_requests.back();
+            GT_ASSERT(message.type==::game::FrontendRequest::FR_BASE_UPDATE && message.data.base_update.has_native_body &&
+                message.data.base_update.body_column==1 && message.data.base_update.body_row==0,"Actual Base publication omitted detached body metadata");
+            ::game::FrontendRequest copied(message);
+            GT_ASSERT(copied.data.base_update.has_native_body && copied.data.base_update.body_column==1 && copied.data.base_update.body_row==0 &&
+                copied.data.base_update.name!=message.data.base_update.name && copied.data.base_update.pops!=message.data.base_update.pops,
+                "Copied Base request lost body fields or borrowed its payload");
+
             util::FinallyGuard restore([&]{tile->base=base;});tile->base=nullptr;
             GT_ASSERT(!inspect(),"Native Road Base query fabricated a missing live marker from its record");GT_OK();
         });

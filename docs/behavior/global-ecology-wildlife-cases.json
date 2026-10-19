@@ -1,0 +1,539 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Actual global537790 from captured first global advance caller53a820, original controller frame; input controls preserve real terrain/Unit/site/Base/draw producers.",
+  "inherited_pattern": 27067,
+  "earlier_receipt_binding": {
+    "prior_receipt_sha256": "edfcdcbd5e9f0c16d3a2e9345dbbd0b10357598d85c77dbdf0f0e4705874af41",
+    "all208_draws_exactly_equal": true,
+    "later_boundaries": [
+      {
+        "stage": "faction_upkeep_entry",
+        "scheduled": 0,
+        "pc": "0x53bb60",
+        "caller": "0x53caf2",
+        "CRT": 1551285371,
+        "shared": 1,
+        "wildlife_Unit_count": 0
+      },
+      {
+        "stage": "computer_command_entry",
+        "scheduled": 0,
+        "pc": "0x58f6b0",
+        "caller": "0x53cb67",
+        "CRT": 1551285371,
+        "shared": 1,
+        "wildlife_Unit_count": 0
+      },
+      {
+        "stage": "faction_upkeep_entry",
+        "scheduled": 1,
+        "pc": "0x53bb60",
+        "caller": "0x53caf2",
+        "CRT": 1551285371,
+        "shared": 1,
+        "wildlife_Unit_count": 0
+      }
+    ]
+  },
+  "cases": [
+    {
+      "variant": "baseline",
+      "preparation": [],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "primary_rules": 6670,
+      "Voice_marker": -1,
+      "tile_count": 3200,
+      "dimensions": [
+        80,
+        80
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 1551285371,
+      "CRT_draws": 208,
+      "draws_by_caller": {
+        "0x5377da": 100,
+        "0x5377f5": 100,
+        "0x537e1f": 4,
+        "0x537e3a": 4
+      },
+      "spread_attempts": 100,
+      "spread_changes": [],
+      "land_attempts": 4,
+      "land_samples": [
+        [
+          12,
+          6
+        ],
+        [
+          26,
+          66
+        ],
+        [
+          74,
+          68
+        ],
+        [
+          66,
+          70
+        ]
+      ],
+      "spawned": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 13,
+      "map_and_Unit_journal_checked": true,
+      "return_pc": "0x53a820"
+    },
+    {
+      "variant": "turn4",
+      "preparation": [
+        "Supplied current global turn4"
+      ],
+      "turn": 4,
+      "life": 1,
+      "difficulty": 3,
+      "primary_rules": 6670,
+      "Voice_marker": -1,
+      "tile_count": 3200,
+      "dimensions": [
+        80,
+        80
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 3057336019,
+      "CRT_draws": 200,
+      "draws_by_caller": {
+        "0x5377da": 96,
+        "0x5377f5": 96,
+        "0x537e1f": 4,
+        "0x537e3a": 4
+      },
+      "spread_attempts": 96,
+      "spread_changes": [],
+      "land_attempts": 4,
+      "land_samples": [
+        [
+          70,
+          6
+        ],
+        [
+          0,
+          46
+        ],
+        [
+          48,
+          2
+        ],
+        [
+          61,
+          43
+        ]
+      ],
+      "spawned": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 13,
+      "map_and_Unit_journal_checked": true,
+      "return_pc": "0x53a820"
+    },
+    {
+      "variant": "life0",
+      "preparation": [
+        "Supplied native-life category0"
+      ],
+      "turn": 1,
+      "life": 0,
+      "difficulty": 3,
+      "primary_rules": 6670,
+      "Voice_marker": -1,
+      "tile_count": 3200,
+      "dimensions": [
+        80,
+        80
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 4044550535,
+      "CRT_draws": 204,
+      "draws_by_caller": {
+        "0x5377da": 100,
+        "0x5377f5": 100,
+        "0x537e1f": 2,
+        "0x537e3a": 2
+      },
+      "spread_attempts": 100,
+      "spread_changes": [],
+      "land_attempts": 2,
+      "land_samples": [
+        [
+          12,
+          6
+        ],
+        [
+          26,
+          66
+        ]
+      ],
+      "spawned": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 13,
+      "map_and_Unit_journal_checked": true,
+      "return_pc": "0x53a820"
+    },
+    {
+      "variant": "life2",
+      "preparation": [
+        "Supplied native-life category2"
+      ],
+      "turn": 1,
+      "life": 2,
+      "difficulty": 3,
+      "primary_rules": 6670,
+      "Voice_marker": -1,
+      "tile_count": 3200,
+      "dimensions": [
+        80,
+        80
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 1401041839,
+      "CRT_draws": 212,
+      "draws_by_caller": {
+        "0x5377da": 100,
+        "0x5377f5": 100,
+        "0x537e1f": 6,
+        "0x537e3a": 6
+      },
+      "spread_attempts": 100,
+      "spread_changes": [],
+      "land_attempts": 6,
+      "land_samples": [
+        [
+          12,
+          6
+        ],
+        [
+          26,
+          66
+        ],
+        [
+          74,
+          68
+        ],
+        [
+          66,
+          70
+        ],
+        [
+          20,
+          26
+        ],
+        [
+          28,
+          18
+        ]
+      ],
+      "spawned": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 13,
+      "map_and_Unit_journal_checked": true,
+      "return_pc": "0x53a820"
+    },
+    {
+      "variant": "no_wildlife_rule",
+      "preparation": [
+        "Supplied primary no-wildlife rule0x200000"
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "primary_rules": 2103822,
+      "Voice_marker": -1,
+      "tile_count": 3200,
+      "dimensions": [
+        80,
+        80
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 3057336019,
+      "CRT_draws": 200,
+      "draws_by_caller": {
+        "0x5377da": 100,
+        "0x5377f5": 100
+      },
+      "spread_attempts": 100,
+      "spread_changes": [],
+      "land_attempts": 0,
+      "land_samples": [],
+      "spawned": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 13,
+      "map_and_Unit_journal_checked": true,
+      "return_pc": "0x53a820"
+    },
+    {
+      "variant": "Voice_present",
+      "preparation": [
+        "Supplied present Voice project marker0"
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "primary_rules": 6670,
+      "Voice_marker": 0,
+      "tile_count": 3200,
+      "dimensions": [
+        80,
+        80
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 3057336019,
+      "CRT_draws": 200,
+      "draws_by_caller": {
+        "0x5377da": 100,
+        "0x5377f5": 100
+      },
+      "spread_attempts": 100,
+      "spread_changes": [],
+      "land_attempts": 0,
+      "land_samples": [],
+      "spawned": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 13,
+      "map_and_Unit_journal_checked": true,
+      "return_pc": "0x53a820"
+    },
+    {
+      "variant": "fungus_candidate",
+      "preparation": [
+        {
+          "supplied_CRT_seed": 112,
+          "first_land_candidate": [
+            29,
+            35
+          ],
+          "tile_input": "fungus0x20 + resolved-site suppression0x100000"
+        }
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "primary_rules": 6670,
+      "Voice_marker": -1,
+      "tile_count": 3200,
+      "dimensions": [
+        80,
+        80
+      ],
+      "CRT_before": 112,
+      "CRT_after": 4267423168,
+      "CRT_draws": 208,
+      "draws_by_caller": {
+        "0x5377da": 100,
+        "0x5377f5": 100,
+        "0x537e1f": 4,
+        "0x537e3a": 4
+      },
+      "spread_attempts": 100,
+      "spread_changes": [],
+      "land_attempts": 4,
+      "land_samples": [
+        [
+          29,
+          35
+        ],
+        [
+          23,
+          53
+        ],
+        [
+          50,
+          30
+        ],
+        [
+          79,
+          27
+        ]
+      ],
+      "spawned": [
+        {
+          "design": 8,
+          "owner": 0,
+          "position": [
+            29,
+            35
+          ],
+          "nearest_Base": 2,
+          "distance": 4
+        }
+      ],
+      "Unit_count_before": 13,
+      "Unit_count_after": 14,
+      "map_and_Unit_journal_checked": true,
+      "return_pc": "0x53a820"
+    },
+    {
+      "variant": "forest_seed",
+      "preparation": [
+        {
+          "supplied_CRT_seed": 1,
+          "first_spread_source": [
+            41,
+            67
+          ],
+          "tile_input": "forest_seed",
+          "source_exploration": 0
+        }
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "primary_rules": 6670,
+      "Voice_marker": -1,
+      "tile_count": 3200,
+      "dimensions": [
+        80,
+        80
+      ],
+      "CRT_before": 1,
+      "CRT_after": 4215572369,
+      "CRT_draws": 208,
+      "draws_by_caller": {
+        "0x5377da": 100,
+        "0x5377f5": 100,
+        "0x537e1f": 4,
+        "0x537e3a": 4
+      },
+      "spread_attempts": 100,
+      "spread_changes": [
+        {
+          "iteration": 0,
+          "source": [
+            41,
+            67
+          ],
+          "target": [
+            41,
+            69
+          ],
+          "feature": 2097152,
+          "score": 8,
+          "value": 2097152
+        }
+      ],
+      "land_attempts": 4,
+      "land_samples": [
+        [
+          68,
+          16
+        ],
+        [
+          55,
+          11
+        ],
+        [
+          41,
+          49
+        ],
+        [
+          38,
+          36
+        ]
+      ],
+      "spawned": [
+        {
+          "design": 8,
+          "owner": 0,
+          "position": [
+            38,
+            36
+          ],
+          "nearest_Base": 1,
+          "distance": 3
+        }
+      ],
+      "Unit_count_before": 13,
+      "Unit_count_after": 14,
+      "map_and_Unit_journal_checked": true,
+      "return_pc": "0x53a820"
+    },
+    {
+      "variant": "kelp_seed",
+      "preparation": [
+        {
+          "supplied_CRT_seed": 3,
+          "first_spread_source": [
+            48,
+            76
+          ],
+          "tile_input": "kelp_seed",
+          "source_exploration": 0
+        }
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "primary_rules": 6670,
+      "Voice_marker": -1,
+      "tile_count": 3200,
+      "dimensions": [
+        80,
+        80
+      ],
+      "CRT_before": 3,
+      "CRT_after": 3829572627,
+      "CRT_draws": 208,
+      "draws_by_caller": {
+        "0x5377da": 100,
+        "0x5377f5": 100,
+        "0x537e1f": 4,
+        "0x537e3a": 4
+      },
+      "spread_attempts": 100,
+      "spread_changes": [
+        {
+          "iteration": 0,
+          "source": [
+            48,
+            76
+          ],
+          "target": [
+            49,
+            75
+          ],
+          "feature": 32768,
+          "score": 8,
+          "value": 32768
+        }
+      ],
+      "land_attempts": 4,
+      "land_samples": [
+        [
+          79,
+          33
+        ],
+        [
+          13,
+          33
+        ],
+        [
+          28,
+          48
+        ],
+        [
+          34,
+          66
+        ]
+      ],
+      "spawned": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 13,
+      "map_and_Unit_journal_checked": true,
+      "return_pc": "0x53a820"
+    }
+  ],
+  "limits": [
+    "Real global producer only; stop before next global helper5348f0 and before wildlife upkeep/command.",
+    "Independent wildlife model covers encountered empty land branch; sea brood, occupied ambush, no-Base stale distance and following fungus cluster paths unsupported.",
+    "All native presentation choices remain unanswered; these controlled paths reach no new presentation call omission."
+  ]
+}

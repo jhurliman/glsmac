@@ -13,6 +13,7 @@ SET( SRC ${SRC}
 	${PWD}/Game.cpp
 	${PWD}/GameScoutBattle.cpp
 	${PWD}/SmacTerrainRaster.cpp
+	${PWD}/SmacLandMaterial.cpp
 	${PWD}/Slot.cpp
 	${PWD}/TileObject.cpp
 	${PWD}/AnimationDef.cpp

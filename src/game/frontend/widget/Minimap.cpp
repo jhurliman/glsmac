@@ -54,7 +54,7 @@ void Minimap::ReadDetail(gse::value::Object* data) {
             const auto field=[&](const char* name,gse::value_type_t type)->gse::Value* {
                 const auto it=fields.find(name);if(it==fields.end() || !it->second || it->second->type!=type) {throw std::invalid_argument("Incomplete Detail frame");}return it->second;
             };
-            if(static_cast<gse::value::String*>(field("kind",gse::VT_STRING))->value!="smac-detail-ordinary-v1") {throw std::invalid_argument("Unknown Detail profile");}
+            if(static_cast<gse::value::String*>(field("kind",gse::VT_STRING))->value!="smac-detail-ordinary-v2") {throw std::invalid_argument("Unknown Detail profile");}
             const auto& packed=static_cast<gse::value::String*>(field("tiles",gse::VT_STRING))->value;
             if(packed.size()!=3200*12) {throw std::invalid_argument("Invalid Detail world extent");}
             detail::World next;next.wrap=static_cast<gse::value::Bool*>(field("horizontal_wrap",gse::VT_BOOL))->value;
@@ -76,7 +76,14 @@ void Minimap::ReadDetail(gse::value::Object* data) {
                 const auto& tile=next.tiles[size_t(y)*40+x/2];if(!tile.base_known || !tile.supported) {throw std::invalid_argument("Unadmitted Detail Base");}
                 const auto file=static_cast<gse::value::String*>(item("file",gse::VT_STRING))->value;
                 if(file.empty() || file.size()>1024) {throw std::invalid_argument("Invalid Detail Base source");}
-                next.bases.push_back({{int(x),int(y)},file,1,static_cast<gse::value::Bool*>(item("owned",gse::VT_BOOL))->value,1});
+                const auto population=static_cast<gse::value::Int*>(item("population",gse::VT_INT))->value;
+                const auto column=static_cast<gse::value::Int*>(item("column",gse::VT_INT))->value,row=static_cast<gse::value::Int*>(item("row",gse::VT_INT))->value;
+                const auto owner=static_cast<gse::value::Int*>(item("native_owner",gse::VT_INT))->value;
+                if(population<0 || population>127 || column<0 || column>3 || row<0 || row>5 || owner<0 || owner>7) {throw std::invalid_argument("Invalid Detail Base selector");}
+                if(owner==0 && static_cast<gse::value::Bool*>(item("style_known",gse::VT_BOOL))->value) {throw std::invalid_argument("Unknown Detail population palette owner");}
+                next.bases.push_back({{int(x),int(y)},file,int(population),static_cast<gse::value::Bool*>(item("owned",gse::VT_BOOL))->value,1+76*int(row),int(column),int(owner),
+                    static_cast<gse::value::Bool*>(item("filled",gse::VT_BOOL))->value,static_cast<gse::value::Bool*>(item("spartans",gse::VT_BOOL))->value,
+                    static_cast<gse::value::Bool*>(item("style_known",gse::VT_BOOL))->value});
             }
             m_detail=std::move(next);m_using_overview=true;
         }
@@ -108,17 +115,22 @@ void Minimap::DrawDetail(ui::dom::Widget* widget) {
         const auto base=std::find_if(m_detail->bases.begin(),m_detail->bases.end(),[&](const auto& b){return b.tile==entry.tile;});
         if(base==m_detail->bases.end()) {continue;}
         const detail::Point anchor{{entry.anchor[0],entry.anchor[1]-14}};
-        const auto source=g_engine->GetTextureLoader()->GetSmacDetailBaseSprite(base->file,base->crop_y);
+        const auto source=g_engine->GetTextureLoader()->GetSmacDetailBaseSprite(base->file,base->crop_y,base->column);
         if(!source) {continue;}
         detail::Composite(frame,anchor,*source,shadow,[](int,int,int,int,uint8_t){});
-        detail::PopulationBox(frame,anchor,base->owned);
-        // Native Base calls paint body, badge and glyph before the next Base.
-        // Keep that order so a subsequent city/shadow can cover earlier text.
-        const auto& glyph=font->m_symbols['1'];
-        for(size_t y=0;y<glyph.height;++y) {for(size_t x=0;x<glyph.width;++x) {if(glyph.data[y*glyph.width+x]) {
-            const int px=anchor[0]+3+glyph.left+int(x),py=anchor[1]+9-glyph.top+int(y);
-            if(px>=0 && px<239 && py>=0 && py<119) {frame.pixels[py*240+px]=base->owned?155:0;}
-        }}}
+        if(!base->style_known || !palette->text_available) {continue;}
+        const auto style=smac_base_body::Colors(base->filled,base->spartans,palette->normal.at(base->native_owner),palette->alternate.at(base->native_owner),palette->text.at(base->native_owner));
+        const auto layout=smac_base_body::PopulationLayout(base->population,font->m_symbols['8'].ax,7);
+        detail::PopulationBox(frame,anchor,layout,style);
+        int pen=0;
+        for(const auto ch:std::to_string(base->population)) {
+            const auto& glyph=font->m_symbols[static_cast<uint8_t>(ch)];
+            for(size_t y=0;y<glyph.height;++y) {for(size_t x=0;x<glyph.width;++x) {if(glyph.data[y*glyph.width+x]) {
+                const int px=anchor[0]+3+pen+glyph.left+int(x),py=anchor[1]+layout.baseline-glyph.top+int(y);
+                if(px>=0 && px<239 && py>=0 && py<119) {frame.pixels[py*240+px]=style.text;}
+            }}}
+            pen+=glyph.ax;
+        }
     }
     for(int y=0;y<119;++y) {for(int x=0;x<239;++x) {
         const auto& rgb=palette->colors[frame.pixels[y*240+x]];preview->SetPixel(x,y,types::Color::RGBA(rgb[0],rgb[1],rgb[2],255));

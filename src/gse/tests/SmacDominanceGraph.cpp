@@ -62,10 +62,10 @@ static std::string CheckGraphPaletteSurface() {
     const auto data=directory/"default",path=data/"palette.pcx";
     fs::create_directory(directory);fs::create_directory(data);
     util::FinallyGuard remove([&]{std::error_code ignored;fs::remove(path,ignored);fs::remove(data,ignored);fs::remove(directory,ignored);});
-    std::vector<uint8_t> bytes(128,0),pixels(638*48,0);
+    std::vector<uint8_t> bytes(128,0),pixels(638*32,0);
     bytes[0]=10;bytes[1]=5;bytes[2]=1;bytes[3]=8;bytes[65]=1;
     const auto word=[&](size_t at,int value){bytes[at]=value&255;bytes[at+1]=(value>>8)&255;};
-    word(8,637);word(10,47);word(66,638);word(68,1);
+    word(8,637);word(10,31);word(66,638);word(68,1);
     const std::array<uint8_t,8> normal{249,241,252,255,251,65,102,235},alternate{1,32,187,209,85,79,109,186};
     for(size_t slot=0;slot<8;++slot) {pixels[23*638+580+8*slot]=uint8_t(normal[slot]-10);pixels[31*638+580+8*slot]=uint8_t(alternate[slot]-10);}
     for(const auto value:pixels) {if(value>=192) {bytes.push_back(193);}bytes.push_back(value);}
@@ -78,7 +78,7 @@ static std::string CheckGraphPaletteSurface() {
     std::shared_ptr<const loader::texture::SmacGraphPalette> retained;
     const auto check=WithWidgetTextureResources(directory.string(),[&]()->std::string {
         retained=g_engine->GetTextureLoader()->GetSmacGraphPalette();
-        GT_ASSERT(retained && retained==g_engine->GetTextureLoader()->GetSmacGraphPalette() && retained->normal==normal && retained->alternate==alternate,"Actual graph metadata producer/cache differs");
+        GT_ASSERT(retained && !retained->text_available && retained==g_engine->GetTextureLoader()->GetSmacGraphPalette() && retained->normal==normal && retained->alternate==alternate,"Actual graph metadata producer/cache differs");
         GT_ASSERT(retained->colors[241]==(std::array<uint8_t,3>{0,235,0}) && retained->colors[79]==(std::array<uint8_t,3>{235,235,235})
             && retained->colors[255]==(std::array<uint8_t,3>{255,255,255}),"Graph display changed Gamma100 common/reserved colors");
         GSE runtime;auto* gc_space=runtime.GetGCSpace();std::string result;

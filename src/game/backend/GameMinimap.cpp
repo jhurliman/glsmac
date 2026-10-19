@@ -3,6 +3,8 @@
 #include "base/Base.h"
 #include "base/BaseManager.h"
 #include "base/FacilityDef.h"
+#include "unit/UnitManager.h"
+#include "unit/Unit.h"
 #include "faction/Faction.h"
 #include "map/SmacPlanetMap.h"
 #include "gse/value/Array.h"
@@ -111,31 +113,66 @@ gse::Value* Game::CopyLocalDetailMinimap(GSE_CALLABLE) const {
         if(supported) {const auto heights=::game::smac_detail::Heights(x,y,band_at);
             for(size_t v=0;v<5;++v) {tiles[index*12+2+v*2]=static_cast<char>(heights[v]&255);tiles[index*12+3+v*2]=static_cast<char>((heights[v]>>8)&255);}}
     }}
+    const auto& resource_rules=m_state->m_settings.global.GetSmacResourceRules();
+    const auto& profiles=m_state->m_settings.global.GetSmacFactionStartupRules();
     gse::value::array_elements_t bases;
     for(const auto& entry:m_bm->GetBases()) {
         const auto* base=entry.second;const auto* tile=base->GetTile();
         if(!base->HasSmacResourceContext() || !tile || tile->base!=base || tile->coord.x>=80 || tile->coord.y>=80 || !base->m_faction) {continue;}
         const size_t index=size_t(tile->coord.y)*40+tile->coord.x/2;
         if((static_cast<uint8_t>(tiles[index*12+1])&6u)!=6u) {continue;}
-        const auto owner=base->GetSmacResourceContext().owner_simulation_id;
+        const auto context=base->GetSmacResourceContext();const auto owner=context.owner_simulation_id;
         const auto memory=std::find_if(data.bases.begin(),data.bases.end(),[&](const auto& row){return row.id==base->m_id;});
         if(!::game::smac_detail::AdmitsBase(true,true,(static_cast<uint8_t>(tiles[index*12+1])&2u)!=0,owner==viewer,memory!=data.bases.end() && (memory->known_by&bit))) {continue;}
-        // Admitted ordinary land/pop1 selector. The source receipt does not
-        // establish later population tiers, sea cities or additional walls.
+        // Body family is retained independently in the original. Current port
+        // conquered Bases do not own that authority: do not guess from owner.
         const auto& art=base->m_faction->m_bases_render;
-        bool supported=base->GetPopulation()==1 && !tile->is_water_tile && art.grid_x==1 && art.grid_y==1
-            && art.cell_width==100 && art.cell_height==75 && art.cell_padding==1 && art.cell_cx==50 && art.cell_cy==37
-            && art.scale_x==1 && art.scale_y==1 && !art.file.empty()
-            && m_simulation->value.movement_capability==faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain;
-        for(const auto& facility:base->m_facilities) {const auto id=facility.second->m_smac_source_id;if(id && (*id==4 || *id==5)) {supported=false;}}
-        if(!supported) {continue;}
+        const auto population=base->GetPopulation();
+        if(context.conquest || !resource_rules || !profiles || population>127
+            || resource_rules->hab_complex_limit<0 || resource_rules->hab_complex_limit>126
+            || resource_rules->hab_dome_limit<0 || resource_rules->hab_dome_limit>126
+            || art.grid_x!=1 || art.grid_y!=1 || art.cell_width!=100 || art.cell_height!=75
+            || art.cell_padding!=1 || art.cell_cx!=50 || art.cell_cy!=37 || art.scale_x!=1 || art.scale_y!=1 || art.file.empty()
+            || m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {continue;}
+        const auto* profile=profiles->Find(base->m_faction->m_id);if(!profile) {continue;}
+        // Frozen startup validation pins the canonical source binding order.
+        // Dense simulation/transport IDs are not palette slots.
+        const bool unique_identity=std::count_if(m_simulation->value.roster.begin(),m_simulation->value.roster.end(),[&](const auto& row){return row.faction_id==profile->port_id;})==1;
+        const int native_owner=unique_identity?int(profile-profiles->factions.data())+1:0;
+        bool hq=false,perimeter=false,tachyon=false;
+        for(const auto& facility:base->m_facilities) {const auto id=facility.second->m_smac_source_id;
+            hq|=id && *id==1;perimeter|=id && *id==4;tachyon|=id && *id==5;}
+        const auto body=::game::smac_base_body::Select(int(population),resource_rules->hab_complex_limit,resource_rules->hab_dome_limit,
+            hq,static_cast<uint8_t>(tiles[index*12])<3,perimeter,tachyon,false); // saved no-project capability proves no CDF
+        ::game::smac_base_body::Access access;access.owned=owner==viewer;access.revealed=revealed;
+        access.governor=m_simulation->value.resource_modifiers.planetary_governor==viewer;
+        bool unit_authority=true;
+        for(const auto& live:m_um->GetUnits()) {
+            const auto* actor=live.second;const auto* position=actor->GetTile();if(!position) {continue;}
+            int dx=int(position->coord.x)-int(tile->coord.x),dy=int(position->coord.y)-int(tile->coord.y);
+            if(data.horizontal_wrap) {if(dx>40) {dx-=80;}if(dx< -40) {dx+=80;}}
+            const bool on_base=dx==0 && dy==0,neighbor=(dy==0 && std::abs(dx)==2) || (dx==0 && std::abs(dy)==2) || (std::abs(dx)==1 && std::abs(dy)==1);
+            if(!on_base && !neighbor) {continue;}
+            if(!actor->IsConventional() && !actor->IsNative()) {unit_authority=false;continue;}
+            const auto unit_owner=actor->SimulationOwner();
+            access.unit_here|=on_base && unit_owner>=0 && unit_owner<8;
+            access.neighbor_unit|=neighbor && unit_owner==viewer;
+        }
+        const auto own_relations=m_simulation->value.hostility.owners.find(owner),viewer_relations=m_simulation->value.hostility.owners.find(viewer);
+        const bool relation_authority=own_relations!=m_simulation->value.hostility.owners.end() && viewer_relations!=m_simulation->value.hostility.owners.end();
+        if(relation_authority) {access.owner_pact=(own_relations->second.directions.at(viewer).primary&1u)!=0;
+            access.viewer_infiltration=(viewer_relations->second.directions.at(owner).primary&0x1000u)!=0;}
+        const bool style_known=unique_identity && (access.unit_here || (unit_authority && (access.owned || access.revealed || access.governor || access.neighbor_unit || relation_authority)));
         bases.push_back(VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
             {"x",VALUE(gse::value::Int,,tile->coord.x)},{"y",VALUE(gse::value::Int,,tile->coord.y)},
-            {"file",VALUE(gse::value::String,,art.file)},{"owned",VALUE(gse::value::Bool,,owner==viewer)}
+            {"file",VALUE(gse::value::String,,art.file)},{"owned",VALUE(gse::value::Bool,,owner==viewer)},
+            {"population",VALUE(gse::value::Int,,population)},{"column",VALUE(gse::value::Int,,body.column)},{"row",VALUE(gse::value::Int,,body.row)},
+            {"native_owner",VALUE(gse::value::Int,,native_owner)},{"spartans",VALUE(gse::value::Bool,,profile->filename=="spartans.txt")},
+            {"filled",VALUE(gse::value::Bool,,::game::smac_base_body::Filled(access))},{"style_known",VALUE(gse::value::Bool,,style_known)}
         })));
     }
     return VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
-        {"kind",VALUE(gse::value::String,,"smac-detail-ordinary-v1")},{"horizontal_wrap",VALUE(gse::value::Bool,,data.horizontal_wrap)},
+        {"kind",VALUE(gse::value::String,,"smac-detail-ordinary-v2")},{"horizontal_wrap",VALUE(gse::value::Bool,,data.horizontal_wrap)},
         {"tiles",VALUE(gse::value::String,,tiles)},{"bases",VALUE(gse::value::Array,,bases)}
     }));
 }

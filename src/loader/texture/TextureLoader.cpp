@@ -329,7 +329,7 @@ types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t 
 
 std::shared_ptr<types::texture::Texture> TextureLoader::GetSmacEffectTexture(bool) {THROW("Indexed effects are unsupported by this texture loader");}
 
-std::shared_ptr<const game::smac_detail::Sprite> TextureLoader::GetSmacDetailBaseSprite(const std::string&,size_t) {throw std::runtime_error("Native Detail Base source unavailable");}
+std::shared_ptr<const game::smac_detail::Sprite> TextureLoader::GetSmacDetailBaseSprite(const std::string&,size_t,size_t) {throw std::runtime_error("Native Detail Base source unavailable");}
 std::shared_ptr<const SmacBaseCard> TextureLoader::GetSmacNativeBaseCard(const std::string&,size_t,size_t,bool) {return {};}
 
 std::shared_ptr<const SmacGraphPalette> TextureLoader::GetSmacGraphPalette() {THROW("Dominance graph colors are unsupported by this texture backend");}

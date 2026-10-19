@@ -39,6 +39,7 @@ return {
 			text: #sizeof(commands.actions) == 0 ? 'No available commands here.' : 'Click a command or press its key.'});
 		const labels = ['Cancel [C]', 'Farm [F]', 'Road [R]', 'Forest [O]', 'Solar [S]', 'Mine [M]', 'Found Base [B]', 'Activate unit'];
 		const selected_id = this.unit_id;
+        const selected_turn = commands.turn_id;
 		let index = 0;
 		for (action of commands.actions) {
 			const selected_action = action;
@@ -52,11 +53,12 @@ return {
 				// sends a retired wrapper or substitutes a newly selected Unit.
 				if (!#is_defined(this.unit) || this.unit == null || this.unit_id != selected_id) { return true; }
 				const current = this.unit.query_conventional_commands();
+                if (current.turn_id != selected_turn) { return true; }
 				let available = false;
 				for (offered of current.actions) { if (offered == selected_action) { available = true; } }
 				if (available) {
 					const unit = this.unit;
-					if (selected_action == 7) { this.p.game.event('unit_activate', {unit: unit}); }
+					if (selected_action == 7) { this.p.game.event('unit_activate', {unit: unit, turn_id: selected_turn}); }
 					else if (selected_action == 6) { this.p.game.event('found_base', {unit: unit}); }
 					else if (selected_action == 0) { this.p.game.event('cancel_unit_work', {unit: unit}); }
 					else { this.p.game.event('work_unit', {unit: unit, action: selected_action}); }

@@ -10,7 +10,7 @@ let progress = 0;
 let kind = 'former';
 let held = false;
 const unit = {id: 71, is_conventional: true, query_conventional_commands: () => {
-	return {kind: kind, actions: offered, work_order: order, work_progress: progress, held: held};
+	return {kind: kind, actions: offered, work_order: order, work_progress: progress, held: held, turn_id: 1};
 }};
 const game = {
 	on: (name, callback) => { handlers[name] = callback; },

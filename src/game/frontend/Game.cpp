@@ -1580,10 +1580,10 @@ void Game::Initialize(
                     if(event.data.key.code==input::K_H && (event.data.key.modifiers==input::KM_NONE || event.data.key.modifiers==input::KM_SHIFT)) {
                         const auto* selected=m_um->GetSelectedUnit();
                         if(selected) {
-                            const auto id=selected->GetId(); const bool ten=event.data.key.modifiers==input::KM_SHIFT;
-                            m_glsmac->WithGSE([game,id,ten](GSE_CALLABLE) {
+                            const auto id=selected->GetId(); const auto input_turn=m_turn_id; const bool ten=event.data.key.modifiers==input::KM_SHIFT;
+                            m_glsmac->WithGSE([game,id,ten,input_turn](GSE_CALLABLE) {
                                 auto* actor=game->GetUM()->GetUnit(id);
-                                if(actor && actor->IsConventional()) {game->Event(GSE_CALL,ten?"unit_hold_ten":"unit_hold",{{"unit",actor->Wrap(GSE_CALL)}});}
+                                if(actor && actor->IsConventional()) {game->Event(GSE_CALL,ten?"unit_hold_ten":"unit_hold",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(gse::value::Int,,input_turn)}});}
                             });
                         }
                         return true;
@@ -1648,22 +1648,18 @@ void Game::Initialize(
                                     }
                                     break;
                                 }
-								case input::K_SPACE: {
-									auto* unit = m_um->GetSelectedUnit();
-									if ( unit ) {
-										m_glsmac->WithGSE(
-											[ &game, &unit ]( GSE_CALLABLE ) {
-												auto* u = game->GetUM()->GetUnit( unit->GetId() );
-												game->Event(
-													GSE_CALL, "unit_skip_turn", {
-														{ "unit", u->Wrap( GSE_CALL ) },
-													}
-												);
-											}
-										);
-									}
-									break;
-								}
+                                case input::K_SPACE: {
+                                    const auto* selected=m_um->GetSelectedUnit();
+                                    if(selected) {
+                                        const auto id=selected->GetId();const auto input_turn=m_turn_id;
+                                        m_glsmac->WithGSE([game,id,input_turn](GSE_CALLABLE) {
+                                            auto* actor=game->GetUM()->GetUnit(id);if(!actor){return;}
+                                            if(actor->IsConventional()) {game->Event(GSE_CALL,"unit_skip_turn",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(gse::value::Int,,input_turn)}});}
+                                            else {game->Event(GSE_CALL,"unit_skip_turn",{{"unit",actor->Wrap(GSE_CALL)}});}
+                                        });
+                                    }
+                                    break;
+                                }
 								case input::K_ENTER: {
 									if ( m_turn_status == backend::turn::TS_TURN_COMPLETE ) {
 										CompleteTurn();

@@ -87,6 +87,24 @@ void Event(GSE_CALLABLE,ConventionalUnitFixture& fixture,Unit* actor,Order order
 }
 }
 void AddConventionalWorkTests(task::gsetests::GSETests* task) {
+    task->AddTest("Human order queued behind actual turn end cannot mutate next turn",GT(){
+        for(const char* name:{"unit_hold","unit_hold_ten","unit_skip_turn","unit_activate"}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string{
+                auto* actor=Populate(GSE_CALL,fixture);auto* game=fixture.Game();
+                if(std::string(name)=="unit_activate") {
+                    game->Event(GSE_CALL,"unit_hold",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});fixture.DrainEvents();
+                }
+                const auto old_turn=game->GetTurnId();
+                game->Event(GSE_CALL,"complete_turn",{});
+                game->Event(GSE_CALL,name,{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,old_turn)}});fixture.DrainEvents();
+                GT_ASSERT(game->GetTurnId()==old_turn+1 && actor->Conventional().spent==0 && actor->Conventional().order_countdown==0
+                    && actor->Conventional().IsHeld()==(std::string(name)=="unit_activate"),"Old queued input consumed next-turn allowance or changed its order");
+                GT_OK();
+            });if(!error.empty()){return error;}
+        }
+        GT_OK();
+    });
     task->AddTest("Human Hold codec preserves signed countdown and rejects unsupported orders",GT(){
         ConventionalUnitState plain{2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
         for(const int count:{INT16_MIN,-1,0,1,10,INT16_MAX}) {
@@ -106,7 +124,7 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
         ConventionalUnitFixture source;source.ConfigureProduction(Source,"GAIANS");std::string snapshot;
         auto first=source.Run([&](GSE_CALLABLE)->std::string{
             auto* actor=Populate(GSE_CALL,source,1);auto* game=source.Game();auto* um=game->GetUM();
-            const auto command=[&](const char* name){game->Event(GSE_CALL,name,{{"unit",actor->Wrap(GSE_CALL)}});source.DrainEvents();};
+            const auto command=[&](const char* name){game->Event(GSE_CALL,name,{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});source.DrainEvents();};
             Event(GSE_CALL,source,actor,Order::Farm);Event(GSE_CALL,source,actor,Order::None,true);
             const auto random=source.GameplayRandom();command("unit_hold");
             bool held_update=false;for(const auto& update:source.Updates()) {
@@ -145,7 +163,7 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string{
             auto* actor=Populate(GSE_CALL,fixture);auto* game=fixture.Game();
-            const auto command=[&](const char* name){game->Event(GSE_CALL,name,{{"unit",actor->Wrap(GSE_CALL)}});fixture.DrainEvents();};
+            const auto command=[&](const char* name){game->Event(GSE_CALL,name,{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});fixture.DrainEvents();};
             command("unit_hold_ten");
             for(int turn=1;turn<=10;++turn) {
                 game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();
@@ -165,11 +183,11 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
         return fixture.Run([&](GSE_CALLABLE)->std::string{
             auto* actor=Populate(GSE_CALL,fixture);auto* game=fixture.Game();auto* um=game->GetUM();
             Event(GSE_CALL,fixture,actor,Order::Farm);
-            game->Event(GSE_CALL,"unit_skip_turn",{{"unit",actor->Wrap(GSE_CALL)}});fixture.DrainEvents();
+            game->Event(GSE_CALL,"unit_skip_turn",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});fixture.DrainEvents();
             GT_ASSERT(actor->Conventional().work_order==Order::Farm && !actor->Conventional().IsHeld() && actor->Conventional().spent==3,"Space became Hold or cancelled work");
             const auto before=fixture.Snapshot();using Command=UnitManager::HumanOrderCommand;
             GT_ASSERT(Rejects([&]{um->PrepareHumanOrder(actor,Command::Hold,1);}) && fixture.Snapshot()==before,"Foreign caller assigned Hold");
-            game->Event(GSE_CALL,"unit_hold",{{"unit",actor->Wrap(GSE_CALL)}});fixture.DrainEvents();
+            game->Event(GSE_CALL,"unit_hold",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});fixture.DrainEvents();
             GT_ASSERT(actor->Conventional().IsHeld() && actor->Conventional().spent==3,"Exhausted unit could not Hold");
             const auto held=fixture.Snapshot();
             GT_ASSERT(Rejects([&]{um->PrepareHumanOrder(actor,Command::Skip,0);}) && fixture.Snapshot()==held,"Skip acted on held unit");

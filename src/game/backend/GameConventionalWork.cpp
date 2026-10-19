@@ -93,9 +93,17 @@ bool Game::HandleConventionalWorkEvent(GSE_CALLABLE,const std::string& name,
     using Command=unit::UnitManager::HumanOrderCommand;
     if(name=="unit_hold" || name=="unit_hold_ten" || name=="unit_menu_hold" || name=="unit_activate" || name=="unit_skip_turn") {
         const auto found=args.find("unit");
-        if(found==args.end() || !found->second || args.size()!=1) {throw std::runtime_error("Human order requires exactly its actual Unit");}
+        if(found==args.end() || !found->second) {throw std::runtime_error("Human order requires its actual Unit");}
+        const auto stamp=args.find("turn_id");
+        if(name=="unit_skip_turn" && stamp==args.end()) {
+            auto* legacy=unit::Unit::Unwrap(found->second);
+            if(legacy && !legacy->IsConventional()) {return false;}
+        }
+        if(args.size()!=2 || stamp==args.end() || !stamp->second || stamp->second->type!=gse::VT_INT
+            || static_cast<const gse::value::Int*>(stamp->second)->value<0) {throw std::runtime_error("Human order requires its captured turn identity");}
+        // Discard an old queued input before touching a possibly retired wrapper.
+        if(static_cast<uint64_t>(static_cast<const gse::value::Int*>(stamp->second)->value)!=GetTurnId()) {return true;}
         auto* actor=unit::Unit::Unwrap(found->second);
-        if(name=="unit_skip_turn" && actor && !actor->IsConventional()) {return false;}
         const auto command=name=="unit_hold" ? Command::Hold : name=="unit_hold_ten" ? Command::HoldTen
             : name=="unit_menu_hold" ? Command::MenuHold : name=="unit_activate" ? Command::Activate : Command::Skip;
         if(apply) {m_um->ApplyHumanOrder(GSE_CALL,actor,command,caller);}

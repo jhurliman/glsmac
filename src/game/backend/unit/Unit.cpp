@@ -334,6 +334,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			: commands.package == ConventionalUnitContext::Package::Colony ? "colony" : IsConventional() && Conventional().IsHeld() ? "unit" : "none";
 		return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
 			{ "kind", VALUE( gse::value::String,, kind ) },
+            { "turn_id", VALUE(gse::value::Int,,m_um->m_game->GetTurnId()) },
 			{ "actions", VALUE( gse::value::Array,, actions ) },
 			{ "work_order", VALUE( gse::value::Int,, IsConventional() ? static_cast<int32_t>(Conventional().work_order) : 0 ) },
 			{ "work_progress", VALUE( gse::value::Int,, IsConventional() ? Conventional().work_progress : 0 ) },

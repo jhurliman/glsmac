@@ -2616,7 +2616,7 @@ public:
         // not only a synthetic unit_select callback. Leave the retained target
         // selected to isolate request admission from this fixture's unset map focus.
         error=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{
-            m_game.Event(GSE_CALL,"unit_hold",{{"unit",actor->Wrap(GSE_CALL)}});ProcessEvents();GT_OK();
+            m_game.Event(GSE_CALL,"unit_hold",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,m_game.GetTurnId())}});ProcessEvents();GT_OK();
         });if(!error.empty()){return error;}
         auto* held=controller->GetUnitById(actor->m_id);
         controller->m_selected_unit=nullptr;held->SetHeld(true);held->Refresh();controller->m_selected_unit=held;

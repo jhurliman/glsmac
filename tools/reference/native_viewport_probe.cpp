@@ -14,14 +14,14 @@ uint32_t Word(const std::vector<uint8_t>& bytes,size_t offset) {
 }
 int main(int argc,char** argv) {
     if(argc!=2) {return 1;}const std::string dir=argv[1];std::ifstream input(dir+"/input.txt");
-    int tw,th,sw,sh,rw,rh,seed,automatic,initial,observer0_alias;
-    if(!(input>>tw>>th>>sw>>sh>>rw>>rh>>seed>>automatic>>initial>>observer0_alias) || seed<0 || seed>65535 || initial<0 || initial>255) {return 1;}
+    int tw,th,sw,sh,rw,rh,seed,automatic,initial,observer0_alias,viewer;
+    if(!(input>>tw>>th>>sw>>sh>>rw>>rh>>seed>>automatic>>initial>>observer0_alias>>viewer) || seed<0 || seed>65535 || initial<0 || initial>255) {return 1;}
     native::Source source;source.loaded={tw,th,Read(dir+"/texture.bin")};source.ter1={sw,sh,Read(dir+"/ter1.bin")};
     source.coast_mask=game::frontend::smac_water_coast::CoastMasks({rw,rh,Read(dir+"/rainfall.bin")})[0];
     const auto shadow=Read(dir+"/shadow.bin");if(shadow.size()!=256) {return 1;}
     for(size_t i=0;i<256;++i) {source.shadow_lookup[i]=shadow[i];source.palette[i]={uint8_t(i),0,0};}
     const auto bytes=Read(dir+"/planet.bin");if(bytes.size()!=15+0xaa4+3200*44+128) {return 1;}
-    game::native_terrain::World world;world.retained_geometry=true;world.automatic_land_resources=automatic;
+    game::native_terrain::World world;world.retained_geometry=true;world.viewer=viewer;world.automatic_land_resources=automatic;
     const auto pattern=Word(bytes,23);world.resource_pattern=pattern<=INT32_MAX?int32_t(pattern):int32_t(int64_t(pattern)-4294967296LL);
     for(size_t i=0;i<3200;++i) {
         const size_t p=2739+i*44;auto& tile=world.tiles[i];

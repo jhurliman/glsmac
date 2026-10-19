@@ -55,3 +55,25 @@ For the admitted role3 Scout, let `dx` be wrapped absolute X difference and `dy`
 After a goal is selected, `0x57ad34` writes order24; `0x57ad40` writes status ASCII`1` (`0x31`); `0x57ad47/0x57ad4d` load X/Y from the selected active record; `0x57ad53/0x57ad5a` store first waypoint X/Y. Type3 causes `0x57ad8c` to OR Unit state with`0x40000000`. It does not move the Unit or spend movement here. The waypoint-control byte remains its native value; do not invent a waypoint count1 from the nonempty coordinates. Baseline Scout2 stays at(24,38) with spent0 and receives the selected known-pod destination(25,35).
 
 Native receipts: `tmp/reference/computer-expansion-planning-v3-original-x86-20261019.json` and `tmp/reference/computer-pod-goal-controls-v2-original-x86-20261019.json`; producers have corresponding `probe_*.py` names. [Checked numeric cases](computer-upkeep-expansion-planning-cases.json) exclude original map/asset bytes. Checker `tmp/reference/check_computer_upkeep_expansion_planning.py --verify-only` verifies decisions, full Unit write journals, the Former census gate, distance ranks and changed destination. These extend the accepted startup/first-upkeep checkpoint. The earlier expansion v1 block trace was incomplete because translated blocks were already cached; v2/v3 invalidate the translated cache before each invocation. No full computer turn, movement execution or general AI completeness is claimed.
+
+## Port storage implementation boundary
+
+`SmacComputerGoals` implements insertion and renewal on supplied owned records.
+The ten native planning controls compare the retained valid active records after
+renewal; the type3 persistent inputs follow the audited territory producer.
+Additional structural tests exercise replacement scores, duplicate auxiliary
+retention, bounds differences, signed expiry and incoming-DWORD comparisons
+before signed-word storage. Those boundary inputs are source-derived tests, not
+additional native changed-input controls.
+
+Direct helper inspection also establishes that persistent insertion writes only
+type, priority, X and Y (`0x58fb27–0x58fb43`); it leaves that record's auxiliary
+DWORD untouched. It forwards the sign-extended stored type/priority to active
+insertion with auxiliary−1 (`0x58fb58–0x58fb69`). Active duplicate priority updates
+likewise leave auxiliary untouched (`0x58f9c6–0x58f9e8`).
+
+The class does not establish world initialization/reset or post-consumption
+lifetime. It is not yet stored in the live simulation or called by the computer
+controller. Production scoring, territory goal admission, assignment, actual
+pathfinding and movement remain separate integration work; storage alone is not
+a playable opponent.

@@ -26,6 +26,14 @@ const types::Vec3 SlotBadges::GetBadgeCoords( const types::Vec3& unit_coords ) {
 	};
 }
 
+types::Vec3 SlotBadges::GetRenderedBadgeCoords(const types::Vec3& base_coords) const {
+    if(m_smac_population && m_bm->UsesNativeMapProjection()) {
+        // Native body canvas and population box share the dispatcher anchor.
+        return {base_coords.x-0.5f,base_coords.y+1.0f,base_coords.z};
+    }
+    return GetBadgeCoords(base_coords);
+}
+
 SlotBadges::SlotBadges(
 	BaseManager* bm,
 	sprite::InstancedSpriteManager* ism,
@@ -118,12 +126,13 @@ sprite::InstancedSprite* SlotBadges::GetBadgeSprite( const size_t population, co
 				SmacPopulationDisplayColor(palette,is_guarded && spartan ? m_secondary:0));
 			const auto width=static_cast<uint32_t>(texture->GetWidth());
 			const auto height=static_cast<uint32_t>(texture->GetHeight());
-			// NormalizePosition adds (pivot/size - 1/2)*dimensions to the
-			// centered rectangle: full-size pivots keep its first corner fixed.
+            const bool native=m_bm->UsesNativeMapProjection();
+            // Entity inverts mesh Y. A top pivot uses zero source Y so the
+            // first source row stays at the declared dispatcher anchor.
 			auto* sprite=m_ism->GetInstancedSprite("SmacPopulation_"+std::to_string(m_slot_index)+"_"+
-				std::to_string(population)+(is_guarded ? "_filled":"_outline"),texture.get(),{0,0},
-				{width,height},{width,height},{backend::map::s_consts.tile.scale.x*0.25f*width/23,
-				backend::map::s_consts.tile.scale.y*backend::map::s_consts.sprite.y_scale*0.5f*height/30},
+				std::to_string(population)+(is_guarded ? "_filled":"_outline")+(native?"_native":""),texture.get(),{0,0},
+				{width,height},{width,native?0u:height},{native?width/96.0f:backend::map::s_consts.tile.scale.x*0.25f*width/23,
+				native?height/48.0f:backend::map::s_consts.tile.scale.y*backend::map::s_consts.sprite.y_scale*0.5f*height/30},
 				ZL_TERRAIN_TEXT,0.008f);
 			try {it2=it1->second.emplace(population,badge_sprite_t{texture.get(),sprite}).first;}
 			catch(...) {m_ism->RemoveInstancedSpriteByKey(sprite->key);throw;}

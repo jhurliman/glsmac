@@ -11,6 +11,8 @@ namespace types::texture {
 class Texture;
 }
 
+namespace gse::tests { class BackendFixture; }
+
 namespace game {
 namespace frontend {
 
@@ -32,6 +34,7 @@ class SlotBadges {
 public:
 
 	static const types::Vec3 GetBadgeCoords( const types::Vec3& unit_coords );
+    types::Vec3 GetRenderedBadgeCoords(const types::Vec3& base_coords) const;
 
 	SlotBadges(
 		BaseManager* bm,
@@ -44,6 +47,7 @@ public:
 	sprite::Sprite* GetBaseBadgeSprite( const size_t population, const bool is_guarded );
 
 private:
+    friend class gse::tests::BackendFixture;
 
 	BaseManager* m_bm = nullptr;
 	sprite::InstancedSpriteManager* const m_ism;

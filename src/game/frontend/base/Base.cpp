@@ -237,7 +237,7 @@ void Base::ShowBadge() {
 	if ( !m_render.badge.instance_id ) {
 		m_render.badge.instance_id = m_render.badge.def->next_instance_id++;
 	}
-	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, SlotBadges::GetBadgeCoords( m_render.coords ) );
+	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, m_slot_badges->GetRenderedBadgeCoords( m_render.coords ) );
 }
 
 void Base::HideBadge() {

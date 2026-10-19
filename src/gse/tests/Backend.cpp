@@ -21,6 +21,7 @@
 #include "game/frontend/unit/BadgeDefs.h"
 #include "game/frontend/base/Base.h"
 #include "game/frontend/base/BaseManager.h"
+#include "game/frontend/base/SlotBadges.h"
 #include "game/frontend/widget/BasePreview.h"
 #include "game/frontend/text/InstancedTextManager.h"
 #include "game/frontend/text/InstancedText.h"
@@ -2677,6 +2678,30 @@ public:
                     return types::Vec2<float>{(x+1)*512,(1-y)*384};
                 };
                 const auto top_left=project(27,17),bottom_right=project(68,55);
+                {
+                    // Exercise the admitted population sprite with synthetic font
+                    // ink; original geometry is independent of glyph rasterization.
+                    game::frontend::base::SlotBadges badges(&manager,&sprites,31,original_faction);
+                    badges.m_smac_population=true;
+                    manager.m_smac_population_palette_loaded=true;
+                    manager.m_smac_population_font=fonts.LoadFont(::resource::TTF_ARIALNB,16);
+                    for(const size_t population:{3u,10u}) {for(const bool guarded:{false,true}) {
+                    auto* badge=badges.GetBaseBadgeSprite(population,guarded)->instanced_sprite;
+                    badge->actor->SetInstance(1,badges.GetRenderedBadgeCoords({0,0,2+height/48.0f}));
+                    const auto badge_transform=camera.GetMatrix()*badge->actor->GetInstanceMatrices().front();
+                    auto badge_mesh=badge->actor->GetSpriteActor()->GenerateMesh();types::Vec3 ba,bz;
+                    badge_mesh->GetVertexCoord(0,&ba);badge_mesh->GetVertexCoord(2,&bz);
+                    const auto bp=[&](const types::Vec3& c) {const auto& m=badge_transform.m;return types::Vec2<float>{
+                        (m[0][0]*c.x+m[0][1]*c.y+m[0][2]*c.z+m[0][3]+1)*512,
+                        (1-m[1][0]*c.x-m[1][1]*c.y-m[1][2]*c.z-m[1][3])*384};};
+                    const auto first=bp(ba),last=bp(bz),anchor=project(0,0);
+                    const float width=population<10?7.0f:9.0f;
+                    GT_ASSERT(std::abs(first.x-anchor.x)<0.001f && std::abs(first.y-anchor.y)<0.001f &&
+                        std::abs(last.x-first.x-width)<0.001f && std::abs(last.y-first.y-16)<0.001f,
+                        "Population box projected "+first.ToString()+".."+last.ToString()+" instead of "+anchor.ToString()+" plus native measured width by16");
+                    badge->actor->RemoveInstance(1);
+                    }}
+                }
                 GT_ASSERT(std::abs(top_left.x-555)<0.001f && std::abs(top_left.y-(257-height))<0.001f &&
                     std::abs(bottom_right.x-596)<0.001f && std::abs(bottom_right.y-(295-height))<0.001f,
                     "Actual Base sprite rectangle differs from original loaded metadata: "+top_left.ToString()+".."+bottom_right.ToString());

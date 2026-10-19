@@ -25,7 +25,7 @@ return (m) => {
 			popup: popup,
 			settings: e.settings,
 			randomize_map: () => {
-				randomize_map(e.settings.global);
+				randomize_map(e.settings.global, m.glsmac.game.get_ruleset());
 			},
 			customize_preview_defaults: {
 				// copied from original SMAC

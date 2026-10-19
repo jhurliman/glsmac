@@ -1,5 +1,6 @@
-return (settings) => {
-	if (settings.ruleset == 'smac') {
+return (settings, ruleset) => {
+    // settings.ruleset is a snapshot from Wrap(), before the menu choice.
+	if (ruleset == 'smac') {
 		const coverage = [0.4, 0.6, 0.8];
 		const choice = #random_int(0, 2);
 		settings.map.ocean_coverage = coverage[choice];

@@ -1,8 +1,9 @@
 const randomize = #include('../default/ui/parts/mainmenu/map_randomization');
 for (ruleset of ['smac', 'smax']) {
-    const settings = {ruleset: ruleset, map: {}};
+    // A retained main-menu wrapper predates the player's ruleset selection.
+    const settings = {ruleset: 'unselected', map: {}};
     for (let i = 0; i < 20; i++) {
-        randomize(settings);
+        randomize(settings, ruleset);
         const map = settings.map;
         test.assert(map.erosive_forces >= 0.5 && map.erosive_forces <= 1.0);
         for (value of [map.native_lifeforms, map.cloud_cover]) {

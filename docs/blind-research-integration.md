@@ -295,3 +295,21 @@ Existing original selector traces cover its additional shared draws separately.
 The new randomization script test and 24 native research/startup groups pass,
 including all seven Planet factions at all six difficulties. Both additional
 production translation units pass targeted correctness analysis.
+
+The first real cold-process menu run exposed a stale wrapper: `settings.ruleset`
+is captured by Wrap before the player selects a game. Randomization now takes
+the live game ruleset explicitly, with a script regression using an intentionally
+stale `unselected` settings object. The native SMAC/SMAX world-size menu tests
+also pass the live value. This fixes the first-launch continuous category path;
+a second menu attempt had previously hidden it by creating a fresh wrapper.
+
+Hands-on software-rendered validation uses the purchased GOG data, the normal
+Start Game / Alpha Centauri / Make Random Map / Small / Librarian / Standard /
+Gaians route, at1024x768. The live priority question saves an848903-byte campaign
+and returns to the same question. Unchecking its sole selected axis and accepting
+continues to the map with the Scout selected. An independent fresh-process run
+then reaches the question on its first attempt, accepts Keep Priorities and exits
+through the real Quit confirmation. Both normal exits report no tracked OpenGL
+leaks; heap allocations and audio were not checked. Screenshots and the owned
+campaign remain outside Git. A manual frontend reload of that saved question is
+not claimed here; actual Start restoration is covered by the native checkpoints.

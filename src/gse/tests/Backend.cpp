@@ -8649,10 +8649,11 @@ static void AddWorldSnapshotTests( task::gsetests::GSETests* task ) {
 			types::Buffer manager_frames( managers );
 			for ( size_t i = 0 ; i < 4 ; ++i ) { old_body.WriteString( manager_frames.ReadString() ); }
 			// V31 appends one versioned, absent continuation after the managers.
-			// Continuation V4 retains ordered citizens after V3 ecology and V2 research/V1 Colony choices.
+			// Continuation V6 adds Blind research stages; an idle world still
+			// carries only its version and absent-continuation Boolean.
 			// The preceding map/manager payload and ordering stay unchanged.
 			types::Buffer idle_continuation;
-			idle_continuation.WriteInt( 5 ); idle_continuation.WriteBool( false );
+			idle_continuation.WriteInt( 6 ); idle_continuation.WriteBool( false );
 			old_body.WriteString( idle_continuation.ToString() );
 			game->GetRandom()->GetUInt();
 			const auto before_rng = game->GetRandom()->GetStateString();

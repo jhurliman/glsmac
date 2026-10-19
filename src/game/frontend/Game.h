@@ -214,6 +214,7 @@ CLASS( Game, common::Module )
 	// structures received from game thread
 	struct map_data_t {
 		map_data_t();
+		bool native_projection = false;
 		size_t width = 0;
 		size_t height = 0;
 		struct {
@@ -277,7 +278,8 @@ private:
 		const std::unordered_map< std::string, backend::map::sprite_actor_t >& sprite_actors,
 		const std::unordered_map< size_t, std::pair< std::string, ::types::Vec3 > >& sprite_instances,
 		const std::vector< backend::map::tile::Tile >* tiles,
-		const std::vector< backend::map::tile::TileState >* tile_states
+		const std::vector< backend::map::tile::TileState >* tile_states,
+        bool native_projection
 	);
 	void Deinitialize();
 

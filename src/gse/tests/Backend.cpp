@@ -2688,6 +2688,35 @@ public:
 					types::Vec3{},true,stats.movement,stats.morale,unit->GetMoraleString(),stats.health,true,unit->HasMovesLeft(),stats.full_movement);
 				controller->m_units.emplace(unit->m_id,rendered);
 			}
+            {
+                const auto saved_map=frontend->m_map_data;
+                const auto saved_camera=frontend->m_camera_position;
+                const auto saved_view=frontend->m_viewport;
+                const auto saved_turn=frontend->m_turn_id;
+                util::FinallyGuard restore_focus([&] {
+                    controller->m_selection_visit.reset();frontend->m_map_data=saved_map;
+                    frontend->m_camera_position=saved_camera;frontend->m_viewport=saved_view;frontend->m_turn_id=saved_turn;
+                });
+                frontend->m_turn_id=m_game.GetTurnId();
+                frontend->m_map_data.width=80;frontend->m_map_data.height=80;
+                frontend->m_map_data.range.percent_to_absolute.x.SetRange({{0,1},{-20,20}});
+                frontend->m_map_data.range.percent_to_absolute.y.SetRange({{0,1},{-20,20}});
+                frontend->m_viewport.window_aspect_ratio=0.75f;frontend->m_viewport.ratio.y=1;
+                for(const bool native:{false,true}) {
+                    frontend->m_map_data.native_projection=native;
+                    for(const int sign:{-1,1}) {
+                        // Same world focus under each camera: x39 and y59/19.
+                        // The legacy inverse on a native pan would yield row53/25.
+                        frontend->m_camera_position={0,sign*(native?0.625f:0.88375f),0.125f};
+                        controller->m_selection_visit.reset();
+                        GT_ASSERT(controller->QueueAutomaticSelection(),"Actual controller rejected a valid panned view");
+                        const auto request=controller->m_selection_visit;
+                        GT_ASSERT(request && request->ready.load() && request->selected.has_value() &&
+                            request->focus==types::Vec2<size_t>(39,sign<0?59:19),
+                            "Automatic unit focus used a different map projection coefficient");
+                    }
+                }
+            }
 			controller->m_selected_unit=controller->GetUnitById(actor->m_id);
 			auto* initialize=static_cast<value::Callable*>(RunScript(GSE_CALL,"./GLSMAC_data/tests/_unit_commands"));
 			check=static_cast<value::Callable*>(initialize->Run(GSE_CALL,{m_game.Wrap(GSE_CALL)}));m_gse->AddRootObject(check);

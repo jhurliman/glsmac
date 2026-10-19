@@ -242,6 +242,8 @@ struct vertices_t {
 };
 
 struct response_map_data_t {
+    bool native_projection = false;
+    void SetMapProjectionProvenance(const map::Map& source);
 	size_t map_width;
 	size_t map_height;
 	types::texture::Texture* terrain_texture;

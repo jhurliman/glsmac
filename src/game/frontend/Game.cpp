@@ -1,3 +1,4 @@
+#include "MapProjection.h"
 #include "Game.h"
 #include "game/backend/LocalMoveCommand.h"
 #include "game/backend/map/TerrainRenderUpdate.h"
@@ -276,7 +277,8 @@ void Game::Iterate() {
 						*response.data.get_map_data->sprites.actors,
 						*response.data.get_map_data->sprites.instances,
 						response.data.get_map_data->tiles,
-						response.data.get_map_data->tile_states
+						response.data.get_map_data->tile_states,
+                        response.data.get_map_data->native_projection
 					);
 					response.data.get_map_data->terrain_texture = nullptr;
 					response.data.get_map_data->terrain_mesh = nullptr;
@@ -561,7 +563,7 @@ void Game::CenterAtCoordinatePercents( const types::Vec2< float > position_perce
 	//Log( "Scrolling to percents " + position_percents.ToString() );
 	m_camera_position = {
 		GetFixedX( -position.x * m_camera_position.z * m_viewport.window_aspect_ratio ),
-		-position.y * m_camera_position.z * m_viewport.ratio.y * 0.707f,
+		-position.y * m_camera_position.z * m_viewport.ratio.y * map_projection::Vertical(m_map_data.native_projection),
 		m_camera_position.z
 	};
 	UpdateCameraPosition();
@@ -635,30 +637,24 @@ void Game::UpdateCameraPosition() {
 	m_camera->SetPosition(
 		{
 			( 0.5f + m_camera_position.x ) / m_viewport.window_aspect_ratio,
-			( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + backend::map::s_consts.tile.scale.z * m_camera_position.z / 1.414f, // TODO: why 1.414?
+			( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + backend::map::s_consts.tile.scale.z * m_camera_position.z * map_projection::HeightVertical(m_map_data.native_projection),
 			( 0.5f + m_camera_position.y ) / m_viewport.ratio.y + m_camera_position.z
 		}
 	);
 
 	const types::Vec2< float >& percents = {
 		1.0f - m_map_data.range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z / m_viewport.window_aspect_ratio ),
-		1.0f - m_map_data.range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z / m_viewport.ratio.y / 0.707f )
+		1.0f - m_map_data.range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z / m_viewport.ratio.y / map_projection::Vertical(m_map_data.native_projection) )
 	};
 	const types::Vec2< float >& zoom = {
 		2.0f / ( (float)( m_map_data.width ) * m_camera_position.z * m_viewport.window_aspect_ratio ),
-		2.0f / ( (float)( m_map_data.height ) * m_camera_position.z * m_viewport.ratio.y * 0.707f ),
+		2.0f / ( (float)( m_map_data.height ) * m_camera_position.z * m_viewport.ratio.y * map_projection::Vertical(m_map_data.native_projection) ),
 	};
 	m_widgets.Minimap->SetMinimapSelection( percents, zoom );
 }
 
 void Game::UpdateCameraScale() {
-	m_camera->SetScale(
-		{
-			m_camera_position.z,
-			m_camera_position.z,
-			m_camera_position.z
-		}
-	);
+	m_camera->SetScale(map_projection::CameraScale(m_camera_position.z,m_map_data.native_projection));
 	//UpdateUICamera();
 }
 
@@ -668,7 +664,7 @@ void Game::UpdateCameraAngle() {
 }
 
 void Game::UpdateCameraRange() {
-	m_camera_range.min.z = 2.82f / ( m_map_data.height + 1 ) / m_viewport.ratio.y; // TODO: why 2.82?
+	m_camera_range.min.z = map_projection::FitHeight(m_map_data.native_projection) / ( m_map_data.height + 1 ) / m_viewport.ratio.y;
 	m_camera_range.max.z = 0.22f; // TODO: fix camera z and allow to zoom in more
 	if ( m_camera_position.z < m_camera_range.min.z ) {
 		m_camera_position.z = m_camera_range.min.z;
@@ -676,7 +672,7 @@ void Game::UpdateCameraRange() {
 	if ( m_camera_position.z > m_camera_range.max.z ) {
 		m_camera_position.z = m_camera_range.max.z;
 	}
-	m_camera_range.max.y = ( m_camera_position.z - m_camera_range.min.z ) * ( m_map_data.height + 1 ) * m_viewport.ratio.y * 0.1768f; // TODO: why 0.1768?
+	m_camera_range.max.y = ( m_camera_position.z - m_camera_range.min.z ) * ( m_map_data.height + 1 ) * m_viewport.ratio.y * map_projection::RangeVertical(m_map_data.native_projection);
 	m_camera_range.min.y = -m_camera_range.max.y;
 
 	//Log( "Camera range change: Z=[" + to_string( m_camera_range.min.z ) + "," + to_string( m_camera_range.max.z ) + "] Y=[" + to_string( m_camera_range.min.y ) + "," + to_string( m_camera_range.max.y ) + "], z=" + to_string( m_camera_position.z ) );
@@ -1322,7 +1318,8 @@ void Game::Initialize(
 	const std::unordered_map< std::string, backend::map::sprite_actor_t >& sprite_actors,
 	const std::unordered_map< size_t, std::pair< std::string, types::Vec3 > >& sprite_instances,
 	const std::vector< backend::map::tile::Tile >* tiles,
-	const std::vector< backend::map::tile::TileState >* tile_states
+	const std::vector< backend::map::tile::TileState >* tile_states,
+        bool native_projection
 ) {
 	ASSERT( !m_is_initialized, "already initialized" );
 
@@ -1332,6 +1329,7 @@ void Game::Initialize(
 	Log( "Initializing game" );
 
 	NEW( m_camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
+    m_map_data.native_projection=native_projection;
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
 	UpdateCameraAngle();
 
@@ -2064,7 +2062,7 @@ const types::Vec2< float > Game::GetTileWindowCoordinates( const tile::Tile* til
 	const auto& c = tile->GetRenderData().coords;
 	return {
 		c.x * m_viewport.window_aspect_ratio * m_camera_position.z,
-		( c.y - ( c.z - 2.0f ) ) * m_viewport.ratio.y * m_camera_position.z / 1.414f
+		( c.y - ( c.z - 2.0f ) ) * m_viewport.ratio.y * m_camera_position.z * map_projection::HeightVertical(m_map_data.native_projection)
 	};
 }
 

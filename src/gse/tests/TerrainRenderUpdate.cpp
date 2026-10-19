@@ -1,6 +1,10 @@
 #include "TerrainRenderUpdate.h"
+#include "Mesh.h"
+#include "scene/Camera.h"
+#include "game/frontend/MapProjection.h"
 #include "game/frontend/tile/Tile.h"
 #include "game/backend/MapObject.h"
+#include "game/backend/Game.h"
 #include "game/frontend/unit/SelectionBlink.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/MapState.h"
@@ -164,6 +168,29 @@ public:
         const auto& b=world.GetTerrainUpdatePayload(*appearance);
         return b.added.size()==1 && b.added.front().coords==wanted;
     }
+    bool CheckProjectionProvenance() {
+        game::backend::response_map_data_t response{};
+        response.SetMapProjectionProvenance(world);
+        if(response.native_projection) return false;
+        using Planet=map::SmacPlanetMap;
+        std::string wire(Planet::FILE_BYTES,'\0');wire.replace(0,11,"TERRANMAP\0\x1a",11);
+        wire[11]=5;wire[15]=80;wire[19]=80;wire[15+0xa30]=4;
+        for(size_t i=0;i<Planet::TILE_COUNT;++i) {
+            wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES]=char(2<<5);
+        }
+        world.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+        for(const auto& state:*world.GetMapState()->GetTileStatesPtr()) {
+            if(state.smac_projector_height) return false;
+        }
+        response.SetMapProjectionProvenance(world);
+        if(!response.native_projection) return false;
+        world.m_resource_policy=map::GlsmacResourceMapPolicy::Deserialize(world.m_resource_policy->Serialize().ToString());
+        response.SetMapProjectionProvenance(world);
+        if(!response.native_projection) return false;
+        world.m_resource_policy=map::GlsmacResourceMapPolicy::DisplayedTerrainV1();
+        response.SetMapProjectionProvenance(world);
+        return !response.native_projection;
+    }
     auto Replay(const map::TerrainCoastRecipes::Land& land) { return world.m_coast_recipes.Prepare(land); }
 	void Commit( tile::Tile* t, uint16_t bits, map::Map::PreparedTerrainUpdate& update ) {
 		t->terraforming = bits; world.CommitOrdinaryTerrainUpdate( update );
@@ -172,6 +199,39 @@ public:
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("SMAC native camera provenance survives all ocean tiles without land metadata",GT(){
+        TerrainRenderFixture f;GT_ASSERT(f.CheckProjectionProvenance(),"Projection inferred provenance from current land or retained stale mode");
+        GT_OK();
+    });
+    task->AddTest("SMAC ordinary terrain actual camera projects native96x48 diamonds and pixel heights",GT(){
+        return WithWidgetGraphics([]()->std::string {
+            scene::Camera camera(scene::Camera::CT_ORTHOGRAPHIC);
+            camera.SetCustomAspectRatio(768.0f/1024);
+            camera.SetAngle({-float(M_PI)*0.5f,float(M_PI)*0.75f,0});
+            camera.SetScale(game::frontend::map_projection::CameraScale(0.125f,true));
+            camera.SetPosition({0.75f,0.5f,0.5f});
+            const auto project=[&](types::Vec3 c) {
+                c.y=-c.y;c.z+=2;
+                const auto& m=camera.GetMatrix().m;
+                const float x=m[0][0]*c.x+m[0][1]*c.y+m[0][2]*c.z+m[0][3];
+                const float y=m[1][0]*c.x+m[1][1]*c.y+m[1][2]*c.z+m[1][3];
+                return types::Vec2<float>{(x+1)*512,(1-y)*384};
+            };
+            const std::array<types::Vec2<float>,5> flat{{{576,288},{528,288},{576,264},{624,288},{576,312}}};
+            for(const auto& fixture:terrain_cases::ALL) {
+                const auto c=map::smac_terrain::LandCoordinates(fixture.expected,{0,0},{0.5f,0.5f});
+                const std::array<types::Vec3,5> vertices{{c.center,c.left,c.top,c.right,c.bottom}};
+                for(size_t i=0;i<vertices.size();++i) {
+                    const auto p=project(vertices[i]);
+                    GT_ASSERT(std::abs(p.x-flat[i].x)<0.001f &&
+                        std::abs(p.y-(flat[i].y-fixture.expected[i]))<0.001f,
+                        "Original pixel projection differs: "+std::string(fixture.name)+" vertex"+std::to_string(i)+" at"+p.ToString());
+                }
+            }
+            GT_ASSERT(game::frontend::map_projection::CameraScale(0.125f,false)==types::Vec3(0.125f,0.125f,0.125f),"Legacy camera scale changed");
+            GT_OK();
+        });
+    });
     task->AddTest("SMAC terrain sprite anchors agree through initial ordinary and appearance callers",GT(){
         {TerrainRenderFixture f;GT_ASSERT(f.CheckSpriteAnchors(true),"Native sprite lost floored projector height");}
         {TerrainRenderFixture f;GT_ASSERT(f.CheckSpriteAnchors(false),"Legacy sprite lost floating outer mean");}

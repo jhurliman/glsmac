@@ -128,9 +128,13 @@ void Sprite::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Cam
 									auto flags = sprite_actor->GetRenderFlags();
 									glUniform1ui( sp->uniforms.flags, flags );
 									if ( flags & scene::actor::Actor::RF_PIXEL_SPRITE ) {
+										GLint viewport[4];glGetIntegerv(GL_VIEWPORT,viewport);
+										if(viewport[2]<=0 || viewport[3]<=0) {return;}
 										const auto& offset = sprite_actor->GetDstOffsets();
 										glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&offset );
-										glUniform2f( sp->uniforms.pixel_step, 2.0f / m_opengl->GetViewportWidth(), 2.0f / m_opengl->GetViewportHeight() );
+										// FBO targets and Retina drawables need their physical
+										// viewport, rather than SDL's logical window dimensions.
+										glUniform2f( sp->uniforms.pixel_step, 2.0f / viewport[2], 2.0f / viewport[3] );
 									}
                                     if(flags&scene::actor::Actor::RF_SMAC_EFFECT) {const auto origin=m_opengl->PrepareEffectBackground();glUniform2i(sp->uniforms.effect_origin,origin.x,origin.y);}
 									if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {

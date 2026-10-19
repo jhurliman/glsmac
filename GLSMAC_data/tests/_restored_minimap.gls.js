@@ -9,13 +9,15 @@ return (game) => {
 	let timers = 0;
 	let overview = null;
 	let world_click = null;
+	let world_geometry = null;
+	let info_geometry = null;
 	let map_listeners = {};
 	const style = {set: (data) => {}};
 	style.extend = (name) => { return style; };
 	const button = (data) => {
 		const result = data + {
 			on: (name, callback) => {
-				if (name == 'click' && #is_defined(data.left) && data.left == 904) { world_click = callback; }
+				if (name == 'click' && #is_defined(data.right) && data.right == 66) { world_click = callback; world_geometry = data; }
 			},
 			sound: (properties) => { return {play: () => { plays++; }}; },
 			surface: (properties) => {
@@ -38,6 +40,7 @@ return (game) => {
 	};
 	let panel = null;
 	panel = (data) => {
+		if (#is_defined(data.width) && data.width == 116) { info_geometry = data; }
 		return {
 			panel: panel,
 			button: button,
@@ -52,6 +55,6 @@ return (game) => {
 	minimap.init({game: game, map: {on: (name, callback) => { map_listeners[name] = callback; }},
 		ui: {class: (name) => { return style; }}, el: {panel: panel, button: button, widget: widget}});
 	return () => { return {year: year.text, energy: energy.text, text: turn_button.text, plays: plays, timers: timers,
-		overview: overview.data.overview, geometry: {left: overview.left, top: overview.top, width: overview.width, height: overview.height},
-		world_click: world_click, map_event: (name) => { map_listeners[name]({}); }}; };
+		overview: overview.data.overview, geometry: {align: overview.align, right: overview.right, top: overview.top, width: overview.width, height: overview.height},
+		world_geometry: world_geometry, info_geometry: info_geometry, world_click: world_click, map_event: (name) => { map_listeners[name]({}); }}; };
 };

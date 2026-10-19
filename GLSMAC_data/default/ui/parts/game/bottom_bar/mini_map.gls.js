@@ -22,10 +22,10 @@ return {
 			width: 236,
 		});
 
-		// Source console coordinates at the fixed 1024x768 logical stage.
+		// Original 1024x768 rectangles, anchored to the right console artwork.
 		const minimap = p.el.widget({
-			type: 'minimap', align: 'top left',
-			left: 780, top: 88, width: 239, height: 119,
+			type: 'minimap', align: 'top right',
+			right: 5, top: 88, width: 239, height: 119,
 			data: {},
 		});
 		let had_overview = false;
@@ -45,8 +45,8 @@ return {
 		minimap.listen(p.map, 'base_preview', (e) => { refresh_overview(); });
 
 		const info_block = p.el.panel({
-			class: 'bottombar-panel-inner', align: 'top left',
-			left: 785, top: 214, width: 116, height: 32,
+			class: 'bottombar-panel-inner', align: 'top right',
+			right: 123, top: 214, width: 116, height: 32,
 		});
 		const info_year = info_block.text({
 			class: 'bottombar-minimap-info-text',
@@ -91,7 +91,7 @@ return {
 		p.el.button({
 			class: 'bottombar-minimap-button-left',
 			text: '',
-			left: 904, top: 214,
+			align: 'top right', right: 66, top: 214,
 		}).on('click', (e) => {
 			refresh_overview();
 			return true;

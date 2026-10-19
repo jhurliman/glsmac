@@ -12,7 +12,7 @@ const game = {
 const read = create(game);
 let state = read();
 test.assert(state.overview == frame && reads == 1, 'initial/restored console bypassed local minimap query');
-test.assert(state.geometry.left == 780 && state.geometry.top == 88 && state.geometry.width == 239 && state.geometry.height == 119,
+test.assert(state.geometry.align == 'top right' && state.geometry.right == 5 && state.geometry.top == 88 && state.geometry.width == 239 && state.geometry.height == 119,
     'console overview did not use measured source rectangle');
 frame = {kind: 'next-observer-frame'};
 state.map_event('unit_preview');

@@ -22,6 +22,7 @@
 #include "gse/context/GlobalContext.h"
 #include "gc/Space.h"
 #include "ui/UI.h"
+#include "ui/geometry/Geometry.h"
 #include "ui/dom/Root.h"
 #include "ui/dom/Widget.h"
 #include "game/frontend/widget/Minimap.h"
@@ -84,6 +85,43 @@ std::string CheckOverviewWidget() {
 }
 }
 void AddSmacMinimapTests(task::gsetests::GSETests* task) {
+    task->AddTest("minimap actual console caller remains right anchored on wider presentation stages",GT(){
+        for(const auto size:std::array<std::array<unsigned short,2>,2>{{{{1024,768}},{{1440,1080}}}}) {
+            const auto error=WithWidgetGraphics([&]()->std::string {
+                GSE runtime;auto* gc_space=runtime.GetGCSpace();std::string result;
+                gc_space->Accumulate(&runtime,[&] {
+                    auto* ctx=runtime.CreateGlobalContext();const si_t si;ExecutionPointer ep;
+                    auto* ui=new ::ui::UI(GSE_CALL);util::FinallyGuard cleanup([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
+                    auto* root=static_cast<value::Object*>(ui->GetRoot()->Wrap(GSE_CALL));
+                    auto* state=static_cast<value::Object*>(runtime.RunScript(GSE_CALL,"./GLSMAC_data/tests/_minimap_layout"));
+                    result=[&]()->std::string {
+                        ui->GetRoot()->GetGeometry()->NeedUpdate();
+                        const auto width=ui->GetRoot()->GetGeometry()->GetWidth();
+                        GT_ASSERT(width==size[0],"unexpected logical presentation width");
+                        const std::array<const char*,3> fields{{"geometry","info_geometry","world_geometry"}};
+                        const std::array<int,3> source_left{{780,785,904}},source_right{{1019,901,958}};
+                        for(size_t i=0;i<fields.size();++i) {
+                            auto* source=static_cast<value::Object*>(state->Get(fields[i]));
+                            value::object_properties_t props;
+                            for(const auto* field:{"align","right","top","width","height"}) {
+                                auto* v=source->Get(field);
+                                // The synchronous factory omits class expansion;
+                                // retain the measured World artwork dimensions.
+                                if(v->type==VT_UNDEFINED && i==2) {v=VALUE(value::Int,,std::string(field)=="width"?54:32);}
+                                props.emplace(field,v);
+                            }
+                            auto* panel=::ui::dom::Object::Unwrap(static_cast<value::Callable*>(root->Get("panel"))->Run(GSE_CALL,{new value::Object(GSE_CALL,props)}));
+                            ui->GetRoot()->GetGeometry()->NeedUpdate();
+                            const auto area=panel->GetGeometry()->GetEffectiveArea();
+                            GT_ASSERT(area.left==source_left[i]+width-1024 && area.right==source_right[i]+width-1024,
+                                "actual minimap caller detached a child from the right console");
+                        }
+                        GT_OK();
+                    }();
+                });return result;
+            },size[0],size[1]);GT_ASSERT(error.empty(),"console stage: "+error);
+        }GT_OK();
+    });
     task->AddTest("minimap Planet source matches native clipping ink and complete indexed control",GT(){
         namespace raster=game::frontend::widget::smac_minimap;
         for(const auto& c:minimap_placement_fixture::cases) {

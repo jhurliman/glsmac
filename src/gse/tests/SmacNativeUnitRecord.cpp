@@ -107,6 +107,48 @@ void ExploreNine(game::backend::map::SmacWorkerKnowledge::Data& data,int32_t x,i
 
 }
 void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC native factory interleaves brood sentry promotion and restores transaction",GT(){
+        using namespace game::backend;using namespace game::backend::unit;using Knowledge=map::SmacWorkerKnowledge;
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);
+        std::string saved;std::vector<Record> expected;
+        const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* manager=game->GetUM();BirthDefinitions(game);BirthBase(GSE_CALL,game);
+            Knowledge::Data data{80,80,true,true,0,{},{},{}};data.observers[1]=Knowledge::Observer{};data.observers[1]->pact_with=0;
+            data.tiles.resize(3200,{0,std::nullopt});Knowledge::BaseObservation base{901,2,{}};base.population[1]=1;data.bases.push_back(base);ExploreNine(data,16,16,2);
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+            const auto before=fixture.Snapshot();const auto next=Unit::GetNextId();const auto random=fixture.GameplayRandom();
+            const auto produce=[&](const UnitManager::NativeBirthFactory& factory) {
+                const auto carrier=factory.create(9,{40,40},{});
+                if(carrier!=0 || factory.capacity(carrier)!=2) {throw std::runtime_error("Actual Isle capacity differs");}
+                for(int i=0;i<2;++i) {const auto passenger=factory.create(8,{40,40},{});factory.sentry(passenger);}
+                factory.promote_stack(carrier);factory.promote_stack(carrier); // Already-head promotion is a no-op.
+                const auto head=factory.record(carrier);
+                if(head.stack_previous!=-1 || head.stack_next!=2 || factory.record(2).stack_next!=1
+                    || factory.record(1).stack_next!=-1 || factory.record(1).order!=1 || factory.record(2).waypoint_x[0]!=-1
+                    || factory.record(2).waypoint_y[0]!=0) {throw std::runtime_error("Staged brood order or head differs");}
+                factory.create(10,{40,40},{});
+            };
+            GT_ASSERT(Rejects([&]{(void)manager->PrepareNativeBirths(GSE_CALL,80,80,true,[&](const auto& factory){produce(factory);throw std::runtime_error("Injected producer failure");});})
+                && fixture.Snapshot()==before && Unit::GetNextId()==next && fixture.GameplayRandom()==random,"Failed producer published staged authority");
+            {auto discarded=manager->PrepareNativeBirths(GSE_CALL,80,80,true,produce);GT_ASSERT(discarded.Size()==4,"Discarded brood missing bodies");}
+            GT_ASSERT(fixture.Snapshot()==before && Unit::GetNextId()==next,"Discarded brood published state");
+            auto prepared=manager->PrepareNativeBirths(GSE_CALL,80,80,true,produce);
+            GT_ASSERT(prepared.Size()==4 && fixture.Snapshot()==before,"Brood published before commit");
+            const int next_links[]{2,-1,1,0},previous_links[]{3,2,0,-1};
+            for(size_t i=0;i<4;++i) {const auto value=prepared.Candidate(i).Native();
+                GT_ASSERT(value.id==i && value.stack_next==next_links[i] && value.stack_previous==previous_links[i],"Prepared stack differs after Locust constructor");expected.push_back(value);}
+            prepared.Commit();prepared.Notify(GSE_CALL);
+            GT_ASSERT(Unit::GetNextId()==next+4 && fixture.GameplayRandom()==random,"Brood allocation or RNG differs");
+            saved=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(error.empty(),"Native producer: "+error);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);
+        const auto restore_error=restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.Restore(GSE_CALL,saved,true);auto* manager=restored.Game()->GetUM();
+            GT_ASSERT(manager->GetUnitRecordOrder().size()==expected.size(),"Restored brood count differs");
+            for(size_t i=0;i<expected.size();++i) {GT_ASSERT(manager->GetUnit(manager->GetUnitRecordOrder()[i])->Native()==expected[i],"Restore lost brood order/stack record");}GT_OK();
+        });GT_ASSERT(restore_error.empty(),"Native producer restore: "+restore_error);GT_OK();
+    });
+
     task->AddTest("SMAC native birth batches publish six original streams and restore complete sea stacks",GT(){
         using namespace game::backend;using namespace game::backend::unit;using Knowledge=map::SmacWorkerKnowledge;
         for(const auto& c:smac_native_spawn_fixture::cases) {

@@ -33,3 +33,19 @@ passes all 30 returns and reconstructs complete captured write journals. That
 constructor evidence does not make the structural C++ test factory a complete
 live publisher. Frozen 29-file manifest SHA256:
 `47a8927904222c3d49e2ae6790b3b5228b30b4068f91b9ea487950148feec9cd`.
+
+## Shared staged factory
+
+`UnitManager::PrepareNativeBirths` now accepts a synchronous C++ producer. Its
+operations create actual staged Units, query the admitted native capacity, set
+sentry fields, promote a stack head, and read the resulting staged record.
+The ecology-plan entry point uses this same factory. Publication and spawn hooks
+remain separate Commit/Notify steps. The operations must not escape the producer,
+yield, invoke scripts, or suppress an operation failure and publish partial work.
+
+The brood integration test creates an Isle and two sentry passengers, promotes
+the Isle, then creates a Locust. It checks intermediate and final links, unchanged
+live state on discard/failure, atomic publication and full world save/reload.
+Existing birth and sight fixtures continue to run through the shared factory.
+Mixed-owner co-location and the broader native assignment/RNG tail still require
+their missing authorities; this API does not silently bypass those guards.

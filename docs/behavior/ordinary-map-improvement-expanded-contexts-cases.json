@@ -1,0 +1,5841 @@
+{
+  "semantic_revision": {
+    "revision": 2,
+    "reason": "V1 improvement names were wrong; raw masks/coordinates retained. All six originally named improvement controls are corrected.",
+    "raw_masks": {
+      "mine": 16,
+      "solar": 64,
+      "farm": 32768,
+      "forest": 2097152,
+      "river": 128,
+      "condenser": 4194304,
+      "bunker": 2048,
+      "airbase": 262144,
+      "sensor": 2147483648
+    },
+    "prior_names_to_correct_names": {
+      "sensor": "bunker",
+      "bunker": "airbase",
+      "farm": "mine",
+      "mine": "solar",
+      "solar": "condenser",
+      "forest": "river"
+    },
+    "source": "Original item-mask action/ecology authority, native map render branch tests, native TER1 extraction and existing port atlas constants.",
+    "frozen_v1": "Preserved unchanged; semantic feature labels are superseded by this revision."
+  },
+  "scope": "Separate expanded Farm/Sensor loaded rectangles and Farm/Forest/River display-flag contexts. Canonical corrected24-rectangle and48-check handoffs retain their original scope.",
+  "loaded_sprite_rectangles": [
+    {
+      "id": "uniform3_base",
+      "feature_bits": null,
+      "caller_anchor": [
+        528,
+        240
+      ],
+      "sprite_offset": [
+        27,
+        17
+      ],
+      "sprite_size": [
+        41,
+        38
+      ],
+      "unclipped_destination": [
+        555,
+        257,
+        596,
+        295
+      ]
+    },
+    {
+      "id": "uniform4_base",
+      "feature_bits": null,
+      "caller_anchor": [
+        528,
+        215
+      ],
+      "sprite_offset": [
+        27,
+        17
+      ],
+      "sprite_size": [
+        41,
+        38
+      ],
+      "unclipped_destination": [
+        555,
+        232,
+        596,
+        270
+      ]
+    },
+    {
+      "id": "single_hill_base",
+      "feature_bits": null,
+      "caller_anchor": [
+        528,
+        234
+      ],
+      "sprite_offset": [
+        27,
+        17
+      ],
+      "sprite_size": [
+        41,
+        38
+      ],
+      "unclipped_destination": [
+        555,
+        251,
+        596,
+        289
+      ]
+    },
+    {
+      "id": "coast_base",
+      "feature_bits": null,
+      "caller_anchor": [
+        528,
+        237
+      ],
+      "sprite_offset": [
+        27,
+        17
+      ],
+      "sprite_size": [
+        41,
+        38
+      ],
+      "unclipped_destination": [
+        555,
+        254,
+        596,
+        292
+      ]
+    },
+    {
+      "id": "uniform3_bunker",
+      "feature_bits": 2048,
+      "caller_anchor": [
+        528,
+        264
+      ],
+      "sprite_offset": [
+        40,
+        18
+      ],
+      "sprite_size": [
+        50,
+        29
+      ],
+      "unclipped_destination": [
+        568,
+        282,
+        618,
+        311
+      ]
+    },
+    {
+      "id": "uniform3_airbase",
+      "feature_bits": 262144,
+      "caller_anchor": [
+        528,
+        264
+      ],
+      "sprite_offset": [
+        26,
+        12
+      ],
+      "sprite_size": [
+        43,
+        26
+      ],
+      "unclipped_destination": [
+        554,
+        276,
+        597,
+        302
+      ]
+    },
+    {
+      "id": "uniform3_mine",
+      "feature_bits": 16,
+      "caller_anchor": [
+        528,
+        264
+      ],
+      "sprite_offset": [
+        22,
+        1
+      ],
+      "sprite_size": [
+        57,
+        43
+      ],
+      "unclipped_destination": [
+        550,
+        265,
+        607,
+        308
+      ]
+    },
+    {
+      "id": "uniform3_solar",
+      "feature_bits": 64,
+      "caller_anchor": [
+        528,
+        264
+      ],
+      "sprite_offset": [
+        25,
+        17
+      ],
+      "sprite_size": [
+        49,
+        23
+      ],
+      "unclipped_destination": [
+        553,
+        281,
+        602,
+        304
+      ]
+    },
+    {
+      "id": "uniform3_condenser",
+      "feature_bits": 4194304,
+      "caller_anchor": [
+        528,
+        264
+      ],
+      "sprite_offset": [
+        16,
+        2
+      ],
+      "sprite_size": [
+        63,
+        38
+      ],
+      "unclipped_destination": [
+        544,
+        266,
+        607,
+        304
+      ]
+    },
+    {
+      "id": "uniform3_farm",
+      "feature_bits": 32768,
+      "caller_anchor": [
+        528,
+        264
+      ],
+      "sprite_offset": [
+        33,
+        28
+      ],
+      "sprite_size": [
+        14,
+        11
+      ],
+      "unclipped_destination": [
+        561,
+        292,
+        575,
+        303
+      ]
+    },
+    {
+      "id": "uniform3_sensor",
+      "feature_bits": 2147483648,
+      "caller_anchor": [
+        528,
+        264
+      ],
+      "sprite_offset": [
+        30,
+        1
+      ],
+      "sprite_size": [
+        27,
+        36
+      ],
+      "unclipped_destination": [
+        558,
+        265,
+        585,
+        301
+      ]
+    },
+    {
+      "id": "uniform4_bunker",
+      "feature_bits": 2048,
+      "caller_anchor": [
+        528,
+        239
+      ],
+      "sprite_offset": [
+        40,
+        18
+      ],
+      "sprite_size": [
+        50,
+        29
+      ],
+      "unclipped_destination": [
+        568,
+        257,
+        618,
+        286
+      ]
+    },
+    {
+      "id": "uniform4_airbase",
+      "feature_bits": 262144,
+      "caller_anchor": [
+        528,
+        239
+      ],
+      "sprite_offset": [
+        26,
+        12
+      ],
+      "sprite_size": [
+        43,
+        26
+      ],
+      "unclipped_destination": [
+        554,
+        251,
+        597,
+        277
+      ]
+    },
+    {
+      "id": "uniform4_mine",
+      "feature_bits": 16,
+      "caller_anchor": [
+        528,
+        239
+      ],
+      "sprite_offset": [
+        22,
+        1
+      ],
+      "sprite_size": [
+        57,
+        43
+      ],
+      "unclipped_destination": [
+        550,
+        240,
+        607,
+        283
+      ]
+    },
+    {
+      "id": "uniform4_solar",
+      "feature_bits": 64,
+      "caller_anchor": [
+        528,
+        239
+      ],
+      "sprite_offset": [
+        25,
+        17
+      ],
+      "sprite_size": [
+        49,
+        23
+      ],
+      "unclipped_destination": [
+        553,
+        256,
+        602,
+        279
+      ]
+    },
+    {
+      "id": "uniform4_condenser",
+      "feature_bits": 4194304,
+      "caller_anchor": [
+        528,
+        239
+      ],
+      "sprite_offset": [
+        16,
+        2
+      ],
+      "sprite_size": [
+        63,
+        38
+      ],
+      "unclipped_destination": [
+        544,
+        241,
+        607,
+        279
+      ]
+    },
+    {
+      "id": "uniform4_farm",
+      "feature_bits": 32768,
+      "caller_anchor": [
+        528,
+        239
+      ],
+      "sprite_offset": [
+        33,
+        28
+      ],
+      "sprite_size": [
+        14,
+        11
+      ],
+      "unclipped_destination": [
+        561,
+        267,
+        575,
+        278
+      ]
+    },
+    {
+      "id": "uniform4_sensor",
+      "feature_bits": 2147483648,
+      "caller_anchor": [
+        528,
+        239
+      ],
+      "sprite_offset": [
+        30,
+        1
+      ],
+      "sprite_size": [
+        27,
+        36
+      ],
+      "unclipped_destination": [
+        558,
+        240,
+        585,
+        276
+      ]
+    },
+    {
+      "id": "single_hill_bunker",
+      "feature_bits": 2048,
+      "caller_anchor": [
+        528,
+        258
+      ],
+      "sprite_offset": [
+        40,
+        18
+      ],
+      "sprite_size": [
+        50,
+        29
+      ],
+      "unclipped_destination": [
+        568,
+        276,
+        618,
+        305
+      ]
+    },
+    {
+      "id": "single_hill_airbase",
+      "feature_bits": 262144,
+      "caller_anchor": [
+        528,
+        258
+      ],
+      "sprite_offset": [
+        26,
+        12
+      ],
+      "sprite_size": [
+        43,
+        26
+      ],
+      "unclipped_destination": [
+        554,
+        270,
+        597,
+        296
+      ]
+    },
+    {
+      "id": "single_hill_mine",
+      "feature_bits": 16,
+      "caller_anchor": [
+        528,
+        258
+      ],
+      "sprite_offset": [
+        22,
+        1
+      ],
+      "sprite_size": [
+        57,
+        43
+      ],
+      "unclipped_destination": [
+        550,
+        259,
+        607,
+        302
+      ]
+    },
+    {
+      "id": "single_hill_solar",
+      "feature_bits": 64,
+      "caller_anchor": [
+        528,
+        258
+      ],
+      "sprite_offset": [
+        25,
+        17
+      ],
+      "sprite_size": [
+        49,
+        23
+      ],
+      "unclipped_destination": [
+        553,
+        275,
+        602,
+        298
+      ]
+    },
+    {
+      "id": "single_hill_condenser",
+      "feature_bits": 4194304,
+      "caller_anchor": [
+        528,
+        258
+      ],
+      "sprite_offset": [
+        16,
+        2
+      ],
+      "sprite_size": [
+        63,
+        38
+      ],
+      "unclipped_destination": [
+        544,
+        260,
+        607,
+        298
+      ]
+    },
+    {
+      "id": "single_hill_farm",
+      "feature_bits": 32768,
+      "caller_anchor": [
+        528,
+        258
+      ],
+      "sprite_offset": [
+        33,
+        28
+      ],
+      "sprite_size": [
+        14,
+        11
+      ],
+      "unclipped_destination": [
+        561,
+        286,
+        575,
+        297
+      ]
+    },
+    {
+      "id": "single_hill_sensor",
+      "feature_bits": 2147483648,
+      "caller_anchor": [
+        528,
+        258
+      ],
+      "sprite_offset": [
+        30,
+        1
+      ],
+      "sprite_size": [
+        27,
+        36
+      ],
+      "unclipped_destination": [
+        558,
+        259,
+        585,
+        295
+      ]
+    },
+    {
+      "id": "coast_bunker",
+      "feature_bits": 2048,
+      "caller_anchor": [
+        528,
+        261
+      ],
+      "sprite_offset": [
+        40,
+        18
+      ],
+      "sprite_size": [
+        50,
+        29
+      ],
+      "unclipped_destination": [
+        568,
+        279,
+        618,
+        308
+      ]
+    },
+    {
+      "id": "coast_airbase",
+      "feature_bits": 262144,
+      "caller_anchor": [
+        528,
+        261
+      ],
+      "sprite_offset": [
+        26,
+        12
+      ],
+      "sprite_size": [
+        43,
+        26
+      ],
+      "unclipped_destination": [
+        554,
+        273,
+        597,
+        299
+      ]
+    },
+    {
+      "id": "coast_mine",
+      "feature_bits": 16,
+      "caller_anchor": [
+        528,
+        261
+      ],
+      "sprite_offset": [
+        22,
+        1
+      ],
+      "sprite_size": [
+        57,
+        43
+      ],
+      "unclipped_destination": [
+        550,
+        262,
+        607,
+        305
+      ]
+    },
+    {
+      "id": "coast_solar",
+      "feature_bits": 64,
+      "caller_anchor": [
+        528,
+        261
+      ],
+      "sprite_offset": [
+        25,
+        17
+      ],
+      "sprite_size": [
+        49,
+        23
+      ],
+      "unclipped_destination": [
+        553,
+        278,
+        602,
+        301
+      ]
+    },
+    {
+      "id": "coast_condenser",
+      "feature_bits": 4194304,
+      "caller_anchor": [
+        528,
+        261
+      ],
+      "sprite_offset": [
+        16,
+        2
+      ],
+      "sprite_size": [
+        63,
+        38
+      ],
+      "unclipped_destination": [
+        544,
+        263,
+        607,
+        301
+      ]
+    },
+    {
+      "id": "coast_farm",
+      "feature_bits": 32768,
+      "caller_anchor": [
+        528,
+        261
+      ],
+      "sprite_offset": [
+        33,
+        28
+      ],
+      "sprite_size": [
+        14,
+        11
+      ],
+      "unclipped_destination": [
+        561,
+        289,
+        575,
+        300
+      ]
+    },
+    {
+      "id": "coast_sensor",
+      "feature_bits": 2147483648,
+      "caller_anchor": [
+        528,
+        261
+      ],
+      "sprite_offset": [
+        30,
+        1
+      ],
+      "sprite_size": [
+        27,
+        36
+      ],
+      "unclipped_destination": [
+        558,
+        262,
+        585,
+        298
+      ]
+    }
+  ],
+  "feature_contexts": [
+    {
+      "id": "uniform3_bunker",
+      "feature": "bunker",
+      "feature_bits": 2048,
+      "render_flags": 32,
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projector": [
+        528,
+        264
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            264
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            264,
+            624,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            312,
+            528,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform3_airbase",
+      "feature": "airbase",
+      "feature_bits": 262144,
+      "render_flags": 32,
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projector": [
+        528,
+        264
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            264
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            264,
+            624,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            312,
+            528,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform3_mine",
+      "feature": "mine",
+      "feature_bits": 16,
+      "render_flags": 32,
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projector": [
+        528,
+        264
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            264
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            264,
+            624,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            312,
+            528,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform3_solar",
+      "feature": "solar",
+      "feature_bits": 64,
+      "render_flags": 32,
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projector": [
+        528,
+        264
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            264
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            264,
+            624,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            312,
+            528,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform3_condenser",
+      "feature": "condenser",
+      "feature_bits": 4194304,
+      "render_flags": 32,
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projector": [
+        528,
+        264
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            264
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            264,
+            624,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            312,
+            528,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform3_river",
+      "feature": "river",
+      "feature_bits": 128,
+      "render_flags": 32,
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projector": [
+        528,
+        264
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            264,
+            624,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            312,
+            528,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform3_farm",
+      "feature": "farm",
+      "feature_bits": 32768,
+      "render_flags": 32,
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projector": [
+        528,
+        264
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            264
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            264,
+            624,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            312,
+            528,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        }
+      ],
+      "selected_terrain_texture": {
+        "id": "arid",
+        "asset": "TEXTURE.PCX",
+        "source_crop": [
+          1,
+          58,
+          56,
+          56
+        ]
+      }
+    },
+    {
+      "id": "uniform3_forest",
+      "feature": "forest",
+      "feature_bits": 2097152,
+      "render_flags": 32,
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projector": [
+        528,
+        264
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            264,
+            624,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            312,
+            528,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform3_sensor",
+      "feature": "sensor",
+      "feature_bits": 2147483648,
+      "render_flags": 32,
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projector": [
+        528,
+        264
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            264
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            264,
+            624,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            312,
+            528,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform3_farm_texture",
+      "feature": "farm",
+      "feature_bits": 32768,
+      "render_flags": 33,
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projector": [
+        528,
+        264
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            264
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            264,
+            624,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            312,
+            528,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        }
+      ],
+      "selected_terrain_texture": {
+        "id": "farm_surface_variant_3",
+        "bank_index": 3,
+        "asset": "TEXTURE.PCX",
+        "source_crop": [
+          775,
+          276,
+          56,
+          56
+        ]
+      }
+    },
+    {
+      "id": "uniform3_forest_texture",
+      "feature": "forest",
+      "feature_bits": 2097152,
+      "render_flags": 33,
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projector": [
+        528,
+        264
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            264,
+            624,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            312,
+            528,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 4,
+          "vertices": [
+            528,
+            288,
+            576,
+            264,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "role": "forest_quad"
+        }
+      ]
+    },
+    {
+      "id": "uniform3_river_texture",
+      "feature": "river",
+      "feature_bits": 128,
+      "render_flags": 33,
+      "heights_CWNES": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projector": [
+        528,
+        264
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            264,
+            624,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            624,
+            288,
+            576,
+            312
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            288,
+            576,
+            312,
+            528,
+            288
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform4_bunker",
+      "feature": "bunker",
+      "feature_bits": 2048,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "projector": [
+        528,
+        239
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            239
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            263,
+            576,
+            239
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            239,
+            624,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            287,
+            528,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform4_airbase",
+      "feature": "airbase",
+      "feature_bits": 262144,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "projector": [
+        528,
+        239
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            239
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            263,
+            576,
+            239
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            239,
+            624,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            287,
+            528,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform4_mine",
+      "feature": "mine",
+      "feature_bits": 16,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "projector": [
+        528,
+        239
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            239
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            263,
+            576,
+            239
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            239,
+            624,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            287,
+            528,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform4_solar",
+      "feature": "solar",
+      "feature_bits": 64,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "projector": [
+        528,
+        239
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            239
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            263,
+            576,
+            239
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            239,
+            624,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            287,
+            528,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform4_condenser",
+      "feature": "condenser",
+      "feature_bits": 4194304,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "projector": [
+        528,
+        239
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            239
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            263,
+            576,
+            239
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            239,
+            624,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            287,
+            528,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform4_river",
+      "feature": "river",
+      "feature_bits": 128,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "projector": [
+        528,
+        239
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            263,
+            576,
+            239
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            239,
+            624,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            287,
+            528,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform4_farm",
+      "feature": "farm",
+      "feature_bits": 32768,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "projector": [
+        528,
+        239
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            239
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            263,
+            576,
+            239
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            239,
+            624,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            287,
+            528,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        }
+      ],
+      "selected_terrain_texture": {
+        "id": "arid",
+        "asset": "TEXTURE.PCX",
+        "source_crop": [
+          1,
+          58,
+          56,
+          56
+        ]
+      }
+    },
+    {
+      "id": "uniform4_forest",
+      "feature": "forest",
+      "feature_bits": 2097152,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "projector": [
+        528,
+        239
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            263,
+            576,
+            239
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            239,
+            624,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            287,
+            528,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform4_sensor",
+      "feature": "sensor",
+      "feature_bits": 2147483648,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "projector": [
+        528,
+        239
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            239
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            263,
+            576,
+            239
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            239,
+            624,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            287,
+            528,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "uniform4_farm_texture",
+      "feature": "farm",
+      "feature_bits": 32768,
+      "render_flags": 33,
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "projector": [
+        528,
+        239
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            239
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            263,
+            576,
+            239
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            239,
+            624,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            287,
+            528,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        }
+      ],
+      "selected_terrain_texture": {
+        "id": "farm_surface_variant_3",
+        "bank_index": 3,
+        "asset": "TEXTURE.PCX",
+        "source_crop": [
+          775,
+          276,
+          56,
+          56
+        ]
+      }
+    },
+    {
+      "id": "uniform4_forest_texture",
+      "feature": "forest",
+      "feature_bits": 2097152,
+      "render_flags": 33,
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "projector": [
+        528,
+        239
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            263,
+            576,
+            239
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            239,
+            624,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            287,
+            528,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 4,
+          "vertices": [
+            528,
+            263,
+            576,
+            239,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "role": "forest_quad"
+        }
+      ]
+    },
+    {
+      "id": "uniform4_river_texture",
+      "feature": "river",
+      "feature_bits": 128,
+      "render_flags": 33,
+      "heights_CWNES": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "projector": [
+        528,
+        239
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            263,
+            576,
+            239
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            239,
+            624,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            263,
+            576,
+            287
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            287,
+            528,
+            263
+          ],
+          "shade": [
+            0,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "single_hill_bunker",
+      "feature": "bunker",
+      "feature_bits": 2048,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        258
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            258
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            282,
+            576,
+            258
+          ],
+          "shade": [
+            0,
+            1,
+            1
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            258,
+            624,
+            282
+          ],
+          "shade": [
+            0,
+            1,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            282
+          ],
+          "shade": [
+            0,
+            -2,
+            1
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "single_hill_airbase",
+      "feature": "airbase",
+      "feature_bits": 262144,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        258
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            258
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            282,
+            576,
+            258
+          ],
+          "shade": [
+            0,
+            1,
+            1
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            258,
+            624,
+            282
+          ],
+          "shade": [
+            0,
+            1,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            282
+          ],
+          "shade": [
+            0,
+            -2,
+            1
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "single_hill_mine",
+      "feature": "mine",
+      "feature_bits": 16,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        258
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            258
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            282,
+            576,
+            258
+          ],
+          "shade": [
+            0,
+            1,
+            1
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            258,
+            624,
+            282
+          ],
+          "shade": [
+            0,
+            1,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            282
+          ],
+          "shade": [
+            0,
+            -2,
+            1
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "single_hill_solar",
+      "feature": "solar",
+      "feature_bits": 64,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        258
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            258
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            282,
+            576,
+            258
+          ],
+          "shade": [
+            0,
+            1,
+            1
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            258,
+            624,
+            282
+          ],
+          "shade": [
+            0,
+            1,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            282
+          ],
+          "shade": [
+            0,
+            -2,
+            1
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "single_hill_condenser",
+      "feature": "condenser",
+      "feature_bits": 4194304,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        258
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            258
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            282,
+            576,
+            258
+          ],
+          "shade": [
+            0,
+            1,
+            1
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            258,
+            624,
+            282
+          ],
+          "shade": [
+            0,
+            1,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            282
+          ],
+          "shade": [
+            0,
+            -2,
+            1
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "single_hill_river",
+      "feature": "river",
+      "feature_bits": 128,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        258
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            282,
+            576,
+            258
+          ],
+          "shade": [
+            0,
+            1,
+            1
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            258,
+            624,
+            282
+          ],
+          "shade": [
+            0,
+            1,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            282
+          ],
+          "shade": [
+            0,
+            -2,
+            1
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "single_hill_farm",
+      "feature": "farm",
+      "feature_bits": 32768,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        258
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            258
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            282,
+            576,
+            258
+          ],
+          "shade": [
+            0,
+            1,
+            1
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            258,
+            624,
+            282
+          ],
+          "shade": [
+            0,
+            1,
+            -2
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            282
+          ],
+          "shade": [
+            0,
+            -2,
+            1
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        }
+      ],
+      "selected_terrain_texture": {
+        "id": "arid",
+        "asset": "TEXTURE.PCX",
+        "source_crop": [
+          1,
+          58,
+          56,
+          56
+        ]
+      }
+    },
+    {
+      "id": "single_hill_forest",
+      "feature": "forest",
+      "feature_bits": 2097152,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        258
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            282,
+            576,
+            258
+          ],
+          "shade": [
+            0,
+            1,
+            1
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            258,
+            624,
+            282
+          ],
+          "shade": [
+            0,
+            1,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            282
+          ],
+          "shade": [
+            0,
+            -2,
+            1
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "single_hill_sensor",
+      "feature": "sensor",
+      "feature_bits": 2147483648,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        258
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            258
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            282,
+            576,
+            258
+          ],
+          "shade": [
+            0,
+            1,
+            1
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            258,
+            624,
+            282
+          ],
+          "shade": [
+            0,
+            1,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            282
+          ],
+          "shade": [
+            0,
+            -2,
+            1
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "single_hill_farm_texture",
+      "feature": "farm",
+      "feature_bits": 32768,
+      "render_flags": 33,
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        258
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            258
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            282,
+            576,
+            258
+          ],
+          "shade": [
+            0,
+            1,
+            1
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            258,
+            624,
+            282
+          ],
+          "shade": [
+            0,
+            1,
+            -2
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            282
+          ],
+          "shade": [
+            0,
+            -2,
+            1
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        }
+      ],
+      "selected_terrain_texture": {
+        "id": "farm_surface_variant_3",
+        "bank_index": 3,
+        "asset": "TEXTURE.PCX",
+        "source_crop": [
+          775,
+          276,
+          56,
+          56
+        ]
+      }
+    },
+    {
+      "id": "single_hill_forest_texture",
+      "feature": "forest",
+      "feature_bits": 2097152,
+      "render_flags": 33,
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        258
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            282,
+            576,
+            258
+          ],
+          "shade": [
+            0,
+            1,
+            1
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            258,
+            624,
+            282
+          ],
+          "shade": [
+            0,
+            1,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            282
+          ],
+          "shade": [
+            0,
+            -2,
+            1
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 4,
+          "vertices": [
+            528,
+            282,
+            576,
+            258,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            1,
+            1,
+            -2,
+            -2
+          ],
+          "role": "forest_quad"
+        }
+      ]
+    },
+    {
+      "id": "single_hill_river_texture",
+      "feature": "river",
+      "feature_bits": 128,
+      "render_flags": 33,
+      "heights_CWNES": [
+        25,
+        6,
+        6,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        258
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            282,
+            576,
+            258
+          ],
+          "shade": [
+            0,
+            1,
+            1
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            258,
+            624,
+            282
+          ],
+          "shade": [
+            0,
+            1,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            282
+          ],
+          "shade": [
+            0,
+            -2,
+            1
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "coast_bunker",
+      "feature": "bunker",
+      "feature_bits": 2048,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        261
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            261
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            -3,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            264,
+            624,
+            282
+          ],
+          "shade": [
+            -3,
+            0,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            -3,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            288
+          ],
+          "shade": [
+            -3,
+            -2,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "coast_airbase",
+      "feature": "airbase",
+      "feature_bits": 262144,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        261
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            261
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            -3,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            264,
+            624,
+            282
+          ],
+          "shade": [
+            -3,
+            0,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            -3,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            288
+          ],
+          "shade": [
+            -3,
+            -2,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "coast_mine",
+      "feature": "mine",
+      "feature_bits": 16,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        261
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            261
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            -3,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            264,
+            624,
+            282
+          ],
+          "shade": [
+            -3,
+            0,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            -3,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            288
+          ],
+          "shade": [
+            -3,
+            -2,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "coast_solar",
+      "feature": "solar",
+      "feature_bits": 64,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        261
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            261
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            -3,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            264,
+            624,
+            282
+          ],
+          "shade": [
+            -3,
+            0,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            -3,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            288
+          ],
+          "shade": [
+            -3,
+            -2,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "coast_condenser",
+      "feature": "condenser",
+      "feature_bits": 4194304,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        261
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            261
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            -3,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            264,
+            624,
+            282
+          ],
+          "shade": [
+            -3,
+            0,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            -3,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            288
+          ],
+          "shade": [
+            -3,
+            -2,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "coast_river",
+      "feature": "river",
+      "feature_bits": 128,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        261
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            -3,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            264,
+            624,
+            282
+          ],
+          "shade": [
+            -3,
+            0,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            -3,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            288
+          ],
+          "shade": [
+            -3,
+            -2,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "coast_farm",
+      "feature": "farm",
+      "feature_bits": 32768,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        261
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            261
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            -3,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            264,
+            624,
+            282
+          ],
+          "shade": [
+            -3,
+            0,
+            -2
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            -3,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            288
+          ],
+          "shade": [
+            -3,
+            -2,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          }
+        }
+      ],
+      "selected_terrain_texture": {
+        "id": "arid",
+        "asset": "TEXTURE.PCX",
+        "source_crop": [
+          1,
+          58,
+          56,
+          56
+        ]
+      }
+    },
+    {
+      "id": "coast_forest",
+      "feature": "forest",
+      "feature_bits": 2097152,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        261
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            -3,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            264,
+            624,
+            282
+          ],
+          "shade": [
+            -3,
+            0,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            -3,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            288
+          ],
+          "shade": [
+            -3,
+            -2,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "coast_sensor",
+      "feature": "sensor",
+      "feature_bits": 2147483648,
+      "render_flags": 32,
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        261
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            261
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            -3,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            264,
+            624,
+            282
+          ],
+          "shade": [
+            -3,
+            0,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            -3,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            288
+          ],
+          "shade": [
+            -3,
+            -2,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    },
+    {
+      "id": "coast_farm_texture",
+      "feature": "farm",
+      "feature_bits": 32768,
+      "render_flags": 33,
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        261
+      ],
+      "sprite_calls": [
+        {
+          "anchor": [
+            528,
+            261
+          ]
+        }
+      ],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            -3,
+            0,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            264,
+            624,
+            282
+          ],
+          "shade": [
+            -3,
+            0,
+            -2
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            -3,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            288
+          ],
+          "shade": [
+            -3,
+            -2,
+            0
+          ],
+          "role": "terrain_triangle",
+          "selected_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          }
+        }
+      ],
+      "selected_terrain_texture": {
+        "id": "farm_surface_variant_3",
+        "bank_index": 3,
+        "asset": "TEXTURE.PCX",
+        "source_crop": [
+          775,
+          276,
+          56,
+          56
+        ]
+      }
+    },
+    {
+      "id": "coast_forest_texture",
+      "feature": "forest",
+      "feature_bits": 2097152,
+      "render_flags": 33,
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        261
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            -3,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            264,
+            624,
+            282
+          ],
+          "shade": [
+            -3,
+            0,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            -3,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            288
+          ],
+          "shade": [
+            -3,
+            -2,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 4,
+          "vertices": [
+            528,
+            288,
+            576,
+            264,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            0,
+            0,
+            -2,
+            -2
+          ],
+          "role": "forest_quad"
+        }
+      ]
+    },
+    {
+      "id": "coast_river_texture",
+      "feature": "river",
+      "feature_bits": 128,
+      "render_flags": 33,
+      "heights_CWNES": [
+        25,
+        0,
+        0,
+        6,
+        6
+      ],
+      "projector": [
+        528,
+        261
+      ],
+      "sprite_calls": [],
+      "terrain_draws": [
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            528,
+            288,
+            576,
+            264
+          ],
+          "shade": [
+            -3,
+            0,
+            0
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            264,
+            624,
+            282
+          ],
+          "shade": [
+            -3,
+            0,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            624,
+            282,
+            576,
+            306
+          ],
+          "shade": [
+            -3,
+            -2,
+            -2
+          ],
+          "role": "terrain_triangle"
+        },
+        {
+          "vertex_count": 3,
+          "vertices": [
+            576,
+            263,
+            576,
+            306,
+            528,
+            288
+          ],
+          "shade": [
+            -3,
+            -2,
+            0
+          ],
+          "role": "terrain_triangle"
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "native_feature_contexts": 48,
+    "loaded_rectangles": 32,
+    "rectangle_assertions": 96,
+    "farm_texture_contexts": 8,
+    "farm_texture_triangle_bindings": 32
+  },
+  "farm_texture_pairs": [
+    {
+      "world": "uniform3",
+      "feature_bits": 32768,
+      "cases": [
+        {
+          "id": "uniform3_farm",
+          "render_flags": 32,
+          "selected_terrain_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          },
+          "terrain_triangle_count": 4
+        },
+        {
+          "id": "uniform3_farm_texture",
+          "render_flags": 33,
+          "selected_terrain_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          },
+          "terrain_triangle_count": 4
+        }
+      ]
+    },
+    {
+      "world": "uniform4",
+      "feature_bits": 32768,
+      "cases": [
+        {
+          "id": "uniform4_farm",
+          "render_flags": 32,
+          "selected_terrain_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          },
+          "terrain_triangle_count": 4
+        },
+        {
+          "id": "uniform4_farm_texture",
+          "render_flags": 33,
+          "selected_terrain_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          },
+          "terrain_triangle_count": 4
+        }
+      ]
+    },
+    {
+      "world": "single_hill",
+      "feature_bits": 32768,
+      "cases": [
+        {
+          "id": "single_hill_farm",
+          "render_flags": 32,
+          "selected_terrain_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          },
+          "terrain_triangle_count": 4
+        },
+        {
+          "id": "single_hill_farm_texture",
+          "render_flags": 33,
+          "selected_terrain_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          },
+          "terrain_triangle_count": 4
+        }
+      ]
+    },
+    {
+      "world": "coast",
+      "feature_bits": 32768,
+      "cases": [
+        {
+          "id": "coast_farm",
+          "render_flags": 32,
+          "selected_terrain_texture": {
+            "id": "arid",
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              1,
+              58,
+              56,
+              56
+            ]
+          },
+          "terrain_triangle_count": 4
+        },
+        {
+          "id": "coast_farm_texture",
+          "render_flags": 33,
+          "selected_terrain_texture": {
+            "id": "farm_surface_variant_3",
+            "bank_index": 3,
+            "asset": "TEXTURE.PCX",
+            "source_crop": [
+              775,
+              276,
+              56,
+              56
+            ]
+          },
+          "terrain_triangle_count": 4
+        }
+      ]
+    }
+  ]
+}

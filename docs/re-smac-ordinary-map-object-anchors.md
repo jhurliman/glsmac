@@ -1,3 +1,5 @@
+> Revision2 semantic correction: see behavior/ordinary-map-improvement-semantic-correction.md. Frozen v1 names are superseded; raw evidence remains unchanged.
+
 # Original ordinary object caller receipt
 
 Pinned EXE SHA2560a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01.

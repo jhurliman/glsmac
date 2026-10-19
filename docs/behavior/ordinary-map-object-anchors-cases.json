@@ -67,39 +67,44 @@
       ],
       "improvement_sprites": [
         {
-          "feature": "sensor",
-          "anchor": [
-            528,
-            264
-          ]
-        },
-        {
           "feature": "bunker",
           "anchor": [
             528,
             264
-          ]
+          ],
+          "feature_bits": 2048
         },
         {
-          "feature": "farm",
+          "feature": "airbase",
           "anchor": [
             528,
             264
-          ]
+          ],
+          "feature_bits": 262144
         },
         {
           "feature": "mine",
           "anchor": [
             528,
             264
-          ]
+          ],
+          "feature_bits": 16
         },
         {
           "feature": "solar",
           "anchor": [
             528,
             264
-          ]
+          ],
+          "feature_bits": 64
+        },
+        {
+          "feature": "condenser",
+          "anchor": [
+            528,
+            264
+          ],
+          "feature_bits": 4194304
         }
       ]
     },
@@ -161,39 +166,44 @@
       ],
       "improvement_sprites": [
         {
-          "feature": "sensor",
-          "anchor": [
-            528,
-            239
-          ]
-        },
-        {
           "feature": "bunker",
           "anchor": [
             528,
             239
-          ]
+          ],
+          "feature_bits": 2048
         },
         {
-          "feature": "farm",
+          "feature": "airbase",
           "anchor": [
             528,
             239
-          ]
+          ],
+          "feature_bits": 262144
         },
         {
           "feature": "mine",
           "anchor": [
             528,
             239
-          ]
+          ],
+          "feature_bits": 16
         },
         {
           "feature": "solar",
           "anchor": [
             528,
             239
-          ]
+          ],
+          "feature_bits": 64
+        },
+        {
+          "feature": "condenser",
+          "anchor": [
+            528,
+            239
+          ],
+          "feature_bits": 4194304
         }
       ]
     },
@@ -255,39 +265,44 @@
       ],
       "improvement_sprites": [
         {
-          "feature": "sensor",
-          "anchor": [
-            528,
-            258
-          ]
-        },
-        {
           "feature": "bunker",
           "anchor": [
             528,
             258
-          ]
+          ],
+          "feature_bits": 2048
         },
         {
-          "feature": "farm",
+          "feature": "airbase",
           "anchor": [
             528,
             258
-          ]
+          ],
+          "feature_bits": 262144
         },
         {
           "feature": "mine",
           "anchor": [
             528,
             258
-          ]
+          ],
+          "feature_bits": 16
         },
         {
           "feature": "solar",
           "anchor": [
             528,
             258
-          ]
+          ],
+          "feature_bits": 64
+        },
+        {
+          "feature": "condenser",
+          "anchor": [
+            528,
+            258
+          ],
+          "feature_bits": 4194304
         }
       ]
     },
@@ -349,42 +364,73 @@
       ],
       "improvement_sprites": [
         {
-          "feature": "sensor",
-          "anchor": [
-            528,
-            261
-          ]
-        },
-        {
           "feature": "bunker",
           "anchor": [
             528,
             261
-          ]
+          ],
+          "feature_bits": 2048
         },
         {
-          "feature": "farm",
+          "feature": "airbase",
           "anchor": [
             528,
             261
-          ]
+          ],
+          "feature_bits": 262144
         },
         {
           "feature": "mine",
           "anchor": [
             528,
             261
-          ]
+          ],
+          "feature_bits": 16
         },
         {
           "feature": "solar",
           "anchor": [
             528,
             261
-          ]
+          ],
+          "feature_bits": 64
+        },
+        {
+          "feature": "condenser",
+          "anchor": [
+            528,
+            261
+          ],
+          "feature_bits": 4194304
         }
       ]
     }
   ],
-  "checks": 48
+  "checks": 48,
+  "semantic_revision": {
+    "revision": 2,
+    "reason": "V1 improvement names were wrong; raw masks/coordinates retained. All six originally named improvement controls are corrected.",
+    "raw_masks": {
+      "mine": 16,
+      "solar": 64,
+      "farm": 32768,
+      "forest": 2097152,
+      "river": 128,
+      "condenser": 4194304,
+      "bunker": 2048,
+      "airbase": 262144,
+      "sensor": 2147483648
+    },
+    "prior_names_to_correct_names": {
+      "sensor": "bunker",
+      "bunker": "airbase",
+      "farm": "mine",
+      "mine": "solar",
+      "solar": "condenser",
+      "forest": "river"
+    },
+    "source": "Original item-mask action/ecology authority, native map render branch tests, native TER1 extraction and existing port atlas constants.",
+    "frozen_v1": "Preserved unchanged; semantic feature labels are superseded by this revision."
+  },
+  "expanded_supplement": "ordinary-map-improvement-expanded-contexts-cases.json"
 }

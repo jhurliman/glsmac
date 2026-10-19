@@ -145,7 +145,7 @@ Result Draw(const Bitmap& initial,const Bitmap& texture,const std::vector<Triang
 Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,const Clip& clip,bool track_coverage) {
     ValidateBitmap(initial);
     for(const auto& command:commands) {
-        if(!command.texture || (command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded && command.shader!=Shader::KeyedUnlit && command.shader!=Shader::WaterDepth16 && command.shader!=Shader::CoastMapped && command.shader!=Shader::OwnerClut)) {Invalid();}
+        if(!command.texture || (command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded && command.shader!=Shader::KeyedUnlit && command.shader!=Shader::WaterDepth16 && command.shader!=Shader::CoastMapped && command.shader!=Shader::OwnerClut && command.shader!=Shader::Sprite && command.shader!=Shader::SpriteShadow)) {Invalid();}
         ValidateBitmap(*command.texture);
         if(command.shader==Shader::OwnerClut && (!command.owner_clut || std::any_of(command.owner_mapping.begin(),command.owner_mapping.end(),[](auto selector){return selector>8;}))) {Invalid();}
         if(command.shader==Shader::CoastMapped) {
@@ -153,13 +153,29 @@ Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,cons
             ValidateBitmap(*command.mask);
             if(command.mask->width!=command.texture->width || command.mask->height!=command.texture->height) {Invalid();}
         }
-        if(command.polygon.count!=3 && command.polygon.count!=4) {Invalid();}
+        if(command.shader==Shader::Sprite || command.shader==Shader::SpriteShadow) {
+            for(auto coordinate:command.sprite_origin) {if(coordinate < -32768 || coordinate > 32767) {Invalid();}}
+            if(command.shader==Shader::SpriteShadow && !command.shadow_lookup) {Invalid();}
+        }else if(command.polygon.count!=3 && command.polygon.count!=4) {Invalid();}
     }
     const auto bounded=Intersection(clip,{{0,0,initial.width,initial.height}});
     Result result{initial,0};
     if(track_coverage) {result.coverage.resize(initial.pixels.size());}
     for(const auto& command:commands) {
         const auto& texture=*command.texture;
+        if(command.shader==Shader::Sprite || command.shader==Shader::SpriteShadow) {
+            const auto visible=Intersection(Intersection(command.clip,bounded),{{command.sprite_origin[0],command.sprite_origin[1],
+                Signed32(int64_t(command.sprite_origin[0])+texture.width),Signed32(int64_t(command.sprite_origin[1])+texture.height)}});
+            for(int y=visible[1];y<visible[3];++y) {for(int x=visible[0];x<visible[2];++x) {
+                const auto src=static_cast<size_t>(y-command.sprite_origin[1])*static_cast<size_t>(texture.width)+static_cast<size_t>(x-command.sprite_origin[0]);
+                const auto dst=static_cast<size_t>(y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x);
+                const auto ink=texture.pixels[src];++result.attempts;
+                if(ink==9) {continue;}
+                result.bitmap.pixels[dst]=command.shader==Shader::SpriteShadow && ink==0?(*command.shadow_lookup)[result.bitmap.pixels[dst]]:ink;
+                ++result.writes;if(track_coverage) {result.coverage[dst]=1;}
+            }}
+            continue;
+        }
         const bool shaded=command.shader!=Shader::KeyedUnlit;
         const bool keyed=command.shader==Shader::KeyedShaded || command.shader==Shader::KeyedUnlit;
         if(command.shader==Shader::WaterDepth16 && std::all_of(command.polygon.vertices.begin(),

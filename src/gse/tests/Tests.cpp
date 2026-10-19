@@ -23,6 +23,7 @@
 #include "Value.h"
 #include "Faction.h"
 #include "SmacFactionSummary.h"
+#include "SmacDominanceHistory.h"
 #include "SmacMinimap.h"
 #include "SmacBaseCard.h"
 #include "Mesh.h"
@@ -352,6 +353,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacProductionTargetsTests( task );
 		tests::AddFactionTests( task );
 		tests::AddSmacFactionSummaryTests( task );
+        tests::AddSmacDominanceHistoryTests( task );
 		tests::AddSmacMinimapTests( task );
 		tests::AddSmacBaseCardTests( task );
 		tests::AddSmacBaseSquareYieldTests( task );

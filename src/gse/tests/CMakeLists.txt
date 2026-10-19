@@ -30,6 +30,7 @@ SET( SRC ${SRC}
 	${PWD}/Value.cpp
 	${PWD}/Faction.cpp
 	${PWD}/SmacFactionSummary.cpp
+    ${PWD}/SmacDominanceHistory.cpp
 	${PWD}/SmacMinimap.cpp
 	${PWD}/SmacBaseCard.cpp
 	${PWD}/Mesh.cpp

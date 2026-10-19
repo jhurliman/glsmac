@@ -76,7 +76,9 @@ return {
 				right: 0,
 				top: 50,
 				bottom: 0,
-				background: 'black',
+				// Named-color packed conversion currently loses one alpha step.
+				// Unknown minimap polygons must preserve an opaque backing.
+				background: 'rgb(0,0,0)',
 			}),
 			right: parent.el.surface({
 				zindex: 0.3,

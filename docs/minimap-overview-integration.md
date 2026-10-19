@@ -5,6 +5,9 @@ terrain bands, exploration, initial-survey rules and all-map revelation. Reads
 do not change the world, simulation IDs, RNG or pending frontend requests.
 Unknown tiles have no polygon; a late whole-world GPU capture cannot replace
 an admitted observer-filtered snapshot.
+The console's existing black underlay uses explicit RGB so it is fully opaque;
+the legacy packed named-color conversion loses one alpha step and otherwise
+lets traces of current camera terrain show through the skipped polygons.
 
 The round 80x80 Planet profile reproduces the original 320x152 base-pass source
 bitmap placement and raster clipping. Its controlled uniform band3 bitmap

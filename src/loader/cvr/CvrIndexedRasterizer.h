@@ -34,6 +34,17 @@ struct CvrIndexedResult {
 	size_t written_samples = 0;
 };
 
+struct CvrShadowResult {
+    uint32_t width,height,pitch;
+    std::vector<uint8_t> mask;
+    size_t processed_records=0,written_samples=0,draw_count=0,frame_count=0;
+    // Key-zero 1:1 copy, row-major stores. Lookup indexes destination color.
+    // All target/clip validation precedes mutation; depth and RGB are absent.
+    size_t Blend(std::vector<uint8_t>& target,uint32_t target_width,uint32_t target_height,uint32_t target_pitch,
+        const std::array<uint8_t,256>& lookup,const std::array<int32_t,2>& origin,
+        const std::array<int32_t,4>& clip) const;
+};
+
 class CvrIndexedRasterizer {
 public:
 	// Resource limits are GLSMAC policy, not original malformed-input behavior.
@@ -50,6 +61,9 @@ public:
 	// effective draws and malformed terminals with std::invalid_argument.
 	// Empty batches return an owned copy. Allocation failures propagate.
 	// No camera, scalar, RGB palette, group-origin or matrix defaults.
+    // Terminal, single-pixel shadow path. Ignores depth and record color bytes;
+    // each delta step stamps128 even when a previous record hit the same pixel.
+    static CvrShadowResult Shadow(uint32_t width,uint32_t height,const std::vector<CvrIndexedDraw>& draws);
 	static CvrIndexedResult Draw( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,
 		const std::vector< CvrIndexedDraw >& draws );
 	// The complete Scout caller uses the original modulo32 shifted depth

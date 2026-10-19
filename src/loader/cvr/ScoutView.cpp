@@ -105,6 +105,7 @@ View MakeView( const CvrScoutViewInput& input, const IdleProfile profile ) {
 	const Matrix rotation{ c, s ^ 0x80000000U, 0, s, c, 0, 0, 0, 0x3f800000 };
 	const auto u = Trig( 0xbf85f92d, true ), v = Trig( 0xbf85f92d, false );
 	View result;
+    result.orientation=rotation;
 	result.auxiliary = { 0x3f800000, 0, 0, 0, u, v, 0x80000000, v, u ^ 0x80000000U };
 	Number base;
 	int64_t delta;
@@ -136,6 +137,49 @@ View MakeView( const CvrScoutViewInput& input, const IdleProfile profile ) {
 		result.target_anchor[ i ] = static_cast< int32_t >( anchor );
 	}
 	return result;
+}
+
+
+ShadowScene FlatScoutShadowScene(const CvrScoutViewInput& input) {
+    const auto view=MakeView(input);
+    const auto c=Decode(view.auxiliary[4]),n=Decode(view.auxiliary[5]);
+    const auto q=Decode(Store(Add(Multiply(c,c),Multiply(n,n))));
+    const auto iq=Decode(Store(Divide(Integer(1),q)));
+    const Matrix inverse{Store(Multiply(q,iq)),0,0,0,Store(Multiply(c,iq)),Store(Multiply(n,iq)),
+        0,Store(Multiply(n,iq)),Store(Negate(Multiply(c,iq)))};
+    Vector position;
+    for(size_t i=0;i<3;++i) {position[i]=Store(Multiply(Decode(view.auxiliary[6+i]),Integer(-10000)));}
+    return {view.auxiliary,view.orientation,position,{0,0,0},MultiplyVector(inverse,view.light),
+        view.scales[0],0x3f800000,0,{0x3f800000,0x3f800000},{0,0},{0,0},256,256};
+}
+
+ShadowView MakeShadowView(const ShadowScene& scene) {
+    if(!scene.width || !scene.height || scene.width>4096 || scene.height>4096) {
+        throw std::invalid_argument("CVR shadow: unsupported surface dimensions");
+    }
+    auto dz=Decode(scene.direction[2]);const auto epsilon=Decode(0x358637bd);
+    if(std::abs(ToDouble(dz))<ToDouble(epsilon)) {dz=dz.negative && dz.magnitude?Negate(epsilon):epsilon;}
+    const auto rx=Divide(Decode(scene.direction[0]),dz),ry=Divide(Decode(scene.direction[1]),dz);
+    const Matrix plane{0x3f800000,0,Store(Negate(rx)),0,0x3f800000,Store(Negate(ry)),0,0,0};
+    auto position=MultiplyVector(plane,scene.position);
+    const Vector ground{Store(Multiply(Decode(Store(rx)),Decode(scene.ground))),
+        Store(Multiply(Decode(Store(ry)),Decode(scene.ground))),scene.ground};
+    position=AddVector(position,ground);
+    for(size_t i=0;i<3;++i) {position[i]=Store(Subtract(Decode(position[i]),Decode(scene.auxiliary_position[i])));}
+    const auto translation=MultiplyVector(scene.auxiliary,position);
+    ShadowView result{MultiplyMatrix(MultiplyMatrix(scene.auxiliary,plane),scene.orientation),translation};
+    const auto scale=Multiply(Decode(scene.object_scale),Decode(scene.auxiliary_scale));
+    for(size_t axis=0;axis<2;++axis) {
+        const auto scaled=Multiply(scale,Decode(scene.xy_scale[axis]));
+        for(size_t column=0;column<3;++column) {const auto i=axis*3+column;
+            result.projection[i]=Store(Multiply(Decode(result.projection[i]),scaled));}
+        const auto center=Add(Integer(static_cast<int32_t>((axis?scene.height:scene.width)/2)),Decode(0x3f000000));
+        auto value=Multiply(Decode(scene.offset[axis]),Decode(scene.xy_scale[axis]));
+        value=Add(value,Decode(scene.pixel_offset[axis]));value=Add(value,center);
+        value=Add(value,Decode(Store(Multiply(Decode(translation[axis]),scaled))));
+        result.translation[axis]=Store(value);
+    }
+    return result;
 }
 
 }

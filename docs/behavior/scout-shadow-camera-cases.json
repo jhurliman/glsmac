@@ -1,0 +1,417 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Independent runtime flat orthographic Scout scene/light/ground producer. Two original facing controls plus translated/raised-ground control. No captured camera/projection/translation/mask input; owned decoded frame data, geometry origins and streams remain inputs. Reproduces native scene values, plane, pre-scale stages, final projection/translation/extents and three entire masks. Perspective, nonflat matrix inversion, animated/slope paths and universal x87 transcendental/signed-zero identity remain outside this supplement.",
+  "source_receipt_sha256": "ad82bb866002025b9e8171a82f6fdaa94858f5131690374dc18cdc2d7af7dc97",
+  "light_receipt_sha256": "2441bcbdfdbc51a247f7cc6b87d6f1b165acd257625261bdb81c0decea960c59",
+  "prior_mask_fixture": "scout-shadow-producer-cases.json",
+  "world_light_bits": [
+    3205745974,
+    1058262326,
+    1058262326
+  ],
+  "inverse_observation": {
+    "input_matrix": [
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.500459611415863,
+      -0.8657598495483398,
+      -0.0,
+      -0.8657598495483398,
+      -0.500459611415863
+    ],
+    "inverse": [
+      1.0,
+      0.0,
+      0.0,
+      -0.0,
+      0.5004596710205078,
+      -0.8657599687576294,
+      -0.0,
+      -0.8657599687576294,
+      -0.5004596710205078
+    ],
+    "direction": [
+      -0.5773500204086304,
+      -0.21090613305568695,
+      -0.7887869477272034
+    ],
+    "stopped_at": "0x653fb0",
+    "wrapper_stop_diagnostic": "AssertionError(('0x653fb0', ['0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210', '0x5ed210'], [{'service': 'CreateFileA', 'name': 'C:\\\\Program Files (x86)\\\\GOG Galaxy\\\\Games\\\\Alpha Centauri\\\\palette.pcx', 'args': [2147483648, 0, 0, 3, 134217856, 0]}, {'service': 'open', 'name': 'alpha.txt', 'mode': 'rt'}, {'service': 'open', 'name': 'alpha.txt', 'mode': 'rt'}, {'service': 'CreateFileA', 'name': 'C:\\\\Program Files (x86)\\\\GOG Galaxy\\\\Games\\\\Alpha Centauri\\\\PALETTE.PCX', 'args': [2147483648, 0, 0, 3, 134217856, 0]}, {'service': 'CreateFileA', 'name': 'C:\\\\Program Files (x86)\\\\GOG Galaxy\\\\Games\\\\Alpha Centauri\\\\UNITS.PCX', 'args': [2147483648, 0, 0, 3, 134217856, 0]}]))"
+  },
+  "source_addresses": {
+    "light": "0x4d7873..0x4d7883;0x4d7b24..0x4d7b76",
+    "inverse": "0x641ce0",
+    "flat_auxiliary": "0x4d5ad0",
+    "facing": "0x4d7c28..0x4d7c4f",
+    "plane": "0x6543d8..0x6544d3",
+    "camera": "0x6544d9..0x654512",
+    "scaling": "0x654517..0x654610"
+  },
+  "cases": [
+    {
+      "name": "facing2",
+      "facing": 2,
+      "scene_inputs": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "orientation": [
+          0.7069920301437378,
+          0.707221508026123,
+          0.0,
+          -0.707221508026123,
+          0.7069920301437378,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "object_scale": 1.0,
+        "direction": [
+          -0.5773500204086304,
+          -0.21090613305568695,
+          -0.7887869477272034
+        ],
+        "ground": 0.0,
+        "xy_scale": [
+          1.0,
+          1.0
+        ],
+        "offset": [
+          0.0,
+          0.0
+        ],
+        "pixel_offset": [
+          0.0,
+          0.0
+        ],
+        "aux_position": [
+          0.0,
+          8657.5986328125,
+          5004.59619140625
+        ],
+        "aux_matrix": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.500459611415863,
+          -0.8657598495483398,
+          -0.0,
+          -0.8657598495483398,
+          -0.500459611415863
+        ],
+        "aux_scale": 0.08749999850988388,
+        "width": 256,
+        "height": 256,
+        "perspective": 0.0
+      },
+      "generated": {
+        "plane": [
+          1.0,
+          0.0,
+          -0.7319467067718506,
+          0.0,
+          1.0,
+          -0.26738035678863525,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "plane_position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "before_translation": [
+          0.0,
+          -1.8497812561690807e-06,
+          10000.0
+        ],
+        "before_matrix": [
+          0.7069920301437378,
+          0.707221508026123,
+          -0.7319467067718506,
+          -0.3539358079433441,
+          0.35382094979286194,
+          -0.1338130682706833,
+          0.6122840046882629,
+          -0.6120853424072266,
+          0.2314871847629547
+        ],
+        "projection": [
+          0.061861801892519,
+          0.06188188120722771,
+          -0.06404533237218857,
+          -0.03096938319504261,
+          0.03095933236181736,
+          -0.011708643287420273,
+          0.6122840046882629,
+          -0.6120853424072266,
+          0.2314871847629547
+        ],
+        "translation": [
+          128.5,
+          128.5,
+          10000.0
+        ],
+        "extents": [
+          0.08904317766427994,
+          0.03309943526983261
+        ],
+        "direction_z_after_clamp": -0.7887869477272034
+      },
+      "mask_sha256": "3c26c4bbd927a4752e779a90f378c4ef9aade2b86755ca4d2aeb69f3aa4e9b20",
+      "mask_pixels": 222,
+      "shadow_stores": 47483,
+      "frame_count": 59,
+      "kernel_count": 65
+    },
+    {
+      "name": "facing3",
+      "facing": 3,
+      "scene_inputs": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "orientation": [
+          1.0,
+          -0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "object_scale": 1.0,
+        "direction": [
+          -0.5773500204086304,
+          -0.21090613305568695,
+          -0.7887869477272034
+        ],
+        "ground": 0.0,
+        "xy_scale": [
+          1.0,
+          1.0
+        ],
+        "offset": [
+          0.0,
+          0.0
+        ],
+        "pixel_offset": [
+          0.0,
+          0.0
+        ],
+        "aux_position": [
+          0.0,
+          8657.5986328125,
+          5004.59619140625
+        ],
+        "aux_matrix": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.500459611415863,
+          -0.8657598495483398,
+          -0.0,
+          -0.8657598495483398,
+          -0.500459611415863
+        ],
+        "aux_scale": 0.08749999850988388,
+        "width": 256,
+        "height": 256,
+        "perspective": 0.0
+      },
+      "generated": {
+        "plane": [
+          1.0,
+          0.0,
+          -0.7319467067718506,
+          0.0,
+          1.0,
+          -0.26738035678863525,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "plane_position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "before_translation": [
+          0.0,
+          -1.8497812561690807e-06,
+          10000.0
+        ],
+        "before_matrix": [
+          1.0,
+          0.0,
+          -0.7319467067718506,
+          0.0,
+          0.500459611415863,
+          -0.1338130682706833,
+          0.0,
+          -0.8657598495483398,
+          0.2314871847629547
+        ],
+        "projection": [
+          0.08749999850988388,
+          0.0,
+          -0.06404533237218857,
+          0.0,
+          0.04379021376371384,
+          -0.011708643287420273,
+          0.0,
+          -0.8657598495483398,
+          0.2314871847629547
+        ],
+        "translation": [
+          128.5,
+          128.5,
+          10000.0
+        ],
+        "extents": [
+          0.10843456536531448,
+          0.045328523963689804
+        ],
+        "direction_z_after_clamp": -0.7887869477272034
+      },
+      "mask_sha256": "e6fbd36a9089ca669acad7cc1aab9a0c141548242a01944aa33e05a6e32f0a06",
+      "mask_pixels": 262,
+      "shadow_stores": 47483,
+      "frame_count": 59,
+      "kernel_count": 65
+    },
+    {
+      "name": "translated_ground",
+      "facing": 2,
+      "scene_inputs": {
+        "position": [
+          3.0,
+          -2.0,
+          4.0
+        ],
+        "orientation": [
+          0.7069920301437378,
+          0.707221508026123,
+          0.0,
+          -0.707221508026123,
+          0.7069920301437378,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "object_scale": 1.0,
+        "direction": [
+          -0.5773500204086304,
+          -0.21090613305568695,
+          -0.7887869477272034
+        ],
+        "ground": 5.0,
+        "xy_scale": [
+          1.0,
+          1.0
+        ],
+        "offset": [
+          7.0,
+          -3.0
+        ],
+        "pixel_offset": [
+          4.0,
+          -2.0
+        ],
+        "aux_position": [
+          0.0,
+          8657.5986328125,
+          5004.59619140625
+        ],
+        "aux_matrix": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.500459611415863,
+          -0.8657598495483398,
+          -0.0,
+          -0.8657598495483398,
+          -0.500459611415863
+        ],
+        "aux_scale": 0.08749999850988388,
+        "width": 256,
+        "height": 256,
+        "perspective": 0.0
+      },
+      "generated": {
+        "plane": [
+          1.0,
+          0.0,
+          -0.7319467067718506,
+          0.0,
+          1.0,
+          -0.26738035678863525,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "plane_position": [
+          0.07221317291259766,
+          -3.069521427154541,
+          0.0
+        ],
+        "before_translation": [
+          3.7319467067718506,
+          -5.195808410644531,
+          9998.9970703125
+        ],
+        "before_matrix": [
+          0.7069920301437378,
+          0.707221508026123,
+          -0.7319467067718506,
+          -0.3539358079433441,
+          0.35382094979286194,
+          -0.1338130682706833,
+          0.6122840046882629,
+          -0.6120853424072266,
+          0.2314871847629547
+        ],
+        "projection": [
+          0.061861801892519,
+          0.06188188120722771,
+          -0.06404533237218857,
+          -0.03096938319504261,
+          0.03095933236181736,
+          -0.011708643287420273,
+          0.6122840046882629,
+          -0.6120853424072266,
+          0.2314871847629547
+        ],
+        "translation": [
+          139.8265380859375,
+          123.04536437988281,
+          9998.9970703125
+        ],
+        "extents": [
+          0.08904317766427994,
+          0.03309943526983261
+        ],
+        "direction_z_after_clamp": -0.7887869477272034
+      },
+      "mask_sha256": "297f95a6a01232042e14e339f84268449402cc615b1acd2b5dbbb9a1fe4d0102",
+      "mask_pixels": 233,
+      "shadow_stores": 47483,
+      "frame_count": 59,
+      "kernel_count": 65
+    }
+  ]
+}

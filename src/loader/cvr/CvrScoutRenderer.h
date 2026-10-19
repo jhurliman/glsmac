@@ -10,6 +10,7 @@ namespace gse::tests { class CvrRenderPolicyFixture; }
 
 namespace loader::cvr {
 
+namespace scout {struct ShadowScene;}
 struct CvrActorMaterial;
 class CvrSpartanRoverRenderer;
 
@@ -47,6 +48,9 @@ public:
 	// Produces a256-square internal image; final target clipping/blitting and
 	// gameplay unit selection are separate. Input anchors affect metadata only.
 	CvrScoutImage Render( const CvrScoutViewInput& view ) const;
+    // Explicit orthographic scene producer, not inferred initialized map light.
+    // On demand: normal color/card rendering does not generate unused masks.
+    CvrShadowResult RenderShadow(const scout::ShadowScene& scene) const;
 
 private:
 	friend class CvrSpartanRoverRenderer;

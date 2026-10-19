@@ -2,6 +2,7 @@
 #include "game/NativeTerrainWorld.h"
 #include "SmacTerrainRaster.h"
 #include "SmacLandMaterial.h"
+#include "SmacTerritoryBoundary.h"
 #include <memory>
 
 namespace game::frontend::native_terrain {
@@ -12,7 +13,9 @@ std::vector<Placement> View(int camera_x,int camera_y,bool horizontal_wrap);
 struct Source {
     smac_terrain_raster::Bitmap loaded;
     smac_land_material::Palette palette;
-    smac_terrain_raster::Bitmap coast_mask{};
+    smac_terrain_raster::Bitmap coast_mask{},boundary_mask{};
+    smac_terrain_raster::OwnerClut owner_clut{};
+    std::array<std::string,8> faction_files{};
 };
 struct Frame {
     std::vector<uint8_t> rgba;
@@ -22,5 +25,5 @@ struct Frame {
 // Explicit reference allocation-base low16; never a coordinate hash or a
 // gameplay RNG stream. Offset translates a visible copy without changing UVs.
 Frame Render(const ::game::native_terrain::World& world,const Source& source,
-    const std::vector<Placement>& placements,uint16_t variation_base_low16,Point offset={{0,0}},uint32_t display_flags=0x401);
+    const std::vector<Placement>& placements,uint16_t variation_base_low16,Point offset={{0,0}},uint32_t display_flags=0x10401);
 }

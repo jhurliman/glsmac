@@ -33,7 +33,7 @@ runs. It does not consume either random stream.
 
 ## Boundaries still to close
 
-- Roads, territory coloration and further land continuations.
+- Roads and further land continuations.
 - Named landmark deformation/shading and neighboring affected stencils.
 - Original observer/fog admission, complete object occlusion and animated water.
 - Full native view/camera-origin/scrolling behavior and other zooms/viewports.
@@ -118,3 +118,31 @@ python tools/reference/verify_native_rivers.py --texture-pcx PATH/TEXTURE.PCX --
 ```
 
 Add `--sanitize --cxx clang++` for the focused indexed-raster replay.
+
+## Territory-boundary continuation
+
+The inspector's ordinary profile is now 0x10401: base materials, River 0x400,
+and territory 0x10000. It copies current worker-knowledge claims and topology
+regions, the actual local simulation viewer's directed relations, and the
+accepted runtime faction artwork filenames into an owned snapshot. Bases and
+turn advances invalidate the snapshot. It does not infer claims from occupancy
+or substitute a stock faction order for the accepted roster.
+
+The palette stage samples the owned PALETTE.PCX and SYSTEM.TXT boundary defaults,
+then applies each accepted faction PCX's boundary color and opacity metadata.
+The indexed renderer applies the original owner lookup to the already-painted
+destination, before land coast and River. Identity-valued stores still count as
+coverage. Source caches distinguish runtime faction artwork assignments.
+
+[Territory reference](behavior/territory-boundary.md) covers 31 producer contexts,
+154 complete commands, 43 composed indexed frames and 4096 lookup entries. Replay
+with owned installed assets:
+
+```
+python tools/reference/verify_native_territory_boundary.py --asset-directory PATH
+```
+
+Add `--sanitize --cxx clang++` for focused ASan/UBSan. The live inspector deliberately
+reveals terrain; it does not implement original fog admission, arbitrary display
+flags, all diplomacy refresh events or original cache/hot-reload timing. Complete
+native map/camera and unsupported landmark/road continuations remain separate.

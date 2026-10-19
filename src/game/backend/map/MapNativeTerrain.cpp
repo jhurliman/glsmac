@@ -9,11 +9,16 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
     if(!planet || GetWidth()!=80 || GetHeight()!=80 || !m_territory_topology) {return {};}
     auto result=std::make_unique<::game::native_terrain::World>();
     result->horizontal_wrap=m_territory_topology->Wraps();
+    const auto knowledge=m_worker_knowledge && m_worker_knowledge_ready?std::optional<SmacWorkerKnowledge::Data>{m_worker_knowledge->CopyData()}:std::nullopt;
+    if(knowledge && knowledge->tiles.size()!=3200) {throw std::runtime_error("Native territory snapshot has invalid claim geometry");}
     for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
         const auto& original=planet->At(x,y);
         const auto* live=GetTile(x,y);
         auto& output=result->tiles[static_cast<size_t>(y)*40+x/2];
         output.band=original.Climate()>>5;
+        const auto index=static_cast<size_t>(y)*40+x/2;
+        output.region=m_territory_topology->Regions().at(index);
+        if(knowledge) {output.owner=static_cast<int8_t>(knowledge->tiles[index].claimant.value_or(-1));}
         output.contour=original.Contour();
         output.moisture=live->moisture?live->moisture-1:0;
         output.rockiness=live->rockiness?live->rockiness-1:0;

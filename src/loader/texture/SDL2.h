@@ -20,7 +20,7 @@ CLASS( SDL2, TextureLoader )
 
 	types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant) override;
     std::shared_ptr<const SmacBaseCard> GetSmacNativeBaseCard(const std::string& faction,size_t x,size_t y,bool roster) override;
-    std::shared_ptr<const game::frontend::native_terrain::Source> GetSmacTerrainSource() override;
+    std::shared_ptr<const game::frontend::native_terrain::Source> GetSmacTerrainSource(const std::array<std::string,8>& faction_files={}) override;
     std::shared_ptr<types::texture::Texture> GetSmacEffectTexture(bool death) override;
     std::shared_ptr<const SmacTurnFrames> GetSmacTurnFrames() override;
 	void Start() override;

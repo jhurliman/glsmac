@@ -172,7 +172,7 @@ public:
         return b.added.size()==1 && b.added.front().coords==wanted;
     }
     bool CheckNativeTerrainSnapshot() {
-        std::unique_ptr<::game::native_terrain::World> retained;
+        std::unique_ptr<::game::native_terrain::World> retained,claims;
         {
             map::Map local(nullptr,80,80);
             if(local.CopyNativeTerrain()) return false;
@@ -225,9 +225,19 @@ public:
             local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
             live->terraforming=tile::TERRAFORMING_ROAD;
             const auto updated=local.CopyNativeTerrain();
-            if(updated->tiles[40*40+20].ordinary || updated->tiles[40*40+20].items!=0x20 || !before.ordinary) return false;
+            if(updated->tiles[40*40+20].ordinary || updated->tiles[40*40+20].items!=0x20 || !before.ordinary || before.owner!=-1) return false;
+            map::SmacWorkerKnowledge::Data data{};data.width=80;data.height=80;data.ordinary_local_mode=true;data.tiles.resize(3200);data.observers[3]=map::SmacWorkerKnowledge::Observer{};
+            data.tiles[40*40+20].claimant=3;
+            local.m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);local.m_worker_knowledge_ready=true;
+            claims=local.CopyNativeTerrain();
+            if(claims->tiles[40*40+20].owner!=3 || claims->tiles[40*40+20].region!=local.m_territory_topology->Regions()[40*40+20]) return false;
+            data.tiles[40*40+20].claimant=0;local.m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);
+            if(local.CopyNativeTerrain()->tiles[40*40+20].owner!=0 || claims->tiles[40*40+20].owner!=3) return false;
+            local.m_worker_knowledge_ready=false;
+            if(local.CopyNativeTerrain()->tiles[40*40+20].owner!=-1) return false;
         }
-        return retained->tiles[40*40+20].items==0x200020 && retained->tiles[40*40+20].ordinary;
+        return retained->tiles[40*40+20].items==0x200020 && retained->tiles[40*40+20].ordinary
+            && claims && claims->tiles[40*40+20].owner==3;
     }
     bool CheckProjectionProvenance() {
         game::backend::response_map_data_t response{};
@@ -351,6 +361,30 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         center.items|=0x200;
         const auto extra=native::Render(world,source,view,0);
         GT_ASSERT(extra.rgba==river.rgba && extra.writes-river.writes==river.writes-disabled.writes,"Raw extra River pass was omitted or reordered");GT_OK();
+    });
+
+    task->AddTest("SMAC native terrain composes current territory before coast and River",GT(){
+        namespace native=game::frontend::native_terrain;
+        namespace raster=game::frontend::smac_terrain_raster;
+        ::game::native_terrain::World world;world.viewer=3;
+        for(auto& tile:world.tiles) {tile.band=3;tile.contour=70;tile.ordinary=true;tile.region=1;tile.owner=3;}
+        auto& center=world.tiles[40*40+20];
+        world.tiles[39*40+41/2].owner=-1;
+        native::Source source{{1024,768,std::vector<uint8_t>(1024*768,10)},{}};
+        source.coast_mask={56,56,std::vector<uint8_t>(56*56,0)};source.boundary_mask={60,60,std::vector<uint8_t>(3600,1)};
+        for(auto& row:source.owner_clut) {for(size_t i=0;i<256;++i) {row[i]=static_cast<uint8_t>(i);}}
+        source.owner_clut[3][10]=20;source.palette[10]={1,2,3};source.palette[20]={100,101,102};source.palette[30]={200,201,202};
+        const std::vector<native::Placement> view{{{{40,40}},{{576,288}},44*(40*40+20)}};
+        const auto disabled=native::Render(world,source,view,0,{{0,0}},0x401);
+        const auto boundary=native::Render(world,source,view,0);
+        const size_t pixel=(288*1024+575)*4;
+        GT_ASSERT(disabled.rgba[pixel]==1 && boundary.rgba[pixel]==100,"Connected territory did not remap prior land indices");
+        center.items=0x80;
+        for(int y=259;y<315;++y) {std::fill_n(source.loaded.pixels.begin()+y*1024+280,56,30);}
+        const auto river=native::Render(world,source,view,0);
+        GT_ASSERT(river.rgba[pixel]==200,"Territory compositor painted over a later River");
+        world.tiles[39*40+41/2].owner=3;center.items=0;
+        GT_ASSERT(native::Render(world,source,view,0).rgba==disabled.rgba,"Territory boundary did not refresh after claim change");GT_OK();
     });
 
     task->AddTest("SMAC indexed terrain generates759 actual native spans from vertices",GT(){

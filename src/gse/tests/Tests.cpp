@@ -108,6 +108,7 @@
 #include "SmacSiteQuality.h"
 #include "SmacSiteRatingCache.h"
 #include "SmacRestartSearch.h"
+#include "SmacStartingSite.h"
 #include "SmacRestartPreprocessing.h"
 #include "SmacLiveTerritory.h"
 #include "SmacLiveWorkerKnowledge.h"
@@ -359,6 +360,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacSiteQualityTests( task );
 		tests::AddSmacSiteRatingCacheTests( task );
 		tests::AddSmacRestartSearchTests( task );
+        tests::AddSmacStartingSiteTests( task );
 		tests::AddSmacRestartPreprocessingTests( task );
 		tests::AddSmacLiveTerritoryTests( task );
 		tests::AddSmacLiveWorkerKnowledgeTests( task );

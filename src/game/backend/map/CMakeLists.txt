@@ -23,6 +23,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacSiteQuality.cpp
 	${PWD}/SmacSiteRatingCache.cpp
 	${PWD}/SmacRestartSearch.cpp
+	${PWD}/SmacStartingSite.cpp
 	${PWD}/SmacRestartPreprocessing.cpp
 	${PWD}/GlsmacTerritoryTopology.cpp
 	${PWD}/SmacTerritorySummary.cpp

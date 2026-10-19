@@ -5,6 +5,7 @@
 #include "types/Font.h"
 #include "types/texture/Texture.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
+#include "game/frontend/base/SmacBaseNameRaster.h"
 
 namespace game {
 namespace frontend {
@@ -22,10 +23,12 @@ const std::vector< float > s_shadow_alpha_levels = {
 	0.25f,
 };
 
-InstancedFont::InstancedFont( sprite::InstancedSpriteManager* ism, const types::Font* font )
+InstancedFont::InstancedFont( sprite::InstancedSpriteManager* ism, const types::Font* font, bool pixel_base_names )
 	: m_ism( ism )
 	, m_font( font )
-	, m_name( font->m_name ) {
+	, m_name( font->m_name )
+	, m_pixel_base_names( pixel_base_names ) {
+	if ( m_pixel_base_names ) { return; }
 
 	// load font into texture
 
@@ -175,7 +178,7 @@ InstancedFont::~InstancedFont() {
 	for ( const auto& it : m_color_textures ) {
 		DELETE( it.second );
 	}
-	DELETE( m_base_texture );
+	if ( m_base_texture ) { DELETE( m_base_texture ); }
 }
 
 const std::string& InstancedFont::GetFontName() const {
@@ -183,6 +186,16 @@ const std::string& InstancedFont::GetFontName() const {
 }
 
 const std::vector< sprite::InstancedSprite* > InstancedFont::GetSymbolSprites( const std::string& text, const types::Color& color, const types::Color& shadow_color ) {
+	if ( m_pixel_base_names ) {
+		if ( text.empty() ) { return {}; }
+		const auto key=std::to_string(color.GetRGBA())+":"+std::to_string(shadow_color.GetRGBA())+":"+text;
+		const auto found=m_base_names.find(key);
+		if(found!=m_base_names.end()) {return {found->second};}
+		auto raster=base::MakeSmacBaseNameRaster(text,*m_font,color,shadow_color);
+		auto* sprite=m_ism->GetPixelTextSprite(m_name+":"+key,std::move(raster.texture),raster.pixel_center);
+		m_base_names.emplace(key,sprite);
+		return {sprite};
+	}
 	std::vector< sprite::InstancedSprite* > sprites = {};
 	auto* texture = GetColorizedTexture( color, shadow_color );
 	for ( const auto symbol : text ) {
@@ -208,6 +221,7 @@ const std::vector< sprite::InstancedSprite* > InstancedFont::GetSymbolSprites( c
 }
 
 const std::vector< types::Vec2< float > > InstancedFont::GetSymbolOffsets( const std::string& text ) const {
+	if ( m_pixel_base_names ) { return text.empty() ? std::vector<types::Vec2<float>>{} : std::vector<types::Vec2<float>>{{0,0}}; }
 	std::vector< types::Vec2< float > > offsets = {};
 	float total_offset = 0.0f;
 	float x_center = 0.0f;

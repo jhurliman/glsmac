@@ -28,7 +28,7 @@ namespace text {
 
 class InstancedFont {
 public:
-	InstancedFont( sprite::InstancedSpriteManager* ism, const types::Font* font );
+	InstancedFont( sprite::InstancedSpriteManager* ism, const types::Font* font, bool pixel_base_names = false );
 	~InstancedFont();
 
 	const std::string& GetFontName() const;
@@ -61,6 +61,8 @@ private:
 	sprite::InstancedSpriteManager* m_ism = nullptr;
 	const types::Font* m_font = nullptr;
 	const std::string m_name = "";
+	const bool m_pixel_base_names;
+	std::unordered_map<std::string,sprite::InstancedSprite*> m_base_names;
 
 	types::texture::Texture* m_base_texture = nullptr;
 	std::unordered_map< uint64_t, types::texture::Texture* > m_color_textures = {};

@@ -32,7 +32,9 @@ namespace base {
 BaseManager::BaseManager( Game* game, bool smac_population )
 	: m_game( game )
 	, m_ism( game->GetISM() )
-	, m_name_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( ::resource::TTF_ARIALN, 48 ) ) )
+	, m_name_font( game->GetITM()->GetInstancedFont( smac_population
+		? g_engine->GetFontLoader()->LoadCustomFont("arial.ttf",12,loader::font::RasterMode::MONOCHROME)
+		: g_engine->GetFontLoader()->LoadFont(::resource::TTF_ARIALN,48),smac_population ) )
 	, m_badge_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( ::resource::TTF_ARIALNB, 48 ) ) )
 	, m_smac_population( smac_population ) {
 }

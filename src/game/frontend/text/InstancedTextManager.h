@@ -5,6 +5,7 @@
 #include "game/frontend/Types.h"
 
 #include "types/Color.h"
+#include <map>
 
 namespace types {
 class Font;
@@ -32,7 +33,7 @@ public:
 	InstancedTextManager( sprite::InstancedSpriteManager* ism );
 	~InstancedTextManager();
 
-	InstancedFont* GetInstancedFont( const types::Font* font );
+	InstancedFont* GetInstancedFont( const types::Font* font, bool pixel_base_names = false );
 
 	InstancedText* CreateInstancedText(
 		const std::string& text,
@@ -45,7 +46,7 @@ private:
 
 	sprite::InstancedSpriteManager* m_ism = nullptr;
 
-	std::unordered_map< const types::Font*, InstancedFont* > m_instanced_fonts = {};
+	std::map< std::pair<const types::Font*,bool>, InstancedFont* > m_instanced_fonts = {};
 	std::unordered_map< const types::Font*, InstancedText* > m_instanced_texts = {};
 
 };

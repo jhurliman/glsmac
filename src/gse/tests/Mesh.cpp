@@ -6,6 +6,9 @@
 #include <filesystem>
 
 #include "Mesh.h"
+#include "types/Font.h"
+#include "game/frontend/text/InstancedFont.h"
+#include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "graphics/opengl/actor/TextureReloadState.h"
 #include "graphics/PresentationViewport.h"
 #include "loader/texture/SmacPalette.h"
@@ -841,6 +844,27 @@ static std::string CheckViewportEdges() {
 }
 
 void AddMeshTests( task::gsetests::GSETests* task ) {
+    task->AddTest("test instanced labels advance narrow glyphs without accumulating bearings",GT(){
+        types::Font font("synthetic label metrics");
+        font.m_symbols['i']={3,0,1,0,2,0,nullptr};
+        font.m_symbols['j']={3,0,2,0,-1,0,nullptr};
+        font.m_symbols['W']={10,0,9,0,0,0,nullptr};
+        font.m_symbols[' ']={4,0,0,0,0,0,nullptr};
+        scene::Scene scene("label layout",scene::SCENE_TYPE_WORLD);
+        game::frontend::sprite::InstancedSpriteManager sprites(&scene);
+        game::frontend::text::InstancedFont text(&sprites,&font);
+        const auto narrow=text.GetSymbolOffsets("iii"),negative=text.GetSymbolOffsets("jjj");
+        const auto wide=text.GetSymbolOffsets("WWW"),space=text.GetSymbolOffsets("i i");
+        const auto near=[](float a,float b){return std::abs(a-b)<0.000001f;};
+        GT_ASSERT(near(narrow[1].x-narrow[0].x,0.009f) && near(narrow[2].x-narrow[1].x,0.009f),
+            "narrow label characters accumulated bitmap left bearings instead of font advances");
+        GT_ASSERT(near(negative[1].x-negative[0].x,0.009f) && near(wide[1].x-wide[0].x,0.030f),
+            "negative bearing or wide glyph changed pen advance");
+        GT_ASSERT(near(space[2].x-space[0].x,0.021f),"space lost its own advance or inherited glyph padding");
+        GT_ASSERT(text.GetSymbolOffsets("").empty(),"empty label invented glyph offsets");
+        GT_OK();
+    });
+
 	task->AddTest("Mesh texture reload survives hidden replacements at a reused address", [](GSE*,context::Context*) -> std::string {
 		WidgetGraphicsFixture graphics;
 		types::texture::Texture intermediate(1,1);

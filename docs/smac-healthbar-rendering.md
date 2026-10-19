@@ -21,7 +21,16 @@ ASan/UBSan instruments 15 renderer, texture, request, Unit and test translation
 units and passes these groups plus Scout playback/live battle consumers; remaining
 objects reuse the normal build and leak detection is disabled.
 
-This checkpoint does not certify framebuffer placement, map projection, original
-flag artwork, zoom policy or full screenshot parity. A real map capture and review
-are required before promotion. Hold commands/order glyphs and population badge
-font/geometry remain separate follow-up work.
+The promotion build passes the same six health/playback/live battle groups. A
+fresh software-rendered GOG session loads the previously saved pending research
+question through the real Load Game menu, accepts its all-unchecked priorities,
+and displays the updated bar on the selected Scout. Full frames and enlarged
+unchanged-pixel crops remain outside Git. The real Quit confirmation exits0 with
+no tracked OpenGL leaks; heap allocations and audio were not checked.
+
+This confirms live wiring and basic placement, not original framebuffer parity.
+The full-map before/after comparison also shows terrain texture variation after
+reload, so it is not an isolated health-bar diff. Investigate render repeatability
+before using that scene as a global pixel gate. Map projection, original flag
+artwork and zoom policy remain unproven. Hold commands/order glyphs and population
+badge font/geometry are separate follow-up work.

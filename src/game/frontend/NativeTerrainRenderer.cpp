@@ -1,4 +1,5 @@
 #include "NativeTerrainRenderer.h"
+#include "SmacTerrainAtlas.h"
 #include "SmacWaterCoast.h"
 #include "SmacRiver.h"
 #include "SmacRoadTube.h"
@@ -30,10 +31,7 @@ std::vector<Placement> View(int x,int y,bool wrap) {
 }
 
 static Frame RenderImpl(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags,uint8_t initial_index,const std::vector<ViewGeometry::Terrain>* prepared,const Frame* previous=nullptr,Point scroll={{0,0}},raster::Clip clip={{0,0,1024,511}}) {
-    if(source.loaded.width<=0 || source.loaded.height<=0 ||
-        uint64_t(source.loaded.width)*static_cast<uint32_t>(source.loaded.height)!=source.loaded.pixels.size()) {
-        throw std::invalid_argument("Invalid indexed terrain source");
-    }
+    raster::AtlasCrops crops(source.loaded);
     if(offset[0]<-4096 || offset[0]>4096 || offset[1]<-4096 || offset[1]>4096 || placements.size()>3200) {
         throw std::invalid_argument("Unsupported native terrain view offset or size");
     }
@@ -61,22 +59,7 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
     // This opt-in inspector reveals terrain; ordinary game fog is not inferred
     // from explored memory. Owner relations still use the actual local viewer.
     const smac_territory_boundary::Context boundary_context{world.viewer,world.relations};
-    std::map<material::Crop,raster::Bitmap> crops;
-    const auto crop=[&](const material::Crop& rect)->const raster::Bitmap* {
-        auto found=crops.find(rect);
-        if(found==crops.end()) {
-            const auto x=rect[0],y=rect[1],width=rect[2],height=rect[3];
-            if(x<0 || y<0 || width<=0 || height<=0 || width>source.loaded.width || height>source.loaded.height ||
-                x>source.loaded.width-width || y>source.loaded.height-height) {throw std::invalid_argument("Native terrain crop outside indexed atlas");}
-            raster::Bitmap pixels{width,height,std::vector<uint8_t>(static_cast<size_t>(width)*static_cast<size_t>(height))};
-            for(int row=0;row<height;++row) {
-                std::copy_n(source.loaded.pixels.begin()+static_cast<size_t>(y+row)*static_cast<size_t>(source.loaded.width)+static_cast<size_t>(x),width,
-                    pixels.pixels.begin()+static_cast<size_t>(row)*static_cast<size_t>(width));
-            }
-            found=crops.emplace(rect,std::move(pixels)).first;
-        }
-        return &found->second;
-    };
+    const auto crop=[&](const material::Crop& rect) {return crops.Get(rect);};
     Frame frame;
     std::map<material::Crop,smac_developed_overlay::Sprite> sprites;
     std::vector<raster::Command> commands;commands.reserve(placements.size()*14);

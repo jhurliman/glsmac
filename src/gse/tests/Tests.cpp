@@ -5,6 +5,7 @@
 #include "SmacOrdinaryLandExploration.h"
 #include "TerrainRenderUpdate.h"
 #include "SmacLandMaterial.h"
+#include "SmacTerrainLighting.h"
 #include "Async.h"
 
 #include "Backend.h"
@@ -154,6 +155,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacOrdinaryLandExplorationTests( task );
 		tests::AddTerrainRenderUpdateTests( task );
 		tests::AddSmacLandMaterialTests( task );
+		tests::AddSmacTerrainLightingTests( task );
 		tests::AddRosterRecordTests( task );
 		tests::AddSmacGameplayRandomStateTests( task );
 		tests::AddSmacScoutCombatTests( task );

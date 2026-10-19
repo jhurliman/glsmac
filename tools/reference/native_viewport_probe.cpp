@@ -1,0 +1,42 @@
+#include "game/frontend/NativeTerrainRenderer.h"
+#include "game/frontend/SmacWaterCoast.h"
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <stdexcept>
+namespace native=game::frontend::native_terrain;
+std::vector<uint8_t> Read(const std::string& name) {
+    std::ifstream input(name,std::ios::binary);if(!input) {throw std::runtime_error("Missing owned probe input");}
+    return {std::istreambuf_iterator<char>(input),{}};
+}
+uint32_t Word(const std::vector<uint8_t>& bytes,size_t offset) {
+    return uint32_t(bytes.at(offset))|(uint32_t(bytes.at(offset+1))<<8)|(uint32_t(bytes.at(offset+2))<<16)|(uint32_t(bytes.at(offset+3))<<24);
+}
+int main(int argc,char** argv) {
+    if(argc!=2) {return 1;}const std::string dir=argv[1];std::ifstream input(dir+"/input.txt");
+    int tw,th,sw,sh,rw,rh,seed,automatic,initial,observer0_alias;
+    if(!(input>>tw>>th>>sw>>sh>>rw>>rh>>seed>>automatic>>initial>>observer0_alias) || seed<0 || seed>65535 || initial<0 || initial>255) {return 1;}
+    native::Source source;source.loaded={tw,th,Read(dir+"/texture.bin")};source.ter1={sw,sh,Read(dir+"/ter1.bin")};
+    source.coast_mask=game::frontend::smac_water_coast::CoastMasks({rw,rh,Read(dir+"/rainfall.bin")})[0];
+    const auto shadow=Read(dir+"/shadow.bin");if(shadow.size()!=256) {return 1;}
+    for(size_t i=0;i<256;++i) {source.shadow_lookup[i]=shadow[i];source.palette[i]={uint8_t(i),0,0};}
+    const auto bytes=Read(dir+"/planet.bin");if(bytes.size()!=15+0xaa4+3200*44+128) {return 1;}
+    game::native_terrain::World world;world.retained_geometry=true;world.automatic_land_resources=automatic;
+    const auto pattern=Word(bytes,23);world.resource_pattern=pattern<=INT32_MAX?int32_t(pattern):int32_t(int64_t(pattern)-4294967296LL);
+    for(size_t i=0;i<3200;++i) {
+        const size_t p=2739+i*44;auto& tile=world.tiles[i];
+        tile.band=bytes[p]>>5;tile.moisture=(bytes[p]>>3)&3;tile.rockiness=bytes[p+5]>>6;tile.contour=bytes[p+1];
+        tile.items=tile.selected_items=tile.resource_items=Word(bytes,p+8);tile.landmarks=Word(bytes,p+12);tile.region=bytes[p+3];
+        if(observer0_alias) {tile.selected_items=tile.landmarks;}
+        tile.ordinary=tile.material_admitted=tile.resource_ready=tile.developed_ready=tile.selected_known=true;
+    }
+    native::ViewGeometry geometry(world);std::optional<native::Frame> previous;
+    constexpr int cameras[4][2]={{22,38},{22,38},{24,38},{22,38}};
+    for(int i=0;i<4;++i) {
+        const bool pan=i>=2;const auto plan=geometry.Prepare(native::Layout(cameras[i][0],cameras[i][1],0,true),0,25,pan);
+        auto frame=native::RenderPrepared(world,source,plan,uint16_t(seed),0x10621,uint8_t(initial),pan?&*previous:nullptr);
+        std::ofstream output(dir+"/frame-"+std::to_string(i)+".bin",std::ios::binary);
+        output.write(reinterpret_cast<const char*>(frame.indexed.data()),frame.indexed.size());
+        std::cout<<i<<' '<<frame.tiles<<' '<<frame.attempts<<' '<<frame.writes<<'\n';previous=std::move(frame);
+    }
+}

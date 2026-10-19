@@ -1,0 +1,9 @@
+# Complete indexed viewport comparison checkpoint
+
+`tools/reference/capture_native_viewport.py` drives production `ViewGeometry` and `RenderPrepared` from the owned installed raw Planet records and decoded PCX art. It emits first/repeat/east/back indexed frames, using explicit allocation-low16 variation and initial backdrop inputs. No recorded query coordinates or draw lists are injected. Art-derived outputs belong in an external private directory.
+
+Pass `--reference-receipt` to require complete frame hashes. With `--reference-frame-directory`, mismatch diagnostics also validate the private original bytes against the receipt and report differing pixel counts/coordinates. A mismatch is a failing command, not an accepted tolerance. The expected original receipt is still being finalized in the separate reverse-engineering thread.
+
+The initial original diagnostic uses viewer0, flags0x10621, known raw Planet, empty rosters, camera22,38 then24,38/back, zoom0, allocation low16=0xbf60, clear index65. Original viewer0 reads its remembered-improvement word at the landmark offset; `--observer0-alias` reproduces that diagnostic input explicitly. It is not a normal playable-faction view and must not change gameplay observer semantics. A valid-faction control remains required.
+
+At this checkpoint, ASan/UBSan production captures return normally. First/repeat/back are internally identical. Against the original diagnostic, first/repeat/back each differ at2312 of523264 indices; east differs at2319. Original shadow LUT bytes match. Last-native-writer attribution for the2312 first-frame differences identifies1686 water-depth stores at63ef70/caller470ff7 and626 coastal-mask stores at63e880/caller471d98. The water/coast caller inputs and mutable raster state are under investigation; no complete viewport parity is claimed. Earlier486 isolated tile frames and geometry-schedule proofs remain narrower evidence.

@@ -33,7 +33,7 @@ runs. It does not consume either random stream.
 
 ## Boundaries still to close
 
-- Water/depth/coast painting, roads, rivers and further land continuations.
+- Roads, rivers and further land continuations.
 - Named landmark deformation/shading and neighboring affected stencils.
 - Original observer/fog admission, complete object occlusion and animated water.
 - Full native view/camera-origin/scrolling behavior and other zooms/viewports.
@@ -60,3 +60,41 @@ arbitrary original scrolling phase or dirty-region redraw behavior.
   minimap recenter to two areas, native atlas admission and ordinary menu Quit.
   Quit returns zero with no tracked OpenGL leaks. Audio is disabled; this is not
   hardware-vsync/audio performance acceptance. Captures remain external.
+
+## Water/coast and sea Fungus continuation
+
+The live inspector also copies the retained contour byte and paints ordinary
+water/depth sectors, land coast masks and shelf Fungus. Coast masks are generated
+from the owned indexed RAINFALL.PCX; no original pixels are embedded in this repo.
+Sea Fungus uses its separate atlas bank and keyed unlit shader after the water
+sectors; existing land Fungus remains before coast. The snapshot owns its fields
+and the atlas cache owns its mask, with no retained backend tile pointers.
+
+The measured profile is documented in [water/coast](behavior/ordinary-water-coast.md)
+and [sea Fungus](behavior/ordinary-sea-fungus.md). Production command checks cover
+54 contexts,250 continuation commands and760 contour samples; raster receipts cover
+60 complete indexed frames and7714 spans. To replay the production C++ against
+owned original assets (loaded pixels and output stay in a temporary directory):
+
+```
+python tools/reference/verify_native_water_coast.py --texture-pcx PATH/TEXTURE.PCX --rainfall-pcx PATH/RAINFALL.PCX
+```
+
+Add `--sanitize --cxx clang++` for the focused ASan/UBSan replay. This is static
+terrain material composition, not animated water or whole-map pixel parity.
+
+### Retained landmark metadata admission
+
+The live map capture exposed an overly broad landmark filter. The retained word
+contains dirty bookkeeping and a shared upper detail byte, as well as membership
+bits. Land geometry now checks the source-proved0xb03 profile mask without a
+blanket negative-detail exemption. Metadata alone no longer rejects tiles or
+their neighboring geometry stencil. Unsupported material memberships remain a
+separate admission decision; sea0x10/Freshwater0x80 and the land-only0x40 base
+branch do not alter this ordinary sea profile. Special-art1/2/0x100 stays excluded
+on sea even though sea heights are zero. The original retained word is unchanged.
+
+See [87 geometry controls](behavior/terrain-landmark-field-admission.md) and
+[27 complete-renderer sea controls](behavior/sea-landmark-material-admission.md).
+These clarify the existing flags1/zoom0 inspector; they do not implement other
+landmark profiles, optional object overlays or dirty-only redraw scheduling.

@@ -13,6 +13,7 @@ SET( SRC ${SRC}
 	${PWD}/Flic.cpp
 	${PWD}/TerrainRenderUpdate.cpp
 	${PWD}/SmacTerrainPolygonRaster.cpp
+    ${PWD}/SmacWaterCoast.cpp
 	${PWD}/SmacLandMaterial.cpp
 	${PWD}/SmacTerrainLighting.cpp
 	${PWD}/SmacGroundEdgeCost.cpp

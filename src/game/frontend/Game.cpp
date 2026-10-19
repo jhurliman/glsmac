@@ -1,5 +1,6 @@
 #include "MapProjection.h"
 #include "Game.h"
+#include "game/NativeTerrainWorld.h"
 #include "game/backend/LocalMoveCommand.h"
 #include "game/backend/map/TerrainRenderUpdate.h"
 

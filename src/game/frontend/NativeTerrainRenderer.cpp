@@ -1,4 +1,5 @@
 #include "NativeTerrainRenderer.h"
+#include "SmacWaterCoast.h"
 #include "game/backend/map/SmacTerrainGeometry.h"
 #include "game/backend/map/SmacTerrainLighting.h"
 #include <algorithm>
@@ -52,6 +53,9 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         const auto* tile=At(world,x,y);if(!tile) {return {};}
         return material::Tile{tile->band,tile->moisture,tile->rockiness,tile->items};
     };
+    const smac_water_coast::CellAt cells=[&](int x,int y)->std::optional<smac_water_coast::Cell> {
+        const auto* tile=At(world,x,y);return tile?std::optional<smac_water_coast::Cell>{{tile->band,tile->contour,tile->items}}:std::nullopt;
+    };
     std::map<material::Crop,raster::Bitmap> crops;
     const auto crop=[&](const material::Crop& rect)->const raster::Bitmap* {
         auto found=crops.find(rect);
@@ -69,7 +73,15 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         return &found->second;
     };
     Frame frame;
-    std::vector<raster::Command> commands;commands.reserve(placements.size()*10);
+    std::vector<raster::Command> commands;commands.reserve(placements.size()*14);
+    const auto append_water=[&](int x,int y,const std::array<Point,5>& points) {
+        for(const auto& pass:smac_water_coast::Select(x,y,points,cells)) {
+            raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
+            command.shader=pass.shader;command.shade_limits=pass.shade_limits;
+            if(pass.shader==raster::Shader::CoastMapped) {command.mask=&source.coast_mask;command.mask_mapping=pass.mapping;}
+            commands.push_back(command);
+        }
+    };
     for(const auto& placement:placements) {
         const auto x=placement.tile[0],y=placement.tile[1];
         if(x<0 || x>=80 || y<0 || y>=80 || ((x^y)&1) ||
@@ -77,7 +89,12 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             placement.flat_center[0]<-4096 || placement.flat_center[0]>4096 ||
             placement.flat_center[1]<-4096 || placement.flat_center[1]>4096) {throw std::invalid_argument("Invalid native terrain placement");}
         const auto& tile=*At(world,x,y);
-        if(!tile.ordinary || tile.band<3) {continue;}
+        if(!tile.ordinary) {continue;}
+        const auto fx=placement.flat_center[0]+offset[0],fy=placement.flat_center[1]+offset[1];
+        if(tile.band<3) {
+            const std::array<Point,5> points{{{{fx,fy}},{{fx-48,fy}},{{fx,fy-24}},{{fx+48,fy}},{{fx,fy+24}}}};
+            append_water(x,y,points);++frame.tiles;continue;
+        }
         // Neighbor landmark deformation has not been translated. Do not feed
         // an ordinary lighting/height model through an unsupported stencil.
         bool ordinary=true;
@@ -88,7 +105,6 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         if(!ordinary) {continue;}
         const auto light=terrain::OrdinaryLighting(x,y,bands);if(!light) {continue;}
         const auto heights=terrain::OrdinaryHeights(x,y,bands);
-        const auto fx=placement.flat_center[0]+offset[0],fy=placement.flat_center[1]+offset[1];
         const std::array<Point,5> points{{{{fx,fy-heights[0]}},{{fx-48,fy-heights[1]}},
             {{fx,fy-24-heights[2]}},{{fx+48,fy-heights[3]}},{{fx,fy+24-heights[4]}}}};
         const auto seed=static_cast<uint16_t>(base+placement.record_offset);
@@ -102,6 +118,7 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             }
             commands.push_back(command);
         }
+        append_water(x,y,points);
         ++frame.tiles;
     }
     const raster::Bitmap background{1024,511,std::vector<uint8_t>(1024*511)};

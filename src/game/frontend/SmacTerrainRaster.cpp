@@ -145,15 +145,24 @@ Result Draw(const Bitmap& initial,const Bitmap& texture,const std::vector<Triang
 Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,const Clip& clip,bool track_coverage) {
     ValidateBitmap(initial);
     for(const auto& command:commands) {
-        if(!command.texture || (command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded && command.shader!=Shader::KeyedUnlit)) {Invalid();}
+        if(!command.texture || (command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded && command.shader!=Shader::KeyedUnlit && command.shader!=Shader::WaterDepth16 && command.shader!=Shader::CoastMapped)) {Invalid();}
         ValidateBitmap(*command.texture);
+        if(command.shader==Shader::CoastMapped) {
+            if(!command.mask) {Invalid();}
+            ValidateBitmap(*command.mask);
+            if(command.mask->width!=command.texture->width || command.mask->height!=command.texture->height) {Invalid();}
+        }
+        if(command.polygon.count!=3 && command.polygon.count!=4) {Invalid();}
     }
     const auto bounded=Intersection(clip,{{0,0,initial.width,initial.height}});
     Result result{initial,0};
     if(track_coverage) {result.coverage.resize(initial.pixels.size());}
     for(const auto& command:commands) {
         const auto& texture=*command.texture;
-        const bool shaded=command.shader!=Shader::KeyedUnlit,keyed=command.shader!=Shader::OpaqueShaded;
+        const bool shaded=command.shader!=Shader::KeyedUnlit;
+        const bool keyed=command.shader==Shader::KeyedShaded || command.shader==Shader::KeyedUnlit;
+        if(command.shader==Shader::WaterDepth16 && std::all_of(command.polygon.vertices.begin(),
+            command.polygon.vertices.begin()+command.polygon.count,[](const auto& vertex){return vertex.light>=16;})) {continue;}
         for(const auto& span:GeneratePolygonSpans(command.polygon,Intersection(command.clip,bounded),shaded,command.shade_limits)) {
             int64_t u=span.u,v=span.v;
             auto shade=span.shade;
@@ -162,9 +171,19 @@ Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,cons
                 if(offset<0 || static_cast<uint64_t>(offset)>=texture.pixels.size()) {Invalid();}
                 const auto loaded=texture.pixels[static_cast<size_t>(offset)];
                 ++result.attempts;
-                if(!keyed || loaded!=9) {
+                int signed_shade=shade>>8;if(signed_shade>=128) {signed_shade-=256;}
+                uint8_t mapped=0;
+                if(command.shader==Shader::CoastMapped) {
+                    const auto cls=command.mask->pixels[static_cast<size_t>(offset)];
+                    if(cls>=command.mask_mapping.size()) {Invalid();}
+                    mapped=command.mask_mapping[cls];
+                }
+                const bool store=(!keyed || loaded!=9) &&
+                    (command.shader!=Shader::WaterDepth16 || signed_shade<16) &&
+                    (command.shader!=Shader::CoastMapped || mapped!=0);
+                if(store) {
                     result.bitmap.pixels[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]=
-                        static_cast<uint8_t>(loaded+(shaded?(shade>>8):0));
+                        command.shader==Shader::CoastMapped && mapped>1?mapped:static_cast<uint8_t>(loaded+(shaded?signed_shade:0));
                     ++result.writes;
                     if(track_coverage) {result.coverage[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]=1;}
                 }

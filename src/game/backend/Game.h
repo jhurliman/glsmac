@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "game/NativeTerrainWorld.h"
+namespace game::native_terrain {struct World;}
 #include <functional>
 #include <array>
 

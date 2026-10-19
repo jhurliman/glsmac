@@ -470,7 +470,7 @@ void BaseManager::ProcessUnprocessed( GSE_CALLABLE ) {
 }
 
 std::optional<::game::smac_base_body::Selection> BaseManager::GetSmacBodyPresentation(const Base& base) const {
-    if(!base.HasSmacResourceContext() || !m_game->m_simulation || !m_game->GetState() ||
+    if(!base.HasSmacResourceContext() || !m_game->m_simulation || !m_game->GetState() || !m_game->GetMap() ||
         m_game->m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {return {};}
     const auto& policy=m_game->GetMap()->GetResourcePolicy();
     const auto& rules=m_game->GetState()->m_settings.global.GetSmacResourceRules();

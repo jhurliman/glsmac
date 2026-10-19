@@ -121,7 +121,8 @@ sprite::Sprite* Base::GetSprite() const {
 
 sprite::Sprite* Base::GetSpriteFor( faction::Faction* faction ) const {
     if(m_native_body && m_bm->UsesNativeMapProjection()) {
-        return faction->GetBaseSprite(m_native_body->row>=3,uint8_t(m_native_body->column),uint8_t(m_native_body->row%3),true);
+        auto* source=m_native_body_faction?m_native_body_faction:faction;
+        return source->GetBaseSprite(m_native_body->row>=3,uint8_t(m_native_body->column),uint8_t(m_native_body->row%3),true);
     }
 	uint8_t size = 0;
 	const auto population = GetPopulation();
@@ -134,10 +135,11 @@ sprite::Sprite* Base::GetSpriteFor( faction::Faction* faction ) const {
 	return faction->GetBaseSprite( m_tile->IsWater(), size, 0, m_bm->UsesNativeMapProjection() ); // TODO: perimeter
 }
 
-void Base::SetNativeBody(std::optional<::game::smac_base_body::Selection> selection) {
+void Base::SetNativeBody(std::optional<::game::smac_base_body::Selection> selection, faction::Faction* source) {
+    if(!selection) {source=nullptr;}
     if(selection && (selection->column<0 || selection->column>3 || selection->row<0 || selection->row>5)) {throw std::invalid_argument("Invalid main-map Base body");}
-    if(bool(selection)==bool(m_native_body) && (!selection || (selection->column==m_native_body->column && selection->row==m_native_body->row))) {return;}
-    const bool shown=m_render.is_rendered;Hide();m_native_body=selection;
+    if(source==m_native_body_faction && bool(selection)==bool(m_native_body) && (!selection || (selection->column==m_native_body->column && selection->row==m_native_body->row))) {return;}
+    const bool shown=m_render.is_rendered;Hide();m_native_body=selection;m_native_body_faction=source;
     // Instance IDs belong to the selected sprite actor, not the Base globally.
     m_render.instance_id=0;UpdateMeshTex(m_render_data.base,GetSprite()->instanced_sprite);
     if(shown) {Show();}

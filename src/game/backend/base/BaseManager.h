@@ -127,6 +127,7 @@ public:
 	const popdefs_t& GetBasePopDefs() const;
 
 	void ProcessUnprocessed( GSE_CALLABLE );
+    std::optional<size_t> GetSmacBodySourceSlot(const Base& base) const;
     std::optional<::game::smac_base_body::Selection> GetSmacBodyPresentation(const Base& base) const;
 	void PushUpdates();
 

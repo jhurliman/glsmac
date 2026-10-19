@@ -80,7 +80,7 @@ public:
 
 	sprite::Sprite* GetSprite() const;
 
-    void SetNativeBody(std::optional<::game::smac_base_body::Selection> selection);
+    void SetNativeBody(std::optional<::game::smac_base_body::Selection> selection, faction::Faction* source = nullptr);
 	void Show();
 	void Hide();
 	void Update();
@@ -115,6 +115,7 @@ private:
 	std::string m_name = "";
 
 	faction::Faction* m_faction = nullptr;
+    faction::Faction* m_native_body_faction = nullptr;
 
 	struct {
 		types::Vec3 coords = {};

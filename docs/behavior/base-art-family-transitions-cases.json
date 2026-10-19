@@ -1,0 +1,1589 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Native original local write fragments with explicitly supplied owner/register/frame inputs. Full capture, transfer UI, riot admission, founding, elimination not executed here; previous full receipts provide integration context.",
+  "checked_fragments": 1361,
+  "representative_cases": [
+    {
+      "kind": "founding",
+      "old_owner": 0,
+      "former_before": 0,
+      "new_owner": 1,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x4fa572",
+      "stop": "0x4fa58c",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x4fa572",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x4fa578",
+          "offset": 4,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x4fa57e",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x4fa585",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "founding",
+      "old_owner": 0,
+      "former_before": 0,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x4fa572",
+      "stop": "0x4fa58c",
+      "owner_after": 2,
+      "former_after": 2,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x4fa572",
+          "offset": 5,
+          "size": 1,
+          "value": 2
+        },
+        {
+          "pc": "0x4fa578",
+          "offset": 4,
+          "size": 1,
+          "value": 2
+        },
+        {
+          "pc": "0x4fa57e",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x4fa585",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "founding",
+      "old_owner": 0,
+      "former_before": 0,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x4fa572",
+      "stop": "0x4fa58c",
+      "owner_after": 3,
+      "former_after": 3,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x4fa572",
+          "offset": 5,
+          "size": 1,
+          "value": 3
+        },
+        {
+          "pc": "0x4fa578",
+          "offset": 4,
+          "size": 1,
+          "value": 3
+        },
+        {
+          "pc": "0x4fa57e",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x4fa585",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "founding",
+      "old_owner": 0,
+      "former_before": 0,
+      "new_owner": 4,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x4fa572",
+      "stop": "0x4fa58c",
+      "owner_after": 4,
+      "former_after": 4,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x4fa572",
+          "offset": 5,
+          "size": 1,
+          "value": 4
+        },
+        {
+          "pc": "0x4fa578",
+          "offset": 4,
+          "size": 1,
+          "value": 4
+        },
+        {
+          "pc": "0x4fa57e",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x4fa585",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "founding",
+      "old_owner": 0,
+      "former_before": 0,
+      "new_owner": 5,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x4fa572",
+      "stop": "0x4fa58c",
+      "owner_after": 5,
+      "former_after": 5,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x4fa572",
+          "offset": 5,
+          "size": 1,
+          "value": 5
+        },
+        {
+          "pc": "0x4fa578",
+          "offset": 4,
+          "size": 1,
+          "value": 5
+        },
+        {
+          "pc": "0x4fa57e",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x4fa585",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "founding",
+      "old_owner": 0,
+      "former_before": 0,
+      "new_owner": 6,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x4fa572",
+      "stop": "0x4fa58c",
+      "owner_after": 6,
+      "former_after": 6,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x4fa572",
+          "offset": 5,
+          "size": 1,
+          "value": 6
+        },
+        {
+          "pc": "0x4fa578",
+          "offset": 4,
+          "size": 1,
+          "value": 6
+        },
+        {
+          "pc": "0x4fa57e",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x4fa585",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "founding",
+      "old_owner": 0,
+      "former_before": 0,
+      "new_owner": 7,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x4fa572",
+      "stop": "0x4fa58c",
+      "owner_after": 7,
+      "former_after": 7,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x4fa572",
+          "offset": 5,
+          "size": 1,
+          "value": 7
+        },
+        {
+          "pc": "0x4fa578",
+          "offset": 4,
+          "size": 1,
+          "value": 7
+        },
+        {
+          "pc": "0x4fa57e",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x4fa585",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "capture",
+      "old_owner": 1,
+      "former_before": 0,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x5210fe",
+      "stop": "0x521148",
+      "owner_after": 2,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x5210fe",
+          "offset": 4,
+          "size": 1,
+          "value": 2
+        },
+        {
+          "pc": "0x521121",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x521132",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x521138",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "riot",
+      "old_owner": 1,
+      "former_before": 0,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x50a64d",
+      "stop": "0x50a6a2",
+      "owner_after": 2,
+      "former_after": 0,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x50a65d",
+          "offset": 4,
+          "size": 1,
+          "value": 2
+        },
+        {
+          "pc": "0x50a69f",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 0,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 2,
+      "timer_after": 19,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x5639b9",
+          "offset": 5,
+          "size": 1,
+          "value": 2
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 0,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 3,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x56398e",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x563994",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "capture",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x5210fe",
+      "stop": "0x521148",
+      "owner_after": 2,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x5210fe",
+          "offset": 4,
+          "size": 1,
+          "value": 2
+        },
+        {
+          "pc": "0x521121",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x521132",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x521138",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "riot",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x50a64d",
+      "stop": "0x50a6a2",
+      "owner_after": 2,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x50a65d",
+          "offset": 4,
+          "size": 1,
+          "value": 2
+        },
+        {
+          "pc": "0x50a69f",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 2,
+      "timer_after": 19,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x5639b9",
+          "offset": 5,
+          "size": 1,
+          "value": 2
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 3,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x56398e",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x563994",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "capture",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x5210fe",
+      "stop": "0x521148",
+      "owner_after": 2,
+      "former_after": 2,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x5210fe",
+          "offset": 4,
+          "size": 1,
+          "value": 2
+        },
+        {
+          "pc": "0x521121",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x521141",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "riot",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x50a64d",
+      "stop": "0x50a6a2",
+      "owner_after": 2,
+      "former_after": 2,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x50a65d",
+          "offset": 4,
+          "size": 1,
+          "value": 2
+        },
+        {
+          "pc": "0x50a69f",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 2,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x5639b2",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x5639b9",
+          "offset": 5,
+          "size": 1,
+          "value": 2
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 3,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 2,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x56399d",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "capture",
+      "old_owner": 1,
+      "former_before": 3,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x5210fe",
+      "stop": "0x521148",
+      "owner_after": 2,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x5210fe",
+          "offset": 4,
+          "size": 1,
+          "value": 2
+        },
+        {
+          "pc": "0x521121",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x521132",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x521138",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "riot",
+      "old_owner": 1,
+      "former_before": 3,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x50a64d",
+      "stop": "0x50a6a2",
+      "owner_after": 2,
+      "former_after": 3,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x50a65d",
+          "offset": 4,
+          "size": 1,
+          "value": 2
+        },
+        {
+          "pc": "0x50a69f",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 3,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 2,
+      "timer_after": 19,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x5639b9",
+          "offset": 5,
+          "size": 1,
+          "value": 2
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 3,
+      "new_owner": 2,
+      "timer_before": 19,
+      "transfer_mode": 3,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x56398e",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x563994",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "capture",
+      "old_owner": 1,
+      "former_before": 0,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x5210fe",
+      "stop": "0x521148",
+      "owner_after": 3,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x5210fe",
+          "offset": 4,
+          "size": 1,
+          "value": 3
+        },
+        {
+          "pc": "0x521121",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x521132",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x521138",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "riot",
+      "old_owner": 1,
+      "former_before": 0,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x50a64d",
+      "stop": "0x50a6a2",
+      "owner_after": 3,
+      "former_after": 0,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x50a65d",
+          "offset": 4,
+          "size": 1,
+          "value": 3
+        },
+        {
+          "pc": "0x50a69f",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 0,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 3,
+      "timer_after": 19,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x5639b9",
+          "offset": 5,
+          "size": 1,
+          "value": 3
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 0,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 3,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x56398e",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x563994",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "capture",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x5210fe",
+      "stop": "0x521148",
+      "owner_after": 3,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x5210fe",
+          "offset": 4,
+          "size": 1,
+          "value": 3
+        },
+        {
+          "pc": "0x521121",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x521132",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x521138",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "riot",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x50a64d",
+      "stop": "0x50a6a2",
+      "owner_after": 3,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x50a65d",
+          "offset": 4,
+          "size": 1,
+          "value": 3
+        },
+        {
+          "pc": "0x50a69f",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 3,
+      "timer_after": 19,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x5639b9",
+          "offset": 5,
+          "size": 1,
+          "value": 3
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 3,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x56398e",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x563994",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "capture",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x5210fe",
+      "stop": "0x521148",
+      "owner_after": 3,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x5210fe",
+          "offset": 4,
+          "size": 1,
+          "value": 3
+        },
+        {
+          "pc": "0x521121",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x521132",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x521138",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "riot",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x50a64d",
+      "stop": "0x50a6a2",
+      "owner_after": 3,
+      "former_after": 2,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x50a65d",
+          "offset": 4,
+          "size": 1,
+          "value": 3
+        },
+        {
+          "pc": "0x50a69f",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 3,
+      "timer_after": 19,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x5639b9",
+          "offset": 5,
+          "size": 1,
+          "value": 3
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 3,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 50,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x56398e",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x563994",
+          "offset": 7,
+          "size": 1,
+          "value": 50
+        }
+      ]
+    },
+    {
+      "kind": "capture",
+      "old_owner": 1,
+      "former_before": 3,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x5210fe",
+      "stop": "0x521148",
+      "owner_after": 3,
+      "former_after": 3,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x5210fe",
+          "offset": 4,
+          "size": 1,
+          "value": 3
+        },
+        {
+          "pc": "0x521121",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x521141",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "riot",
+      "old_owner": 1,
+      "former_before": 3,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x50a64d",
+      "stop": "0x50a6a2",
+      "owner_after": 3,
+      "former_after": 3,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x50a65d",
+          "offset": 4,
+          "size": 1,
+          "value": 3
+        },
+        {
+          "pc": "0x50a69f",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 3,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 0,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 3,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x5639b2",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x5639b9",
+          "offset": 5,
+          "size": 1,
+          "value": 3
+        }
+      ]
+    },
+    {
+      "kind": "transfer",
+      "old_owner": 1,
+      "former_before": 3,
+      "new_owner": 3,
+      "timer_before": 19,
+      "transfer_mode": 3,
+      "start": "0x563972",
+      "stop": "0x5639bf",
+      "owner_after": 1,
+      "former_after": 3,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x563975",
+          "offset": 8,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x56399d",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        }
+      ]
+    },
+    {
+      "kind": "assimilation",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 1,
+      "timer_before": 0,
+      "transfer_mode": 0,
+      "start": "0x50cc00",
+      "stop": "0x50cc3e",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 0,
+      "writes": []
+    },
+    {
+      "kind": "assimilation",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 1,
+      "timer_before": 1,
+      "transfer_mode": 0,
+      "start": "0x50cc00",
+      "stop": "0x50cc3e",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x50cc09",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x50cc36",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "kind": "assimilation",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 1,
+      "timer_before": 2,
+      "transfer_mode": 0,
+      "start": "0x50cc00",
+      "stop": "0x50cc3e",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x50cc09",
+          "offset": 7,
+          "size": 1,
+          "value": 1
+        },
+        {
+          "pc": "0x50cc24",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x50cc36",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "kind": "assimilation",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 1,
+      "timer_before": 3,
+      "transfer_mode": 0,
+      "start": "0x50cc00",
+      "stop": "0x50cc3e",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 1,
+      "writes": [
+        {
+          "pc": "0x50cc09",
+          "offset": 7,
+          "size": 1,
+          "value": 2
+        },
+        {
+          "pc": "0x50cc24",
+          "offset": 7,
+          "size": 1,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "kind": "assimilation",
+      "old_owner": 1,
+      "former_before": 1,
+      "new_owner": 1,
+      "timer_before": 50,
+      "transfer_mode": 0,
+      "start": "0x50cc00",
+      "stop": "0x50cc3e",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 48,
+      "writes": [
+        {
+          "pc": "0x50cc09",
+          "offset": 7,
+          "size": 1,
+          "value": 49
+        },
+        {
+          "pc": "0x50cc24",
+          "offset": 7,
+          "size": 1,
+          "value": 48
+        }
+      ]
+    },
+    {
+      "kind": "assimilation",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 1,
+      "timer_before": 0,
+      "transfer_mode": 0,
+      "start": "0x50cc00",
+      "stop": "0x50cc3e",
+      "owner_after": 1,
+      "former_after": 2,
+      "timer_after": 0,
+      "writes": []
+    },
+    {
+      "kind": "assimilation",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 1,
+      "timer_before": 1,
+      "transfer_mode": 0,
+      "start": "0x50cc00",
+      "stop": "0x50cc3e",
+      "owner_after": 1,
+      "former_after": 1,
+      "timer_after": 0,
+      "writes": [
+        {
+          "pc": "0x50cc09",
+          "offset": 7,
+          "size": 1,
+          "value": 0
+        },
+        {
+          "pc": "0x50cc36",
+          "offset": 5,
+          "size": 1,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "kind": "assimilation",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 1,
+      "timer_before": 2,
+      "transfer_mode": 0,
+      "start": "0x50cc00",
+      "stop": "0x50cc3e",
+      "owner_after": 1,
+      "former_after": 2,
+      "timer_after": 1,
+      "writes": [
+        {
+          "pc": "0x50cc09",
+          "offset": 7,
+          "size": 1,
+          "value": 1
+        }
+      ]
+    },
+    {
+      "kind": "assimilation",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 1,
+      "timer_before": 3,
+      "transfer_mode": 0,
+      "start": "0x50cc00",
+      "stop": "0x50cc3e",
+      "owner_after": 1,
+      "former_after": 2,
+      "timer_after": 2,
+      "writes": [
+        {
+          "pc": "0x50cc09",
+          "offset": 7,
+          "size": 1,
+          "value": 2
+        }
+      ]
+    },
+    {
+      "kind": "assimilation",
+      "old_owner": 1,
+      "former_before": 2,
+      "new_owner": 1,
+      "timer_before": 50,
+      "transfer_mode": 0,
+      "start": "0x50cc00",
+      "stop": "0x50cc3e",
+      "owner_after": 1,
+      "former_after": 2,
+      "timer_after": 49,
+      "writes": [
+        {
+          "pc": "0x50cc09",
+          "offset": 7,
+          "size": 1,
+          "value": 49
+        }
+      ]
+    }
+  ],
+  "direct_absolute_stores": [
+    {
+      "address": "0x4fa572",
+      "mnemonic": "mov",
+      "operands": "byte ptr [esi + 0x96f1b5], bl"
+    },
+    {
+      "address": "0x521132",
+      "mnemonic": "mov",
+      "operands": "byte ptr [ebp + 0x96f1b5], bl"
+    },
+    {
+      "address": "0x56398e",
+      "mnemonic": "mov",
+      "operands": "byte ptr [ebp + 0x96f1b5], dl"
+    },
+    {
+      "address": "0x5639b9",
+      "mnemonic": "mov",
+      "operands": "byte ptr [ebp + 0x96f1b5], bl"
+    }
+  ],
+  "full_capture_former_write": [
+    {
+      "order": 35,
+      "address": "0x96f2e5",
+      "size": 1,
+      "value": 2,
+      "pc": "0x521132"
+    }
+  ],
+  "existing_complete_elimination_controls": [
+    {
+      "id": "actual_eliminated_human_former",
+      "before": {
+        "id": 0,
+        "owner": 1,
+        "former": 2,
+        "assimilation": 10,
+        "food": 0,
+        "minerals": 0,
+        "status": 2
+      },
+      "after": {
+        "id": 0,
+        "owner": 1,
+        "former": 2,
+        "assimilation": 10,
+        "food": 0,
+        "minerals": 0,
+        "status": 2
+      }
+    },
+    {
+      "id": "actual_eliminated_AI_former",
+      "before": {
+        "id": 0,
+        "owner": 1,
+        "former": 2,
+        "assimilation": 10,
+        "food": 0,
+        "minerals": 0,
+        "status": 2
+      },
+      "after": {
+        "id": 0,
+        "owner": 1,
+        "former": 2,
+        "assimilation": 10,
+        "food": 0,
+        "minerals": 0,
+        "status": 2
+      }
+    }
+  ],
+  "source_sha256": {
+    "base-art-family-transitions-original-x86-20261019.json": "c789fe2ccf16885692abd824c532aa0ed122500b03226c262402f69957fde0da",
+    "base-art-family-absolute-references-20261019.json": "7c39e06ec7ad455c0b83dd3d494342259e3ea7d008bcee10dac7a8d5aa32fd94",
+    "headquarters-capture-development-20261017.json": "4f9655f8471b9a53b5e43e66e127e778b744b67d63e17d6ac63c43eae8820502",
+    "riot-inactive-former-development-20261018.json": "5d1774ae573fa1621334c275b8b6ee9fbf6f4fe8debbe87426c42676d50ab81c"
+  }
+}

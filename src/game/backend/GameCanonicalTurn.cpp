@@ -222,8 +222,11 @@ void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
             // Publish fresh composites before rank selection consumes its working
             // table and before advancing the turn. Never manufacture old rows.
             if(m_simulation->value.dominance_history) {
-                const auto composite=m_simulation->value.dominance_native_keys ? NativeDominanceScores(rank_order->composite):rank_order->composite;
-                m_simulation->value.dominance_history->Publish(GetTurnId(),composite);
+                if(m_simulation->value.dominance_native_keys) {
+                    if(const auto composite=NativeDominanceScores(rank_order->composite)) {
+                        m_simulation->value.dominance_history->Publish(GetTurnId(),*composite);
+                    } // Unsupported projection preserves native history; ranking/upkeep still run.
+                } else {m_simulation->value.dominance_history->Publish(GetTurnId(),rank_order->composite);}
             }
             m_simulation->value.ranking_scores=rank_order->scores;
             m_simulation->value.rank_order=rank_order->order;

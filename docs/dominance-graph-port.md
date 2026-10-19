@@ -42,3 +42,9 @@ Authorities: [history/geometry](behavior/dominance-graph.md),
 the existing regular Arial12 presentation. Historical Windows font raster,
 arbitrary custom/native-import source slots, other widths, native UI timer
 scheduling and whole-screen original-game parity are not claimed.
+
+A valid port roster may contain multiple owners using the same faction profile.
+That roster has no unique native-column projection: graph requests are
+unavailable and the native history block stays intact, while ordinary ranking
+and turn upkeep continue. Scores are never merged into a guessed source slot.
+Legacy format31 dense history keeps its prior writer and raw bytes.

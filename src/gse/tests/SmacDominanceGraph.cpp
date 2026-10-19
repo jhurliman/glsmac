@@ -5,6 +5,9 @@
 #include "ConventionalUnits.h"
 #include "fixtures/SmacStartupSource.h"
 #include "game/backend/Game.h"
+#include "game/backend/map/Map.h"
+#include "game/backend/base/BaseManager.h"
+#include "game/backend/base/PopDef.h"
 #include "game/backend/faction/SmacRankingScore.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Object.h"
@@ -116,6 +119,35 @@ static std::string CheckGraphPaletteSurface() {
 void AddSmacDominanceGraphTests(task::gsetests::GSETests* task) {
     task->AddTest("Dominance graph actual SDL metadata and Surface retain palette pixels and redraw ownership",GT(){return CheckGraphPaletteSurface();});
 
+    task->AddTest("Dominance graph duplicate faction owners keep valid campaign upkeep and retained native history",GT(){
+        using namespace game::backend;
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(smac_startup_fixture::OrdinarySource,true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* world=game->GetMap();std::string retained;
+            fixture.ResourceState([&](auto& state) {
+                if(state.roster.size()!=2 || state.roster[0].faction_id!=state.roster[1].faction_id) {throw std::runtime_error("fixture does not have duplicate valid faction owners");}
+                state.dominance_history->samples[1][1]=777;state.dominance_history->samples[999][7]=-32768;
+                retained=state.dominance_history->Serialize();
+                for(auto& entry:state.economy) {entry.second.population_aggregate=17;entry.second.design_counts.emplace();}
+            });
+            const auto saved=fixture.Snapshot();
+            auto* request=static_cast<value::Callable*>(static_cast<value::Object*>(game->Wrap(GSE_CALL))->Get("request_smac_dominance_graph"));
+            GT_ASSERT(!static_cast<value::Bool*>(request->Run(GSE_CALL,{VALUE(value::Int,,1)}))->value,"duplicate owners were merged into a fabricated native graph");
+            GT_ASSERT(fixture.Snapshot()==saved,"unsupported graph admission mutated retained native history");
+            map::SmacWorkerKnowledge::Data knowledge{int32_t(world->GetWidth()),int32_t(world->GetHeight()),true,true,0,{},{},{}};
+            for(int owner=1;owner<=2;++owner) {knowledge.observers[owner]=map::SmacWorkerKnowledge::Observer{};knowledge.remembered[owner].resize(world->GetWidth()*world->GetHeight()/2);}
+            knowledge.tiles.resize(world->GetWidth()*world->GetHeight()/2,{6,std::nullopt});
+            game->PublishSmacWorkerKnowledge(GSE_CALL,map::SmacWorkerKnowledge::Create(knowledge));
+            std::array<std::string,8> roles;roles[0]="graph-worker";
+            game->GetBM()->DefinePop(new base::PopDef(roles[0],"Worker",{},{},base::PopDef::PF_TILE_WORKER));
+            for(uint8_t i=0;i<7;++i) {roles[i+1]="graph-specialist"+std::to_string(i);game->GetBM()->DefinePop(new base::PopDef(roles[i+1],"Specialist",{},{},base::PopDef::PF_NONE,i));}
+            fixture.BasePresentationRoles(roles);
+            const auto turn=game->GetTurnId();game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();bool exact=false;
+            fixture.ResourceState([&](auto& state) {exact=game->GetTurnId()==turn+1 && state.rank_order
+                && state.ranking_scores->at(1)==-1 && state.ranking_scores->at(2)==-1 && state.dominance_history->Serialize()==retained;});
+            GT_ASSERT(exact,"unsupported graph projection broke canonical ranking/upkeep or replaced existing native samples");GT_OK();
+        });
+    });
     task->AddTest("Dominance graph actual queued rebuild refreshes native slots without reranking or inventing legacy identity",GT(){
         using namespace game::backend;
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"UNIVERSITY");

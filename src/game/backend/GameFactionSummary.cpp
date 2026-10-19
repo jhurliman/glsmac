@@ -13,16 +13,18 @@
 #include <stdexcept>
 
 namespace game::backend {
-std::array<int32_t,8> Game::NativeDominanceScores(const std::array<int32_t,8>& scores) const {
+std::optional<std::array<int32_t,8>> Game::NativeDominanceScores(const std::array<int32_t,8>& scores) const {
     const auto& state=m_simulation->value;
     const auto& profiles=*m_state->m_settings.global.GetSmacFactionStartupRules();
-    if(!state.dominance_native_keys) {throw std::runtime_error("Dominance history has no retained native identities");}
+    if(!state.dominance_native_keys) {return {};}
     std::array<int32_t,8> result{};std::array<bool,8> assigned{};
     for(const auto& owner:state.roster) {
         const auto* profile=profiles.Find(owner.faction_id);
         if(!profile) {throw std::runtime_error("Dominance owner lacks frozen canonical profile");}
         size_t slot=1;while(slot<8 && state.dominance_native_keys->at(slot)!=profile->section) {++slot;}
-        if(slot==8 || assigned[slot]) {throw std::runtime_error("Dominance source slots are absent or duplicated");}
+        // Multiple simulation owners may legitimately use one faction profile.
+        // Their scores cannot be merged or guessed into one native column.
+        if(slot==8 || assigned[slot]) {return {};}
         assigned[slot]=true;result[slot]=scores.at(owner.simulation_id);
     }
     return result;
@@ -39,7 +41,8 @@ bool Game::RequestLocalDominanceGraph(GSE_CALLABLE,int64_t request) {
     // from today's roster or installed files, nor read beyond native capacity.
     if(!state.dominance_history || !state.dominance_native_keys || !state.ranking_scores
         || GetTurnId()>=faction::SmacDominanceHistory::ROWS
-        || state.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {return false;}
+        || state.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain
+        || !NativeDominanceScores(*state.ranking_scores)) {return false;}
     AddEvent(new event::Event(this,event::Event::ES_LOCAL,m_slot_num,GSE_CALL,"_rebuild_smac_dominance",
         {{"request_id",VALUE(gse::value::Int,,request)},{"turn_id",VALUE(gse::value::Int,,GetTurnId())}}));
     return true;
@@ -69,9 +72,9 @@ bool Game::HandleDominanceGraphEvent(GSE_CALLABLE,const std::string& name,const 
         && size_t(turn)==GetTurnId() && m_simulation->value.dominance_history
         && m_simulation->value.dominance_native_keys && m_simulation->value.ranking_scores
         && m_simulation->value.movement_capability==faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {
-        if(const auto ranking=PrepareCanonicalRankOrder()) {
+        if(const auto ranking=PrepareCanonicalRankOrder();ranking && (current=NativeDominanceScores(ranking->composite))) {
             CheckRW(GSE_CALL);
-            next=m_simulation->value.dominance_history;current=NativeDominanceScores(ranking->composite);
+            next=m_simulation->value.dominance_history;
             keys=*m_simulation->value.dominance_native_keys;next->Publish(GetTurnId(),*current);
             // Real score-only invocation: current native row and working scores
             // change, while the retained rank order is deliberately untouched.

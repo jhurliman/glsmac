@@ -710,7 +710,7 @@ private:
 	const faction::SmacSimulationParticipant& RequireSmacProductionOwner( const slot::Slot* owner ) const;
 	gse::Value* CopyTechnologyState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopyLocalFactionSummary( GSE_CALLABLE ) const;
-    std::array<int32_t,8> NativeDominanceScores(const std::array<int32_t,8>& scores) const;
+    std::optional<std::array<int32_t,8>> NativeDominanceScores(const std::array<int32_t,8>& scores) const;
     bool RequestLocalDominanceGraph(GSE_CALLABLE,int64_t request);
     bool HandleDominanceGraphEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	gse::Value* CopyLocalMinimap( GSE_CALLABLE ) const;

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <yaml-cpp/yaml.h>
 
 namespace gse::tests {
 namespace {
@@ -64,6 +65,55 @@ void AddSmacSocialStateTests( task::gsetests::GSETests* task ) {
 		}
 		state.Validate( fixture::Technologies(), Profiles() ); state.ValidateTurn( 0 ); GT_OK();
 	} );
+    task->AddTest("SMAC social owner refresh matches all seven original command boundaries and mixed social-record restore",GT(){
+        const auto receipt=YAML::LoadFile("docs/behavior/seven-first-upkeep-authority-cases.json");
+        const auto tech=fixture::Technologies();const auto profiles=Profiles();
+        std::vector<SmacSimulationAdmission> admissions;
+        for(int32_t id=7;id>=1;--id) {admissions.push_back({id,SmacFactionStartupRules::Bindings()[id-1].port_id});}
+        auto state=SmacSocialState::NewWorld(admissions,tech,profiles);
+        const auto ratings=[](const YAML::Node& n) {SmacSocialRatings out{};for(size_t a=0;a<11;++a) {out[a]=n[a].as<int32_t>();}return out;};
+        for(int32_t id=1;id<=7;++id) {
+            const auto before=state;
+            state.BuildStartupIntrinsic(id,tech,profiles);
+            GT_ASSERT(state.Find(id)->intrinsic==ratings(receipt["before"]["factions"][id-1]["social_intrinsic"])
+                && state.Find(id)->current==SmacSocialRatings{} && state.Find(id)->phase==Phase::Early && !state.Find(id)->retained,"Late intrinsic publication refreshed current/retained ratings");
+            for(const auto& other:before.factions) {if(other.admission.simulation_id!=id) {GT_ASSERT(*state.Find(other.admission.simulation_id)==other,"Late intrinsic publication changed a different owner");}}
+        }
+        state.ValidateTurn(0);
+        for(int32_t scheduled=1;scheduled<=7;++scheduled) {
+            const auto before=state;
+            state.RefreshOwnerForFirstCommand(scheduled,tech,profiles);
+            const auto expected=receipt["command_boundaries"][scheduled-1]["state"]["factions"];
+            for(int32_t id=1;id<=7;++id) {
+                const auto* owner=state.Find(id);const auto e=expected[id-1];
+                GT_ASSERT(owner->current==ratings(e["social_current"]) && owner->intrinsic==ratings(e["social_intrinsic"]),"Owner refresh differs from native command-boundary social vectors");
+                if(id<=scheduled) {GT_ASSERT(owner->phase==Phase::Refreshed && owner->retained==ratings(e["social_snapshot"]),"Processed owner lacks exact retained social snapshot");}
+                else {GT_ASSERT(*owner==*before.Find(id),"Future owner refreshed before its own upkeep");}
+            }
+            const auto saved=state;
+            state=SmacSocialState::Deserialize(state.Serialize(tech,profiles).ToString(),tech,profiles);
+            GT_ASSERT(state==saved,"Mixed first-round state was altered during restoration");
+            state.RefreshOwnerForFirstCommand(scheduled,tech,profiles);
+            GT_ASSERT(state==saved,"Completed owner refresh replayed after restoration");
+            if(scheduled<7) {GT_ASSERT(Rejects([&]{state.ValidateTurn(1);}),"Legacy world boundary silently admitted a partial native round without a controller cursor");}
+        }
+        state.ValidateTurn(1);GT_OK();
+    });
+    task->AddTest("SMAC social late intrinsic and owner refresh preserve authority and reject invalid transitions atomically",GT(){
+        const auto tech=fixture::Technologies();const auto profiles=Profiles();auto state=State();
+        auto& owner=state.factions.front();owner.intrinsic=SmacSocialRatings{};owner.intrinsic->fill(7);
+        const auto early=state;
+        for(const int32_t id:{0,8,-1}) {
+            GT_ASSERT(Rejects([&]{state.BuildStartupIntrinsic(id,tech,profiles);}) && Rejects([&]{state.RefreshOwnerForFirstCommand(id,tech,profiles);}) && state==early,"Unknown social owner partially mutated state");
+        }
+        state.RefreshOwnerForFirstCommand(owner.admission.simulation_id,tech,profiles);
+        GT_ASSERT(state.Find(owner.admission.simulation_id)->intrinsic==early.factions.front().intrinsic
+            && state.Find(owner.admission.simulation_id)->current==*early.factions.front().intrinsic,"Refresh silently rebuilt an owned intrinsic snapshot");
+        const auto ready=state;
+        GT_ASSERT(Rejects([&]{state.BuildStartupIntrinsic(owner.admission.simulation_id,tech,profiles);}) && state==ready,"Late initializer replayed after upkeep");
+        auto invalid=profiles;invalid.initial_social_models.back().modifiers="+MORALE";
+        GT_ASSERT(Rejects([&]{state.RefreshOwnerForFirstCommand(1,tech,invalid);}) && state==ready,"Owner refresh context failure changed another owner");GT_OK();
+    });
 	task->AddTest( "SMAC social first refresh derives all seven profiles and preserves later exact state", GT() {
 		// Reduced all-axis outputs from RE-SMAC-START-FACTION-001.
 		const std::array< SmacSocialRatings, 7 > expected{{

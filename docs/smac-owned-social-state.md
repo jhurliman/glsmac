@@ -47,10 +47,19 @@ early reset does not initialize those snapshots, so the value-level
 indices, current ratings and phase. World retirement still clears the whole
 simulation through the existing reset path.
 
-New-world admission preflights intrinsic arithmetic without exposing late
-ratings to `create_world`, initial founding, or `start`. First refresh copies
-the entire social value, validates every owner and source, computes all owners,
-then installs the complete result before the first-turn publication and hooks.
+New-world admission preflights intrinsic arithmetic without exposing it to
+initial founding. In the authenticated default SMAC Start, each owner's late
+intrinsic producer runs after its actual Base and Scout/Rover factories and
+before global compensation. Current ratings stay zero, retained state stays
+unavailable, and the owner stays Early until upkeep. Compensation Pods observe
+the completed late intrinsic producer.
+
+The owner-specific first refresh validates all bound state, consumes that owner's
+owned intrinsic vector and publishes only its current/retained ratings. Legacy
+port snapshots without intrinsic authority derive it from their frozen profile.
+The existing all-human controller stages these transitions for all owners before
+publishing the first turn. Native per-faction scheduling must instead call the
+owner transition at each measured upkeep boundary; that controller is unfinished.
 Malformed roster/profile/context leaves social state, turn, frontend requests,
 RNG and upkeep callbacks unchanged at that boundary. A later callback failure
 is governed by the existing game lifecycle; this is not rollback of completed

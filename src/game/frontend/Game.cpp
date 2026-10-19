@@ -1143,6 +1143,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				d.health, d.conventional, d.has_moves, d.full_movement, d.native
 			);
             m_um->GetUnitById(d.unit_id)->SetMaximumHitPoints(d.maximum_hit_points);
+            m_um->GetUnitById(d.unit_id)->SetHeld(d.held);
             m_um->GetUnitById(d.unit_id)->Refresh();
 			break;
 		}
@@ -1158,6 +1159,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
             unit->SetMaximumHitPoints(d.maximum_hit_points);
 			unit->SetHealth( d.health );
 			unit->SetActionability( d.conventional, d.has_moves, d.full_movement );
+            unit->SetHeld(d.held);
 			unit->SetMorale( d.morale, *d.morale_string );
 			const auto& c = unit->GetTile()->GetCoords();
 			if ( d.tile_coords.x != c.x || d.tile_coords.y != c.y ) {
@@ -1575,6 +1577,17 @@ void Game::Initialize(
 
 			switch ( event.type ) {
 				case input::EV_KEY_DOWN: {
+                    if(event.data.key.code==input::K_H && (event.data.key.modifiers==input::KM_NONE || event.data.key.modifiers==input::KM_SHIFT)) {
+                        const auto* selected=m_um->GetSelectedUnit();
+                        if(selected) {
+                            const auto id=selected->GetId(); const bool ten=event.data.key.modifiers==input::KM_SHIFT;
+                            m_glsmac->WithGSE([game,id,ten](GSE_CALLABLE) {
+                                auto* actor=game->GetUM()->GetUnit(id);
+                                if(actor && actor->IsConventional()) {game->Event(GSE_CALL,ten?"unit_hold_ten":"unit_hold",{{"unit",actor->Wrap(GSE_CALL)}});}
+                            });
+                        }
+                        return true;
+                    }
 					if ( !event.data.key.modifiers ) {
 						auto* selected_tile = m_tm->GetSelectedTile();
 						if ( selected_tile ) {

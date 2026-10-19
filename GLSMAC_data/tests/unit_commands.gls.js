@@ -8,8 +8,9 @@ let offered = [1, 2, 3, 4, 5];
 let order = 0;
 let progress = 0;
 let kind = 'former';
+let held = false;
 const unit = {id: 71, is_conventional: true, query_conventional_commands: () => {
-	return {kind: kind, actions: offered, work_order: order, work_progress: progress};
+	return {kind: kind, actions: offered, work_order: order, work_progress: progress, held: held};
 }};
 const game = {
 	on: (name, callback) => { handlers[name] = callback; },
@@ -55,3 +56,9 @@ handlers.unit_despawn({unit_id: 71});
 check('hidden', '', '');
 handlers.unit_select({unit: {id: 99, is_conventional: false}});
 check('hidden', '', '');
+
+held = true; kind = 'unit'; offered = [7];
+handlers.unit_select({unit: unit});
+check('check', 'Activate unit', 'Holding position — stored work: 2');
+check('click', 'Activate unit', '');
+test.assert(#sizeof(events) == 5 && events[4].name == 'unit_activate' && events[4].data.unit.id == 71);

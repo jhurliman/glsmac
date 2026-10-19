@@ -56,6 +56,7 @@ std::optional<size_t> Game::SelectLocalConventionalUnit(size_t turn_id,std::opti
         if(actor->m_owner!=m_slot || !valid(actor)) {continue;}
         if(!actor->IsConventional()) {throw std::runtime_error("Native local selection requires ordinary conventional units");}
         actor->RequireConventionalReady();
+        if(actor->Conventional().IsHeld()) {continue;}
         // A persisted selected work order holds controller identity between
         // turns even after dispatch exhausts it. This is separate from the
         // nearest-unit helper, whose eligibility still requires allowance.
@@ -89,6 +90,18 @@ bool Game::QueueSelectedConventionalWork(GSE_CALLABLE,size_t unit_id,size_t turn
 
 bool Game::HandleConventionalWorkEvent(GSE_CALLABLE,const std::string& name,
     const gse::value::object_properties_t& args,size_t caller,bool apply) {
+    using Command=unit::UnitManager::HumanOrderCommand;
+    if(name=="unit_hold" || name=="unit_hold_ten" || name=="unit_menu_hold" || name=="unit_activate" || name=="unit_skip_turn") {
+        const auto found=args.find("unit");
+        if(found==args.end() || !found->second || args.size()!=1) {throw std::runtime_error("Human order requires exactly its actual Unit");}
+        auto* actor=unit::Unit::Unwrap(found->second);
+        if(name=="unit_skip_turn" && actor && !actor->IsConventional()) {return false;}
+        const auto command=name=="unit_hold" ? Command::Hold : name=="unit_hold_ten" ? Command::HoldTen
+            : name=="unit_menu_hold" ? Command::MenuHold : name=="unit_activate" ? Command::Activate : Command::Skip;
+        if(apply) {m_um->ApplyHumanOrder(GSE_CALL,actor,command,caller);}
+        else {(void)m_um->PrepareHumanOrder(actor,command,caller);}
+        return true;
+    }
     const bool request=name=="work_unit",dispatch=name=="continue_unit_work",cancel=name=="cancel_unit_work";
     if(!request && !dispatch && !cancel){return false;}
     const auto found=args.find("unit");

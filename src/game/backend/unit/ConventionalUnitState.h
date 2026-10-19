@@ -32,10 +32,18 @@ struct ConventionalUnitState {
 	static uint8_t AccountingMarkers(uint32_t word) noexcept;
 	void SetAccountingMarkers(uint8_t markers);
 	bool HasStateHistory() const noexcept {return retained_state_word.has_value() || accounting_markers.has_value();}
+    // General unit orders are distinct from this port's terraforming wire IDs.
+    enum class Order : uint8_t { None = 0, Hold = 2 };
+    Order order = Order::None;
+    int16_t order_countdown = 0;
+    bool IsHeld() const noexcept {return order == Order::Hold;}
+    bool HasOrderState() const noexcept {return IsHeld() || order_countdown != 0;}
+    void AdvanceOrderUpkeep() noexcept;
+
 	bool operator==( const ConventionalUnitState& other ) const;
 	void Validate() const;
-	void Serialize( types::Buffer& buffer, bool include_state_history = true ) const;
-	static ConventionalUnitState Deserialize( types::Buffer& buffer, bool include_state_history = true );
+	void Serialize( types::Buffer& buffer, bool include_state_history = true, bool include_orders = false ) const;
+	static ConventionalUnitState Deserialize( types::Buffer& buffer, bool include_state_history = true, bool include_orders = false );
 };
 
 // An owned resolved copy produced from a checked current or downloaded bound

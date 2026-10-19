@@ -56,7 +56,7 @@ Unit::Unit(
 	, m_health( health )
 	, m_conventional( conventional ), m_has_moves( has_moves ), m_native(native), m_full_movement( full_movement ) {
 	m_is_active = ShouldBeActive();
-	m_render.badge.def = m_slot_badges->GetUnitBadgeSprite( m_morale, m_is_active );
+	m_render.badge.def = m_slot_badges->GetUnitBadgeSprite( m_morale, m_is_active || (m_held && m_is_owned && CanMove()) );
 	m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
 	UpdateMeshTex( m_render_data.unit, GetSprite()->instanced_sprite );
 	UpdateMeshTex( m_render_data.badge, GetBadgeSprite()->instanced_sprite );
@@ -261,7 +261,7 @@ void Unit::Refresh() {
 			HideBadge();
 		}
 		{
-			auto* newdef = m_slot_badges->GetUnitBadgeSprite( m_morale, m_is_active );
+			auto* newdef = m_slot_badges->GetUnitBadgeSprite( m_morale, m_is_active || (m_held && m_is_owned && CanMove()) );
 			if ( m_render.badge.def != newdef ) {
 				if ( m_render.badge.instance_id ) {
 					m_render.badge.def->instanced_sprite->actor->RemoveInstance( m_render.badge.instance_id );
@@ -318,6 +318,8 @@ void Unit::SetMaximumHitPoints(int32_t maximum) {
 const bool Unit::CanMove() const {
 	return m_conventional ? m_has_moves : m_movement >= backend::unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
 }
+
+void Unit::SetHeld(bool held) {if(m_held!=held) {m_held=held;m_need_refresh=true;}}
 
 void Unit::SetActionability( const bool conventional, const bool has_moves, const backend::unit::movement_t full_movement ) {
 	if ( m_conventional != conventional || m_has_moves != has_moves || m_full_movement != full_movement ) {
@@ -376,7 +378,7 @@ const Unit::render_data_t& Unit::GetRenderData() const {
 }
 
 const bool Unit::ShouldBeActive() const {
-	return m_is_owned && CanMove();
+	return m_is_owned && !m_held && CanMove();
 }
 
 void Unit::UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite ) {

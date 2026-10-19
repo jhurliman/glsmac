@@ -358,12 +358,12 @@ void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 	}
 	m_controller_selection = unit->GetId();
 	m_selection_visit.reset();
-	if ( actually_select_unit && m_selected_unit->IsActive() && m_game->IsTurnActive() ) {
+	if ( actually_select_unit && (m_selected_unit->IsActive() || (m_selected_unit->IsOwned() && m_selected_unit->IsHeld())) && m_game->IsTurnActive() ) {
 		auto* most_important_unit = m_game->GetSelectedTileMostImportantUnit();
 		if ( most_important_unit && m_selected_unit != most_important_unit ) {
 			most_important_unit->Hide();
 		}
-		m_selected_unit->StartBadgeBlink();
+		if(m_selected_unit->IsActive()) {m_selected_unit->StartBadgeBlink();}
 		const auto id = m_selected_unit->GetId();
 		Log( "Selected unit " + std::to_string( id ) );
 		auto* game = m_game->GetGame();

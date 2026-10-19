@@ -17,6 +17,7 @@ bool ConventionalUnitState::operator==( const ConventionalUnitState& other ) con
 		&& stored_morale == other.stored_morale && damage == other.damage && spent == other.spent
 		&& failed_move == other.failed_move && home == other.home && home_base_id == other.home_base_id && render_morale_mode == other.render_morale_mode
 		&& work_order == other.work_order && work_progress == other.work_progress
+        && order == other.order && order_countdown == other.order_countdown
 		&& retained_state_word==other.retained_state_word && accounting_markers==other.accounting_markers;
 }
 
@@ -31,7 +32,17 @@ void ConventionalUnitState::SetAccountingMarkers(uint8_t markers) {
 			| (markers&1 ? PAID_SUPPORT:0u) | (markers&2 ? PACIFISM_PENALIZED:0u) | (markers&4 ? PACIFISM_EXEMPT:0u);
 	}
 }
+void ConventionalUnitState::AdvanceOrderUpkeep() noexcept {
+    if(IsHeld() && order_countdown != 0) {
+        // Original word arithmetic, including inherited negative counters.
+        order_countdown = order_countdown == INT16_MIN ? INT16_MAX : int16_t(order_countdown - 1);
+        if(order_countdown == 0) {order = Order::None;}
+    }
+}
 void ConventionalUnitState::Validate() const {
+    if ((order != Order::None && order != Order::Hold) || (IsHeld() && work_order != WorkOrder::None)) {
+        throw std::runtime_error("Invalid conventional general/work order combination");
+    }
 	if(accounting_markers && (*accounting_markers>7 || (retained_state_word && AccountingMarkers(*retained_state_word)!=*accounting_markers))) {
 		throw std::runtime_error("Inconsistent conventional accounting history");
 	}
@@ -43,8 +54,9 @@ void ConventionalUnitState::Validate() const {
 	}
 }
 
-void ConventionalUnitState::Serialize( types::Buffer& buffer, bool include_state_history ) const {
+void ConventionalUnitState::Serialize( types::Buffer& buffer, bool include_state_history, bool include_orders ) const {
 	Validate();
+    if(!include_orders && HasOrderState()) {throw std::runtime_error("Cannot discard retained orders in legacy unit codec");}
 	buffer.WriteInt( design_id ); buffer.WriteInt( owner_simulation_id );
 	buffer.WriteInt( stored_morale ); buffer.WriteInt( damage ); buffer.WriteInt( spent );
 	buffer.WriteBool( failed_move ); buffer.WriteInt( static_cast< int32_t >( home ) );
@@ -55,9 +67,10 @@ void ConventionalUnitState::Serialize( types::Buffer& buffer, bool include_state
 		buffer.WriteBool(retained_state_word.has_value());if(retained_state_word) {buffer.WriteInt(*retained_state_word);}
 		buffer.WriteBool(accounting_markers.has_value());if(accounting_markers) {buffer.WriteInt(*accounting_markers);}
 	}
+    if(include_orders) {buffer.WriteInt(static_cast<int32_t>(order));buffer.WriteInt(order_countdown);}
 }
 
-ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer, bool include_state_history ) {
+ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer, bool include_state_history, bool include_orders ) {
 	const auto design = Integer( buffer, 0, 511 ), owner = Integer( buffer, 1, 7 );
 	const auto morale = Integer( buffer, 0, 255 ), damage = Integer( buffer, 0, 255 ), spent = Integer( buffer, 0, 255 );
 	const bool failed = buffer.ReadBool();
@@ -75,6 +88,10 @@ ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer,
 		}
 		if(buffer.ReadBool()) {result.accounting_markers=static_cast<uint8_t>(Integer(buffer,0,7));}
 	}
+    if(include_orders) {
+        result.order = static_cast<Order>(Integer(buffer,0,2));
+        result.order_countdown = static_cast<int16_t>(Integer(buffer,INT16_MIN,INT16_MAX));
+    }
 	result.Validate(); return result;
 }
 

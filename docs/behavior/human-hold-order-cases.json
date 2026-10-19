@@ -1,0 +1,1140 @@
+{
+  "research_id": "RE-SMAC-HUMAN-HOLD-001",
+  "scope": "Thirty controlled original-x86 contexts; keyboard dispatch to common cleanup, supplied unit-menu choice to explicit pre-presentation boundaries, real ordinary Former work, actual owning upkeeps, full selector/other-faction unit pass and controller prefix through selected-unit store. No rendered input replay, native save/load or overlay probe.",
+  "cases": [
+    {
+      "name": "scout_hold",
+      "input": {
+        "actor": 0,
+        "character": "h",
+        "movement_spent_override": 0,
+        "actual_prior_work": false
+      },
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "scout_hold_partial",
+      "input": {
+        "actor": 0,
+        "character": "h",
+        "movement_spent_override": 1,
+        "actual_prior_work": false
+      },
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 1,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 1,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "scout_hold_exhausted",
+      "input": {
+        "actor": 0,
+        "character": "h",
+        "movement_spent_override": 3,
+        "actual_prior_work": false
+      },
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 3,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 3,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "former_hold_after_work",
+      "input": {
+        "actor": 1,
+        "character": "h",
+        "movement_spent_override": null,
+        "actual_prior_work": true
+      },
+      "before": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "farm",
+        "progress": 2,
+        "spent": 3,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 2,
+        "spent": 3,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "former_hold_with_retained_work_ready",
+      "input": {
+        "actor": 1,
+        "character": "h",
+        "movement_spent_override": 0,
+        "actual_prior_work": true
+      },
+      "before": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "farm",
+        "progress": 2,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 2,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "scout_timed_hold",
+      "input": {
+        "actor": 0,
+        "character": "H",
+        "movement_spent_override": 0,
+        "actual_prior_work": false
+      },
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 10
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "scout_sentry",
+      "input": {
+        "actor": 0,
+        "character": "l",
+        "movement_spent_override": 0,
+        "actual_prior_work": false
+      },
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "sentry_board_transport",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "former_sentry_work",
+      "input": {
+        "actor": 1,
+        "character": "l",
+        "movement_spent_override": null,
+        "actual_prior_work": true
+      },
+      "before": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "farm",
+        "progress": 2,
+        "spent": 3,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "sentry_board_transport",
+        "progress": 2,
+        "spent": 3,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "hold_retains_automation_and_other_waypoints",
+      "input": {
+        "actor": 0,
+        "character": "h",
+        "movement_spent_override": 0,
+        "actual_prior_work": false
+      },
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "explore",
+        "progress": 0,
+        "spent": 0,
+        "payload": 22,
+        "countdown": 16
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": 22,
+        "countdown": 0
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "diagnostic_foreign_keyboard_trusts_selection",
+      "input": {
+        "actor": 0,
+        "character": "h",
+        "movement_spent_override": 0,
+        "actual_prior_work": false
+      },
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 2,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 2,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": true
+    },
+    {
+      "name": "no_selection",
+      "input": {
+        "actor": -1,
+        "character": "h",
+        "movement_spent_override": 0,
+        "actual_prior_work": false
+      },
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "control_off",
+      "input": {
+        "actor": 0,
+        "character": "h",
+        "movement_spent_override": 0,
+        "actual_prior_work": false
+      },
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "skip_actor0_spent0",
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 3,
+        "payload": -1,
+        "countdown": -1
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "skip_actor0_spent3",
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 3,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 3,
+        "payload": -1,
+        "countdown": -1
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "skip_actor1_spent0",
+      "before": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "farm",
+        "progress": 2,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "farm",
+        "progress": 2,
+        "spent": 3,
+        "payload": -1,
+        "countdown": -1
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "menu_hold_fresh",
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "menu_hold_former_work",
+      "before": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "farm",
+        "progress": 2,
+        "spent": 3,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 2,
+        "spent": 3,
+        "payload": -1,
+        "countdown": -1
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "menu_hold_retained_positive_timer",
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 1
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "menu_hold_foreign_refused",
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 2,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 2,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "menu_hold_selection_changed_refused",
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "former_continuous_hold_wake_move_reassign",
+      "expected_sequence": [
+        {
+          "id": 1,
+          "coordinate": [
+            18,
+            16
+          ],
+          "owner": 1,
+          "order": "farm",
+          "progress": 2,
+          "spent": 3,
+          "payload": -1,
+          "countdown": -1
+        },
+        {
+          "id": 1,
+          "coordinate": [
+            18,
+            16
+          ],
+          "owner": 1,
+          "order": "hold",
+          "progress": 2,
+          "spent": 3,
+          "payload": -1,
+          "countdown": 0
+        },
+        {
+          "id": 1,
+          "coordinate": [
+            18,
+            16
+          ],
+          "owner": 1,
+          "order": "hold",
+          "progress": 2,
+          "spent": 0,
+          "payload": -1,
+          "countdown": 0
+        },
+        {
+          "id": 1,
+          "coordinate": [
+            18,
+            16
+          ],
+          "owner": 1,
+          "order": "hold",
+          "progress": 2,
+          "spent": 0,
+          "payload": -1,
+          "countdown": 0
+        },
+        {
+          "id": 1,
+          "coordinate": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "order": "no_orders",
+          "progress": 2,
+          "spent": 3,
+          "payload": -1,
+          "countdown": 0
+        },
+        {
+          "id": 1,
+          "coordinate": [
+            20,
+            16
+          ],
+          "owner": 1,
+          "order": "solar",
+          "progress": 4,
+          "spent": 3,
+          "payload": -1,
+          "countdown": 0
+        }
+      ],
+      "expected_selection": 0,
+      "diagnostic": false
+    },
+    {
+      "name": "keyboard_indefinite_next_owner_upkeep",
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "keyboard_ten_next_owner_upkeep",
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 10
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 9
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "menu_retained_one_next_owner_upkeep",
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "menu_retained_minus_one_next_owner_upkeep",
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -2
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "timed_hold_ten_owner_passes",
+      "expected_sequence": [
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "order": "hold",
+          "progress": 0,
+          "spent": 0,
+          "payload": -1,
+          "countdown": 9
+        },
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "order": "hold",
+          "progress": 0,
+          "spent": 0,
+          "payload": -1,
+          "countdown": 8
+        },
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "order": "hold",
+          "progress": 0,
+          "spent": 0,
+          "payload": -1,
+          "countdown": 7
+        },
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "order": "hold",
+          "progress": 0,
+          "spent": 0,
+          "payload": -1,
+          "countdown": 6
+        },
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "order": "hold",
+          "progress": 0,
+          "spent": 0,
+          "payload": -1,
+          "countdown": 5
+        },
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "order": "hold",
+          "progress": 0,
+          "spent": 0,
+          "payload": -1,
+          "countdown": 4
+        },
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "order": "hold",
+          "progress": 0,
+          "spent": 0,
+          "payload": -1,
+          "countdown": 3
+        },
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "order": "hold",
+          "progress": 0,
+          "spent": 0,
+          "payload": -1,
+          "countdown": 2
+        },
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "order": "hold",
+          "progress": 0,
+          "spent": 0,
+          "payload": -1,
+          "countdown": 1
+        },
+        {
+          "id": 0,
+          "coordinate": [
+            16,
+            16
+          ],
+          "owner": 1,
+          "order": "no_orders",
+          "progress": 0,
+          "spent": 0,
+          "payload": -1,
+          "countdown": 0
+        }
+      ],
+      "diagnostic": false
+    },
+    {
+      "name": "diagnostic_direct_move_preserves_hold",
+      "before": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "expected": {
+        "id": 1,
+        "coordinate": [
+          20,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 3,
+        "payload": -1,
+        "countdown": 0
+      },
+      "diagnostic": true
+    },
+    {
+      "name": "outer_controller_selects_and_stores_ready_scout_after_held_former",
+      "before": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 2,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "expected": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 2,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 0
+      },
+      "expected_selection": 0,
+      "diagnostic": false
+    },
+    {
+      "name": "other_faction_full_unit_upkeep_does_not_decrement",
+      "before": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 10
+      },
+      "expected": {
+        "id": 0,
+        "coordinate": [
+          16,
+          16
+        ],
+        "owner": 1,
+        "order": "hold",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": 10
+      },
+      "diagnostic": false
+    },
+    {
+      "name": "diagnostic_ground_unit_unbased_water_hold_refused",
+      "before": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "expected": {
+        "id": 1,
+        "coordinate": [
+          18,
+          16
+        ],
+        "owner": 1,
+        "order": "no_orders",
+        "progress": 0,
+        "spent": 0,
+        "payload": -1,
+        "countdown": -1
+      },
+      "diagnostic": true
+    }
+  ]
+}

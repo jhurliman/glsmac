@@ -60,6 +60,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 		throw std::runtime_error( "Conventional movement supports local single-player only" );
 	}
 	const auto& stored = unit->Conventional();
+    if(stored.IsHeld()) {throw std::runtime_error("Activate held unit before directional movement");}
 	const auto context = ResolveConventional( stored, unit->m_owner ); // validates current binding before native owner use
 	const auto stats = QueryConventionalUnit( stored, context, SmacMoraleMode::Mode1 );
 	const auto& simulation = m_game->m_simulation->value;
@@ -292,6 +293,7 @@ void UnitManager::ResetConventionalSpent( GSE_CALLABLE, Unit* unit ) {
 	auto next = unit->Conventional();
 	const auto reset = smac_move::ResetSpentForCheckedUnitUpkeep( { unit->m_id, next.spent, next.failed_move } );
 	next.spent = static_cast< uint8_t >( reset.spent );
+    next.AdvanceOrderUpkeep();
 	QueueUnitUpdate( unit, UUO_REFRESH ); // allocation before byte update
 	unit->CommitConventionalMove( next, unit->GetTile() );
 }

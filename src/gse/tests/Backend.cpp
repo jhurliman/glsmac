@@ -2210,6 +2210,10 @@ public:
 			// morale refresh, then return this shared preview fixture to legacy mode.
 			unit->SetMovement( 0.01f ); unit->SetActionability( true, true, 2 );
 			GT_ASSERT( unit->CanMove() && unit->GetStatsString() == "? - ? - 2", "frontend discarded integer actionability or fresh full allowance" );
+            unit->SetHeld(true);unit->Refresh();
+            GT_ASSERT(unit->CanMove() && !unit->IsActive(),"Frontend Hold faked movement exhaustion or retained controller eligibility");
+            unit->SetHeld(false);unit->Refresh();
+            GT_ASSERT(unit->IsActive(),"Frontend Activate did not restore unspent eligibility");
 			unit->SetActionability( true, false );
 			GT_ASSERT( !unit->CanMove(), "frontend ignored exact conventional exhaustion" );
 

@@ -1228,6 +1228,7 @@ void UnitManager::PushUpdates() {
 				fr.data.unit_spawn.conventional = unit->IsConventional();
 				fr.data.unit_spawn.full_movement = presentation.full_movement;
 				fr.data.unit_spawn.has_moves = unit->HasMovesLeft();
+                fr.data.unit_spawn.held = unit->IsConventional() && unit->Conventional().IsHeld();
 				m_game->AddFrontendRequest( fr );
 			}
 			if ( uu.ops & UUO_REFRESH ) {
@@ -1242,6 +1243,7 @@ void UnitManager::PushUpdates() {
 				fr.data.unit_update.conventional = unit->IsConventional();
 				fr.data.unit_update.full_movement = presentation.full_movement;
 				fr.data.unit_update.has_moves = unit->HasMovesLeft();
+                fr.data.unit_update.held = unit->IsConventional() && unit->Conventional().IsHeld();
 				const auto* tile = unit->GetTile();
 				fr.data.unit_update.tile_coords = {
 					tile->coord.x,

@@ -109,6 +109,9 @@ public:
 	void ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
 	void MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller );
 	void ResetConventionalSpent( GSE_CALLABLE, Unit* unit );
+    enum class HumanOrderCommand { Hold, HoldTen, MenuHold, Activate, Skip };
+    ConventionalUnitState PrepareHumanOrder(Unit* actor, HumanOrderCommand command, size_t caller) const;
+    void ApplyHumanOrder(GSE_CALLABLE,Unit* actor,HumanOrderCommand command,size_t caller);
 	// Request preserves work/spent; Dispatch uses the actual movement remainder.
 	// None requests menu cancellation, retaining both accumulated bytes.
 	void ValidateConventionalWork( Unit* unit, ConventionalUnitState::WorkOrder order, size_t caller, bool dispatch ) const;

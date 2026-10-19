@@ -1,4 +1,5 @@
 #include "BadgeDefs.h"
+#include "game/SmacHealthbar.h"
 #include <memory>
 
 #include "engine/Engine.h"
@@ -45,7 +46,14 @@ const types::Vec3 BadgeDefs::GetBadgeCoords( const types::Vec3& unit_coords ) {
 	};
 }
 
-const types::Vec3 BadgeDefs::GetBadgeHealthbarCoords( const types::Vec3& unit_coords ) {
+const types::Vec3 BadgeDefs::GetBadgeHealthbarCoords( const types::Vec3& unit_coords, bool canonical ) {
+    if(canonical) {
+        // Badge pivot(11,15), bar pivot(1,10), backing starts at(6,6).
+        const auto x=s_consts.offset.x-4*s_consts.scale.x/23;
+        const auto y=s_consts.offset.y+s_consts.scale.y/30;
+        return {unit_coords.x+backend::map::s_consts.tile.scale.x*x,
+            unit_coords.y-backend::map::s_consts.tile.scale.y*y*backend::map::s_consts.sprite.y_scale,unit_coords.z};
+    }
 	return {
 		unit_coords.x + backend::map::s_consts.tile.scale.x * s_consts.healthbars.offset.x,
 		unit_coords.y - backend::map::s_consts.tile.scale.y * s_consts.healthbars.offset.y * backend::map::s_consts.sprite.y_scale,
@@ -155,7 +163,31 @@ sprite::InstancedSprite* BadgeDefs::GetFakeBadgeSprite() {
 	return m_fake_badge;
 }
 
-sprite::Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health ) {
+sprite::Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health, int32_t maximum_hit_points ) {
+    if(maximum_hit_points>0) {
+        const auto bar=CalculateSmacHealthbar(health,maximum_hit_points);
+        const auto key=static_cast<uint8_t>(128+22*static_cast<uint8_t>(bar.color)+bar.filled);
+        auto found=m_healthbar_sprites.find(key);
+        if(found==m_healthbar_sprites.end()) {
+            auto pixels=m_healthbar_textures.find(key);
+            if(pixels==m_healthbar_textures.end()) {
+                auto owned=std::make_unique<types::texture::Texture>("SmacHealthbar_"+std::to_string(key),2,21);
+                owned->Fill(0,0,1,20,types::Color::FromRGB(0,0,0));
+                if(bar.filled) {
+                    const auto color=bar.color==SmacHealthbar::Color::Green ? types::Color::FromRGB(0,255,0)
+                        :bar.color==SmacHealthbar::Color::Yellow ? types::Color::FromRGB(255,255,0):types::Color::FromRGB(255,0,0);
+                    owned->Fill(0,0,1,bar.filled-1,color);
+                }
+                pixels=m_healthbar_textures.emplace(key,owned.get()).first;owned.release();
+            }
+            auto* texture=pixels->second;
+            found=m_healthbar_sprites.emplace(key,sprite::Sprite{
+                m_ism->GetInstancedSprite("UnitBadge_SmacHealthbar_"+std::to_string(key),texture,{0,0},{2,21},{1,10},
+                    {backend::map::s_consts.tile.scale.x*s_consts.scale.x*2/23,
+                        backend::map::s_consts.tile.scale.y*s_consts.scale.y*21/30*backend::map::s_consts.sprite.y_scale},ZL_UNITS,0.005f),1}).first;
+        }
+        return &found->second;
+    }
 	const uint8_t step = round( health * ( s_consts.healthbars.resolution - 1 ) );
 	auto it = m_healthbar_sprites.find( step );
 	if ( it == m_healthbar_sprites.end() ) {

@@ -29,7 +29,7 @@ class BadgeDefs {
 public:
 
 	static const types::Vec3 GetBadgeCoords( const types::Vec3& unit_coords );
-	static const types::Vec3 GetBadgeHealthbarCoords( const types::Vec3& unit_coords );
+	static const types::Vec3 GetBadgeHealthbarCoords( const types::Vec3& unit_coords, bool canonical = false );
 
 	BadgeDefs( sprite::InstancedSpriteManager* ism );
 	~BadgeDefs();
@@ -43,7 +43,7 @@ public:
 	sprite::InstancedSprite* GetBadgeSprite( const badge_type_t badge_type, const backend::unit::morale_t morale );
 	sprite::Sprite* GetNativeBadgeSprite(backend::unit::morale_t level);
 	sprite::InstancedSprite* GetFakeBadgeSprite();
-	sprite::Sprite* GetBadgeHealthbarSprite( const float health );
+	sprite::Sprite* GetBadgeHealthbarSprite( const float health, int32_t maximum_hit_points = 0 );
 
 	const types::Vec3 GetFakeBadgeCoords( const types::Vec3& coords, const uint8_t offset ) const;
 

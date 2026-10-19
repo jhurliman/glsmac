@@ -171,6 +171,7 @@ public:
 			const std::string* morale_string;
 			backend::unit::health_t health;
 			bool conventional, has_moves, native;
+            int32_t maximum_hit_points;
 			backend::unit::movement_t full_movement;
 		} unit_spawn;
 		struct {
@@ -183,6 +184,7 @@ public:
 			backend::unit::morale_t morale;
 			const std::string* morale_string;
 			bool conventional, has_moves;
+            int32_t maximum_hit_points;
 			backend::unit::movement_t full_movement;
 			struct {
 				size_t x;

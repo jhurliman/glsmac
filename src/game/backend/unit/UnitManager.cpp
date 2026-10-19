@@ -1224,6 +1224,7 @@ void UnitManager::PushUpdates() {
 				fr.data.unit_spawn.morale = presentation.morale;
 				NEW( fr.data.unit_spawn.morale_string, std::string, unit->GetMoraleString() );
 				fr.data.unit_spawn.health = presentation.health;
+                fr.data.unit_spawn.maximum_hit_points = presentation.maximum_hit_points;
 				fr.data.unit_spawn.conventional = unit->IsConventional();
 				fr.data.unit_spawn.full_movement = presentation.full_movement;
 				fr.data.unit_spawn.has_moves = unit->HasMovesLeft();
@@ -1235,6 +1236,7 @@ void UnitManager::PushUpdates() {
 				fr.data.unit_update.unit_id = unit->m_id;
 				fr.data.unit_update.movement = presentation.movement;
 				fr.data.unit_update.health = presentation.health;
+                fr.data.unit_update.maximum_hit_points = presentation.maximum_hit_points;
 				fr.data.unit_update.morale = presentation.morale;
 				NEW( fr.data.unit_update.morale_string, std::string, unit->GetMoraleString() );
 				fr.data.unit_update.conventional = unit->IsConventional();

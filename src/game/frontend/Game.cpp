@@ -1142,6 +1142,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				*d.morale_string,
 				d.health, d.conventional, d.has_moves, d.full_movement, d.native
 			);
+            m_um->GetUnitById(d.unit_id)->SetMaximumHitPoints(d.maximum_hit_points);
 			break;
 		}
 		case FrontendRequest::FR_UNIT_DESPAWN: {
@@ -1153,6 +1154,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			auto* unit = m_um->GetUnitById( d.unit_id );
 			ASSERT( unit, "unit is null" );
 			unit->SetMovement( d.movement );
+            unit->SetMaximumHitPoints(d.maximum_hit_points);
 			unit->SetHealth( d.health );
 			unit->SetActionability( d.conventional, d.has_moves, d.full_movement );
 			unit->SetMorale( d.morale, *d.morale_string );

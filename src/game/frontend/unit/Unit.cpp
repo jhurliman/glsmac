@@ -208,7 +208,7 @@ const bool Unit::IsBadgeVisible() const {
 void Unit::ShowBadge() {
 	if(!m_render.is_rendered || (m_render.badge.blink && !m_badge_defs->IsSelectionBlinkVisible())) {HideBadge();return;}
 	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, BadgeDefs::GetBadgeCoords( m_render.coords ) );
-	m_render.badge.healthbar.def->instanced_sprite->actor->SetInstance( m_render.badge.healthbar.instance_id, BadgeDefs::GetBadgeHealthbarCoords( m_render.coords ) );
+	m_render.badge.healthbar.def->instanced_sprite->actor->SetInstance( m_render.badge.healthbar.instance_id, BadgeDefs::GetBadgeHealthbarCoords( m_render.coords, m_maximum_hit_points>0 ) );
 }
 
 void Unit::HideBadge() {
@@ -274,7 +274,7 @@ void Unit::Refresh() {
 			}
 		}
 		{
-			auto* newdef = m_badge_defs->GetBadgeHealthbarSprite( m_health );
+			auto* newdef = m_badge_defs->GetBadgeHealthbarSprite( m_health, m_maximum_hit_points );
 			if ( m_render.badge.healthbar.def != newdef ) {
 				if ( m_render.badge.healthbar.instance_id ) {
 					m_render.badge.healthbar.def->instanced_sprite->actor->RemoveInstance( m_render.badge.healthbar.instance_id );
@@ -309,6 +309,10 @@ void Unit::SetHealth( const backend::unit::health_t health ) {
 		m_health = health;
 		m_need_refresh = true;
 	}
+}
+
+void Unit::SetMaximumHitPoints(int32_t maximum) {
+    if(maximum!=m_maximum_hit_points) {m_maximum_hit_points=maximum;m_need_refresh=true;}
 }
 
 const bool Unit::CanMove() const {
@@ -424,7 +428,7 @@ void Unit::SetRenderCoords( const types::Vec3& coords ) {
 	);
 	m_render.badge.healthbar.def->instanced_sprite->actor->UpdateInstance(
 		m_render.badge.healthbar.instance_id,
-		BadgeDefs::GetBadgeHealthbarCoords( m_render.coords )
+		BadgeDefs::GetBadgeHealthbarCoords( m_render.coords, m_maximum_hit_points>0 )
 	);
 	if ( m_render.fake_badge.instance_id ) {
 		m_slot_badges->HideFakeBadge( m_render.fake_badge.instance_id );

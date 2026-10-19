@@ -20,7 +20,12 @@ std::vector<Pass> Select(Point center,const TileAt& tile_at,uint16_t seed) {
     Validate(*own);
     const auto neighbor=[&](Point offset) {
         const auto tile=tile_at(center[0]+offset[0],center[1]+offset[1]);
-        if(tile) {Validate(*tile);}return tile;
+        // Neighbor rockiness is not read by these selectors, and sea connects
+        // without inspecting its moisture. Do not reject unused packed fields.
+        if(tile && (tile->band>7 || (tile->band>=3 && tile->moisture>2))) {
+            throw std::invalid_argument("Unsupported ordinary terrain neighbor fields");
+        }
+        return tile;
     };
     unsigned moisture_mask=0,fungus_mask=0;
     for(unsigned bit=0;bit<8;++bit) {

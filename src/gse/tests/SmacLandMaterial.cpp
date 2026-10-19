@@ -19,6 +19,17 @@ void AddSmacLandMaterialTests(task::gsetests::GSETests* task) {
             count+=got.size();
         }
         GT_ASSERT(count==193,"Missing native selector/composition receipts");
+        for(const auto& c:land_material_fixture::Cases()) {if(std::string(c.name)=="moist_sea_NW") {
+            const auto at=land_material_fixture::Lookup(c);
+            const auto polluted=[&](int x,int y) {
+                auto tile=at(x,y);
+                if(tile && material::Point{{x,y}}!=c.coord) {tile->rockiness=3;if(tile->band<3) {tile->moisture=3;}}
+                return tile;
+            };
+            const auto got=material::Select(c.coord,polluted,c.seed);
+            GT_ASSERT(got.size()==c.expected.size(),"Unused neighbor fields change native pass count");
+            for(size_t i=0;i<got.size();++i) {GT_ASSERT(got[i].crop==c.expected[i].crop && got[i].uv==c.expected[i].uv,"Unused sea moisture or neighbor rockiness changes connectivity");}
+        }}
         GT_OK();
     });
     task->AddTest("SMAC land material palette follows loaded indices and preserves active reserved colors",GT(){

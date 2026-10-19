@@ -55,7 +55,7 @@ public:
 	slot::Slot* m_owner;
 
 	struct LegacyState { movement_t movement; morale_t morale; health_t health; bool moved_this_turn; };
-	struct Presentation { movement_t movement; morale_t morale; health_t health; movement_t full_movement = 0; };
+	struct Presentation { movement_t movement; morale_t morale; health_t health; movement_t full_movement = 0; int32_t maximum_hit_points = 0; };
 	bool IsConventional() const;
 	bool IsNative() const;
 	const SmacNativeUnitRecord& Native() const;

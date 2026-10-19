@@ -1,0 +1,3597 @@
+{
+  "research_id": "RE-SMAC-MAP-OVERLAYS-001",
+  "assets": {
+    "terran.exe": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+    "alpha.txt": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4",
+    "palette.pcx": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "units.pcx": "1da9f262b4a90c6d26378e1421cc7bcc9dc561491337c1d8c111793a82b8285d"
+  },
+  "reference": {
+    "sha256": "0717b51a2e352a472320a1a0216dffb9070828a001256c0e8a9d96113332cb54",
+    "size": [
+      1920,
+      1080
+    ],
+    "native_1024x768_origin_proven": false,
+    "map_zoom_proven": false
+  },
+  "orders": [
+    {
+      "order": 0,
+      "label": "No Orders",
+      "glyph": "-"
+    },
+    {
+      "order": 1,
+      "label": "Sentry/Board Transport",
+      "glyph": "L"
+    },
+    {
+      "order": 2,
+      "label": "Hold",
+      "glyph": "H"
+    },
+    {
+      "order": 3,
+      "label": "Convoy",
+      "glyph": "O"
+    },
+    {
+      "order": 4,
+      "label": "Cultivate Farm",
+      "glyph": "f"
+    },
+    {
+      "order": 5,
+      "label": "Construct Soil Enricher",
+      "glyph": "f"
+    },
+    {
+      "order": 6,
+      "label": "Construct Mine",
+      "glyph": "M"
+    },
+    {
+      "order": 7,
+      "label": "Construct Solar Collector",
+      "glyph": "S"
+    },
+    {
+      "order": 8,
+      "label": "Plant Forest",
+      "glyph": "F"
+    },
+    {
+      "order": 9,
+      "label": "Build Road",
+      "glyph": "R"
+    },
+    {
+      "order": 10,
+      "label": "Build Mag Tube",
+      "glyph": "R"
+    },
+    {
+      "order": 11,
+      "label": "Construct Bunker",
+      "glyph": "K"
+    },
+    {
+      "order": 12,
+      "label": "Construct Airbase",
+      "glyph": "."
+    },
+    {
+      "order": 13,
+      "label": "Construct Sensor Array",
+      "glyph": "O"
+    },
+    {
+      "order": 14,
+      "label": "Remove Fungus",
+      "glyph": "F"
+    },
+    {
+      "order": 15,
+      "label": "Plant Fungus",
+      "glyph": "F"
+    },
+    {
+      "order": 16,
+      "label": "Construct Condenser",
+      "glyph": "N"
+    },
+    {
+      "order": 17,
+      "label": "Construct Echelon Mirror",
+      "glyph": "E"
+    },
+    {
+      "order": 18,
+      "label": "Construct Thermal Borehole",
+      "glyph": "B"
+    },
+    {
+      "order": 19,
+      "label": "Drill to Aquifer",
+      "glyph": "Q"
+    },
+    {
+      "order": 20,
+      "label": "Terraform UP",
+      "glyph": "]"
+    },
+    {
+      "order": 21,
+      "label": "Terraform DOWN",
+      "glyph": "["
+    },
+    {
+      "order": 22,
+      "label": "Terraform LEVEL",
+      "glyph": "_"
+    },
+    {
+      "order": 23,
+      "label": "Place Monolith",
+      "glyph": "?"
+    },
+    {
+      "order": 24,
+      "label": "Move to",
+      "glyph": "G"
+    },
+    {
+      "order": 25,
+      "label": "Move",
+      "glyph": ">"
+    },
+    {
+      "order": 26,
+      "label": "Explore",
+      "glyph": "/"
+    },
+    {
+      "order": 27,
+      "label": "Road to",
+      "glyph": "r"
+    },
+    {
+      "order": 28,
+      "label": "Tube to",
+      "glyph": "t"
+    },
+    {
+      "order": 29,
+      "label": "",
+      "glyph": ""
+    }
+  ],
+  "font_requests": [
+    {
+      "id": 100,
+      "height": -12,
+      "weight": 700,
+      "face": "Arial",
+      "text_height": 15,
+      "ascent": 12,
+      "descent": 3,
+      "internal_leading": 3
+    },
+    {
+      "id": 101,
+      "height": -9,
+      "weight": 700,
+      "face": "Arial",
+      "text_height": 11,
+      "ascent": 9,
+      "descent": 2,
+      "internal_leading": 2
+    },
+    {
+      "id": 102,
+      "height": -11,
+      "weight": 700,
+      "face": "Arial",
+      "text_height": 14,
+      "ascent": 11,
+      "descent": 3,
+      "internal_leading": 3
+    },
+    {
+      "id": 103,
+      "height": -15,
+      "weight": 700,
+      "face": "Arial",
+      "text_height": 18,
+      "ascent": 14,
+      "descent": 4,
+      "internal_leading": 3
+    },
+    {
+      "id": 104,
+      "height": -18,
+      "weight": 700,
+      "face": "Arial",
+      "text_height": 21,
+      "ascent": 17,
+      "descent": 4,
+      "internal_leading": 3
+    },
+    {
+      "id": 105,
+      "height": -12,
+      "weight": 700,
+      "face": "Arial",
+      "text_height": 15,
+      "ascent": 12,
+      "descent": 3,
+      "internal_leading": 3
+    },
+    {
+      "id": 106,
+      "height": -16,
+      "weight": 700,
+      "face": "Arial",
+      "text_height": 19,
+      "ascent": 15,
+      "descent": 4,
+      "internal_leading": 3
+    },
+    {
+      "id": 107,
+      "height": -12,
+      "weight": 700,
+      "face": "Arial",
+      "text_height": 15,
+      "ascent": 12,
+      "descent": 3,
+      "internal_leading": 3
+    },
+    {
+      "id": 108,
+      "height": -20,
+      "weight": 700,
+      "face": "Arial",
+      "text_height": 24,
+      "ascent": 19,
+      "descent": 5,
+      "internal_leading": 4
+    },
+    {
+      "id": 109,
+      "height": -25,
+      "weight": 700,
+      "face": "Arial",
+      "text_height": 30,
+      "ascent": 24,
+      "descent": 6,
+      "internal_leading": 5
+    }
+  ],
+  "current_Arial_Bold_font_sha256": "e8f4e3baf6cc35fed6fcce3a540e8b39e8f6cda1d22a28f2ec8f526fef7a43f5",
+  "faction_palette_indices": [
+    {
+      "owner": 0,
+      "primary": 249,
+      "secondary": 1,
+      "text": 249
+    },
+    {
+      "owner": 1,
+      "primary": 241,
+      "secondary": 32,
+      "text": 242
+    },
+    {
+      "owner": 2,
+      "primary": 252,
+      "secondary": 187,
+      "text": 218
+    },
+    {
+      "owner": 3,
+      "primary": 255,
+      "secondary": 209,
+      "text": 155
+    },
+    {
+      "owner": 4,
+      "primary": 251,
+      "secondary": 85,
+      "text": 251
+    },
+    {
+      "owner": 5,
+      "primary": 65,
+      "secondary": 79,
+      "text": 75
+    },
+    {
+      "owner": 6,
+      "primary": 102,
+      "secondary": 109,
+      "text": 98
+    },
+    {
+      "owner": 7,
+      "primary": 235,
+      "secondary": 186,
+      "text": 235
+    }
+  ],
+  "sample_palette_RGB": {
+    "0": [
+      0,
+      0,
+      0
+    ],
+    "44": [
+      226,
+      203,
+      176
+    ],
+    "155": [
+      216,
+      224,
+      235
+    ],
+    "209": [
+      122,
+      137,
+      131
+    ],
+    "249": [
+      255,
+      0,
+      0
+    ],
+    "250": [
+      0,
+      255,
+      0
+    ],
+    "251": [
+      255,
+      255,
+      0
+    ],
+    "255": [
+      255,
+      255,
+      255
+    ]
+  },
+  "draw_cases": [
+    {
+      "id": "unit_order0",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "-",
+          "x": 113,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 4
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_order1",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "L",
+          "x": 112,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 7
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_order2",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_order3",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "O",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 9
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_order24",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "G",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_order25",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": ">",
+          "x": 112,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 7
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_order26",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "/",
+          "x": 114,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 3
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_order27",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "r",
+          "x": 113,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 5
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_order28",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "t",
+          "x": 113,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 4
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_order29",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "health0",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "health2",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            122
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "health3",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            120
+          ],
+          "color": 251
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "health5",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            116
+          ],
+          "color": 251
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "health6",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            114
+          ],
+          "color": 249
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "health9",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            108
+          ],
+          "color": 249
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "health10",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "overlay_flags0x400",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        1024
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "overlay_flags0x800",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        2048
+      ],
+      "events": [
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "overlay_flags0xc00",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        3072
+      ],
+      "events": [
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "status0x4000",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "/",
+          "x": 114,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 3
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "status0x1000200",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "P",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 209,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "status0x200",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 209,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "status0x40000",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "status0x8000000",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 250,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_zoom-4",
+      "input": [
+        0,
+        100,
+        100,
+        -4,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            104,
+            104,
+            105,
+            119
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            104,
+            104,
+            105,
+            119
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 107,
+          "y": 104,
+          "font_id": 101,
+          "height": 7,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 7
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_zoom-3",
+      "input": [
+        0,
+        100,
+        100,
+        -3,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            104,
+            104,
+            105,
+            121
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            104,
+            104,
+            105,
+            121
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 108,
+          "y": 105,
+          "font_id": 102,
+          "height": 8,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 7
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_zoom4",
+      "input": [
+        0,
+        100,
+        100,
+        4,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            107,
+            107,
+            109,
+            133
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            107,
+            107,
+            109,
+            133
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 113,
+          "y": 109,
+          "font_id": 103,
+          "height": 11,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 11
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "unit_zoom8",
+      "input": [
+        0,
+        100,
+        100,
+        8,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            109,
+            109,
+            112,
+            140
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            109,
+            109,
+            112,
+            140
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 116,
+          "y": 110,
+          "font_id": 104,
+          "height": 14,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 13
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "reactor2_damage5",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            121
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 105,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "reactor2_damage6",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            120
+          ],
+          "color": 251
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 105,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "reactor2_damage12",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            114
+          ],
+          "color": 251
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 105,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "reactor2_damage13",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            113
+          ],
+          "color": 249
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 105,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "reactor2_damage19",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            107
+          ],
+          "color": 249
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 105,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "reactor0_damage0",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 105,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "reactor255_damage254",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            121
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 105,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "foreign_H_hidden",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 1,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "-",
+          "x": 113,
+          "y": 107,
+          "font_id": 105,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 4
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "Base_pop9_viewer3",
+      "input": [
+        0,
+        300,
+        200,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "border",
+          "rect": [
+            300,
+            200,
+            314,
+            216
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "event": "text",
+          "text": "9",
+          "x": 303,
+          "y": 202,
+          "font_id": 106,
+          "height": 12,
+          "foreground": 155,
+          "shadow": 4294967295,
+          "width": 9
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "Base_pop9_viewer1",
+      "input": [
+        0,
+        300,
+        200,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "border",
+          "rect": [
+            300,
+            200,
+            314,
+            216
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            301,
+            201,
+            313,
+            215
+          ],
+          "color": 255
+        },
+        {
+          "event": "text",
+          "text": "9",
+          "x": 303,
+          "y": 202,
+          "font_id": 106,
+          "height": 12,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 9
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "Base_pop9_occupied",
+      "input": [
+        0,
+        300,
+        200,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "border",
+          "rect": [
+            300,
+            200,
+            314,
+            216
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            301,
+            201,
+            313,
+            215
+          ],
+          "color": 255
+        },
+        {
+          "event": "text",
+          "text": "9",
+          "x": 303,
+          "y": 202,
+          "font_id": 106,
+          "height": 12,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 9
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "Base_pop10_viewer3",
+      "input": [
+        0,
+        300,
+        200,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "border",
+          "rect": [
+            300,
+            200,
+            323,
+            216
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "event": "text",
+          "text": "10",
+          "x": 303,
+          "y": 202,
+          "font_id": 106,
+          "height": 12,
+          "foreground": 155,
+          "shadow": 4294967295,
+          "width": 18
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "Base_pop10_viewer1",
+      "input": [
+        0,
+        300,
+        200,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "border",
+          "rect": [
+            300,
+            200,
+            323,
+            216
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            301,
+            201,
+            322,
+            215
+          ],
+          "color": 255
+        },
+        {
+          "event": "text",
+          "text": "10",
+          "x": 303,
+          "y": 202,
+          "font_id": 106,
+          "height": 12,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 18
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "Base_pop10_occupied",
+      "input": [
+        0,
+        300,
+        200,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "border",
+          "rect": [
+            300,
+            200,
+            323,
+            216
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            301,
+            201,
+            322,
+            215
+          ],
+          "color": 255
+        },
+        {
+          "event": "text",
+          "text": "10",
+          "x": 303,
+          "y": 202,
+          "font_id": 106,
+          "height": 12,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 18
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "Base_pop10_zoom-4",
+      "input": [
+        0,
+        300,
+        200,
+        -4,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "border",
+          "rect": [
+            300,
+            200,
+            319,
+            213
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            301,
+            201,
+            318,
+            212
+          ],
+          "color": 255
+        },
+        {
+          "event": "text",
+          "text": "10",
+          "x": 303,
+          "y": 202,
+          "font_id": 107,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 14
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "Base_pop10_zoom4",
+      "input": [
+        0,
+        300,
+        200,
+        4,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "border",
+          "rect": [
+            300,
+            200,
+            327,
+            219
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            301,
+            201,
+            326,
+            218
+          ],
+          "color": 255
+        },
+        {
+          "event": "text",
+          "text": "10",
+          "x": 303,
+          "y": 202,
+          "font_id": 108,
+          "height": 15,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 22
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "Base_pop10_zoom8",
+      "input": [
+        0,
+        300,
+        200,
+        8,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "border",
+          "rect": [
+            300,
+            200,
+            333,
+            223
+          ],
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            301,
+            201,
+            332,
+            222
+          ],
+          "color": 255
+        },
+        {
+          "event": "text",
+          "text": "10",
+          "x": 303,
+          "y": 202,
+          "font_id": 109,
+          "height": 19,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 28
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "Spartan_H",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 5,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 105,
+          "height": 9,
+          "foreground": 44,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "edge_order255_state0_role0",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "order_text_box",
+          "text": "-",
+          "rect": [
+            110,
+            105,
+            121,
+            119
+          ]
+        },
+        {
+          "event": "text",
+          "text": "-",
+          "x": 113,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 4
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "edge_order30_state0_role0",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "order_text_box",
+          "text": "",
+          "rect": [
+            110,
+            105,
+            121,
+            119
+          ]
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "edge_order0_state512_role0",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "order_text_box",
+          "text": "a",
+          "rect": [
+            110,
+            105,
+            121,
+            119
+          ]
+        },
+        {
+          "event": "text",
+          "text": "a",
+          "x": 112,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 209,
+          "shadow": 4294967295,
+          "width": 7
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "edge_order2_state512_role11",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "order_text_box",
+          "text": "*",
+          "rect": [
+            110,
+            105,
+            121,
+            119
+          ]
+        },
+        {
+          "event": "text",
+          "text": "*",
+          "x": 113,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 209,
+          "shadow": 4294967295,
+          "width": 5
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "edge_order2_state512_role10",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "order_text_box",
+          "text": "B",
+          "rect": [
+            110,
+            105,
+            121,
+            119
+          ]
+        },
+        {
+          "event": "text",
+          "text": "B",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 209,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "edge_order20_state0_role0",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "order_text_box",
+          "text": "]]",
+          "rect": [
+            110,
+            105,
+            121,
+            119
+          ]
+        },
+        {
+          "event": "text",
+          "text": "]",
+          "x": 113,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 4
+        },
+        {
+          "event": "text",
+          "text": "",
+          "x": 117,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 0
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "edge_order21_state0_role0",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 0,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "order_text_box",
+          "text": "[[",
+          "rect": [
+            110,
+            105,
+            121,
+            119
+          ]
+        },
+        {
+          "event": "text",
+          "text": "[",
+          "x": 113,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 4
+        },
+        {
+          "event": "text",
+          "text": "",
+          "x": 117,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 0
+        }
+      ],
+      "completed": true
+    },
+    {
+      "id": "Hold_spent3",
+      "input": [
+        0,
+        100,
+        100,
+        0,
+        0
+      ],
+      "events": [
+        {
+          "event": "body_sprite"
+        },
+        {
+          "event": "badge_sprite",
+          "owner": 3,
+          "display_morale": 1,
+          "spent_variant": 1,
+          "key": 9,
+          "anchor": [
+            100,
+            100
+          ]
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 0
+        },
+        {
+          "event": "fill",
+          "rect": [
+            106,
+            106,
+            108,
+            127
+          ],
+          "color": 250
+        },
+        {
+          "event": "order_text_box",
+          "text": "H",
+          "rect": [
+            110,
+            105,
+            121,
+            119
+          ]
+        },
+        {
+          "event": "text",
+          "text": "H",
+          "x": 111,
+          "y": 107,
+          "font_id": 100,
+          "height": 9,
+          "foreground": 0,
+          "shadow": 4294967295,
+          "width": 8
+        }
+      ],
+      "completed": true
+    }
+  ],
+  "text_API_controls": [
+    {
+      "text": "H",
+      "x": 111,
+      "y": 116,
+      "font_id": 100,
+      "COLORREF": 285147136,
+      "rgb": [
+        0,
+        0,
+        0
+      ],
+      "alignment": 24,
+      "background_mode": 1
+    },
+    {
+      "text": "H",
+      "x": 211,
+      "y": 116,
+      "font_id": 100,
+      "COLORREF": 285147136,
+      "rgb": [
+        0,
+        0,
+        0
+      ],
+      "alignment": 24,
+      "background_mode": 1
+    },
+    {
+      "text": "9",
+      "x": 303,
+      "y": 214,
+      "font_id": 101,
+      "COLORREF": 285147136,
+      "rgb": [
+        0,
+        0,
+        0
+      ],
+      "alignment": 24,
+      "background_mode": 1
+    },
+    {
+      "text": "10",
+      "x": 403,
+      "y": 214,
+      "font_id": 101,
+      "COLORREF": 285147136,
+      "rgb": [
+        0,
+        0,
+        0
+      ],
+      "alignment": 24,
+      "background_mode": 1
+    }
+  ],
+  "same_tile_dispatch_order": [
+    "Base",
+    "Unit"
+  ],
+  "controlled_capture": {
+    "path": "map-overlays-indexed-1024x768-20261018.png",
+    "size": [
+      1024,
+      768
+    ],
+    "sha256": "ba8761bce39f36db69a03a3bf87be4d46699f50deb857ed11f105600818d4edd"
+  },
+  "controlled_crops": [
+    {
+      "name": "H",
+      "path": "map-overlay-indexed-H-20261018.png",
+      "rect": [
+        98,
+        98,
+        126,
+        134
+      ],
+      "sha256": "429e499f605a2f80dee8149cb48ee520860d83f79117724afe24a69518274741"
+    },
+    {
+      "name": "population9",
+      "path": "map-overlay-indexed-population9-20261018.png",
+      "rect": [
+        298,
+        198,
+        319,
+        221
+      ],
+      "sha256": "3edc9c31498ee89c87cfb7c3c05bd7699acafc894361ed9aa62b40349cba0a2e"
+    },
+    {
+      "name": "population10",
+      "path": "map-overlay-indexed-population10-20261018.png",
+      "rect": [
+        398,
+        198,
+        429,
+        221
+      ],
+      "sha256": "705c0d7853d282ec55eefe1e3f2cba761fd146cbf2eb7d971b42ec0a8a2a5994"
+    }
+  ],
+  "scope": "Original overlay caller/font manager/LOGFONT/font widths/text layout/text primitives execute to captured TextOutA. Font creation/metrics and final glyph raster use current Windows GDI on an8-bit indexed DIB with the native palette and original DIBINDEX COLORREFs. Native badge/health/borders/fills render to original indexed backing. Body models are sinks; plain index100 background. Lossless controlled offscreen composite, not original live gameplay screenshot or historical Windows font parity.",
+  "source_state_semantic_producers_fully_traced": false,
+  "original_live_screenshot_captured": false,
+  "historical_font_pixels_established": false,
+  "passed": true
+}

@@ -122,12 +122,12 @@ Unit::Presentation Unit::GetPresentation( int32_t native_viewer ) const {
     if(IsNative()) {
         const auto stats=m_um->QueryNativeUnit(Native(),native_viewer);
         return {float(stats.remaining_allowance)/stats.quantum,static_cast<morale_t>(stats.level),
-            float(stats.hit_points)/stats.maximum_hit_points,float(stats.full_allowance)/stats.quantum};
+            float(stats.hit_points)/stats.maximum_hit_points,float(stats.full_allowance)/stats.quantum,stats.maximum_hit_points};
     }
 	if ( !IsConventional() ) { const auto& state = Legacy(); return { state.movement, state.morale, state.health }; }
 	const auto stats = QueryStats( Conventional().render_morale_mode );
 	return { static_cast< float >( stats.remaining_allowance ) / stats.quantum, stats.effective_morale,
-		static_cast< float >( stats.hit_points ) / stats.maximum_hit_points, static_cast< float >( stats.full_allowance ) / stats.quantum };
+		static_cast< float >( stats.hit_points ) / stats.maximum_hit_points, static_cast< float >( stats.full_allowance ) / stats.quantum, stats.maximum_hit_points };
 }
 
 const movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.025f;

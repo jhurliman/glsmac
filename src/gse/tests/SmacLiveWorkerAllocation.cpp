@@ -2404,6 +2404,24 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
 
+    task->AddTest("SMAC health bar maximum reaches actual Unit spawn and refresh requests",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            Populate(GSE_CALL,fixture,false);auto* game=fixture.Game();auto* unit=game->GetUM()->GetUnit(91);
+            GT_ASSERT(unit->GetPresentation().maximum_hit_points==10,"Canonical Unit presentation lost its HP denominator");
+            bool spawned=false;
+            for(const auto& fr:fixture.Updates()) {if(fr.type==game::FrontendRequest::FR_UNIT_SPAWN && fr.data.unit_spawn.unit_id==91) {
+                spawned=true;GT_ASSERT(fr.data.unit_spawn.maximum_hit_points==10,"Spawn omitted canonical maximum hit points");
+            }}
+            GT_ASSERT(spawned,"Health fixture did not publish its Unit spawn");
+            game->GetUM()->RefreshUnit(GSE_CALL,unit);bool refreshed=false;
+            for(const auto& fr:fixture.Updates()) {if(fr.type==game::FrontendRequest::FR_UNIT_UPDATE && fr.data.unit_update.unit_id==91) {
+                refreshed=true;GT_ASSERT(fr.data.unit_update.maximum_hit_points==10,"Refresh omitted canonical maximum hit points");
+            }}
+            GT_ASSERT(refreshed,"Health fixture did not publish a refresh");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC live Blind research priorities and discovery tails resume once through actual Start",[](GSE*,context::Context*)->std::string {
         const auto provider=[](const std::string& filename) {
             auto source=UpkeepSource(filename);size_t at=0;

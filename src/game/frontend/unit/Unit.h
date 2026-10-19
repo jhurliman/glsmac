@@ -102,6 +102,7 @@ public:
 
 	void SetMovement( const backend::unit::movement_t movement );
 	void SetHealth( const backend::unit::health_t health );
+    void SetMaximumHitPoints(int32_t maximum);
 	void SetMorale( backend::unit::morale_t morale, const std::string& text );
 	void SetActionability( bool conventional, bool has_moves, backend::unit::movement_t full_movement = 0 );
 	const bool CanMove() const;
@@ -159,6 +160,7 @@ private:
 	backend::unit::morale_t m_morale = 0;
 	std::string m_morale_string = "";
 	backend::unit::health_t m_health = 0;
+    int32_t m_maximum_hit_points = 0;
 	bool m_conventional = false, m_has_moves = false;
 	const bool m_native = false;
 	backend::unit::movement_t m_full_movement = 0;

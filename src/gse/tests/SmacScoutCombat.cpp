@@ -6,6 +6,14 @@
 #include <cstdlib>
 #include "loader/texture/SmacEffect.h"
 #include "game/ScoutBattlePresentation.h"
+#include "game/SmacHealthbar.h"
+#include "game/frontend/unit/BadgeDefs.h"
+#include "game/backend/map/Consts.h"
+#include "game/frontend/sprite/InstancedSpriteManager.h"
+#include "scene/Scene.h"
+#include "scene/actor/Instanced.h"
+#include "scene/actor/Sprite.h"
+#include "types/texture/Texture.h"
 #include "game/FrontendRequest.h"
 
 #include "game/backend/unit/SmacScoutCombat.h"
@@ -54,6 +62,65 @@ bool StepMatches( const fixture::Step& e, const model::Survivor& s, const model:
 }
 
 void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC health bar renderer preserves indexed colors geometry cache and retirement",GT(){
+        scene::Scene scene("Health bar fixture",scene::SCENE_TYPE_WORLD);
+        game::frontend::sprite::InstancedSpriteManager sprites(&scene);
+        {
+            game::frontend::unit::BadgeDefs badges(&sprites);
+            auto* yellow=badges.GetBadgeHealthbarSprite(0.7f,10);
+            auto* same=badges.GetBadgeHealthbarSprite(0.7f,20);
+            auto* green=badges.GetBadgeHealthbarSprite(0.7f,30);
+            types::texture::Texture flag_pixels(23,30);
+            const auto& map=game::backend::map::s_consts;
+            const float flag_width=map.tile.scale.x*0.25f;
+            const float flag_height=map.tile.scale.y*map.sprite.y_scale*0.5f;
+            auto* flag=sprites.GetInstancedSprite("Health alignment flag",&flag_pixels,{0,0},{23,30},{11,15},
+                {flag_width,flag_height},game::frontend::ZL_UNITS);
+            const auto flag_center=flag->actor->GetSpriteActor()->NormalizePosition(
+                game::frontend::unit::BadgeDefs::GetBadgeCoords({0,0,0}));
+            const auto* bar_actor=yellow->instanced_sprite->actor->GetSpriteActor();
+            const auto bar_center=bar_actor->NormalizePosition(
+                game::frontend::unit::BadgeDefs::GetBadgeHealthbarCoords({0,0,0},true));
+            const auto bar_size=bar_actor->GetDimensions();
+            const float dx=(bar_center.x-bar_size.x/2-(flag_center.x-flag_width/2))*23/flag_width;
+            const float dy=(bar_center.y-bar_size.y/2-(flag_center.y-flag_height/2))*30/flag_height;
+            GT_ASSERT(std::abs(dx-6)<0.001f && std::abs(dy-6)<0.001f,
+                "Actual actor rectangles do not place the bar at flag source pixel6,6");
+            sprites.RemoveInstancedSpriteByKey(flag->key);
+            GT_ASSERT(yellow==same && yellow!=green,"Equal heights conflated distinct damage-threshold colors");
+            const auto check=[&](game::frontend::sprite::Sprite* sprite,uint32_t ink,int filled)->bool {
+                const auto* texture=sprite->instanced_sprite->actor->GetSpriteActor()->GetTexture();
+                if(texture->GetWidth()!=2 || texture->GetHeight()!=21) {return false;}
+                for(size_t y=0;y<21;++y) {for(size_t x=0;x<2;++x) {
+                    if(texture->GetPixel(x,y)!=(y<size_t(filled) ? ink:types::Color::FromRGB(0,0,0).GetRGBA())) {return false;}
+                }}return true;
+            };
+            GT_ASSERT(check(yellow,types::Color::FromRGB(255,255,0).GetRGBA(),14)
+                && check(green,types::Color::FromRGB(0,255,0).GetRGBA(),14)
+                && check(badges.GetBadgeHealthbarSprite(0.0f,10),0,0),
+                "Actual health textures changed source width height fill direction opacity or palette colors");
+            GT_ASSERT(badges.GetBadgeHealthbarSprite(0.7f)!=yellow,"Legacy ratio cache aliased a canonical bar");
+        }
+        bool empty=false;scene.WithActors([&](const auto& actors){empty=actors.empty();});
+        GT_ASSERT(empty,"Retiring health badges left scene actors with retired textures");GT_OK();
+    });
+    task->AddTest("SMAC health bar matches original Fission Fusion and clamped reactor draws",GT(){
+        using Color=game::SmacHealthbar::Color;
+        struct Case {int32_t maximum,damage;uint8_t filled;Color color;};
+        // RE-SMAC-MAP-OVERLAYS-001: original fill rectangles at y106.
+        const Case cases[]={{10,0,21,Color::Green},{10,2,16,Color::Green},{10,3,14,Color::Yellow},
+            {10,5,10,Color::Yellow},{10,6,8,Color::Red},{10,9,2,Color::Red},{10,10,0,Color::Red},
+            {20,5,15,Color::Green},{20,6,14,Color::Yellow},{20,12,8,Color::Yellow},
+            {20,13,7,Color::Red},{20,19,1,Color::Red},{1000,254,15,Color::Green}};
+        for(const auto& row:cases) {
+            const auto actual=game::CalculateSmacHealthbar(float(row.maximum-row.damage)/row.maximum,row.maximum);
+            GT_ASSERT(actual.filled==row.filled && actual.color==row.color,"Original health fill/threshold differs");
+        }
+        GT_ASSERT(Rejects([]{game::CalculateSmacHealthbar(0.5f,0);}) &&
+            Rejects([]{game::CalculateSmacHealthbar(std::numeric_limits<float>::quiet_NaN(),10);}),
+            "Health renderer silently accepted missing or nonfinite authority");
+        GT_OK();
+    });
     if(std::getenv("GLSMAC_TEST_SCOUT_GPU")) {task->AddTest("SMAC Scout GPU indexed compositor matches every ordinary background and source row",GT(){
         namespace fx=loader::texture::smac_effect;
         GT_ASSERT(SDL_InitSubSystem(SDL_INIT_VIDEO)==0,"GPU fixture could not initialize video");

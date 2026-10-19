@@ -1,0 +1,2401 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Complete reachable stock global537790 wildlife policy after existing flora; native sea search/strength/capacity/sentry/factory, ambush, reset-distance and cap controls. Original53a820 return.",
+  "cases": [
+    {
+      "variant": "sea8",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 4056086993,
+      "CRT_draws": 198,
+      "spread_attempts": 94,
+      "sea_attempts": 1,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          58,
+          66
+        ],
+        "raw_requested": 2,
+        "early": true,
+        "requested": 1,
+        "capacity": 2,
+        "passengers": 1,
+        "carrier": 13
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            58,
+            66
+          ],
+          "result": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            58,
+            66
+          ],
+          "result": 14
+        },
+        {
+          "op": "sentry",
+          "unit": 14,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            23,
+            33
+          ],
+          "result": 15
+        }
+      ],
+      "nearest_queries": [
+        {
+          "position": [
+            23,
+            33
+          ],
+          "region": 15,
+          "Base": 2,
+          "distance": 4
+        }
+      ],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 16,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea40",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [],
+      "turn": 40,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 2027001279,
+      "CRT_draws": 164,
+      "spread_attempts": 76,
+      "sea_attempts": 2,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          79,
+          1
+        ],
+        "raw_requested": 2,
+        "early": false,
+        "requested": 2,
+        "capacity": 2,
+        "passengers": 2,
+        "carrier": 13
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            79,
+            1
+          ],
+          "result": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            79,
+            1
+          ],
+          "result": 14
+        },
+        {
+          "op": "sentry",
+          "unit": 14,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            79,
+            1
+          ],
+          "result": 15
+        },
+        {
+          "op": "sentry",
+          "unit": 15,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 13
+        }
+      ],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 16,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea56",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [],
+      "turn": 56,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 305053295,
+      "CRT_draws": 148,
+      "spread_attempts": 69,
+      "sea_attempts": 1,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          27,
+          71
+        ],
+        "raw_requested": 2,
+        "early": false,
+        "requested": 2,
+        "capacity": 2,
+        "passengers": 2,
+        "carrier": 13
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            27,
+            71
+          ],
+          "result": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            27,
+            71
+          ],
+          "result": 14
+        },
+        {
+          "op": "sentry",
+          "unit": 14,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            27,
+            71
+          ],
+          "result": 15
+        },
+        {
+          "op": "sentry",
+          "unit": 15,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 13
+        }
+      ],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 16,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea56_double",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [],
+      "turn": 56,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 1048576,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 305053295,
+      "CRT_draws": 148,
+      "spread_attempts": 69,
+      "sea_attempts": 1,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          27,
+          71
+        ],
+        "raw_requested": 3,
+        "early": false,
+        "requested": 3,
+        "capacity": 2,
+        "passengers": 2,
+        "carrier": 13
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            27,
+            71
+          ],
+          "result": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            27,
+            71
+          ],
+          "result": 14
+        },
+        {
+          "op": "sentry",
+          "unit": 14,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            27,
+            71
+          ],
+          "result": 15
+        },
+        {
+          "op": "sentry",
+          "unit": 15,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 13
+        }
+      ],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 16,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea400",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [],
+      "turn": 400,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 3679767189,
+      "CRT_draws": 58,
+      "spread_attempts": 24,
+      "sea_attempts": 1,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          5,
+          71
+        ],
+        "raw_requested": 6,
+        "early": false,
+        "requested": 6,
+        "capacity": 2,
+        "passengers": 2,
+        "carrier": 13
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            5,
+            71
+          ],
+          "result": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            5,
+            71
+          ],
+          "result": 14
+        },
+        {
+          "op": "sentry",
+          "unit": 14,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            5,
+            71
+          ],
+          "result": 15
+        },
+        {
+          "op": "sentry",
+          "unit": 15,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 13
+        }
+      ],
+      "nearest_queries": [
+        {
+          "position": [
+            44,
+            60
+          ],
+          "region": 14,
+          "Base": 0,
+          "distance": 20
+        },
+        {
+          "position": [
+            12,
+            20
+          ],
+          "region": 14,
+          "Base": 0,
+          "distance": 32
+        }
+      ],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 16,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea8_tech63",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [
+        {
+          "native_technology_acquisition": 63,
+          "owner": 3
+        }
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        8
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 4056086993,
+      "CRT_draws": 198,
+      "spread_attempts": 94,
+      "sea_attempts": 1,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          58,
+          66
+        ],
+        "raw_requested": 2,
+        "early": true,
+        "requested": 1,
+        "capacity": 2,
+        "passengers": 1,
+        "carrier": 13
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            58,
+            66
+          ],
+          "result": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            58,
+            66
+          ],
+          "result": 14
+        },
+        {
+          "op": "sentry",
+          "unit": 14,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 13
+        },
+        {
+          "op": "create",
+          "design": 10,
+          "owner": 0,
+          "position": [
+            58,
+            66
+          ],
+          "result": 15
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            23,
+            33
+          ],
+          "result": 16
+        }
+      ],
+      "nearest_queries": [
+        {
+          "position": [
+            23,
+            33
+          ],
+          "region": 15,
+          "Base": 2,
+          "distance": 4
+        }
+      ],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 17,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea8_tech25",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [
+        {
+          "native_technology_acquisition": 25,
+          "owner": 3
+        }
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        8,
+        0
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 4056086993,
+      "CRT_draws": 198,
+      "spread_attempts": 94,
+      "sea_attempts": 1,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          58,
+          66
+        ],
+        "raw_requested": 2,
+        "early": true,
+        "requested": 1,
+        "capacity": 2,
+        "passengers": 1,
+        "carrier": 13
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            58,
+            66
+          ],
+          "result": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            58,
+            66
+          ],
+          "result": 14
+        },
+        {
+          "op": "sentry",
+          "unit": 14,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 13
+        },
+        {
+          "op": "create",
+          "design": 10,
+          "owner": 0,
+          "position": [
+            58,
+            66
+          ],
+          "result": 15
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            23,
+            33
+          ],
+          "result": 16
+        }
+      ],
+      "nearest_queries": [
+        {
+          "position": [
+            23,
+            33
+          ],
+          "region": 15,
+          "Base": 2,
+          "distance": 4
+        }
+      ],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 17,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea8_land_fungus",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [
+        {
+          "CRT_seed": 1,
+          "first_sea_candidate": [
+            47,
+            67
+          ],
+          "input": "land fungus"
+        }
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1,
+      "CRT_after": 433661943,
+      "CRT_draws": 198,
+      "spread_attempts": 94,
+      "sea_attempts": 1,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          47,
+          67
+        ],
+        "raw_requested": 2,
+        "early": true,
+        "requested": 1,
+        "capacity": 2,
+        "passengers": 1,
+        "carrier": 13
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            47,
+            67
+          ],
+          "result": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            47,
+            67
+          ],
+          "result": 14
+        },
+        {
+          "op": "sentry",
+          "unit": 14,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 13
+        }
+      ],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 15,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "ambush",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [
+        {
+          "native_Unit_factory": 13,
+          "owner": 2,
+          "design": 2,
+          "CRT_seed": 112,
+          "first_land_candidate": [
+            29,
+            35
+          ]
+        }
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 112,
+      "CRT_after": 4267423168,
+      "CRT_draws": 208,
+      "spread_attempts": 100,
+      "sea_attempts": 0,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            31,
+            33
+          ],
+          "result": 14
+        }
+      ],
+      "nearest_queries": [
+        {
+          "position": [
+            29,
+            35
+          ],
+          "region": 15,
+          "Base": 2,
+          "distance": 4
+        }
+      ],
+      "adjacency_queries": [
+        {
+          "position": [
+            31,
+            33
+          ],
+          "owner": 0,
+          "result": 0
+        }
+      ],
+      "Unit_count_before": 14,
+      "Unit_count_after": 15,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "ambush_explored",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [
+        {
+          "native_Unit_factory": 13,
+          "owner": 2,
+          "design": 2,
+          "CRT_seed": 112,
+          "first_land_candidate": [
+            29,
+            35
+          ]
+        }
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 112,
+      "CRT_after": 4267423168,
+      "CRT_draws": 208,
+      "spread_attempts": 100,
+      "sea_attempts": 0,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [],
+      "nearest_queries": [
+        {
+          "position": [
+            29,
+            35
+          ],
+          "region": 15,
+          "Base": 2,
+          "distance": 4
+        }
+      ],
+      "adjacency_queries": [],
+      "Unit_count_before": 14,
+      "Unit_count_after": 14,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "ambush_omniscient",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [
+        {
+          "native_Unit_factory": 13,
+          "owner": 2,
+          "design": 2,
+          "CRT_seed": 112,
+          "first_land_candidate": [
+            29,
+            35
+          ]
+        }
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 112,
+      "CRT_after": 4267423168,
+      "CRT_draws": 208,
+      "spread_attempts": 100,
+      "sea_attempts": 0,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [],
+      "nearest_queries": [
+        {
+          "position": [
+            29,
+            35
+          ],
+          "region": 15,
+          "Base": 2,
+          "distance": 4
+        }
+      ],
+      "adjacency_queries": [],
+      "Unit_count_before": 14,
+      "Unit_count_after": 14,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "ambush_near_Base",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [
+        {
+          "native_Unit_factory": 13,
+          "owner": 2,
+          "design": 2,
+          "CRT_seed": 11,
+          "first_land_candidate": [
+            5,
+            67
+          ]
+        }
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 11,
+      "CRT_after": 2285573659,
+      "CRT_draws": 208,
+      "spread_attempts": 100,
+      "sea_attempts": 0,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            59,
+            27
+          ],
+          "result": 14
+        }
+      ],
+      "nearest_queries": [
+        {
+          "position": [
+            5,
+            67
+          ],
+          "region": 14,
+          "Base": 5,
+          "distance": 2
+        },
+        {
+          "position": [
+            59,
+            27
+          ],
+          "region": 13,
+          "Base": 3,
+          "distance": 3
+        }
+      ],
+      "adjacency_queries": [],
+      "Unit_count_before": 14,
+      "Unit_count_after": 15,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "native_occupied",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [
+        {
+          "native_Unit_factory": 13,
+          "owner": 0,
+          "design": 8,
+          "CRT_seed": 112,
+          "first_land_candidate": [
+            29,
+            35
+          ]
+        }
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 112,
+      "CRT_after": 4267423168,
+      "CRT_draws": 208,
+      "spread_attempts": 100,
+      "sea_attempts": 0,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [],
+      "nearest_queries": [
+        {
+          "position": [
+            29,
+            35
+          ],
+          "region": 15,
+          "Base": 2,
+          "distance": 4
+        }
+      ],
+      "adjacency_queries": [],
+      "Unit_count_before": 14,
+      "Unit_count_after": 14,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "no_Base_distance",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [
+        {
+          "CRT_seed": 15,
+          "first_land_candidate": [
+            72,
+            68
+          ],
+          "prior_distance": 3,
+          "region": 21
+        }
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 15,
+      "CRT_after": 1513574175,
+      "CRT_draws": 208,
+      "spread_attempts": 100,
+      "sea_attempts": 0,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [],
+      "nearest_queries": [
+        {
+          "position": [
+            72,
+            68
+          ],
+          "region": 21,
+          "Base": -1,
+          "distance": 9999
+        }
+      ],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 13,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "cap1791",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [
+        "Actual native factories build a1791/1792-Unit roster; producer seed restored as declared input"
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 4056086993,
+      "CRT_draws": 198,
+      "spread_attempts": 94,
+      "sea_attempts": 1,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          58,
+          66
+        ],
+        "raw_requested": 2,
+        "early": true,
+        "requested": 1,
+        "capacity": 2,
+        "passengers": 1,
+        "carrier": 1791
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            58,
+            66
+          ],
+          "result": 1791
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            58,
+            66
+          ],
+          "result": 1792
+        },
+        {
+          "op": "sentry",
+          "unit": 1792,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 1791
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            23,
+            33
+          ],
+          "result": 1793
+        }
+      ],
+      "nearest_queries": [
+        {
+          "position": [
+            23,
+            33
+          ],
+          "region": 15,
+          "Base": 2,
+          "distance": 4
+        }
+      ],
+      "adjacency_queries": [],
+      "Unit_count_before": 1791,
+      "Unit_count_after": 1794,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "cap1792",
+      "source_receipt": "global-wildlife-closure-development-20261019.json",
+      "preparation": [
+        "Actual native factories build a1791/1792-Unit roster; producer seed restored as declared input"
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 1433055287,
+      "CRT_draws": 188,
+      "spread_attempts": 94,
+      "sea_attempts": 0,
+      "land_attempts": 0,
+      "brood": null,
+      "actions": [],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 1792,
+      "Unit_count_after": 1792,
+      "cluster_entry_count": 0,
+      "cluster_guard": [],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea_life0_T10",
+      "source_receipt": "global-wildlife-closure-extensions-development-20261019.json",
+      "preparation": [],
+      "turn": 10,
+      "life": 0,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 2231806461,
+      "CRT_draws": 194,
+      "spread_attempts": 94,
+      "sea_attempts": 1,
+      "land_attempts": 2,
+      "brood": {
+        "position": [
+          58,
+          66
+        ],
+        "raw_requested": 1,
+        "early": true,
+        "requested": 1,
+        "capacity": 2,
+        "passengers": 1,
+        "carrier": 13
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            58,
+            66
+          ],
+          "result": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            58,
+            66
+          ],
+          "result": 14
+        },
+        {
+          "op": "sentry",
+          "unit": 14,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            23,
+            33
+          ],
+          "result": 15
+        }
+      ],
+      "nearest_queries": [
+        {
+          "position": [
+            23,
+            33
+          ],
+          "region": 15,
+          "Base": 2,
+          "distance": 4
+        }
+      ],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 16,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 2,
+          "limit": 2
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea_life2_T6",
+      "source_receipt": "global-wildlife-closure-extensions-development-20261019.json",
+      "preparation": [],
+      "turn": 6,
+      "life": 2,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 701817913,
+      "CRT_draws": 206,
+      "spread_attempts": 96,
+      "sea_attempts": 1,
+      "land_attempts": 6,
+      "brood": {
+        "position": [
+          70,
+          6
+        ],
+        "raw_requested": 3,
+        "early": true,
+        "requested": 1,
+        "capacity": 2,
+        "passengers": 1,
+        "carrier": 13
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            70,
+            6
+          ],
+          "result": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            70,
+            6
+          ],
+          "result": 14
+        },
+        {
+          "op": "sentry",
+          "unit": 14,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 13
+        }
+      ],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 15,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 6,
+          "limit": 6
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea7",
+      "source_receipt": "global-wildlife-closure-extensions-development-20261019.json",
+      "preparation": [],
+      "turn": 7,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 3057336019,
+      "CRT_draws": 200,
+      "spread_attempts": 96,
+      "sea_attempts": 0,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 13,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "ambush_no_Base",
+      "source_receipt": "global-wildlife-closure-extensions-development-20261019.json",
+      "preparation": [
+        {
+          "native_Unit_factory": 13,
+          "owner": 2,
+          "CRT_seed": 15,
+          "first_land_candidate": [
+            72,
+            68
+          ],
+          "prior_distance": 3
+        }
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 15,
+      "CRT_after": 1513574175,
+      "CRT_draws": 208,
+      "spread_attempts": 100,
+      "sea_attempts": 0,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            74,
+            70
+          ],
+          "result": 14
+        }
+      ],
+      "nearest_queries": [
+        {
+          "position": [
+            72,
+            68
+          ],
+          "region": 21,
+          "Base": -1,
+          "distance": 9999
+        }
+      ],
+      "adjacency_queries": [
+        {
+          "position": [
+            74,
+            70
+          ],
+          "owner": 0,
+          "result": 0
+        }
+      ],
+      "Unit_count_before": 14,
+      "Unit_count_after": 15,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea8_no_candidate",
+      "source_receipt": "global-wildlife-search-limit-original-x86-20261019.json",
+      "preparation": [
+        "Supplied all-land, fungus/forest/kelp-free terrain; original region/climate/search/census preparation executed"
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1537134187,
+      "CRT_after": 1664623,
+      "CRT_draws": 2196,
+      "spread_attempts": 94,
+      "sea_attempts": 1000,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 13,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea8_999_candidate",
+      "source_receipt": "global-wildlife-search-limit-original-x86-20261019.json",
+      "preparation": [
+        "Supplied all-land, fungus/forest/kelp-free terrain; original region/climate/search/census preparation executed",
+        {
+          "CRT_seed": 1,
+          "only_eligible_sea_ordinal": 999,
+          "position": [
+            29,
+            35
+          ]
+        }
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1,
+      "CRT_after": 3762461011,
+      "CRT_draws": 2194,
+      "spread_attempts": 94,
+      "sea_attempts": 999,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          29,
+          35
+        ],
+        "raw_requested": 2,
+        "early": true,
+        "requested": 1,
+        "capacity": 2,
+        "passengers": 1,
+        "carrier": 13
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            29,
+            35
+          ],
+          "result": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            29,
+            35
+          ],
+          "result": 14
+        },
+        {
+          "op": "sentry",
+          "unit": 14,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 13
+        }
+      ],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 15,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea8_1000_candidate",
+      "source_receipt": "global-wildlife-search-limit-original-x86-20261019.json",
+      "preparation": [
+        "Supplied all-land, fungus/forest/kelp-free terrain; original region/climate/search/census preparation executed",
+        {
+          "CRT_seed": 3,
+          "only_eligible_sea_ordinal": 1000,
+          "position": [
+            20,
+            36
+          ]
+        }
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 3,
+      "CRT_after": 1477408135,
+      "CRT_draws": 2196,
+      "spread_attempts": 94,
+      "sea_attempts": 1000,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 13,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "ambush_blocker",
+      "source_receipt": "global-wildlife-guard-controls-original-x86-20261019.json",
+      "preparation": [
+        {
+          "victim": 13,
+          "blocker": 14,
+          "blocker_owner": 3,
+          "blocker_position": [
+            30,
+            34
+          ],
+          "directed_Pact_input": false,
+          "CRT_seed": 112
+        }
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 112,
+      "CRT_after": 4267423168,
+      "CRT_draws": 208,
+      "spread_attempts": 100,
+      "sea_attempts": 0,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            27,
+            37
+          ],
+          "result": 15
+        }
+      ],
+      "nearest_queries": [
+        {
+          "position": [
+            29,
+            35
+          ],
+          "region": 15,
+          "Base": 2,
+          "distance": 4
+        }
+      ],
+      "adjacency_queries": [
+        {
+          "position": [
+            31,
+            33
+          ],
+          "owner": 0,
+          "result": 4
+        },
+        {
+          "position": [
+            27,
+            37
+          ],
+          "owner": 0,
+          "result": 0
+        }
+      ],
+      "Unit_count_before": 15,
+      "Unit_count_after": 16,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "ambush_Pact_blocker",
+      "source_receipt": "global-wildlife-guard-controls-original-x86-20261019.json",
+      "preparation": [
+        {
+          "victim": 13,
+          "blocker": 14,
+          "blocker_owner": 3,
+          "blocker_position": [
+            30,
+            34
+          ],
+          "directed_Pact_input": true,
+          "CRT_seed": 112
+        }
+      ],
+      "turn": 1,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 112,
+      "CRT_after": 4267423168,
+      "CRT_draws": 208,
+      "spread_attempts": 100,
+      "sea_attempts": 0,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            31,
+            33
+          ],
+          "result": 15
+        }
+      ],
+      "nearest_queries": [
+        {
+          "position": [
+            29,
+            35
+          ],
+          "region": 15,
+          "Base": 2,
+          "distance": 4
+        }
+      ],
+      "adjacency_queries": [
+        {
+          "position": [
+            31,
+            33
+          ],
+          "owner": 0,
+          "result": 0
+        }
+      ],
+      "Unit_count_before": 15,
+      "Unit_count_after": 16,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea_area49",
+      "source_receipt": "global-wildlife-guard-controls-original-x86-20261019.json",
+      "preparation": [
+        {
+          "CRT_seed": 119,
+          "first_sea_candidate": [
+            36,
+            14
+          ],
+          "actual_region": 65,
+          "actual_region_area": 49,
+          "native_region_producers": true
+        }
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 119,
+      "CRT_after": 424770363,
+      "CRT_draws": 2196,
+      "spread_attempts": 94,
+      "sea_attempts": 1000,
+      "land_attempts": 4,
+      "brood": null,
+      "actions": [],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 13,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea_area50",
+      "source_receipt": "global-wildlife-guard-controls-original-x86-20261019.json",
+      "preparation": [
+        {
+          "CRT_seed": 119,
+          "first_sea_candidate": [
+            36,
+            14
+          ],
+          "actual_region": 65,
+          "actual_region_area": 50,
+          "native_region_producers": true
+        }
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 119,
+      "CRT_after": 3327693309,
+      "CRT_draws": 198,
+      "spread_attempts": 94,
+      "sea_attempts": 1,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          36,
+          14
+        ],
+        "raw_requested": 2,
+        "early": true,
+        "requested": 1,
+        "capacity": 2,
+        "passengers": 1,
+        "carrier": 13
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            36,
+            14
+          ],
+          "result": 13
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            36,
+            14
+          ],
+          "result": 14
+        },
+        {
+          "op": "sentry",
+          "unit": 14,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 13
+        }
+      ],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 13,
+      "Unit_count_after": 15,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea_area50_occupied",
+      "source_receipt": "global-wildlife-guard-controls-original-x86-20261019.json",
+      "preparation": [
+        {
+          "native_sea_Unit": 13,
+          "owner": 2,
+          "position": [
+            36,
+            14
+          ]
+        },
+        {
+          "CRT_seed": 119,
+          "first_sea_candidate": [
+            36,
+            14
+          ],
+          "actual_region": 65,
+          "actual_region_area": 50,
+          "native_region_producers": true
+        }
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 119,
+      "CRT_after": 8384017,
+      "CRT_draws": 522,
+      "spread_attempts": 94,
+      "sea_attempts": 163,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          29,
+          13
+        ],
+        "raw_requested": 2,
+        "early": true,
+        "requested": 1,
+        "capacity": 2,
+        "passengers": 1,
+        "carrier": 14
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            29,
+            13
+          ],
+          "result": 14
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            29,
+            13
+          ],
+          "result": 15
+        },
+        {
+          "op": "sentry",
+          "unit": 15,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 14
+        }
+      ],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 14,
+      "Unit_count_after": 16,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea_area49_fungus_occupied",
+      "source_receipt": "global-wildlife-guard-controls-original-x86-20261019.json",
+      "preparation": [
+        {
+          "native_sea_Unit": 13,
+          "owner": 2,
+          "position": [
+            36,
+            14
+          ]
+        },
+        {
+          "CRT_seed": 119,
+          "first_sea_candidate": [
+            36,
+            14
+          ],
+          "actual_region": 65,
+          "actual_region_area": 49,
+          "native_region_producers": true
+        }
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 119,
+      "CRT_after": 3327693309,
+      "CRT_draws": 198,
+      "spread_attempts": 94,
+      "sea_attempts": 1,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          36,
+          14
+        ],
+        "raw_requested": 2,
+        "early": true,
+        "requested": 1,
+        "capacity": 2,
+        "passengers": 1,
+        "carrier": 14
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            36,
+            14
+          ],
+          "result": 14
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            36,
+            14
+          ],
+          "result": 15
+        },
+        {
+          "op": "sentry",
+          "unit": 15,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 14
+        }
+      ],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 14,
+      "Unit_count_after": 16,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": null
+    },
+    {
+      "variant": "sea_fungus_Scout",
+      "source_receipt": "global-wildlife-scout-colocation-original-x86-20261019.json",
+      "preparation": [
+        {
+          "native_Scout_factory": 13,
+          "owner": 2,
+          "position": [
+            47,
+            67
+          ],
+          "CRT_seed": 1,
+          "first_sea_candidate": [
+            47,
+            67
+          ],
+          "input": "land fungus + real positive-owner Scout"
+        }
+      ],
+      "turn": 8,
+      "life": 1,
+      "difficulty": 3,
+      "secondary": 0,
+      "technology_masks": [
+        0,
+        0
+      ],
+      "CRT_before": 1,
+      "CRT_after": 433661943,
+      "CRT_draws": 198,
+      "spread_attempts": 94,
+      "sea_attempts": 1,
+      "land_attempts": 4,
+      "brood": {
+        "position": [
+          47,
+          67
+        ],
+        "raw_requested": 2,
+        "early": true,
+        "requested": 1,
+        "capacity": 2,
+        "passengers": 1,
+        "carrier": 14
+      },
+      "actions": [
+        {
+          "op": "create",
+          "design": 9,
+          "owner": 0,
+          "position": [
+            47,
+            67
+          ],
+          "result": 14
+        },
+        {
+          "op": "create",
+          "design": 8,
+          "owner": 0,
+          "position": [
+            47,
+            67
+          ],
+          "result": 15
+        },
+        {
+          "op": "sentry",
+          "unit": 15,
+          "payload": -1,
+          "extra_order_word": 0
+        },
+        {
+          "op": "promote_stack",
+          "unit": 14
+        }
+      ],
+      "nearest_queries": [],
+      "adjacency_queries": [],
+      "Unit_count_before": 14,
+      "Unit_count_after": 16,
+      "cluster_entry_count": 0,
+      "cluster_guard": [
+        {
+          "count": 4,
+          "limit": 4
+        }
+      ],
+      "gameplay_journal_complete_for_observed_ranges": true,
+      "presentation_omissions": [],
+      "preparation_view_omission_count": 0,
+      "Scout_colocation": {
+        "positive_Scout": 13,
+        "Scout_changed_offsets": [
+          39,
+          50,
+          51
+        ],
+        "Scout_observation_before": 0,
+        "Scout_observation_after": 4,
+        "Scout_observation_write_pc": "0x5ce613",
+        "final_stack": [
+          14,
+          15,
+          13
+        ],
+        "tile_affiliation": 2,
+        "damage_unchanged": true,
+        "ownership_unchanged": true,
+        "mixed_owner_publication_succeeds": true
+      }
+    }
+  ],
+  "source_proof": {
+    "cluster_unreachable_from_normal_entry": true,
+    "filtered_nearest_resets_distance9999": true
+  },
+  "unaccepted_attempts": [
+    "First closure sea8_no_candidate stopped on absent-view preparation read.",
+    "First extension three search-limit inputs changed cached class only; actual contour preparation restored original sea. Repaired cases supply contour authority and assert all-land before entry."
+  ]
+}

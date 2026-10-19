@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace task::intro { class Movie; }
-namespace loader::texture {struct SmacTurnFrames;}
+namespace loader::texture {struct SmacTurnFrames;struct SmacGraphPalette;}
 
 namespace types {
 namespace mesh {
@@ -54,6 +54,7 @@ private:
 	void ClearTexture();
 	std::unique_ptr<task::intro::Movie> m_movie;
     std::shared_ptr<const loader::texture::SmacTurnFrames> m_turn_frames;
+    std::shared_ptr<const loader::texture::SmacGraphPalette> m_graph_palette;
 	void StopMovie();
 
 private:

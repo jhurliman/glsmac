@@ -15,6 +15,22 @@ return {
 		}
 	},
 
+    request_graph: () => {
+        if (!this.graph_visible) { return; }
+        this.graph_dirty = true;
+        if (this.graph_pending) { return; }
+        this.graph_dirty = false;
+        this.graph_request = this.graph_request + 1;
+        if (this.get_width() != 455) {
+            this.graph.hide(); this.history.show(); return;
+        }
+        this.graph_pending = true;
+        if (!this.game.request_smac_dominance_graph(this.graph_request)) {
+            this.graph_pending = false;
+            this.graph.hide(); this.history.show();
+        }
+    },
+
 	refresh_data: () => {
 		// A roster controller name is not the faction leader's name. Source
 		// identity is retained with the faction; old snapshots keep its absence.
@@ -44,9 +60,13 @@ return {
 		for (let placed_value = 0; placed_value < 3; placed_value++) {
 			this.place(this.values[placed_value], placed_value + 2, 5 + this.labels[placed_value + 2].measure().width);
 		}
+        this.request_graph();
 	},
 
+    on_hide: () => { this.graph_visible = false; this.graph_dirty = false; },
+
 	on_show: () => {
+        this.graph_visible = true;
 		this.refresh(this.get_width());
 		this.refresh_data();
 	},
@@ -77,12 +97,29 @@ return {
 			this.place(value, rating_row, 5 + this.labels[rating_row].measure().width);
 			this.values :+ value;
 		}
+        this.graph_visible = true;
+        this.graph_request = 0;
+        this.graph_pending = false;
+        this.graph_dirty = false;
+        this.graph = this.panels[1].surface({left: 3, top: 3, width: 220, height: 86});
+        this.graph.hide();
 		this.heading = this.panels[1].text({class: 'bottombar-info-text', text: 'Faction Dominance'});
 		this.history = this.panels[1].text({class: 'bottombar-info-text', text: 'History unavailable'});
 		this.place(this.heading, 0, 5);
 		this.place(this.history, 1, 5);
 		this.button = p.frame.button({class: 'bottombar-panel-page-button', align: 'bottom right', bottom: 5, right: 5, text: 'I', group: 'pages'});
-		this.page.on('resize', (e) => { this.refresh(this.get_width()); return true; });
+        this.page.on('resize', (e) => { this.refresh(this.get_width()); this.request_graph(); return true; });
+        this.page.listen(p.game, 'smac_dominance_graph', (e) => {
+            if (e.request_id != this.graph_request) { return; }
+            this.graph_pending = false;
+            if (this.get_width() == 455 && #is_defined(e.frame)) {
+                this.graph.smacdominancegraph(e.frame);
+                this.graph.show(); this.history.hide();
+            } else {
+                this.graph.hide(); this.history.show();
+            }
+            if (this.graph_dirty) { this.request_graph(); }
+        });
 		this.page.listen(p.game, 'turn', (e) => { this.refresh_data(); });
 		this.page.listen(p.game, 'player_update', (e) => { this.refresh_data(); });
 		this.page.listen(p.game, 'update_base', (e) => { this.refresh_data(); });

@@ -179,6 +179,9 @@ struct SmacSimulationState {
 	std::optional<std::array<int32_t,8>> ranking_scores;
     // V11-V30 did not retain graph samples. Loading preserves absence.
     std::optional<SmacDominanceHistory> dominance_history;
+    // V32: full seven canonical native source slots. Absent V31 payloads keep
+    // their original dense port-owner columns without reinterpretation.
+    std::optional<std::array<std::string,8>> dominance_native_keys;
 	// V11-V24 did not retain these words. Loading preserves absence and never
 	// rebuilds H from facilities, atrocity history or aggregate from current Bases.
 	std::optional<SmacEcologyHistory> ecology_history;

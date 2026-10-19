@@ -1,0 +1,530 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Native palette slot-table producer over poisoned entries, two complete59de20 list loaders and14complete faction text parsers/actual PCX loads with virtual FACTIONS row1/3 swap. Same declared actor/cache and sprite-storage presentation sinks as prior minimap discriminator.21native graph color-selection fragments; no graph geometry/score writer rerun. Full graphics cache routine not executed.",
+  "produced_tables": [
+    [
+      249,
+      241,
+      252,
+      255,
+      251,
+      65,
+      102,
+      235
+    ],
+    [
+      1,
+      32,
+      187,
+      209,
+      85,
+      79,
+      109,
+      186
+    ],
+    [
+      249,
+      242,
+      218,
+      155,
+      251,
+      75,
+      98,
+      235
+    ],
+    [
+      199,
+      37,
+      198,
+      83,
+      135,
+      65,
+      135,
+      192
+    ]
+  ],
+  "producer_writes": [
+    {
+      "address": "0x6aeeb4",
+      "size": 4,
+      "value": 249
+    },
+    {
+      "address": "0x6aeed4",
+      "size": 4,
+      "value": 1
+    },
+    {
+      "address": "0x6aeef4",
+      "size": 4,
+      "value": 249
+    },
+    {
+      "address": "0x6aef14",
+      "size": 4,
+      "value": 199
+    },
+    {
+      "address": "0x6aeeb8",
+      "size": 4,
+      "value": 241
+    },
+    {
+      "address": "0x6aeed8",
+      "size": 4,
+      "value": 32
+    },
+    {
+      "address": "0x6aeef8",
+      "size": 4,
+      "value": 242
+    },
+    {
+      "address": "0x6aef18",
+      "size": 4,
+      "value": 37
+    },
+    {
+      "address": "0x6aeebc",
+      "size": 4,
+      "value": 252
+    },
+    {
+      "address": "0x6aeedc",
+      "size": 4,
+      "value": 187
+    },
+    {
+      "address": "0x6aeefc",
+      "size": 4,
+      "value": 218
+    },
+    {
+      "address": "0x6aef1c",
+      "size": 4,
+      "value": 198
+    },
+    {
+      "address": "0x6aeec0",
+      "size": 4,
+      "value": 255
+    },
+    {
+      "address": "0x6aeee0",
+      "size": 4,
+      "value": 209
+    },
+    {
+      "address": "0x6aef00",
+      "size": 4,
+      "value": 155
+    },
+    {
+      "address": "0x6aef20",
+      "size": 4,
+      "value": 83
+    },
+    {
+      "address": "0x6aeec4",
+      "size": 4,
+      "value": 251
+    },
+    {
+      "address": "0x6aeee4",
+      "size": 4,
+      "value": 85
+    },
+    {
+      "address": "0x6aef04",
+      "size": 4,
+      "value": 251
+    },
+    {
+      "address": "0x6aef24",
+      "size": 4,
+      "value": 135
+    },
+    {
+      "address": "0x6aeec8",
+      "size": 4,
+      "value": 65
+    },
+    {
+      "address": "0x6aeee8",
+      "size": 4,
+      "value": 79
+    },
+    {
+      "address": "0x6aef08",
+      "size": 4,
+      "value": 75
+    },
+    {
+      "address": "0x6aef28",
+      "size": 4,
+      "value": 65
+    },
+    {
+      "address": "0x6aeecc",
+      "size": 4,
+      "value": 102
+    },
+    {
+      "address": "0x6aeeec",
+      "size": 4,
+      "value": 109
+    },
+    {
+      "address": "0x6aef0c",
+      "size": 4,
+      "value": 98
+    },
+    {
+      "address": "0x6aef2c",
+      "size": 4,
+      "value": 135
+    },
+    {
+      "address": "0x6aeed0",
+      "size": 4,
+      "value": 235
+    },
+    {
+      "address": "0x6aeef0",
+      "size": 4,
+      "value": 186
+    },
+    {
+      "address": "0x6aef10",
+      "size": 4,
+      "value": 235
+    },
+    {
+      "address": "0x6aef30",
+      "size": 4,
+      "value": 192
+    }
+  ],
+  "cases": [
+    {
+      "id": "canonical_default",
+      "slots": [
+        {
+          "native_slot": 1,
+          "filename": "GAIANS",
+          "graph_key": "GAIANS",
+          "name": "Gaia's Stepdaughters",
+          "index": 241
+        },
+        {
+          "native_slot": 2,
+          "filename": "HIVE",
+          "graph_key": "HIVE",
+          "name": "Human Hive",
+          "index": 252
+        },
+        {
+          "native_slot": 3,
+          "filename": "UNIV",
+          "graph_key": "UNIV",
+          "name": "University of Planet",
+          "index": 255
+        },
+        {
+          "native_slot": 4,
+          "filename": "MORGAN",
+          "graph_key": "MORGAN",
+          "name": "Morgan Industries",
+          "index": 251
+        },
+        {
+          "native_slot": 5,
+          "filename": "SPARTANS",
+          "graph_key": "SPARTANS",
+          "name": "Spartan Federation",
+          "index": 79
+        },
+        {
+          "native_slot": 6,
+          "filename": "BELIEVE",
+          "graph_key": "BELIEVE",
+          "name": "The Lord's Believers",
+          "index": 102
+        },
+        {
+          "native_slot": 7,
+          "filename": "PEACE",
+          "graph_key": "PEACE",
+          "name": "Peacekeeping Forces",
+          "index": 235
+        }
+      ],
+      "table_writes": [],
+      "tables_after": [
+        [
+          249,
+          241,
+          252,
+          255,
+          251,
+          65,
+          102,
+          235
+        ],
+        [
+          1,
+          32,
+          187,
+          209,
+          85,
+          79,
+          109,
+          186
+        ],
+        [
+          249,
+          242,
+          218,
+          155,
+          251,
+          75,
+          98,
+          235
+        ],
+        [
+          199,
+          37,
+          198,
+          83,
+          135,
+          65,
+          135,
+          192
+        ]
+      ],
+      "opened_graphics": [
+        "GAIANS.pcx",
+        "HIVE.pcx",
+        "UNIV.pcx",
+        "MORGAN.pcx",
+        "SPARTANS.pcx",
+        "BELIEVE.pcx",
+        "PEACE.pcx"
+      ],
+      "virtual_order": []
+    },
+    {
+      "id": "custom_swap_1_3",
+      "slots": [
+        {
+          "native_slot": 1,
+          "filename": "UNIV",
+          "graph_key": "UNIV",
+          "name": "University of Planet",
+          "index": 241
+        },
+        {
+          "native_slot": 2,
+          "filename": "HIVE",
+          "graph_key": "HIVE",
+          "name": "Human Hive",
+          "index": 252
+        },
+        {
+          "native_slot": 3,
+          "filename": "GAIANS",
+          "graph_key": "GAIANS",
+          "name": "Gaia's Stepdaughters",
+          "index": 255
+        },
+        {
+          "native_slot": 4,
+          "filename": "MORGAN",
+          "graph_key": "MORGAN",
+          "name": "Morgan Industries",
+          "index": 251
+        },
+        {
+          "native_slot": 5,
+          "filename": "SPARTANS",
+          "graph_key": "SPARTANS",
+          "name": "Spartan Federation",
+          "index": 79
+        },
+        {
+          "native_slot": 6,
+          "filename": "BELIEVE",
+          "graph_key": "BELIEVE",
+          "name": "The Lord's Believers",
+          "index": 102
+        },
+        {
+          "native_slot": 7,
+          "filename": "PEACE",
+          "graph_key": "PEACE",
+          "name": "Peacekeeping Forces",
+          "index": 235
+        }
+      ],
+      "table_writes": [],
+      "tables_after": [
+        [
+          249,
+          241,
+          252,
+          255,
+          251,
+          65,
+          102,
+          235
+        ],
+        [
+          1,
+          32,
+          187,
+          209,
+          85,
+          79,
+          109,
+          186
+        ],
+        [
+          249,
+          242,
+          218,
+          155,
+          251,
+          75,
+          98,
+          235
+        ],
+        [
+          199,
+          37,
+          198,
+          83,
+          135,
+          65,
+          135,
+          192
+        ]
+      ],
+      "opened_graphics": [
+        "UNIV.pcx",
+        "HIVE.pcx",
+        "GAIANS.pcx",
+        "MORGAN.pcx",
+        "SPARTANS.pcx",
+        "BELIEVE.pcx",
+        "PEACE.pcx"
+      ],
+      "virtual_order": [
+        {
+          "rows": [
+            "UNIV,     UNIV",
+            "HIVE,     HIVE",
+            "GAIANS,   GAIANS",
+            "MORGAN,   MORGAN",
+            "SPARTANS, SPARTANS",
+            "BELIEVE,  BELIEVE",
+            "PEACE,    PEACE"
+          ],
+          "virtual_alpha_sha256": "c8517f12e2256e2dee54175a2bcb05b325c60c6b79f56eeda0082ea04ec3fe67"
+        },
+        {
+          "rows": [
+            "UNIV,     UNIV",
+            "HIVE,     HIVE",
+            "GAIANS,   GAIANS",
+            "MORGAN,   MORGAN",
+            "SPARTANS, SPARTANS",
+            "BELIEVE,  BELIEVE",
+            "PEACE,    PEACE"
+          ],
+          "virtual_alpha_sha256": "c8517f12e2256e2dee54175a2bcb05b325c60c6b79f56eeda0082ea04ec3fe67"
+        }
+      ]
+    }
+  ],
+  "sparse_active_mask": 2,
+  "sparse_slots": [
+    {
+      "native_slot": 1,
+      "filename": "UNIV",
+      "graph_key": "UNIV",
+      "name": "University of Planet",
+      "index": 241
+    },
+    {
+      "native_slot": 2,
+      "filename": "HIVE",
+      "graph_key": "HIVE",
+      "name": "Human Hive",
+      "index": 252
+    },
+    {
+      "native_slot": 3,
+      "filename": "GAIANS",
+      "graph_key": "GAIANS",
+      "name": "Gaia's Stepdaughters",
+      "index": 255
+    },
+    {
+      "native_slot": 4,
+      "filename": "MORGAN",
+      "graph_key": "MORGAN",
+      "name": "Morgan Industries",
+      "index": 251
+    },
+    {
+      "native_slot": 5,
+      "filename": "SPARTANS",
+      "graph_key": "SPARTANS",
+      "name": "Spartan Federation",
+      "index": 79
+    },
+    {
+      "native_slot": 6,
+      "filename": "BELIEVE",
+      "graph_key": "BELIEVE",
+      "name": "The Lord's Believers",
+      "index": 102
+    },
+    {
+      "native_slot": 7,
+      "filename": "PEACE",
+      "graph_key": "PEACE",
+      "name": "Peacekeeping Forces",
+      "index": 235
+    }
+  ],
+  "palette_sha256": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6",
+  "asset_sha256": {
+    "ALPHA.txt": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4",
+    "PALETTE.PCX": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "GAIANS.PCX": "a2d4214c3857c130586a249adf8c48c27d877f3da8321f5d53155ca5836d0891",
+    "UNIV.PCX": "84ccbaa954808a6fe14dc6f3f41850fbb37350f1af34359a21b8820ecf3019a5"
+  },
+  "pre_producer_defaults": [
+    [
+      249,
+      111,
+      252,
+      255,
+      251,
+      65,
+      102,
+      187
+    ],
+    [
+      1,
+      175,
+      4,
+      248,
+      3,
+      57,
+      109,
+      192
+    ]
+  ]
+}

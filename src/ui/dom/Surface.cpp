@@ -8,6 +8,10 @@
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "loader/texture/SmacTurnFrames.h"
+#include "ui/SmacDominanceRaster.h"
+#include "gse/value/Array.h"
+#include "gse/value/Object.h"
+#include "gse/value/String.h"
 #include "gse/value/Int.h"
 #include "graphics/Graphics.h"
 #include "types/texture/Texture.h"
@@ -66,6 +70,36 @@ Surface::Surface( DOM_ARGS_T )
 	Method( GSE_CALL, "stopmovie", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 0 );StopMovie();return VALUE(gse::value::Undefined);
 	} ) );
+
+    Method(GSE_CALL,"smacdominancegraph",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(1);N_GET(frame,0,Object);
+        const auto field=[&](const char* name,gse::value_type_t type)->gse::Value* {
+            const auto item=frame->value.find(name);
+            if(item==frame->value.end() || !item->second || item->second->type!=type) {throw std::invalid_argument("Incomplete dominance graph frame");}
+            return item->second;
+        };
+        if(static_cast<gse::value::String*>(field("kind",gse::VT_STRING))->value!="smac-native-dominance-v1") {throw std::invalid_argument("Unknown dominance graph frame");}
+        const auto turn=static_cast<gse::value::Int*>(field("turn",gse::VT_INT))->value;
+        const auto history=game::backend::faction::SmacDominanceHistory::Deserialize(static_cast<gse::value::String*>(field("history",gse::VT_STRING))->value);
+        const auto& values=static_cast<gse::value::Array*>(field("scores",gse::VT_ARRAY))->value;
+        const auto& names=static_cast<gse::value::Array*>(field("native_keys",gse::VT_ARRAY))->value;
+        if(turn<0 || turn>=1000 || values.size()!=8 || names.size()!=8) {throw std::invalid_argument("Unsupported dominance graph frame size");}
+        std::array<int32_t,8> scores{};std::array<std::string,8> keys{};
+        for(size_t slot=0;slot<8;++slot) {
+            if(!values[slot] || values[slot]->type!=gse::VT_INT || !names[slot] || names[slot]->type!=gse::VT_STRING) {throw std::invalid_argument("Invalid dominance graph slot");}
+            const auto score=static_cast<gse::value::Int*>(values[slot])->value;
+            if(score<INT32_MIN || score>INT32_MAX) {throw std::invalid_argument("Dominance score outside signed32");}
+            scores[slot]=static_cast<int32_t>(score);keys[slot]=static_cast<gse::value::String*>(names[slot])->value;
+        }
+        if(!m_graph_palette) {m_graph_palette=g_engine->GetTextureLoader()->GetSmacGraphPalette();}
+        if(!m_graph_palette) {throw std::runtime_error("Dominance graph palette unavailable");}
+        const auto graph=game::backend::faction::SmacDominanceGraph::Build(static_cast<size_t>(turn),{501,76,721,162},scores,history,keys,m_graph_palette->normal,m_graph_palette->alternate);
+        const auto rgba=ui::RasterSmacDominance(graph,*m_graph_palette);
+        CreateTexture();m_background.texture->Resize(220,86);
+        std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());
+        m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);
+        m_geometry->AsRectangle()->SetStretched();return VALUE(gse::value::Bool,,true);
+    }));
 
     Method( GSE_CALL, "smacturnframe", NATIVE_CALL( this ) {
         N_EXPECT_ARGS(1);N_GETVALUE(frame,0,Int);

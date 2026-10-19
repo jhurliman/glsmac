@@ -22,33 +22,29 @@ return {
 			width: 236,
 		});
 
-		const minimap = this.frame.widget({
-			type: 'minimap',
-			align: 'top left',
-			top: 36,
-			height: 112,
-			left: 0,
-			width: 236,
+		// Source console coordinates at the fixed 1024x768 logical stage.
+		const minimap = p.el.widget({
+			type: 'minimap', align: 'top left',
+			left: 780, top: 88, width: 239, height: 119,
+			data: {},
 		});
+		let had_overview = false;
+		const refresh_overview = () => {
+			const frame = p.game.get_smac_minimap();
+			if (#is_defined(frame)) {
+				minimap.data = {overview: frame};
+				had_overview = true;
+			} else if (had_overview) {
+				minimap.data = {overview: {}};
+			}
+		};
+		refresh_overview();
+		minimap.listen(p.map, 'unit_preview', (e) => { refresh_overview(); });
+		minimap.listen(p.map, 'base_preview', (e) => { refresh_overview(); });
 
-		// the block under minimap
-		const control_panel = this.frame.panel({
-			class: 'bottombar-panel',
-			align: 'bottom',
-			bottom: 1,
-			left: 1,
-			right: 1,
-			height: 38,
-		});
-
-		// info block
-		const info_block = control_panel.panel({
-			class: 'bottombar-panel-inner',
-			align: 'left',
-			left: 3,
-			top: 3,
-			bottom: 3,
-			width: 114,
+		const info_block = p.el.panel({
+			class: 'bottombar-panel-inner', align: 'top left',
+			left: 785, top: 214, width: 116, height: 32,
 		});
 		const info_year = info_block.text({
 			class: 'bottombar-minimap-info-text',
@@ -75,9 +71,10 @@ return {
 		minimap.listen(p.game, 'turn', (e) => {
 			info_year.text = 'Mission Year ' + #to_string(e.year);
 			refresh_energy();
+			refresh_overview();
 		});
 
-		// minimap-related buttons (no functionality yet)
+		// Verified World artwork. A separate native Detail renderer is the next slice.
 
 		// TODO: make _hover and _active work without class
 		p.ui.class('bottombar-minimap-button-left').extend('bottombar-minimap-button').set({
@@ -89,13 +86,12 @@ return {
 				background: 'interface.pcx:crop(532, 209, 585, 240)',
 			},
 		});
-		control_panel.button({
+		p.el.button({
 			class: 'bottombar-minimap-button-left',
-			text: 'button1',
-			group: 'minimap-mode',
-			left: 120,
+			text: '',
+			left: 904, top: 214,
 		}).on('click', (e) => {
-			minimap.show();
+			refresh_overview();
 			return true;
 		});
 
@@ -108,15 +104,9 @@ return {
 				background: 'interface.pcx:crop(587, 209, 640, 240)',
 			},
 		});
-		control_panel.button({
-			class: 'bottombar-minimap-button-right',
-			text: 'button2',
-			group: 'minimap-mode',
-			left: 175,
-		}).on('click', (e) => {
-			minimap.hide();
-			return true;
-		});
+		// Keep the source Detail artwork above, but do not expose the former
+		// debug action that merely blanked the map. This is not a completed
+		// two-mode console; Detail requires its own measured zoom-7 view.
 
 		// 'turn complete' button
 

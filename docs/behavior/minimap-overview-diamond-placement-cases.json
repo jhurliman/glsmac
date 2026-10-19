@@ -1,0 +1,602 @@
+{
+  "scope": "Original overview geometry/bitmap producer reused; complete original base-pass iteration through4766db; full original coarse tile renderer and polygon raster execute. Selected native caller arguments replayed with uniform background to isolate painted clipping. Declared flat band3/known-by-viewer3 world, no texture/actor/whole presentation claim.",
+  "view_state": {
+    "flags": 2147483648,
+    "zoom": -14,
+    "center": [
+      40,
+      40
+    ],
+    "first": [
+      1,
+      1
+    ],
+    "window_size": [
+      320,
+      152
+    ],
+    "span": [
+      40,
+      39,
+      40,
+      39
+    ]
+  },
+  "source_size": [
+    320,
+    152
+  ],
+  "clip": [
+    0,
+    0,
+    320,
+    152
+  ],
+  "tile_call_count": 3160,
+  "polygon_count": 3160,
+  "rows": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79
+  ],
+  "duplicate_tiles": [],
+  "full_source_sha256": "e5147aeeb3f2f8b8821670d4fe33d4f4e7c62c800232d040a4468081e3f57f12",
+  "full_source_color_counts": {
+    "22": 47980,
+    "100": 660
+  },
+  "selected": [
+    {
+      "tile": [
+        1,
+        1
+      ],
+      "caller_count": 1,
+      "native_anchor": [
+        -4,
+        -2
+      ],
+      "fills": [
+        {
+          "tile": [
+            1,
+            1
+          ],
+          "vertices": [
+            -4,
+            0,
+            0,
+            -2,
+            4,
+            0,
+            0,
+            2
+          ],
+          "color_index": 22,
+          "clip": [
+            0,
+            0,
+            320,
+            152
+          ]
+        }
+      ],
+      "painted_bbox": [
+        0,
+        0,
+        4,
+        2
+      ],
+      "painted_pixel_count": 6
+    },
+    {
+      "tile": [
+        79,
+        1
+      ],
+      "caller_count": 1,
+      "native_anchor": [
+        308,
+        -2
+      ],
+      "fills": [
+        {
+          "tile": [
+            79,
+            1
+          ],
+          "vertices": [
+            308,
+            0,
+            312,
+            -2,
+            316,
+            0,
+            312,
+            2
+          ],
+          "color_index": 22,
+          "clip": [
+            0,
+            0,
+            320,
+            152
+          ]
+        }
+      ],
+      "painted_bbox": [
+        308,
+        0,
+        316,
+        2
+      ],
+      "painted_pixel_count": 12
+    },
+    {
+      "tile": [
+        0,
+        2
+      ],
+      "caller_count": 1,
+      "native_anchor": [
+        312,
+        0
+      ],
+      "fills": [
+        {
+          "tile": [
+            0,
+            2
+          ],
+          "vertices": [
+            312,
+            2,
+            316,
+            0,
+            320,
+            2,
+            316,
+            4
+          ],
+          "color_index": 22,
+          "clip": [
+            0,
+            0,
+            320,
+            152
+          ]
+        }
+      ],
+      "painted_bbox": [
+        312,
+        1,
+        319,
+        4
+      ],
+      "painted_pixel_count": 15
+    },
+    {
+      "tile": [
+        2,
+        2
+      ],
+      "caller_count": 1,
+      "native_anchor": [
+        0,
+        0
+      ],
+      "fills": [
+        {
+          "tile": [
+            2,
+            2
+          ],
+          "vertices": [
+            0,
+            2,
+            4,
+            0,
+            8,
+            2,
+            4,
+            4
+          ],
+          "color_index": 22,
+          "clip": [
+            0,
+            0,
+            320,
+            152
+          ]
+        }
+      ],
+      "painted_bbox": [
+        0,
+        1,
+        8,
+        4
+      ],
+      "painted_pixel_count": 16
+    },
+    {
+      "tile": [
+        40,
+        40
+      ],
+      "caller_count": 1,
+      "native_anchor": [
+        152,
+        76
+      ],
+      "fills": [
+        {
+          "tile": [
+            40,
+            40
+          ],
+          "vertices": [
+            152,
+            78,
+            156,
+            76,
+            160,
+            78,
+            156,
+            80
+          ],
+          "color_index": 22,
+          "clip": [
+            0,
+            0,
+            320,
+            152
+          ]
+        }
+      ],
+      "painted_bbox": [
+        152,
+        77,
+        160,
+        80
+      ],
+      "painted_pixel_count": 16
+    },
+    {
+      "tile": [
+        39,
+        77
+      ],
+      "caller_count": 1,
+      "native_anchor": [
+        148,
+        150
+      ],
+      "fills": [
+        {
+          "tile": [
+            39,
+            77
+          ],
+          "vertices": [
+            148,
+            152,
+            152,
+            150,
+            156,
+            152,
+            152,
+            154
+          ],
+          "color_index": 22,
+          "clip": [
+            0,
+            0,
+            320,
+            152
+          ]
+        }
+      ],
+      "painted_bbox": null,
+      "painted_pixel_count": 0
+    },
+    {
+      "tile": [
+        40,
+        76
+      ],
+      "caller_count": 1,
+      "native_anchor": [
+        152,
+        148
+      ],
+      "fills": [
+        {
+          "tile": [
+            40,
+            76
+          ],
+          "vertices": [
+            152,
+            150,
+            156,
+            148,
+            160,
+            150,
+            156,
+            152
+          ],
+          "color_index": 22,
+          "clip": [
+            0,
+            0,
+            320,
+            152
+          ]
+        }
+      ],
+      "painted_bbox": [
+        152,
+        149,
+        160,
+        151
+      ],
+      "painted_pixel_count": 12
+    },
+    {
+      "tile": [
+        0,
+        76
+      ],
+      "caller_count": 1,
+      "native_anchor": [
+        312,
+        148
+      ],
+      "fills": [
+        {
+          "tile": [
+            0,
+            76
+          ],
+          "vertices": [
+            312,
+            150,
+            316,
+            148,
+            320,
+            150,
+            316,
+            152
+          ],
+          "color_index": 22,
+          "clip": [
+            0,
+            0,
+            320,
+            152
+          ]
+        }
+      ],
+      "painted_bbox": [
+        312,
+        149,
+        319,
+        151
+      ],
+      "painted_pixel_count": 11
+    },
+    {
+      "tile": [
+        1,
+        77
+      ],
+      "caller_count": 1,
+      "native_anchor": [
+        -4,
+        150
+      ],
+      "fills": [
+        {
+          "tile": [
+            1,
+            77
+          ],
+          "vertices": [
+            -4,
+            152,
+            0,
+            150,
+            4,
+            152,
+            0,
+            154
+          ],
+          "color_index": 22,
+          "clip": [
+            0,
+            0,
+            320,
+            152
+          ]
+        }
+      ],
+      "painted_bbox": null,
+      "painted_pixel_count": 0
+    },
+    {
+      "tile": [
+        0,
+        78
+      ],
+      "caller_count": 1,
+      "native_anchor": [
+        312,
+        152
+      ],
+      "fills": [
+        {
+          "tile": [
+            0,
+            78
+          ],
+          "vertices": [
+            312,
+            154,
+            316,
+            152,
+            320,
+            154,
+            316,
+            156
+          ],
+          "color_index": 22,
+          "clip": [
+            0,
+            0,
+            320,
+            152
+          ]
+        }
+      ],
+      "painted_bbox": null,
+      "painted_pixel_count": 0
+    },
+    {
+      "tile": [
+        79,
+        79
+      ],
+      "caller_count": 1,
+      "native_anchor": [
+        -12,
+        154
+      ],
+      "fills": [
+        {
+          "tile": [
+            79,
+            79
+          ],
+          "vertices": [
+            -12,
+            156,
+            -8,
+            154,
+            -4,
+            156,
+            -8,
+            158
+          ],
+          "color_index": 22,
+          "clip": [
+            0,
+            0,
+            320,
+            152
+          ]
+        }
+      ],
+      "painted_bbox": null,
+      "painted_pixel_count": 0
+    },
+    {
+      "tile": [
+        0,
+        0
+      ],
+      "caller_count": 0
+    },
+    {
+      "tile": [
+        78,
+        0
+      ],
+      "caller_count": 0
+    }
+  ],
+  "coordinate_rule": {
+    "valid_parity": "x and y have equal low bits",
+    "rows": "1 through79 inclusive,40 calls per row",
+    "visible_y": "1<=y<79",
+    "visible_dx": "x-1, add80 if negative",
+    "offscreen_dx": "x-1; subtract80 if >40; add80 if < -40",
+    "anchor": "(4*(dx-1),2*(y-2))",
+    "polygon_WNES": "anchor+(0,2),(4,0),(8,2),(4,4)"
+  }
+}

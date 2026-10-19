@@ -54,8 +54,10 @@ otherwise document that this is a controlled equivalent scene.
   retained game history, not decorative invented curves.
 - Stack strip: Base/unit icons, order badges, health and combat statistics;
   selection and navigation update the inspected object consistently.
-- Political/terrain minimap modes, viewport indication, navigation and mode
-  buttons; correct hidden information for the observing faction.
+- Source-backed World/Detail minimap modes, viewport indication, navigation and
+  buttons; correct hidden information for the observing faction. The original
+  World/Detail controls are not political/terrain palette toggles. Political and
+  rainfall color policies need their actual command binding before exposure.
 - Menu, Commlink, Turn Complete, M/I controls, year and energy bound to real
   state and commands. Document any unsupported action rather than silently
   accepting a click or presenting fabricated values.

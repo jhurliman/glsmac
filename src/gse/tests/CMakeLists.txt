@@ -25,6 +25,7 @@ SET( SRC ${SRC}
 	${PWD}/Value.cpp
 	${PWD}/Faction.cpp
 	${PWD}/SmacFactionSummary.cpp
+	${PWD}/SmacMinimap.cpp
 	${PWD}/Mesh.cpp
 	${PWD}/SmacBaseSquareYield.cpp
 	${PWD}/SmacTileMinerals.cpp

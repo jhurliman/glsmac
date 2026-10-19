@@ -553,6 +553,14 @@ sprite::InstancedSprite* Game::GetTerrainInstancedSprite( const backend::map::sp
 	);
 }
 
+bool Game::CenterAtMapTile( const types::Vec2< size_t >& coords ) {
+	if ( !m_tm || coords.x >= m_map_data.width || coords.y >= m_map_data.height || ( coords.x & 1 ) != ( coords.y & 1 ) ) { return false; }
+	auto* tile = m_tm->GetTile( coords );
+	if ( !tile ) { return false; }
+	ScrollToTile( tile, true );
+	return true;
+}
+
 void Game::CenterAtCoordinatePercents( const types::Vec2< float > position_percents ) {
 	const types::Vec2< float > position = {
 		m_map_data.range.percent_to_absolute.x.Clamp( position_percents.x ),

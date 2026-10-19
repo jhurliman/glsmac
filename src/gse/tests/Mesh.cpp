@@ -108,8 +108,8 @@ private:
 	loader::texture::TextureLoader* m_previous_textures = nullptr;
 };
 
-std::string WithWidgetGraphics( const std::function< std::string() >& check ) {
-	WidgetGraphicsFixture graphics;
+std::string WithWidgetGraphics( const std::function< std::string() >& check, unsigned short width, unsigned short height ) {
+	WidgetGraphicsFixture graphics( {}, width, height );
 	return check();
 }
 

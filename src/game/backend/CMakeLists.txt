@@ -34,6 +34,7 @@ SET( SRC ${SRC}
 	${PWD}/GameEnergyRates.cpp
 	${PWD}/GameRegionalStrategy.cpp
 	${PWD}/GameFactionSummary.cpp
+	${PWD}/GameMinimap.cpp
 	${PWD}/GameResearch.cpp
 	${PWD}/GameTileResources.cpp
 	${PWD}/GameWorkerKnowledge.cpp

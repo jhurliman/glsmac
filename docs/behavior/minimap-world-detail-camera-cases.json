@@ -1,0 +1,993 @@
+{
+  "scope": "Bounded original World/Detail producer and navigation supplement; native custom loaded-slot color authority. Native presentation request geometry, not whole framebuffer parity. Four-button reference remains unresolved.",
+  "world_size": [
+    80,
+    80
+  ],
+  "console_screen_origin": [
+    0,
+    511
+  ],
+  "minimap_rect": [
+    780,
+    88,
+    1019,
+    207
+  ],
+  "detail_initializer": {
+    "flags": 2147483778,
+    "zoom": -7,
+    "center": [
+      8,
+      8
+    ],
+    "first": [
+      0,
+      0
+    ],
+    "window_size": [
+      239,
+      119
+    ],
+    "span": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "overview_producer": {
+    "source_size": [
+      320,
+      152
+    ],
+    "window_size": [
+      239,
+      119
+    ],
+    "offset": [
+      0,
+      0
+    ],
+    "base_flags": 2147483648,
+    "overlay_flags": 2147483776,
+    "zoom": -14,
+    "center": [
+      40,
+      40
+    ],
+    "geometry": {
+      "flags": 2147483776,
+      "zoom": -14,
+      "center": [
+        40,
+        40
+      ],
+      "first": [
+        1,
+        1
+      ],
+      "window_size": [
+        320,
+        152
+      ],
+      "span": [
+        40,
+        39,
+        40,
+        39
+      ]
+    }
+  },
+  "layouts": {
+    "stretched": {
+      "world_size": [
+        80,
+        80
+      ],
+      "window_size": [
+        239,
+        119
+      ],
+      "source_size": [
+        320,
+        152
+      ],
+      "image_size": [
+        239,
+        119
+      ],
+      "offset": [
+        0,
+        0
+      ],
+      "scaled": true
+    },
+    "letterbox": {
+      "world_size": [
+        80,
+        80
+      ],
+      "window_size": [
+        400,
+        200
+      ],
+      "source_size": [
+        320,
+        152
+      ],
+      "image_size": [
+        320,
+        152
+      ],
+      "offset": [
+        40,
+        24
+      ],
+      "scaled": false
+    }
+  },
+  "mapping_cases": [
+    {
+      "direction": "pixel_to_tile",
+      "layout": "stretched",
+      "pixel": [
+        0,
+        0
+      ],
+      "expected_tile": [
+        0,
+        0
+      ]
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "stretched",
+      "pixel": [
+        1,
+        0
+      ],
+      "expected_tile": [
+        0,
+        0
+      ]
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "stretched",
+      "pixel": [
+        119,
+        59
+      ],
+      "expected_tile": [
+        39,
+        39
+      ]
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "stretched",
+      "pixel": [
+        238,
+        118
+      ],
+      "expected_tile": [
+        79,
+        79
+      ]
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "stretched",
+      "pixel": [
+        239,
+        118
+      ],
+      "expected_tile": null
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "stretched",
+      "pixel": [
+        238,
+        119
+      ],
+      "expected_tile": null
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "stretched",
+      "pixel": [
+        -1,
+        0
+      ],
+      "expected_tile": [
+        0,
+        0
+      ]
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "stretched",
+      "pixel": [
+        0,
+        -1
+      ],
+      "expected_tile": [
+        0,
+        0
+      ]
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "stretched",
+      "pixel": [
+        17,
+        31
+      ],
+      "expected_tile": [
+        5,
+        21
+      ]
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "stretched",
+      "tile": [
+        0,
+        0
+      ],
+      "expected_pixel": [
+        0,
+        0
+      ]
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "stretched",
+      "tile": [
+        1,
+        1
+      ],
+      "expected_pixel": [
+        2,
+        1
+      ]
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "stretched",
+      "tile": [
+        40,
+        40
+      ],
+      "expected_pixel": [
+        119,
+        59
+      ]
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "stretched",
+      "tile": [
+        79,
+        79
+      ],
+      "expected_pixel": [
+        236,
+        117
+      ]
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "stretched",
+      "tile": [
+        -1,
+        40
+      ],
+      "expected_pixel": [
+        236,
+        59
+      ]
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "stretched",
+      "tile": [
+        80,
+        40
+      ],
+      "expected_pixel": [
+        0,
+        59
+      ]
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "stretched",
+      "tile": [
+        81,
+        40
+      ],
+      "expected_pixel": [
+        2,
+        59
+      ]
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "stretched",
+      "tile": [
+        -81,
+        40
+      ],
+      "expected_pixel": null
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "stretched",
+      "tile": [
+        40,
+        -1
+      ],
+      "expected_pixel": [
+        119,
+        0
+      ]
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "stretched",
+      "tile": [
+        40,
+        80
+      ],
+      "expected_pixel": [
+        119,
+        117
+      ]
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "letterbox",
+      "pixel": [
+        39,
+        24
+      ],
+      "expected_tile": null
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "letterbox",
+      "pixel": [
+        40,
+        24
+      ],
+      "expected_tile": [
+        0,
+        0
+      ]
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "letterbox",
+      "pixel": [
+        359,
+        175
+      ],
+      "expected_tile": [
+        79,
+        79
+      ]
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "letterbox",
+      "pixel": [
+        360,
+        175
+      ],
+      "expected_tile": null
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "letterbox",
+      "pixel": [
+        359,
+        176
+      ],
+      "expected_tile": null
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "letterbox",
+      "pixel": [
+        40,
+        23
+      ],
+      "expected_tile": null
+    },
+    {
+      "direction": "pixel_to_tile",
+      "layout": "letterbox",
+      "pixel": [
+        200,
+        100
+      ],
+      "expected_tile": [
+        40,
+        40
+      ]
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "letterbox",
+      "tile": [
+        0,
+        0
+      ],
+      "expected_pixel": [
+        40,
+        24
+      ]
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "letterbox",
+      "tile": [
+        40,
+        40
+      ],
+      "expected_pixel": [
+        200,
+        100
+      ]
+    },
+    {
+      "direction": "tile_to_pixel",
+      "layout": "letterbox",
+      "tile": [
+        79,
+        79
+      ],
+      "expected_pixel": [
+        356,
+        174
+      ]
+    }
+  ],
+  "click_cases": [
+    {
+      "name": "ordinary",
+      "input_pixel": [
+        119,
+        59
+      ],
+      "active_center": [
+        39,
+        39
+      ],
+      "detail_center": [
+        8,
+        8
+      ],
+      "detail_choice": 0,
+      "recenter_requests": [
+        {
+          "receiver": "active",
+          "args": [
+            39,
+            39,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "shift",
+      "input_pixel": [
+        119,
+        59
+      ],
+      "active_center": [
+        22,
+        30
+      ],
+      "detail_center": [
+        22,
+        30
+      ],
+      "detail_choice": 1,
+      "recenter_requests": [
+        {
+          "receiver": "detail",
+          "args": [
+            22,
+            30,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "outside",
+      "input_pixel": [
+        239,
+        119
+      ],
+      "active_center": [
+        22,
+        30
+      ],
+      "detail_center": [
+        22,
+        30
+      ],
+      "detail_choice": 1,
+      "recenter_requests": []
+    }
+  ],
+  "outline_cases": [
+    {
+      "name": "center",
+      "camera_center": [
+        40,
+        40
+      ],
+      "flat_map": false,
+      "view": {
+        "flags": 2147483778,
+        "zoom": -7,
+        "center": [
+          40,
+          40
+        ],
+        "first": [
+          35,
+          35
+        ],
+        "window_size": [
+          239,
+          119
+        ],
+        "span": [
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "lines": [
+        {
+          "kind": "frame",
+          "rect": [
+            104,
+            52,
+            134,
+            66
+          ],
+          "colors": [
+            251,
+            251
+          ]
+        }
+      ]
+    },
+    {
+      "name": "west_seam",
+      "camera_center": [
+        0,
+        40
+      ],
+      "flat_map": false,
+      "view": {
+        "flags": 2147483778,
+        "zoom": -7,
+        "center": [
+          0,
+          40
+        ],
+        "first": [
+          75,
+          35
+        ],
+        "window_size": [
+          239,
+          119
+        ],
+        "span": [
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "lines": [
+        {
+          "kind": "horizontal",
+          "args": [
+            0,
+            13,
+            52,
+            251
+          ]
+        },
+        {
+          "kind": "horizontal",
+          "args": [
+            0,
+            12,
+            65,
+            251
+          ]
+        },
+        {
+          "kind": "vertical",
+          "args": [
+            13,
+            53,
+            65,
+            251
+          ]
+        },
+        {
+          "kind": "horizontal",
+          "args": [
+            225,
+            238,
+            52,
+            251
+          ]
+        },
+        {
+          "kind": "horizontal",
+          "args": [
+            224,
+            238,
+            65,
+            251
+          ]
+        },
+        {
+          "kind": "vertical",
+          "args": [
+            224,
+            52,
+            64,
+            251
+          ]
+        }
+      ]
+    },
+    {
+      "name": "east_seam",
+      "camera_center": [
+        79,
+        31
+      ],
+      "flat_map": false,
+      "view": {
+        "flags": 2147483778,
+        "zoom": -7,
+        "center": [
+          79,
+          31
+        ],
+        "first": [
+          74,
+          26
+        ],
+        "window_size": [
+          239,
+          119
+        ],
+        "span": [
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "lines": [
+        {
+          "kind": "horizontal",
+          "args": [
+            0,
+            10,
+            38,
+            251
+          ]
+        },
+        {
+          "kind": "horizontal",
+          "args": [
+            0,
+            9,
+            52,
+            251
+          ]
+        },
+        {
+          "kind": "vertical",
+          "args": [
+            10,
+            39,
+            52,
+            251
+          ]
+        },
+        {
+          "kind": "horizontal",
+          "args": [
+            222,
+            238,
+            38,
+            251
+          ]
+        },
+        {
+          "kind": "horizontal",
+          "args": [
+            221,
+            238,
+            52,
+            251
+          ]
+        },
+        {
+          "kind": "vertical",
+          "args": [
+            221,
+            38,
+            51,
+            251
+          ]
+        }
+      ]
+    },
+    {
+      "name": "flat_west",
+      "camera_center": [
+        0,
+        40
+      ],
+      "flat_map": true,
+      "view": {
+        "flags": 2147483778,
+        "zoom": -7,
+        "center": [
+          0,
+          40
+        ],
+        "first": [
+          -3,
+          35
+        ],
+        "window_size": [
+          239,
+          119
+        ],
+        "span": [
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "lines": []
+    },
+    {
+      "name": "north_pole",
+      "camera_center": [
+        40,
+        0
+      ],
+      "flat_map": false,
+      "view": {
+        "flags": 2147483778,
+        "zoom": -7,
+        "center": [
+          40,
+          0
+        ],
+        "first": [
+          34,
+          -2
+        ],
+        "window_size": [
+          239,
+          119
+        ],
+        "span": [
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "lines": [
+        {
+          "kind": "frame",
+          "rect": [
+            101,
+            0,
+            131,
+            11
+          ],
+          "colors": [
+            251,
+            251
+          ]
+        }
+      ]
+    },
+    {
+      "name": "south_pole",
+      "camera_center": [
+        39,
+        79
+      ],
+      "flat_map": false,
+      "view": {
+        "flags": 2147483778,
+        "zoom": -7,
+        "center": [
+          39,
+          79
+        ],
+        "first": [
+          34,
+          74
+        ],
+        "window_size": [
+          239,
+          119
+        ],
+        "span": [
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "lines": [
+        {
+          "kind": "frame",
+          "rect": [
+            101,
+            110,
+            131,
+            117
+          ],
+          "colors": [
+            251,
+            251
+          ]
+        }
+      ]
+    }
+  ],
+  "slot_assignment": {
+    "input": "In-memory Alpha FACTIONS rows1/3 swapped, all seven native faction text parsers and faction PCX loads executed.",
+    "slots": [
+      {
+        "native_slot": 1,
+        "filename": "UNIV",
+        "section": "UNIV",
+        "name": "University of Planet",
+        "map_color_index": 241,
+        "map_rgb": [
+          0,
+          235,
+          0
+        ]
+      },
+      {
+        "native_slot": 2,
+        "filename": "HIVE",
+        "section": "HIVE",
+        "name": "Human Hive",
+        "map_color_index": 252,
+        "map_rgb": [
+          0,
+          0,
+          255
+        ]
+      },
+      {
+        "native_slot": 3,
+        "filename": "GAIANS",
+        "section": "GAIANS",
+        "name": "Gaia's Stepdaughters",
+        "map_color_index": 255,
+        "map_rgb": [
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "native_slot": 4,
+        "filename": "MORGAN",
+        "section": "MORGAN",
+        "name": "Morgan Industries",
+        "map_color_index": 251,
+        "map_rgb": [
+          255,
+          255,
+          0
+        ]
+      },
+      {
+        "native_slot": 5,
+        "filename": "SPARTANS",
+        "section": "SPARTANS",
+        "name": "Spartan Federation",
+        "map_color_index": 65,
+        "map_rgb": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "native_slot": 6,
+        "filename": "BELIEVE",
+        "section": "BELIEVE",
+        "name": "The Lord's Believers",
+        "map_color_index": 102,
+        "map_rgb": [
+          235,
+          92,
+          0
+        ]
+      },
+      {
+        "native_slot": 7,
+        "filename": "PEACE",
+        "section": "PEACE",
+        "name": "Peacekeeping Forces",
+        "map_color_index": 235,
+        "map_rgb": [
+          164,
+          176,
+          232
+        ]
+      }
+    ],
+    "political_paints": [
+      {
+        "owner": 1,
+        "filename": "UNIV",
+        "color_index": 241
+      },
+      {
+        "owner": 3,
+        "filename": "GAIANS",
+        "color_index": 255
+      },
+      {
+        "owner": 5,
+        "filename": "SPARTANS",
+        "color_index": 65
+      },
+      {
+        "owner": 1,
+        "filename": "UNIV",
+        "renderer_viewer_arg": 3,
+        "display_faction": 1,
+        "known_mask": 10,
+        "color_index": 241
+      }
+    ],
+    "map_tables_unchanged": true,
+    "active_palette_unchanged": true
+  },
+  "validation": {
+    "named_mapping_and_outline_checks": 35,
+    "complete_click_handlers": 3,
+    "full_definition_list_loaders": 1,
+    "full_faction_text_parsers": 7,
+    "political_identity_and_observer_cases": 4
+  }
+}

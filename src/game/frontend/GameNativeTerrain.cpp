@@ -106,7 +106,7 @@ void Game::UpdateNativeTerrain() {
     }
     if(m_native_snapshot_dirty && !m_mt_ids.native_terrain) {
         m_native_snapshot_dirty=false;
-        m_mt_ids.native_terrain=m_game->MT_GetNativeTerrain(m_world_ticket);
+        m_mt_ids.native_terrain=m_game->MT_GetNativeTerrain(m_world_ticket,m_native_inspector);
     }
     if(!m_native_inspector) {return;}
     const bool admitted=m_native_world && m_viewport.window_width==1024 && m_viewport.window_height==768

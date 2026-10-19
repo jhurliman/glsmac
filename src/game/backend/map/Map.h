@@ -156,7 +156,7 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	void CommitOrdinaryTerrainUpdate( PreparedTerrainUpdate& prepared ) noexcept;
 
 	const size_t GetWidth() const;
-    std::unique_ptr<::game::native_terrain::World> CopyNativeTerrain() const;
+    std::unique_ptr<::game::native_terrain::World> CopyNativeTerrain(bool include_geometry=true) const;
     smac_terrain::LandmarkGeometry* GetNativeGeometry() const;
 	const size_t GetHeight() const;
 

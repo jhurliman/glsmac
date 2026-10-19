@@ -25,7 +25,7 @@ smac_terrain::LandmarkGeometry* Map::GetNativeGeometry() const {
     }
     return m_native_geometry.get();
 }
-std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
+std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain(bool include_geometry) const {
     const auto* planet=m_resource_policy?m_resource_policy->OriginalPlanet():nullptr;
     if(!planet || GetWidth()!=80 || GetHeight()!=80 || !m_territory_topology) {return {};}
     auto result=std::make_unique<::game::native_terrain::World>();
@@ -33,7 +33,9 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
     result->retained_geometry=true;
     result->resource_pattern=planet->ResourcePattern();
     result->automatic_land_resources=m_resource_policy->AutomaticLandResources();
-    auto* geometry=GetNativeGeometry();
+    // The original console passes a NULL view: producing its material inputs
+    // must not create, refresh or traverse the shared height/face-light cache.
+    auto* geometry=include_geometry?GetNativeGeometry():nullptr;
     const auto band_at=[&](int x,int y)->std::optional<uint8_t> {
         if(y<0 || y>=80) {return std::nullopt;}
         if(result->horizontal_wrap) {x=(x%80+80)%80;}

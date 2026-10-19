@@ -5419,17 +5419,29 @@ public:
             live->terraforming=map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOIL_ENRICHER|map::tile::TERRAFORMING_CONDENSER;
             live->features=0;
             data.remembered[viewer][40*40+20]=map::SmacWorkerKnowledge::Improvements{0,map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOIL_ENRICHER|map::tile::TERRAFORMING_SOLAR,false,false};
-            const auto inspect=[&]()->std::unique_ptr<::game::native_terrain::World> {
+            const auto inspect=[&](bool include_geometry=true)->std::unique_ptr<::game::native_terrain::World> {
                 m_game.m_map->m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);
-                const auto id=m_game.MT_GetNativeTerrain(FixtureWorldTicket());ProcessRequests();auto response=m_game.MT_GetResponse(id);
+                const auto id=m_game.MT_GetNativeTerrain(FixtureWorldTicket(),include_geometry);ProcessRequests();auto response=m_game.MT_GetResponse(id);
                 util::FinallyGuard destroy([&]{m_game.MT_DestroyResponse(response);});
                 if(response.result!=R_SUCCESS || !response.data.native_terrain) {throw std::runtime_error("Actual developed terrain snapshot unavailable");}
                 auto result=std::unique_ptr<::game::native_terrain::World>(response.data.native_terrain);response.data.native_terrain=nullptr;return result;
             };
-            const auto first=inspect();const auto& target=first->tiles[40*40+20];
+            m_game.m_map->m_native_geometry.reset();m_game.m_map->m_native_geometry_source.reset();
+            const auto first=inspect(false);const auto& target=first->tiles[40*40+20];
+            GT_ASSERT(!m_game.m_map->m_native_geometry && !m_game.m_map->m_native_geometry_source,
+                "Actual NULL-view preview MT query created or traversed native geometry");
+            for(const auto& cell:first->tiles) {GT_ASSERT(!cell.heights && !cell.lighting,"Preview MT query produced height/light inputs");}
             GT_ASSERT(m_state->m_settings.global.GetSmacResourceRules()->TileNutrients().improved_land==0,"Snapshot fixture no longer uses its custom zero Farm rule");
             GT_ASSERT(target.band>=3 && target.developed_ready && target.selected_known && target.center_known,"Live query discarded actual viewer/occupancy/nutrient authority");
             GT_ASSERT(target.selected_items==0x88040 && target.items==0x488000 && target.nutrients==4,"Farm art mixed remembered admission with live nutrients: "+std::to_string(target.selected_items)+"/"+std::to_string(target.items)+"/"+std::to_string(target.nutrients));
+            const auto full=inspect();auto* const cached_geometry=m_game.m_map->m_native_geometry.get();
+            const auto cached_source=m_game.m_map->m_native_geometry_source;
+            GT_ASSERT(cached_geometry && full->tiles[40*40+20].heights && full->tiles[40*40+20].lighting,
+                "Default inspector MT query lost its complete geometry");
+            const auto again=inspect(false);
+            GT_ASSERT(m_game.m_map->m_native_geometry.get()==cached_geometry && m_game.m_map->m_native_geometry_source==cached_source
+                && !again->tiles[40*40+20].heights && !again->tiles[40*40+20].lighting,
+                "Preview MT query replaced an existing geometry cache or borrowed its projections");
             data.remembered[viewer][40*40+20]->terraforming=map::tile::TERRAFORMING_FARM;
             GT_ASSERT(inspect()->tiles[40*40+20].nutrients==4,"Removing remembered Soil changed live nutrient query");
             data.occupancy->FoundBase({40,40},viewer);

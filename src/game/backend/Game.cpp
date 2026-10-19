@@ -221,8 +221,9 @@ bool Game::MatchesActiveAdmission( const world_ticket_t ticket ) const {
 		&& m_state->IsGameSessionActive( m_active_admission->admitted_binding );
 }
 
-common::mt_id_t Game::MT_GetNativeTerrain(world_ticket_t world) {
+common::mt_id_t Game::MT_GetNativeTerrain(world_ticket_t world,bool include_geometry) {
     MT_Request request={};request.op=OP_GET_NATIVE_TERRAIN;request.world_ticket=world;
+    request.data.native_terrain.include_geometry=include_geometry;
     return MT_CreateRequest(request);
 }
 
@@ -1367,7 +1368,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
             response.result=R_SUCCESS;
             if(m_game_state==GS_RUNNING && m_map && m_state && !m_state->GetConnection()
                 && m_state->m_settings.global.GetRulesetId()=="smac") {
-                auto snapshot=m_map->CopyNativeTerrain();
+                auto snapshot=m_map->CopyNativeTerrain(request.data.native_terrain.include_geometry);
                 std::map<size_t,uint8_t> base_visibility;
                 if(snapshot && m_simulation) {
                     for(const auto& participant:m_simulation->value.roster) {

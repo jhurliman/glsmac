@@ -200,8 +200,26 @@ public:
             local.m_territory_topology=map::GlsmacTerritoryTopology::Build(80,80,false,std::vector<bool>(3200,false));
             auto* live=local.GetTile(40,40);live->features=tile::FEATURE_XENOFUNGUS;
             live->terraforming=tile::TERRAFORMING_FOREST;live->moisture=tile::MOISTURE_RAINY;live->rockiness=tile::ROCKINESS_ROLLING;
+            const auto preview=local.CopyNativeTerrain(false);
+            if(!preview || local.m_native_geometry || local.m_native_geometry_source) return false;
+            const auto& preview_cell=preview->tiles[40*40+20];
+            if(preview_cell.band!=3 || preview_cell.moisture!=2 || preview_cell.rockiness!=1 ||
+                preview_cell.items!=0x200020 || !preview_cell.resource_ready) return false;
+            for(const auto& cell:preview->tiles) {if(cell.heights || cell.lighting) return false;}
             retained=local.CopyNativeTerrain();
             if(!retained || retained->horizontal_wrap) return false;
+            auto* cached_geometry=local.m_native_geometry.get();const auto cached_source=local.m_native_geometry_source;
+            if(!cached_geometry || !cached_source) return false;
+            // Changed source would refresh the geometry cache if a preview
+            // accidentally called GetNativeGeometry. Its material still uses
+            // the current source, while geometry remains completely untouched.
+            wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+44*(40*40+20)]=char(5<<5);
+            local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+            const auto next_preview=local.CopyNativeTerrain(false);
+            if(!next_preview || next_preview->tiles[40*40+20].band!=5 ||
+                local.m_native_geometry.get()!=cached_geometry || local.m_native_geometry_source!=cached_source) return false;
+            wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+44*(40*40+20)]=char(3<<5);
+            local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
             const auto& before=retained->tiles[40*40+20];
             if(!before.resource_ready || before.resource_items!=0 || !retained->automatic_land_resources) return false;
             live->features|=tile::FEATURE_MONOLITH;

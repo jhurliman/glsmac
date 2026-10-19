@@ -179,6 +179,7 @@ struct MT_Request {
 	op_t op;
 	world_ticket_t world_ticket = 0;
 	union {
+		struct {bool include_geometry;} native_terrain;
 		struct {
 			world_ticket_t pending_initialization;
 			bool controller;
@@ -324,7 +325,7 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 
 	// get map data for display
 	common::mt_id_t MT_GetMapData( world_ticket_t world );
-    common::mt_id_t MT_GetNativeTerrain(world_ticket_t world);
+    common::mt_id_t MT_GetNativeTerrain(world_ticket_t world,bool include_geometry=true);
 
 	// deinitialize everything
 	common::mt_id_t MT_Reset( world_ticket_t world, world_ticket_t pending_initialization = 0 );

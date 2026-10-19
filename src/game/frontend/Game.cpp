@@ -645,6 +645,10 @@ void Game::UpdateCameraPosition() {
 		FixCameraX();
 	}
 
+    ApplyCameraPosition();
+}
+
+void Game::ApplyCameraPosition() {
 	m_camera->SetPosition(
 		{
 			( 0.5f + m_camera_position.x ) / m_viewport.window_aspect_ratio,

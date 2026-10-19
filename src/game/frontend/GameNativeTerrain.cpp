@@ -95,11 +95,12 @@ void Game::UpdateNativeTerrain() {
     const auto layout=native_terrain::Layout(camera_x,first_y+12,0,m_native_world->horizontal_wrap);
     if(!m_native_world->horizontal_wrap) {first_x=layout.first[0];}
     auto placements=native_terrain::SelectView(layout);
-    const native_terrain::Point translation{{static_cast<int>(std::lround(px+first_x*48)),
-        static_cast<int>(std::lround(py+first_y*24))}};
-    for(auto& placement:placements) {
-        placement.flat_center[0]+=translation[0];placement.flat_center[1]+=translation[1];
-    }
+    // Align the actual camera, including GPU units and Bases, with the native
+    // pixel grid. Translating only the candidate list leaves edge wedges when
+    // the port's smooth camera falls between native rows/columns.
+    m_camera_position.x-=(px+first_x*48)/1024.0f;
+    m_camera_position.y-=(py+first_y*24)*m_viewport.ratio.y/768.0f;
+    ApplyCameraPosition();
     // Default controlled comparison base0x40100000. A measured original run
     // can override its low16 explicitly, without consuming any RNG stream.
     // The opt-in inspector presents resources/sites as well as improvements.

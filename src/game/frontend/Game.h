@@ -372,6 +372,7 @@ private:
 
 	void UpdateViewport();
 	void UpdateCameraPosition();
+    void ApplyCameraPosition();
 	void UpdateCameraAngle();
 	void UpdateCameraScale();
 	void UpdateCameraRange();

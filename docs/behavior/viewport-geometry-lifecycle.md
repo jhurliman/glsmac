@@ -159,9 +159,10 @@ of preliminary projection coordinates against the original event receipt.
 The existing1,597 original full-view placements remain regression controls.
 
 The live inspector now uses that padded enumeration instead of clipping flat
-centers before painting. Its first grid coordinate and integer screen translation
-are resolved from the existing port camera's flat origin; this is not a claim
-that the port's camera input/quantization reproduces the original controller.
+centers before painting. Its first grid coordinate is resolved from the existing port camera's flat
+origin, then the actual camera is aligned to that native grid so terrain and GPU
+objects move together. Translating only candidates left edge wedges between
+native rows. This does not establish original input-controller fidelity.
 The live path still performs full repaint and uses backend-copied geometry.
 The measured incremental selector is available but has not yet replaced live
 bitmap scrolling, object projection, name/overlay scheduling, or cache lifetime.

@@ -102,7 +102,7 @@ public:
 
     // Original zoom0 projector displacement: floor(mean outer native heights).
     // Separate from the land fan center; absent on legacy/unproven geometry.
-    std::optional<uint8_t> smac_projector_height;
+    std::optional<int16_t> smac_projector_height;
     types::Vec3 GetProjectorCoords(tile_layer_type_t layer) const;
 
 	// visual traits

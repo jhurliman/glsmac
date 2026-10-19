@@ -14,6 +14,7 @@ namespace game::native_terrain {struct World;}
 #include "Types.h"
 #include "GlsmacResourceMapPolicy.h"
 #include "SmacWorkerKnowledge.h"
+#include "SmacLandmarkGeometry.h"
 #include "GlsmacTerritoryTopology.h"
 #include "common/MTTypes.h"
 #include "game/backend/map/tile/Types.h"
@@ -156,6 +157,7 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 
 	const size_t GetWidth() const;
     std::unique_ptr<::game::native_terrain::World> CopyNativeTerrain() const;
+    smac_terrain::LandmarkGeometry* GetNativeGeometry() const;
 	const size_t GetHeight() const;
 
 	// be careful using this
@@ -243,6 +245,9 @@ private:
 	Game* m_game = nullptr;
 
 	std::optional< GlsmacResourceMapPolicy > m_resource_policy;
+    mutable std::shared_ptr<const SmacPlanetMap> m_native_geometry_source;
+    mutable std::unique_ptr<smac_terrain::LandmarkGeometry> m_native_geometry;
+    mutable bool m_native_geometry_wrap=true;
 	std::optional< SmacWorkerKnowledge > m_worker_knowledge;
 	std::optional< GlsmacTerritoryTopology > m_territory_topology;
 	std::unique_ptr< smac_territory::RegionalLandWorkspace > m_regional_path_workspace;

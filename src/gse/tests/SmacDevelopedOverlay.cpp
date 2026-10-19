@@ -59,6 +59,9 @@ void AddSmacDevelopedOverlayTests(task::gsetests::GSETests* task) {
         GT_ASSERT(draw().rgba[(281*1024+553)*4]!=30,"Live Solar bypassed remembered admission");
         tile.selected_items=0x40;const auto solar=draw();
         GT_ASSERT(solar.rgba[(281*1024+553)*4]==30 && solar.developed_tiles[40*40+20],"Solar lost native crop, projector anchor or visibility handoff");
+        tile.heights=std::array<int,5>{{-12,-3,-3,-15,-16}};
+        GT_ASSERT(draw().rgba[(291*1024+553)*4]==30,"Negative landmark mean truncated toward zero at live sprite anchor");
+        tile.heights.reset();
         tile.selected_items|=0x80000000u;GT_ASSERT(draw().rgba[(289*1024+576)*4]==40,"Sensor shadow lost terrain destination index");
         tile.selected_items=0x88000;tile.nutrients=6;GT_ASSERT(draw().rgba[(289*1024+576)*4]==70,"Live high-yield Soil patch lost last draw order");
         tile.nutrients=4;GT_ASSERT(draw().rgba[(289*1024+576)*4]==60,"Soil Farm tier incorrectly appended extra patch");

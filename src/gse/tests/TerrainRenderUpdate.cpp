@@ -201,6 +201,20 @@ public:
                 const auto metadata=local.CopyNativeTerrain();const auto& cell=metadata->tiles[40*40+20];
                 if(cell.deformed!=bool(word&0xb03u) || cell.ordinary==bool(word&0xb03u)) return false;
             }
+            // Source replacement must discard the shared cache; snapshots own
+            // the resulting signed geometry after the backend is destroyed.
+            for(const uint32_t word:{0x200u,0x800u}) {
+                if(word==0x800u) {live->features|=tile::FEATURE_FOSSIL_FIELD_RIDGE;}
+                for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=static_cast<char>(word>>(8*byte));
+                local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+                auto* geometry=local.GetNativeGeometry();
+                if(!geometry || geometry->Height(40,40,0)!=(word==0x200u?-12:20)) return false;
+                const auto snapshot=local.CopyNativeTerrain();const auto& cell=snapshot->tiles[40*40+20];
+                if(!cell.heights || !cell.lighting || cell.deformed || !cell.ordinary ||
+                    (*cell.heights)[0]!=(word==0x200u?-12:20)) return false;
+                if(snapshot->tiles[40*40+19].heights->at(3)!=cell.heights->at(1)) return false;
+            }
+            live->features&=~tile::FEATURE_FOSSIL_FIELD_RIDGE;
             for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=0;
             local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
             wire[record]=char(2<<5);
@@ -505,6 +519,13 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         tile::TileState restored{};restored.Deserialize(source.Serialize());
         GT_ASSERT(restored.smac_projector_height==source.smac_projector_height && restored.GetProjectorCoords(tile::LAYER_LAND)==expected,
             "Transport discarded native terrain-aware projector anchor");
+        for(const int height:{-127,-18,-1,0,127}) {
+            source.smac_projector_height=static_cast<int16_t>(height);
+            tile::TileState signed_state{};signed_state.Deserialize(source.Serialize());
+            GT_ASSERT(signed_state.smac_projector_height==source.smac_projector_height &&
+                signed_state.GetProjectorCoords(tile::LAYER_LAND)==source.GetProjectorCoords(tile::LAYER_LAND),
+                "Signed landmark projector displacement changed in transport");
+        }
         source.smac_projector_height.reset();const auto legacy=source.Serialize();
         tile::TileState old{};old.Deserialize(legacy);
         GT_ASSERT(!old.smac_projector_height && old.GetProjectorCoords(tile::LAYER_LAND)==source.layers[tile::LAYER_LAND].coords.center,
@@ -514,6 +535,12 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
             bool rejected=false;
             try {tile::TileState probe{};probe.Deserialize(bad);}catch(const std::exception&){rejected=true;}
             GT_ASSERT(rejected,"Out-of-range projector metadata was accepted");
+        }
+        for(const int height:{-128,128}) {
+            auto bad=legacy;bad.WriteString("SMAC_PROJECTOR_HEIGHT_V2");bad.WriteInt(height);
+            bool rejected=false;
+            try {tile::TileState probe{};probe.Deserialize(bad);}catch(const std::exception&){rejected=true;}
+            GT_ASSERT(rejected,"Out-of-range signed projector metadata was accepted");
         }
         auto unknown=legacy;unknown.WriteString("UNKNOWN_PROJECTOR");unknown.WriteInt(18);
         bool rejected=false;

@@ -26,6 +26,7 @@ public:
 	static GlsmacResourceMapPolicy InstalledPlanetV1( SmacPlanetMap source, bool automatic_land_resources );
 	bool operator==( const GlsmacResourceMapPolicy& other ) const;
 	const SmacPlanetMap* OriginalPlanet() const { return m_planet.get(); }
+    const std::shared_ptr<const SmacPlanetMap>& OriginalPlanetSource() const { return m_planet; }
 	bool AutomaticLandResources() const { return m_automatic_land_resources; }
     GlsmacResourceMapPolicy WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const;
     GlsmacResourceMapPolicy WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const;

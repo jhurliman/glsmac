@@ -57,6 +57,10 @@ void AddSmacTilePreviewTests(task::gsetests::GSETests* task) {
         tile.band=3;tile.selected_items=0x8000;
         GT_ASSERT(!preview::Paint(world,source,8,8,0,background),"Unmeasured preview feature admitted");
         GT_ASSERT(!preview::Paint(world,source,-1,8,0,background),"Invalid center wrapped into a different selected tile");
+        tile.selected_items=0;tile.resource_items=0x20000400u;
+        source.ter1={1000,704,std::vector<uint8_t>(704000,9)};source.ter1.pixels[253*1000+203]=77;
+        const auto tiny=preview::Paint(world,source,8,8,0,background);
+        GT_ASSERT(tiny && tiny->writes==bare->writes,"Retained resource scaled to zero dimensions became an invalid raster command");
         GT_OK();
     });
 }

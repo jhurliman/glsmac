@@ -90,6 +90,7 @@ std::optional<native_terrain::Frame> Paint(const ::game::native_terrain::World& 
         const auto decoded=smac_developed_overlay::Decode(source.ter1,pick.crop);
         if(decoded.bitmap.pixels.empty()) {continue;}
         const auto sprite=sprites.emplace(pick.crop,Scale(decoded.bitmap)).first;
+        if(sprite->second.pixels.empty()) {continue;} // native floor-to-zero extent emits no stores
         raster::Command command;command.texture=&sprite->second;
         command.sprite_origin={{anchor[0]+decoded.offset[0]*85/100,anchor[1]+decoded.offset[1]*85/100}};
         command.shader=pick.shadow?raster::Shader::SpriteShadow:raster::Shader::Sprite;

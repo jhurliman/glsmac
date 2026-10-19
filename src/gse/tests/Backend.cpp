@@ -4687,8 +4687,8 @@ public:
 		// profiles/map. Scenarios8/9 execute the actual default-world/definition scripts;
 		// rendering remains asset-free, while creation, movement and turn are real.
 		const bool default_world = scenario >= 8, local_rover = scenario == 9;
-		const bool research=scenario>=10;
-		const size_t expected_units = default_world ? 1 : 3;
+		const bool research=scenario==10 || scenario==11, compensation=scenario==12;
+		const size_t expected_units = default_world ? (compensation ? 2:1) : 3;
 		EnableWorldSnapshot();
 		if(default_world) {
 			m_gse->GetGCSpace()->Accumulate(m_gse,[&] {
@@ -4704,7 +4704,8 @@ public:
 		} ); smac_rules_fixture::AcceptWorldSize( settings );
 		EnableSimulationParticipants( default_world ? std::vector< size_t >{ 0 } : std::vector< size_t >{ 0, 2, 6 }, 0, !default_world );
 		if(research) {m_state->m_slots->GetSlot(0).GetPlayer()->SetDifficultyLevel("Librarian");}
-		if(default_world) {GT_ASSERT(settings.difficulty_level==0,"new-campaign default is not the admitted Librarian difficulty");}
+        if(compensation) {settings.difficulty_level=1;m_state->m_slots->GetSlot(0).GetPlayer()->SetDifficultyLevel("Thinker");}
+		if(default_world) {GT_ASSERT(settings.difficulty_level==(compensation ? 1:0),"startup difficulty selection changed");}
 		if ( local_rover ) { m_state->m_slots->GetSlot( 0 ).GetPlayer()->SetFaction( m_state->GetFM()->Get( "SPARTANS" ) ); }
 		const auto old_id = Unit::GetNextId(), old_base_id = base::Base::GetNextId();
 		util::FinallyGuard ids( [ = ] { Unit::SetNextId( old_id ); base::Base::SetNextId( old_base_id ); } );
@@ -4721,7 +4722,7 @@ public:
 		// Eight native-initializer CRT advances from supplied29; shared11 is untouched.
 		// The independent startup reference selects(5,5) after962 pairs on this
         // uniform10x8 arid fixture, continuing the eight-draw initializer.
-        const SmacGameplayRandomState expected_random( 11, default_world ? 3308098009u:847431173u ); size_t entropy = 0;
+        const SmacGameplayRandomState expected_random( 11, default_world ? 2162593080u:847431173u ); size_t entropy = 0;
 		m_game.m_gameplay_entropy_word_source = [ & ]() { return ++entropy == 1 ? 11u : 29u; };
 		const auto call = [ & ]( GSE_CALLABLE, value::Object* object, const std::string& name, const value::function_arguments_t& args = {} ) {
 			return static_cast< value::Callable* >( object->Get( name ) )->Run( GSE_CALL, args );
@@ -5006,6 +5007,43 @@ public:
 					&& destination.m_game.HasSmacTechnologyReveal(1),"stable restore replayed research or lost completed authority");GT_OK();
 			});
 		}
+        if(compensation) {
+            // Thinker correctly pauses for its ordinary first research choice.
+            // Answer the actual offered request before checking turn publication.
+            if(m_game.m_research_request) {
+                const auto answered=WithScriptValues([&](GSE_CALLABLE)->std::string {
+                    const auto& request=*m_game.m_research_request;
+                    GT_ASSERT(!request.choices.empty(),"Thinker research has no offered choice");
+                    m_game.Event(GSE_CALL,"choose_research",{{"request_id",VALUE(value::Int,,request.id)},
+                        {"technology_id",VALUE(value::Int,,request.choices.front())}});m_game.ProcessEvents();GT_OK();
+                });GT_ASSERT(answered.empty(),"Thinker first research answer: "+answered);
+            }
+            GT_ASSERT(errors==0 && raw_valid && spawn_hooks==2 && turns==1 && identities.size()==2
+                && order==std::vector<std::string>({"hq","unit","unit"}),"Compensation factory failed actual claimed Start: "+startup_error+", counts="+std::to_string(errors)+"/"+std::to_string(raw_valid)+"/"+std::to_string(spawn_hooks)+"/"+std::to_string(turns)+"/"+std::to_string(identities.size()));
+            auto* scout=m_game.GetUM()->GetUnit(identities[0]);auto* pod=m_game.GetUM()->GetUnit(identities[1]);
+            GT_ASSERT(scout->Conventional().design_id==2 && pod->Conventional().design_id==0 && pod->GetTile()==scout->GetTile()
+                && pod->Conventional().home==ConventionalUnitState::Home::None && pod->Conventional().stored_morale==1
+                && !pod->IsConventionalPending() && pod->HasMovesLeft(),"Compensation Pod lost its native raw identity or first-command readiness");
+            const auto random=m_game.m_simulation->value.gameplay_random;
+            std::string saved,pod_wire;
+            const auto captured=WithScriptValues([&](GSE_CALLABLE)->std::string {
+                const auto id=Unit::GetNextId();bool rejected=false;
+                try {m_game.GetUM()->SpawnStartingConventionalUnit(GSE_CALL,pod->m_def,pod->m_owner,pod->GetTile(),SmacMoraleMode::Mode0,true);}catch(const std::exception&){rejected=true;}
+                GT_ASSERT(rejected && Unit::GetNextId()==id && m_game.GetUM()->GetUnits().size()==2,"Late compensation Pod escaped claimed startup");
+                saved=WorldSnapshot();pod_wire=Unit::Serialize(pod).ToString();GT_OK();
+            });GT_ASSERT(captured.empty(),"Compensation save: "+captured);
+            BackendFixture destination;
+            destination.ConfigureConventional(true,3,true,false,false,nullptr,[](const std::string& name){return CanonicalStartupSource(name,true);});
+            destination.m_state->m_settings.global.difficulty_level=1;
+            destination.m_state->m_slots->GetSlot(0).GetPlayer()->SetDifficultyLevel("Thinker");
+            return destination.WithScriptValues([&](GSE_CALLABLE)->std::string {
+                destination.RestoreConventional(GSE_CALL,saved,true);
+                auto* restored=destination.GetGame()->GetUM()->GetUnit(identities[1]);
+                GT_ASSERT(destination.GetGame()->GetUM()->GetUnits().size()==2 && restored
+                    && Unit::Serialize(restored).ToString()==pod_wire && restored->HasMovesLeft()
+                    && destination.m_game.m_simulation->value.gameplay_random==random,"Compensation restore replayed its grant or RNG");GT_OK();
+            });
+        }
 		GT_ASSERT( errors == 0 && raw_valid && spawn_hooks == expected_units && base_hooks == (default_world?0u:1u) && turns == 1 && order == ( default_world ? std::vector< std::string >{ "hq", "unit" } : std::vector< std::string >{ "hq", "unit", "unit", "unit" } ), "actual HQ/raw/first-turn order or freshness failed: " + startup_error + " counts " + std::to_string( spawn_hooks ) + "/" + std::to_string( base_hooks ) + "/" + std::to_string( turns ) );
 		GT_ASSERT( entropy == 2 && m_game.m_simulation->value.gameplay_random == expected_random, "raw lifecycle differs from exact native-initializer RNG continuation" );
 		std::string saved; std::vector< std::string > saved_units;

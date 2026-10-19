@@ -1,4 +1,9 @@
 #include "SmacStartingSite.h"
+#include "game/backend/map/SmacStartingBalance.h"
+#include "game/backend/map/SmacPlanetMap.h"
+#include "game/backend/map/GlsmacResourceMapPolicy.h"
+#include <fstream>
+#include <iterator>
 #include "game/backend/map/SmacStartingSite.h"
 #include "game/backend/map/SmacSiteQuality.h"
 #include "game/backend/resource/SmacResourceBonus.h"
@@ -94,6 +99,92 @@ void AddSmacStartingSiteTests(task::gsetests::GSETests* task) {
             total+=seen;misses+=queries;refined+=refinements;
         }GT_ASSERT(total==3747 && misses==3 && refined==65,"Native startup control coverage changed");GT_OK();
     });
+    task->AddTest("SMAC startup balance matches original scores deficits Pods and every terrain item",GT(){
+        namespace balance=game::backend::map::smac_balance;
+        const auto* path=std::getenv("GLSMAC_STARTUP_BALANCE_REFERENCE");if(!path || !*path) {GT_OK();}
+        const auto data=YAML::LoadFile(path),cases=YAML::LoadFile("docs/behavior/startup-site-balance-cases.json");
+        size_t total=0,items=0;
+        for(size_t variant=0;variant<data["replays"].size();++variant) {
+            const auto replay=data["replays"][variant],world=replay["before"],expected=cases["cases"][variant];
+            Check(replay["variant"].as<std::string>()==expected["variant"].as<std::string>(),"Balance control order differs");
+            balance::Input input{};input.geometry={world["width"].as<int32_t>(),world["height"].as<int32_t>(),!(world["map_flags"].as<int32_t>()&1)};
+            input.difficulty=3;input.human_mask=world["state"]["human"].as<uint8_t>();
+            auto raw=Hex(world["tiles_hex"].as<std::string>());
+            const auto index=[&](auto p){return 44*(size_t(p[1])*(input.geometry.width/2)+p[0]/2);};
+            const auto word=[&](size_t a){return uint32_t(raw.at(a))|(uint32_t(raw.at(a+1))<<8)|(uint32_t(raw.at(a+2))<<16)|(uint32_t(raw.at(a+3))<<24);};
+            for(size_t r=0;r<128;++r) {input.areas[r]=world["regions"][7*r].as<int32_t>();}
+            for(const auto& u:world["state"]["units"]) {input.units.push_back({u["id"].as<int64_t>(),u["owner"].as<int32_t>(),Point(u["position"])});}
+            for(size_t f=1;f<=7;++f) {const auto bonus=world["starting_bonuses"][f-1];
+                for(int32_t j=0;j<bonus[0].as<int32_t>();++j) {if(bonus[1+j].as<int32_t>()==1) {
+                    input.configured_unit_roles[f].push_back(world["design_roles"][std::to_string(bonus[9+j].as<int32_t>())].as<uint8_t>());
+                }}
+            }
+            const game::backend::SmacGameplayRandomState initial(world["state"]["shared"].as<uint32_t>(),world["state"]["crt"].as<uint32_t>());
+            const auto result=balance::Prepare(input,initial,[&](auto p) {const auto a=index(p);
+                return balance::Tile{uint8_t(raw[a]>>5),uint8_t((raw[a]>>3)&3),uint8_t(raw[a+5]>>6),raw[a+3],word(a+8)};
+            },[&](auto p,uint32_t flags) {return resource::ResolveSiteSignal({p[0],p[1],static_cast<resource::AltitudeBand>(raw[index(p)]>>5),flags,
+                bool(world["state"]["rules"].as<uint32_t>()&0x2000),world["resource_pattern"].as<int32_t>(),world["pattern_multipliers"][1].as<int32_t>(),world["pattern_multipliers"][0].as<int32_t>()});});
+            GT_ASSERT(result.scores.size()==7 && result.deficits.size()==7,"Balance skipped native owners");
+            for(size_t i=0;i<7;++i) {const auto& a=result.scores[i];const auto e=expected["components"][i];
+                Check(a.owner==e["faction"].as<int32_t>() && a.point==Point(e["position"]) && a.region==e["region"].as<int32_t>()
+                    && a.area==e["region_area"].as<int32_t>() && a.spacing==e["nearest_normalized_spacing"].as<int32_t>()
+                    && a.space==e["spacing_component"].as<int32_t>() && a.terrain_count==e["terrain_counter"].as<int32_t>()
+                    && a.terrain==e["terrain_component"].as<int32_t>() && a.region_term==e["region_component"].as<int32_t>() && a.value==e["score"].as<int32_t>(),"Native balance score differs");
+                const auto& d=result.deficits[i];const auto n=expected["deficits"][i];
+                Check(d.owner==n["faction"].as<int32_t>() && d.maximum==n["maximum"].as<int32_t>() && d.credit==n["unit_credit"].as<int32_t>() && d.value==n["deficit"].as<int32_t>(),"Native balance deficit differs");
+                for(size_t f=1;f<=7;++f) {Check(d.scores[f]==std::optional<int32_t>(n["scores"][f-1].as<int32_t>()),"Native mutable balance score history differs");}
+            }
+            Check(result.pods.size()==expected["pod_owners"].size() && result.writes.size()==expected["terrain_writes"].size(),"Native balance package count differs");
+            for(size_t i=0;i<result.pods.size();++i) {Check(result.pods[i].owner==expected["pod_owners"][i].as<int32_t>(),"Native balance Pod owner differs");}
+            for(size_t i=0;i<result.writes.size();++i) {const auto& w=result.writes[i];const auto e=expected["terrain_writes"][i];const auto a=index(w.point)+8;
+                Check(w.owner==e["faction"].as<int32_t>() && w.point==Point(e["position"]) && a==e["offset"].as<size_t>()
+                    && w.mask==e["mask"].as<uint32_t>() && w.after==e["value"].as<uint32_t>() && word(a)==w.before,"Native ordered compensation write differs");
+                for(size_t k=0;k<4;++k) {raw[a+k]=uint8_t(w.after>>(8*k));}
+            }
+            const auto final=Hex(replay["tiles_hex"].as<std::string>());
+            for(size_t a=0;a<raw.size();a+=44) {Check(word(a+8)==(uint32_t(final[a+8])|(uint32_t(final[a+9])<<8)|(uint32_t(final[a+10])<<16)|(uint32_t(final[a+11])<<24)),"Final native compensation items differ");++items;}
+            if(const auto* assets=std::getenv("GLSMAC_SCOUT_ASSETS")) {
+                namespace map=game::backend::map;
+                std::ifstream file(std::string(assets)+"/maps/planet.MP",std::ios::binary);
+                const std::string installed((std::istreambuf_iterator<char>(file)),{});
+                Check(installed.size()==map::SmacPlanetMap::FILE_BYTES,"Missing owned Planet publication container");
+                auto container=installed;const auto begin=map::SmacPlanetMap::PREFIX_BYTES+map::SmacPlanetMap::HEADER_BYTES;
+                const auto before=Hex(world["tiles_hex"].as<std::string>());
+                container.replace(begin,before.size(),reinterpret_cast<const char*>(before.data()),before.size());
+                const auto source=map::SmacPlanetMap::Decode(container),published=source.WithStartingBalance(result);
+                auto expected_container=container;expected_container.replace(begin,raw.size(),reinterpret_cast<const char*>(raw.data()),raw.size());
+                Check(published.Encode()==expected_container && source.Encode()==container,"Compensation publication changed unrelated source bytes or input authority");
+                if(!result.writes.empty()) {
+                    auto stale=result;stale.writes.front().before^=0x80;stale.writes.front().after=stale.writes.front().before|stale.writes.front().mask;
+                    bool rejected=false;try {(void)source.WithStartingBalance(stale);}catch(const std::invalid_argument&){rejected=true;}
+                    Check(rejected,"Stale compensation source terrain was accepted");
+                }
+                // Exercise the actual immutable policy and its saved container
+                // separately from native live Unit-presence bytes above.
+                auto policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(map::SmacPlanetMap::Decode(installed),true);
+                auto staged=result;staged.writes.clear();const auto flags=policy.OriginalPlanet()->At(1,1).Items();
+                staged.writes.push_back({1,{{1,1}},flags,0x04000000u,flags|0x04000000u});
+                const auto updated=policy.WithStartingBalance(staged);
+                Check(updated.OriginalPlanet()->At(1,1).Items()==(flags|0x04000000u) && policy.OriginalPlanet()->At(1,1).Items()==flags
+                    && map::GlsmacResourceMapPolicy::Deserialize(updated.Serialize().ToString())==updated,"Compensation policy/save lost markers or mutated its source");
+            }
+            Check(result.random.Crt()==replay["crt"].as<uint32_t>() && result.random.Shared()==initial.Shared() && initial.Crt()==expected["crt_before"].as<uint32_t>(),"Balance RNG lifecycle differs");
+            total+=result.writes.size();
+        }
+        GT_ASSERT(total==161 && items==12800,"Native compensation coverage changed");GT_OK();
+    });
+    task->AddTest("SMAC startup balance retains zero-deficit draw and high-difficulty human Pod",GT(){
+        namespace balance=game::backend::map::smac_balance;
+        balance::Input input{};input.geometry={80,80,true};input.areas[1]=3200;input.units.push_back({0,1,{{20,20}}});input.human_mask=2;
+        const game::backend::SmacGameplayRandomState initial(17,531966586);
+        for(int32_t difficulty=0;difficulty<=5;++difficulty) {input.difficulty=difficulty;
+            const auto result=balance::Prepare(input,initial,[](auto){return balance::Tile{3,2,0,1,0};},[](auto,auto){return 0;});
+            auto after=initial;after.NextCrtRaw15();
+            GT_ASSERT(result.random==after && result.deficits.size()==1 && result.deficits[0].value==0 && result.writes.empty()
+                && result.pods.size()==size_t(difficulty>=4),"Zero deficit suppressed mandatory draw or used computer Pod threshold");
+        }GT_OK();
+    });
+
     task->AddTest("SMAC startup computer budget preserves the human turn-zero bypass",GT(){
         for(const bool human:{false,true}) {
             start::Input input{};input.geometry={80,80,true};input.scale=56;input.ocean=1;input.difficulty=3;input.human=human;

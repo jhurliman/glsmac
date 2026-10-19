@@ -54,3 +54,36 @@ The UNIT controls change only a descriptor at the balancing boundary; they do no
 Initial search admission and final placement are distinct. Native search accepts `(16,58)` for Gaia, then its inner21 refinement selects `(17,61)`. Other changes include Hive `(35,37)`→`(34,36)`, Sparta `(29,27)`→`(29,25)`, Peace `(13,71)`→`(15,71)`. These are receipts, not prescribed coordinates. Refinement uses a strict greater comparison, preserving the first candidate on tied scores. The full search-admission/cache/refinement producer remains a separate audit; this handoff independently closes balancing arithmetic and terrain side effects.
 
 Verification: `tmp/reference/check_startup_site_balance.py --verify-only`. Frozen evidence: `tmp/reference/startup-site-balance-evidence-20261019/manifest.json`.
+
+
+## Port implementation checkpoint
+
+SmacStartingBalance now produces runtime anchors, score components, mutable score
+history, configured-UNIT credits, extra-Pod decisions, ordered marker writes and
+the continued CRT state. The complete four-control replay independently matches
+all28 scores/deficits,161 writes and12800 final item words. Coordinate, package
+and expected RNG receipts are outputs used for validation, never producer inputs.
+
+The authenticated immediate-HQ local SMAC Start runs this producer after its
+initial Base/Scout packages. It consumes the mandatory draw even for zero deficit.
+Extra Pods use the actual early Unit factory with design0, stored morale1 and no
+home, then participate in the ordinary first-turn seal. Repeating the grant after
+startup is rejected. The stock parser currently rejects custom UNIT descriptors;
+the pure producer supports their role-based credit without treating the live Unit
+census as faction configuration.
+
+Original terrain markers publish through a detached immutable resource-policy
+container, checking every ordered before/after word and preserving all unrelated
+bytes. Their normal policy serialization retains the markers. Visible site flags
+are derived from the resulting real site query before frontend map creation.
+Legacy displayed-terrain maps lack original item authority and cannot publish a
+nonempty marker plan. Computer-faction admission and Look First remain separate
+unfinished work; this is not a seven-faction playable-start milestone.
+
+Validation includes the full original numeric replay, a zero-deficit/difficulty
+control, actual default Gaian/Spartan startup and a Thinker startup that creates
+an independent Pod, answers the offered research request, and restores both Units
+without repeating the grant or RNG. Five changed production translation units
+pass targeted correctness analysis. Seventeen focused groups pass with thirteen
+production/test translation units instrumented by ASan/UBSan; other linked objects
+remain uninstrumented and leak detection is disabled.

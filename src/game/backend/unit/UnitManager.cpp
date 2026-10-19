@@ -957,12 +957,19 @@ Unit* UnitManager::SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slo
 	SpawnUnit( GSE_CALL, unit ); return unit;
 }
 
-Unit* UnitManager::SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::Slot* owner, map::tile::Tile* tile, SmacMoraleMode mode ) {
+Unit* UnitManager::SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::Slot* owner, map::tile::Tile* tile, SmacMoraleMode mode, bool compensation_pod ) {
 	m_game->CheckRW( GSE_CALL );
-	const auto state = m_game->PrepareStartingConventionalUnit( owner, mode );
-	for ( const auto& entry : m_units ) {
-		if ( entry.second->IsConventional() && entry.second->m_owner == owner ) { THROW( "Starting conventional unit already exists" ); }
-	}
+	auto state = m_game->PrepareStartingConventionalUnit( owner, mode );
+    size_t existing=0;
+    for(const auto& entry:m_units) {if(entry.second->IsConventional() && entry.second->m_owner==owner) {
+        ++existing;
+        if(!compensation_pod || !entry.second->IsConventionalPending() || entry.second->Conventional().design_id!=state.design_id) {
+            THROW("Starting conventional package already exists or is not pending");
+        }
+    }}
+    if(existing!=size_t(compensation_pod)) {THROW("Compensation Pod requires exactly the original pending Scout/Rover");}
+    if(compensation_pod) {state.design_id=0;} // native stock Colony Pod; home remains None
+
 	const ConventionalUnitResolver resolver = [ this ]( const auto& value, const auto* slot ) {
 		return m_game->ResolveConventionalIdentity( value, slot, *m_game->m_simulation );
 	};

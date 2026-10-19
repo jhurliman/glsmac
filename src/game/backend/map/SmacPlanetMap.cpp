@@ -1,5 +1,6 @@
 #include "SmacPlanetMap.h"
 #include "SmacClimate.h"
+#include "SmacStartingBalance.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -40,6 +41,22 @@ std::string SmacPlanetMap::Encode() const {
     result.append(reinterpret_cast<const char*>(m_header.data()), m_header.size());
     for (const auto& tile : m_tiles) { result.append(reinterpret_cast<const char*>(tile.bytes.data()), tile.bytes.size()); }
     result.append(reinterpret_cast<const char*>(m_trailer.data()), m_trailer.size());
+    return result;
+}
+
+SmacPlanetMap SmacPlanetMap::WithStartingBalance(const smac_balance::Result& plan) const {
+    if(m_tiles.size()!=TILE_COUNT) {throw std::logic_error("Incomplete startup terrain source");}
+    auto result=*this;
+    for(const auto& w:plan.writes) {
+        const auto x=w.point[0],y=w.point[1];
+        if(x<0 || x>=int32_t(WIDTH) || y<0 || y>=int32_t(HEIGHT) || ((x^y)&1)
+            || (w.mask!=0x04000000u && w.mask!=0x08000000u) || w.after!=(w.before|w.mask)) {
+            throw std::invalid_argument("Invalid startup compensation terrain write");
+        }
+        auto& tile=result.m_tiles.at(size_t(y)*(WIDTH/2)+x/2);
+        if(tile.Items()!=w.before) {throw std::invalid_argument("Stale startup compensation terrain authority");}
+        for(size_t k=0;k<4;++k) {tile.bytes[8+k]=uint8_t(w.after>>(8*k));}
+    }
     return result;
 }
 

@@ -68,6 +68,7 @@ class Def;
 
 namespace faction {
 class Faction;
+struct SmacHumanResearchInputs;
 }
 
 namespace map {
@@ -515,6 +516,7 @@ private:
 	int64_t m_next_research_request=0; // never reused by ResetGame
 	void ContinueCanonicalTurn(GSE_CALLABLE);
 	bool ContinueCanonicalResearch(GSE_CALLABLE);
+	faction::SmacHumanResearchInputs PrepareCanonicalHumanResearchInputs(int32_t owner,bool blind) const;
 	bool RequestCanonicalResearch(GSE_CALLABLE,int32_t owner,bool bonus);
 	bool HandleSmacResearchEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	gse::Value* GetPendingSmacResearch(GSE_CALLABLE) const;

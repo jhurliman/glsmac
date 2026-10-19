@@ -2744,6 +2744,8 @@ public:
         return check(); // The fixture and restored Map retire before these borrowed sources.
     }
 
+    game::backend::faction::SmacHumanResearchInputs HumanResearchInputs(int32_t owner,bool blind) {return m_game.PrepareCanonicalHumanResearchInputs(owner,blind);}
+
     std::string SaveCampaign(const std::string& path) {
         const auto ticket=FixtureWorldTicket();
         const auto id=m_game.QueueCampaignSave(m_state->CaptureGameSession(),path);
@@ -5837,6 +5839,7 @@ void ConventionalUnitFixture::Restore( GSE_CALLABLE, const std::string& snapshot
 void ConventionalUnitFixture::RestoreThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start ) { fixture->RestoreKnowledgeThroughStart( GSE_CALL, snapshot, on_start ); }
 void ConventionalUnitFixture::QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback ) { fixture->QueueKnowledgeProbeEvent( GSE_CALL, callback ); }
 void ConventionalUnitFixture::DrainEvents() { fixture->ProcessEvents(); }
+game::backend::faction::SmacHumanResearchInputs ConventionalUnitFixture::HumanResearchInputs(int32_t owner,bool blind) {return fixture->HumanResearchInputs(owner,blind);}
 std::string ConventionalUnitFixture::SaveCampaign(const std::string& path) {return fixture->SaveCampaign(path);}
 std::string ConventionalUnitFixture::CheckCampaignSaveOwnership(const std::string& path,const std::string& cancelled) {return fixture->CheckCampaignSaveOwnership(path,cancelled);}
 std::string ConventionalUnitFixture::CheckCampaignRejectedLoad(GSE_CALLABLE,const std::string& path) {return fixture->CheckCampaignRejectedLoad(GSE_CALL,path);}

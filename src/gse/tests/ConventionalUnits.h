@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "gse/Value.h"
+#include "game/backend/faction/SmacResearchValue.h"
 #include "game/backend/SmacGameplayRandomState.h"
 #include "game/backend/map/SmacWorkerKnowledge.h"
 #include "game/backend/faction/SmacSimulationState.h"
@@ -62,6 +63,7 @@ public:
 	void RestoreThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start );
 	void QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback );
 	void DrainEvents();
+	game::backend::faction::SmacHumanResearchInputs HumanResearchInputs(int32_t owner,bool blind);
 	std::string SaveCampaign(const std::string& path); // actual owner request, immediate fixture checkpoint
 	std::string CheckCampaignSaveOwnership(const std::string& path, const std::string& cancelled_path);
 	std::string CheckCampaignRejectedLoad(GSE_CALLABLE,const std::string& path);

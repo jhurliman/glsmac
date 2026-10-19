@@ -209,3 +209,34 @@ establish arithmetic and ordering, not construction, blooms or climate events.
 Cold startup zeroes are distinct from initializer behavior: poisoned strategy
 entries survive the checked initializer. Saved history must not be fabricated
 from current terrain, definitions or a newly calculated owner summary.
+
+## Live valuation input binding checkpoint
+
+PrepareCanonicalHumanResearchInputs now resolves the complete ordinary human
+valuation context from the current canonical campaign. It reads the saved
+priority integers, Base totals and per-region peer Base bytes, territory known
+counts/areas, strategy rows, own/foreign available weapon caches, partial ecology
+aggregate, global cloud category, intrinsic PLANET/PROBE, uncapped POPULATION
+bonus and saved human victory-pressure history. Raw possession includes every
+admitted faction; definition enablement remains in the existing value/selector.
+Facility, reactor, Foil and predefined Formers prerequisites are resolved from
+the current catalogs. Weapon offense retains native signed-byte semantics.
+
+The binder performs no summary refresh, ownership grant, RNG draw or publication.
+Missing retained authority and unknown catalog references reject instead of
+becoming fabricated zero values. The current no-project admission rejects Voice
+ownership, while preserving the saved future economic-pressure date branch.
+Generated continuous map settings that lack original categorical cloud authority
+remain unavailable; this query does not infer a category during research.
+
+A live two-participant fixture supplies intentionally stale/different Base counts,
+regional knowledge/strategy, own weapon versus own armor versus foreign weapon,
+partial ecology history, signed non-Boolean priorities and a future pressure date.
+It verifies these identities, intrinsic PLANET versus INDUSTRY, changed catalog
+prerequisites, unchanged world/RNG and missing-history rejection. The native
+research groups and targeted GameResearch.cpp correctness analysis pass.
+
+This is an integration dependency, not completed Blind dispatch. The live request
+still uses the manual pool until the priority question, automatic selection and
+discovery/Secrets continuation are connected. Save/Start of that new suspended
+question must be implemented and tested before claiming Standard Rules parity.

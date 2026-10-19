@@ -2366,6 +2366,46 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
 
+    task->AddTest("SMAC live human research binds retained histories without refreshing or drawing",[](GSE*,context::Context*)->std::string {
+        const auto provider=[](const std::string& filename) {
+            auto source=UpkeepSource(filename);
+            // The parser fixture intentionally has unresolved facility tokens;
+            // this consumer requires a complete valid catalog instead.
+            size_t at=0;while((at=source.find("UnknownTech",at))!=std::string::npos) {source.replace(at,11,"Tech");at+=4;}
+            return source;
+        };
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(provider,true,128,64,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            Populate(GSE_CALL,fixture,false);
+            std::vector<bool> sea(128*64/2,false);
+            auto topology=game::backend::map::GlsmacTerritoryTopology::Build(128,64,true,sea);
+            game::backend::map::smac_territory::TerritorySummary summary{};summary.owners[1].known[1]=77;
+            fixture.TerritoryTopology(topology.WithTerritorySummary(summary).Serialize());
+            fixture.ResourceState([](auto& state){
+                state.strategy->at(1).priorities={2,-1,0,3};state.retained_base_totals->at(1)=13;
+                state.capabilities->factions[0].available[0]=7;state.capabilities->factions[0].foreign[0]=19;
+                state.capabilities->factions[0].available[1]=99;
+                state.ecology_history->research_aggregate[1]=31;state.ecology_world=game::backend::faction::SmacEcologyWorld{1,0,0};
+                state.regional_strategy->at(1)[1]=2;state.economy.at(1).regional_base_counts->at(1)=4;
+                state.economy.at(2).regional_base_counts->at(1)=9;
+                state.hostility.owners.at(1).directions[2].primary=0x18;
+                state.victory_history->economic_deadlines[1]=500;
+            });
+            const auto before=fixture.Snapshot();const auto rng=fixture.GameplayRandom();
+            const auto input=fixture.HumanResearchInputs(1,true);
+            GT_ASSERT((input.priorities==std::array<int32_t,4>{2,-1,0,3}) && input.base_count==13 && input.maximum_attack==7
+                && input.maximum_defense==19 && input.ecology_aggregate==31 && input.cloud_cover==0 && input.endgame_pressure
+                && input.regional_known_tiles[1]==77 && input.regional_strategy[1]==2 && input.regional_bases[1][1]==4
+                && input.regional_bases[2][1]==9 && input.relations[2]==0x18 && input.blind
+                && input.intrinsic_planet==1 && input.intrinsic_probe==0 && input.former_prerequisite==6
+                && input.foil_prerequisite==-2 && input.reactor_prerequisites[0]==-2,
+                "Live research binder recounted or confused retained input identities");
+            GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==rng,"Research input query changed authority or RNG");
+            fixture.ResourceState([](auto& state){state.capabilities.reset();});
+            GT_ASSERT(Rejects([&]{fixture.HumanResearchInputs(1,true);}),"Missing retained research capability was invented");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC live hostile Scout movement joins battle history casualties palette and actual Start",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         for(int scenario=0;scenario<7;++scenario) {

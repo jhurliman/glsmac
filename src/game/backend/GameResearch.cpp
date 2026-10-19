@@ -6,6 +6,8 @@
 #include "base/BaseManager.h"
 #include "base/FacilityDef.h"
 #include "faction/SmacResearch.h"
+#include "faction/SmacResearchValue.h"
+#include "faction/SmacDominance.h"
 #include "map/Map.h"
 #include "gc/Space.h"
 #include "gse/value/Array.h"
@@ -91,6 +93,75 @@ void Game::GrantCanonicalResearch(int32_t owner,int32_t id,bool clear_labs) {
 
 void Game::NotifyCanonicalResearch(GSE_CALLABLE) {
 	m_state->TriggerObject(this,"research_choice",ARGS_F(this) { }; });
+}
+
+faction::SmacHumanResearchInputs Game::PrepareCanonicalHumanResearchInputs(int32_t owner,bool blind) const {
+    ValidateCurrentSimulation();
+    if(!m_simulation || !m_map) {throw std::runtime_error("Research valuation requires a bound world");}
+    const auto& state=m_simulation->value;const auto& global=m_state->m_settings.global;
+    const auto found=std::find_if(state.roster.begin(),state.roster.end(),[&](const auto& row){return row.simulation_id==owner;});
+    const auto* participant=found==state.roster.end() ? nullptr:&*found;
+    if(!participant || !participant->active) {throw std::runtime_error("Research valuation has no active participant");}
+    RequireSmacLocalHumanOwner(&m_state->m_slots->GetSlot(participant->slot));
+    const auto* social=state.social.Find(owner);const auto* profile=global.GetSmacFactionStartupRules()->Find(participant->faction_id);
+    const auto& topology=m_map->GetTerritoryTopology();
+    if(!global.IsOrdinarySmacCampaign() || state.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain
+        || !state.strategy || !state.strategy->count(owner) || !state.capabilities || !state.regional_strategy
+        || !state.retained_base_totals || !state.ecology_history || !state.ecology_world || !state.victory_history
+        || !social || !social->intrinsic || !profile || !topology || !topology->Summary() || !topology->Areas()) {
+        throw std::runtime_error("Human research valuation lacks retained ordinary campaign inputs");
+    }
+    const auto& technologies=*global.GetSmacTechnologyRules();const auto& catalog=global.GetSmacPredefinedUnitRules()->catalog;
+    const auto resolve=[](const settings::SmacTechnologyReference& ref)->int32_t {
+        using Kind=settings::SmacTechnologyReference::Kind;
+        if(ref.kind==Kind::NONE) {return -1;}if(ref.kind==Kind::DISABLED) {return -2;}
+        if(ref.kind==Kind::TECHNOLOGY_ID && ref.technology_id) {return *ref.technology_id;}
+        throw std::runtime_error("Research valuation has an unresolved prerequisite");
+    };
+    faction::SmacHumanResearchInputs input{};input.faction_id=owner;input.blind=blind;
+    for(size_t i=0;i<input.technologies.size();++i) {
+        const auto& row=technologies.technologies[i];auto& out=input.technologies[i];out.ratings=row.priorities;out.flags=row.flags;
+        for(size_t j=0;j<2;++j) {out.prerequisites[j]=resolve(technologies.ResolveToken(row.prerequisites[j]));}
+        for(const auto& peer:state.technology.factions) {if(peer.owned[i]) {out.possession|=uint32_t(1)<<peer.admission.simulation_id;}}
+    }
+    input.facility_prerequisites.fill(-1);
+    for(size_t i=1;i<input.facility_prerequisites.size();++i) {
+        input.facility_prerequisites[i]=resolve(technologies.ResolveToken(global.GetSmacProductionRules()->facilities.at(i-1).prerequisite));
+    }
+    for(size_t i=0;i<2;++i) {input.reactor_prerequisites[i]=resolve(technologies.ResolveToken(catalog.reactors.reactors.at(i+1).prerequisite));}
+    // Positional original records: predefined Formers1 and Foil chassis3.
+    // Resolve their current catalog tokens instead of hardcoding technology IDs.
+    input.former_prerequisite=resolve(catalog.units.at(1).prerequisite);
+    input.foil_prerequisite=resolve(technologies.ResolveToken(catalog.chassis.chassis.at(3).prerequisite));
+    for(size_t i=0;i<input.weapons.size();++i) {const auto& row=catalog.weapons.weapons.at(i);
+        const auto raw=static_cast<uint8_t>(row.offense);
+        input.weapons[i]={raw<=127 ? int32_t(raw):int32_t(raw)-256,resolve(technologies.ResolveToken(row.prerequisite))};}
+    input.priorities=state.strategy->at(owner).priorities;input.base_count=state.retained_base_totals->at(owner);
+    input.intrinsic_planet=social->intrinsic->at(7);input.intrinsic_probe=social->intrinsic->at(8);
+    // Frozen ordinary faction admission has no PSI scalar writer (constructor0).
+    input.psi_bonus=0;
+    for(const auto& bonus:profile->bonuses) {if(bonus.kind==settings::SmacFactionStartupBonus::Kind::POPULATION) {input.population_bonus=bonus.parameter;}}
+    const auto& capability=state.capabilities->factions.at(owner-1);
+    input.maximum_attack=capability.available[faction::SmacCapabilityState::Weapon];
+    input.maximum_defense=capability.foreign[faction::SmacCapabilityState::Weapon];
+    input.turn=Checked(GetTurnId());input.cloud_cover=state.ecology_world->cloud_cover;
+    input.ecology_aggregate=state.ecology_history->research_aggregate.at(owner);
+    if(input.base_count<0) {throw std::runtime_error("Research valuation has a negative retained Base count");}
+    if(state.victory_history->voice_host!=-1) {throw std::runtime_error("No-project research cannot admit Voice ownership");}
+    faction::SmacVictoryContext victory;victory.turn=input.turn;victory.humans=state.human_membership;
+    victory.economic_deadlines=state.victory_history->economic_deadlines;
+    input.endgame_pressure=faction::SmacVictoryPressure(victory,{{settings::SmacTechnologyReference::Kind::UNKNOWN,{}},-1,-1});
+    for(size_t peer=0;peer<8;++peer) {input.relations[peer]=state.hostility.owners.at(owner).directions[peer].primary;}
+    for(size_t i=0;i<128;++i) {
+        input.regional_known_tiles[i]=topology->Summary()->owners[owner].known[i];
+        input.regional_strategy[i]=state.regional_strategy->at(owner)[i];
+        input.region_area[i]=static_cast<uint32_t>(topology->Areas()->at(i));
+        for(const auto& peer:state.economy) {
+            if(!peer.second.regional_base_counts) {throw std::runtime_error("Research valuation lacks retained peer Base counts");}
+            input.regional_bases.at(peer.first)[i]=peer.second.regional_base_counts->at(i);
+        }
+    }
+    return input; // Query only: never refresh summaries, grant ownership or draw RNG.
 }
 
 bool Game::RequestCanonicalResearch(GSE_CALLABLE,int32_t owner,bool bonus) {

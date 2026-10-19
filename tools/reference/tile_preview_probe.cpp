@@ -36,7 +36,8 @@ int main(int argc,char** argv) {
         // memory, unsupported sea and unmeasured features unavailable.
         center.selected_known=false;if(game::frontend::smac_tile_preview::Paint(world,source,8,8,0,backing)) {return 2;}
         center.selected_known=true;world.tiles[7*40+3].selected_known=false;
-        if(game::frontend::smac_tile_preview::Paint(world,source,8,8,0,backing)) {return 3;}
+        const auto partial=game::frontend::smac_tile_preview::Paint(world,source,8,8,0,backing);
+        if(bool(partial)==(i==2 || i==3 || i==5)) {return 3;}
         world.tiles[7*40+3].selected_known=true;center.band=2;
         if(game::frontend::smac_tile_preview::Paint(world,source,8,8,0,backing)) {return 4;}
     }

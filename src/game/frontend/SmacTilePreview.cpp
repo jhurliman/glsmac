@@ -48,8 +48,11 @@ std::optional<native_terrain::Frame> Paint(const ::game::native_terrain::World& 
     bool complete=true;
     const material::TileAt materials=[&](int tx,int ty)->std::optional<material::Tile> {
         const auto* cell=at(tx,ty);if(!cell) {return {};}
-        if(!cell->selected_known) {complete=false;return {};}
-        return material::Tile{cell->band,cell->moisture,cell->rockiness,cell->selected_items};
+        // Bare material connectivity reads actual neighboring climate, not
+        // improvement knowledge. Only a center Fungus pass consumes this
+        // neighbor item field (Forest is outside this admitted profile).
+        if(!cell->selected_known && (own.selected_items&0x20u)) {complete=false;return {};}
+        return material::Tile{cell->band,cell->moisture,cell->rockiness,cell->selected_known?cell->selected_items:0u};
     };
     const auto passes=material::Select({{x,y}},materials,static_cast<uint16_t>(base+44*(40*y+x/2)));
     if(!complete) {return {};}

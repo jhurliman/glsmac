@@ -39,6 +39,10 @@ void AddSmacTilePreviewTests(task::gsetests::GSETests* task) {
         const auto bare=preview::Paint(world,source,8,8,0,background);
         tile.items=32;const auto live=preview::Paint(world,source,8,8,0,background);
         GT_ASSERT(bare && live && live->writes==bare->writes && live->indexed==bare->indexed,"Live-only Fungus leaked into remembered preview");
+        world.tiles[7*40+3].selected_known=false;world.tiles[7*40+3].items=32;
+        const auto partial=preview::Paint(world,source,8,8,0,background);
+        GT_ASSERT(partial && partial->indexed==bare->indexed,"Bare-land climate connectivity unnecessarily required neighbor improvement memory or leaked live Fungus");
+        world.tiles[7*40+3].selected_known=true;
         tile.items=0;tile.selected_items=32;const auto remembered=preview::Paint(world,source,8,8,0,background);
         GT_ASSERT(remembered && remembered->writes>bare->writes,"Remembered Fungus bypassed original feature painter");
         tile.selected_known=false;GT_ASSERT(!preview::Paint(world,source,8,8,0,background),"Unknown center painted");

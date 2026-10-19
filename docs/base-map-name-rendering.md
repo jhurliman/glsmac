@@ -27,3 +27,14 @@ odd-width centering, whole-string shadow order, single-sprite cache reuse,
 unscaled geometry, unchanged world anchors and owned texture retirement. The
 existing legacy-spacing and frontend Base owner/name refresh groups also pass
 with allocation tracking.
+
+The owned developed-campaign runtime comparison at41293dc0 uses the ordinary
+Load Game path, the same1024x768 camera navigation as the317 capture, and a
+normal menu Quit. It reported no tracked OpenGL leaks (heap tracking and audio
+were not part of that graphical run). Exact foreground masks against the pinned
+current-Windows original-path GDI controls differ by0pixels for New Austin,
+0for New Chicago and2for Hilton Head (one pixel on the final d moves vertically).
+Comparison translates cropped ink bounds only, without resizing or warping;
+it does not prove scene-anchor or historical raster parity. That last glyph
+raster difference remains unresolved rather than patched with a name-specific
+pixel correction. Captures and owned campaign data remain outside the code tree.

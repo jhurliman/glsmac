@@ -163,6 +163,10 @@ std::shared_ptr<const game::frontend::native_terrain::Source> SDL2::GetSmacTerra
     source->owner_clut=game::frontend::smac_territory_boundary::Rows(source->palette,targets,opacities);
     for(size_t owner=0;owner<8;++owner) {if(!faction_paths[owner].empty()) {
         util::FS::ReadFile(bytes,faction_paths[owner]);Surface faction(load_image(bytes),SDL_FreeSurface);
+        // Port-defined Base art may be a small grid or true-color image.
+        // Without the native metadata profile, retain SYSTEM's global row.
+        if(!faction || !faction->format || faction->format->BitsPerPixel!=8 || !faction->pixels ||
+            faction->w<162 || faction->h<758 || faction->pitch<faction->w) {continue;}
         const auto target=loaded_index(faction.get(),161,747),encoded=loaded_index(faction.get(),161,757);
         const int opacity=static_cast<uint8_t>(encoded-10)*100/255;
         source->owner_clut[owner]=game::frontend::smac_territory_boundary::Row(source->palette,target,opacity);

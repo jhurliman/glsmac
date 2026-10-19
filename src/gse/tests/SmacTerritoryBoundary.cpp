@@ -11,6 +11,7 @@
 #include "util/UUID.h"
 #include <filesystem>
 #include <fstream>
+#include <SDL.h>
 
 namespace gse::tests {
 namespace {
@@ -28,7 +29,7 @@ void AddSmacTerritoryBoundaryTests(task::gsetests::GSETests* task) {
         namespace fs=std::filesystem;
         const auto directory=fs::temp_directory_path()/("glsmac-boundary-source-"+util::UUID::Generate());
         const auto data=directory/"default";fs::create_directory(directory);fs::create_directory(data);
-        const std::array<std::string,6> names{{"texture.pcx","palette.pcx","rainfall.pcx","custom-a.pcx","custom-b.pcx","system.txt"}};
+        const std::array<std::string,8> names{{"texture.pcx","palette.pcx","rainfall.pcx","custom-a.pcx","custom-b.pcx","system.txt","small.pcx","truecolor.bmp"}};
         util::FinallyGuard remove([&]{std::error_code ignored;for(const auto& name:names) {fs::remove(data/name,ignored);}fs::remove(data,ignored);fs::remove(directory,ignored);});
         const auto write_pcx=[](const fs::path& path,int width,int height,const std::vector<uint8_t>& pixels) {
             std::vector<uint8_t> bytes(128,0);bytes[0]=10;bytes[1]=5;bytes[2]=1;bytes[3]=8;bytes[65]=1;
@@ -45,6 +46,9 @@ void AddSmacTerritoryBoundaryTests(task::gsetests::GSETests* task) {
         std::vector<uint8_t> rainfall(128*400,255);rainfall[254*128+2]=208;write_pcx(data/names[2],128,400,rainfall);
         std::vector<uint8_t> faction(162*758,255);faction[747*162+161]=120;faction[757*162+161]=255;write_pcx(data/names[3],162,758,faction);
         faction[747*162+161]=80;faction[757*162+161]=128;write_pcx(data/names[4],162,758,faction);
+        write_pcx(data/names[6],2,2,{1,1,1,1});
+        {const std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)> rgb(SDL_CreateRGBSurfaceWithFormat(0,162,758,32,SDL_PIXELFORMAT_RGBA32),SDL_FreeSurface);
+            GT_ASSERT(rgb && SDL_SaveBMP(rgb.get(),(data/names[7]).string().c_str())==0,"Cannot write true-color boundary fallback fixture");}
         {std::ofstream file(data/names[5]);file<<"#BOUNDARYPERCENTS\n";for(int i=0;i<8;++i) {file<<"0, default\n";}}
         return WithWidgetTextureResources(directory.string(),[&]()->std::string {
             std::shared_ptr<const game::frontend::native_terrain::Source> retained;
@@ -60,6 +64,8 @@ void AddSmacTerritoryBoundaryTests(task::gsetests::GSETests* task) {
                 GT_ASSERT(custom->owner_clut[3]==expected && custom->owner_clut[3]!=defaults->owner_clut[3] && custom->owner_clut[5]==defaults->owner_clut[5],"Custom faction override was applied to a stock transport slot or omitted");
                 files[3]=names[4];files[5]=names[3];const auto reassigned=loader.GetSmacTerrainSource(files);
                 GT_ASSERT(reassigned!=custom && reassigned->owner_clut[3]==boundary::Row(custom->palette,90,50) && reassigned->owner_clut[5]==expected,"Native faction reassignment reused stale color/opacity rows");
+                for(const auto& fallback:{names[6],names[7]}) {files[3]=fallback;const auto port_art=loader.GetSmacTerrainSource(files);
+                    GT_ASSERT(port_art->owner_clut[3]==defaults->owner_clut[3] && port_art->owner_clut[5]==expected,"Non-native custom artwork did not retain the global owner row");}
                 retained=custom;
             }
             GT_ASSERT(retained->loaded.pixels[0]==30 && retained->owner_clut[3][30]==130,"Native terrain source borrowed retired SDL surfaces or loader cache");GT_OK();

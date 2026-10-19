@@ -1363,6 +1363,12 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
                     if(viewer!=m_simulation->value.hostility.owners.end()) {
                         for(size_t i=0;i<8;++i) {snapshot->relations[i]=viewer->second.directions[i].primary;}
                     }
+                    if(snapshot->viewer>0 && m_map->m_worker_knowledge && m_map->m_worker_knowledge_ready) {
+                        const auto knowledge=m_map->m_worker_knowledge->CopyData();
+                        if(const auto& observer=knowledge.observers[snapshot->viewer]) {
+                            for(size_t i=0;i<8;++i) {if(observer->relations[i].territory_recognition) {snapshot->relations[i]|=0x08000008u;}}
+                        }
+                    }
                 }
                 response.data.native_terrain=snapshot.release();
             }

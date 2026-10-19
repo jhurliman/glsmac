@@ -5402,12 +5402,21 @@ public:
             GT_ASSERT(viewer>0,"Native snapshot fixture has no actual local participant");
             auto& relation=m_game.m_simulation->value.hostility.owners.at(viewer).directions[7].primary;
             relation=0x08000008;
+            auto& discovered=m_game.m_simulation->value.hostility.owners.at(viewer).directions[6].primary;
+            discovered=0x80008118; // Battle history alone lacks territory recognition.
+            m_game.m_simulation->value.hostility.owners.at(viewer).directions[5].primary=discovered;
+            map::SmacWorkerKnowledge::Data knowledge{};knowledge.width=80;knowledge.height=80;
+            knowledge.ordinary_local_mode=true;knowledge.horizontal_wrap=m_game.m_map->m_territory_topology->Wraps();
+            knowledge.tiles.resize(3200);knowledge.observers[viewer]=map::SmacWorkerKnowledge::Observer{};
+            knowledge.observers[viewer]->relations[6].territory_recognition=true;
+            m_game.m_map->m_worker_knowledge=map::SmacWorkerKnowledge::Create(knowledge);m_game.m_map->m_worker_knowledge_ready=true;
             const auto ticket=FixtureWorldTicket(),request=m_game.MT_GetNativeTerrain(ticket);ProcessRequests();
             const auto response=m_game.MT_GetResponse(request);
             util::FinallyGuard destroy([&]{m_game.MT_DestroyResponse(response);});
             GT_ASSERT(response.result==R_SUCCESS && response.world_ticket==ticket && response.data.native_terrain,"Actual native metadata request did not return an owned world");
             const auto& snapshot=*response.data.native_terrain;
             GT_ASSERT(snapshot.viewer==viewer && snapshot.relations[7]==relation,"Snapshot lost local simulation identity or directed relations");
+            GT_ASSERT(snapshot.relations[6]==(discovered|0x08000008u) && snapshot.relations[5]==discovered,"Snapshot ignored committed worker recognition or leaked it to an undiscovered peer");
             for(const auto& row:m_game.m_simulation->value.roster) {
                 GT_ASSERT(snapshot.faction_files[row.simulation_id]==row.faction_id+".pcx","Snapshot assigned owner colors by transport slot or stock order");
                 m_state->GetFM()->Get(row.faction_id)->m_bases_render.file.clear();

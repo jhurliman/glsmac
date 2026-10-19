@@ -205,7 +205,7 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         size_t count=0;
         for(const auto& c:smac_terrain_fixture::Cases()) {
             const auto got=raster::GenerateSpans(c.triangle,c.clip);
-            GT_ASSERT(got==c.spans,std::string("Native span mismatch: ")+c.name);
+            GT_ASSERT(got==c.spans,"Native span mismatch: "+std::string(c.name));
             count+=got.size();
         }
         GT_ASSERT(count==759,"Missing original terrain or edge-control spans");

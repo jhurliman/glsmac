@@ -25,11 +25,12 @@ int32_t HorizontalStep(int64_t delta,int32_t width,unsigned scale_power) {
     Signed32(delta);
     if(!delta) {return 0;}
     const auto k=Width(static_cast<uint32_t>(width-1));
-    uint64_t reciprocal=0,remainder=0;
-    for(int bit=static_cast<int>(63+k);bit>=0;--bit) {
-        remainder=remainder*2+(bit==static_cast<int>(63+k)?1:0);
+    const auto denominator=static_cast<uint32_t>(width);
+    uint64_t reciprocal=(uint64_t{1}<<63)/denominator,remainder=(uint64_t{1}<<63)%denominator;
+    for(unsigned bit=0;bit<k;++bit) {
+        remainder*=2;
         reciprocal<<=1;
-        if(remainder>=static_cast<uint32_t>(width)) {remainder-=static_cast<uint32_t>(width);reciprocal|=1;}
+        if(remainder>=denominator) {remainder-=denominator;reciprocal|=1;}
     }
     const uint64_t magnitude=delta<0?static_cast<uint64_t>(-delta):static_cast<uint64_t>(delta);
     const uint64_t low=uint64_t(uint32_t(reciprocal))*magnitude;

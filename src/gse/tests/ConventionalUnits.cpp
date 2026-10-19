@@ -751,6 +751,34 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					{ "retired_id", VALUE( value::Int,, retired_id ) }
 				} ) } );
 				error = inspect( legacy, "(?)-?-2", "native6", "Moves: 0.5" ); if ( !error.empty() ) { return error; }
+				// A Base identity event must refresh the already selected homed
+				// Unit, without a unit-preview/reselection event doing it for us.
+				auto* home = new base::Base( game, 701, unit->m_owner, unit->m_owner->GetPlayer()->GetFaction(), game->GetMap()->GetTile( 0, 0 ),
+					"Original home", {}, {}, 1, 0, {}, base::SmacBaseResourceContext{ record.owner_simulation_id, false, 0, 0, 0, false } );
+				game->GetBM()->SpawnBase( GSE_CALL, home );
+				record.home = ConventionalUnitState::Home::Base; record.home_base_id = 701;
+				record.stored_morale = 1; record.damage = 0; record.spent = 0; record.order = ConventionalUnitState::Order::None;
+				// Home is immutable identity in the admitted command profile.
+				unit = Spawn( GSE_CALL, fixture, record, 75, rover ? 2 : 0, rover ? "EXPLICIT_ROVER" : "EXPLICIT_SCOUT" );
+				auto* selected = unit->Wrap( GSE_CALL );
+				game->GetState()->TriggerObject( game->GetMap(), "unit_preview", ARGS_F( &selected ) { { "unit", selected } }; } );
+				game->GetState()->TriggerObject( game, "unit_select", ARGS_F( &selected ) { { "unit", selected } }; } );
+				const auto check_home = [&]( const std::string& name ) {
+					check->Run( GSE_CALL, { selected, new value::Object( GSE_CALL, {
+						{ "stats", VALUE( value::String,, rover ? "1-1-2" : "1-1-1" ) },
+						{ "morale", VALUE( value::String,, "level" + std::to_string(unit->QueryStats(record.render_morale_mode).effective_morale) ) },
+						{ "moves", VALUE( value::String,, rover ? "Moves: 2" : "Moves: 1" ) },
+						{ "home", VALUE( value::String,, name ) }
+					} ) } );
+				};
+				check_home( "Original home" );
+				home->m_name = "Renamed home"; fixture.Updates();
+				const auto before_home_read = fixture.Snapshot(), before_home_random = game->GetRandom()->GetStateString();
+				auto* home_wrapper = home->Wrap( GSE_CALL );
+				game->GetState()->TriggerObject( game, "update_base", ARGS_F( &home_wrapper ) { { "base", home_wrapper } }; } );
+				check_home( "Renamed home" );
+				GT_ASSERT( fixture.Snapshot() == before_home_read && game->GetRandom()->GetStateString() == before_home_random
+					&& fixture.Updates().empty(), "home identity read mutated the world or published a Unit refresh" );
 				// Losing an admitted query context must fail afresh rather than render
 				// cached values or invent retained morale. No full-world rollback claim.
 				fixture.Early(); const auto stored = unit->Conventional(); const auto random = fixture.GameplayRandom();

@@ -226,6 +226,9 @@ return {
 		this.frame.listen(p.game, 'update_base', (e) => {
 			if (this.object_class == 'Base' && this.object_id == e.base.id) {
 				this.show(e.base);
+			} else if (this.object_class == 'Unit' && #is_defined(this.object) && this.object.is_conventional) {
+				const home = this.object.get_conventional_state().home_base_id;
+				if (#is_defined(home) && home == e.base.id) { this.show(this.object); }
 			}
 		});
 		this.frame.listen(p.game, 'base_despawn', (e) => {

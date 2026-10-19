@@ -79,7 +79,7 @@ return (game) => {
 		check(#sizeof(lines) == (unit.is_immovable ? 4 : (held ? 6 : 5)), 'wrong preview line count');
 		check(lines[0].font == 'arialbd.ttf:12:mono' && lines[1].font == 'arial.ttf:12:mono', 'unit card lost native font distinction');
 		check(lines[0].top + lines[0].measure().height == 73 && lines[1].top + lines[1].measure().height == 86, 'unit card baselines drifted');
-		if (unit.is_conventional) { check(lines[3].text == 'Independent', 'homeless unit lost source-backed home row'); }
+		if (unit.is_conventional) { check(lines[3].text == (#is_defined(expected.home) ? expected.home : 'Independent'), 'unit home row is stale: ' + lines[3].text); }
 		if (held) { check(lines[5].text == 'Hold', 'live Hold order row missing'); }
 		check(lines[0].text == unit.get_def().name, 'wrong unit name');
 		const legacy_artillery = !unit.is_conventional && !unit.is_native && unit.get_def().id == 'SporeLauncher';

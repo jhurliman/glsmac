@@ -31,38 +31,41 @@ to load them from a user-supplied installation. See
 
 ## Current checkpoint — 2026-10-19
 
-Integration checkpoint: `7f870cce` (through [#352](https://github.com/jhurliman/glsmac/pull/352)).
-The dated notes below retain historical evidence; they do not describe the
-current implementation where this checkpoint supersedes them. No milestone or
-golden release gate is declared complete by this update.
+Integration checkpoint: `26d293c3` (through [#361](https://github.com/jhurliman/glsmac/pull/361)).
+The dated notes below retain historical evidence; this checkpoint supersedes
+older implementation status. No milestone or release gate is declared complete.
 
 - Bounded conventional movement, founding, production, research, terraforming,
-  combat and capture paths exist. Focused rule and caller tests establish
-  individual behavior, not the complete M2 local/network conquest scenario.
-  Ordinary startup still has one local human; network/SMAX startup retains a
-  placeholder path. A legal opponent and complete match remain required.
-- The native terrain inspector composes indexed land, water/coast, fungus,
-  rivers, territory, Road/Tube, improvements, named landmark art and resource /
-  Pod / Monolith sprites. See [#348](https://github.com/jhurliman/glsmac/pull/348),
-  [#350](https://github.com/jhurliman/glsmac/pull/350),
-  [#351](https://github.com/jhurliman/glsmac/pull/351) and
-  [#352](https://github.com/jhurliman/glsmac/pull/352). The assembler matches
-  486 original indexed frames for its bounded input controls. This does not
-  establish whole-screen parity, arbitrary zoom, or complete terrain admission.
-- Positive landmark geometry and signed projector metadata are live. Bounded
-  negative-detail geometry has original-return controls in
-  [#353](https://github.com/jhurliman/glsmac/pull/353), but live admission awaits
-  original viewport query order and cache lifecycle integration. Whole-map
-  preparation cannot stand in for that view-specific behavior.
-- The live dominance graph now uses saved native faction identities and history
-  ([#345](https://github.com/jhurliman/glsmac/pull/345)); a real multi-turn
-  campaign capture exercises it. World minimap visibility and optional-settings
-  handling are connected ([#347](https://github.com/jhurliman/glsmac/pull/347)).
-  Detail minimap, remaining console actions and full screen matching stay open.
-- Earlier Mac interactive checks passed. Current selected CI and focused checks
-  do not replace release hardware, performance, audio or full campaign acceptance.
-- GitHub Codex review credit is exhausted. The user explicitly waived that merge
-  requirement while credit is exhausted; the workflow below records the change.
+  combat and capture paths exist. Individual rule/caller tests do not establish
+  the complete M2 local/network conquest scenario. Ordinary startup still has
+  one local human; network/SMAX startup retains a placeholder path. A legal
+  opponent and complete match remain required.
+- Native terrain now retains view-specific geometry/cache history, uses measured
+  painter order and anchors objects to their own projector calls
+  ([#356](https://github.com/jhurliman/glsmac/pull/356),
+  [#358](https://github.com/jhurliman/glsmac/pull/358)).
+  [#359](https://github.com/jhurliman/glsmac/pull/359) matches all eight complete
+  original indexed viewport frames and paint-store counts under ASan/UBSan:
+  first/repeat/east/back for a diagnostic observer and a valid faction control.
+  See [comparison scope and commands](behavior/viewport-pixel-comparison.md).
+  These controls have empty rosters and explicit allocation/visibility inputs;
+  they do not establish complete game screens, fog, arbitrary cameras or GPU parity.
+- The Detail minimap has its own observer-aware terrain geometry and navigation
+  ([#357](https://github.com/jhurliman/glsmac/pull/357)). Original Base body,
+  defense/HQ and population-label controls are connected there
+  ([#360](https://github.com/jhurliman/glsmac/pull/360)). Main-map Base body
+  metadata is in [#362](https://github.com/jhurliman/glsmac/pull/362), still
+  awaiting integration at this checkpoint. Captured-city art family, complete
+  label/font parity and a matched populated original scene remain open.
+- The live dominance graph uses saved native faction identities/history (#345).
+  Legacy whole movement no longer prints a decimal suffix (#361). The lower
+  console terrain preview still uses the legacy tinted mesh; original preview
+  paint/lighting controls are the next reference dependency. Aircraft state,
+  remaining console actions and full screen matching remain open.
+- Earlier Mac interactive checks passed. Focused checks and selected CI do not
+  replace release hardware, frame pacing, audio or complete campaign acceptance.
+- GitHub Codex review credit is exhausted; the user waived that merge requirement.
+  Focused correctness checks and relevant CI continue.
 
 ## Starting evidence — 2026-10-15
 
@@ -140,8 +143,8 @@ finished single-player or satisfy the 1.0 AI gate.
 
 | Slice | Acceptance / dependency |
 | --- | --- |
-| Viewport geometry lifecycle and complete map comparison | Preserve the original shared corner cache across actual pan calls, reset it at measured zoom/relief/map lifecycle boundaries, and execute projector/height/shade calls in the observed painter order. Keep terrain and unit/Base anchors coherent. Compare a controlled pan sequence before enabling negative-detail live admission; then close unsupported material and art admission gaps. |
-| Detail minimap and remaining console callers | Implement the original local-camera Detail terrain pass at relief step14, observer geography and Base visibility gates, and indexed Base sprites with measured sampling/clipping. Connect working mode/navigation controls; compare original terrain/Base frame controls and a runtime capture. Do not infer Detail geometry by scaling the zoom0 step25 cache. |
+| Populated map fidelity | Integrate #362 after relevant CI; retain original source art family across capture rather than deriving it from current owner. Compare real Base/unit/flag/population overlays against an original populated scene with declared state, camera, observer and asset provenance. Terrain-only exact frames do not close this gate. |
+| Native lower-console tile preview | Capture the original flags0x621, 85% preview paint with flat/sloped land and a feature control, including indexed pixels, geometry, UVs, lighting, clip and cache effects. Reuse native material/raster rules in an independent preview viewport; do not downsample the main map or guess relief. Then compare preview pixels and working console interactions. |
 | Complete M2 conquest acceptance | Establish a legal second faction through an authenticated startup path, then exercise the complete numbered M2 scenario through gameplay callers. Save/reload each checkpoint and compare uninterrupted state/RNG; repeat remotely with late join. Existing startup restricts conventional play to the local SMAC human, so extending only fixture rosters or rendering extra factions does not close this prerequisite. |
 
 Keep the next three actionable slices specified in enough detail to implement.

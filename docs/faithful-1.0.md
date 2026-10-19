@@ -31,26 +31,34 @@ to load them from a user-supplied installation. See
 
 ## Current checkpoint — 2026-10-19
 
-Integration checkpoint: `729c496917d1c8d6d99e400b7ad5e5a48d491a3d`.
+Integration checkpoint: `7f870cce` (through [#352](https://github.com/jhurliman/glsmac/pull/352)).
 The dated notes below retain historical evidence; they do not describe the
 current implementation where this checkpoint supersedes them. No milestone or
 golden release gate is declared complete by this update.
 
 - Bounded conventional movement, founding, production, research, terraforming,
-  combat and capture paths now exist. Focused rule and caller tests establish
+  combat and capture paths exist. Focused rule and caller tests establish
   individual behavior, not the complete M2 local/network conquest scenario.
-- The native terrain inspector composes original indexed land, water/coast,
-  fungus, rivers, territory boundaries and Road/Tube passes. Latest integration:
-  [#341](https://github.com/jhurliman/glsmac/pull/341) and
-  [#343](https://github.com/jhurliman/glsmac/pull/343). Its explicit Planet/map,
-  viewport and zoom scope remains bounded; unsupported improvements and landmark
-  geometry retain legacy rendering. Primitive pixel controls and real runtime
-  captures do not establish whole-screen parity with the supplied GOG image.
-- Console card sizing, movement formatting and terrain spacing have corrections;
-  Base card palette and Turn Complete presentation also have native controls.
-  [#342](https://github.com/jhurliman/glsmac/pull/342) saves dominance history;
-  the live graph and native faction identity migration are still in progress.
-  Remaining console functionality and full original screen matching stay open.
+  Ordinary startup still has one local human; network/SMAX startup retains a
+  placeholder path. A legal opponent and complete match remain required.
+- The native terrain inspector composes indexed land, water/coast, fungus,
+  rivers, territory, Road/Tube, improvements, named landmark art and resource /
+  Pod / Monolith sprites. See [#348](https://github.com/jhurliman/glsmac/pull/348),
+  [#350](https://github.com/jhurliman/glsmac/pull/350),
+  [#351](https://github.com/jhurliman/glsmac/pull/351) and
+  [#352](https://github.com/jhurliman/glsmac/pull/352). The assembler matches
+  486 original indexed frames for its bounded input controls. This does not
+  establish whole-screen parity, arbitrary zoom, or complete terrain admission.
+- Positive landmark geometry and signed projector metadata are live. Bounded
+  negative-detail geometry has original-return controls in
+  [#353](https://github.com/jhurliman/glsmac/pull/353), but live admission awaits
+  original viewport query order and cache lifecycle integration. Whole-map
+  preparation cannot stand in for that view-specific behavior.
+- The live dominance graph now uses saved native faction identities and history
+  ([#345](https://github.com/jhurliman/glsmac/pull/345)); a real multi-turn
+  campaign capture exercises it. World minimap visibility and optional-settings
+  handling are connected ([#347](https://github.com/jhurliman/glsmac/pull/347)).
+  Detail minimap, remaining console actions and full screen matching stay open.
 - Earlier Mac interactive checks passed. Current selected CI and focused checks
   do not replace release hardware, performance, audio or full campaign acceptance.
 - GitHub Codex review credit is exhausted. The user explicitly waived that merge
@@ -132,9 +140,9 @@ finished single-player or satisfy the 1.0 AI gate.
 
 | Slice | Acceptance / dependency |
 | --- | --- |
-| Ordinary improvement composition and landmark geometry | Use original executable continuations to establish selected/live authority, crops, shading and draw order. Remove legacy terrain exclusions only after indexed composition matches; retain actual runtime captures. |
-| Live dominance graph and remaining console callers | Preserve V31 history without guessing faction identities; retain native identities in the new format. Connect authenticated score refresh, original palette and indexed line rendering. Capture a fresh world after real turns, then close remaining console actions with source contracts. |
-| Complete M2 conquest acceptance | Exercise the whole scenario below through actual gameplay callers, including checkpoint save/reload, local and network play. Fix exposed gaps and introduce a legal initial opponent; individual native rule cases do not satisfy campaign acceptance. |
+| Viewport geometry lifecycle and complete map comparison | Preserve the original shared corner cache across actual pan calls, reset it at measured zoom/relief/map lifecycle boundaries, and execute projector/height/shade calls in the observed painter order. Keep terrain and unit/Base anchors coherent. Compare a controlled pan sequence before enabling negative-detail live admission; then close unsupported material and art admission gaps. |
+| Detail minimap and remaining console callers | Implement the original local-camera Detail terrain pass at relief step14, observer geography and Base visibility gates, and indexed Base sprites with measured sampling/clipping. Connect working mode/navigation controls; compare original terrain/Base frame controls and a runtime capture. Do not infer Detail geometry by scaling the zoom0 step25 cache. |
+| Complete M2 conquest acceptance | Establish a legal second faction through an authenticated startup path, then exercise the complete numbered M2 scenario through gameplay callers. Save/reload each checkpoint and compare uninterrupted state/RNG; repeat remotely with late join. Existing startup restricts conventional play to the local SMAC human, so extending only fixture rosters or rendering extra factions does not close this prerequisite. |
 
 Keep the next three actionable slices specified in enough detail to implement.
 Expand later milestones into PRs when their prerequisites and reference cases

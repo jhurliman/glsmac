@@ -10,6 +10,8 @@
 #include <vector>
 #include "SmacTerrainCorners.h"
 #include "SmacLandmarkTables.h"
+#include "SmacNegativeLandmarkTables.h"
+#include "SmacTerrainLighting.h"
 
 namespace game::backend::map::smac_terrain {
 
@@ -18,8 +20,8 @@ namespace game::backend::map::smac_terrain {
 class LandmarkGeometry {
 public:
     struct Cell { uint8_t band=0; uint32_t landmarks=0; };
-    LandmarkGeometry(int width,int rows,bool wrap,std::vector<Cell> cells,bool low_relief=false)
-        : width_(width),rows_(rows),wrap_(wrap),cells_(std::move(cells)),step_(low_relief?8:25) {
+    LandmarkGeometry(int width,int rows,bool wrap,std::vector<Cell> cells,bool low_relief=false,bool pinned_planet=false)
+        : width_(width),rows_(rows),wrap_(wrap),cells_(std::move(cells)),step_(low_relief?8:25),pinned_planet_(pinned_planet) {
         if(width<=0 || width%2 || rows<=0 || cells_.size()!=size_t(width/2)*size_t(rows)) {
             throw std::invalid_argument("Invalid native landmark geometry dimensions");
         }
@@ -43,7 +45,7 @@ public:
         const auto index=Index(x,y);
         if(!index || cells_[*index].band<3) {return 0;}
         auto& cached=cache_[*index][vertex];
-        if(cached) {return cached;}
+        if(cached && *cached!= -1) {return cached;}
         const auto profile=Profile(cells_[*index].landmarks,vertex,false);
         if(!profile) {return std::nullopt;}
         int base=step_*(int(cells_[*index].band)-3);
@@ -81,9 +83,49 @@ public:
         if(!index || vertex>=5) {return std::nullopt;}
         return Profile(cells_[*index].landmarks,vertex,true);
     }
+    std::optional<int> ProjectorHeight(int x,int y) {
+        int sum=0;
+        for(unsigned v=4;v>0;--v) {const auto height=Height(x,y,v);if(!height) {return {};}sum+=*height;}
+        return FloorQuarter(sum);
+    }
+    std::optional<int> Shade(int x,int y,unsigned vertex) {
+        if(vertex>=5 || !Index(x,y)) {return {};}
+        int sum=0;
+        if(vertex==0) {
+            for(unsigned f=0;f<4;++f) {const auto value=FaceShade(x,y,f);if(!value) {return {};}sum+=*value;}
+        } else {
+            for(unsigned i=0;i<4;++i) {
+                const auto& offset=CORNERS[vertex-1][i];
+                const auto first=FaceShade(x+offset[0],y+offset[1],(i+1)&3);
+                const auto second=FaceShade(x+offset[0],y+offset[1],(i+2)&3);
+                if(!first || !second) {return {};}sum+=*first+*second;
+            }
+        }
+        const auto extra=ExtraShade(x,y,vertex);if(!extra) {return {};}
+        const int count=vertex?8:4;
+        return sum/count-(sum%count<0?1:0)+*extra;
+    }
     static int FloorQuarter(int value) {return value/4-(value%4<0?1:0);}
 
 private:
+    std::optional<int> Slope(int x,int y,unsigned corner) const {
+        const auto own=Index(x,y);if(!own || cells_[*own].band<3) {return 0;}
+        if(cells_[*own].band>7) {return {};}
+        int sum=0;
+        for(const auto& offset:CORNERS[corner]) {
+            const auto cell=Index(x+offset[0],y+offset[1]);
+            if(!cell || cells_[*cell].band<3) {return 0;}
+            if(cells_[*cell].band>7) {return {};}sum+=cells_[*cell].band;
+        }
+        return int(unsigned(sum-4*int(cells_[*own].band)+4)&15u)-4;
+    }
+    std::optional<int> FaceShade(int x,int y,unsigned face) {
+        const auto own=Index(x,y);if(!own || cells_[*own].band<3) {return 0;}
+        if(!Height(x,y,face+1) || !Height(x,y,((face+1)&3)+1)) {return {};}
+        const auto first=Slope(x,y,face),second=Slope(x,y,(face+1)&3);
+        if(!first || !second) {return {};}
+        return FaceLighting(*first,*second,face);
+    }
     std::optional<size_t> Index(int x,int y) const {
         if(y<0 || y>=rows_) {return std::nullopt;}
         if(wrap_) {x%=width_;if(x<0) {x+=width_;}}
@@ -94,8 +136,16 @@ private:
         const unsigned detail=word>>24;
         if(!(word&(shade?0x203u:0xb03u))) {return 0;}
         if(shade && detail>=128) {return 0;}
-        if(detail>=49) {return std::nullopt;}
-        const unsigned index=landmark_tables::MAPPING[detail*5+vertex];
+        unsigned index=0;
+        if(detail>=128 && !shade && pinned_planet_) {
+            const int signed_detail=int(detail)-256;
+            const auto found=std::find(landmark_tables::NEGATIVE_DETAILS.begin(),landmark_tables::NEGATIVE_DETAILS.end(),signed_detail);
+            if(found==landmark_tables::NEGATIVE_DETAILS.end()) {return {};}
+            index=landmark_tables::NEGATIVE_MAPPING[size_t(found-landmark_tables::NEGATIVE_DETAILS.begin())][vertex];
+        } else {
+            if(detail>=49) {return std::nullopt;}
+            index=landmark_tables::MAPPING[detail*5+vertex];
+        }
         constexpr uint32_t priority[]={2,1,0x200,0x100,0x800};
         constexpr unsigned shade_priority[]={1,0,2};
         for(unsigned n=0;n<(shade?3u:5u);++n) {
@@ -110,6 +160,7 @@ private:
     int width_,rows_;bool wrap_;
     std::vector<Cell> cells_;
     int step_;
+    bool pinned_planet_;
     std::vector<std::array<std::optional<int>,5>> cache_;
     std::array<std::array<uint8_t,113>,5> profiles_;
     std::array<bool,5> prepared_{{true,true,true,true,true}};

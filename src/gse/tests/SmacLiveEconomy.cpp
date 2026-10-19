@@ -15,6 +15,7 @@
 #include "gse/value/Callable.h"
 #include "gse/value/Int.h"
 #include "gse/value/Object.h"
+#include "gse/value/String.h"
 #include <sstream>
 
 namespace gse::tests {
@@ -61,6 +62,27 @@ Base* Create(GSE_CALLABLE,Game* game) {
 }
 }
 void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
+	task->AddTest("SMAC minimap treasury observes in-turn Base publication without posting on read",[](GSE*,context::Context*)->std::string {
+		ConventionalUnitFixture fixture;fixture.ConfigureResources(Source,"UNIVERSITY");
+		return fixture.Run([&](GSE_CALLABLE)->std::string {
+			auto* game=fixture.Game();auto* base=Create(GSE_CALL,game);
+			auto* factory=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_restored_minimap"));
+			auto* read=static_cast<value::Callable*>(factory->Run(GSE_CALL,{game->Wrap(GSE_CALL)}));
+			const auto energy=[&]() {
+				return static_cast<value::String*>(static_cast<value::Object*>(read->Run(GSE_CALL,{}))->Get("energy"))->value;
+			};
+			const auto initial=game->GetCanonicalEconomy(base->m_owner).credits;
+			GT_ASSERT(energy()=="Energy: "+std::to_string(initial),"actual minimap lost initial treasury");
+			fixture.PostEconomy(*base);
+			const auto posted=game->GetCanonicalEconomy(base->m_owner).credits;
+			GT_ASSERT(posted!=initial,"fixture did not exercise a real in-turn credit change");
+			const auto saved=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+			game->GetBM()->AddUpdateTrigger(base);game->GetBM()->TriggerUpdates(GSE_CALL);
+			GT_ASSERT(energy()=="Energy: "+std::to_string(posted),"actual Base publication left minimap treasury stale until next turn");
+			GT_ASSERT(fixture.Snapshot()==saved && fixture.GameplayRandom()==random,"minimap refresh posted economy or changed game state");
+			GT_OK();
+		});
+	});
 	task->AddTest("SMAC private economy posting stages research and credits before one native commit",[](GSE*,context::Context*)->std::string {
 		ConventionalUnitFixture fixture;fixture.ConfigureResources(Source,"UNIVERSITY");
 		return fixture.Run([&](GSE_CALLABLE)->std::string {

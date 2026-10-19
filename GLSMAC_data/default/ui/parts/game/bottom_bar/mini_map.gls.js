@@ -73,6 +73,11 @@ return {
 		// Initial construction covers restored sessions, which do not emit a
 		// gameplay turn just to open the UI. Later reads follow actual state events.
 		refresh_energy();
+		// Conquest and razing commit treasury during the active turn, before
+		// publishing Base updates/removal. Read the same local authority then;
+		// turn readiness alone does not change for these gameplay actions.
+		minimap.listen(p.game, 'update_base', (e) => { refresh_energy(); });
+		minimap.listen(p.game, 'base_despawn', (e) => { refresh_energy(); });
 		minimap.listen(p.game, 'turn', (e) => {
 			info_year.text = 'Mission Year ' + #to_string(e.year);
 			refresh_energy();

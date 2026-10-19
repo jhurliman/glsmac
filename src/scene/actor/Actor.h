@@ -68,6 +68,8 @@ CLASS( Actor, Entity )
 	static constexpr render_flag_t RF_USE_2D_POSITION = 1 << 5;
 	static constexpr render_flag_t RF_SPRITES_DEPTH = 1 << 6;
     static constexpr render_flag_t RF_SMAC_EFFECT = 1 << 7;
+	// Camera-projected origin, with unscaled, pixel-aligned sprite geometry.
+	static constexpr render_flag_t RF_PIXEL_SPRITE = 1 << 8;
 
 	void SetRenderFlags( const render_flag_t render_flags );
 	const render_flag_t GetRenderFlags() const;

@@ -8,6 +8,9 @@
 #include "Mesh.h"
 #include "types/Font.h"
 #include "game/frontend/text/InstancedFont.h"
+#include "game/frontend/base/SmacBaseNameRaster.h"
+#include "game/frontend/text/InstancedText.h"
+#include "scene/actor/Instanced.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "graphics/opengl/actor/TextureReloadState.h"
 #include "graphics/PresentationViewport.h"
@@ -844,6 +847,72 @@ static std::string CheckViewportEdges() {
 }
 
 void AddMeshTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Base name raster preserves native advances overhangs and whole-string shadow",GT(){
+        types::Font font("synthetic regular Arial12 metrics");
+        const auto glyph=[&](char code,int advance,int left,int top) {
+            auto* ink=static_cast<unsigned char*>(malloc(1));if(!ink) {throw std::bad_alloc();}*ink=255;
+            font.m_symbols[static_cast<unsigned char>(code)]={advance,0,1,1,left,top,ink};
+        };
+        glyph('i',3,1,1);glyph('j',3,-1,0);glyph('W',11,0,1);glyph('H',65,0,1);glyph('f',0,-3,2);
+        const auto foreground=types::Color::FromRGB(216,224,235),shadow=types::Color::FromRGB(27,33,31);
+        std::array<types::Color,256> palette{};palette[155]=types::Color::FromRGB(216,224,244);
+        const auto imported=palette[155].GetRGBA();
+        GT_ASSERT(game::frontend::base::SmacBaseNameDisplayColor(types::Color::FromRGBA(imported),imported,palette).GetRGBA()==foreground.GetRGBA(),
+            "imported Base name color lost opacity or gamma100 palette cap");
+        const auto custom=types::Color(0.2f,0.3f,0.4f,0.5f);
+        GT_ASSERT(!(game::frontend::base::SmacBaseNameDisplayColor(custom,imported,palette)!=custom),"explicit Base name color was replaced with asset metadata");
+        const auto raster=game::frontend::base::MakeSmacBaseNameRaster("iiiWWW",font,foreground,shadow);
+        GT_ASSERT(raster.advance==42,"native name advance added bearings or applied pair kerning");
+        const auto left=raster.pixel_center.x-raster.texture->GetWidth()/2.0f;
+        const auto top=raster.pixel_center.y-raster.texture->GetHeight()/2.0f;
+        GT_ASSERT(left==-21 && top==26,"name was not centered by whole advance or baseline centerY+27");
+        GT_ASSERT(raster.texture->GetPixel(1,0)==foreground.GetRGBA() && raster.texture->GetPixel(4,0)==foreground.GetRGBA()
+            && raster.texture->GetPixel(7,0)==foreground.GetRGBA() && raster.texture->GetPixel(9,0)==foreground.GetRGBA(),
+            "narrow glyph ink or subsequent wide glyph did not follow three-pixel advances");
+        GT_ASSERT(raster.texture->GetPixel(2,1)==shadow.GetRGBA(),"shadow is not exactly (+1,+1)");
+        const auto odd=game::frontend::base::MakeSmacBaseNameRaster("H",font,foreground,shadow);
+        GT_ASSERT(odd.pixel_center.x-odd.texture->GetWidth()/2.0f==-32,"odd name width rounded center upward");
+        const auto negative=game::frontend::base::MakeSmacBaseNameRaster("j",font,foreground,shadow);
+        GT_ASSERT(negative.advance==3 && negative.pixel_center.x-negative.texture->GetWidth()/2.0f==-2
+            && negative.texture->GetPixel(0,0)==foreground.GetRGBA(),"negative bearing was clipped or added to advance");
+        // Overhanging f puts its shadow over the earlier i's foreground.
+        const auto overlap=game::frontend::base::MakeSmacBaseNameRaster("if",font,foreground,shadow);
+        GT_ASSERT(overlap.texture->GetPixel(1,1)==foreground.GetRGBA(),"character-local shadow overwrote whole-string foreground");
+        scene::Scene scene("native name lifecycle",scene::SCENE_TYPE_WORLD);
+        scene.SetWorldInstancePositions({{0,0,0}});
+        game::frontend::sprite::InstancedSpriteManager sprites(&scene);
+        game::frontend::text::InstancedFont labels(&sprites,&font,true);
+        const auto first=labels.AcquireSymbolSprites("iiiWWW",foreground,shadow),second=labels.AcquireSymbolSprites("iiiWWW",foreground,shadow);
+        GT_ASSERT(first.size()==1 && first==second,"whole name did not reuse a single owned sprite");
+        auto* actor=first[0]->actor->GetSpriteActor();
+        const types::Vec3 anchor{2,3,4};
+        GT_ASSERT(actor->NormalizePosition(anchor)==anchor,"pixel offset polluted the world anchor");
+        GT_ASSERT(actor->GetRenderFlags() & scene::actor::Actor::RF_PIXEL_SPRITE,"Base label still uses camera-scaled glyph geometry");
+        GT_ASSERT(actor->GetDimensions().x==raster.texture->GetWidth() && actor->GetDimensions().y==raster.texture->GetHeight(),
+            "Base label bitmap was scaled before rendering");
+        {game::frontend::text::InstancedText label("iiiWWW",&labels,foreground,shadow);label.ShowAt(anchor);label.Hide();}
+        GT_ASSERT(labels.AcquireSymbolSprites("",foreground,shadow).empty(),"empty Base name allocated a sprite");
+        std::weak_ptr<types::texture::Texture> owned=first[0]->texture_owner;
+        labels.ReleaseSymbolSprites(first);
+        GT_ASSERT(!owned.expired(),"shared Base name retired before its last label");
+        labels.ReleaseSymbolSprites(second);
+        GT_ASSERT(owned.expired(),"retired Base name actor retained its texture");
+        std::weak_ptr<types::texture::Texture> last_owner;
+        {
+            game::frontend::text::InstancedText label("ji",&labels,foreground,shadow);label.ShowAt(anchor);
+            const auto probe=labels.AcquireSymbolSprites("ji",foreground,shadow);last_owner=probe[0]->texture_owner;
+            labels.ReleaseSymbolSprites(probe);
+            GT_ASSERT(!last_owner.expired(),"live InstancedText lost its shared name texture");
+        }
+        GT_ASSERT(last_owner.expired(),"destroying the final InstancedText did not evict its name");
+        for(int rename=0;rename<64;++rename) {
+            const auto unique=labels.AcquireSymbolSprites("i"+std::to_string(rename),foreground,shadow);
+            std::weak_ptr<types::texture::Texture> retired=unique[0]->texture_owner;
+            labels.ReleaseSymbolSprites(unique);
+            GT_ASSERT(retired.expired(),"successive Base rename retained an unused texture/actor");
+        }
+        GT_OK();
+    });
     task->AddTest("test instanced labels advance narrow glyphs without accumulating bearings",GT(){
         types::Font font("synthetic label metrics");
         font.m_symbols['i']={3,0,1,0,2,0,nullptr};
@@ -855,12 +924,12 @@ void AddMeshTests( task::gsetests::GSETests* task ) {
         game::frontend::text::InstancedFont text(&sprites,&font);
         const auto narrow=text.GetSymbolOffsets("iii"),negative=text.GetSymbolOffsets("jjj");
         const auto wide=text.GetSymbolOffsets("WWW"),space=text.GetSymbolOffsets("i i");
-        const auto near=[](float a,float b){return std::abs(a-b)<0.000001f;};
-        GT_ASSERT(near(narrow[1].x-narrow[0].x,0.009f) && near(narrow[2].x-narrow[1].x,0.009f),
+        const auto close_float=[](float a,float b){return std::abs(a-b)<0.000001f;};
+        GT_ASSERT(close_float(narrow[1].x-narrow[0].x,0.009f) && close_float(narrow[2].x-narrow[1].x,0.009f),
             "narrow label characters accumulated bitmap left bearings instead of font advances");
-        GT_ASSERT(near(negative[1].x-negative[0].x,0.009f) && near(wide[1].x-wide[0].x,0.030f),
+        GT_ASSERT(close_float(negative[1].x-negative[0].x,0.009f) && close_float(wide[1].x-wide[0].x,0.030f),
             "negative bearing or wide glyph changed pen advance");
-        GT_ASSERT(near(space[2].x-space[0].x,0.021f),"space lost its own advance or inherited glyph padding");
+        GT_ASSERT(close_float(space[2].x-space[0].x,0.021f),"space lost its own advance or inherited glyph padding");
         GT_ASSERT(text.GetSymbolOffsets("").empty(),"empty label invented glyph offsets");
         GT_OK();
     });

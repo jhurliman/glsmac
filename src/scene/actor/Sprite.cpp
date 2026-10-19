@@ -55,6 +55,7 @@ Sprite::mesh_ptr_t Sprite::GenerateMesh() const {
 }
 
 const types::Vec3 Sprite::NormalizePosition( const types::Vec3& position ) const {
+	if ( GetRenderFlags() & RF_PIXEL_SPRITE ) { return position; }
 	return {
 		position.x + m_dst_offsets.x,
 		position.y + m_dst_offsets.y,

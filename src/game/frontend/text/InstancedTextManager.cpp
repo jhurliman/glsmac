@@ -22,14 +22,15 @@ InstancedTextManager::~InstancedTextManager() {
 	}
 }
 
-InstancedFont* InstancedTextManager::GetInstancedFont( const types::Font* font ) {
-	auto it = m_instanced_fonts.find( font );
+InstancedFont* InstancedTextManager::GetInstancedFont( const types::Font* font, bool pixel_base_names ) {
+	const auto key=std::make_pair(font,pixel_base_names);
+	auto it = m_instanced_fonts.find( key );
 	if ( it == m_instanced_fonts.end() ) {
 		Log( "Initializing instanced font: " + font->m_name );
 		it = m_instanced_fonts.insert(
 			{
-				font,
-				new InstancedFont( m_ism, font )
+				key,
+				new InstancedFont( m_ism, font, pixel_base_names )
 			}
 		).first;
 	}

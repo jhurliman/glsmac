@@ -25,6 +25,7 @@
 #include "gse/value/Int.h"
 #include "gse/value/String.h"
 #include <sstream>
+#include <array>
 
 namespace gse::tests {
 namespace {
@@ -124,7 +125,7 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
     });
     task->AddTest("Human Hold codec preserves signed countdown and rejects unsupported orders",GT(){
         ConventionalUnitState plain{2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
-        for(const int count:{INT16_MIN,-1,0,1,10,INT16_MAX}) {
+        for(const int count:std::array<int,6>{INT16_MIN,-1,0,1,10,INT16_MAX}) {
             auto state=plain;state.order=ConventionalUnitState::Order::Hold;state.order_countdown=static_cast<int16_t>(count);
             state.retained_state_word=0x80000000u;types::Buffer wire;state.Serialize(wire,true,true);
             const auto copy=ConventionalUnitState::Deserialize(wire,true,true);

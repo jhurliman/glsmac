@@ -85,6 +85,29 @@ InstancedSprite* InstancedSpriteManager::GetScoutSprite( const std::string& name
 	return &inserted->second;
 }
 
+InstancedSprite* InstancedSpriteManager::GetPixelTextSprite(const std::string& name,
+	std::shared_ptr<types::texture::Texture> texture,const types::Vec2<float>& pixel_center) {
+	const auto key="PixelText:"+name;
+	const auto found=m_instanced_sprites.find(key);
+	if(found!=m_instanced_sprites.end()) {return &found->second;}
+	const auto width=static_cast<uint32_t>(texture->GetWidth()),height=static_cast<uint32_t>(texture->GetHeight());
+	const auto delete_sprite=[](scene::actor::Sprite* value) {DELETE(value);};
+	const auto delete_actor=[](scene::actor::Instanced* value) {DELETE(value);};
+	NEWV(sprite,scene::actor::Sprite,name,{static_cast<float>(width),static_cast<float>(height)},
+		texture.get(),{{0,0},{1,1}},pixel_center);
+	std::unique_ptr<scene::actor::Sprite,decltype(delete_sprite)> sprite_owner(sprite,delete_sprite);
+	sprite->SetRenderFlags(scene::actor::Actor::RF_PIXEL_SPRITE | scene::actor::Actor::RF_IGNORE_LIGHTING);
+	NEWV(actor,scene::actor::Instanced,sprite);
+	sprite_owner.release();
+	std::unique_ptr<scene::actor::Instanced,decltype(delete_actor)> actor_owner(actor,delete_actor);
+	actor->SetZIndex(s_zlevel_map.at(ZL_TERRAIN_TEXT));
+	auto inserted=m_instanced_sprites.emplace(key,InstancedSprite{key,name,{0,0},{width,height},{0,0},actor,std::move(texture)}).first;
+	try {m_scene->AddActor(actor);}
+	catch(...) {m_scene->RemoveActor(actor);m_instanced_sprites.erase(inserted);throw;}
+	actor_owner.release();
+	return &inserted->second;
+}
+
 InstancedSprite* InstancedSpriteManager::GetInstancedSprite(
 	const std::string& name,
 	types::texture::Texture* texture,

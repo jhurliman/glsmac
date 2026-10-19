@@ -42,6 +42,8 @@ public:
 		const float z_index_adjustment = 0.0f
 	);
 	InstancedSprite* GetInstancedSpriteByKey( const std::string& key ); // actor must already exist
+	InstancedSprite* GetPixelTextSprite( const std::string& name,
+		std::shared_ptr<types::texture::Texture> texture, const types::Vec2<float>& pixel_center );
 	InstancedSprite* GetScoutSprite( const std::string& name, const backend::unit::CvrScoutRender& descriptor );
 	InstancedSprite* GetFormerMarkerSprite( const std::string& name );
 	InstancedSprite* GetColonyMarkerSprite( const std::string& name );

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Widget.h"
+#include "game/SmacDetailMinimap.h"
 
 #include "types/Vec2.h"
 #include <memory>
@@ -40,6 +41,12 @@ private:
 	};
 	std::optional< Overview > m_overview;
 	bool m_using_overview = false;
+    std::optional<::game::smac_detail::World> m_detail;
+    ::game::smac_detail::Point m_detail_center{{40,40}};
+    bool m_detail_mode=false,m_detail_initialized=false,m_shift_down=false;
+    void ReadDetail(gse::value::Object* data);
+    void DrawDetail(ui::dom::Widget* widget);
+    void DrawDetailOutline(ui::dom::Widget* widget);
 	std::shared_ptr< const bool > m_lifetime = std::make_shared< const bool >( true );
 	void ReadOverview( ui::dom::Widget* widget, gse::value::Object* data );
 	void DrawOverview( ui::dom::Widget* widget );

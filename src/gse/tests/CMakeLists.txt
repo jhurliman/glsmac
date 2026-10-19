@@ -35,6 +35,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacFactionSummary.cpp
     ${PWD}/SmacDominanceHistory.cpp
     ${PWD}/SmacDominanceGraph.cpp
+    ${PWD}/SmacDetailMinimap.cpp
 	${PWD}/SmacMinimap.cpp
 	${PWD}/SmacBaseCard.cpp
 	${PWD}/Mesh.cpp

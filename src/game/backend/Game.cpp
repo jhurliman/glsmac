@@ -793,6 +793,13 @@ WRAPIMPL_BEGIN( Game )
                 catch(const std::exception& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
             })
         },
+        {
+            "get_smac_detail_minimap",NATIVE_CALL(this) {
+                N_EXPECT_ARGS(0);
+                try {return CopyLocalDetailMinimap(GSE_CALL);}
+                catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+            })
+        },
 		{
 			"get_smac_minimap",
 			NATIVE_CALL(this) {

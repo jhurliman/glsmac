@@ -16,6 +16,8 @@ return (game) => {
     let confirmation = null;
 	let overview = null;
 	let world_click = null;
+    let detail_click = null;
+    let detail_visible = false;
 	let world_geometry = null;
 	let info_geometry = null;
 	let map_listeners = {};
@@ -23,8 +25,11 @@ return (game) => {
 	style.extend = (name) => { return style; };
 	const button = (data) => {
 		const result = data + {
+            show: () => { if (#is_defined(data.right) && data.right == 10) { detail_visible = true; } },
+            hide: () => { if (#is_defined(data.right) && data.right == 10) { detail_visible = false; } },
 			on: (name, callback) => {
                 if (#is_defined(data.width) && data.width == 233) { turn_events[name] = callback; }
+                if (name == 'click' && #is_defined(data.right) && data.right == 10) { detail_click = callback; }
 				if (name == 'click' && #is_defined(data.right) && data.right == 66) { world_click = callback; world_geometry = data; }
 			},
 			sound: (properties) => { return {play: () => { plays++; }}; },
@@ -79,5 +84,6 @@ return (game) => {
         click: () => { return turn_events.click({}); }, modal: (shown) => { modal = shown; },
         confirm: (accepted) => { confirmation(accepted); },
 		overview: overview.data.overview, geometry: {align: overview.align, right: overview.right, top: overview.top, width: overview.width, height: overview.height},
+        detail: overview.data.detail, mode: overview.data.mode, detail_click: detail_click, detail_visible: detail_visible,
 		world_geometry: world_geometry, info_geometry: info_geometry, world_click: world_click, map_event: (name) => { map_listeners[name]({}); }}; };
 };

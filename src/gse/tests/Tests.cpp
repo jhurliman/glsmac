@@ -29,6 +29,7 @@
 #include "SmacDominanceHistory.h"
 #include "SmacDominanceGraph.h"
 #include "SmacMinimap.h"
+#include "SmacDetailMinimap.h"
 #include "SmacBaseCard.h"
 #include "Mesh.h"
 #include "SmacBaseSquareYield.h"
@@ -363,6 +364,7 @@ void AddTests( task::gsetests::GSETests* task ) {
         tests::AddSmacDominanceHistoryTests( task );
         tests::AddSmacDominanceGraphTests( task );
 		tests::AddSmacMinimapTests( task );
+    tests::AddSmacDetailMinimapTests(task);
 		tests::AddSmacBaseCardTests( task );
 		tests::AddSmacBaseSquareYieldTests( task );
 		tests::AddSmacResourceBonusTests( task );

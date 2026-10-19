@@ -8,6 +8,7 @@
 
 #include "TextureLoader.h"
 
+namespace game::smac_detail {struct Sprite;}
 namespace loader {
 namespace texture {
 
@@ -20,6 +21,7 @@ CLASS( SDL2, TextureLoader )
 
 	types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant) override;
     std::shared_ptr<const SmacBaseCard> GetSmacNativeBaseCard(const std::string& faction,size_t x,size_t y,bool roster) override;
+    std::shared_ptr<const game::smac_detail::Sprite> GetSmacDetailBaseSprite(const std::string& faction,size_t frame_y) override;
     std::shared_ptr<const game::frontend::native_terrain::Source> GetSmacTerrainSource(const std::array<std::string,8>& faction_files={}) override;
     std::shared_ptr<types::texture::Texture> GetSmacEffectTexture(bool death) override;
     std::shared_ptr<const SmacTurnFrames> GetSmacTurnFrames() override;
@@ -46,6 +48,7 @@ private:
     std::unordered_map<bool,std::weak_ptr<types::texture::Texture>> m_effect_sources;
     std::unordered_map<std::string,std::shared_ptr<SmacBaseCardSource>> m_base_card_sources;
     std::unordered_map<std::string,std::shared_ptr<const SmacBaseCard>> m_base_cards;
+    std::unordered_map<std::string,std::shared_ptr<const game::smac_detail::Sprite>> m_detail_bases;
     std::unordered_map<std::string,std::shared_ptr<const SmacTurnFrames>> m_turn_frames;
     std::unordered_map<std::string,std::shared_ptr<const SmacGraphPalette>> m_graph_palettes;
 	void FixTransparency( types::texture::Texture* texture ) const;

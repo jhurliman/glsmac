@@ -557,6 +557,19 @@ sprite::InstancedSprite* Game::GetTerrainInstancedSprite( const backend::map::sp
 	);
 }
 
+std::optional<types::Vec2<size_t>> Game::GetActiveMapTileCenter() const {
+    if(!m_tm || m_world_retired || !m_map_data.width || !m_map_data.height || m_camera_position.z<=0) {return {};}
+    // Resolve the current camera rather than the possibly stale selected object.
+    // This is the port's existing recenter coordinate system, quantized to its
+    // nearest projected tile; local Detail retains that focus independently.
+    float best=1.0e30f;types::Vec2<size_t> result{};
+    for(size_t y=0;y<m_map_data.height;++y) {for(size_t x=y&1;x<m_map_data.width;x+=2) {
+        const auto coordinate=GetTileWindowCoordinates(m_tm->GetTile(x,y));
+        const float dx=GetFixedX(coordinate.x+m_camera_position.x),dy=coordinate.y+m_camera_position.y;
+        const float distance=dx*dx+dy*dy;if(distance<best) {best=distance;result={x,y};}
+    }}return result;
+}
+
 bool Game::CenterAtMapTile( const types::Vec2< size_t >& coords ) {
 	if ( !m_tm || coords.x >= m_map_data.width || coords.y >= m_map_data.height || ( coords.x & 1 ) != ( coords.y & 1 ) ) { return false; }
 	auto* tile = m_tm->GetTile( coords );

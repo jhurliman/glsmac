@@ -1,4 +1,12 @@
 #include "Game.h"
+#include "game/SmacDetailMinimap.h"
+#include "base/Base.h"
+#include "base/BaseManager.h"
+#include "base/FacilityDef.h"
+#include "faction/Faction.h"
+#include "map/SmacPlanetMap.h"
+#include "gse/value/Array.h"
+
 #include "State.h"
 #include "Player.h"
 #include "slot/Slot.h"
@@ -68,4 +76,68 @@ gse::Value* Game::CopyLocalMinimap(GSE_CALLABLE) const {
         {"rgba",VALUE(gse::value::String,,rgba)}
     }));
 }
+gse::Value* Game::CopyLocalDetailMinimap(GSE_CALLABLE) const {
+    if(!IsRunning() || !m_state || !m_simulation || !m_slot || !m_player || !m_map || m_state->GetConnection()
+        || m_player->GetRole()!=Player::PR_SINGLE || m_map->GetWidth()!=80 || m_map->GetHeight()!=80) {return VALUE(gse::value::Undefined);}
+    const auto& participant=RequireSimulationParticipant(m_player);
+    if(participant.slot!=static_cast<int32_t>(m_slot->GetIndex())) {throw std::runtime_error("Detail local participant mismatch");}
+    const auto& saved=m_map->GetSmacWorkerKnowledge();const auto& terrain=m_map->GetResourcePolicy();
+    if(!saved || !terrain || !m_map->m_worker_knowledge_ready) {return VALUE(gse::value::Undefined);}
+    const auto data=saved->CopyData();const auto viewer=participant.simulation_id;
+    if(data.width!=80 || data.height!=80 || viewer<1 || viewer>7 || !data.observers.at(viewer)) {throw std::runtime_error("Detail saved observer differs from live world");}
+    const auto& rules=m_state->m_settings.global.GetSmacCampaignRules();
+    const uint8_t bit=static_cast<uint8_t>(1u<<viewer);
+    const bool survey=rules && (rules->primary&0x0100u),revealed=(data.all_map_revealed&bit)!=0;
+    const auto* original=terrain->OriginalPlanet();
+    const auto coordinate=[&](int x,int y)->std::optional<std::array<int,2>> {
+        if(y<0 || y>=80) {return {}; }if(data.horizontal_wrap) {x=(x%80+80)%80;}
+        if(x<0 || x>=80 || ((x^y)&1)) {return {}; }return std::array<int,2>{x,y};
+    };
+    const auto band_at=[&](int x,int y)->std::optional<uint8_t> {
+        const auto q=coordinate(x,y);if(!q) {return {};}
+        return static_cast<uint8_t>(terrain->Altitude(*m_map->GetTile((*q)[0],(*q)[1])));
+    };
+    std::string tiles(3200*12,'\0');
+    for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
+        const size_t index=size_t(y)*40+x/2;const bool explored=(data.tiles.at(index).explored_by&bit)!=0;
+        const bool known=explored || revealed || survey;if(!known) {continue;}
+        bool supported=true;const auto band=*band_at(x,y);
+        const auto ordinary=[&](int px,int py) {const auto q=coordinate(px,py);return !q || !original || !(original->At((*q)[0],(*q)[1]).Landmarks()&0xb03u);};
+        if(band>=3) {
+            supported=ordinary(x,y);
+            for(const auto& corner:map::smac_terrain::CORNERS) {for(const auto& delta:corner) {supported=supported && ordinary(x+delta[0],y+delta[1]);}}
+        }
+        tiles[index*12]=static_cast<char>(band);tiles[index*12+1]=static_cast<char>(1u|((explored || revealed)?2u:0u)|(supported?4u:0u));
+        if(supported) {const auto heights=::game::smac_detail::Heights(x,y,band_at);
+            for(size_t v=0;v<5;++v) {tiles[index*12+2+v*2]=static_cast<char>(heights[v]&255);tiles[index*12+3+v*2]=static_cast<char>((heights[v]>>8)&255);}}
+    }}
+    gse::value::array_elements_t bases;
+    for(const auto& entry:m_bm->GetBases()) {
+        const auto* base=entry.second;const auto* tile=base->GetTile();
+        if(!base->HasSmacResourceContext() || !tile || tile->base!=base || tile->coord.x>=80 || tile->coord.y>=80 || !base->m_faction) {continue;}
+        const size_t index=size_t(tile->coord.y)*40+tile->coord.x/2;
+        if((static_cast<uint8_t>(tiles[index*12+1])&6u)!=6u) {continue;}
+        const auto owner=base->GetSmacResourceContext().owner_simulation_id;
+        const auto memory=std::find_if(data.bases.begin(),data.bases.end(),[&](const auto& row){return row.id==base->m_id;});
+        if(!::game::smac_detail::AdmitsBase(true,true,(static_cast<uint8_t>(tiles[index*12+1])&2u)!=0,owner==viewer,memory!=data.bases.end() && (memory->known_by&bit))) {continue;}
+        // Admitted ordinary land/pop1 selector. The source receipt does not
+        // establish later population tiers, sea cities or additional walls.
+        const auto& art=base->m_faction->m_bases_render;
+        bool supported=base->GetPopulation()==1 && !tile->is_water_tile && art.grid_x==1 && art.grid_y==1
+            && art.cell_width==100 && art.cell_height==75 && art.cell_padding==1 && art.cell_cx==50 && art.cell_cy==37
+            && art.scale_x==1 && art.scale_y==1 && !art.file.empty()
+            && m_simulation->value.movement_capability==faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain;
+        for(const auto& facility:base->m_facilities) {const auto id=facility.second->m_smac_source_id;if(id && (*id==4 || *id==5)) {supported=false;}}
+        if(!supported) {continue;}
+        bases.push_back(VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+            {"x",VALUE(gse::value::Int,,tile->coord.x)},{"y",VALUE(gse::value::Int,,tile->coord.y)},
+            {"file",VALUE(gse::value::String,,art.file)},{"owned",VALUE(gse::value::Bool,,owner==viewer)}
+        })));
+    }
+    return VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+        {"kind",VALUE(gse::value::String,,"smac-detail-ordinary-v1")},{"horizontal_wrap",VALUE(gse::value::Bool,,data.horizontal_wrap)},
+        {"tiles",VALUE(gse::value::String,,tiles)},{"bases",VALUE(gse::value::Array,,bases)}
+    }));
+}
+
 }

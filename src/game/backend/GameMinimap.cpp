@@ -12,6 +12,7 @@
 #include "State.h"
 #include "Player.h"
 #include "slot/Slot.h"
+#include "slot/Slots.h"
 #include "map/Map.h"
 #include "map/SmacMinimap.h"
 #include "map/tile/Tile.h"
@@ -124,11 +125,11 @@ gse::Value* Game::CopyLocalDetailMinimap(GSE_CALLABLE) const {
         const auto context=base->GetSmacResourceContext();const auto owner=context.owner_simulation_id;
         const auto memory=std::find_if(data.bases.begin(),data.bases.end(),[&](const auto& row){return row.id==base->m_id;});
         if(!::game::smac_detail::AdmitsBase(true,true,(static_cast<uint8_t>(tiles[index*12+1])&2u)!=0,owner==viewer,memory!=data.bases.end() && (memory->known_by&bit))) {continue;}
-        // Body family is retained independently in the original. Current port
-        // conquered Bases do not own that authority: do not guess from owner.
-        const auto& art=base->m_faction->m_bases_render;
+        const auto source=m_bm->GetSmacBodySourceSlot(*base);if(!source) {continue;}
+        // Body art follows saved former-owner history; label colors still use owner.
+        const auto& art=m_state->m_slots->GetSlot(*source).GetPlayer()->GetFaction()->m_bases_render;
         const auto population=base->GetPopulation();
-        if(context.conquest || !resource_rules || !profiles || population>127
+        if(!resource_rules || !profiles || population>127
             || resource_rules->hab_complex_limit<0 || resource_rules->hab_complex_limit>126
             || resource_rules->hab_dome_limit<0 || resource_rules->hab_dome_limit>126
             || art.grid_x!=1 || art.grid_y!=1 || art.cell_width!=100 || art.cell_height!=75

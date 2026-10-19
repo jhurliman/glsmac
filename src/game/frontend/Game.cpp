@@ -1278,7 +1278,8 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				);
 			}
 			base->SetPops( pops, d.has_population ? d.population : pops.size() );
-            base->SetNativeBody(d.has_native_body?std::optional<::game::smac_base_body::Selection>{{d.body_column,d.body_row}}:std::nullopt);
+            base->SetNativeBody(d.has_native_body?std::optional<::game::smac_base_body::Selection>{{d.body_column,d.body_row}}:std::nullopt,
+                d.has_native_body?GetSlot(d.body_source_slot)->GetFaction():nullptr);
 			m_bm->RefreshBase( base );
 			break;
 		}

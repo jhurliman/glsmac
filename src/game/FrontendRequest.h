@@ -243,6 +243,7 @@ public:
 			size_t population;
             bool has_native_body;
             uint8_t body_column,body_row;
+            size_t body_source_slot;
 		} base_update;
 		struct {
 			const std::string* serialized_resourcedef; // can be optimized

@@ -23,6 +23,7 @@
 #include "gse/value/Object.h"
 #include "gse/value/Array.h"
 #include "gse/value/Int.h"
+#include "gse/value/String.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Callable.h"
 #include "util/UUID.h"
@@ -49,9 +50,11 @@ void AddSmacBaseVariantTests(task::gsetests::GSETests* task) {
     });
     task->AddTest("Detail Base actual owner snapshot binds HQ defense population and native palette identity",GT(){
         using namespace game::backend;
-        for(const bool duplicate:{false,true}) {
+        for(const int scenario:{0,1,2,3,4}) {
+        const bool duplicate=scenario==1,captured=scenario==2 || scenario==3,unknown=scenario==4;
         ConventionalUnitFixture fixture;
         if(duplicate) {fixture.ConfigureTwoResourceParticipants(smac_startup_fixture::OrdinarySource,true,80,80,"GAIANS");}
+        else if(captured) {fixture.ConfigureTwoResourceParticipants(smac_startup_fixture::OrdinarySource,true,80,80,"UNIVERSITY");}
         else {fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"UNIVERSITY",80,80);}
         const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* bm=game->GetBM();auto* owner=&game->GetState()->m_slots->GetSlot(0);auto* faction=owner->GetPlayer()->GetFaction();
@@ -62,13 +65,23 @@ void AddSmacBaseVariantTests(task::gsetests::GSETests* task) {
             for(const int id:{1,4,5}) {auto* def=new base::FacilityDef("DETAIL_FACILITY"+std::to_string(id),"Facility","fixture",1,{"fixture",0,0,1,1},id);bm->DefineFacility(def);if(id!=5) {facilities.emplace(def->m_id,def);}}
             auto* tile=game->GetMap()->GetTile(40,40);tile->is_water_tile=false;*tile->elevation.center=100;
             base::SmacBaseAllocationState allocation{1,{{},9}};allocation.specialists.types.fill(0);
-            auto* base=new base::Base(game,801,owner,faction,tile,"Live HQ",facilities,pops,10,0,{},base::SmacBaseResourceContext{1,false,0,0,0,false},allocation);bm->SpawnBase(GSE_CALL,base);
+            base::SmacBaseResourceContext context{1,false,0,0,0,false};
+            if(captured) {
+                context.conquest=base::SmacConquestState{2,uint8_t(scenario==2?0:50)};
+                game->GetState()->m_slots->GetSlot(6).GetPlayer()->GetFaction()->m_bases_render={"gaian.pcx",1,1,100,75,50,37,1,1,1};
+            } else if(!unknown) {context.uncaptured_former_owner=1;}
+            auto* base=new base::Base(game,801,owner,faction,tile,"Live HQ",facilities,pops,10,0,{},context,allocation);bm->SpawnBase(GSE_CALL,base);
             map::SmacWorkerKnowledge::Data knowledge{80,80,true,true,0,{},{},{}};knowledge.observers[1]=map::SmacWorkerKnowledge::Observer{};knowledge.observers[1]->pact_with=0;knowledge.tiles.resize(3200,{0,std::nullopt});knowledge.tiles[40*40+20].explored_by=2;knowledge.bases.push_back({801,2,{}});
             game->PublishSmacWorkerKnowledge(GSE_CALL,map::SmacWorkerKnowledge::Create(knowledge));
             auto* query=static_cast<value::Callable*>(static_cast<value::Object*>(game->Wrap(GSE_CALL))->Get("get_smac_detail_minimap"));
             const auto check=[&](int row)->std::string {
                 const auto before=fixture.Snapshot();auto* frame=static_cast<value::Object*>(query->Run(GSE_CALL,{}));const auto& bases=static_cast<value::Array*>(frame->Get("bases"))->value;
+                if(unknown) {
+                    GT_ASSERT(bases.empty() && !bm->GetSmacBodySourceSlot(*base) && fixture.Snapshot()==before,"Unknown art history invented current-owner art or mutated save");GT_OK();
+                }
                 GT_ASSERT(bases.size()==1,"live supported Base omitted from Detail");auto* record=static_cast<value::Object*>(bases[0]);
+                GT_ASSERT(static_cast<value::String*>(record->Get("file"))->value==(captured?"gaian.pcx":"univ.pcx") &&
+                    bm->GetSmacBodySourceSlot(*base)==std::optional<size_t>(captured?6:0),"Body art followed current owner or confused saved simulation ID with transport slot");
                 const auto integer=[&](const char* name){return static_cast<value::Int*>(record->Get(name))->value;};
                 GT_ASSERT(integer("population")==9 && integer("column")==3 && integer("row")==row,"live Detail ignored actual population/HQ/defense/retained altitude");
                 GT_ASSERT(integer("native_owner")== (duplicate?0:3) && static_cast<value::Bool*>(record->Get("style_known"))->value==!duplicate && !static_cast<value::Bool*>(record->Get("filled"))->value,"live Detail confused dense owner1 with native University3 or invented duplicate-profile palette identity");

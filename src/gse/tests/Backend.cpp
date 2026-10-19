@@ -2695,6 +2695,12 @@ public:
                         sea->actor->GetSpriteActor()->GetDimensions()==types::Vec2<float>(100.0f/96,75.0f/48),"Native sea/defense body lost source extent or old-instance retirement");
                     base.SetNativeBody(::game::smac_base_body::Selection{2,1});
                     GT_ASSERT(perimeter->actor->GetInstanceMatrices().size()==2,"Returning body reused another city's instance ID");
+                    base.SetNativeBody(::game::smac_base_body::Selection{2,1},first.GetFaction());
+                    GT_ASSERT(base.GetSprite()==first.GetFaction()->GetBaseSprite(false,2,1,true) && base.GetFaction()==original_faction &&
+                        perimeter->actor->GetInstanceMatrices().size()==1,"Body family changed owner identity or retained its old actor");
+                    base.SetNativeBody(::game::smac_base_body::Selection{2,1},original_faction);
+                    GT_ASSERT(base.GetSprite()->instanced_sprite==perimeter && perimeter->actor->GetInstanceMatrices().size()==2,
+                        "Unchanged bank selector hid a changed art family");
                     base.SetNativeBody(std::nullopt);
                     GT_ASSERT(base.GetSprite()->instanced_sprite==native,"Removing admitted body did not restore legacy selector");
                 }
@@ -5434,6 +5440,7 @@ public:
                 message.data.base_update.body_column==1 && message.data.base_update.body_row==0,"Actual Base publication omitted detached body metadata");
             ::game::FrontendRequest copied(message);
             GT_ASSERT(copied.data.base_update.has_native_body && copied.data.base_update.body_column==1 && copied.data.base_update.body_row==0 &&
+                copied.data.base_update.body_source_slot==base->m_owner->GetIndex() &&
                 copied.data.base_update.name!=message.data.base_update.name && copied.data.base_update.pops!=message.data.base_update.pops,
                 "Copied Base request lost body fields or borrowed its payload");
 

@@ -469,15 +469,27 @@ void BaseManager::ProcessUnprocessed( GSE_CALLABLE ) {
 	m_unprocessed_retained_population = false;
 }
 
+std::optional<size_t> BaseManager::GetSmacBodySourceSlot(const Base& base) const {
+    if(!base.HasSmacResourceContext() || !m_game->m_simulation) {return {};}
+    const auto former=base.GetSmacResourceContext().FormerOwner();
+    if(!former) {return {};}
+    // Saved simulation identities are not transport slots or native palette IDs.
+    for(const auto& participant:m_game->m_simulation->value.roster) {
+        if(participant.simulation_id==*former) {return participant.slot;}
+    }
+    return {}; // Missing/native history must not invent the current owner's art.
+}
+
 std::optional<::game::smac_base_body::Selection> BaseManager::GetSmacBodyPresentation(const Base& base) const {
     if(!base.HasSmacResourceContext() || !m_game->m_simulation || !m_game->GetState() || !m_game->GetMap() ||
         m_game->m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {return {};}
     const auto& policy=m_game->GetMap()->GetResourcePolicy();
     const auto& rules=m_game->GetState()->m_settings.global.GetSmacResourceRules();
     const auto* tile=base.GetTile();const auto population=base.GetPopulation();
-    if(!policy || !policy->OriginalPlanet() || !rules || !tile || !base.m_faction || base.GetSmacResourceContext().conquest ||
+    const auto source=GetSmacBodySourceSlot(base);
+    if(!policy || !policy->OriginalPlanet() || !rules || !tile || !source ||
         population>127 || rules->hab_complex_limit<0 || rules->hab_complex_limit>126 || rules->hab_dome_limit<0 || rules->hab_dome_limit>126) {return {};}
-    const auto& art=base.m_faction->m_bases_render;
+    const auto& art=m_game->GetState()->m_slots->GetSlot(*source).GetPlayer()->GetFaction()->m_bases_render;
     if(art.grid_x!=1 || art.grid_y!=1 || art.cell_width!=100 || art.cell_height!=75 || art.cell_padding!=1 ||
         art.cell_cx!=50 || art.cell_cy!=37 || art.scale_x!=1 || art.scale_y!=1 || art.file.empty()) {return {};}
     bool hq=false,perimeter=false,tachyon=false;
@@ -520,6 +532,7 @@ void BaseManager::PushUpdates() {
 				fr.data.base_update.population = base->GetPopulation();
                 if(const auto body=GetSmacBodyPresentation(*base)) {
                     fr.data.base_update.has_native_body=true;
+                    fr.data.base_update.body_source_slot=*GetSmacBodySourceSlot(*base);
                     fr.data.base_update.body_column=uint8_t(body->column);fr.data.base_update.body_row=uint8_t(body->row);
                 }
 				NEW( fr.data.base_update.name, std::string, base->m_name );

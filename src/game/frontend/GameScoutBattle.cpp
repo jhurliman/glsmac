@@ -9,6 +9,7 @@
 #include "scene/actor/Sound.h"
 #include "engine/Engine.h"
 #include "audio/Audio.h"
+#include "loader/texture/TextureLoader.h"
 #include <chrono>
 #include <memory>
 namespace game::frontend {
@@ -27,8 +28,9 @@ void Game::StartScoutBattle(const scout_presentation::Plan& plan) {
         const uint16_t width=i ? 100:43,height=i ? 150:47;
         backend::animation::FramesRow definition(i ? "ScoutDeath":"ScoutHit",i ? "xf.pcx":"xi.pcx",2,2,width,height,
             width/2,height-16,2,16,i ? 8:16,float(width)/64,float(height)/64,i ? 800:400,i ? "boom.wav":"energy1.wav");
-        battle->definitions[i]=std::make_unique<AnimationDef>(m_ism,&definition);
-        (void)battle->definitions[i]->GetSprites();(void)battle->definitions[i]->GetSound();
+        battle->definitions[i]=std::make_unique<AnimationDef>(m_ism,&definition,g_engine->GetTextureLoader()->GetSmacEffectTexture(i!=0));
+        (void)battle->definitions[i]->GetSprites();
+        if(g_engine->GetAudio()->IsPlaybackAvailable()) {(void)battle->definitions[i]->GetSound();}
     }
     m_map_control.is_dragging=false;
     m_scout_battle=std::move(battle);IterateScoutBattle();
@@ -51,7 +53,7 @@ void Game::IterateScoutBattle() {
         battle.Clear();if(action->kind==Kind::Clear) {continue;}
         const size_t index=action->step.effect==scout_presentation::Effect::Death ? 1:0;
         auto* unit=m_um->GetUnitById(battle.playback.GetPlan().units[action->step.target]);if(!unit) {continue;}
-        if(action->frame==0) {
+        if(action->frame==0 && g_engine->GetAudio()->IsPlaybackAvailable()) {
             auto sound=std::make_unique<scene::actor::Sound>("Scout battle",battle.definitions[index]->GetSound());
             m_scout_sounds.reserve(m_scout_sounds.size()+1);g_engine->GetAudio()->AddActor(sound.get());
             m_scout_sounds.push_back(sound.release());m_scout_sounds.back()->Play();

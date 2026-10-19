@@ -61,6 +61,8 @@ CLASS( OpenGL, Graphics )
 	void UnloadTexture( const types::texture::Texture* texture ) override;
 
 	void WithTexture( const types::texture::Texture* texture, const f_t& f ) override;
+    types::Vec2<int> PrepareEffectBackground();
+    void ReleaseEffectBackground();
 
 	FBO* CreateFBO();
 	void DestroyFBO( FBO* fbo );
@@ -124,6 +126,7 @@ private:
 	typedef std::unordered_map< const types::texture::Texture*, texture_data_t > m_textures_map;
 	m_textures_map m_textures = {};
 	GLuint m_no_texture = 0;
+    GLuint m_effect_background=0;int m_effect_width=0,m_effect_height=0;
 	GLint m_texture_limit = 0, m_array_layer_limit = 0;
 	mutable shader_program::ShaderProgram* m_bound_shader_program = nullptr;
 

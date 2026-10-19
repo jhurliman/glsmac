@@ -30,6 +30,7 @@ protected:
 	struct {
 		GLuint position;
 		GLuint texture;
+        GLuint effect_background,effect_origin;
 		GLuint paged_texture, logical_size, page_size, page_columns, smoothen;
 		GLuint world;
 		GLuint instances;

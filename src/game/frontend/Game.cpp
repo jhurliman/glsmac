@@ -479,7 +479,7 @@ void Game::Iterate() {
 			actor.first->Iterate();
 		}
 
-		m_um->Iterate();
+        if(!m_scout_battle) {m_um->Iterate();}
 	}
 }
 

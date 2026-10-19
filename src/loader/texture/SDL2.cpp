@@ -1,5 +1,6 @@
 #include "SDL2.h"
 #include "SmacPalette.h"
+#include "SmacEffect.h"
 #include "SmacNativeBadge.h"
 #include "loader/flic/MenuCompositor.h"
 #include <algorithm>
@@ -106,6 +107,34 @@ types::texture::Texture* SDL2::CreateSmacMenuTexture( const std::string& animati
 	memcpy( texture->m_bitmap, composed.rgba.data(), composed.rgba.size() );
 	texture->FullUpdate();
 	return texture.release();
+}
+
+std::shared_ptr<types::texture::Texture> SDL2::GetSmacEffectTexture(bool death) {
+    const auto cached=m_effect_sources[death].lock();if(cached) {return cached;}
+    using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
+    std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,GetCustomFilename(death ? "xf.pcx":"xi.pcx"));
+    Surface image(load_image(bytes),SDL_FreeSurface);
+    util::FS::ReadFile(bytes,GetCustomFilename("palette.pcx"));Surface common(load_image(bytes),SDL_FreeSurface);
+    const int width=death ? 816:720,height=death ? 304:49;
+    if(!image || image->format->BitsPerPixel!=8 || image->w<width || image->h<height
+        || !common || !common->format->palette || common->format->palette->ncolors!=256) {THROW("Indexed Scout effect assets have incompatible dimensions or palettes");}
+    smac_effect::Palette palette{};
+    for(size_t index=0;index<236;++index) {const auto color=common->format->palette->colors[index];
+        palette[index+10]={std::min<uint8_t>(color.r,235),std::min<uint8_t>(color.g,235),std::min<uint8_t>(color.b,235)};}
+    util::FS::ReadFile(bytes,GetCustomFilename("system.txt"));
+    const auto bank=smac_effect::Generate(palette,smac_effect::ReadRows(std::string(bytes.begin(),bytes.end()),death ? 0:3));
+    auto texture=std::make_shared<types::texture::Texture>(death ? "Indexed Scout death":"Indexed Scout hit",width,height+17);
+    texture->Clear();auto* out=texture->GetBitmap();
+    for(int y=0;y<height;++y) {const auto* source=static_cast<const uint8_t*>(image->pixels)+y*image->pitch;
+        for(int x=0;x<width;++x) {auto* pixel=out+(size_t(y)*width+x)*4;const auto index=source[x];pixel[0]=index;
+            // Explicit temporary fallback for XF's unverified row252 memory read.
+            // Other non-CLUT atlas annotations are outside the selected crops.
+            pixel[3]=index<16 ? 255:0;}}
+    for(size_t row=0;row<16;++row) {for(size_t destination=0;destination<256;++destination) {
+        auto* pixel=out+((height+row)*width+destination)*4;pixel[0]=bank[row*256+destination];pixel[3]=255;}}
+    for(size_t index=0;index<256;++index) {auto* pixel=out+((height+16)*width+index)*4;
+        for(size_t channel=0;channel<3;++channel) {pixel[channel]=palette[index][channel];}pixel[3]=255;}
+    texture->FullUpdate();m_effect_sources[death]=texture;return texture;
 }
 
 types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, const types::texture::texture_flag_t flags ) {

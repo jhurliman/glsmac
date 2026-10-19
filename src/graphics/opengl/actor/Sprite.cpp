@@ -77,7 +77,7 @@ void Sprite::LoadTexture() {
 	auto* texture = GetSpriteActor()->GetTexture();
 
 	if ( texture ) {
-		g_engine->GetGraphics()->LoadTexture( texture, true );
+		g_engine->GetGraphics()->LoadTexture( texture, !(GetSpriteActor()->GetRenderFlags()&scene::actor::Actor::RF_SMAC_EFFECT) );
 	}
 }
 
@@ -101,6 +101,7 @@ scene::actor::Sprite* Sprite::GetSpriteActor() const {
 void Sprite::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 
 	auto* sprite_actor = GetSpriteActor();
+    if(m_actor->GetType()==scene::actor::Actor::TYPE_INSTANCED_SPRITE && static_cast<scene::actor::Instanced*>(m_actor)->GetInstanceMatrices().empty()) {return;}
 
 	//Log( "Drawing" );
 
@@ -125,6 +126,7 @@ void Sprite::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Cam
 
 									auto flags = sprite_actor->GetRenderFlags();
 									glUniform1ui( sp->uniforms.flags, flags );
+                                    if(flags&scene::actor::Actor::RF_SMAC_EFFECT) {const auto origin=m_opengl->PrepareEffectBackground();glUniform2i(sp->uniforms.effect_origin,origin.x,origin.y);}
 									if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
 										const types::Vec3 pos = sprite_actor->NormalizePosition( sprite_actor->GetPosition() );
 										glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&pos );

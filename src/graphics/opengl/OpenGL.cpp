@@ -291,6 +291,7 @@ void OpenGL::Stop() {
 	DestroyFBO( m_capture_to_texture_fbo );
 
 	glDeleteTextures( 1, &m_no_texture );
+    ReleaseEffectBackground();
 
 	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
 		( *it )->Stop();
@@ -443,6 +444,30 @@ void OpenGL::OnWindowResize() {
 	for ( auto& r : m_routines ) {
 		r->OnWindowResize();
 	}
+}
+
+void OpenGL::ReleaseEffectBackground() {
+    if(m_effect_background) {
+        glActiveTexture(GL_TEXTURE2);GLint bound=0;glGetIntegerv(GL_TEXTURE_BINDING_2D,&bound);
+        if(GLuint(bound)==m_effect_background) {glBindTexture(GL_TEXTURE_2D,0);}glActiveTexture(GL_TEXTURE0);
+        glDeleteTextures(1,&m_effect_background);m_effect_background=0;
+    }
+    m_effect_width=m_effect_height=0;
+}
+types::Vec2<int> OpenGL::PrepareEffectBackground() {
+    GLint viewport[4];glGetIntegerv(GL_VIEWPORT,viewport);
+    glActiveTexture(GL_TEXTURE2);
+    if(!m_effect_background) {glGenTextures(1,&m_effect_background);m_effect_width=m_effect_height=0;}
+    GLint bound=0;glGetIntegerv(GL_TEXTURE_BINDING_2D,&bound);
+    if(GLuint(bound)!=m_effect_background) {if(bound) {glBindTexture(GL_TEXTURE_2D,0);}glBindTexture(GL_TEXTURE_2D,m_effect_background);}
+    if(m_effect_width!=viewport[2] || m_effect_height!=viewport[3]) {
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,viewport[2],viewport[3],0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+        m_effect_width=viewport[2];m_effect_height=viewport[3];
+    }
+    glCopyTexSubImage2D(GL_TEXTURE_2D,0,0,0,viewport[0],viewport[1],viewport[2],viewport[3]);
+    glActiveTexture(GL_TEXTURE0);return {viewport[0],viewport[1]};
 }
 
 void OpenGL::LoadTexture( types::texture::Texture* texture, const bool requested_smoothen ) {

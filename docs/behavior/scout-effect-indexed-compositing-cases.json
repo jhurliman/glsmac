@@ -1,0 +1,1202 @@
+{
+  "research_id": "RE-SMAC-SCOUT-EFFECT-CLUT-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "gamma100_palette_sha256": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6",
+  "assets": {
+    "terran.exe": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+    "system.txt": "cadbe5153d3e36fbb95638f6aec54ba929b6f60af56e782b38042fb835cb146f",
+    "palette.pcx": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "palcheck.tmp": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6",
+    "XI.PCX": "3106dbe0a7cad5e701d1678e9eaa268dde67628b8476a84e517b1f458ddc7494",
+    "XF.PCX": "2646e142878e6942a191e30fc4759a678a42360b191444de132d8ead19932af2",
+    "explosions0.tmp": "8aee8ce66f3468b40cd97f72e40faef5e762cd45fab7c14f447c81a16c359873",
+    "explosions3.tmp": "c19207cc4c2183c6d1c882ddd91b55bca4a671014db1953132e5d88f55aea738"
+  },
+  "banks": [
+    {
+      "bank": 0,
+      "rows": [
+        [
+          49,
+          100
+        ],
+        [
+          83,
+          100
+        ],
+        [
+          85,
+          99
+        ],
+        [
+          86,
+          98
+        ],
+        [
+          87,
+          97
+        ],
+        [
+          88,
+          96
+        ],
+        [
+          90,
+          95
+        ],
+        [
+          219,
+          94
+        ],
+        [
+          220,
+          93
+        ],
+        [
+          221,
+          92
+        ],
+        [
+          222,
+          91
+        ],
+        [
+          123,
+          90
+        ],
+        [
+          124,
+          80
+        ],
+        [
+          125,
+          60
+        ],
+        [
+          126,
+          40
+        ],
+        [
+          71,
+          95
+        ]
+      ],
+      "CLUT_sha256": "8aee8ce66f3468b40cd97f72e40faef5e762cd45fab7c14f447c81a16c359873",
+      "matches_installed_cache": true
+    },
+    {
+      "bank": 3,
+      "rows": [
+        [
+          49,
+          100
+        ],
+        [
+          83,
+          100
+        ],
+        [
+          85,
+          99
+        ],
+        [
+          86,
+          98
+        ],
+        [
+          87,
+          97
+        ],
+        [
+          88,
+          96
+        ],
+        [
+          90,
+          95
+        ],
+        [
+          219,
+          94
+        ],
+        [
+          220,
+          90
+        ],
+        [
+          221,
+          85
+        ],
+        [
+          222,
+          70
+        ],
+        [
+          123,
+          50
+        ],
+        [
+          124,
+          40
+        ],
+        [
+          125,
+          20
+        ],
+        [
+          126,
+          0
+        ],
+        [
+          71,
+          95
+        ]
+      ],
+      "CLUT_sha256": "c19207cc4c2183c6d1c882ddd91b55bca4a671014db1953132e5d88f55aea738",
+      "matches_installed_cache": true
+    }
+  ],
+  "asset_free_cases": [
+    {
+      "id": "unique_gray",
+      "palette_rule": "P[i]=(i,i,i)",
+      "target_index": 59,
+      "source_rows_opacity": [
+        100,
+        40,
+        0
+      ],
+      "mapped_destination_range": [
+        10,
+        245
+      ],
+      "source_before": [
+        0,
+        1,
+        2,
+        253,
+        255
+      ],
+      "source_after": [
+        0,
+        1,
+        2,
+        255,
+        255
+      ],
+      "background": [
+        44,
+        100,
+        200,
+        249,
+        255
+      ],
+      "output": [
+        59,
+        83,
+        200,
+        249,
+        255
+      ]
+    },
+    {
+      "id": "duplicate_gray",
+      "palette_rule": "P[i]=(i,i,i), except P[200]=(199,199,199)",
+      "target_index": 59,
+      "source_rows_opacity": [
+        100,
+        40,
+        0
+      ],
+      "mapped_destination_range": [
+        10,
+        245
+      ],
+      "source_before": [
+        0,
+        1,
+        2,
+        253,
+        255
+      ],
+      "source_after": [
+        0,
+        1,
+        2,
+        255,
+        255
+      ],
+      "background": [
+        44,
+        100,
+        200,
+        249,
+        255
+      ],
+      "output": [
+        59,
+        83,
+        199,
+        249,
+        255
+      ]
+    }
+  ],
+  "numeric_cases": [
+    {
+      "bank": 0,
+      "source": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        253,
+        255
+      ],
+      "after_substitution": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        255,
+        255
+      ],
+      "background": 10,
+      "output": [
+        59,
+        93,
+        229,
+        17,
+        81,
+        10,
+        10
+      ],
+      "output_rgb": [
+        [
+          70,
+          36,
+          39
+        ],
+        [
+          235,
+          232,
+          192
+        ],
+        [
+          208,
+          112,
+          24
+        ],
+        [
+          113,
+          92,
+          71
+        ],
+        [
+          56,
+          64,
+          64
+        ],
+        [
+          172,
+          129,
+          81
+        ],
+        [
+          172,
+          129,
+          81
+        ]
+      ]
+    },
+    {
+      "bank": 0,
+      "source": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        253,
+        255
+      ],
+      "after_substitution": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        255,
+        255
+      ],
+      "background": 44,
+      "output": [
+        59,
+        93,
+        229,
+        11,
+        80,
+        44,
+        44
+      ],
+      "output_rgb": [
+        [
+          70,
+          36,
+          39
+        ],
+        [
+          235,
+          232,
+          192
+        ],
+        [
+          208,
+          112,
+          24
+        ],
+        [
+          162,
+          124,
+          81
+        ],
+        [
+          64,
+          76,
+          76
+        ],
+        [
+          226,
+          203,
+          176
+        ],
+        [
+          226,
+          203,
+          176
+        ]
+      ]
+    },
+    {
+      "bank": 0,
+      "source": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        253,
+        255
+      ],
+      "after_substitution": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        255,
+        255
+      ],
+      "background": 100,
+      "output": [
+        59,
+        93,
+        229,
+        230,
+        81,
+        100,
+        100
+      ],
+      "output_rgb": [
+        [
+          70,
+          36,
+          39
+        ],
+        [
+          235,
+          232,
+          192
+        ],
+        [
+          208,
+          112,
+          24
+        ],
+        [
+          161,
+          86,
+          15
+        ],
+        [
+          56,
+          64,
+          64
+        ],
+        [
+          228,
+          120,
+          24
+        ],
+        [
+          228,
+          120,
+          24
+        ]
+      ]
+    },
+    {
+      "bank": 0,
+      "source": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        253,
+        255
+      ],
+      "after_substitution": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        255,
+        255
+      ],
+      "background": 200,
+      "output": [
+        59,
+        93,
+        219,
+        88,
+        81,
+        200,
+        200
+      ],
+      "output_rgb": [
+        [
+          70,
+          36,
+          39
+        ],
+        [
+          235,
+          232,
+          192
+        ],
+        [
+          191,
+          103,
+          21
+        ],
+        [
+          52,
+          29,
+          9
+        ],
+        [
+          56,
+          64,
+          64
+        ],
+        [
+          51,
+          19,
+          7
+        ],
+        [
+          51,
+          19,
+          7
+        ]
+      ]
+    },
+    {
+      "bank": 0,
+      "source": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        253,
+        255
+      ],
+      "after_substitution": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        255,
+        255
+      ],
+      "background": 245,
+      "output": [
+        59,
+        93,
+        229,
+        85,
+        81,
+        245,
+        245
+      ],
+      "output_rgb": [
+        [
+          70,
+          36,
+          39
+        ],
+        [
+          235,
+          232,
+          192
+        ],
+        [
+          208,
+          112,
+          24
+        ],
+        [
+          143,
+          140,
+          18
+        ],
+        [
+          56,
+          64,
+          64
+        ],
+        [
+          193,
+          173,
+          26
+        ],
+        [
+          193,
+          173,
+          26
+        ]
+      ]
+    },
+    {
+      "bank": 0,
+      "source": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        253,
+        255
+      ],
+      "after_substitution": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        255,
+        255
+      ],
+      "background": 249,
+      "output": [
+        249,
+        249,
+        249,
+        249,
+        249,
+        249,
+        249
+      ],
+      "output_rgb": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "bank": 3,
+      "source": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        253,
+        255
+      ],
+      "after_substitution": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        255,
+        255
+      ],
+      "background": 10,
+      "output": [
+        59,
+        93,
+        229,
+        10,
+        81,
+        10,
+        10
+      ],
+      "output_rgb": [
+        [
+          70,
+          36,
+          39
+        ],
+        [
+          235,
+          232,
+          192
+        ],
+        [
+          208,
+          112,
+          24
+        ],
+        [
+          172,
+          129,
+          81
+        ],
+        [
+          56,
+          64,
+          64
+        ],
+        [
+          172,
+          129,
+          81
+        ],
+        [
+          172,
+          129,
+          81
+        ]
+      ]
+    },
+    {
+      "bank": 3,
+      "source": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        253,
+        255
+      ],
+      "after_substitution": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        255,
+        255
+      ],
+      "background": 44,
+      "output": [
+        59,
+        93,
+        229,
+        44,
+        80,
+        44,
+        44
+      ],
+      "output_rgb": [
+        [
+          70,
+          36,
+          39
+        ],
+        [
+          235,
+          232,
+          192
+        ],
+        [
+          208,
+          112,
+          24
+        ],
+        [
+          226,
+          203,
+          176
+        ],
+        [
+          64,
+          76,
+          76
+        ],
+        [
+          226,
+          203,
+          176
+        ],
+        [
+          226,
+          203,
+          176
+        ]
+      ]
+    },
+    {
+      "bank": 3,
+      "source": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        253,
+        255
+      ],
+      "after_substitution": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        255,
+        255
+      ],
+      "background": 100,
+      "output": [
+        59,
+        93,
+        229,
+        100,
+        81,
+        100,
+        100
+      ],
+      "output_rgb": [
+        [
+          70,
+          36,
+          39
+        ],
+        [
+          235,
+          232,
+          192
+        ],
+        [
+          208,
+          112,
+          24
+        ],
+        [
+          228,
+          120,
+          24
+        ],
+        [
+          56,
+          64,
+          64
+        ],
+        [
+          228,
+          120,
+          24
+        ],
+        [
+          228,
+          120,
+          24
+        ]
+      ]
+    },
+    {
+      "bank": 3,
+      "source": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        253,
+        255
+      ],
+      "after_substitution": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        255,
+        255
+      ],
+      "background": 200,
+      "output": [
+        59,
+        93,
+        219,
+        200,
+        81,
+        200,
+        200
+      ],
+      "output_rgb": [
+        [
+          70,
+          36,
+          39
+        ],
+        [
+          235,
+          232,
+          192
+        ],
+        [
+          191,
+          103,
+          21
+        ],
+        [
+          51,
+          19,
+          7
+        ],
+        [
+          56,
+          64,
+          64
+        ],
+        [
+          51,
+          19,
+          7
+        ],
+        [
+          51,
+          19,
+          7
+        ]
+      ]
+    },
+    {
+      "bank": 3,
+      "source": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        253,
+        255
+      ],
+      "after_substitution": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        255,
+        255
+      ],
+      "background": 245,
+      "output": [
+        59,
+        93,
+        229,
+        245,
+        81,
+        245,
+        245
+      ],
+      "output_rgb": [
+        [
+          70,
+          36,
+          39
+        ],
+        [
+          235,
+          232,
+          192
+        ],
+        [
+          208,
+          112,
+          24
+        ],
+        [
+          193,
+          173,
+          26
+        ],
+        [
+          56,
+          64,
+          64
+        ],
+        [
+          193,
+          173,
+          26
+        ],
+        [
+          193,
+          173,
+          26
+        ]
+      ]
+    },
+    {
+      "bank": 3,
+      "source": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        253,
+        255
+      ],
+      "after_substitution": [
+        0,
+        1,
+        7,
+        14,
+        15,
+        255,
+        255
+      ],
+      "background": 249,
+      "output": [
+        249,
+        249,
+        249,
+        249,
+        249,
+        249,
+        249
+      ],
+      "output_rgb": [
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ],
+        [
+          255,
+          0,
+          0
+        ]
+      ]
+    }
+  ],
+  "native_compositor_discriminators": [
+    {
+      "bank": 0,
+      "pixels": 4096,
+      "output_sha256": "8aee8ce66f3468b40cd97f72e40faef5e762cd45fab7c14f447c81a16c359873"
+    },
+    {
+      "bank": 3,
+      "pixels": 4096,
+      "output_sha256": "c19207cc4c2183c6d1c882ddd91b55bca4a671014db1953132e5d88f55aea738"
+    }
+  ],
+  "atlas_index_domain": [
+    {
+      "name": "XI.PCX",
+      "asset_sha256": "3106dbe0a7cad5e701d1678e9eaa268dde67628b8476a84e517b1f458ddc7494",
+      "size": [
+        722,
+        492
+      ],
+      "whole_asset_253_replaced": 276,
+      "first_family_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        255
+      ],
+      "palette_unchanged": true,
+      "extra_index252_per_frame": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "XF.PCX",
+      "asset_sha256": "2646e142878e6942a191e30fc4759a678a42360b191444de132d8ead19932af2",
+      "size": [
+        818,
+        1522
+      ],
+      "whole_asset_253_replaced": 125354,
+      "first_family_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        252,
+        255
+      ],
+      "palette_unchanged": true,
+      "extra_index252_per_frame": [
+        75,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ]
+    }
+  ],
+  "outside_bank_canary_controls": [
+    {
+      "frame": 0,
+      "source252_pixels": 75,
+      "diagnostic_outside_row_value": 17,
+      "source252_outputs_equal_marker": true,
+      "output_sha256": "cce562406f7848ad04cacbbce5d251de1cc0677796e212f82ea9988f7fa91b05"
+    },
+    {
+      "frame": 0,
+      "source252_pixels": 75,
+      "diagnostic_outside_row_value": 219,
+      "source252_outputs_equal_marker": true,
+      "output_sha256": "952dc060b389220052d257c1f4e23543590c0ce9bbd35655d4151604e69d2af5"
+    },
+    {
+      "frame": 8,
+      "source252_pixels": 9,
+      "diagnostic_outside_row_value": 17,
+      "source252_outputs_equal_marker": true,
+      "output_sha256": "1b91c7a129a7e4258d85352056223d8a1c560e367ab58c8eb7e4b3f3c00f2a7e"
+    },
+    {
+      "frame": 8,
+      "source252_pixels": 9,
+      "diagnostic_outside_row_value": 219,
+      "source252_outputs_equal_marker": true,
+      "output_sha256": "d3a2221c8153f27bb7f363fae469398c858ef8d0be7465e2954912e1c52c5602"
+    }
+  ],
+  "scope": "Original PCX decode/substitution/extraction/CLUT generation/compositor. Gamma100 reuses prior executed receipt via host channel cap. No waveform, full initialized GUI state or scaled-raster parity. XF source252 reads outside bank; canary values are diagnostic, not stock mapping.",
+  "normal_conversion_passed": true,
+  "exact_stock_XF_index252_mapping_established": false
+}

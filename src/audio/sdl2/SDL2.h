@@ -28,6 +28,7 @@ CLASS( SDL2, Audio )
 	SDL2();
 	~SDL2();
 
+    bool IsPlaybackAvailable() const override {return m_is_sound_enabled;}
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -39,6 +40,7 @@ CLASS( TextureLoader, Loader )
 
 	// Caller owns this original native owner0 badge texture (gamma100).
 	virtual types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant);
+    virtual std::shared_ptr<types::texture::Texture> GetSmacEffectTexture(bool death);
 
 	// create texture of solid color
 	types::texture::Texture* GetColorTexture( const types::Color& color );

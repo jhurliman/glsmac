@@ -53,6 +53,8 @@ in vec4 tintcolor; \
 in vec3 fragpos; \
 in vec3 normal; \
 uniform sampler2D uTexture; \
+uniform sampler2D uEffectBackground; \
+uniform ivec2 uEffectOrigin; \
 uniform sampler2DArray uPagedTexture; \
 uniform ivec2 uLogicalSize; \
 uniform ivec2 uPageSize; \
@@ -107,6 +109,20 @@ void main(void) { \
 		) + " \
 	ambient /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
 	diffuse /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
+    if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_SMAC_EFFECT ) + " ) { \
+        ivec2 size=textureSize(uTexture,0); \
+        vec4 effect=texelFetch(uTexture,ivec2(floor(texpos*vec2(size))),0); \
+        if(effect.a==0.0) discard; \
+        int source=int(round(effect.r*255.0)); \
+        vec3 background=texelFetch(uEffectBackground,ivec2(gl_FragCoord.xy)-uEffectOrigin,0).rgb; \
+        int destination=10;float best=1e30; \
+        for(int i=10;i<=245;++i) { \
+            vec3 delta=background-texelFetch(uTexture,ivec2(i,size.y-1),0).rgb; \
+            float distance=dot(delta,delta);if(distance<best) {best=distance;destination=i;} \
+        } \
+        int index=int(round(texelFetch(uTexture,ivec2(destination,size.y-17+source),0).r*255.0)); \
+        FragColor=texelFetch(uTexture,ivec2(index,size.y-1),0);return; \
+    } \
 	vec4 tex = sampleTexture(texpos.xy); \
 	float gamma = 1.1 ; /* TODO: pass via uniform */ \
 	float contrast = 0.1; /* TODO: pass via uniform */ \
@@ -134,6 +150,8 @@ void Orthographic::Initialize() {
 	attributes.normal = GetAttributeLocation( "aNormal" );
 	uniforms.position = GetUniformLocation( "uPosition" );
 	uniforms.texture = GetUniformLocation( "uTexture" );
+    uniforms.effect_background=GetUniformLocation("uEffectBackground");uniforms.effect_origin=GetUniformLocation("uEffectOrigin");
+    glUniform1i(uniforms.effect_background,2);
 	uniforms.paged_texture=GetUniformLocation("uPagedTexture");
 	uniforms.logical_size=GetUniformLocation("uLogicalSize");
 	uniforms.page_size=GetUniformLocation("uPageSize");

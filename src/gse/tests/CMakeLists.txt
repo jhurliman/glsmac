@@ -15,6 +15,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacTerrainPolygonRaster.cpp
     ${PWD}/SmacWaterCoast.cpp
     ${PWD}/SmacRiver.cpp
+    ${PWD}/SmacRoadTube.cpp
     ${PWD}/SmacTerritoryBoundary.cpp
 	${PWD}/SmacLandMaterial.cpp
 	${PWD}/SmacTerrainLighting.cpp

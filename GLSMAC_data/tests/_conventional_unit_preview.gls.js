@@ -71,8 +71,8 @@ return (game) => {
 			return;
 		}
 		const terrain = sections.tile_preview;
-		check(terrain.preview.left == 2 && terrain.preview.top == 1 && terrain.preview.width == 80 && terrain.preview.height == 40,
-			'terrain preview lost native80x40 extent/anchor');
+		check(terrain.preview.left == 0 && terrain.preview.top == 0 && terrain.preview.width == 89 && terrain.preview.height == 117,
+			'terrain preview lost independent native clip; painter/fallback retain80x40 at local2,1');
 		check(terrain.lines.children[0].top + terrain.lines.children[0].measure().height == 56
 			&& terrain.bottom_line.top + terrain.bottom_line.measure().height == 113, 'terrain baselines drifted into preview');
 		const lines = sections.object_preview.lines.children;

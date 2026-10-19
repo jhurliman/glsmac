@@ -277,7 +277,8 @@ void Game::Iterate() {
 						*response.data.get_map_data->sprites.actors,
 						*response.data.get_map_data->sprites.instances,
 						response.data.get_map_data->tiles,
-						response.data.get_map_data->tile_states
+						response.data.get_map_data->tile_states,
+                        response.data.get_map_data->native_projection
 					);
 					response.data.get_map_data->terrain_texture = nullptr;
 					response.data.get_map_data->terrain_mesh = nullptr;
@@ -1317,7 +1318,8 @@ void Game::Initialize(
 	const std::unordered_map< std::string, backend::map::sprite_actor_t >& sprite_actors,
 	const std::unordered_map< size_t, std::pair< std::string, types::Vec3 > >& sprite_instances,
 	const std::vector< backend::map::tile::Tile >* tiles,
-	const std::vector< backend::map::tile::TileState >* tile_states
+	const std::vector< backend::map::tile::TileState >* tile_states,
+        bool native_projection
 ) {
 	ASSERT( !m_is_initialized, "already initialized" );
 
@@ -1327,8 +1329,7 @@ void Game::Initialize(
 	Log( "Initializing game" );
 
 	NEW( m_camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
-    m_map_data.native_projection=std::any_of(tile_states->begin(),tile_states->end(),
-        [](const auto& state) {return state.smac_projector_height.has_value();});
+    m_map_data.native_projection=native_projection;
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
 	UpdateCameraAngle();
 

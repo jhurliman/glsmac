@@ -80,6 +80,11 @@ Game::EventBatchHandoff::~EventBatchHandoff() {
 	}
 }
 
+void response_map_data_t::SetMapProjectionProvenance(const map::Map& source) {
+    const auto& policy=source.GetResourcePolicy();
+    native_projection=policy && policy->OriginalPlanet()!=nullptr;
+}
+
 response_map_data_t::~response_map_data_t() {
 	if ( terrain_texture ) {
 		DELETE( terrain_texture );
@@ -2433,6 +2438,7 @@ void Game::InitializeMap() {
 		ASSERT( m_map, "map not set" );
 
 		NEW( m_response_map_data, response_map_data_t );
+        m_response_map_data->SetMapProjectionProvenance(*m_map);
 
 		m_response_map_data->map_width = m_map->GetWidth();
 		m_response_map_data->map_height = m_map->GetHeight();

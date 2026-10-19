@@ -4,6 +4,7 @@
 #include "game/frontend/MapProjection.h"
 #include "game/frontend/tile/Tile.h"
 #include "game/backend/MapObject.h"
+#include "game/backend/Game.h"
 #include "game/frontend/unit/SelectionBlink.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/MapState.h"
@@ -167,6 +168,29 @@ public:
         const auto& b=world.GetTerrainUpdatePayload(*appearance);
         return b.added.size()==1 && b.added.front().coords==wanted;
     }
+    bool CheckProjectionProvenance() {
+        game::backend::response_map_data_t response{};
+        response.SetMapProjectionProvenance(world);
+        if(response.native_projection) return false;
+        using Planet=map::SmacPlanetMap;
+        std::string wire(Planet::FILE_BYTES,'\0');wire.replace(0,11,"TERRANMAP\0\x1a",11);
+        wire[11]=5;wire[15]=80;wire[19]=80;wire[15+0xa30]=4;
+        for(size_t i=0;i<Planet::TILE_COUNT;++i) {
+            wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES]=char(2<<5);
+        }
+        world.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+        for(const auto& state:*world.GetMapState()->GetTileStatesPtr()) {
+            if(state.smac_projector_height) return false;
+        }
+        response.SetMapProjectionProvenance(world);
+        if(!response.native_projection) return false;
+        world.m_resource_policy=map::GlsmacResourceMapPolicy::Deserialize(world.m_resource_policy->Serialize().ToString());
+        response.SetMapProjectionProvenance(world);
+        if(!response.native_projection) return false;
+        world.m_resource_policy=map::GlsmacResourceMapPolicy::DisplayedTerrainV1();
+        response.SetMapProjectionProvenance(world);
+        return !response.native_projection;
+    }
     auto Replay(const map::TerrainCoastRecipes::Land& land) { return world.m_coast_recipes.Prepare(land); }
 	void Commit( tile::Tile* t, uint16_t bits, map::Map::PreparedTerrainUpdate& update ) {
 		t->terraforming = bits; world.CommitOrdinaryTerrainUpdate( update );
@@ -175,6 +199,10 @@ public:
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("SMAC native camera provenance survives all ocean tiles without land metadata",GT(){
+        TerrainRenderFixture f;GT_ASSERT(f.CheckProjectionProvenance(),"Projection inferred provenance from current land or retained stale mode");
+        GT_OK();
+    });
     task->AddTest("SMAC ordinary terrain actual camera projects native96x48 diamonds and pixel heights",GT(){
         return WithWidgetGraphics([]()->std::string {
             scene::Camera camera(scene::Camera::CT_ORTHOGRAPHIC);

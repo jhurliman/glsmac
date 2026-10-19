@@ -158,6 +158,7 @@ void Game::PublishSmacWorkerKnowledge( GSE_CALLABLE, const map::SmacWorkerKnowle
 	m_map->m_worker_knowledge.swap( replacement );
 	m_map->m_territory_topology.swap( topology );
 	m_map->m_worker_knowledge_ready = true;
+	m_map_knowledge_dirty = true;
 }
 
 void Game::CompleteSmacWorkerKnowledgeRestore() {
@@ -397,7 +398,17 @@ void Game::CommitConventionalSight( std::optional< map::SmacWorkerKnowledge >& p
 	if ( prepared ) {
         m_map->m_worker_knowledge.swap(prepared);
         m_um->SyncNativeObservationMasks(*m_map->m_worker_knowledge);
+        m_map_knowledge_dirty = true;
     }
+}
+
+void Game::PublishMapKnowledgeUpdate( GSE_CALLABLE ) {
+    if ( !m_map_knowledge_dirty || !IsRunning() ) { return; }
+    // CommitConventionalSight is noexcept: publishing/allocating callbacks only
+    // happens at the owner checkpoint, after every authoritative event write.
+    // Clear first so a callback that commits new sight schedules another update.
+    m_map_knowledge_dirty = false;
+    m_state->TriggerObject( this, "map_knowledge", {} );
 }
 
 bool Game::HandleConventionalMoveEvent( GSE_CALLABLE, const std::string& name,

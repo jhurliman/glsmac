@@ -3342,6 +3342,7 @@ public:
         });
     }
 
+	void PublishMapKnowledge( GSE_CALLABLE ) { m_game.PublishMapKnowledgeUpdate( GSE_CALL ); }
 	void ProcessEvents() { m_game.ProcessEvents(); }
 	void FlushEvents() { m_game.GetState()->GetConnection()->ProcessPending( true ); }
 	size_t PendingWireEvents() { return m_game.GetState()->GetConnection()->m_pending_game_events.size(); }
@@ -6243,6 +6244,7 @@ void ConventionalUnitFixture::Restore( GSE_CALLABLE, const std::string& snapshot
 void ConventionalUnitFixture::RestoreThroughStart( GSE_CALLABLE, const std::string& snapshot, const std::function< void( GSE_CALLABLE ) >& on_start ) { fixture->RestoreKnowledgeThroughStart( GSE_CALL, snapshot, on_start ); }
 void ConventionalUnitFixture::QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback ) { fixture->QueueKnowledgeProbeEvent( GSE_CALL, callback ); }
 void ConventionalUnitFixture::DrainEvents() { fixture->ProcessEvents(); }
+void ConventionalUnitFixture::PublishMapKnowledge( GSE_CALLABLE ) { fixture->PublishMapKnowledge( GSE_CALL ); }
 game::backend::faction::SmacHumanResearchInputs ConventionalUnitFixture::HumanResearchInputs(int32_t owner,bool blind) {return fixture->HumanResearchInputs(owner,blind);}
 std::string ConventionalUnitFixture::SaveCampaign(const std::string& path) {return fixture->SaveCampaign(path);}
 std::string ConventionalUnitFixture::CheckCampaignSaveOwnership(const std::string& path,const std::string& cancelled) {return fixture->CheckCampaignSaveOwnership(path,cancelled);}

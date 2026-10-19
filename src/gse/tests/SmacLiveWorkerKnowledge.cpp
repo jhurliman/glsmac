@@ -251,11 +251,34 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 					GT_ASSERT(Rejects([&]{game->GetUM()->ValidateConventionalMove(actor,target,0);}) && before==game->GetMap()->GetSmacWorkerKnowledge()->Serialize() && requests==fixture.QueuedFrontendRequests().size(),"unknown Pact state silently became neutral or changed publication");
 				}
 				game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                size_t knowledge_events=0;bool revealed_in_query=false;
+                if(c.enemies==2) {
+                    fixture.ResourcePolicy(true);game->GetState()->m_settings.global.SelectSmacCampaignRules(false);
+                    fixture.PublishMapKnowledge(GSE_CALL); // drain initial publication before observing the move
+                    const auto query=[&](GSE_CALLABLE) {
+                        return static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_smac_minimap",{}));
+                    };
+                    const auto index=static_cast<size_t>(c.ey[1]*64+c.ex[1]/2)*4+3;
+                    GT_ASSERT(static_cast<value::String*>(query(GSE_CALL)->Get("rgba"))->value.at(index)==0,"ZOC minimap fixture did not begin unknown");
+                    game->On(GSE_CALL,"map_knowledge",NATIVE_CALL(&knowledge_events,&revealed_in_query,game,index) {
+                        ++knowledge_events;
+                        auto* result=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_smac_minimap",{}));
+                        revealed_in_query=static_cast<uint8_t>(static_cast<value::String*>(result->Get("rgba"))->value.at(index))==255;
+                        return VALUE(value::Undefined);
+                    }));
+                }
 				const auto before=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();const auto pair=fixture.GameplayRandom();const auto bytes=Unit::Serialize(actor).ToString();const auto requests=fixture.QueuedFrontendRequests().size();
 				game->GetUM()->ValidateConventionalMove(actor,target,0);
 				GT_ASSERT(before==game->GetMap()->GetSmacWorkerKnowledge()->Serialize() && pair==fixture.GameplayRandom() && bytes==Unit::Serialize(actor).ToString() && requests==fixture.QueuedFrontendRequests().size(),"ZOC validation published refusal side effects");
 				game->Event(GSE_CALL,"move_unit",{{"unit",actor->Wrap(GSE_CALL)},{"tile",target->Wrap(GSE_CALL)}});fixture.DrainEvents();
 				const auto after=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                if(c.enemies==2) {
+                    GT_ASSERT(!knowledge_events && fixture.QueuedFrontendRequests().size()==requests,"sight commit ran callbacks or fabricated a movement presentation");
+                    const auto committed=fixture.Snapshot();
+                    fixture.PublishMapKnowledge(GSE_CALL);fixture.PublishMapKnowledge(GSE_CALL);
+                    GT_ASSERT(knowledge_events==1 && revealed_in_query,"blocked move did not publish one authoritative query refresh");
+                    GT_ASSERT(fixture.Snapshot()==committed && fixture.GameplayRandom()==pair,"knowledge notification/query mutated authority");
+                }
 				GT_ASSERT(actor->GetTile()==(c.moved?target:source) && actor->Conventional().spent==(c.moved?3:0) && fixture.GameplayRandom()==pair,"original ZOC outcome/spending/RNG differs");
 				for(int i=0;i<c.enemies;++i){GT_ASSERT(after.units[i+1].visible_to==2,"actual refusal/sight did not reveal foreign unit");}
 				GT_ASSERT(after.observers==data.observers,"movement changed directed diplomatic state");
@@ -278,6 +301,7 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 			if(!restore_snapshot.empty()){
 				ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
 				const auto error=restored.Run([&](GSE_CALLABLE)->std::string{
+					restored.Game()->GetState()->m_settings.global.SelectSmacCampaignRules(false);
 					restored.RestoreThroughStart(GSE_CALL,restore_snapshot,[](GSE_CALLABLE){});
 					GT_ASSERT(restored.Game()->GetMap()->GetSmacWorkerKnowledge()->Serialize()==restore_knowledge && restored.Game()->GetUM()->GetUnit(71)->GetTile()->coord.x==32,"refusal knowledge or directed Pact changed on actual restore");GT_OK();
 				});GT_ASSERT(error.empty(),"ZOC restore: " + error);

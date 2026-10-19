@@ -560,6 +560,8 @@ private:
 	std::unordered_set< size_t > m_verified_turn_checksum_slots = {};
 
 	std::vector< FrontendRequest >* m_pending_frontend_requests = nullptr;
+	bool m_map_knowledge_dirty = false;
+	void PublishMapKnowledgeUpdate( GSE_CALLABLE );
 
 	enum class StartupStage { Complete, InitializeConfigure, PrepareBindings, ConfigureEvents, RestoreCampaign, AcquireMap, AwaitDownload, InitializeMap, Start, Failure, Ingress };
 	struct WorldAdmission {

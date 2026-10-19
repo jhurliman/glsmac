@@ -39,6 +39,8 @@ return {
 			}
 		};
 		refresh_overview();
+		// A refused move can reveal sight without moving or refreshing a preview.
+		minimap.listen(p.game, 'map_knowledge', (e) => { refresh_overview(); });
 		minimap.listen(p.map, 'unit_preview', (e) => { refresh_overview(); });
 		minimap.listen(p.map, 'base_preview', (e) => { refresh_overview(); });
 

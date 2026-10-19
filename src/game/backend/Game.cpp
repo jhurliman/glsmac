@@ -499,6 +499,7 @@ void Game::Iterate() {
 		m_state->WithGame(
 			this, [ this ]( Game* const, GSE_CALLABLE ) {
 				if ( HasInitializationFailure() ) { return; }
+				PublishMapKnowledgeUpdate( GSE_CALL );
 				if ( m_bm ) {
 					m_bm->TriggerUpdates( GSE_CALL );
 				}
@@ -3307,6 +3308,7 @@ void Game::ResetGame() {
 			m_event_handlers.clear();
 		}
 		m_next_event_id = 0;
+		m_map_knowledge_dirty = false;
 
 		m_tm = nullptr;
 		m_rm = nullptr;

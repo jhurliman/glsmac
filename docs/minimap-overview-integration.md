@@ -34,3 +34,9 @@ artwork is retained for the immediate separate Detail-view implementation.
 Native overlay pass, yellow detail-pointer outline, political/rainfall command
 bindings, loaded-slot palette retention and the four-button reference identity
 remain outstanding. No invented political toggle or historical map is exposed.
+
+Committed sight also schedules one coalesced `map_knowledge` notification at the
+owner checkpoint. This covers refused ZOC moves that reveal a neighboring tile
+without a Unit/Base preview event; callbacks do not run inside the noexcept
+sight commit. Reads and repeated publication of an unchanged checkpoint do not
+mutate saved authority.

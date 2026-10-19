@@ -89,12 +89,25 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
     Frame frame;
     std::map<material::Crop,smac_developed_overlay::Sprite> sprites;
     std::vector<raster::Command> commands;commands.reserve(placements.size()*14);
+    const auto append_marker=[&](const std::optional<material::Crop>& pick,const Point& anchor) {
+        if(!pick || source.ter1.pixels.empty()) {return;}
+        auto found=sprites.find(*pick);
+        if(found==sprites.end()) {found=sprites.emplace(*pick,smac_developed_overlay::Decode(source.ter1,*pick)).first;}
+        const auto& sprite=found->second;if(sprite.bitmap.pixels.empty()) {return;}
+        raster::Command command;command.texture=&sprite.bitmap;command.shader=raster::Shader::Sprite;
+        command.sprite_origin={anchor[0]+sprite.offset[0],anchor[1]+sprite.offset[1]};commands.push_back(command);
+    };
     const auto append_quads=[&](int x,int y,const std::array<Point,5>& points,const std::array<int,5>& light) {
         const auto& tile=*At(world,x,y);
         for(const auto& pass:smac_landmark_art::Quads(tile.landmarks,tile.band>=3,points,light)) {
             raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
             command.shader=pass.shader;command.shade_limits=pass.shade_limits;commands.push_back(command);
         }
+        // Outer screen-Y offsets sum to zero. Ceil(mean projected Y)
+        // equals flatCenterY-floor(mean height), including negative heights.
+        int sum=0;for(unsigned v=1;v<5;++v) {sum+=points[v][1];}
+        append_marker(smac_landmark_art::EarlyMarker(tile.landmarks,display_flags),
+            {{points[0][0]-48,-terrain::LandmarkGeometry::FloorQuarter(-sum)-24}});
     };
     const auto append_water=[&](int x,int y,const std::array<Point,5>& points) {
         const bool sea=At(world,x,y)->band<3;bool quads=false;
@@ -141,9 +154,11 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         if(!tile.ordinary) {continue;}
         const auto fx=placement.flat_center[0]+offset[0],fy=placement.flat_center[1]+offset[1];
         if(tile.band<3) {
+            frame.landmark_tiles[static_cast<size_t>(y)*40+x/2]=!source.ter1.pixels.empty();
             const std::array<Point,5> points{{{{fx,fy}},{{fx-48,fy}},{{fx,fy-24}},{{fx+48,fy}},{{fx,fy+24}}}};
             append_water(x,y,points);append_boundary(x,y,points);
             append_developed(tile,{{fx-48,fy-24}},true);append_developed(tile,{{fx-48,fy-24}},false);
+            append_marker(smac_landmark_art::Nexus(tile.landmarks,display_flags),{{fx-48,fy-24}});
             frame.developed_tiles[static_cast<size_t>(y)*40+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
             ++frame.tiles;continue;
         }
@@ -157,6 +172,7 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         if(!ordinary) {continue;}
         const auto light=tile.lighting?tile.lighting:terrain::OrdinaryLighting(x,y,bands);if(!light) {continue;}
         const auto heights=tile.heights?*tile.heights:terrain::OrdinaryHeights(x,y,bands);
+        frame.landmark_tiles[static_cast<size_t>(y)*40+x/2]=!source.ter1.pixels.empty();
         const std::array<Point,5> points{{{{fx,fy-heights[0]}},{{fx-48,fy-heights[1]}},
             {{fx,fy-24-heights[2]}},{{fx+48,fy-heights[3]}},{{fx,fy+24-heights[4]}}}};
         const auto seed=static_cast<uint16_t>(base+placement.record_offset);
@@ -187,6 +203,7 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         }
         const Point anchor{{fx-48,fy-24-terrain::LandmarkGeometry::FloorQuarter(heights[1]+heights[2]+heights[3]+heights[4])}};
         append_developed(tile,anchor,false);
+        append_marker(smac_landmark_art::Nexus(tile.landmarks,display_flags),anchor);
         frame.developed_tiles[static_cast<size_t>(y)*40+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
         ++frame.tiles;
     }

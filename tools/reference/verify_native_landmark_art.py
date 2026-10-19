@@ -28,7 +28,7 @@ def main():
             points=[first['vertices'][:2],first['vertices'][2:4],first['vertices'][4:6],
                     second['vertices'][4:6],third['vertices'][4:6]]
             lighting=first['values'][:3]+[second['values'][2],third['values'][2]]
-        inputs.append([spec.get('landmark',0),int(land)]+[v for p in points for v in p]+lighting)
+        inputs.append([spec.get('landmark',0),int(land)]+[v for p in points for v in p]+lighting+[spec.get('flags',0x221)])
         draws=[d for d in case['commands'] if tuple(d.get('source_crop',[])) in crops]
         values=[len(draws)]
         for draw in draws:
@@ -37,6 +37,11 @@ def main():
             for vertex in range(4):
                 values.extend(draw['vertices'][2*vertex:2*vertex+2]+draw['uv'][2*vertex:2*vertex+2]
                               +[0 if unlit else draw['values'][vertex]])
+        for banks in [{'0x781828','0x781854'}, {'0x781d30','0x781d5c','0x781d88','0x781db4','0x781de0','0x781e0c'}]:
+            markers=[d for d in case['commands'] if d.get('bank') in banks]
+            if len(markers)>1:raise RuntimeError('Unexpected multiple markers in one stage')
+            values.append(int(bool(markers)))
+            if markers:values.extend(markers[0]['binding']['crop'])
         expected.append(values)
     with tempfile.TemporaryDirectory(prefix='glsmac-landmark-art-') as directory:
         binary=Path(directory)/'probe'
@@ -50,7 +55,7 @@ def main():
         if len(actual)!=len(expected):raise RuntimeError('Truncated selector output')
         for index,(a,e) in enumerate(zip(actual,expected)):
             if a!=e:raise RuntimeError(f"{frozen['producer_cases'][index]['input']['id']}: expected {e}, got {a}")
-    print(f'PASS: {len(inputs)} original named-art contexts; quad crop/order/geometry/UV/scalars/shader/limits')
+    print(f'PASS: {len(inputs)} original named-art contexts; quad crop/order/geometry/UV/scalars/shader/limits and marker stages')
 
 
 if __name__=='__main__':main()

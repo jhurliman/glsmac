@@ -2,6 +2,7 @@
 #include "SmacTerrainRaster.h"
 #include "SmacLandmarkArtTables.h"
 #include <stdexcept>
+#include <optional>
 
 namespace game::frontend::smac_landmark_art {
 namespace raster=smac_terrain_raster;
@@ -11,6 +12,22 @@ struct Pass {
     raster::Shader shader;
     std::array<int32_t,2> shade_limits;
 };
+using Crop=std::array<int,4>;
+inline std::optional<Crop> EarlyMarker(uint32_t word,uint32_t flags) {
+    if(!(flags&0x200u)) {return {};}
+    if((word&0x80000008u)==8u) {return Crop{{822,253,100,62}};}
+    if((word&0x80000400u)==0x400u) {return Crop{{822,190,100,62}};}
+    return {};
+}
+inline std::optional<Crop> Nexus(uint32_t word,uint32_t flags) {
+    if(!(flags&0x20u) || (word&0x80002000u)!=0x2000u) {return {};}
+    const unsigned detail=word>>24;
+    if(detail>8) {throw std::invalid_argument("Unsupported Nexus art detail");}
+    constexpr Crop crops[]={{{579,695,100,62}},{{680,695,100,62}},{{0,0,0,0}},
+        {{0,0,0,0}},{{0,0,0,0}},{{478,695,100,62}},{{478,632,100,62}},
+        {{579,632,100,62}},{{680,632,100,62}}};
+    return detail>=2 && detail<=4?std::optional<Crop>{}:crops[detail];
+}
 
 // Live retained word, already deformed C/W/N/E/S points and raw lighting.
 // Mount, Mesa, Crater are independent branches, in original submission order.

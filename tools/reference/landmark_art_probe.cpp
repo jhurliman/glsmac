@@ -8,6 +8,7 @@ int main() {
         std::array<int,5> lighting{};std::cin>>word>>land;
         for(auto& point:points) {std::cin>>point[0]>>point[1];}
         for(auto& light:lighting) {std::cin>>light;}
+        uint32_t flags;std::cin>>flags;
         if(!std::cin) {throw std::runtime_error("Truncated landmark input");}
         const auto passes=game::frontend::smac_landmark_art::Quads(word,land,points,lighting);
         std::cout<<passes.size();
@@ -18,6 +19,11 @@ int main() {
             for(const auto& v:pass.polygon.vertices) {
                 std::cout<<' '<<v.screen[0]<<' '<<v.screen[1]<<' '<<v.uv[0]<<' '<<v.uv[1]<<' '<<v.light;
             }
+        }
+        for(const auto& marker:{game::frontend::smac_landmark_art::EarlyMarker(word,flags),
+                               game::frontend::smac_landmark_art::Nexus(word,flags)}) {
+            std::cout<<' '<<bool(marker);
+            if(marker) {for(auto value:*marker) {std::cout<<' '<<value;}}
         }
         std::cout<<'\n';
     }

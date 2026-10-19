@@ -317,6 +317,33 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         const auto skipped=raster::DrawBatch(initial,{command},{{0,0,8,8}},true);
         GT_ASSERT(skipped.writes==0 && std::all_of(skipped.coverage.begin(),skipped.coverage.end(),[](auto n){return !n;}),"Transparent key wrote coverage");GT_OK();
     });
+    task->AddTest("SMAC native landmark markers preserve priority gates and replacement coverage",GT(){
+        namespace native=game::frontend::native_terrain;
+        ::game::native_terrain::World world;
+        for(auto& cell:world.tiles) {cell.band=3;cell.ordinary=true;}
+        auto& cell=world.tiles[40*40+20];cell.landmarks=8|0x400;
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,10)};
+        source.ter1={1024,768,std::vector<uint8_t>(1024*768,9)};
+        source.coast_mask={56,56,std::vector<uint8_t>(56*56,0)};
+        for(unsigned i=0;i<256;++i) {source.palette[i]={uint8_t(i),0,0};}
+        for(const auto crop:std::array<std::array<int,3>,3>{{{{822,253,30}},{{822,190,40}},{{579,695,50}}}}) {
+            for(int y=0;y<62;++y) {for(int x=0;x<100;++x) {source.ter1.pixels[(crop[1]+y)*1024+crop[0]+x]=uint8_t(crop[2]);}}
+        }
+        const std::vector<native::Placement> view{{{{40,40}},{{576,288}},44*(40*40+20)}};
+        const auto draw=[&](uint32_t flags){return native::Render(world,source,view,0,{{0,0}},flags);};
+        const auto ink=[](const native::Frame& f){return f.rgba[(288*1024+575)*4];};
+        GT_ASSERT(ink(draw(0x200))==30,"Uranium priority lost to Geothermal");
+        cell.landmarks=0x400;
+        GT_ASSERT(ink(draw(0x200))==40 && ink(draw(0))!=40,"Geothermal lost display gate");
+        cell.landmarks=0x2000;
+        const auto nexus=draw(0x20);
+        GT_ASSERT(ink(nexus)==50 && nexus.landmark_tiles[40*40+20] && !nexus.developed_tiles[40*40+20],
+            "Nexus depended on unrelated nutrient context or lost replacement coverage");
+        cell.landmarks=0x02002000;
+        GT_ASSERT(ink(draw(0x20))!=50,"Empty Nexus detail2 slot drew a sprite");
+        world.tiles[40*40+21].deformed=true;
+        GT_ASSERT(!draw(0x20).landmark_tiles[40*40+20],"Skipped terrain stencil consumed legacy markers");GT_OK();
+    });
     task->AddTest("SMAC native landmark quads compose before Forest and sea Fungus",GT(){
         namespace native=game::frontend::native_terrain;
         ::game::native_terrain::World world;

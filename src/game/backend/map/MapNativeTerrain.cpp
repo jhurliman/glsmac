@@ -83,9 +83,10 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         // Geometry-only0x200/0x800 have no sea profile. The named quads
         // are now composed on land and sea with their distinct scalar rules.
         const uint32_t sea_memberships=output.band<3?0xd0u:0u;
-        const auto unsupported_landmark_materials=landmarks&~(0xff400000u|0xb03u|4u|8u|0x400u|sea_memberships);
+        const auto unsupported_landmark_materials=landmarks&~(0xff400000u|0xb03u|4u|8u|0x400u|0x2000u|sea_memberships);
         const auto art_detail=landmarks>>24;
-        const bool unsupported_art_detail=(landmarks&0x103u) && art_detail>=49 && art_detail<128;
+        const bool unsupported_art_detail=((landmarks&0x103u) && art_detail>=49 && art_detail<128) ||
+            ((landmarks&0x80002000u)==0x2000u && art_detail>8);
         // Unsupported later improvements retain the existing GPU terrain.
         // Road/Tube now compose from the viewer's separately copied memory.
         // Pholus is height-only in this prefix. Its live adapter feature must

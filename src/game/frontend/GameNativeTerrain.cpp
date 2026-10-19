@@ -19,14 +19,17 @@
 #include <cmath>
 
 namespace game::frontend {
-void Game::UpdateNativeTerrainSpriteVisibility(const std::array<bool,3200>* covered) {
+void Game::UpdateNativeTerrainSpriteVisibility(const std::array<bool,3200>* covered,const std::array<bool,3200>* landmarks) {
     std::unordered_set<size_t> hidden;
-    if(covered && m_tm && m_map_data.width==80 && m_map_data.height==80) {
+    if((covered || landmarks) && m_tm && m_map_data.width==80 && m_map_data.height==80) {
         for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
-            if(!covered->at(static_cast<size_t>(y)*40+x/2)) {continue;}
+            const auto index=static_cast<size_t>(y)*40+x/2;
+            const bool developed=covered && covered->at(index),named=landmarks && landmarks->at(index);
+            if(!developed && !named) {continue;}
             for(const auto& sprite:m_tm->GetTile(x,y)->GetRenderData().terrain_instances) {
                 const auto entry=m_native_legacy_instances.find(sprite.id);
-                if(entry!=m_native_legacy_instances.end() && entry->second.first==sprite.actor && smac_developed_overlay::ReplacesLegacySprite(sprite.name)) {hidden.insert(sprite.id);}
+                if(entry!=m_native_legacy_instances.end() && entry->second.first==sprite.actor && ((developed && smac_developed_overlay::ReplacesLegacySprite(sprite.name)) ||
+                    (named && (sprite.name=="Uranium" || sprite.name=="Geothermal")))) {hidden.insert(sprite.id);}
             }
         }}
     }
@@ -110,7 +113,7 @@ void Game::UpdateNativeTerrain() {
     }
     std::copy(frame.rgba.begin(),frame.rgba.end(),m_native_texture->GetBitmap());
     m_native_texture->FullUpdate();m_native_actor->SetTexture(m_native_texture);m_native_actor->Show();
-    UpdateNativeTerrainSpriteVisibility(&frame.developed_tiles);
+    UpdateNativeTerrainSpriteVisibility(&frame.developed_tiles,&frame.landmark_tiles);
     m_native_frame_dirty=false;
 }
 }

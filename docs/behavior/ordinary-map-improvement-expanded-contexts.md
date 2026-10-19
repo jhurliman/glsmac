@@ -22,3 +22,18 @@ Base fixture remains University original/former artwork owner3,population3,size0
 The earlier failed extraction attempts and v1 frozen bundles remain unchanged. This revision preserves their history and valid raw coordinates while explicitly superseding every wrong improvement name. See the correction handoff for raw masks, atlas sources, new Farm/Forest controls and precise display-flag limits.
 
 This is a separate finite supplement. Its loaded rectangles and display-flag contexts are in `ordinary-map-improvement-expanded-contexts-cases.json`. The canonical24-rectangle correction remains in `ordinary-map-loaded-sprite-rectangles-cases.json`.
+
+## Farm terrain texture identity
+
+The four Farm0x20/0x21 pairs now record `selected_terrain_texture` on each context and `selected_texture` on all32 terrain triangles, plus the root `farm_texture_pairs` table. These are selections already captured from the actual native renderer; no geometry, sprite rectangle or raw mask changed.
+
+| World | Flags0x20, four triangles | Flags0x21, four triangles |
+|---|---|---|
+|Uniform band3|arid: TEXTURE.PCX(1,58),56×56|farm_surface_variant_3: TEXTURE.PCX(775,276),56×56|
+|Uniform band4|arid: TEXTURE.PCX(1,58),56×56|farm_surface_variant_3: TEXTURE.PCX(775,276),56×56|
+|Single hill|arid: TEXTURE.PCX(1,58),56×56|farm_surface_variant_3: TEXTURE.PCX(775,276),56×56|
+|Coast|arid: TEXTURE.PCX(1,58),56×56|farm_surface_variant_3: TEXTURE.PCX(775,276),56×56|
+
+The original branch first tests the selected tile's Farm item0x8000, then renderer flag0x1. With both set, it computes a Farm bank index and dispatches that bank for each fan triangle. The observed isolated-world fixtures select index3 of the original nine-entry Farm bank. This closes the selected identity for these contexts; the general neighborhood-to-bank-index producer remains outside this small correction. The original constructor fragments independently establish the crop origins and56×56 sizes, with no texture pixel result supplied.
+
+This terrain texture is separate from the retained TER1.PCX Farm sprite at(923,453). Both contexts still emit that sprite; toggling0x1 changes the terrain texture selection. No new loaded texture pixels, art parity, Base or Scout behavior is claimed here.

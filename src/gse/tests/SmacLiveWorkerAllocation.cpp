@@ -2228,7 +2228,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 foreign_record=Base::Serialize(bases[1]).ToString();
                 if(paid) {bases[1]->m_facilities.erase("capture-hq");}
                 fixture.MoveEvent(GSE_CALL,actor,target->GetTile());
-                GT_ASSERT(game->GetMap()->GetSmacWorkerKnowledge()->CopyData().occupancy->At({20,16}).affiliation==1,"Capture omitted independent Base-center affiliation write");
+                const auto occupancy=game->GetMap()->GetSmacWorkerKnowledge()->CopyData().occupancy;
+                GT_ASSERT((occupancy->At({19,15})==map::SmacOccupancyCache::Cell{1,0}
+                    && occupancy->At({20,16})==map::SmacOccupancyCache::Cell{1,3}
+                    && occupancy->At({30,16})==map::SmacOccupancyCache::Cell{2,2}),
+                    "Capture omitted source departure, Base-center presence/affiliation or changed an unrelated Unit cache");
                 GT_ASSERT(*game->GetMap()->GetTerritoryTopology()->LandmarkDetails()==shared_details,"capture commit rewrote raw shared detail");
                 const auto context=target->GetSmacResourceContext();const auto production=target->GetProductionState();
                 if(with_native) {std::string factory;fixture.ResourceState([&](auto& state){factory=state.native_factory->Serialize().ToString();});

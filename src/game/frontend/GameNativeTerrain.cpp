@@ -80,26 +80,27 @@ void Game::UpdateNativeTerrain() {
     if(!m_native_frame_dirty) {return;}
     if(!m_native_source || m_native_source->faction_files!=m_native_world->faction_files) {m_native_source=g_engine->GetTextureLoader()->GetSmacTerrainSource(m_native_world->faction_files);}
     const auto& matrix=m_camera->GetMatrix().m;
-    std::vector<native_terrain::Placement> placements;
-    // Preserve the original row/left-to-right painter order. Each horizontal
-    // wrap copy is translated before clipping, without changing its record seed.
-    for(int y=0;y<80;++y) {
-        std::vector<native_terrain::Placement> row;
-        for(int x=y&1;x<80;x+=2) {
-            auto coord=m_tm->GetTile(x,y)->GetRenderData().coords.InvertY();
-            coord.z=backend::map::s_consts.tile.scale.z;
-            for(int copy=m_native_world->horizontal_wrap?-1:0;copy<=(m_native_world->horizontal_wrap?1:0);++copy) {
-                const auto wx=coord.x+copy*80*backend::map::s_consts.tile.radius.x;
-                const auto px=(matrix[0][0]*wx+matrix[0][1]*coord.y+matrix[0][2]*coord.z+matrix[0][3]+1)*512;
-                const auto py=(1-(matrix[1][0]*wx+matrix[1][1]*coord.y+matrix[1][2]*coord.z+matrix[1][3]))*384;
-                // Up to100 native height pixels can lift a tile into the view.
-                if(px<-48 || px>1072 || py<-24 || py>635) {continue;}
-                row.push_back({{{x,y}},{{static_cast<int>(std::lround(px)),static_cast<int>(std::lround(py))}},static_cast<uint32_t>(44*(40*y+x/2))});
-            }
-        }
-        std::sort(row.begin(),row.end(),[](const auto& a,const auto& b){return a.flat_center[0]<b.flat_center[0];});
-        placements.insert(placements.end(),row.begin(),row.end());
-    }
+    // Translate the port's flat camera origin onto the native doubled-X grid.
+    // The original selector owns padded rows/columns; clipping flat centers
+    // first would discard tiles whose geometry or art reaches into the view.
+    auto origin=m_tm->GetTile(0,0)->GetRenderData().coords.InvertY();
+    origin.z=backend::map::s_consts.tile.scale.z;
+    const auto px=(matrix[0][0]*origin.x+matrix[0][1]*origin.y+matrix[0][2]*origin.z+matrix[0][3]+1)*512;
+    const auto py=(1-(matrix[1][0]*origin.x+matrix[1][1]*origin.y+matrix[1][2]*origin.z+matrix[1][3]))*384;
+    const int first_y=std::clamp(static_cast<int>(std::lround(-py/24)),-2,60);
+    const int parity=(first_y%2+2)%2;
+    int first_x=2*static_cast<int>(std::lround((-px/48-parity)/2))+parity;
+    if(!m_native_world->horizontal_wrap) {first_x=std::clamp(first_x,-4,62);}
+    int camera_x=(first_x+11)%80;if(camera_x<0) {camera_x+=80;}
+    const auto layout=native_terrain::Layout(camera_x,first_y+12,0,m_native_world->horizontal_wrap);
+    if(!m_native_world->horizontal_wrap) {first_x=layout.first[0];}
+    auto placements=native_terrain::SelectView(layout);
+    // Align the actual camera, including GPU units and Bases, with the native
+    // pixel grid. Translating only the candidate list leaves edge wedges when
+    // the port's smooth camera falls between native rows/columns.
+    m_camera_position.x-=(px+first_x*48)/1024.0f;
+    m_camera_position.y-=(py+first_y*24)*m_viewport.ratio.y/768.0f;
+    ApplyCameraPosition();
     // Default controlled comparison base0x40100000. A measured original run
     // can override its low16 explicitly, without consuming any RNG stream.
     // The opt-in inspector presents resources/sites as well as improvements.

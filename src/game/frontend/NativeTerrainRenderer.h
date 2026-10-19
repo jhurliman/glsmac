@@ -1,13 +1,12 @@
 #pragma once
 #include "game/NativeTerrainWorld.h"
+#include "NativeTerrainView.h"
 #include "SmacTerrainRaster.h"
 #include "SmacLandMaterial.h"
 #include "SmacTerritoryBoundary.h"
 #include <memory>
 
 namespace game::frontend::native_terrain {
-using Point=smac_terrain_raster::Point;
-struct Placement {Point tile,flat_center;uint32_t record_offset;};
 // Original80x80/1024x511 ordinary zoom0 full redraw, including padded rows.
 std::vector<Placement> View(int camera_x,int camera_y,bool horizontal_wrap);
 struct Source {

@@ -148,3 +148,22 @@ frontend must execute the original padded view/pan schedule and keep terrain,
 Base and unit projection coherent before negative-detail live admission and a
 matched viewport can be declared complete. No new full-screen pixel parity,
 climate setup, reload invalidation sequence, or SMAX behavior is claimed here.
+
+## Production view selection
+
+`NativeTerrainView.h` derives padded candidates from camera/layout inputs and
+selects the measured small interior horizontal pan rectangles. The independent
+`tools/reference/verify_viewport_selection.py --cxx clang++ --sanitize` compares
+all2,780 ordered terrain/object selections, both dirty regions, and both pairs
+of preliminary projection coordinates against the original event receipt.
+The existing1,597 original full-view placements remain regression controls.
+
+The live inspector now uses that padded enumeration instead of clipping flat
+centers before painting. Its first grid coordinate is resolved from the existing port camera's flat
+origin, then the actual camera is aligned to that native grid so terrain and GPU
+objects move together. Translating only candidates left edge wedges between
+native rows. This does not establish original input-controller fidelity.
+The live path still performs full repaint and uses backend-copied geometry.
+The measured incremental selector is available but has not yet replaced live
+bitmap scrolling, object projection, name/overlay scheduling, or cache lifetime.
+Negative-detail live geometry remains gated pending those connections.

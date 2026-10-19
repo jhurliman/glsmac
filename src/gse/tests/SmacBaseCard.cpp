@@ -77,10 +77,10 @@ void AddSmacBaseCardTests(task::gsetests::GSETests* task) {
             for(int y=0;y<38;++y) {for(int x=0;x<41;++x) {indexed[(17+y)*100+27+x]=20+(y*41+x)%200;}}
             indexed[17*100+27]=9;indexed[17*100+29]=0;
             const std::array<int,8> selected_sources{{0,2,3,4,6,7,8,10}},roster_sources{{0,2,4,6,8,10,12,14}};
-            for(bool small:{false,true}) {
-                auto card=MakeSmacIndexedBaseCard(indexed,100,75,0,0,small,palette);
+            for(bool roster_case:{false,true}) {
+                auto card=MakeSmacIndexedBaseCard(indexed,100,75,0,0,roster_case,palette);
                 GT_ASSERT(card,"indexed native Base source was rejected");
-                const auto& sources=small?roster_sources:selected_sources;
+                const auto& sources=roster_case?roster_sources:selected_sources;
                 for(size_t x=0;x<sources.size();++x) {
                     const auto raw=indexed[17*100+27+sources[x]];
                     const auto expected=raw==9?types::Color::rgba_t(0):raw==0?types::Color::RGB(0,0,0):palette[raw];

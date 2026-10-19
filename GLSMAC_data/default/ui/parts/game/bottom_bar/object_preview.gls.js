@@ -95,7 +95,8 @@ return {
 
 				f_line(def.name, 16, 'center');
 
-				f_line('(' + this.p.get_stats_str(object) + ')', 14, 'center');
+				const tuple = this.p.get_stats_str(object);
+				f_line(object.is_conventional || object.is_native ? '(' + tuple + ')' : tuple, 14, 'center');
 
 				if (object.is_conventional) {
 					const state = object.get_conventional_state();
@@ -121,7 +122,13 @@ return {
 					const stats = object.query_native_stats(0);
 					f_line(stats.morale_name, 14, 'left');
 					f_line('', 14, 'left');
-					f_line('Moves: ' + this.format_movement(#to_float(stats.remaining_allowance) / #to_float(stats.quantum)), 14, 'left');
+					const native_remaining = stats.remaining_allowance > 999 ? 999 : stats.remaining_allowance;
+					if (native_remaining > 0) {
+						f_line('Moves: ' + this.p.format_points(native_remaining, stats.quantum), 14, 'left');
+					} else {
+						const native_exhausted = f_line('ALREADY MOVED', 14, 'left');
+						native_exhausted.color = 'rgb(255,0,0)';
+					}
 				} else {
 					f_line(this.get_morale('NATIVE', object.morale), 14, 'left');
 					f_line('', 14, 'left');

@@ -291,12 +291,14 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
                 bool invalid=false;try {query(INT64_MAX);}catch(const std::exception&) {invalid=true;}
                 GT_ASSERT(invalid,"Native script viewer narrowed before validation");
                 for(int repeat=0;repeat<2;++repeat) {
+                    auto* tile_wrapper=unit->GetTile()->Wrap(GSE_CALL);
+                    game->GetState()->TriggerObject(game->GetMap(),"tile_preview",ARGS_F(&tile_wrapper){{"tile",tile_wrapper}};});
                     game->GetState()->TriggerObject(game->GetMap(),"unit_preview",ARGS_F(&wrapper){{"unit",wrapper}};});
                     game->GetState()->TriggerObject(game,"unit_select",ARGS_F(&wrapper){{"unit",wrapper}};});
                     check->Run(GSE_CALL,{wrapper,new value::Object(GSE_CALL,{
-                        {"stats",VALUE(value::String,,design==8?"? - ? - 1.0":design==9?"? - ? - 4.0":"? - ? - 8.0")},
+                        {"stats",VALUE(value::String,,design==8?"?-?-1":design==9?"?-?-4":"?-?-8")},
                         {"morale",VALUE(value::String,,design==10?"level1":"level0")},
-                        {"moves",VALUE(value::String,,design==8?"Moves: 1.0":design==9?"Moves: 4.0":"Moves: 8.0")}
+                        {"moves",VALUE(value::String,,design==8?"Moves: 1":design==9?"Moves: 4":"Moves: 8")}
                     })});
                 }
                 GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random && game->GetRandom()->GetStateString()==shared

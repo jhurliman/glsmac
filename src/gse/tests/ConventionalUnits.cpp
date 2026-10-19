@@ -706,7 +706,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					GT_ASSERT( fixture.Snapshot() == before && game->GetRandom()->GetStateString() == jsf && fixture.GameplayRandom() == random
 						&& Unit::GetNextId() == id && fixture.Updates().empty(), "bottom bar changed authoritative world, RNG, ID or presentation queue" ); GT_OK();
 				};
-				auto error = inspect( legacy, "(?) - ? - 2", "native4", "Moves: 1.25" ); if ( !error.empty() ) { return error; }
+				auto error = inspect( legacy, "(?)-?-2", "native4", "Moves: 1.25" ); if ( !error.empty() ) { return error; }
 				error = inspect( unit, rover ? "1-1-2" : "1-1-1", "level1", rover ? "Moves: 2" : "Moves: 1" ); if ( !error.empty() ) { return error; }
 				auto* copied_stats = static_cast< value::Object* >( Call( GSE_CALL, static_cast< value::Object* >( unit->Wrap( GSE_CALL ) ),
 					"query_conventional_stats", { VALUE( value::Int,, 0 ) } ) );
@@ -735,13 +735,13 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					error = inspect( alternate, "1-1-1", "level0", "Moves: 1" ); if ( !error.empty() ) { return error; }
 				}
 				legacy->Legacy().movement = 0.5f; legacy->Legacy().morale = 6;
-				error = inspect( legacy, "(?) - ? - 2", "native6", "Moves: 0.5" ); if ( !error.empty() ) { return error; }
+				error = inspect( legacy, "(?)-?-2", "native6", "Moves: 0.5" ); if ( !error.empty() ) { return error; }
 				auto* tower_def = new StaticDef( "FungalTower", manager->GetMoraleSet( "NATIVE" ), "Immovable fixture", MT_IMMOVABLE, 0.0f,
 					new CvrScoutRender( 2, 0, 0, 1, { 1.0f, 1.0f }, { 128.0f, 128.0f } ) );
 				manager->DefineUnit( tower_def );
 				auto* tower = new Unit( GSE_CALL, manager, 74, tower_def, legacy->m_owner, unit->GetTile(), 0.0f, 2, 1.0f, false );
 				manager->SpawnUnit( GSE_CALL, tower );
-				error = inspect( tower, "? - ? - 0", "native2", "unused" ); if ( !error.empty() ) { return error; }
+				error = inspect( tower, "?-?-0", "native2", "unused" ); if ( !error.empty() ) { return error; }
 				const auto retired_id = tower->m_id;
 				manager->DespawnUnit( GSE_CALL, retired_id );
 				game->GetState()->TriggerObject( game, "unit_despawn", ARGS_F( retired_id ) {
@@ -750,7 +750,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				check->Run( GSE_CALL, { legacy->Wrap( GSE_CALL ), new value::Object( GSE_CALL, {
 					{ "retired_id", VALUE( value::Int,, retired_id ) }
 				} ) } );
-				error = inspect( legacy, "(?) - ? - 2", "native6", "Moves: 0.5" ); if ( !error.empty() ) { return error; }
+				error = inspect( legacy, "(?)-?-2", "native6", "Moves: 0.5" ); if ( !error.empty() ) { return error; }
 				// Losing an admitted query context must fail afresh rather than render
 				// cached values or invent retained morale. No full-world rollback claim.
 				fixture.Early(); const auto stored = unit->Conventional(); const auto random = fixture.GameplayRandom();

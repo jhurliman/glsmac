@@ -82,7 +82,7 @@ return (game) => {
 		if (unit.is_conventional) { check(lines[3].text == 'Independent', 'homeless unit lost source-backed home row'); }
 		if (held) { check(lines[5].text == 'Hold', 'live Hold order row missing'); }
 		check(lines[0].text == unit.get_def().name, 'wrong unit name');
-		check(lines[1].text == '(' + expected.stats + ')', 'wrong preview stats: ' + lines[1].text);
+		check(lines[1].text == (unit.is_conventional || unit.is_native ? '(' + expected.stats + ')' : expected.stats), 'wrong preview stats: ' + lines[1].text);
 		check(lines[2].text == expected.morale, 'wrong preview morale: ' + lines[2].text);
 		if (!unit.is_immovable) { check(lines[4].text == expected.moves, 'wrong remaining movement: ' + lines[4].text); }
 		if (expected.moves == 'ALREADY MOVED') { check(lines[4].color == 'rgb(255,0,0)', 'Exhaustion lost native red warning'); }

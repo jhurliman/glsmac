@@ -188,8 +188,7 @@ return {
 						}
                         if (object.is_native) {
                             const stats = object.query_native_stats(0);
-                            const movement = #to_float(stats.full_allowance) / #to_float(stats.quantum);
-                            return '? - ? - ' + #to_string(#to_float(#round(movement * 100.0)) / 100.0);
+                            return '?-?-' + #to_string(stats.basic_allowance / stats.quantum);
                         }
 						let stats_str = '';
 						// tmp
@@ -199,7 +198,7 @@ return {
 						} else {
 							stats_str += '?';
 						}
-						stats_str += ' - ? - ' + #to_string(#round(def.movement_per_turn));
+						stats_str += '-?-' + #to_string(#round(def.movement_per_turn));
 						return stats_str;
 					}
 				}

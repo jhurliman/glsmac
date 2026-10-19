@@ -1,0 +1,3939 @@
+{
+  "research_id": "stock-smac-terrain-geometry-20261019",
+  "screen": [
+    1024,
+    768
+  ],
+  "map_viewport": [
+    1024,
+    511
+  ],
+  "world": [
+    80,
+    80
+  ],
+  "zoom": 0,
+  "scope": "Eighteen original terrain geometry contexts, final raster observation boundaries;196 generated slope-light entries independently checked. No owned binary/map/PCX payload, whole-scene raster or landmark-deformation parity.",
+  "cases": [
+    {
+      "id": "flat_land_band3",
+      "input": {
+        "tile": [
+          40,
+          40
+        ],
+        "raw_installed_planet": false,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          40,
+          40
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 38,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 40,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 42,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 39,
+            "y": 39,
+            "altitude_band": 3
+          },
+          {
+            "x": 41,
+            "y": 39,
+            "altitude_band": 3
+          },
+          {
+            "x": 38,
+            "y": 40,
+            "altitude_band": 3
+          },
+          {
+            "x": 40,
+            "y": 40,
+            "altitude_band": 3
+          },
+          {
+            "x": 42,
+            "y": 40,
+            "altitude_band": 3
+          },
+          {
+            "x": 39,
+            "y": 41,
+            "altitude_band": 3
+          },
+          {
+            "x": 41,
+            "y": 41,
+            "altitude_band": 3
+          },
+          {
+            "x": 38,
+            "y": 42,
+            "altitude_band": 3
+          },
+          {
+            "x": 40,
+            "y": 42,
+            "altitude_band": 3
+          },
+          {
+            "x": 42,
+            "y": 42,
+            "altitude_band": 3
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          28,
+          28
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          576,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "lighting": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "anchor": [
+          528,
+          264
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                528,
+                288
+              ],
+              [
+                576,
+                264
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                576,
+                264
+              ],
+              [
+                624,
+                288
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                624,
+                288
+              ],
+              [
+                576,
+                312
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                576,
+                312
+              ],
+              [
+                528,
+                288
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "flat_land_band4",
+      "input": {
+        "tile": [
+          40,
+          40
+        ],
+        "raw_installed_planet": false,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          40,
+          40
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 38,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 39,
+            "y": 39,
+            "altitude_band": 4
+          },
+          {
+            "x": 41,
+            "y": 39,
+            "altitude_band": 4
+          },
+          {
+            "x": 38,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 39,
+            "y": 41,
+            "altitude_band": 4
+          },
+          {
+            "x": 41,
+            "y": 41,
+            "altitude_band": 4
+          },
+          {
+            "x": 38,
+            "y": 42,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 42,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 42,
+            "altitude_band": 4
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          28,
+          28
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          576,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "lighting": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "anchor": [
+          528,
+          239
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                528,
+                263
+              ],
+              [
+                576,
+                239
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                576,
+                239
+              ],
+              [
+                624,
+                263
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                624,
+                263
+              ],
+              [
+                576,
+                287
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                576,
+                287
+              ],
+              [
+                528,
+                263
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "flat_land_band7",
+      "input": {
+        "tile": [
+          40,
+          40
+        ],
+        "raw_installed_planet": false,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          40,
+          40
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 38,
+            "y": 38,
+            "altitude_band": 7
+          },
+          {
+            "x": 40,
+            "y": 38,
+            "altitude_band": 7
+          },
+          {
+            "x": 42,
+            "y": 38,
+            "altitude_band": 7
+          },
+          {
+            "x": 39,
+            "y": 39,
+            "altitude_band": 7
+          },
+          {
+            "x": 41,
+            "y": 39,
+            "altitude_band": 7
+          },
+          {
+            "x": 38,
+            "y": 40,
+            "altitude_band": 7
+          },
+          {
+            "x": 40,
+            "y": 40,
+            "altitude_band": 7
+          },
+          {
+            "x": 42,
+            "y": 40,
+            "altitude_band": 7
+          },
+          {
+            "x": 39,
+            "y": 41,
+            "altitude_band": 7
+          },
+          {
+            "x": 41,
+            "y": 41,
+            "altitude_band": 7
+          },
+          {
+            "x": 38,
+            "y": 42,
+            "altitude_band": 7
+          },
+          {
+            "x": 40,
+            "y": 42,
+            "altitude_band": 7
+          },
+          {
+            "x": 42,
+            "y": 42,
+            "altitude_band": 7
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          28,
+          28
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          576,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "lighting": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "anchor": [
+          528,
+          164
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                188
+              ],
+              [
+                528,
+                188
+              ],
+              [
+                576,
+                164
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                188
+              ],
+              [
+                576,
+                164
+              ],
+              [
+                624,
+                188
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                188
+              ],
+              [
+                624,
+                188
+              ],
+              [
+                576,
+                212
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                188
+              ],
+              [
+                576,
+                212
+              ],
+              [
+                528,
+                188
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "single_band4_hill",
+      "input": {
+        "tile": [
+          40,
+          40
+        ],
+        "raw_installed_planet": false,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          40,
+          40
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 38,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 40,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 42,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 39,
+            "y": 39,
+            "altitude_band": 3
+          },
+          {
+            "x": 41,
+            "y": 39,
+            "altitude_band": 3
+          },
+          {
+            "x": 38,
+            "y": 40,
+            "altitude_band": 3
+          },
+          {
+            "x": 40,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 40,
+            "altitude_band": 3
+          },
+          {
+            "x": 39,
+            "y": 41,
+            "altitude_band": 3
+          },
+          {
+            "x": 41,
+            "y": 41,
+            "altitude_band": 3
+          },
+          {
+            "x": 38,
+            "y": 42,
+            "altitude_band": 3
+          },
+          {
+            "x": 40,
+            "y": 42,
+            "altitude_band": 3
+          },
+          {
+            "x": 42,
+            "y": 42,
+            "altitude_band": 3
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          28,
+          28
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          576,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          25,
+          6,
+          6,
+          6,
+          6
+        ],
+        "lighting": [
+          0,
+          1,
+          1,
+          -2,
+          -2
+        ],
+        "anchor": [
+          528,
+          258
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                528,
+                282
+              ],
+              [
+                576,
+                258
+              ]
+            ],
+            "lighting": [
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                576,
+                258
+              ],
+              [
+                624,
+                282
+              ]
+            ],
+            "lighting": [
+              0,
+              1,
+              -2
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                624,
+                282
+              ],
+              [
+                576,
+                306
+              ]
+            ],
+            "lighting": [
+              0,
+              -2,
+              -2
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                576,
+                306
+              ],
+              [
+                528,
+                282
+              ]
+            ],
+            "lighting": [
+              0,
+              -2,
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "contour0_same_band4",
+      "input": {
+        "tile": [
+          40,
+          40
+        ],
+        "raw_installed_planet": false,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          40,
+          40
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 38,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 39,
+            "y": 39,
+            "altitude_band": 4
+          },
+          {
+            "x": 41,
+            "y": 39,
+            "altitude_band": 4
+          },
+          {
+            "x": 38,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 39,
+            "y": 41,
+            "altitude_band": 4
+          },
+          {
+            "x": 41,
+            "y": 41,
+            "altitude_band": 4
+          },
+          {
+            "x": 38,
+            "y": 42,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 42,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 42,
+            "altitude_band": 4
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          28,
+          28
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          576,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "lighting": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "anchor": [
+          528,
+          239
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                528,
+                263
+              ],
+              [
+                576,
+                239
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                576,
+                239
+              ],
+              [
+                624,
+                263
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                624,
+                263
+              ],
+              [
+                576,
+                287
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                576,
+                287
+              ],
+              [
+                528,
+                263
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "contour125_same_band4",
+      "input": {
+        "tile": [
+          40,
+          40
+        ],
+        "raw_installed_planet": false,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          40,
+          40
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 38,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 39,
+            "y": 39,
+            "altitude_band": 4
+          },
+          {
+            "x": 41,
+            "y": 39,
+            "altitude_band": 4
+          },
+          {
+            "x": 38,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 39,
+            "y": 41,
+            "altitude_band": 4
+          },
+          {
+            "x": 41,
+            "y": 41,
+            "altitude_band": 4
+          },
+          {
+            "x": 38,
+            "y": 42,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 42,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 42,
+            "altitude_band": 4
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          28,
+          28
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          576,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "lighting": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "anchor": [
+          528,
+          239
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                528,
+                263
+              ],
+              [
+                576,
+                239
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                576,
+                239
+              ],
+              [
+                624,
+                263
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                624,
+                263
+              ],
+              [
+                576,
+                287
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                576,
+                287
+              ],
+              [
+                528,
+                263
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "west_east_slope",
+      "input": {
+        "tile": [
+          40,
+          40
+        ],
+        "raw_installed_planet": false,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          40,
+          40
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 38,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 40,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 39,
+            "y": 39,
+            "altitude_band": 3
+          },
+          {
+            "x": 41,
+            "y": 39,
+            "altitude_band": 4
+          },
+          {
+            "x": 38,
+            "y": 40,
+            "altitude_band": 3
+          },
+          {
+            "x": 40,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 39,
+            "y": 41,
+            "altitude_band": 3
+          },
+          {
+            "x": 41,
+            "y": 41,
+            "altitude_band": 4
+          },
+          {
+            "x": 38,
+            "y": 42,
+            "altitude_band": 3
+          },
+          {
+            "x": 40,
+            "y": 42,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 42,
+            "altitude_band": 4
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          28,
+          28
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          576,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          25,
+          6,
+          18,
+          25,
+          18
+        ],
+        "lighting": [
+          1,
+          1,
+          1,
+          0,
+          1
+        ],
+        "anchor": [
+          528,
+          248
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                528,
+                282
+              ],
+              [
+                576,
+                246
+              ]
+            ],
+            "lighting": [
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                576,
+                246
+              ],
+              [
+                624,
+                263
+              ]
+            ],
+            "lighting": [
+              1,
+              1,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                624,
+                263
+              ],
+              [
+                576,
+                294
+              ]
+            ],
+            "lighting": [
+              1,
+              0,
+              1
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                576,
+                294
+              ],
+              [
+                528,
+                282
+              ]
+            ],
+            "lighting": [
+              1,
+              1,
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "coast_band4_next_to_sea",
+      "input": {
+        "tile": [
+          40,
+          40
+        ],
+        "raw_installed_planet": false,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          40,
+          40
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 38,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 39,
+            "y": 39,
+            "altitude_band": 4
+          },
+          {
+            "x": 41,
+            "y": 39,
+            "altitude_band": 4
+          },
+          {
+            "x": 38,
+            "y": 40,
+            "altitude_band": 2
+          },
+          {
+            "x": 40,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 39,
+            "y": 41,
+            "altitude_band": 4
+          },
+          {
+            "x": 41,
+            "y": 41,
+            "altitude_band": 4
+          },
+          {
+            "x": 38,
+            "y": 42,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 42,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 42,
+            "altitude_band": 4
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          28,
+          28
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          576,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          25,
+          0,
+          25,
+          25,
+          25
+        ],
+        "lighting": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "anchor": [
+          528,
+          246
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                528,
+                288
+              ],
+              [
+                576,
+                239
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                576,
+                239
+              ],
+              [
+                624,
+                263
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                624,
+                263
+              ],
+              [
+                576,
+                287
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                263
+              ],
+              [
+                576,
+                287
+              ],
+              [
+                528,
+                288
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "wrap_west_shared_corner",
+      "input": {
+        "tile": [
+          0,
+          40
+        ],
+        "raw_installed_planet": false,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          0,
+          40
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 78,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 0,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 2,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 79,
+            "y": 39,
+            "altitude_band": 3
+          },
+          {
+            "x": 1,
+            "y": 39,
+            "altitude_band": 3
+          },
+          {
+            "x": 78,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 0,
+            "y": 40,
+            "altitude_band": 3
+          },
+          {
+            "x": 2,
+            "y": 40,
+            "altitude_band": 3
+          },
+          {
+            "x": 79,
+            "y": 41,
+            "altitude_band": 3
+          },
+          {
+            "x": 1,
+            "y": 41,
+            "altitude_band": 3
+          },
+          {
+            "x": 78,
+            "y": 42,
+            "altitude_band": 3
+          },
+          {
+            "x": 0,
+            "y": 42,
+            "altitude_band": 3
+          },
+          {
+            "x": 2,
+            "y": 42,
+            "altitude_band": 3
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          68,
+          28
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          576,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          0,
+          6,
+          0,
+          0,
+          0
+        ],
+        "lighting": [
+          -2,
+          -2,
+          0,
+          0,
+          -1
+        ],
+        "anchor": [
+          528,
+          263
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                528,
+                282
+              ],
+              [
+                576,
+                264
+              ]
+            ],
+            "lighting": [
+              -2,
+              -2,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                576,
+                264
+              ],
+              [
+                624,
+                288
+              ]
+            ],
+            "lighting": [
+              -2,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                624,
+                288
+              ],
+              [
+                576,
+                312
+              ]
+            ],
+            "lighting": [
+              -2,
+              0,
+              -1
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                576,
+                312
+              ],
+              [
+                528,
+                282
+              ]
+            ],
+            "lighting": [
+              -2,
+              -1,
+              -2
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "wrap_east_shared_corner",
+      "input": {
+        "tile": [
+          78,
+          40
+        ],
+        "raw_installed_planet": false,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          0,
+          40
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 76,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 78,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 0,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 77,
+            "y": 39,
+            "altitude_band": 3
+          },
+          {
+            "x": 79,
+            "y": 39,
+            "altitude_band": 3
+          },
+          {
+            "x": 76,
+            "y": 40,
+            "altitude_band": 3
+          },
+          {
+            "x": 78,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 0,
+            "y": 40,
+            "altitude_band": 3
+          },
+          {
+            "x": 77,
+            "y": 41,
+            "altitude_band": 3
+          },
+          {
+            "x": 79,
+            "y": 41,
+            "altitude_band": 3
+          },
+          {
+            "x": 76,
+            "y": 42,
+            "altitude_band": 3
+          },
+          {
+            "x": 78,
+            "y": 42,
+            "altitude_band": 3
+          },
+          {
+            "x": 0,
+            "y": 42,
+            "altitude_band": 3
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          68,
+          28
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          480,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          25,
+          6,
+          6,
+          6,
+          6
+        ],
+        "lighting": [
+          0,
+          1,
+          1,
+          -2,
+          -2
+        ],
+        "anchor": [
+          432,
+          258
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                480,
+                263
+              ],
+              [
+                432,
+                282
+              ],
+              [
+                480,
+                258
+              ]
+            ],
+            "lighting": [
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                480,
+                263
+              ],
+              [
+                480,
+                258
+              ],
+              [
+                528,
+                282
+              ]
+            ],
+            "lighting": [
+              0,
+              1,
+              -2
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                480,
+                263
+              ],
+              [
+                528,
+                282
+              ],
+              [
+                480,
+                306
+              ]
+            ],
+            "lighting": [
+              0,
+              -2,
+              -2
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                480,
+                263
+              ],
+              [
+                480,
+                306
+              ],
+              [
+                432,
+                282
+              ]
+            ],
+            "lighting": [
+              0,
+              -2,
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "flat_map_west_clip",
+      "input": {
+        "tile": [
+          0,
+          40
+        ],
+        "raw_installed_planet": false,
+        "flat_map": true,
+        "low_relief": false,
+        "camera_center": [
+          0,
+          40
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 0,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 2,
+            "y": 38,
+            "altitude_band": 4
+          },
+          {
+            "x": 1,
+            "y": 39,
+            "altitude_band": 4
+          },
+          {
+            "x": 0,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 2,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 1,
+            "y": 41,
+            "altitude_band": 4
+          },
+          {
+            "x": 0,
+            "y": 42,
+            "altitude_band": 4
+          },
+          {
+            "x": 2,
+            "y": 42,
+            "altitude_band": 4
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          -4,
+          28
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          192,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          25,
+          0,
+          0,
+          25,
+          0
+        ],
+        "lighting": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "anchor": [
+          144,
+          258
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                192,
+                263
+              ],
+              [
+                144,
+                288
+              ],
+              [
+                192,
+                264
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                192,
+                263
+              ],
+              [
+                192,
+                264
+              ],
+              [
+                240,
+                263
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                192,
+                263
+              ],
+              [
+                240,
+                263
+              ],
+              [
+                192,
+                312
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                192,
+                263
+              ],
+              [
+                192,
+                312
+              ],
+              [
+                144,
+                288
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "north_pole_clip",
+      "input": {
+        "tile": [
+          40,
+          0
+        ],
+        "raw_installed_planet": false,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          40,
+          2
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 38,
+            "y": 0,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 0,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 0,
+            "altitude_band": 4
+          },
+          {
+            "x": 39,
+            "y": 1,
+            "altitude_band": 4
+          },
+          {
+            "x": 41,
+            "y": 1,
+            "altitude_band": 4
+          },
+          {
+            "x": 38,
+            "y": 2,
+            "altitude_band": 4
+          },
+          {
+            "x": 40,
+            "y": 2,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 2,
+            "altitude_band": 4
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          28,
+          -2
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          576,
+          48
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          25,
+          0,
+          0,
+          0,
+          25
+        ],
+        "lighting": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "anchor": [
+          528,
+          18
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                23
+              ],
+              [
+                528,
+                48
+              ],
+              [
+                576,
+                24
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                23
+              ],
+              [
+                576,
+                24
+              ],
+              [
+                624,
+                48
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                23
+              ],
+              [
+                624,
+                48
+              ],
+              [
+                576,
+                47
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                23
+              ],
+              [
+                576,
+                47
+              ],
+              [
+                528,
+                48
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "flattened_single_hill",
+      "input": {
+        "tile": [
+          40,
+          40
+        ],
+        "raw_installed_planet": false,
+        "flat_map": false,
+        "low_relief": true,
+        "camera_center": [
+          40,
+          40
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 38,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 40,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 42,
+            "y": 38,
+            "altitude_band": 3
+          },
+          {
+            "x": 39,
+            "y": 39,
+            "altitude_band": 3
+          },
+          {
+            "x": 41,
+            "y": 39,
+            "altitude_band": 3
+          },
+          {
+            "x": 38,
+            "y": 40,
+            "altitude_band": 3
+          },
+          {
+            "x": 40,
+            "y": 40,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 40,
+            "altitude_band": 3
+          },
+          {
+            "x": 39,
+            "y": 41,
+            "altitude_band": 3
+          },
+          {
+            "x": 41,
+            "y": 41,
+            "altitude_band": 3
+          },
+          {
+            "x": 38,
+            "y": 42,
+            "altitude_band": 3
+          },
+          {
+            "x": 40,
+            "y": 42,
+            "altitude_band": 3
+          },
+          {
+            "x": 42,
+            "y": 42,
+            "altitude_band": 3
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          28,
+          28
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          576,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          8,
+          2,
+          2,
+          2,
+          2
+        ],
+        "lighting": [
+          0,
+          1,
+          1,
+          -2,
+          -2
+        ],
+        "anchor": [
+          528,
+          262
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                280
+              ],
+              [
+                528,
+                286
+              ],
+              [
+                576,
+                262
+              ]
+            ],
+            "lighting": [
+              0,
+              1,
+              1
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                280
+              ],
+              [
+                576,
+                262
+              ],
+              [
+                624,
+                286
+              ]
+            ],
+            "lighting": [
+              0,
+              1,
+              -2
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                280
+              ],
+              [
+                624,
+                286
+              ],
+              [
+                576,
+                310
+              ]
+            ],
+            "lighting": [
+              0,
+              -2,
+              -2
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                576,
+                280
+              ],
+              [
+                576,
+                310
+              ],
+              [
+                528,
+                286
+              ]
+            ],
+            "lighting": [
+              0,
+              -2,
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "installed_planet_coast",
+      "input": {
+        "tile": [
+          35,
+          5
+        ],
+        "raw_installed_planet": true,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          35,
+          5
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 33,
+            "y": 3,
+            "altitude_band": 2
+          },
+          {
+            "x": 35,
+            "y": 3,
+            "altitude_band": 2
+          },
+          {
+            "x": 37,
+            "y": 3,
+            "altitude_band": 2
+          },
+          {
+            "x": 34,
+            "y": 4,
+            "altitude_band": 2
+          },
+          {
+            "x": 36,
+            "y": 4,
+            "altitude_band": 2
+          },
+          {
+            "x": 33,
+            "y": 5,
+            "altitude_band": 2
+          },
+          {
+            "x": 35,
+            "y": 5,
+            "altitude_band": 3
+          },
+          {
+            "x": 37,
+            "y": 5,
+            "altitude_band": 2
+          },
+          {
+            "x": 34,
+            "y": 6,
+            "altitude_band": 3
+          },
+          {
+            "x": 36,
+            "y": 6,
+            "altitude_band": 3
+          },
+          {
+            "x": 33,
+            "y": 7,
+            "altitude_band": 3
+          },
+          {
+            "x": 35,
+            "y": 7,
+            "altitude_band": 3
+          },
+          {
+            "x": 37,
+            "y": 7,
+            "altitude_band": 3
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          24,
+          -2
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          528,
+          168
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "lighting": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "anchor": [
+          480,
+          144
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                528,
+                168
+              ],
+              [
+                480,
+                168
+              ],
+              [
+                528,
+                144
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "detail_triangle",
+            "vertices": [
+              [
+                528,
+                168
+              ],
+              [
+                480,
+                168
+              ],
+              [
+                528,
+                144
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                528,
+                168
+              ],
+              [
+                528,
+                144
+              ],
+              [
+                576,
+                168
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "detail_triangle",
+            "vertices": [
+              [
+                528,
+                168
+              ],
+              [
+                528,
+                144
+              ],
+              [
+                576,
+                168
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                528,
+                168
+              ],
+              [
+                576,
+                168
+              ],
+              [
+                528,
+                192
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "detail_triangle",
+            "vertices": [
+              [
+                528,
+                168
+              ],
+              [
+                576,
+                168
+              ],
+              [
+                528,
+                192
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                528,
+                168
+              ],
+              [
+                528,
+                192
+              ],
+              [
+                480,
+                168
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "detail_triangle",
+            "vertices": [
+              [
+                528,
+                168
+              ],
+              [
+                528,
+                192
+              ],
+              [
+                480,
+                168
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "installed_planet_slope",
+      "input": {
+        "tile": [
+          43,
+          9
+        ],
+        "raw_installed_planet": true,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          43,
+          9
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 41,
+            "y": 7,
+            "altitude_band": 3
+          },
+          {
+            "x": 43,
+            "y": 7,
+            "altitude_band": 3
+          },
+          {
+            "x": 45,
+            "y": 7,
+            "altitude_band": 3
+          },
+          {
+            "x": 42,
+            "y": 8,
+            "altitude_band": 3
+          },
+          {
+            "x": 44,
+            "y": 8,
+            "altitude_band": 4
+          },
+          {
+            "x": 41,
+            "y": 9,
+            "altitude_band": 3
+          },
+          {
+            "x": 43,
+            "y": 9,
+            "altitude_band": 4
+          },
+          {
+            "x": 45,
+            "y": 9,
+            "altitude_band": 4
+          },
+          {
+            "x": 42,
+            "y": 10,
+            "altitude_band": 3
+          },
+          {
+            "x": 44,
+            "y": 10,
+            "altitude_band": 4
+          },
+          {
+            "x": 41,
+            "y": 11,
+            "altitude_band": 3
+          },
+          {
+            "x": 43,
+            "y": 11,
+            "altitude_band": 4
+          },
+          {
+            "x": 45,
+            "y": 11,
+            "altitude_band": 3
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          32,
+          -2
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          528,
+          264
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          25,
+          6,
+          12,
+          25,
+          18
+        ],
+        "lighting": [
+          1,
+          2,
+          3,
+          0,
+          1
+        ],
+        "anchor": [
+          480,
+          225
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                528,
+                239
+              ],
+              [
+                480,
+                258
+              ],
+              [
+                528,
+                228
+              ]
+            ],
+            "lighting": [
+              1,
+              2,
+              3
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                528,
+                239
+              ],
+              [
+                528,
+                228
+              ],
+              [
+                576,
+                239
+              ]
+            ],
+            "lighting": [
+              1,
+              3,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                528,
+                239
+              ],
+              [
+                576,
+                239
+              ],
+              [
+                528,
+                270
+              ]
+            ],
+            "lighting": [
+              1,
+              0,
+              1
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                528,
+                239
+              ],
+              [
+                528,
+                270
+              ],
+              [
+                480,
+                258
+              ]
+            ],
+            "lighting": [
+              1,
+              1,
+              2
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "installed_planet_flat",
+      "input": {
+        "tile": [
+          25,
+          21
+        ],
+        "raw_installed_planet": true,
+        "flat_map": false,
+        "low_relief": false,
+        "camera_center": [
+          25,
+          21
+        ],
+        "altitude_band_excerpt": [
+          {
+            "x": 23,
+            "y": 19,
+            "altitude_band": 3
+          },
+          {
+            "x": 25,
+            "y": 19,
+            "altitude_band": 3
+          },
+          {
+            "x": 27,
+            "y": 19,
+            "altitude_band": 3
+          },
+          {
+            "x": 24,
+            "y": 20,
+            "altitude_band": 3
+          },
+          {
+            "x": 26,
+            "y": 20,
+            "altitude_band": 3
+          },
+          {
+            "x": 23,
+            "y": 21,
+            "altitude_band": 3
+          },
+          {
+            "x": 25,
+            "y": 21,
+            "altitude_band": 3
+          },
+          {
+            "x": 27,
+            "y": 21,
+            "altitude_band": 3
+          },
+          {
+            "x": 24,
+            "y": 22,
+            "altitude_band": 3
+          },
+          {
+            "x": 26,
+            "y": 22,
+            "altitude_band": 3
+          },
+          {
+            "x": 23,
+            "y": 23,
+            "altitude_band": 3
+          },
+          {
+            "x": 25,
+            "y": 23,
+            "altitude_band": 3
+          },
+          {
+            "x": 27,
+            "y": 23,
+            "altitude_band": 3
+          }
+        ],
+        "excerpt_limit": "radius2 tile excerpt; independent native probe/model use the whole map for lighting"
+      },
+      "expected": {
+        "view_first": [
+          15,
+          9
+        ],
+        "view_offset": [
+          0,
+          0
+        ],
+        "flat_projected_center": [
+          480,
+          288
+        ],
+        "vertex_order": [
+          "C",
+          "W",
+          "N",
+          "E",
+          "S"
+        ],
+        "heights": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "lighting": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "anchor": [
+          432,
+          264
+        ],
+        "submissions": [
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                480,
+                288
+              ],
+              [
+                432,
+                288
+              ],
+              [
+                480,
+                264
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "detail_triangle",
+            "vertices": [
+              [
+                480,
+                288
+              ],
+              [
+                432,
+                288
+              ],
+              [
+                480,
+                264
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                480,
+                288
+              ],
+              [
+                480,
+                264
+              ],
+              [
+                528,
+                288
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "detail_triangle",
+            "vertices": [
+              [
+                480,
+                288
+              ],
+              [
+                480,
+                264
+              ],
+              [
+                528,
+                288
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                480,
+                288
+              ],
+              [
+                528,
+                288
+              ],
+              [
+                480,
+                312
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "detail_triangle",
+            "vertices": [
+              [
+                480,
+                288
+              ],
+              [
+                528,
+                288
+              ],
+              [
+                480,
+                312
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "base_triangle",
+            "vertices": [
+              [
+                480,
+                288
+              ],
+              [
+                480,
+                312
+              ],
+              [
+                432,
+                288
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "role": "detail_triangle",
+            "vertices": [
+              [
+                480,
+                288
+              ],
+              [
+                480,
+                312
+              ],
+              [
+                432,
+                288
+              ]
+            ],
+            "lighting": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sea_contour20",
+      "input": {
+        "tile": [
+          40,
+          40
+        ],
+        "uniform_sea_band": 2,
+        "contour": 20,
+        "camera_center": [
+          40,
+          40
+        ]
+      },
+      "expected": {
+        "heights": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "anchor": [
+          528,
+          264
+        ],
+        "submissions": [
+          {
+            "role": "depth_overlay_quad",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                552,
+                300
+              ],
+              [
+                528,
+                288
+              ],
+              [
+                552,
+                276
+              ]
+            ],
+            "depth": [
+              9,
+              9,
+              9,
+              9
+            ]
+          },
+          {
+            "role": "base_water_quad",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                552,
+                300
+              ],
+              [
+                528,
+                288
+              ],
+              [
+                552,
+                276
+              ]
+            ],
+            "depth": [
+              25,
+              25,
+              25,
+              25
+            ]
+          },
+          {
+            "role": "depth_overlay_quad",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                552,
+                276
+              ],
+              [
+                576,
+                264
+              ],
+              [
+                600,
+                276
+              ]
+            ],
+            "depth": [
+              9,
+              9,
+              9,
+              9
+            ]
+          },
+          {
+            "role": "base_water_quad",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                552,
+                276
+              ],
+              [
+                576,
+                264
+              ],
+              [
+                600,
+                276
+              ]
+            ],
+            "depth": [
+              25,
+              25,
+              25,
+              25
+            ]
+          },
+          {
+            "role": "depth_overlay_quad",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                600,
+                276
+              ],
+              [
+                624,
+                288
+              ],
+              [
+                600,
+                300
+              ]
+            ],
+            "depth": [
+              9,
+              9,
+              9,
+              9
+            ]
+          },
+          {
+            "role": "base_water_quad",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                600,
+                276
+              ],
+              [
+                624,
+                288
+              ],
+              [
+                600,
+                300
+              ]
+            ],
+            "depth": [
+              25,
+              25,
+              25,
+              25
+            ]
+          },
+          {
+            "role": "depth_overlay_quad",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                600,
+                300
+              ],
+              [
+                576,
+                312
+              ],
+              [
+                552,
+                300
+              ]
+            ],
+            "depth": [
+              9,
+              9,
+              9,
+              9
+            ]
+          },
+          {
+            "role": "base_water_quad",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                600,
+                300
+              ],
+              [
+                576,
+                312
+              ],
+              [
+                552,
+                300
+              ]
+            ],
+            "depth": [
+              25,
+              25,
+              25,
+              25
+            ]
+          }
+        ],
+        "sampler_calls": 16
+      }
+    },
+    {
+      "id": "sea_contour37",
+      "input": {
+        "tile": [
+          40,
+          40
+        ],
+        "uniform_sea_band": 2,
+        "contour": 37,
+        "camera_center": [
+          40,
+          40
+        ]
+      },
+      "expected": {
+        "heights": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "anchor": [
+          528,
+          264
+        ],
+        "submissions": [
+          {
+            "role": "base_water_quad",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                552,
+                300
+              ],
+              [
+                528,
+                288
+              ],
+              [
+                552,
+                276
+              ]
+            ],
+            "depth": [
+              11,
+              11,
+              11,
+              11
+            ]
+          },
+          {
+            "role": "base_water_quad",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                552,
+                276
+              ],
+              [
+                576,
+                264
+              ],
+              [
+                600,
+                276
+              ]
+            ],
+            "depth": [
+              11,
+              11,
+              11,
+              11
+            ]
+          },
+          {
+            "role": "base_water_quad",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                600,
+                276
+              ],
+              [
+                624,
+                288
+              ],
+              [
+                600,
+                300
+              ]
+            ],
+            "depth": [
+              11,
+              11,
+              11,
+              11
+            ]
+          },
+          {
+            "role": "base_water_quad",
+            "vertices": [
+              [
+                576,
+                288
+              ],
+              [
+                600,
+                300
+              ],
+              [
+                576,
+                312
+              ],
+              [
+                552,
+                300
+              ]
+            ],
+            "depth": [
+              11,
+              11,
+              11,
+              11
+            ]
+          }
+        ],
+        "sampler_calls": 16
+      }
+    }
+  ]
+}

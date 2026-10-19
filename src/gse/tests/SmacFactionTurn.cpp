@@ -13,8 +13,8 @@ using Phase=Turn::Phase;
 bool Rejects(const std::function<void()>& f) {try {f();}catch(const std::exception&){return true;}return false;}
 Turn Saved(const Turn& state) {return Turn::Deserialize(state.Serialize().ToString());}
 std::string Wire(const Turn& state,size_t changed,int64_t value) {
-    types::Buffer b;const auto t=state.Current();const int64_t words[]{0x534d4654,1,t.turn,t.sequence,static_cast<int32_t>(t.phase),state.Actors(),state.Focus(),t.owner,state.Passed(),state.UpkeepEntered()};
-    for(size_t i=0;i<10;++i) {b.WriteInt(i==changed ? value:words[i]);}return b.ToString();
+    types::Buffer b;const auto t=state.Current();const int64_t words[]{0x534d4654,1,t.turn,t.sequence,static_cast<int32_t>(t.phase),state.Actors(),state.Focus(),t.owner,state.Passed(),state.UpkeepEntered(),state.RefreshedOwners()};
+    for(size_t i=0;i<11;++i) {b.WriteInt(i==changed ? value:words[i]);}return b.ToString();
 }
 }
 void AddSmacFactionTurnTests(task::gsetests::GSETests* task) {
@@ -80,7 +80,7 @@ void AddSmacFactionTurnTests(task::gsetests::GSETests* task) {
         const auto wire=turn.Serialize().ToString();GT_ASSERT(Wire(turn,SIZE_MAX,0)==wire && Saved(turn)==turn,"Cursor codec changed exact owned state");
         for(size_t n=0;n<wire.size();++n) {GT_ASSERT(Rejects([&]{(void)Turn::Deserialize(wire.substr(0,n));}),"Truncated cursor restored");}
         GT_ASSERT(Rejects([&]{(void)Turn::Deserialize(wire+"x");}) && Rejects([&]{(void)Turn::Deserialize(std::string(Turn::MAX_WIRE_BYTES+1,'x'));}),"Extra cursor fields restored");
-        for(const auto bad:std::vector<std::pair<size_t,int64_t>>{{0,0},{1,0},{2,-1},{2,int64_t(INT32_MAX)+1},{3,-1},{3,0},{4,7},{5,255},{5,256},{6,0},{6,8},{7,8},{8,2},{9,0},{9,6}}) {
+        for(const auto bad:std::vector<std::pair<size_t,int64_t>>{{0,0},{1,0},{2,-1},{2,int64_t(INT32_MAX)+1},{3,-1},{3,0},{4,7},{5,255},{5,256},{6,0},{6,8},{7,8},{8,2},{9,0},{9,6},{10,0},{10,255}}) {
             GT_ASSERT(Rejects([&]{(void)Turn::Deserialize(Wire(turn,bad.first,bad.second));}),"Malformed cursor phase or narrowed field restored");
         }
         auto exhausted=Turn::Deserialize(Wire(turn,3,INT64_MAX));const auto before=exhausted;

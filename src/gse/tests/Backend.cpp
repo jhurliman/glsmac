@@ -420,6 +420,34 @@ public:
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() { edit( m_game.m_simulation->value ); } );
 	}
 	void RefreshPopulation(int32_t owner) {m_game.RefreshCanonicalPopulationAggregate(owner);}
+    std::string CheckFactionCursorWorldRestore() {
+        using namespace game::backend;
+        ConfigureConventional(false,3,false);
+        std::string saved;std::optional<faction::SmacSimulationState> expected;
+        const auto captured=WithScriptValues([&](GSE_CALLABLE)->std::string {
+            auto& state=m_game.m_simulation->value;uint8_t actors=0;int32_t focus=0;
+            for(const auto& owner:state.roster) {actors|=uint8_t(1u<<owner.simulation_id);if(owner.slot==0) {focus=owner.simulation_id;}
+                state.social.BuildStartupIntrinsic(owner.simulation_id,*m_state->m_settings.global.GetSmacTechnologyRules(),*m_state->m_settings.global.GetSmacFactionStartupRules());}
+            state.human_membership=uint8_t(1u<<focus);state.faction_turn=faction::SmacFactionTurn::NewWorld(actors,focus);
+            auto& cursor=*state.faction_turn;cursor.BeginRound(cursor.Current());cursor.CompleteWildlifeUpkeep(cursor.Current());cursor.CompleteWildlifeCommand(cursor.Current(),actors);
+            GT_ASSERT(cursor.Current().owner==focus,"Fixture focus is not the first bound owner");
+            cursor.BeginOwnerUpkeep(cursor.Current(),actors);
+            state.social.RefreshOwnerForFirstCommand(focus,*m_state->m_settings.global.GetSmacTechnologyRules(),*m_state->m_settings.global.GetSmacFactionStartupRules());
+            cursor.CompleteOwnerUpkeep(cursor.Current(),actors);SetSnapshotTurn(1);
+            state.ValidateTurn(1);saved=WorldSnapshot();expected=state;GT_OK();
+        });GT_ASSERT(captured.empty(),"Partial cursor world writer: "+captured);
+        BackendFixture destination;destination.ConfigureConventional(true,3,false);
+        return destination.WithScriptValues([&](GSE_CALLABLE)->std::string {
+            destination.RestoreConventional(GSE_CALL,saved,true);
+            GT_ASSERT(destination.m_game.m_simulation->value==*expected && destination.m_game.GetTurnId()==1,"Actual world-body restore replayed or lost cursor progress");
+            destination.m_game.ValidateCurrentSimulation();
+            const auto& state=destination.m_game.m_simulation->value;const auto scheduled=state.faction_turn->Current().owner;
+            for(const auto& owner:state.social.factions) {
+                GT_ASSERT(owner.phase==(owner.admission.simulation_id==scheduled ? faction::SmacFactionSocialState::Phase::Refreshed:faction::SmacFactionSocialState::Phase::Early)
+                    && owner.retained && owner.third,"Actual body decoder refreshed a future owner or discarded baseline authority");
+            }GT_OK();
+        });
+    }
     std::string CheckCrossWorldStrategyStorage() {
         using namespace game::backend;
         ConfigureConventional(true,3,true);
@@ -11681,6 +11709,9 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 
     task->AddTest("SMAC perihelion actual turn hooks preserve calendar ordering legacy absence and failure atomicity",GT(){
         BackendFixture fixture;return fixture.CheckPerihelionAdvance();
+    });
+    task->AddTest("SMAC faction cursor actual world-body restore preserves partial first-round authority",GT(){
+        BackendFixture fixture;return fixture.CheckFactionCursorWorldRestore();
     });
     task->AddTest("SMAC actual Reset and new simulation retain ecology strategy and score history",GT(){
         BackendFixture fixture;return fixture.CheckCrossWorldStrategyStorage();

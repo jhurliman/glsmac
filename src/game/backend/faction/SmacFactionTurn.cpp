@@ -13,17 +13,18 @@ SmacFactionTurn SmacFactionTurn::NewWorld(uint8_t actors,int32_t human_focus) {
     SmacFactionTurn result;result.m_actors=actors;result.m_focus=human_focus;result.Validate();return result;
 }
 bool SmacFactionTurn::operator==(const SmacFactionTurn& other) const {
-    return Current()==other.Current() && m_focus==other.m_focus && m_actors==other.m_actors && m_passed==other.m_passed && m_upkeep==other.m_upkeep;
+    return Current()==other.Current() && m_focus==other.m_focus && m_actors==other.m_actors && m_passed==other.m_passed && m_upkeep==other.m_upkeep && m_refreshed==other.m_refreshed;
 }
 void SmacFactionTurn::Validate() const {
     Check(m_turn>=0 && m_sequence>=0 && m_actors && !(m_actors&1) && m_focus>=1 && m_focus<=7
         && (m_actors&(1u<<m_focus)),"Faction cursor lacks admitted actors or human focus");
-    Check(!(m_passed&~m_actors) && !(m_upkeep&~m_actors),"Faction cursor history includes an unbound actor");
+    Check(!(m_passed&~m_actors) && !(m_upkeep&~m_actors) && !(m_refreshed&~m_actors) && !(m_upkeep&~m_refreshed),"Faction cursor history includes an unbound actor");
     Check(m_phase>=Phase::Global && m_phase<=Phase::Tail,"Unknown faction cursor phase");
     if(!m_turn) {
-        Check(m_phase==Phase::Global && !m_owner && !m_sequence && !m_passed && !m_upkeep,"Unstarted faction cursor carries processed state");return;
+        Check(m_phase==Phase::Global && !m_owner && !m_sequence && !m_passed && !m_upkeep && !m_refreshed,"Unstarted faction cursor carries processed state");return;
     }
     Check(m_sequence>0,"Started faction cursor lacks a transition sequence");
+    if(m_turn==1) {Check(m_refreshed==m_upkeep,"First-round social history precedes its owner upkeep");}
     if(m_phase==Phase::OwnerPending || m_phase==Phase::OwnerUpkeep || m_phase==Phase::OwnerCommand) {
         Check(m_owner>=1 && m_owner<=7 && (m_actors&(1u<<m_owner)),"Faction cursor scheduled owner is unbound");
         const auto prior=uint8_t(m_actors&((1u<<m_owner)-1));
@@ -62,7 +63,7 @@ void SmacFactionTurn::CompleteWildlifeCommand(Ticket expected,uint8_t active) {
 }
 void SmacFactionTurn::BeginOwnerUpkeep(Ticket expected,uint8_t active) {
     Require(expected,Phase::OwnerPending);RequireActive(active);Check(active&(1u<<m_owner),"Inactive owner requires explicit retirement");
-    auto next=*this;next.m_upkeep|=uint8_t(1u<<m_owner);next.m_phase=Phase::OwnerUpkeep;Commit(next);
+    auto next=*this;next.m_upkeep|=uint8_t(1u<<m_owner);next.m_refreshed|=uint8_t(1u<<m_owner);next.m_phase=Phase::OwnerUpkeep;Commit(next);
 }
 void SmacFactionTurn::SkipInactiveOwner(Ticket expected,uint8_t active) {
     Require(expected,Phase::OwnerPending);RequireActive(active);Check(!(active&(1u<<m_owner)),"Cannot skip an active owner's upkeep");
@@ -83,14 +84,14 @@ void SmacFactionTurn::CompleteRound(Ticket expected) {
 }
 types::Buffer SmacFactionTurn::Serialize() const {
     Validate();types::Buffer b;b.WriteInt(0x534d4654);b.WriteInt(1);b.WriteInt(m_turn);b.WriteInt(m_sequence);
-    b.WriteInt(static_cast<int32_t>(m_phase));b.WriteInt(m_actors);b.WriteInt(m_focus);b.WriteInt(m_owner);b.WriteInt(m_passed);b.WriteInt(m_upkeep);
+    b.WriteInt(static_cast<int32_t>(m_phase));b.WriteInt(m_actors);b.WriteInt(m_focus);b.WriteInt(m_owner);b.WriteInt(m_passed);b.WriteInt(m_upkeep);b.WriteInt(m_refreshed);
     Check(b.lenw<=MAX_WIRE_BYTES,"Faction cursor wire budget exceeded");return b;
 }
 SmacFactionTurn SmacFactionTurn::Deserialize(const std::string& wire) {
     Check(wire.size()<=MAX_WIRE_BYTES,"Faction cursor wire budget exceeded");types::Buffer b(wire);
     Check(b.ReadInt()==0x534d4654 && b.ReadInt()==1,"Unsupported faction cursor record");SmacFactionTurn result;
     result.m_turn=Int32(b);result.m_sequence=b.ReadInt();result.m_phase=static_cast<Phase>(Int32(b));result.m_actors=Mask(b);
-    result.m_focus=Int32(b);result.m_owner=Int32(b);result.m_passed=Mask(b);result.m_upkeep=Mask(b);
+    result.m_focus=Int32(b);result.m_owner=Int32(b);result.m_passed=Mask(b);result.m_upkeep=Mask(b);result.m_refreshed=Mask(b);
     Check(b.lenr==b.lenw,"Unexpected faction cursor trailing fields");result.Validate();return result;
 }
 }

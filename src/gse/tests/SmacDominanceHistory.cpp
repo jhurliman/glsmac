@@ -52,6 +52,7 @@ void AddSmacDominanceHistoryTests(task::gsetests::GSETests* task) {
                 types::Buffer tail;tail.WriteBool(true);tail.WriteString(state.dominance_history->Serialize());
                 tail.WriteBool(state.dominance_native_keys.has_value());if(state.dominance_native_keys) {for(const auto& key:*state.dominance_native_keys) {tail.WriteString(key);}}
                 tail.WriteBool(state.conquest_winner.has_value());if(state.conquest_winner) {tail.WriteInt(*state.conquest_winner);}
+                tail.WriteBool(state.faction_turn.has_value());if(state.faction_turn) {tail.WriteString(state.faction_turn->Serialize().ToString());}
                 const auto old=old_header.ToString()+wire.substr(header.lenr,wire.size()-header.lenr-tail.lenw);
                 exact=exact && !restore(old).dominance_history;
                 bool rejected=false;try {restore(wire.substr(0,wire.size()-1));}catch(const std::exception&) {rejected=true;}

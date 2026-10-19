@@ -18,6 +18,7 @@ public:
     uint8_t Actors() const {return m_actors;}
     uint8_t Passed() const {return m_passed;}
     uint8_t UpkeepEntered() const {return m_upkeep;}
+    uint8_t RefreshedOwners() const {return m_refreshed;}
     int32_t Focus() const {return m_focus;}
     void Validate() const;
     bool operator==(const SmacFactionTurn& other) const;
@@ -35,7 +36,7 @@ private:
     int32_t m_turn=0,m_owner=0,m_focus=0;
     int64_t m_sequence=0;
     Phase m_phase=Phase::Global;
-    uint8_t m_actors=0,m_passed=0,m_upkeep=0;
+    uint8_t m_actors=0,m_passed=0,m_upkeep=0,m_refreshed=0;
     void Require(Ticket expected,Phase phase) const;
     void RequireActive(uint8_t active) const;
     void NextOwner(int32_t after,uint8_t active);

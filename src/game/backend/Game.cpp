@@ -504,6 +504,7 @@ void Game::Iterate() {
 		m_state->WithGame(
 			this, [ this ]( Game* const, GSE_CALLABLE ) {
 				if ( HasInitializationFailure() ) { return; }
+				PublishMapKnowledgeUpdate( GSE_CALL );
 				if ( m_bm ) {
 					m_bm->TriggerUpdates( GSE_CALL );
 				}
@@ -776,6 +777,14 @@ WRAPIMPL_BEGIN( Game )
 				}
 				catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
 			} )
+		},
+		{
+			"get_smac_minimap",
+			NATIVE_CALL(this) {
+				N_EXPECT_ARGS(0);
+				try {return CopyLocalMinimap(GSE_CALL);}
+				catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+			})
 		},
 		{
 			"get_smac_faction_summary",
@@ -3304,6 +3313,7 @@ void Game::ResetGame() {
 			m_event_handlers.clear();
 		}
 		m_next_event_id = 0;
+		m_map_knowledge_dirty = false;
 
 		m_tm = nullptr;
 		m_rm = nullptr;

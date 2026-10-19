@@ -192,6 +192,8 @@ CLASS( Game, common::Module )
 	sprite::InstancedSprite* GetTerrainInstancedSprite( const backend::map::sprite_actor_t& actor );
 
 	void CenterAtCoordinatePercents( const ::types::Vec2< float > position_percents );
+	// Minimap navigation resolves a real parity-valid tile, preserving selection.
+	bool CenterAtMapTile( const ::types::Vec2< size_t >& coords );
 
 	void SmoothScroll( const float scroll_value );
 	void SmoothScroll( const ::types::Vec2< float > position, const float scroll_value );

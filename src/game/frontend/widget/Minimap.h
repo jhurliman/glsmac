@@ -3,6 +3,9 @@
 #include "Widget.h"
 
 #include "types/Vec2.h"
+#include <memory>
+#include <optional>
+#include <string>
 
 namespace types::texture {
 class Texture;
@@ -30,6 +33,16 @@ protected:
 	void Register( ui::dom::Widget* const widget ) override;
 
 private:
+	struct Overview {
+		int32_t width, height;
+		bool horizontal_wrap;
+		std::string rgba;
+	};
+	std::optional< Overview > m_overview;
+	bool m_using_overview = false;
+	std::shared_ptr< const bool > m_lifetime = std::make_shared< const bool >( true );
+	void ReadOverview( ui::dom::Widget* widget, gse::value::Object* data );
+	void DrawOverview( ui::dom::Widget* widget );
 	enum layer_index_t {
 		LI_PREVIEW = 0,
 		LI_SELECTION = 1,

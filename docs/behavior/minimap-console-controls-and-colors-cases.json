@@ -1,0 +1,1051 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Pinned terran console geometry/atlas and command receipts; explicit coarse renderer flag/color/knowledge controls. Four-button reference row and its binding remain unresolved.",
+  "coordinates": {
+    "resolution": [
+      1024,
+      768
+    ],
+    "console_screen_origin": [
+      0,
+      511
+    ],
+    "rectangles": "half-open"
+  },
+  "minimap_outer": [
+    780,
+    88,
+    1019,
+    207
+  ],
+  "info_rect": [
+    785,
+    214,
+    901,
+    246
+  ],
+  "buttons": [
+    {
+      "command": 1006,
+      "label": "World Map",
+      "hit_rect": [
+        904,
+        214,
+        958,
+        246
+      ],
+      "atlas": "interface.pcx",
+      "transparent_index": 9,
+      "atlas_rects": [
+        [
+          532,
+          143,
+          586,
+          175
+        ],
+        [
+          532,
+          176,
+          586,
+          208
+        ],
+        [
+          532,
+          209,
+          586,
+          241
+        ]
+      ]
+    },
+    {
+      "command": 1007,
+      "label": "Detail Map",
+      "hit_rect": [
+        960,
+        214,
+        1014,
+        246
+      ],
+      "atlas": "interface.pcx",
+      "transparent_index": 9,
+      "atlas_rects": [
+        [
+          587,
+          143,
+          641,
+          175
+        ],
+        [
+          587,
+          176,
+          641,
+          208
+        ],
+        [
+          587,
+          209,
+          641,
+          241
+        ]
+      ]
+    }
+  ],
+  "command_cases": [
+    {
+      "kind": "command",
+      "retained_detail": 0,
+      "events": [
+        {
+          "service": "select_button",
+          "command": 1006,
+          "arg": 0
+        },
+        {
+          "service": "detail_view_hide"
+        },
+        {
+          "service": "overview_show"
+        }
+      ]
+    },
+    {
+      "kind": "command",
+      "retained_detail": 1,
+      "events": [
+        {
+          "service": "select_button",
+          "command": 1007,
+          "arg": 0
+        },
+        {
+          "service": "detail_view_show"
+        },
+        {
+          "service": "overview_hide"
+        }
+      ]
+    },
+    {
+      "kind": "command",
+      "retained_detail": 1,
+      "events": [
+        {
+          "service": "select_button",
+          "command": 1007,
+          "arg": 0
+        },
+        {
+          "service": "detail_view_show"
+        },
+        {
+          "service": "overview_hide"
+        }
+      ]
+    },
+    {
+      "kind": "command",
+      "retained_detail": 0,
+      "events": [
+        {
+          "service": "select_button",
+          "command": 1006,
+          "arg": 0
+        },
+        {
+          "service": "detail_view_hide"
+        },
+        {
+          "service": "overview_show"
+        }
+      ]
+    },
+    {
+      "kind": "refresh",
+      "retained_detail": 0,
+      "events": [
+        {
+          "service": "select_button",
+          "command": 1006,
+          "arg": 0
+        },
+        {
+          "service": "detail_view_hide"
+        },
+        {
+          "service": "overview_show"
+        }
+      ]
+    },
+    {
+      "kind": "refresh",
+      "retained_detail": 1,
+      "events": [
+        {
+          "service": "select_button",
+          "command": 1007,
+          "arg": 0
+        },
+        {
+          "service": "detail_view_show"
+        },
+        {
+          "service": "overview_hide"
+        }
+      ]
+    }
+  ],
+  "default_slot_colors": [
+    {
+      "owner": 0,
+      "index": 249,
+      "rgb": [
+        255,
+        0,
+        0
+      ]
+    },
+    {
+      "owner": 1,
+      "index": 241,
+      "rgb": [
+        0,
+        235,
+        0
+      ]
+    },
+    {
+      "owner": 2,
+      "index": 252,
+      "rgb": [
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "owner": 3,
+      "index": 255,
+      "rgb": [
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "owner": 4,
+      "index": 251,
+      "rgb": [
+        255,
+        255,
+        0
+      ]
+    },
+    {
+      "owner": 5,
+      "index": 65,
+      "rgb": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "owner": 6,
+      "index": 102,
+      "rgb": [
+        235,
+        92,
+        0
+      ]
+    },
+    {
+      "owner": 7,
+      "index": 235,
+      "rgb": [
+        164,
+        176,
+        232
+      ]
+    }
+  ],
+  "palette_cases": [
+    {
+      "input": {
+        "name": "physical_band0",
+        "band": 0
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 190,
+          "rgb": [
+            14,
+            37,
+            75
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "physical_band1",
+        "band": 1
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 190,
+          "rgb": [
+            14,
+            37,
+            75
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "physical_band2",
+        "band": 2
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 190,
+          "rgb": [
+            14,
+            37,
+            75
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "physical_band3",
+        "band": 3
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 22,
+          "rgb": [
+            80,
+            65,
+            51
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "physical_band4",
+        "band": 4
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 20,
+          "rgb": [
+            93,
+            76,
+            59
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "physical_band5",
+        "band": 5
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 18,
+          "rgb": [
+            106,
+            87,
+            67
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "physical_band6",
+        "band": 6
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 16,
+          "rgb": [
+            120,
+            98,
+            74
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "physical_band7",
+        "band": 7
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 14,
+          "rgb": [
+            133,
+            109,
+            82
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "rainfall_0",
+        "band": 3,
+        "moisture": 0,
+        "flags": 2147483664
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 149,
+          "rgb": [
+            212,
+            208,
+            116
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "rainfall_1",
+        "band": 3,
+        "moisture": 1,
+        "flags": 2147483664
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 151,
+          "rgb": [
+            152,
+            176,
+            76
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "rainfall_2",
+        "band": 3,
+        "moisture": 2,
+        "flags": 2147483664
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 153,
+          "rgb": [
+            88,
+            140,
+            44
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "rainfall_3",
+        "band": 3,
+        "moisture": 3,
+        "flags": 2147483664
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 155,
+          "rgb": [
+            216,
+            224,
+            235
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "political_own",
+        "band": 3,
+        "flags": 2147549184,
+        "claim": 3
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 255,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "political_unclaimed",
+        "band": 3,
+        "flags": 2147549184,
+        "claim": 255
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 22,
+          "rgb": [
+            80,
+            65,
+            51
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "political_foreign_unrecognized",
+        "band": 3,
+        "flags": 2147549184,
+        "claim": 2
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 22,
+          "rgb": [
+            80,
+            65,
+            51
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "political_foreign_contact_only",
+        "band": 3,
+        "flags": 2147549184,
+        "claim": 2,
+        "diplomacy": 8
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 22,
+          "rgb": [
+            80,
+            65,
+            51
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "political_foreign_other_bit_only",
+        "band": 3,
+        "flags": 2147549184,
+        "claim": 2,
+        "diplomacy": 134217728
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 22,
+          "rgb": [
+            80,
+            65,
+            51
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "political_foreign_recognized",
+        "band": 3,
+        "flags": 2147549184,
+        "claim": 2,
+        "diplomacy": 134217736
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 252,
+          "rgb": [
+            0,
+            0,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "political_unknown",
+        "band": 3,
+        "flags": 2147549184,
+        "claim": 3,
+        "known": false
+      },
+      "return_value": 0,
+      "draws": []
+    },
+    {
+      "input": {
+        "name": "political_reveal",
+        "band": 3,
+        "flags": 2147549184,
+        "claim": 3,
+        "known": false,
+        "reveal": true
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 255,
+          "rgb": [
+            255,
+            255,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "political_editor_foreign",
+        "band": 3,
+        "flags": 2147549184,
+        "claim": 2,
+        "editor": true
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 252,
+          "rgb": [
+            0,
+            0,
+            255
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "physical_unknown",
+        "band": 3,
+        "flags": 2147483648,
+        "known": false
+      },
+      "return_value": 0,
+      "draws": []
+    },
+    {
+      "input": {
+        "name": "physical_rule100_unknown",
+        "band": 3,
+        "flags": 2147483648,
+        "known": false,
+        "rule100": true
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 22,
+          "rgb": [
+            80,
+            65,
+            51
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "political_survey_unknown",
+        "band": 3,
+        "flags": 2147549184,
+        "claim": 3,
+        "known": false,
+        "rule100": true
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 22,
+          "rgb": [
+            80,
+            65,
+            51
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "political_reveal_foreign_unrecognized",
+        "band": 3,
+        "flags": 2147549184,
+        "claim": 2,
+        "known": false,
+        "reveal": true
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 22,
+          "rgb": [
+            80,
+            65,
+            51
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "political_sea_own",
+        "band": 2,
+        "flags": 2147549184,
+        "claim": 3
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 190,
+          "rgb": [
+            14,
+            37,
+            75
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "rainfall_sea",
+        "band": 2,
+        "flags": 2147483664,
+        "moisture": 2
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 190,
+          "rgb": [
+            14,
+            37,
+            75
+          ]
+        }
+      ]
+    },
+    {
+      "input": {
+        "name": "political_native_claim_zero",
+        "band": 3,
+        "flags": 2147549184,
+        "claim": 0
+      },
+      "return_value": 1,
+      "draws": [
+        {
+          "vertices": [
+            10,
+            12,
+            14,
+            10,
+            18,
+            12,
+            14,
+            14
+          ],
+          "color_index": 22,
+          "rgb": [
+            80,
+            65,
+            51
+          ]
+        }
+      ]
+    }
+  ],
+  "unknowns": [
+    "Four-button reference row identity, executable/version, hit boxes and command bindings",
+    "Installed PHYSICAL/CLIMATE/RAINFALL/POLITICAL scan labels are not sufficient to establish four console controls",
+    "Climate scan mode mapping",
+    "Political/rainfall renderer flags are tested inputs, not newly proven console button commands",
+    "Complete detail-view viewport/camera/navigation behavior and whole minimap resampling",
+    "Whole minimap pixel output, history sampling and mode save/load lifecycle"
+  ]
+}

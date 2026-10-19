@@ -8,6 +8,7 @@
 #include "game/ScoutBattlePresentation.h"
 #include "game/SmacHealthbar.h"
 #include "game/frontend/unit/BadgeDefs.h"
+#include "game/backend/map/Consts.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "scene/Scene.h"
 #include "scene/actor/Instanced.h"
@@ -69,6 +70,23 @@ void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
             auto* yellow=badges.GetBadgeHealthbarSprite(0.7f,10);
             auto* same=badges.GetBadgeHealthbarSprite(0.7f,20);
             auto* green=badges.GetBadgeHealthbarSprite(0.7f,30);
+            types::texture::Texture flag_pixels(23,30);
+            const auto& map=game::backend::map::s_consts;
+            const float flag_width=map.tile.scale.x*0.25f;
+            const float flag_height=map.tile.scale.y*map.sprite.y_scale*0.5f;
+            auto* flag=sprites.GetInstancedSprite("Health alignment flag",&flag_pixels,{0,0},{23,30},{11,15},
+                {flag_width,flag_height},game::frontend::ZL_UNITS);
+            const auto flag_center=flag->actor->GetSpriteActor()->NormalizePosition(
+                game::frontend::unit::BadgeDefs::GetBadgeCoords({0,0,0}));
+            const auto* bar_actor=yellow->instanced_sprite->actor->GetSpriteActor();
+            const auto bar_center=bar_actor->NormalizePosition(
+                game::frontend::unit::BadgeDefs::GetBadgeHealthbarCoords({0,0,0},true));
+            const auto bar_size=bar_actor->GetDimensions();
+            const float dx=(bar_center.x-bar_size.x/2-(flag_center.x-flag_width/2))*23/flag_width;
+            const float dy=(bar_center.y-bar_size.y/2-(flag_center.y-flag_height/2))*30/flag_height;
+            GT_ASSERT(std::abs(dx-6)<0.001f && std::abs(dy-6)<0.001f,
+                "Actual actor rectangles do not place the bar at flag source pixel6,6");
+            sprites.RemoveInstancedSpriteByKey(flag->key);
             GT_ASSERT(yellow==same && yellow!=green,"Equal heights conflated distinct damage-threshold colors");
             const auto check=[&](game::frontend::sprite::Sprite* sprite,uint32_t ink,int filled)->bool {
                 const auto* texture=sprite->instanced_sprite->actor->GetSpriteActor()->GetTexture();

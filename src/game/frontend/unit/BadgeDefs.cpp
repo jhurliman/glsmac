@@ -48,9 +48,10 @@ const types::Vec3 BadgeDefs::GetBadgeCoords( const types::Vec3& unit_coords ) {
 
 const types::Vec3 BadgeDefs::GetBadgeHealthbarCoords( const types::Vec3& unit_coords, bool canonical ) {
     if(canonical) {
-        // Badge pivot(11,15), bar pivot(1,10), backing starts at(6,6).
-        const auto x=s_consts.offset.x-4*s_consts.scale.x/23;
-        const auto y=s_consts.offset.y+s_consts.scale.y/30;
+        // Include the actual actors' center offsets, not just source pivots.
+        // Flag(23x30,pivot11,15), bar(2x21,pivot1,10): source corner(6,6).
+        const auto x=s_consts.offset.x-5*s_consts.scale.x/23;
+        const auto y=s_consts.offset.y-2*s_consts.scale.y/30;
         return {unit_coords.x+backend::map::s_consts.tile.scale.x*x,
             unit_coords.y-backend::map::s_consts.tile.scale.y*y*backend::map::s_consts.sprite.y_scale,unit_coords.z};
     }

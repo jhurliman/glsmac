@@ -5460,6 +5460,14 @@ public:
             auto& render=const_cast<game::frontend::tile::Tile::render_data_t&>(tiles.GetTile(40,40)->GetRenderData());
             render.terrain_instances={{11,solar->key,"SolarLand"},{12,monolith->key,"Monolith"}};
             std::array<bool,3200> covered{};covered[40*40+20]=true;
+            monolith->actor->SetInstance(14,{7,8,9});
+            frontend.m_native_legacy_instances.emplace(14,std::make_pair(monolith->key,types::Vec3(7,8,9)));
+            render.terrain_instances.push_back({14,monolith->key,"Uranium"});
+            frontend.UpdateNativeTerrainSpriteVisibility(nullptr,&covered);
+            GT_ASSERT(!monolith->actor->HasInstance(14) && solar->actor->HasInstance(11) && monolith->actor->HasInstance(12),
+                "Landmark replacement consumed an improvement or Monolith");
+            frontend.UpdateNativeTerrainSpriteVisibility(nullptr);
+            GT_ASSERT(monolith->actor->HasInstance(14),"Legacy marker did not restore after native coverage ended");
             frontend.UpdateNativeTerrainSpriteVisibility(&covered);
             GT_ASSERT(!solar->actor->HasInstance(11) && monolith->actor->HasInstance(12),"Native pass double-rendered improvement or hid an unimplemented family");
             frontend.UpdateNativeTerrainSpriteVisibility(nullptr);

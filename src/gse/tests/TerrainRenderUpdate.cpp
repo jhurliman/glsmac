@@ -222,8 +222,8 @@ public:
                 for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=static_cast<char>(word>>(8*byte));
                 local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
                 const auto metadata=local.CopyNativeTerrain();const auto& cell=metadata->tiles[40*40+20];
-                const bool special_art=word&0x103u;
-                if(cell.deformed || cell.ordinary==special_art) return false;
+                // Sea heights remain zero and negative detail skips quads.
+                if(cell.deformed || !cell.ordinary) return false;
             }
             wire[record]=char(3<<5);
             for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=0;
@@ -316,6 +316,84 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         std::fill(source.pixels.begin(),source.pixels.end(),9);
         const auto skipped=raster::DrawBatch(initial,{command},{{0,0,8,8}},true);
         GT_ASSERT(skipped.writes==0 && std::all_of(skipped.coverage.begin(),skipped.coverage.end(),[](auto n){return !n;}),"Transparent key wrote coverage");GT_OK();
+    });
+    task->AddTest("SMAC native Jungle and Dunes preserve live material order and Farm precedence",GT(){
+        namespace native=game::frontend::native_terrain;
+        ::game::native_terrain::World world;
+        for(auto& cell:world.tiles) {cell.band=3;cell.ordinary=true;}
+        auto& cell=world.tiles[40*40+20];
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,10)};
+        source.coast_mask={56,56,std::vector<uint8_t>(56*56,0)};
+        for(unsigned i=0;i<256;++i) {source.palette[i]={uint8_t(i),0,0};}
+        const auto fill=[&](int x,int y,uint8_t color) {for(int dy=0;dy<56;++dy) {for(int dx=0;dx<56;++dx) {
+            source.loaded.pixels[(y+dy)*1024+x+dx]=color;
+        }}};
+        for(int i=0;i<15;++i) {fill(526+57*(i%4),259+57*(i/4),60);}
+        fill(229,1,70);
+        const std::vector<native::Placement> view{{{{40,40}},{{576,288}},44*(40*40+20)}};
+        const auto ink=[&](uint32_t flags) {return native::Render(world,source,view,0,{{0,0}},flags).rgba[(288*1024+575)*4];};
+        cell.landmarks=0x44;
+        GT_ASSERT(ink(1)==60 && ink(0)==60,"Jungle lost unlit quad or acquired a terrain-display gate");
+        cell.items=0x200000;
+        GT_ASSERT(ink(1)==10,"Jungle drew over later Forest");
+        cell.items=0;cell.landmarks=0x80000044u;
+        GT_ASSERT(ink(1)==70,"Suppressed Jungle also suppressed the Dunes base");
+        cell.landmarks=0x40;cell.selected_known=true;cell.selected_items=0x8000;
+        GT_ASSERT(ink(1)==10 && ink(0)==70,"Farm did not precede Dunes only under terrain flag1");
+        cell.landmarks=4;cell.selected_items=0;
+        for(auto& water:world.tiles) {water.band=2;water.contour=40;}
+        GT_ASSERT(ink(1)!=60,"Jungle drew on sea");GT_OK();
+    });
+    task->AddTest("SMAC native landmark markers preserve priority gates and replacement coverage",GT(){
+        namespace native=game::frontend::native_terrain;
+        ::game::native_terrain::World world;
+        for(auto& cell:world.tiles) {cell.band=3;cell.ordinary=true;}
+        auto& cell=world.tiles[40*40+20];cell.landmarks=8|0x400;
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,10)};
+        source.ter1={1024,768,std::vector<uint8_t>(1024*768,9)};
+        source.coast_mask={56,56,std::vector<uint8_t>(56*56,0)};
+        for(unsigned i=0;i<256;++i) {source.palette[i]={uint8_t(i),0,0};}
+        for(const auto crop:std::array<std::array<int,3>,3>{{{{822,253,30}},{{822,190,40}},{{579,695,50}}}}) {
+            for(int y=0;y<62;++y) {for(int x=0;x<100;++x) {source.ter1.pixels[(crop[1]+y)*1024+crop[0]+x]=uint8_t(crop[2]);}}
+        }
+        const std::vector<native::Placement> view{{{{40,40}},{{576,288}},44*(40*40+20)}};
+        const auto draw=[&](uint32_t flags){return native::Render(world,source,view,0,{{0,0}},flags);};
+        const auto ink=[](const native::Frame& f){return f.rgba[(288*1024+575)*4];};
+        GT_ASSERT(ink(draw(0x200))==30,"Uranium priority lost to Geothermal");
+        cell.landmarks=0x400;
+        GT_ASSERT(ink(draw(0x200))==40 && ink(draw(0))!=40,"Geothermal lost display gate");
+        cell.landmarks=0x2000;
+        const auto nexus=draw(0x20);
+        GT_ASSERT(ink(nexus)==50 && nexus.landmark_tiles[40*40+20] && !nexus.developed_tiles[40*40+20],
+            "Nexus depended on unrelated nutrient context or lost replacement coverage");
+        cell.landmarks=0x02002000;
+        GT_ASSERT(ink(draw(0x20))!=50,"Empty Nexus detail2 slot drew a sprite");
+        world.tiles[40*40+21].deformed=true;
+        GT_ASSERT(!draw(0x20).landmark_tiles[40*40+20],"Skipped terrain stencil consumed legacy markers");
+        cell.heights=std::array<int,5>{{0,0,0,0,0}};cell.lighting=std::array<int,5>{{0,0,0,0,0}};
+        GT_ASSERT(draw(0x20).landmark_tiles[40*40+20],"Validated owned geometry retained the obsolete broad neighbor veto");GT_OK();
+    });
+    task->AddTest("SMAC native landmark quads compose before Forest and sea Fungus",GT(){
+        namespace native=game::frontend::native_terrain;
+        ::game::native_terrain::World world;
+        for(auto& cell:world.tiles) {cell.band=3;cell.ordinary=true;}
+        auto& cell=world.tiles[40*40+20];cell.landmarks=2;
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,10)};
+        source.coast_mask={56,56,std::vector<uint8_t>(56*56,0)};
+        for(unsigned i=0;i<256;++i) {source.palette[i]={uint8_t(i),0,0};}
+        for(unsigned y=628;y<684;++y) {for(unsigned x=1;x<57;++x) {source.loaded.pixels[y*1024+x]=50;}}
+        const std::vector<native::Placement> view{{{{40,40}},{{576,288}},44*(40*40+20)}};
+        const auto ink=[&](){return native::Render(world,source,view,0).rgba[(288*1024+575)*4];};
+        GT_ASSERT(ink()==50,"Mount detail0 did not draw its unlit quad after the land base");
+        cell.items=0x200000;
+        GT_ASSERT(ink()==10,"Landmark quad drew over later Forest");
+        for(auto& water:world.tiles) {water.band=2;water.contour=40;}
+        cell.items=0;
+        GT_ASSERT(ink()==50,"Sea landmark quad did not follow the sector base");
+        cell.items=0x20;
+        GT_ASSERT(ink()==10,"Landmark quad drew over later sea Fungus");
+        cell.items=0;cell.landmarks=0x80000002u;
+        GT_ASSERT(ink()!=50,"Negative art detail drew a named quad");GT_OK();
     });
     task->AddTest("SMAC native terrain connected painter owns frame and preserves unsupported holes",GT(){
         namespace native=game::frontend::native_terrain;

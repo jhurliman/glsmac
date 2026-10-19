@@ -2,6 +2,7 @@ SET( SRC ${SRC}
 
 	${PWD}/SmacTechnologyState.cpp
 	${PWD}/SmacSocialState.cpp
+	${PWD}/SmacFactionTurn.cpp
 	${PWD}/SmacSimulationState.cpp
 	${PWD}/SmacNativeFactoryState.cpp
 	${PWD}/SmacEcologyWorld.cpp

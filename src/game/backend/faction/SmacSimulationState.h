@@ -2,6 +2,7 @@
 
 #include "SmacTechnologyState.h"
 #include "SmacSocialState.h"
+#include "SmacFactionTurn.h"
 #include "SmacEconomyState.h"
 #include "SmacRankOrder.h"
 #include "SmacDominanceHistory.h"
@@ -209,6 +210,7 @@ struct SmacSimulationState {
 	std::optional<int32_t> human_defeat_request;
     // Explicit single-survivor conquest outcome; never inferred during load.
     std::optional<int32_t> conquest_winner;
+    std::optional<SmacFactionTurn> faction_turn; // absent on legacy all-human campaigns; never inferred on load
     bool HasEnding() const noexcept {return human_defeat_request.has_value() || conquest_winner.has_value();}
     // Accepted human controllers, independent of active membership, focus and
     // Single/Host/Player transport roles. Elimination/restart preserves this.
@@ -221,6 +223,7 @@ struct SmacSimulationState {
     std::optional<SmacRankOrder> rank_order;
 	SmacSatelliteCounts GetSatelliteCounts( int32_t simulation_id ) const;
 	void Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const;
+    void ValidateTurn(size_t turn) const;
 	bool operator==( const SmacSimulationState& other ) const;
 	const SmacSimulationParticipant* FindSlot( size_t slot ) const;
 	types::Buffer Serialize( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles, const settings::SmacPredefinedUnitRules& units ) const;

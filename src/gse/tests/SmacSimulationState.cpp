@@ -91,7 +91,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=33,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=34,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -187,6 +187,7 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=33,bool
     }
     if(version>=32) {suffix.WriteBool(value.dominance_native_keys.has_value());if(value.dominance_native_keys) {for(const auto& key:*value.dominance_native_keys) {suffix.WriteString(key);}}}
     if(version>=33) {suffix.WriteBool(value.conquest_winner.has_value());if(value.conquest_winner) {suffix.WriteInt(*value.conquest_winner);}}
+    if(version>=34) {suffix.WriteBool(value.faction_turn.has_value());if(value.faction_turn) {suffix.WriteString(value.faction_turn->Serialize().ToString());}}
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -887,6 +888,37 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
             if(scenario==4) {invalid.human_membership=132;invalid.human_defeat_request=2;}
             GT_ASSERT(Rejects([&]{invalid.Serialize(technologies,profiles,units);}) && Rejects([&]{SmacSimulationState::Deserialize(CurrentWire(invalid),technologies,profiles,units);}),"invalid or conflicting conquest outcome accepted");
         }GT_OK();
+    });
+    task->AddTest("SMAC faction cursor V34 preserves mixed first-round progress without upgrading V33",GT(){
+        using Turn=faction::SmacFactionTurn;
+        const auto tech=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();value.human_membership=128;
+        const auto baseline=faction::SmacSocialState::FreshImageSnapshots();
+        value.social=faction::SmacSocialState::NewWorld({{7,"GAIANS"},{2,"UNIVERSITY"}},tech,profiles,&baseline);
+        value.social.BuildStartupIntrinsic(7,tech,profiles);value.social.BuildStartupIntrinsic(2,tech,profiles);
+        value.faction_turn=Turn::NewWorld(132,7);auto& turn=*value.faction_turn;
+        value.ValidateTurn(0);turn.BeginRound(turn.Current());turn.CompleteWildlifeUpkeep(turn.Current());turn.CompleteWildlifeCommand(turn.Current(),132);
+        turn.BeginOwnerUpkeep(turn.Current(),132);value.social.RefreshOwnerForFirstCommand(2,tech,profiles);turn.CompleteOwnerUpkeep(turn.Current(),132);
+        value.ValidateTurn(1);
+        const auto wire=value.Serialize(tech,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,tech,profiles,units)==value,"V34 changed scheduled command state or its exact codec");
+        auto expected_legacy=value;expected_legacy.faction_turn.reset();
+        const auto legacy=SmacSimulationState::Deserialize(CurrentWire(value,33),tech,profiles,units);
+        GT_ASSERT(legacy==expected_legacy && Rejects([&]{legacy.ValidateTurn(1);}),"V33 silently inferred native progress or admitted a partial world without its cursor");
+        GT_ASSERT(Rejects([&]{value.ValidateTurn(2);}),"Cursor accepted a mismatched global year");
+        for(int scenario=0;scenario<5;++scenario) {
+            auto invalid=value;
+            if(scenario==0) {invalid.social.RefreshOwnerForFirstCommand(7,tech,profiles);}
+            if(scenario==1) {faction::SmacSocialState::ResetForStartup(invalid.social.factions[1]);}
+            if(scenario==2) {invalid.human_membership=0;}
+            if(scenario==3) {invalid.faction_turn=Turn::NewWorld(4,2);}
+            if(scenario==4) {invalid.social.factions[0].retained.reset();}
+            GT_ASSERT(Rejects([&]{invalid.Serialize(tech,profiles,units);}) && Rejects([&]{(void)SmacSimulationState::Deserialize(CurrentWire(invalid),tech,profiles,units);}),"Cursor binding or premature social refresh survived writer/reader admission");
+        }
+        turn.CompleteOwnerCommand(turn.Current(),132);turn.BeginOwnerUpkeep(turn.Current(),132);
+        value.social.RefreshOwnerForFirstCommand(7,tech,profiles);turn.CompleteOwnerUpkeep(turn.Current(),132);turn.CompleteOwnerCommand(turn.Current(),132);turn.CompleteRound(turn.Current());turn.BeginRound(turn.Current());
+        value.ValidateTurn(2);
+        GT_ASSERT(turn.RefreshedOwners()==132 && !turn.UpkeepEntered() && SmacSimulationState::Deserialize(value.Serialize(tech,profiles,units).ToString(),tech,profiles,units)==value,"New round erased prior social history or replayed completed upkeep");GT_OK();
     });
 	task->AddTest("SMAC human defeat request retains its owner independently of inactive status and migrates V12",GT(){
 		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();

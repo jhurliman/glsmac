@@ -237,7 +237,7 @@ void Game::ValidateCurrentSimulation() const {
 	if ( m_state->m_settings.global.GetRulesetId() == "smac" ) {
 		if ( !m_simulation ) { throw std::runtime_error( "SMAC simulation has not been admitted" ); }
 		ValidateSimulation( *m_simulation );
-		m_simulation->value.social.ValidateTurn( m_current_turn.GetId() );
+		m_simulation->value.ValidateTurn( m_current_turn.GetId() );
 	}
 	else if ( m_simulation || m_pending_simulation ) { throw std::runtime_error( "Unexpected simulation state for non-SMAC world" ); }
 }
@@ -263,7 +263,7 @@ std::optional< Game::BoundSimulation > Game::ReadSimulationState( types::Buffer&
 	}
 	// The nested reader bounds the framed payload before allocating records.
 	auto value = faction::SmacSimulationState::Deserialize( buffer.ReadString( faction::SmacSimulationState::MAX_WIRE_BYTES ), *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules(), *settings.GetSmacPredefinedUnitRules() );
-	value.social.ValidateTurn( turn );
+	value.ValidateTurn( turn );
 	return BindSimulation( std::move( value ) );
 }
 
@@ -290,7 +290,7 @@ void Game::RefreshSimulationForTurn( const size_t turn ) {
 			if ( turn != 1 ) { throw std::runtime_error( "SMAC early social state requires the first turn transition" ); }
 			staged.value.social.RefreshForFirstCommand( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
 		}
-		staged.value.social.ValidateTurn( turn );
+		staged.value.ValidateTurn( turn );
 		if ( m_um->HasPendingConventionalUnits() ) {
 			RequireConventionalStartupClaim();
 			m_um->PreflightConventionalStartup( [ & ]( const auto& unit, const auto* owner ) {

@@ -25,7 +25,7 @@ not hardcoded constants for the port.
 
 ## Current integration boundaries
 
-Inspected through startup-compensation commit607e8a71 (PR382):
+Inspected through the saved-cursor integration in PR385 (live activation is pending):
 
 - `GameSimulation.cpp::PrepareNewSimulation` assigns human membership to every
   occupied participant. `Player`/`RosterRecords` transport roles do not encode
@@ -40,10 +40,10 @@ Inspected through startup-compensation commit607e8a71 (PR382):
   positive-owner Unit's movement. `ContinueCanonicalTurn` runs all owner upkeep
   before publishing the command-ready turn. This is an explicit existing local
   human policy, not the original computer scheduler.
-- `SmacSocialState::ValidateTurn` requires every faction to be Refreshed once
-  global turn is positive. A true first round can contain both Early and
-  Refreshed factions; persisted scheduler progress must make that distinction
-  verifiable rather than removing validation globally.
+- `SmacSimulationState::ValidateTurn` now accepts mixed Early/Refreshed factions
+  only when a saved cursor proves their per-owner refresh history and world
+  turn. Cursor absence retains the strict whole-world guard. The current live
+  controller still emits no cursor and refreshes every faction together.
 - `Game::CanonicalTurnContinuation` retains Base/research/colony-screen progress
   while upkeep is suspended. Extend that ownership model to faction command
   boundaries. Existing query tokens must not become computer UI prompts or
@@ -60,8 +60,10 @@ adds exact faction-scoped social timing, University numeric TECH timing, and
 production/Unit changes before computer command entry. Late intrinsic publication
 and the owner-specific social transition are implemented. [Retained/third snapshot
 lifetime](behavior/social-snapshot-lifetime.md) now supplies known fresh storage
-and actual Reset/new-world preservation independently of refresh phase. Native scheduler
-admission and whole-world mixed-phase validation remain required.
+and actual Reset/new-world preservation independently of refresh phase.
+[Saved faction continuation](faction-turn-continuation.md) now provides the owned
+cursor, V34 persistence and actual mixed-phase world-body restore validation.
+Native scheduler admission and live per-owner dispatch remain required.
 
 1. Admit the local controller roster explicitly, preserving transport identity,
    local human focus, native faction IDs, and separate human/computer ownership.

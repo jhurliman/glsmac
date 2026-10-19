@@ -5,6 +5,7 @@ let events = [];
 const read = create({
     get_year: () => { return 2101; }, get_smac_credits: () => { return 0; },
     get_turn_status: () => { return 'turn_complete'; }, get_smac_minimap: () => { return #undefined; },
+    get_smac_detail_minimap: () => { return #undefined; },
     on: (name, callback) => { listeners[name] = callback; },
     event: (name, data) => { events :+ name; },
 });

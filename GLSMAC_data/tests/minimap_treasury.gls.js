@@ -7,6 +7,7 @@ for (initial of [137, 0, (0 - 7), #undefined]) {
 		get_year: () => { return 2137; },
 		get_turn_status: () => { return 'active'; },
 		get_smac_minimap: () => { return #undefined; },
+    get_smac_detail_minimap: () => { return #undefined; },
 		get_smac_credits: () => { reads++; return credits; },
 		on: (event, callback) => { listeners[event] = callback; },
 	};

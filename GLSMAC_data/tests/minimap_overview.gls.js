@@ -7,6 +7,7 @@ const game = {
     get_turn_status: () => { return 'active'; },
     get_smac_credits: () => { return 0; },
     get_smac_minimap: () => { reads++; return frame; },
+    get_smac_detail_minimap: () => { return #undefined; },
     on: (name, callback) => { listeners[name] = callback; },
 };
 const read = create(game);

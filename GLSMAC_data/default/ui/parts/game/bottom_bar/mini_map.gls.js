@@ -29,20 +29,23 @@ return {
 			data: {},
 		});
 		let had_overview = false;
-		const refresh_overview = () => {
+        let detail_button = null;
+		const refresh_overview = (mode) => {
 			const frame = p.game.get_smac_minimap();
-			if (#is_defined(frame)) {
-				minimap.data = {overview: frame};
-				had_overview = true;
-			} else if (had_overview) {
-				minimap.data = {overview: {}};
-			}
+            const detail = p.game.get_smac_detail_minimap();
+            let next = {detail: #is_defined(detail) ? detail : {}};
+            if (#is_defined(frame)) { next.overview = frame; had_overview = true; }
+            else if (had_overview) { next.overview = {}; }
+            if (mode != '') { next.mode = mode; }
+            minimap.data = next;
+            if (detail_button != null) {
+                if (#is_defined(detail)) { detail_button.show(); } else { detail_button.hide(); }
+            }
 		};
-		refresh_overview();
 		// A refused move can reveal sight without moving or refreshing a preview.
-		minimap.listen(p.game, 'map_knowledge', (e) => { refresh_overview(); });
-		minimap.listen(p.map, 'unit_preview', (e) => { refresh_overview(); });
-		minimap.listen(p.map, 'base_preview', (e) => { refresh_overview(); });
+		minimap.listen(p.game, 'map_knowledge', (e) => { refresh_overview(''); });
+		minimap.listen(p.map, 'unit_preview', (e) => { refresh_overview(''); });
+		minimap.listen(p.map, 'base_preview', (e) => { refresh_overview(''); });
 
 		const info_block = p.el.panel({
 			class: 'bottombar-panel-inner', align: 'top right',
@@ -73,10 +76,10 @@ return {
 		minimap.listen(p.game, 'turn', (e) => {
 			info_year.text = 'Mission Year ' + #to_string(e.year);
 			refresh_energy();
-			refresh_overview();
+			refresh_overview('');
 		});
 
-		// Verified World artwork. A separate native Detail renderer is the next slice.
+		// Verified separate World and Detail controls.
 
 		// TODO: make _hover and _active work without class
 		p.ui.class('bottombar-minimap-button-left').extend('bottombar-minimap-button').set({
@@ -93,7 +96,7 @@ return {
 			text: '',
 			align: 'top right', right: 66, top: 214,
 		}).on('click', (e) => {
-			refresh_overview();
+			refresh_overview('world');
 			return true;
 		});
 
@@ -106,9 +109,9 @@ return {
 				background: 'interface.pcx:crop(587, 209, 640, 240)',
 			},
 		});
-		// Keep the source Detail artwork above, but do not expose the former
-		// debug action that merely blanked the map. This is not a completed
-		// two-mode console; Detail requires its own measured zoom-7 view.
+        detail_button = p.el.button({class: 'bottombar-minimap-button-right', text: '', align: 'top right', right: 10, top: 214});
+        detail_button.on('click', (e) => { refresh_overview('detail'); return true; });
+        refresh_overview('');
 
         // Original233x23 turn.flc control at console-local783,61.
         const btn_turn_complete = this.frame.button({left: 2, top: 2, width: 233, height: 23});

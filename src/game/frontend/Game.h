@@ -3,6 +3,7 @@
 #include <array>
 namespace game::native_terrain {struct World;}
 #include <memory>
+#include <optional>
 #include "game/FrontendRequest.h"
 
 #include <unordered_set>
@@ -198,6 +199,7 @@ CLASS( Game, common::Module )
 	void CenterAtCoordinatePercents( const ::types::Vec2< float > position_percents );
 	// Minimap navigation resolves a real parity-valid tile, preserving selection.
 	bool CenterAtMapTile( const ::types::Vec2< size_t >& coords );
+    std::optional<types::Vec2<size_t>> GetActiveMapTileCenter() const;
 
 	void SmoothScroll( const float scroll_value );
 	void SmoothScroll( const ::types::Vec2< float > position, const float scroll_value );

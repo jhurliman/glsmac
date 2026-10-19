@@ -714,6 +714,7 @@ private:
     bool RequestLocalDominanceGraph(GSE_CALLABLE,int64_t request);
     bool HandleDominanceGraphEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	gse::Value* CopyLocalMinimap( GSE_CALLABLE ) const;
+    gse::Value* CopyLocalDetailMinimap(GSE_CALLABLE) const;
 	gse::Value* CopySocialState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopyStartupDesigns( GSE_CALLABLE, const Player* player ) const;
 	void DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, const std::string& map_payload, const util::random::state_t& random_state, const world_snapshot::TurnState& turn_state, std::optional< BoundSimulation > simulation, std::optional< map::GlsmacResourceMapPolicy > map_policy, std::optional< map::SmacWorkerKnowledge > worker_knowledge, std::optional< map::GlsmacTerritoryTopology > territory = std::nullopt );

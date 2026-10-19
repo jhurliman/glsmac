@@ -1,4 +1,7 @@
 #pragma once
+#include <deque>
+#include <memory>
+#include "game/FrontendRequest.h"
 
 #include <unordered_set>
 #include <unordered_map>
@@ -20,6 +23,8 @@
 #include "util/Clamper.h"
 #include "util/Scroller.h"
 #include "ui/Types.h"
+
+namespace scene::actor {class Sound;}
 
 // TODO: remove those
 #include "game/backend/map/tile/TileState.h"
@@ -441,6 +446,14 @@ private:
 	std::unordered_map< size_t, Slot* > m_slots = {};
 	std::unordered_map< std::string, AnimationDef* > m_animationdefs = {};
 	std::unordered_map< size_t, Animation* > m_animations;
+    struct ScoutBattle;
+    std::shared_ptr<ScoutBattle> m_scout_battle;
+    std::deque<FrontendRequest> m_deferred_frontend;
+    std::vector<scene::actor::Sound*> m_scout_sounds;
+    void StartScoutBattle(const scout_presentation::Plan& plan);
+    void IterateScoutBattle();
+    void CancelScoutBattle();
+
 
 	void PollCampaignSave();
 	void CancelRequests();

@@ -1,4 +1,6 @@
 #include "SmacScoutCombat.h"
+#include "game/ScoutBattlePresentation.h"
+#include "game/FrontendRequest.h"
 
 #include "game/backend/unit/SmacScoutCombat.h"
 #include "fixtures/SmacScoutCombat.h"
@@ -45,6 +47,38 @@ bool StepMatches( const fixture::Step& e, const model::Survivor& s, const model:
 }
 
 void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Scout playback matches original grouped effects and preserves late frames",GT(){
+        namespace av=game::scout_presentation;
+        const model::Participant a(ATTACKER,1,10,1,1,0),d(DEFENDER,1,10,1,1,0);
+        const auto result=model::ResolveNeutralFlatAttack(a,d,3,{3,3},{ATTACKER,DEFENDER});
+        const auto plan=av::Prepare(result);
+        const std::array<std::array<int32_t,2>,19> damage{{{{0,1}},{{1,1}},{{1,2}},{{2,2}},{{2,3}},{{2,4}},{{3,4}},{{4,4}},{{5,4}},{{5,5}},{{5,6}},{{6,6}},{{7,6}},{{7,7}},{{7,8}},{{8,8}},{{9,8}},{{9,9}},{{9,10}}}};
+        const std::array<size_t,7> effect_rounds{{5,7,11,12,17,18,19}},targets{{1,0,1,0,0,1,1}};
+        GT_ASSERT(plan.steps.size()==19 && plan.units[0]==ATTACKER && plan.units[1]==DEFENDER,"Playback lost stable participants or original rounds");
+        size_t effect=0;
+        for(size_t i=0;i<damage.size();++i) {
+            GT_ASSERT((plan.steps[i].health==std::array<int32_t,2>{{10-damage[i][0],10-damage[i][1]}}),"Playback health differs from original timeline");
+            if(effect<effect_rounds.size() && i+1==effect_rounds[effect]) {
+                GT_ASSERT(plan.steps[i].target==targets[effect] && plan.steps[i].effect==(effect==6 ? av::Effect::Death:av::Effect::Hit),"Playback grouped effect differs from original call");++effect;
+            } else {GT_ASSERT(plan.steps[i].effect==av::Effect::None,"Playback invented an effect between original grouped hits");}
+        }
+        for(const bool fast:{false,true}) {for(const uint64_t tick:{uint64_t(25),uint64_t(100)}) {
+            av::Playback playback(plan,fast);size_t health=0,frames=0,clears=0;bool finished=false;uint64_t ended=0;
+            for(uint64_t now=0;now<20000 && !finished;now+=tick) {while(const auto action=playback.Next(now)) {
+                if(action->kind==av::Playback::Kind::Health) {++health;}
+                if(action->kind==av::Playback::Kind::Frame) {GT_ASSERT(action->frame==frames%16,"Late clock skipped or reordered an original frame");++frames;}
+                if(action->kind==av::Playback::Kind::Clear) {++clears;}
+                if(action->kind==av::Playback::Kind::Finished) {finished=true;ended=now;}
+            }}
+            GT_ASSERT(finished && health==19 && frames==112 && clears==7 && !playback.Next(30000),"Playback lost health, frame, tail or terminal actions");
+            GT_ASSERT(ended==(fast ? (tick==25 ? 800u:1600u):(tick==25 ? 3550u:11900u)),"Playback changed original minimum waits or caught up late frames");
+        }}
+        game::FrontendRequest request(game::FrontendRequest::FR_SCOUT_BATTLE);request.data.scout_battle.plan=new av::Plan(plan);
+        game::FrontendRequest copy(request);request.data.scout_battle.plan->steps[0].health[0]=0;
+        GT_ASSERT(copy.data.scout_battle.plan!=request.data.scout_battle.plan && copy.data.scout_battle.plan->steps[0].health[0]==10,"Frontend transport aliased the owning battle timeline");
+        GT_OK();
+    });
+
 	task->AddTest("SMAC Scout Base garrison matches original17 rounds and sequential bonuses",GT(){
         const model::Participant a(ATTACKER,1,10,1,1,0),d(DEFENDER,1,10,1,1,0);
         const auto result=model::ResolveFlatScoutAttack(a,d,3,{3,4},{ATTACKER,DEFENDER},false,{25,25,25});

@@ -352,6 +352,8 @@ void Game::Iterate() {
 		}
 	}
 
+    if(m_world_retired) {CancelScoutBattle();}
+    IterateScoutBattle();
 	{
 		auto it = m_animations.begin();
 		while ( it != m_animations.end() ) {
@@ -381,7 +383,7 @@ void Game::Iterate() {
 					//Log( "got " + std::to_string( requests->size() ) + " frontend requests" );
 
 					for ( const auto& request : *requests ) {
-						ProcessRequest( &request );
+                        m_deferred_frontend.push_back(request);
 						if ( m_on_game_exit ) {
 							break; // exiting game
 						}
@@ -396,6 +398,10 @@ void Game::Iterate() {
 		else {
 			m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests( m_world_ticket );
 		}
+
+        while(!m_world_retired && !m_scout_battle && !m_deferred_frontend.empty() && !m_on_game_exit) {
+            ProcessRequest(&m_deferred_frontend.front());m_deferred_frontend.pop_front();
+        }
 
 		// check if previous backend requests were sent successfully
 		if ( m_mt_ids.send_backend_requests ) {
@@ -1071,6 +1077,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 
 			break;
 		}
+        case FrontendRequest::FR_SCOUT_BATTLE: {StartScoutBattle(*request->data.scout_battle.plan);break;}
 		case FrontendRequest::FR_ANIMATION_ABORT: {
 			AbortAnimation( request->data.animation_abort.running_animation_id );
 			break;
@@ -1413,6 +1420,11 @@ void Game::Initialize(
 	m_global_handlers.before = m_ui->AddGlobalHandler(
 		ui::UI::GH_BEFORE, EH( this, game ) {
 
+            if(m_scout_battle) {
+                if(event.type==input::EV_MOUSE_DOWN) {++m_map_control.mouse_buttons_pressed;}
+                if(event.type==input::EV_MOUSE_UP && m_map_control.mouse_buttons_pressed) {--m_map_control.mouse_buttons_pressed;}
+                return true;
+            }
 			switch ( event.type ) {
 				case input::EV_MOUSE_DOWN: {
 					m_map_control.mouse_buttons_pressed++;
@@ -1847,6 +1859,7 @@ void Game::Deinitialize() {
 		m_textures.terrain = nullptr;
 	}
 
+    CancelScoutBattle();
 	for ( const auto& it : m_animations ) {
 		delete it.second;
 	}

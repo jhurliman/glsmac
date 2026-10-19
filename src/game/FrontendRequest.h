@@ -8,6 +8,7 @@
 #include "backend/turn/Types.h"
 
 namespace game {
+namespace scout_presentation {struct Plan;}
 
 namespace backend {
 namespace map { struct TerrainRenderUpdate; }
@@ -36,6 +37,7 @@ public:
 		FR_ANIMATION_DEFINE,
 		FR_ANIMATION_UNDEFINE,
 		FR_ANIMATION_SHOW,
+        FR_SCOUT_BATTLE,
 		FR_ANIMATION_ABORT,
 		FR_TILE_SELECT,
 		FR_UNIT_SELECT,
@@ -128,6 +130,7 @@ public:
 				float z;
 			} render_coords;
 		} animation_show;
+        struct {scout_presentation::Plan* plan;} scout_battle;
 		struct {
 			size_t running_animation_id;
 		} animation_abort;

@@ -1,4 +1,5 @@
 #include "UnitManager.h"
+#include "game/ScoutBattlePresentation.h"
 #include "Unit.h"
 #include "Def.h"
 #include "SmacScoutKeyboardAdmission.h"
@@ -120,6 +121,9 @@ void UnitManager::ApplyConventionalAttack(GSE_CALLABLE,PreparedConventionalAttac
 	auto removal=PrepareConventionalRemoval(GSE_CALL,{prepared.loser->m_id},nullptr,prepared.survivor);
 	if(prepared.defeated_base) {removal.DiscoverDefendedBase(prepared.defeated_base,prepared.survivor_state.owner_simulation_id);}
 	const auto message=prepared.survivor->m_def->m_name+" defeated "+prepared.loser->m_def->m_name+".";
+    FrontendRequest playback(FrontendRequest::FR_SCOUT_BATTLE);
+    NEW(playback.data.scout_battle.plan,scout_presentation::Plan,scout_presentation::Prepare(prepared.result));
+    auto frontend=*m_game->m_pending_frontend_requests;frontend.push_back(playback);
 	static_assert(std::is_nothrow_copy_assignable_v<SmacGameplayRandomState>);
 	// All queues, sight, strings, inventory/history and survivor validation are
 	// prepared. No callback or allocation between survivor and casualty authority.
@@ -128,7 +132,7 @@ void UnitManager::ApplyConventionalAttack(GSE_CALLABLE,PreparedConventionalAttac
 	m_game->m_simulation->value.gameplay_random=prepared.result.random;
 	if(prepared.palette_identifier) {m_game->m_smac_hit_palette_identifier=prepared.palette_identifier;}
 	if(prepared.defeated_base) {prepared.defeated_base->m_resource_context->recent_defender_loss=true;prepared.defeated_base->m_resource_context->SyncKnownStatusBits();}
-	removal.Commit();removal.Notify(GSE_CALL);m_game->Message(message);
+	removal.Commit();m_game->m_pending_frontend_requests->swap(frontend);removal.Notify(GSE_CALL);m_game->Message(message);
 }
 
 }

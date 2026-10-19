@@ -72,6 +72,9 @@ void Game::UpdateNativeTerrain() {
     if(!m_native_texture) {
         NEW(m_native_texture,types::texture::Texture,"NativeTerrainViewport",1024,511);
         NEWV(quad,types::mesh::Rectangle,(types::Vec2<float>{-1,1}),(types::Vec2<float>{1,1-2*511.0f/768}),0.0f);
+        // This quad is drawn directly in the world scene with face culling.
+        // Rectangle's default second face has the opposite winding.
+        quad->SetSurface(1,{0,2,1});
         NEW(m_native_actor,scene::actor::Mesh,"NativeTerrainViewport",quad);
         m_native_actor->SetPosition({0,0,0.2f});
         m_native_actor->SetRenderFlags(scene::actor::Actor::RF_IGNORE_CAMERA|scene::actor::Actor::RF_IGNORE_LIGHTING|scene::actor::Actor::RF_IGNORE_DEPTH);

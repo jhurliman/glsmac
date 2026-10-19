@@ -103,7 +103,7 @@ void Minimap::DrawDetail(ui::dom::Widget* widget) {
     const auto palette=g_engine->GetTextureLoader()->GetSmacGraphPalette();if(!palette) {throw std::runtime_error("Detail palette unavailable");}
     const auto shadow=smac_developed_overlay::ShadowLookup(palette->colors);
     auto frame=detail::Terrain(*m_detail,m_detail_center);
-    struct Text {detail::Point anchor;bool owned;};std::vector<Text> labels;
+    const auto* font=m_detail->bases.empty()?nullptr:g_engine->GetFontLoader()->LoadCustomFont("arialbd.ttf",9,loader::font::RasterMode::MONOCHROME);
     for(const auto& entry:detail::Entries(*m_detail,m_detail_center)) {
         const auto base=std::find_if(m_detail->bases.begin(),m_detail->bases.end(),[&](const auto& b){return b.tile==entry.tile;});
         if(base==m_detail->bases.end()) {continue;}
@@ -111,21 +111,18 @@ void Minimap::DrawDetail(ui::dom::Widget* widget) {
         const auto source=g_engine->GetTextureLoader()->GetSmacDetailBaseSprite(base->file,base->crop_y);
         if(!source) {continue;}
         detail::Composite(frame,anchor,*source,shadow,[](int,int,int,int,uint8_t){});
-        detail::PopulationBox(frame,anchor,base->owned);labels.push_back({anchor,base->owned});
+        detail::PopulationBox(frame,anchor,base->owned);
+        // Native Base calls paint body, badge and glyph before the next Base.
+        // Keep that order so a subsequent city/shadow can cover earlier text.
+        const auto& glyph=font->m_symbols['1'];
+        for(size_t y=0;y<glyph.height;++y) {for(size_t x=0;x<glyph.width;++x) {if(glyph.data[y*glyph.width+x]) {
+            const int px=anchor[0]+3+glyph.left+int(x),py=anchor[1]+9-glyph.top+int(y);
+            if(px>=0 && px<239 && py>=0 && py<119) {frame.pixels[py*240+px]=base->owned?155:0;}
+        }}}
     }
     for(int y=0;y<119;++y) {for(int x=0;x<239;++x) {
         const auto& rgb=palette->colors[frame.pixels[y*240+x]];preview->SetPixel(x,y,types::Color::RGBA(rgb[0],rgb[1],rgb[2],255));
     }}
-    if(!labels.empty()) {
-        const auto* font=g_engine->GetFontLoader()->LoadCustomFont("arialbd.ttf",9,loader::font::RasterMode::MONOCHROME);
-        const auto& glyph=font->m_symbols['1'];
-        for(const auto& label:labels) {
-            const auto color=types::Color::FromRGBA(label.owned?types::Color::RGB(216,224,235):types::Color::RGB(0,0,0));
-            for(size_t y=0;y<glyph.height;++y) {for(size_t x=0;x<glyph.width;++x) {if(glyph.data[y*glyph.width+x]) {
-                preview->SetPixelMaybe(label.anchor[0]+3+glyph.left+int(x),label.anchor[1]+9-glyph.top+int(y),color);
-            }}}
-        }
-    }
     preview->FullUpdate();auto* selection=widget->GetTexture(LI_SELECTION);selection->Clear();selection->FullUpdate();
 }
 

@@ -17,6 +17,8 @@
 #include "loader/font/FontLoader.h"
 #include "SlotBadges.h"
 #include "game/backend/Game.h"
+#include "game/backend/State.h"
+#include "game/backend/map/tile/Tile.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/Base.h"
 #include "game/backend/map/Map.h"
@@ -219,25 +221,25 @@ void BaseManager::DefineSlotBadges( const size_t slot_index, const faction::Fact
 }
 
 void BaseManager::SelectBase( Base* base ) {
-	m_game->UpdateTilePreview( base->GetTile() );
-	auto* game = m_game->GetGame();
-	auto* const b = game->GetBM()->GetBase( base->GetId() );
-	m_game->Trigger(
-		game->GetMap(), "base_preview", ARGS_F( &b ) {
-			{
-				"base",
-				b->Wrap( GSE_CALL )
-			},
-		}; }
-	);
-	m_game->Trigger(
-		game, "base_select", ARGS_F( &b ) {
-			{
-				"base",
-				b->Wrap( GSE_CALL )
-			},
-		}; }
-	);
+    const auto id=base->GetId();
+    auto* state=m_game->GetGame()->GetState();
+    const auto session=state->CaptureGameSession();
+    // All notification arguments are resolved on the owning script thread.
+    // No queued callback borrows this manager, a frontend Base or a stack local.
+    state->WithGameSession(session,state,[id,session](backend::Game* const game,GSE_CALLABLE) {
+        auto* state=game->GetState();
+        auto* current=game->GetBM()->GetBase(id);
+        if(!current || !game->GetMap()) {return;}
+        auto* tile=current->GetTile();
+        state->TriggerObject(game->GetMap(),"tile_preview",ARGS_F(tile){{"tile",tile->Wrap(GSE_CALL)}};});
+        if(!state->IsGameSessionActive(session)) {return;}
+        current=game->GetBM()->GetBase(id);if(!current) {return;}
+        state->TriggerObject(game->GetMap(),"base_preview",ARGS_F(current){{"base",current->Wrap(GSE_CALL)}};});
+        // Preview listeners can retire the Base or replace the entire session.
+        if(!state->IsGameSessionActive(session)) {return;}
+        current=game->GetBM()->GetBase(id);if(!current) {return;}
+        state->TriggerObject(game,"base_select",ARGS_F(current){{"base",current->Wrap(GSE_CALL)}};});
+    });
 }
 
 Base* BaseManager::GetBaseBefore( Base* base ) const {

@@ -20,6 +20,7 @@
 #include "game/frontend/unit/BadgeDefs.h"
 #include "game/frontend/base/Base.h"
 #include "game/frontend/base/BaseManager.h"
+#include "game/frontend/widget/BasePreview.h"
 #include "game/frontend/text/InstancedTextManager.h"
 #include "game/frontend/text/InstancedText.h"
 #include "game/frontend/faction/FactionManager.h"
@@ -2568,7 +2569,7 @@ public:
 		GT_OK();
 	}
 
-	std::string CheckFrontendBaseOwnership() {
+	std::string CheckFrontendBaseOwnership(int scenario=-1) {
 		class Textures final : public loader::texture::TextureLoader {
 		public: types::texture::Texture bitmap{512,512};
 		protected:
@@ -2590,10 +2591,12 @@ public:
 		auto* old_resources=g_engine->m_resource_manager;auto* old_textures=g_engine->m_texture_loader;auto* old_fonts=g_engine->m_font_loader;
 		{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;g_engine->m_texture_loader=&textures;g_engine->m_font_loader=&fonts;}
 		util::FinallyGuard restore([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=old_resources;g_engine->m_texture_loader=old_textures;g_engine->m_font_loader=old_fonts;});
-		return WithScriptValues([&](GSE_CALLABLE)->std::string {
+		size_t previews=0,selections=0,tiles=0;bool valid=true;
+		const auto checked=WithScriptValues([&](GSE_CALLABLE)->std::string {
 			auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
 			util::FinallyGuard close_ui([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
 			game::frontend::Game frontend(m_glsmac.get(),m_state,ui,{},{});
+			frontend.m_game=&m_game;
 			game::frontend::tile::Tile captured_tile({2,2}),first_tile({4,2}),second_tile({6,2});
 			scene::Scene scene("Base ownership",scene::SCENE_TYPE_WORLD);
 			game::frontend::sprite::InstancedSpriteManager sprites(&scene);
@@ -2626,8 +2629,68 @@ public:
 				&& manager.GetBaseAfter(friendly)==friendly,"navigation inferred owner from visual faction");
 			manager.UpdateBaseIdentity(captured,6,second.GetFaction(),"Recaptured");
 			GT_ASSERT(red_actor->HasInstance(2) && red_actor->HasInstance(3) && blue_actor->HasInstance(1) && !blue_actor->HasInstance(3),"repeated ownership/style changes reused stale actor instance IDs");
+            if(scenario>=0) {
+                using Base=game::backend::base::Base;
+                auto* native=new Base(&m_game,9,&m_state->m_slots->GetSlot(2),m_game.GetFaction("GAIANS"),m_game.GetMap()->GetTile(2,2),"Selected",{},{});
+                WithRW([&]{m_game.GetBM()->SpawnBase(GSE_CALL,native);});
+                m_game.GetMap()->On(GSE_CALL,"tile_preview",NATIVE_CALL(&tiles){++tiles;return VALUE(value::Undefined);}));
+                m_game.GetMap()->On(GSE_CALL,"base_preview",NATIVE_CALL(this,&previews,&valid,scenario) {
+                    ++previews;N_EXPECT_ARGS(1);N_GETVALUE(args,0,Object);
+                    auto* field=args.at("base");
+                    if(scenario==5) {valid=valid && field->type==VT_NULL;}
+                    else {auto* base=Base::Unwrap(field);valid=valid && base && base->m_id==9 && base->m_name=="Selected";}
+                    if(scenario==2) {WithRW([&]{m_game.GetBM()->DespawnBase(GSE_CALL,9);});}
+                    return VALUE(value::Undefined);
+                }));
+                m_game.On(GSE_CALL,"base_select",NATIVE_CALL(&selections,&valid) {
+                    ++selections;N_EXPECT_ARGS(1);N_GETVALUE(args,0,Object);
+                    auto* base=Base::Unwrap(args.at("base"));valid=valid && base && base->m_id==9;
+                    return VALUE(value::Undefined);
+                }));
+                if(scenario==6) {
+                    frontend.m_bm=&manager;
+                    util::FinallyGuard detach_base([&]{frontend.m_bm=nullptr;frontend.m_widgets.BasePreview=nullptr;frontend.m_widget_relations.clear();});
+                    auto presenter=std::make_unique<game::frontend::widget::BasePreview>(&frontend,ui);
+                    frontend.m_widgets.BasePreview=presenter.get();
+                    auto* root=static_cast<value::Object*>(ui->GetRoot()->Wrap(GSE_CALL));
+                    auto* widget=static_cast<::ui::dom::Widget*>(::ui::dom::Object::Unwrap(
+                        static_cast<value::Callable*>(root->Get("widget"))->Run(GSE_CALL,{new value::Object(GSE_CALL,{
+                            {"type",VALUE(value::String,,"base-preview")},{"width",VALUE(value::Int,,116)},{"height",VALUE(value::Int,,68)},
+                            {"data",new value::Object(GSE_CALL,{{"base",native->Wrap(GSE_CALL)}})}
+                        })})));
+                    GT_ASSERT(frontend.m_widget_relations.at(::ui::WT_BASE_PREVIEW).at(widget)==9,"Base widget did not render actual registered Base");
+                    widget->Hide();presenter.reset();frontend.m_widgets.BasePreview=nullptr;
+                    widget->WrapSet("data",new value::Object(GSE_CALL,{}),GSE_CALL);
+                    GT_OK();
+                }
+                std::exception_ptr failure;
+                std::thread receiver([&] {try {
+                    if(scenario>=4) {frontend.UpdateBasePreview(scenario==5?nullptr:captured);}
+                    else {manager.SelectBase(captured);}
+                }catch(...) {failure=std::current_exception();}});receiver.join();
+                if(failure) {std::rethrow_exception(failure);}
+                GT_ASSERT(previews==0 && selections==0 && tiles==0,"fixture did not defer actual frontend notifications");
+                if(scenario==1) {WithRW([&]{m_game.GetBM()->DespawnBase(GSE_CALL,9);});}
+                if(scenario==3) {
+                    const auto old=m_state->CaptureGameSession();m_state->RetireGameCallbacks(old);
+                    m_state->UnsetGame();m_state->SetGame(&m_game);
+                    WithRW([&]{m_game.GetBM()->DespawnBase(GSE_CALL,9);});
+                    auto* replacement=new Base(&m_game,9,&m_state->m_slots->GetSlot(2),m_game.GetFaction("GAIANS"),m_game.GetMap()->GetTile(2,2),"Replacement",{},{});
+                    WithRW([&]{m_game.GetBM()->SpawnBase(GSE_CALL,replacement);});
+                }
+            }
 			GT_OK();
 		});
+        if(!checked.empty()) {return checked;}
+        if(scenario>=0) {
+            ProcessAccumulations();
+            const auto expected_preview=scenario==1 || scenario==3 || scenario==6?0u:1u;
+            const auto expected_select=scenario==0?1u:0u;
+            const auto expected_tile=scenario==0 || scenario==2?1u:0u;
+            GT_ASSERT(valid && previews==expected_preview && selections==expected_select && tiles==expected_tile,
+                "deferred Base delivery retained a borrowed argument, retired Base or replaced session");
+        }
+        GT_OK();
 	}
 
 	std::string CheckUnitCommandCompletion( game::backend::unit::Unit* actor, game::backend::unit::Unit* helper ) {
@@ -11077,6 +11140,11 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 	task->AddTest("frontend Base ownership refresh retains identity rendering and owner navigation",GT(){
 		return BackendFixture::WithControllerViewport([] {BackendFixture fixture;return fixture.CheckFrontendBaseOwnership();});
 	});
+    for(const int scenario:{0,1,2,3,4,5,6}) {
+        task->AddTest("frontend Base deferred selection and card notification "+std::to_string(scenario),GT(scenario){
+            return BackendFixture::WithControllerViewport([&] {BackendFixture fixture;return fixture.CheckFrontendBaseOwnership(scenario);});
+        });
+    }
 	for ( const int failure : { 6, 7 } ) {
 		task->AddTest( "SMAC gameplay RNG claimed Start entropy failure " + std::to_string( failure - 5 ), GT( failure ) {
 			BackendFixture fixture; return fixture.CheckSimulationStartup( true, 0, false, false, 2, false, failure );

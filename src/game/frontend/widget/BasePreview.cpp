@@ -24,15 +24,18 @@ BasePreview::BasePreview( Game* const game, ui::UI* const ui )
 ) {}
 
 void BasePreview::Register( ui::dom::Widget* const widget ) {
+	const std::weak_ptr<const bool> lifetime=m_lifetime;
 	widget->OnUpdate(
-		F_WIDGET_UPDATE( this ) {
+		F_WIDGET_UPDATE( this, lifetime ) {
+			if(lifetime.expired()) {return;}
 			const auto* const b = ::game::backend::base::Base::Unwrap( data->value.at( "base" ) );
 			ASSERT( b, "invalid base ptr" );
 			m_game->SetWidgetRelation( m_type, b->m_id, widget );
 		}
 	);
 	widget->OnRemove(
-		F_WIDGET_REMOVE( this ) {
+		F_WIDGET_REMOVE( this, lifetime ) {
+			if(lifetime.expired()) {return;}
 			m_game->ClearWidgetRelation( m_type, widget );
 		}
 	);

@@ -2546,19 +2546,15 @@ void Game::UpdateUnitPreview( const unit::Unit* const unit ) {
 }
 
 void Game::UpdateBasePreview( const base::Base* const base ) {
-	auto* const b = base
-		? m_game->GetBM()->GetBase( base->GetId() )
-		: nullptr;
-	Trigger(
-		m_game->GetMap(), "base_preview", ARGS_F( &b ) {
-			{
-				"base",
-				b
-					? b->Wrap( GSE_CALL )
-					: VALUE( gse::value::Null ),
-			},
-		}; }
-	);
+    const auto id=base?std::optional<size_t>(base->GetId()):std::nullopt;
+    auto* state=m_game->GetState();
+    state->WithGameSession(state->CaptureGameSession(),state,[id](backend::Game* const game,GSE_CALLABLE) {
+        if(!game->GetMap() || !game->GetBM()) {return;}
+        auto* current=id?game->GetBM()->GetBase(*id):nullptr;
+        game->GetState()->TriggerObject(game->GetMap(),"base_preview",ARGS_F(current) {
+            {"base",current?current->Wrap(GSE_CALL):VALUE(gse::value::Null)},
+        };});
+    });
 }
 
 void Game::UpdatePreviews( tile::Tile* const tile, const unit::Unit* const unit ) {

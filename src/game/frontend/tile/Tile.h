@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <vector>
 #include <unordered_map>
 
@@ -76,6 +77,7 @@ public:
 
 	struct render_data_t {
 		types::Vec3 coords = {};
+        std::optional<types::Vec3> name_anchor;
 		backend::map::tile::tile_vertices_t selection_coords = {};
 		std::vector< types::mesh::Render* > preview_meshes = {};
 		std::vector< std::string > preview_lines = {};

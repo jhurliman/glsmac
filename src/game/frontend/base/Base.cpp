@@ -155,7 +155,10 @@ void Base::Show() {
 			}
 		);
 
-		if ( m_bm->m_smac_population ) { m_render.name_sprite->ShowAt(c); }
+        if ( m_bm->m_smac_population ) {
+            const auto& anchor=m_tile->GetRenderData().name_anchor;
+            m_render.name_sprite->ShowAt(anchor?anchor->InvertY():c);
+        }
 		else { m_render.name_sprite->ShowAt(
 			{
 				m_render.coords.x,

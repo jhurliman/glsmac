@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "Types.h"
 #include "game/backend/map/Types.h"
 #include "types/mesh/Types.h"
@@ -97,6 +99,11 @@ public:
 		tile_vertices_t coords;
 		tile_indices_t indices;
 	} data_mesh;
+
+    // Original zoom0 projector displacement: floor(mean outer native heights).
+    // Separate from the land fan center; absent on legacy/unproven geometry.
+    std::optional<uint8_t> smac_projector_height;
+    types::Vec3 GetProjectorCoords(tile_layer_type_t layer) const;
 
 	// visual traits
 	bool has_water;

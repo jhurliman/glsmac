@@ -50,6 +50,15 @@ const types::Vec3& TileState::GetCenterCoords( tile_layer_type_t layer ) const {
 	return layers[ layer ].coords.center;
 }
 
+types::Vec3 TileState::GetProjectorCoords(tile_layer_type_t layer) const {
+    ASSERT(layer<LAYER_MAX,"projector layer overflow");
+    auto center=layers[layer].coords.center;
+    if(layer==LAYER_LAND && smac_projector_height) {
+        center.z=s_consts.tile.scale.z+*smac_projector_height*(s_consts.tile.scale.y/48.0f);
+    }
+    return center;
+}
+
 const types::Buffer TileState::Serialize() const {
 	types::Buffer buf;
 
@@ -88,6 +97,11 @@ const types::Buffer TileState::Serialize() const {
 		buf.WriteString( a.name );
 		buf.WriteVec2u( a.tex_coords );
 	}
+
+    if(smac_projector_height) {
+        if(*smac_projector_height>127) {THROW("Invalid native projector height");}
+        buf.WriteString("SMAC_PROJECTOR_HEIGHT_V1");buf.WriteInt(*smac_projector_height);
+    }
 
 	return buf;
 }
@@ -142,6 +156,7 @@ const types::Buffer TileState::tile_surfaces_t::Serialize() const {
 }
 
 void TileState::Deserialize( types::Buffer buf ) {
+    smac_projector_height.reset();
 	coord = buf.ReadVec2f();
 	tex_coord.x = buf.ReadFloat();
 	tex_coord.y = buf.ReadFloat();
@@ -185,6 +200,13 @@ void TileState::Deserialize( types::Buffer buf ) {
 		sprite.tex_coords = buf.ReadVec2u();
 		sprites.push_back( sprite );
 	}
+
+    if(buf.lenr<buf.lenw) {
+        if(buf.ReadString(32)!="SMAC_PROJECTOR_HEIGHT_V1") {THROW("Unknown TileState projector extension");}
+        const auto height=buf.ReadInt();
+        if(height<0 || height>127 || buf.lenr!=buf.lenw) {THROW("Invalid native projector height payload");}
+        smac_projector_height=static_cast<uint8_t>(height);
+    }
 
 }
 

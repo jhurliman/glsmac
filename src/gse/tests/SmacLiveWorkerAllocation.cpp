@@ -2175,9 +2175,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
     task->AddTest("SMAC last Base capture joins native failed restart cleanup ending and actual Start",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
-        for(const int design:{1,0,2,3,4}) {for(const bool rollback:{false,true}) {
-            const bool with_native=design>=3,raze=design==2 || design==3;if(design>=2 && rollback) {continue;}const int remote_design=raze || with_native ? 1:design;
+        for(const int design:{1,0,2,3,4,5}) {for(const bool rollback:{false,true}) {
+            const bool computer=design==5,with_native=design==3 || design==4,raze=design==2 || design==3 || computer;if(design>=2 && rollback) {continue;}const int remote_design=raze || with_native ? 1:design;
             ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(BattleSource,true,64,32);fixture.BasePresentationRoles(names);std::string saved,own_record,native_wire,native_factory;size_t native_id=0;
+            size_t ending_notifications=0;bool observed_terminal=false;
             const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
                 auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);
                 auto* bm=game->GetBM();auto* um=game->GetUM();auto* actor=um->GetUnit(91);auto* foreign=&game->GetState()->m_slots->GetSlot(6);
@@ -2218,7 +2219,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
                     state.economy.at(1).credits=100;state.economy.at(2).credits=200;state.economy.at(2).population_aggregate=raze ? 1:2;
                     state.economy.at(1).regional_base_counts->at(1)=3;state.economy.at(2).regional_base_counts->at(1)=2;
-                });fixture.GameplayRandom({3,3});fixture.Updates();
+                });if(computer) {fixture.ResourceState([](auto& state){state.human_membership=2;});}
+                fixture.GameplayRandom({3,3});fixture.Updates();
                 auto* target_tile=target->GetTile();auto* base_wrapper=target->Wrap(GSE_CALL);auto* retained=homed->Wrap(GSE_CALL);auto* citizen=target->m_pops.at(19).Wrap(GSE_CALL);
                 const auto before=fixture.Snapshot();const auto id=Unit::GetNextId();const auto jsf=game->GetRandom()->GetStateString();
                 um->ValidateConventionalMove(actor,target->GetTile(),0);
@@ -2229,6 +2231,13 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         && Unit::Unwrap(retained)==homed && Pop::Unwrap(citizen)==&target->m_pops.at(19),"late last-capture failure published prepared retirement or faction authority");GT_OK();
                 }
                 own_record=Base::Serialize(own).ToString();
+                game->On(GSE_CALL,"smac_ending",NATIVE_CALL(game,computer,&ending_notifications,&observed_terminal) {
+                    ++ending_notifications;
+                    auto* outcome=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_smac_ending"));
+                    observed_terminal=static_cast<value::String*>(outcome->Get("kind"))->value==(computer ? "conquest":"human_defeat")
+                        && Rejects([&]{game->Event(GSE_CALL,"complete_turn",{});});
+                    return VALUE(value::Undefined);
+                }));
                 fixture.MoveEvent(GSE_CALL,actor,target->GetTile());
                 const auto& native=smac_restart_fixture::cases.back();
                 GT_ASSERT(um->GetUnits().size()==(with_native ? 2u:1u) && um->GetUnit(91)==actor && !um->GetUnit(92) && !um->GetUnit(93) && retained->type==VT_UNDEFINED
@@ -2243,9 +2252,14 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 if(with_native) {std::string factory;fixture.ResourceState([&](auto& state){factory=state.native_factory->Serialize().ToString();});
                     GT_ASSERT(um->GetUnit(native_id)->Native().Serialize().ToString()==native_wire && factory==native_factory,"Last-Base disposition changed unrelated native life or its factory");}
                 bool exact=false;fixture.ResourceState([&](auto& state) {exact=state.economy.at(1).credits==(raze ? 200:233) && state.economy.at(2).credits==(raze ? 110:77)
-                    && !state.roster[1].active && state.human_defeat_request==std::optional<int32_t>(2) && state.roster[0].active
+                    && !state.roster[1].active && state.human_defeat_request==(computer ? std::nullopt:std::optional<int32_t>(2))
+                    && state.conquest_winner==(computer ? std::optional<int32_t>(1):std::nullopt) && state.roster[0].active
                     && state.economy.at(1).regional_base_counts->at(1)==3 && state.economy.at(2).regional_base_counts->at(1)==(raze ? 1:2);});
                 GT_ASSERT(exact && game->GetSlotNum()==0,"native last-capture loot initialization stale counts activity ending or controller differs");
+                GT_ASSERT(ending_notifications==1 && observed_terminal,"Capture ending notification did not expose exactly one committed terminal result");
+                auto* ending=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_smac_ending"));
+                GT_ASSERT(static_cast<value::String*>(ending->Get("kind"))->value==(computer ? "conquest":"human_defeat"),"last capture reports the wrong ending kind");
+                GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"complete_turn",{});}),"terminal capture admitted another gameplay command");
                 size_t selections=0;bool refreshed=false;
                 for(const auto& request:fixture.Updates()) {
                     if(request.type==game::FrontendRequest::FR_BASE_UPDATE && request.data.base_update.base_id==702 && request.data.base_update.slot_index==0) {refreshed=true;}
@@ -2260,6 +2274,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();
                     GT_ASSERT(game->GetBM()->GetBases().size()==(raze ? 1u:2u) && game->GetUM()->GetUnits().size()==(with_native ? 2u:1u) && (raze ? !game->GetBM()->GetBase(702):game->GetBM()->GetBase(702)->m_owner->GetIndex()==0)
                         && restored.GameplayRandom()==SmacGameplayRandomState(3,raze ? 124333717u:smac_restart_fixture::cases.back().final_crt),"actual Start replayed last-capture disposition");
+                    auto* ending=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_smac_ending"));
+                    GT_ASSERT(static_cast<value::String*>(ending->Get("kind"))->value==(computer ? "conquest":"human_defeat"),"actual Start lost conquest/defeat distinction");
                     if(with_native) {std::string factory;restored.ResourceState([&](auto& state){factory=state.native_factory->Serialize().ToString();});
                         GT_ASSERT(game->GetUM()->GetUnit(native_id)->Native().Serialize().ToString()==native_wire && factory==native_factory,"Last-capture Start lost native identity/factory state");}
                     GT_OK();

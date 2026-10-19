@@ -1162,7 +1162,7 @@ WRAPIMPL_BEGIN( Game )
                 // viewers keep their existing separate admission and cache.
                 if(base->HasSmacResourceContext() && base->m_owner==m_slot && m_player && m_player->GetRole()==Player::PR_SINGLE
                     && !m_state->GetConnection() && m_simulation && m_smac_base_presentations
-                    && !m_simulation->value.human_defeat_request && !m_canonical_continuation
+                    && !m_simulation->value.HasEnding() && !m_canonical_continuation
                     && std::any_of(m_simulation->value.roster.begin(),m_simulation->value.roster.end(),[&](const auto& row){return row.active && row.slot==static_cast<int32_t>(m_slot_num) && m_simulation->value.IsHuman(row.simulation_id);})) {
                     Event(GSE_CALL,"open_smac_base_inspector",{{"base",base->Wrap(GSE_CALL)}});
                     return VALUE(gse::value::Undefined);
@@ -2051,7 +2051,7 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
                         WithRW([&]{HandleDominanceGraphEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),true);});continue;
                     }
                 }
-				if(m_simulation && m_simulation->value.human_defeat_request) {continue;} // queued gameplay cannot outlive the ending request
+				if(m_simulation && m_simulation->value.HasEnding()) {continue;} // queued gameplay cannot outlive the ending request
 				const auto& data = event->GetData();
 				const auto* args = static_cast< gse::value::Object* >( data.at( "data" ) );
 				if(!AllowsSmacEnergyRateEvent(event->GetEventName())) {continue;} // queued before the modal opened
@@ -3423,7 +3423,7 @@ bool Game::IsLocalTurnComplete() const {
 }
 
 void Game::CheckTurnComplete() {
-	if(m_canonical_continuation || m_canonical_turn_failed) {return;}
+	if(m_canonical_continuation || m_canonical_turn_failed || (m_simulation && m_simulation->value.HasEnding())) {return;}
 	if ( m_um->HasPendingConventionalUnits() ) { return; }
 	const bool is_turn_complete = IsLocalTurnComplete();
 	if ( m_is_turn_complete != is_turn_complete ) {

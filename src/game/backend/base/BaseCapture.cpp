@@ -140,11 +140,13 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
         const bool survives=std::any_of(m_bases.begin(),m_bases.end(),[&](const auto& entry) {
             return entry.second!=captured && entry.second->m_owner==captured->m_owner;
         });
-        // The paired native role control establishes ordinary retained HQ
-        // capture, not paid relocation, liberation or last-Base disposition.
-        if(raze || !headquarters || defender_economy.credits>=1000 || !survives || before.FormerOwner()!=old_owner
+        // Paired native controls establish retained HQ capture and failed
+        // last-size-one disposition, not paid relocation or liberation.
+        const bool ordinary_retained=!raze && headquarters && defender_economy.credits<1000 && survives;
+        const bool last_size_one=raze && !survives && simulation.roster.size()==2;
+        if((!ordinary_retained && !last_size_one) || before.FormerOwner()!=old_owner
             || (before.conquest && before.conquest->assimilation!=0)) {
-            THROW("Computer defender capture requires ordinary surviving unpaid Headquarters");
+            THROW("Computer defender capture requires measured retained HQ or last size-one disposition");
         }
     }
 	// Original HQ relocation precedes loot transfer and random facility loss.
@@ -311,6 +313,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 		if(leaving) {
 			data->disposition=PrepareSmacFactionDisposition(previous_owner,nullptr,new_owner,data->random);
 			auto& plan=*data->disposition;
+            if(!query_simulation.IsHuman(old_owner) && plan.site) {THROW("Computer capture restart placement needs its own control");}
 			data->faction_units.emplace(um->PrepareFactionUnitsForQuery(previous_owner,plan.site,plan.units,*plan.territory,nullptr,&*leaving));
 			data->faction_units->Refresh(actor);
 			query_simulation.economy.at(old_owner)=plan.economy;
@@ -433,6 +436,7 @@ void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 		m_game->AddFrontendRequest(request);m_game->Message("The restarted faction has been tracked.");
 	}
 	m_game->Message(message);
+    if(simulation.HasEnding()) {m_game->GetState()->TriggerObject(m_game,"smac_ending",ARGS_F(this) { }; });}
 }
 
 }

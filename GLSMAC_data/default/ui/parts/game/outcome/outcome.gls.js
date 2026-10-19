@@ -2,7 +2,11 @@ return {
 	refresh: () => {
 		const ending = this.p.game.get_smac_ending();
 		if (ending != null || this.p.game.get_smac_eliminated()) {
-			this.prompt.text = ending != null && !ending.local ? ending.faction_name + ' has been eliminated.' : 'Your faction has been eliminated.';
+			if (ending != null && ending.kind == 'conquest') {
+                this.prompt.text = 'Conquest victory: ' + ending.faction_name;
+            } else {
+                this.prompt.text = ending != null && !ending.local ? ending.faction_name + ' has been eliminated.' : 'Your faction has been eliminated.';
+            }
 			this.p.modules.menu.close_all();
 			this.window.show();
 		} else {

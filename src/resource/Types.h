@@ -73,6 +73,7 @@ enum resource_t : uint8_t {
 	WAV_MMENU,
 	WAV_TURN_COMPLETE,
 	WAV_PLS_DONT_GO,
+	PCX_CONSOLE2,
 
 };
 

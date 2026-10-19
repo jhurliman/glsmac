@@ -1758,6 +1758,33 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_OK();
         });
     });
+    task->AddTest("SMAC lower console refreshes real Base production and retires its preview", [](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);
+            auto* initialize=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_base_console_preview"));
+            auto* check=static_cast<value::Callable*>(initialize->Run(GSE_CALL,{game->Wrap(GSE_CALL)}));
+            const auto tanks=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Facility,3);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            const auto inspect=[&](const char* event,const std::string& expected)->std::string {
+                fixture.Updates();const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+                auto* wrapper=base->Wrap(GSE_CALL);
+                auto* target=std::string(event)=="base_preview" ? static_cast<gse::GCWrappable*>(game->GetMap()) : static_cast<gse::GCWrappable*>(game);
+                game->GetState()->TriggerObject(target,event,ARGS_F(&wrapper){{"base",wrapper}};});
+                check->Run(GSE_CALL,{wrapper,VALUE(value::String,,expected)});
+                GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random && fixture.Updates().empty(),"console changed production, world, RNG or presentation queue");GT_OK();
+            };
+            base->SetProductionState(GSE_CALL,ProductionState{tanks,7,scout,888,std::vector<ProductionItem>{}});
+            auto error=inspect("base_preview","Producing: Tanks (7/40)");if(!error.empty()){return error;}
+            base->SetProductionState(GSE_CALL,ProductionState{scout,3,tanks,777,std::vector<ProductionItem>{}});
+            error=inspect("update_base","Producing: "+game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog.source.units.at(2).name+" (3/10)");if(!error.empty()){return error;}
+            base->SetProductionState(GSE_CALL,std::nullopt);
+            error=inspect("update_base","Production unavailable");if(!error.empty()){return error;}
+            const auto id=base->m_id;game->GetBM()->DespawnBase(GSE_CALL,id);
+            game->GetState()->TriggerObject(game,"base_despawn",ARGS_F(id){{"base_id",VALUE(value::Int,,id)}};});
+            check->Run(GSE_CALL,{VALUE(value::Null),VALUE(value::String,,"")});GT_OK();
+        });
+    });
     task->AddTest("SMAC Base production presentation reads current and complete saved queue without mutation", [](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {

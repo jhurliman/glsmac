@@ -63,6 +63,10 @@ ResourceManager::ResourceManager( const std::string& data_path )
 			"console_x2_a.pcx"
 		},
 		{
+			PCX_CONSOLE2,
+			"console2.pcx"
+		},
+		{
 			PCX_CONSOLE2_A,
 			"console2_a.pcx"
 		},

@@ -824,6 +824,62 @@ static std::string CheckDisplayPalette() {
 	GT_OK();
 }
 
+static std::string CheckTerrainPalette() {
+    try {
+        const auto directory=std::filesystem::temp_directory_path()/("glsmac-terrain-palette-"+util::UUID::Generate());
+        const auto data=directory/"default";std::filesystem::create_directories(data);
+        util::FinallyGuard remove([&] {
+            for(const auto* name:{"texture.pcx","palette.pcx"}) {std::filesystem::remove(data/name);}
+            std::filesystem::remove(data);std::filesystem::remove(directory);
+        });
+        loader::texture::smac_effect::Palette expected{};
+        loader::texture::smac_effect::ApplySmacSoftwareReservedColors(expected);
+        for(bool common:{false,true}) {
+            auto* image=SDL_CreateRGBSurfaceWithFormat(0,257,2,8,SDL_PIXELFORMAT_INDEX8);
+            GT_ASSERT(image,"Could not allocate padded terrain fixture");
+            util::FinallyGuard release([&]{SDL_FreeSurface(image);});
+            SDL_Color colors[256];
+            for(size_t i=0;i<256;++i) {
+                colors[i]=common?SDL_Color{uint8_t(i),uint8_t(255-i),uint8_t(i/2),255}:SDL_Color{125,0,128,255};
+                if(common && i<236) {expected[i+10]={uint8_t(std::min<size_t>(i,235)),uint8_t(std::min<size_t>(255-i,235)),uint8_t(i/2)};}
+            }
+            if(common) {colors[3]={125,0,128,255};expected[13]={125,0,128};}
+            GT_ASSERT(SDL_SetPaletteColors(image->format->palette,colors,0,256)==0,"Could not set terrain fixture palette");
+            for(int y=0;y<2;++y) {
+                auto* row=static_cast<uint8_t*>(image->pixels)+y*image->pitch;
+                for(size_t x=0;x<257;++x) {row[x]=uint8_t(x);}
+            }
+            GT_ASSERT(SDL_SaveBMP(image,(data/(common?"palette.pcx":"texture.pcx")).string().c_str())==0,"Could not save terrain fixture");
+        }
+        WidgetGraphicsFixture graphics(directory.string());auto* loader=g_engine->GetTextureLoader();
+        auto* ordinary=loader->LoadCustomTexture("texture.pcx");
+        auto* mapped=loader->LoadCustomTexture("texture.pcx",types::texture::TF_SMAC_SOFTWARE_TERRAIN);
+        GT_ASSERT(mapped!=ordinary && loader->LoadCustomTexture("texture.pcx")==ordinary &&
+            loader->LoadCustomTexture("texture.pcx",types::texture::TF_SMAC_SOFTWARE_TERRAIN)==mapped,"Terrain palette cache aliased another profile");
+        for(size_t y=0;y<2;++y) {for(size_t x=0;x<257;++x) {
+            const auto source=uint8_t(x);const auto actual=mapped->GetPixel(x,y);
+            const auto* rgba=reinterpret_cast<const uint8_t*>(&actual);
+            if(source==255) {GT_ASSERT(rgba[3]==0,"Source255/loaded9 did not remain transparent");}
+            else {
+                const auto& rgb=expected[uint8_t(source+10)];
+                GT_ASSERT(actual==types::Color::RGB(rgb[0],rgb[1],rgb[2]),"Terrain source index or reserved/common color changed");
+            }
+        }}
+        // Every embedded RGB is the old transparency color. Only the source
+        // key may disappear, even when the common palette repeats that RGB.
+        GT_ASSERT(ordinary->GetPixel(1,0)==types::Color::RGBA(0,0,0,0),"Registered legacy transparency fixture was not admitted");
+        class FragmentLoader : public loader::texture::SDL2 {public:using SDL2::LoadTextureImpl;} fragments;
+        auto* part=fragments.LoadTextureImpl((data/"texture.pcx").string(),254,0,256,1,types::texture::LT_NONE,1.0f,types::texture::TF_SMAC_SOFTWARE_TERRAIN);
+        GT_ASSERT(part->GetPixel(0,0)==mapped->GetPixel(254,0) && part->GetPixel(2,1)==mapped->GetPixel(256,1),"Terrain cropped load changed palette or key phase");
+        bool rejected=false;
+        try {loader->LoadCustomTexture("texture.pcx",static_cast<types::texture::texture_flag_t>(types::texture::TF_SMAC_SOFTWARE_TERRAIN|types::texture::TF_SMAC_PALETTE));}
+        catch(const std::exception&) {rejected=true;}
+        GT_ASSERT(rejected,"Conflicting opaque and terrain profiles accepted");
+    }
+    catch(const std::exception& error) {GT_FAIL(std::string("terrain palette failed: ")+error.what());}
+    GT_OK();
+}
+
 static std::string CheckViewportEdges() {
 	try {
 		WidgetGraphicsFixture graphics;
@@ -964,6 +1020,7 @@ void AddMeshTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "movie native aspect stays inside the 4:3 presentation stage", GT() { return CheckMovieStageLayout(); } );
 	task->AddTest( "texture copy uploads the last row and column including one-pixel extents", GT() { return CheckTextureCopyUpdates(); } );
 	task->AddTest( "SMAC display palette preserves indexed colors and independent cache entries", GT() { return CheckDisplayPalette(); } );
+    task->AddTest("SMAC terrain palette preserves all source indices key transparency and padded rows",GT(){return CheckTerrainPalette();});
 	task->AddTest("SMAC native badge indexed palette transparency cached bank and owned textures",GT(){return CheckNativeBadgePalette();});
 	task->AddTest(
 		"test surface background replacement preserves texture ownership",

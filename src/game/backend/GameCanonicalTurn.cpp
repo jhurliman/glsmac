@@ -278,7 +278,7 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 			ResetCanonicalHurryMarkers(owner.first);
 			SettleCanonicalEconomy(owner.first);
 			++next.owner_index;next.base_index=0;next.stage=Stage::Base;
-			if(m_simulation->value.human_defeat_request) {break;} // finish this owner's tail, then the ending controller
+			if(m_simulation->value.HasEnding()) {break;} // finish this owner's tail, then the ending controller
             if(next.owner_index<next.owners.size() && IsActiveOwner(m_simulation->value,next.owners[next.owner_index].first)) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,next.owners[next.owner_index].first);}
 			continue;
 		}
@@ -318,7 +318,7 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 	m_state->TriggerObject(this,"turn",ARGS_F(this) {
 		{"year",VALUE(gse::value::Int,,m_current_turn.GetId()+2100)},
 	}; });
-	if(m_simulation->value.human_defeat_request) {
+	if(m_simulation->value.HasEnding()) {
 		m_state->TriggerObject(this,"smac_ending",ARGS_F(this) { }; });
 		return;
 	}
@@ -327,21 +327,22 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 }
 
 void Game::RequireSmacGameplayActive() const {
-	if(m_simulation && m_simulation->value.human_defeat_request) {throw std::runtime_error("Campaign has a human-defeat ending request");}
+	if(m_simulation && m_simulation->value.HasEnding()) {throw std::runtime_error("Campaign has an ending request");}
 }
 
 gse::Value* Game::GetSmacEnding(GSE_CALLABLE) const {
-	if(!IsRunning() || !m_simulation || !m_simulation->value.human_defeat_request) {return VALUE(gse::value::Null);}
+	if(!IsRunning() || !m_simulation || !m_simulation->value.HasEnding()) {return VALUE(gse::value::Null);}
 	ValidateCurrentSimulation();
-	const auto owner=*m_simulation->value.human_defeat_request;
+	const bool conquest=m_simulation->value.conquest_winner.has_value();
+    const auto owner=conquest ? *m_simulation->value.conquest_winner:*m_simulation->value.human_defeat_request;
 	const auto& roster=m_simulation->value.roster;
 	const auto found=std::find_if(roster.begin(),roster.end(),[&](const auto& row){return row.simulation_id==owner;});
-	if(found==roster.end() || found->active) {throw std::runtime_error("Ending request owner differs from current saved roster");}
+	if(found==roster.end() || found->active!=conquest) {throw std::runtime_error("Ending request owner differs from current saved roster");}
 	auto* player=m_state->m_slots->GetSlot(found->slot).GetPlayer();
 	const auto name=player->GetFaction()->m_name;
 	const bool local=m_slot && found->slot==static_cast<int32_t>(m_slot->GetIndex());
 	return VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
-		{"kind",VALUE(gse::value::String,,"human_defeat")}, {"owner_simulation_id",VALUE(gse::value::Int,,owner)},
+		{"kind",VALUE(gse::value::String,,conquest ? "conquest":"human_defeat")}, {"owner_simulation_id",VALUE(gse::value::Int,,owner)},
 		{"faction_name",VALUE(gse::value::String,,name)}, {"local",VALUE(gse::value::Bool,,local)}
 	}));
 }

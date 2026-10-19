@@ -91,7 +91,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=32,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=33,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -186,6 +186,7 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=32,bool
         }
     }
     if(version>=32) {suffix.WriteBool(value.dominance_native_keys.has_value());if(value.dominance_native_keys) {for(const auto& key:*value.dominance_native_keys) {suffix.WriteString(key);}}}
+    if(version>=33) {suffix.WriteBool(value.conquest_winner.has_value());if(value.conquest_winner) {suffix.WriteInt(*value.conquest_winner);}}
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -870,6 +871,23 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT(Rejects([]{SmacRankOrder::Update({-1,0,0,0,0,0,0},2);})
 			&& Rejects([]{SmacRankOrder::Update({0,0,0,0,0,0,0},1);}),"unproved negative score or native faction admitted");GT_OK();
 	});
+    task->AddTest("SMAC conquest outcome persists its sole human winner and does not appear in V32",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();value.roster[1].active=false;value.human_membership=128;value.conquest_winner=7;
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"conquest lost saved winner or changed authority");
+        auto old=value;old.conquest_winner.reset();
+        GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(value,32),technologies,profiles,units)==old,"V32 inferred a victory from the survivor count");
+        for(int scenario=0;scenario<5;++scenario) {
+            auto invalid=value;
+            if(scenario==0) {invalid.conquest_winner=2;}
+            if(scenario==1) {invalid.conquest_winner=8;}
+            if(scenario==2) {invalid.human_membership=0;}
+            if(scenario==3) {invalid.roster[1].active=true;}
+            if(scenario==4) {invalid.human_membership=132;invalid.human_defeat_request=2;}
+            GT_ASSERT(Rejects([&]{invalid.Serialize(technologies,profiles,units);}) && Rejects([&]{SmacSimulationState::Deserialize(CurrentWire(invalid),technologies,profiles,units);}),"invalid or conflicting conquest outcome accepted");
+        }GT_OK();
+    });
 	task->AddTest("SMAC human defeat request retains its owner independently of inactive status and migrates V12",GT(){
 		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
 		auto value=State();value.roster[1].active=false;value.human_defeat_request=2;

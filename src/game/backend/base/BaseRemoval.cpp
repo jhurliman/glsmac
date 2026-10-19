@@ -28,7 +28,7 @@ BaseManager::SmacDispositionPlan BaseManager::PrepareLastSmacBaseDisposition(con
     return PrepareSmacFactionDisposition(base.m_owner,&base,0,m_game->m_simulation->value.gameplay_random);
 }
 BaseManager::SmacDispositionPlan BaseManager::PrepareSmacFactionDisposition(slot::Slot* owner_slot,const Base* removed,int32_t captor,const SmacGameplayRandomState& random) const {
-    m_game->RequireSmacLocalHumanOwner(owner_slot);
+    if(!captor) {m_game->RequireSmacLocalHumanOwner(owner_slot);}
     const auto owner=m_game->RequireSmacProductionOwner(owner_slot).simulation_id;
     for(const auto& row:m_bases) {if(row.second!=removed && row.second->m_owner==owner_slot) {THROW("Faction disposition requires no surviving owned Base");}}
     auto& state=m_game->m_simulation->value;
@@ -146,6 +146,11 @@ void BaseManager::CommitSmacFactionDisposition(SmacDispositionPlan& plan) noexce
     if(plan.site) {state.battle_plan_target.at(owner)=-1;} // nonzero faction initializer resets only this owner
     state.roster[plan.participant].active=plan.site!=nullptr;
     if(!plan.site && state.IsHuman(owner)) {state.human_defeat_request=owner;}
+    else if(!plan.site) {
+        const auto survivor=std::find_if(state.roster.begin(),state.roster.end(),[](const auto& row){return row.active;});
+        if(survivor!=state.roster.end() && state.IsHuman(survivor->simulation_id)
+            && std::count_if(state.roster.begin(),state.roster.end(),[](const auto& row){return row.active;})==1) {state.conquest_winner=survivor->simulation_id;}
+    }
 }
 
 BaseManager::SmacAbandonmentResult BaseManager::DisposeLastSmacBase(GSE_CALLABLE,Base& base,

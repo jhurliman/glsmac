@@ -207,6 +207,9 @@ struct SmacSimulationState {
 	// Original human-loss ending request, distinct from local focus, inactive
 	// roster status and a conquest victory. Absence is not inferred from Bases.
 	std::optional<int32_t> human_defeat_request;
+    // Explicit single-survivor conquest outcome; never inferred during load.
+    std::optional<int32_t> conquest_winner;
+    bool HasEnding() const noexcept {return human_defeat_request.has_value() || conquest_winner.has_value();}
     // Accepted human controllers, independent of active membership, focus and
     // Single/Host/Player transport roles. Elimination/restart preserves this.
     uint8_t human_membership = 0;

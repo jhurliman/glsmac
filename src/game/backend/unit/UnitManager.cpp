@@ -721,7 +721,11 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnits(GSE_CALLABLE,
 UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnitsForQuery(slot::Slot* owner,map::tile::Tile* destination,
     const std::vector<std::pair<Def*,ConventionalUnitState>>& replacements,const map::SmacWorkerKnowledge& territory,
     PreparedConventionalUnit* transient,const PreparedConventionalRemoval* supplied) {
-    m_game->RequireSmacGameplayActive();m_game->RequireSmacLocalHumanOwner(owner);RequireConventionalUnitsReady();
+    m_game->RequireSmacGameplayActive();
+    const auto& admitted=m_game->RequireSmacProductionOwner(owner);
+    if(m_game->m_simulation->value.IsHuman(admitted.simulation_id)) {m_game->RequireSmacLocalHumanOwner(owner);}
+    else if(!supplied || destination || !replacements.empty()) {THROW("Computer faction cleanup requires the private failed-capture removal plan");}
+    RequireConventionalUnitsReady();
     if(!m_game->GetGCSpace()->IsAccumulating() || !m_game->IsRunning()) {THROW("Faction preparation requires its owning accumulation");}
     if(replacements.size()>8 || (replacements.empty() ? destination!=nullptr : destination==nullptr)) {
         THROW("Faction disposition requires at most eight replacements at one admitted site");

@@ -43,9 +43,16 @@ eliminated = false;
 handlers.turn({});
 test.assert(!visible && resets == 2);
 // A foreign human loss carries a global request independently of local status.
-ending = {local: false, faction_name: 'The University'};
+ending = {kind: 'human_defeat', local: false, faction_name: 'The University'};
 handlers.smac_ending({});
 test.assert(visible && prompt.text == 'The University has been eliminated.' && !eliminated);
 visible = false;
 outcome.init(p);
 test.assert(visible && prompt.text == 'The University has been eliminated.' && resets == 2);
+
+ending = {kind: 'conquest', local: true, faction_name: 'The Gaians'};
+handlers.smac_ending({});
+test.assert(visible && prompt.text == 'Conquest victory: The Gaians' && !eliminated);
+visible = false;
+outcome.init(p);
+test.assert(visible && prompt.text == 'Conquest victory: The Gaians' && resets == 2);

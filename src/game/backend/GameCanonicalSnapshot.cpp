@@ -142,7 +142,7 @@ void Game::ValidateCanonicalContinuation(const CanonicalTurnContinuation& next) 
     const bool former=next.stage==CanonicalTurnContinuation::Stage::FormerOwner;
     const bool research=next.stage==CanonicalTurnContinuation::Stage::ResearchFinish || next.stage==CanonicalTurnContinuation::Stage::ResearchBonus
         || next.stage==CanonicalTurnContinuation::Stage::ResearchOrdinarySelect || next.stage==CanonicalTurnContinuation::Stage::ResearchBonusSelect;
-    if(!m_simulation || m_simulation->value.human_defeat_request || (!colony && !research && !former) ||
+    if(!m_simulation || m_simulation->value.HasEnding() || (!colony && !research && !former) ||
         (next.screen_after_transfer || (former ? (bool(next.energy) || bool(next.screen_base) || bool(next.screen_request_id) || bool(next.colony)!=bool(next.former_colony_choice) || (next.colony && next.former_abandonment_tail))
             : (next.former_colony_choice || next.former_abandonment_tail || (colony?(!next.colony || bool(next.energy) || bool(next.screen_base) || bool(next.screen_request_id)):(bool(next.colony) || !next.energy)))))
         || next.turn!=GetTurnId() || next.owner_index>=next.owners.size()) {

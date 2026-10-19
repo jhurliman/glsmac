@@ -70,7 +70,8 @@ void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
         types::texture::Texture asset(162,764);
         asset.SetPixel(4,739,palette[241]);asset.SetPixel(4,747,palette[32]);asset.SetPixel(4,755,palette[242]);
         asset.SetPixel(4,763,palette[32]);asset.SetPixel(161,749,palette[241]);
-        const std::array<types::Color,3> configured{palette[242],palette[32],palette[241]};
+        const std::array<types::Color,3> configured{types::Color::FromRGBA(asset.GetPixel(4,755)),
+            types::Color::FromRGBA(asset.GetPixel(4,763)),types::Color::FromRGBA(asset.GetPixel(161,749))};
         const auto admitted=[&]{return game::frontend::base::MatchesSmacPopulationMetadata(asset,palette,241,32,242,configured);};
         GT_ASSERT(admitted(),"Measured stock metadata was rejected");
         for(const auto y:{739,747,755}) {
@@ -88,6 +89,12 @@ void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(game::frontend::base::SmacPopulationDisplayColor(palette,241).GetRGBA()==types::Color::FromRGB(0,235,0).GetRGBA()
             && game::frontend::base::SmacPopulationDisplayColor(palette,255).GetRGBA()==palette[255].GetRGBA(),
             "Software common-color cap changed reserved white or stock green");
+        for(int channel=0;channel<=255;++channel) {
+            palette[155]=types::Color::FromRGB(channel,channel,channel);
+            const auto expected=types::Color::RGBA(std::min(channel,235),std::min(channel,235),std::min(channel,235),255);
+            GT_ASSERT(game::frontend::base::SmacPopulationDisplayColor(palette,155).GetRGBA()==expected,
+                "Common palette clamp lost an unchanged channel byte");
+        }
         GT_OK();
     });
     task->AddTest("SMAC population badge preserves original one and two digit layout",GT(){
@@ -114,6 +121,12 @@ void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
             for(size_t y=0;y<16;++y) {GT_ASSERT(texture->GetPixel(0,y)==black.GetRGBA()
                 && texture->GetPixel(texture->GetWidth()-1,y)==black.GetRGBA(),"Population vertical border is not one pixel");}
         }
+        auto& zero=font.m_symbols['0'];free(zero.data);zero.width=9;zero.data=static_cast<unsigned char*>(malloc(9));
+        if(!zero.data) {throw std::bad_alloc();}std::fill_n(zero.data,9,255);
+        auto hundred=game::frontend::base::MakeSmacPopulationBadge(100,font,white,black,black);
+        GT_ASSERT(hundred->GetWidth()==30 && hundred->GetPixel(22,1)==black.GetRGBA()
+            && hundred->GetPixel(23,1)==clear.GetRGBA() && hundred->GetPixel(29,2)==black.GetRGBA(),
+            "Third population digit was clipped or native two-digit frame expanded");
         GT_OK();
     });
     task->AddTest("SMAC health bar renderer preserves indexed colors geometry cache and retirement",GT(){

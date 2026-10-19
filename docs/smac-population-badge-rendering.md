@@ -22,8 +22,9 @@ as the population becomes two digits. Existing Base refresh and sprite retiremen
 remain the callers. Other rulesets and custom faction identities retain their
 existing renderer.
 
-The native tests pin resolved stock/mod/script color admission and the software
-common-color cap, plus measured widths, baseline, digit advances, border and
+The native tests use the importer's stored packed-RGBA representation for stock/
+mod/script admission and pin all256 common-color channel inputs against integer
+235-cap results. They cover measured widths, baseline, digit advances, border and
 transparent/filled interiors independently of host font availability. The cached
 incremental build passes this test, the health-bar groups and frontend Base
 ownership/retirement navigation. Five affected production translation units pass
@@ -41,9 +42,14 @@ capture at d290eead (before the metadata/color-cap review follow-up):
 automated attempt timed out during loading and is not a successful capture.
 Audio was disabled; heap allocations and hardware frame rate were not checked.
 
+Three-digit populations retain the native88 frame measurement while allocating
+a transparent canvas for the complete glyph ink beyond the frame. The source
+uses TextOutA separately from its frame; a synthetic100 case verifies unclipped
+ink and the unchanged23-pixel frame. This is not a new original-x86100 capture.
+
 This is not full reference parity. The developed reference scene, population10
 live capture, original font raster comparison, absolute Base anchor, all zoom
-policies, three-digit overflow and foreign/knowledge occupancy styles still need
+policies and foreign/knowledge occupancy styles still need
 validation. The frontend's existing occupancy predicate is unchanged. SMAX
 presentation needs its own measured admission before sharing this path.
 

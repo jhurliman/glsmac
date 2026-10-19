@@ -11,11 +11,13 @@ def main():
     parser.add_argument('--planet-map',required=True)
     parser.add_argument('--cxx',default='c++')
     parser.add_argument('--sanitize',action='store_true')
+    parser.add_argument('--full-features',action='store_true',help='Compare the original complete tile-return feature schedule')
     args=parser.parse_args();root=Path(__file__).resolve().parents[2];data=root/'docs/behavior'
     pinned=json.loads((data/'planet-negative-landmark-full-cases.json').read_text())['asset_sha256']
     asset=Path(args.planet_map)
     if hashlib.sha256(asset.read_bytes()).hexdigest()!=pinned:raise ValueError('Planet asset differs from original receipt')
-    cases=json.loads((data/'viewport-geometry-lifecycle-cases.json').read_text())['cases']
+    case_file='viewport-feature-schedule-cases.json' if args.full_features else 'viewport-geometry-lifecycle-cases.json'
+    cases=json.loads((data/case_file).read_text())['cases']
     expected=[];lines=[str(len(cases))];camera=[40,40];zoom=0;relief=25
     kinds={'height':0,'shade':1,'projector':2}
     for i,c in enumerate(cases):
@@ -25,6 +27,8 @@ def main():
         if 'zoom' in spec:zoom=spec['zoom']
         if 'relief' in spec:relief=spec['relief']
         mode=0 if 'guard' in spec else 2 if 'pan' in spec else 1
+        if args.full_features:
+            camera=c['after']['camera'];zoom=c['after']['zoom'];relief=c['after']['step']
         lines.append(' '.join(map(str,camera+[zoom,relief,mode])))
         for e in c['events']:
             if e['kind'] not in kinds:continue

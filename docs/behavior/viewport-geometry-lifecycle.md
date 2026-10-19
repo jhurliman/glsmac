@@ -167,3 +167,9 @@ The live path still performs full repaint and uses backend-copied geometry.
 The measured incremental selector is available but has not yet replaced live
 bitmap scrolling, object projection, name/overlay scheduling, or cache lifetime.
 Negative-detail live geometry remains gated pending those connections.
+
+### Owned view scheduler integration checkpoint
+
+`NativeViewGeometry` owns a separate lazy view cache and produces selected terrain and object projection schedules from camera actions. The standalone production probe matches 30,772 original lifecycle query returns without feeding recorded query coordinates into the model. `verify_native_view_geometry.py --full-features` additionally matches all 15,964 original outer geometry query returns from the complete feature-pass controls, using the purchased Planet map. Both pass with ASan/UBSan. The full-feature receipt preserves numeric observations only; original artwork remains external.
+
+This producer is not yet connected to the live renderer. Indexed bitmap history, separate material admission, object anchor propagation and mutation invalidation remain required; these checks do not establish full viewport pixel parity.

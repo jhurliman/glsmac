@@ -2594,6 +2594,11 @@ public:
 		{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;g_engine->m_texture_loader=&textures;g_engine->m_font_loader=&fonts;}
 		util::FinallyGuard restore([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=old_resources;g_engine->m_texture_loader=old_textures;g_engine->m_font_loader=old_fonts;});
 		size_t previews=0,selections=0,tiles=0;bool valid=true;
+        // This fixture joins a producer while the caller owns an accumulation.
+        // Exclude collection for this artificial schedule: Collect holds pending
+        // before waiting for collect, but the joined producer needs pending.
+        // Production callers enqueue without joining inside an accumulation.
+        std::unique_lock pause_collection(g_engine->GetGC()->m_spaces_mutex);
 		const auto checked=WithScriptValues([&](GSE_CALLABLE)->std::string {
 			auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
 			util::FinallyGuard close_ui([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
@@ -2727,6 +2732,7 @@ public:
             }
 			GT_OK();
 		});
+        pause_collection.unlock();
         if(!checked.empty()) {return checked;}
         if(scenario>=0) {
             ProcessAccumulations();

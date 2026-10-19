@@ -32,6 +32,8 @@
 #include "game/frontend/sprite/InstancedSprite.h"
 #include "game/frontend/widget/UnitPreview.h"
 #include "scene/Scene.h"
+#include "scene/Camera.h"
+#include "game/frontend/MapProjection.h"
 #include "scene/actor/Sprite.h"
 #include "scene/actor/Instanced.h"
 #include "scene/actor/Mesh.h"
@@ -2626,6 +2628,50 @@ public:
 				&& manager.GetBaseAfter(friendly)==friendly,"navigation inferred owner from visual faction");
 			manager.UpdateBaseIdentity(captured,6,second.GetFaction(),"Recaptured");
 			GT_ASSERT(red_actor->HasInstance(2) && red_actor->HasInstance(3) && blue_actor->HasInstance(1) && !blue_actor->HasInstance(3),"repeated ownership/style changes reused stale actor instance IDs");
+            // Source-loaded University size0 rectangle: four original height contexts.
+            game::backend::faction::Faction original("ORIGINAL_GRID","Original grid");
+            original.m_bases_render={"synthetic-base-grid",1,1,100,75,50,37,1,1,1};
+            factions.DefineFaction(&original);
+            auto* original_faction=factions.GetFactionById("ORIGINAL_GRID");
+            game::frontend::Slot native_slot(3,original_faction);
+            manager.DefineSlotBadges(3,original_faction);
+            auto* legacy=original_faction->GetBaseSprite(false,0,0)->instanced_sprite;
+            auto* native=original_faction->GetBaseSprite(false,0,0,true)->instanced_sprite;
+            GT_ASSERT(legacy!=native && legacy->key!=native->key &&
+                legacy->actor->GetSpriteActor()->GetDimensions()==types::Vec2<float>(1,1),
+                "Native artwork replaced the independent legacy cache entry");
+            frontend.m_map_data.native_projection=true;
+            scene::Camera camera(scene::Camera::CT_ORTHOGRAPHIC);
+            camera.SetCustomAspectRatio(768.0f/1024);camera.SetAngle({-float(M_PI)*0.5f,float(M_PI)*0.75f,0});
+            camera.SetScale(game::frontend::map_projection::CameraScale(0.125f,true));
+            camera.SetPosition({0.75f,0.5f,0.5f});scene.SetCamera(&camera);scene.SetWorldInstancePositions({{0,0,0}});
+            util::FinallyGuard detach_camera([&]{scene.SetCamera(nullptr);});
+            for(const int height:{0,25,6,3}) {
+                game::frontend::tile::Tile native_tile({8,2});
+                auto* label=texts.CreateInstancedText("New Austin",manager.m_name_font,
+                    original_faction->m_colors.text,original_faction->m_colors.text_shadow);
+                game::frontend::base::Base base(&manager,100,"New Austin",&native_slot,&native_tile,false,
+                    {0,0,2+height/48.0f},label);
+                base.SetPops({},3);base.Show();
+                GT_ASSERT(base.GetSprite()->instanced_sprite==native,"Actual Base caller lost the native map projection");
+                const auto matrices=native->actor->GetInstanceMatrices();
+                GT_ASSERT(matrices.size()==1,"Native artwork instance was missing or shared a legacy actor");
+                const auto transform=camera.GetMatrix()*matrices.front();
+                auto mesh=native->actor->GetSpriteActor()->GenerateMesh();
+                types::Vec3 a,z;mesh->GetVertexCoord(0,&a);mesh->GetVertexCoord(2,&z);
+                const auto project=[&](float u,float v) {
+                    const types::Vec3 c{a.x+(z.x-a.x)*u/100,a.y+(z.y-a.y)*v/75,0};
+                    const auto& m=transform.m;
+                    const float x=m[0][0]*c.x+m[0][1]*c.y+m[0][2]*c.z+m[0][3];
+                    const float y=m[1][0]*c.x+m[1][1]*c.y+m[1][2]*c.z+m[1][3];
+                    return types::Vec2<float>{(x+1)*512,(1-y)*384};
+                };
+                const auto top_left=project(27,17),bottom_right=project(68,55);
+                GT_ASSERT(std::abs(top_left.x-555)<0.001f && std::abs(top_left.y-(257-height))<0.001f &&
+                    std::abs(bottom_right.x-596)<0.001f && std::abs(bottom_right.y-(295-height))<0.001f,
+                    "Actual Base sprite rectangle differs from original loaded metadata: "+top_left.ToString()+".."+bottom_right.ToString());
+            }
+
 			GT_OK();
 		});
 	}

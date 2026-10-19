@@ -33,7 +33,7 @@ class Faction {
 public:
 	Faction( const backend::faction::Faction* def, sprite::InstancedSpriteManager* ism );
 
-	sprite::Sprite* GetBaseSprite( const bool is_water, const uint8_t size, const uint8_t perimeter_level );
+	sprite::Sprite* GetBaseSprite( const bool is_water, const uint8_t size, const uint8_t perimeter_level, bool native_projection = false );
 	const std::string& GetBaseFilename() const { return m_render.bases_render.file; }
 
 	const std::string m_id;

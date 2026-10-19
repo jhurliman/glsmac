@@ -36,13 +36,17 @@ Faction::Faction( const backend::faction::Faction* def, sprite::InstancedSpriteM
 	//
 }
 
-sprite::Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size, const uint8_t perimeter_level ) {
+sprite::Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size, const uint8_t perimeter_level, const bool native_projection ) {
 	ASSERT( size < 4, "base size overflow ( " + std::to_string( size ) + " >= 4 )" );
 	ASSERT( perimeter_level < 3, "base perimeter level overflow ( " + std::to_string( perimeter_level ) + " >= 3 )" );
+    const auto& layout=m_render.bases_render;
+    const bool native=native_projection && !is_water && layout.grid_x==1 && layout.grid_y==1 &&
+        layout.cell_width==100 && layout.cell_height==75 && layout.cell_padding==1 &&
+        layout.cell_cx==50 && layout.cell_cy==37 && layout.scale_x==1 && layout.scale_y==1;
 	const uint8_t index = ( is_water
 		? 12
 		: 0
-	) + size + perimeter_level * 4;
+	) + size + perimeter_level * 4 + (native?24:0);
 	auto it = m_base_grid_sprites.find( index );
 	if ( it == m_base_grid_sprites.end() ) {
 
@@ -54,12 +58,12 @@ sprite::Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size,
 			h
 		};
 		const types::Vec2< float > dst_wh = {
-			m_render.bases_render.scale_x,
-			m_render.bases_render.scale_y / 1.0f
+			native?100.0f/96:m_render.bases_render.scale_x,
+			native?75.0f/48:m_render.bases_render.scale_y / 1.0f
 		};
 		const types::Vec2< uint32_t > cxy = {
-			(uint32_t)m_render.bases_render.cell_cx,
-			(uint32_t)m_render.bases_render.cell_cy
+			native?52u:(uint32_t)m_render.bases_render.cell_cx,
+			native?48u:(uint32_t)m_render.bases_render.cell_cy
 		};
 
 		const uint32_t x = m_render.bases_render.grid_x + size * ( w + p );
@@ -77,7 +81,7 @@ sprite::Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size,
 						"Faction_Base_" + m_id + "_" + ( is_water
 							? "W"
 							: "L"
-						) + " " + std::to_string( size ) + "_" + std::to_string( perimeter_level ),
+						) + " " + std::to_string( size ) + "_" + std::to_string( perimeter_level )+(native?"_native":""),
 						GetBaseGridTexture(),
 						{
 							x,

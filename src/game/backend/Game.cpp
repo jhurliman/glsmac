@@ -2574,23 +2574,7 @@ void Game::InitializeMap() {
 		}
 
 		{
-			const auto& slots = m_state->m_slots->GetSlots();
-			NEWV( slot_defines, FrontendRequest::slot_defines_t );
-			for ( const auto& slot : slots ) {
-				if ( slot.GetState() == slot::Slot::SS_OPEN || slot.GetState() == slot::Slot::SS_CLOSED ) {
-					continue;
-				}
-				ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
-				auto* player = slot.GetPlayer();
-				ASSERT( player, "slot player not set" );
-				ASSERT( player->GetFaction(), "slot player faction not set" );
-				slot_defines->push_back(
-					FrontendRequest::slot_define_t{
-						slot.GetIndex(),
-						player->GetFaction()->m_id
-					}
-				);
-			}
+			NEWV( slot_defines, FrontendRequest::slot_defines_t, CopyFrontendSlotDefinitions() );
 			auto fr = FrontendRequest( FrontendRequest::FR_SLOT_DEFINE );
 			fr.data.slot_define.slotdefs = slot_defines;
 			AddFrontendRequest( fr );

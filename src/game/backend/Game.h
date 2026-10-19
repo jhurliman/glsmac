@@ -712,6 +712,8 @@ private:
 	gse::Value* CopyTechnologyState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopyLocalFactionSummary( GSE_CALLABLE ) const;
     std::optional<std::array<int32_t,8>> NativeDominanceScores(const std::array<int32_t,8>& scores) const;
+    std::array<uint8_t,7> NativeBadgeSlots() const;
+    FrontendRequest::slot_defines_t CopyFrontendSlotDefinitions() const;
     bool RequestLocalDominanceGraph(GSE_CALLABLE,int64_t request);
     bool HandleDominanceGraphEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	gse::Value* CopyLocalMinimap( GSE_CALLABLE ) const;

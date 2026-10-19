@@ -7,6 +7,7 @@
 #include "game/frontend/SmacWaterCoast.h"
 #include "SmacEffect.h"
 #include "SmacNativeBadge.h"
+#include "SmacUnitBadge.h"
 #include "SmacBaseCard.h"
 #include "SmacTurnFrames.h"
 #include "SmacGraphPalette.h"
@@ -226,6 +227,33 @@ std::shared_ptr<const game::frontend::native_terrain::Source> SDL2::GetSmacTerra
     }}
     m_native_terrain_sources.emplace(key,source);return source;
 }
+struct SmacUnitBadgeSource {
+    std::array<SmacUnitBadge::Indexed,14> templates;
+    std::array<std::shared_ptr<const SmacUnitBadge>,112> colored{};
+};
+std::shared_ptr<const SmacUnitBadge> SDL2::GetSmacUnitBadge(int owner,int level,int variant) {
+    if(owner<1 || owner>7 || level<0 || level>6 || variant<0 || variant>1) {throw std::invalid_argument("Invalid original conventional badge bank");}
+    const auto path=GetCustomFilename("units.pcx"),palette_path=GetCustomFilename("palette.pcx");
+    const auto key=path+":"+palette_path;
+    auto found=m_unit_badge_sources.find(key);
+    if(found==m_unit_badge_sources.end()) {
+        std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,path);
+        using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
+        Surface units(load_image(bytes),SDL_FreeSurface);
+        auto source=std::make_shared<SmacUnitBadgeSource>();
+        for(int m=0;m<7;++m) {for(int v=0;v<2;++v) {source->templates[2*m+v]=ExtractSmacUnitBadge(units.get(),m,v);}}
+        found=m_unit_badge_sources.emplace(key,std::move(source)).first;
+    }
+    const size_t bank=14*owner+2*level+variant;
+    auto& badge=found->second->colored[bank];
+    if(!badge) {
+        const auto palette=GetSmacGraphPalette();
+        badge=std::make_shared<SmacUnitBadge>(ColorSmacUnitBadge(found->second->templates[2*level+variant],
+            palette->normal[owner],palette->alternate[owner],palette->colors));
+    }
+    return badge;
+}
+
 types::texture::Texture* SDL2::CreateSmacNativeBadgeTexture(int level,int variant) {
     if(level<0 || level>6 || variant<0 || variant>1) {THROW("Native badge requires level0..6 and variant0..1");}
     const auto units_path=GetCustomFilename("units.pcx"),palette_path=GetCustomFilename("palette.pcx");

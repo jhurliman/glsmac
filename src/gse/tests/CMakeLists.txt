@@ -19,6 +19,7 @@ SET( SRC ${SRC}
     ${PWD}/SmacRoadTube.cpp
     ${PWD}/SmacTerritoryBoundary.cpp
 	${PWD}/SmacTilePreview.cpp
+    ${PWD}/SmacCardOverlay.cpp
 	${PWD}/SmacLandMaterial.cpp
 	${PWD}/SmacTerrainLighting.cpp
 	${PWD}/SmacGroundEdgeCost.cpp

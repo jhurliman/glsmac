@@ -80,7 +80,7 @@ CLASS( UnitManager, common::Class )
 
 	SlotBadges* GetSlotBadges( const size_t slot_index ) const;
 	SlotBadges* GetNativeBadges();
-	void DefineSlotBadges( const size_t slot_index, const faction::Faction* faction );
+	void DefineSlotBadges( const size_t slot_index, const faction::Faction* faction, uint8_t native_palette_slot=255 );
 
 	const types::Vec3 GetCloserCoords( const types::Vec3& coords, const types::Vec3& ref_coords ) const;
 

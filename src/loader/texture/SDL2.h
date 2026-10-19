@@ -15,11 +15,13 @@ namespace texture {
 struct SmacMenuSource;
 struct SmacNativeBadgeSource;
 struct SmacBaseCardSource;
+struct SmacUnitBadgeSource;
 
 CLASS( SDL2, TextureLoader )
 	virtual ~SDL2();
 
 	types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant) override;
+    std::shared_ptr<const SmacUnitBadge> GetSmacUnitBadge(int owner,int level,int variant) override;
     std::shared_ptr<const SmacBaseCard> GetSmacNativeBaseCard(const std::string& faction,size_t x,size_t y,bool roster) override;
     std::shared_ptr<const game::smac_detail::Sprite> GetSmacDetailBaseSprite(const std::string& faction,size_t frame_y,size_t column=0) override;
     std::shared_ptr<const game::frontend::native_terrain::Source> GetSmacTerrainSource(const std::array<std::string,8>& faction_files={}) override;
@@ -44,6 +46,7 @@ protected:
 private:
 	std::unordered_map< std::string, std::shared_ptr< SmacMenuSource > > m_smac_menu_sources;
 	std::unordered_map<std::string,std::shared_ptr<SmacNativeBadgeSource>> m_native_badge_sources;
+    std::unordered_map<std::string,std::shared_ptr<SmacUnitBadgeSource>> m_unit_badge_sources;
     std::unordered_map<std::string,std::shared_ptr<const game::frontend::native_terrain::Source>> m_native_terrain_sources;
     std::unordered_map<bool,std::weak_ptr<types::texture::Texture>> m_effect_sources;
     std::unordered_map<std::string,std::shared_ptr<SmacBaseCardSource>> m_base_card_sources;

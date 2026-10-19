@@ -337,6 +337,7 @@ std::shared_ptr<const SmacGraphPalette> TextureLoader::GetSmacGraphPalette() {TH
 std::shared_ptr<const SmacTurnFrames> TextureLoader::GetSmacTurnFrames() {THROW("Turn Complete decoding is unsupported by this texture backend");}
 
 types::texture::Texture* TextureLoader::CreateSmacNativeBadgeTexture(int,int) {THROW("Native badge decoding is not supported by this texture loader");}
+std::shared_ptr<const SmacUnitBadge> TextureLoader::GetSmacUnitBadge(int,int,int) {return {};}
 std::shared_ptr<const game::frontend::native_terrain::Source> TextureLoader::GetSmacTerrainSource(const std::array<std::string,8>&) {THROW("Indexed terrain is unsupported by this texture loader");}
 
 types::texture::Texture* TextureLoader::CreateSmacMenuTexture( const std::string&, const std::string&, size_t, size_t, size_t, size_t ) {

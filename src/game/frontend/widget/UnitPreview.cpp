@@ -88,8 +88,14 @@ void UnitPreview::Update( ui::dom::Widget* const widget, const void* const data 
 		const float cx = roster ? 38 : 57, cy = roster ? 26 : 37;
 		AddMeshAndTexture( widget, index++, nullptr, card->texture_owner.get(), false,
 			{ 256 / area.width, 256 / area.height }, { ( cx - 128 ) / area.width, ( cy - 128 ) / area.height } );
-		auto* badge = preview_texture( render.badge.texture, index );
 		const float bx = roster ? 2 : 0, by = roster ? 1 : 0;
+        if(auto overlay=unit->GetCardOverlay()) {
+            widget->RetainTexture(overlay);
+            AddMeshAndTexture(widget,index++,nullptr,overlay.get(),false,
+                {23/area.width,30/area.height},{bx/area.width,by/area.height});
+            return;
+        }
+		auto* badge = preview_texture( render.badge.texture, index );
 		AddMeshAndTexture( widget, index++, render.badge.mesh, badge, true,
 			{ 23 / area.width, 30 / area.height }, { bx / area.width, by / area.height } );
 		auto* bar = preview_texture( render.healthbar.texture, index );

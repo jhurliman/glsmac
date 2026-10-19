@@ -3,6 +3,8 @@
 #include "game/backend/map/SmacLandmarkGeometry.h"
 #include "util/String.h"
 #include "loader/txt/FactionTXTLoader.h"
+#include "loader/texture/SmacUnitBadge.h"
+#include "loader/texture/SmacGraphPalette.h"
 #include "SmacFirstBase.h"
 #include "game/backend/WorldSnapshotWorkerKnowledge.h"
 #include "game/backend/WorldSnapshotTerritory.h"
@@ -1990,6 +1992,16 @@ public:
 		class BadgeLoader final : public loader::texture::TextureLoader {
 		public:
 			types::texture::Texture bitmap{ 512, 512 };
+            int card_owner=-1,card_variant=-1;
+            std::shared_ptr<const loader::texture::SmacUnitBadge> GetSmacUnitBadge(int owner,int level,int variant) override {
+                if(owner!=3 || level<0 || level>6 || variant<0 || variant>1) {throw std::runtime_error("Card used wrong native badge bank");}
+                card_owner=owner;card_variant=variant;
+                auto result=std::make_shared<loader::texture::SmacUnitBadge>();
+                result->rgba.fill(255);return result;
+            }
+            std::shared_ptr<const loader::texture::SmacGraphPalette> GetSmacGraphPalette() override {
+                return std::make_shared<loader::texture::SmacGraphPalette>();
+            }
             types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant) override {
                 if(level<0 || level>6 || variant!=0) {throw std::runtime_error("Wrong native badge bank");}
                 auto image=std::make_unique<types::texture::Texture>(23,30);
@@ -2029,6 +2041,8 @@ public:
 		resource::ResourceManager resources( installed && *installed ? installed : directory.string() );
 		if ( installed && *installed ) { resources.m_smac_path = installed; }
         resources.m_custom_resource_paths["arialbd.ttf"]="resource/font/terminus/TerminusTTF-4.49.3-minified.ttf";
+        resources.m_custom_resource_paths["arial.ttf"]="resource/font/terminus/TerminusTTF-4.49.3-minified.ttf";
+        resources.m_resource_paths[resource::TTF_ARIALNB]="resource/font/terminus/TerminusTTF-4.49.3-minified.ttf";
 		resources.m_resource_paths[ resource::PCX_FLAGS ] = "synthetic-badge";
 		resources.m_resource_paths[ resource::PCX_TEXTURE ] = "synthetic-selection";
 		auto badges_loader = std::make_unique< BadgeLoader >();
@@ -2375,6 +2389,52 @@ public:
 				}
 			} );
 			GT_ASSERT( native_extent, "selected card fitted transparent work surface instead of native pixel translation" );
+            {
+                auto card_factions=std::make_unique<game::frontend::faction::FactionManager>(&frontend);
+                auto card_texts=std::make_unique<game::frontend::text::InstancedTextManager>(ism.get());
+                frontend.m_itm=card_texts.get();
+                auto card_bases=std::make_unique<game::frontend::base::BaseManager>(&frontend,true);
+                frontend.m_fm=card_factions.get();frontend.m_bm=card_bases.get();
+                util::FinallyGuard detach_card_managers([&] {
+                    const auto found=frontend.m_slots.find(6);
+                    if(found!=frontend.m_slots.end()) {delete found->second;frontend.m_slots.erase(found);}
+                    frontend.m_fm=nullptr;frontend.m_bm=nullptr;frontend.m_itm=nullptr;
+                });
+                frontend.m_fm->DefineFaction(&faction_source);
+                game::FrontendRequest slots(game::FrontendRequest::FR_SLOT_DEFINE);
+                slots.data.slot_define.slotdefs=new game::FrontendRequest::slot_defines_t{{6,"TEST",3}};
+                frontend.ProcessRequest(&slots); // actual dispatch -> UnitManager -> SlotBadges
+                std::weak_ptr<types::texture::Texture> overlay_retained;
+                {
+                    game::frontend::Slot card_slot(6,&faction);
+                    game::frontend::unit::Unit card_unit(um.get(),badges.get(),198,def.get(),&card_slot,&tile,{},true,1,1,"Green",1,true,true,1);
+                    card_unit.SetMaximumHitPoints(10);card_unit.SetOrderGlyph('H',0);
+                    auto overlay=card_unit.GetCardOverlay();overlay_retained=overlay;
+                    GT_ASSERT(overlay && overlay==card_unit.GetCardOverlay() && badges_loader->card_owner==3 && badges_loader->card_variant==0,
+                        "Published original palette slot was lost or card cache rebuilt unchanged state");
+                    GT_ASSERT(overlay->HasFlag(types::texture::TF_SMAC_PALETTE) && overlay->GetPixel(6,6)==types::Color::RGB(0,255,0)
+                        && overlay->GetPixel(7,26)==types::Color::RGB(0,255,0) && overlay->GetPixel(11,7)==types::Color::RGB(0,0,0),
+                        "Card did not compose crisp native health/glyph at zoom0 offsets");
+                    presenter->Update(widget,&card_unit);
+                    bool full_uv=false;
+                    graphics.ui_scene->WithActors([&](const auto& actors) {for(const auto* candidate:actors) {
+                        const auto* image=dynamic_cast<const scene::actor::Mesh*>(candidate);
+                        if(image && image->GetTexture()==overlay.get()) {
+                            const auto* mesh=static_cast<const types::mesh::Render*>(image->GetMesh());types::Vec2<float> first,last;
+                            mesh->GetVertexTexCoord(0,&first);mesh->GetVertexTexCoord(2,&last);
+                            full_uv=first==types::Vec2<float>(0,1) && last==types::Vec2<float>(1,0);
+                        }
+                    }});
+                    GT_ASSERT(full_uv,"Native card reused atlas UVs divided by texture dimensions plus1");
+                    card_unit.SetHealth(0.7f);card_unit.SetActionability(true,false,1);
+                    const auto damaged=card_unit.GetCardOverlay();
+                    GT_ASSERT(damaged!=overlay && badges_loader->card_variant==1 && damaged->GetPixel(6,19)==types::Color::RGB(255,255,0)
+                        && damaged->GetPixel(6,20)==types::Color::RGB(0,0,0),"Spent/damaged card retained stale variant or wrong native14px yellow health fill");
+                }
+                GT_ASSERT(!overlay_retained.expired(),"Unit destruction freed a card still borrowed by the DOM");
+                presenter->Update(widget,unit.get());
+                GT_ASSERT(overlay_retained.expired(),"Replacing card actors retained retired overlay texture");
+            }
 			{
 				StaticDef marker_source( "FALLBACK_FORMER", manager->GetMoraleSet( "SCOUT_TEST" ), "Explicit port marker", MT_LAND, 1,
 					new FormerMarkerRender() );
@@ -5605,6 +5665,13 @@ public:
         const auto startup=CheckSimulationStartup(true,0,true,false,2,false,0,false,false,{},{},"UNIVERSITY",{},false,true);
         if(!startup.empty()) {return startup;}
         return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            const auto definitions=m_game.CopyFrontendSlotDefinitions();
+            GT_ASSERT(definitions.size()==1 && definitions[0].faction_id=="UNIVERSITY" && definitions[0].native_palette_slot==3,
+                "Actual admitted canonical Start slot publication followed dense owner instead of original palette slot3");
+            const auto saved_keys=m_game.m_simulation->value.dominance_native_keys;
+            std::swap(m_game.m_simulation->value.dominance_native_keys->at(1),m_game.m_simulation->value.dominance_native_keys->at(3));
+            GT_ASSERT(m_game.CopyFrontendSlotDefinitions()[0].native_palette_slot==255,"Actual slot publication overwrote differing retained source order");
+            m_game.m_simulation->value.dominance_native_keys=saved_keys;
             int viewer=0;
             for(const auto& row:m_game.m_simulation->value.roster) {
                 if(row.slot==static_cast<int32_t>(m_game.m_slot_num)) {viewer=row.simulation_id;}

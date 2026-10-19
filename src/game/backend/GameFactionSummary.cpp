@@ -1,9 +1,12 @@
 #include "Game.h"
 #include "Player.h"
 #include "slot/Slot.h"
+#include "slot/Slots.h"
 #include "base/Base.h"
 #include "base/BaseManager.h"
 #include "faction/SmacDominance.h"
+#include "faction/Faction.h"
+#include "settings/SmacBadgeSlots.h"
 #include "gse/value/Int.h"
 #include "gse/value/String.h"
 #include "gse/value/Undefined.h"
@@ -13,6 +16,35 @@
 #include <stdexcept>
 
 namespace game::backend {
+FrontendRequest::slot_defines_t Game::CopyFrontendSlotDefinitions() const {
+    FrontendRequest::slot_defines_t result;
+    const auto badges=NativeBadgeSlots();
+    for(const auto& slot:m_state->m_slots->GetSlots()) {
+        if(slot.GetState()==slot::Slot::SS_OPEN || slot.GetState()==slot::Slot::SS_CLOSED) {continue;}
+        if(slot.GetState()!=slot::Slot::SS_PLAYER) {throw std::runtime_error("Invalid frontend slot state");}
+        auto* player=slot.GetPlayer();
+        if(!player || !player->GetFaction()) {throw std::runtime_error("Invalid frontend slot definition");}
+        result.push_back({slot.GetIndex(),player->GetFaction()->m_id,slot.GetIndex()<badges.size()?badges[slot.GetIndex()]:uint8_t{255}});
+    }
+    return result;
+}
+
+std::array<uint8_t,7> Game::NativeBadgeSlots() const {
+    std::array<uint8_t,7> unavailable;unavailable.fill(255);
+    if(!m_state || m_state->GetConnection() || !m_player || m_player->GetRole()!=Player::PR_SINGLE) {return unavailable;}
+    const auto& settings=m_state->m_settings.global;
+    const auto& profiles=settings.GetSmacFactionStartupRules();
+    if(settings.GetRulesetId()!="smac" || !settings.IsRulesetLocked() || !profiles) {return unavailable;}
+    std::array<std::optional<std::string>,7> players{};
+    for(const auto& slot:m_state->m_slots->GetSlots()) {
+        if(slot.GetState()!=slot::Slot::SS_PLAYER) {continue;}
+        if(slot.GetIndex()>=players.size() || !slot.GetPlayer() || !slot.GetPlayer()->GetFaction()) {return unavailable;}
+        players[slot.GetIndex()]=slot.GetPlayer()->GetFaction()->m_id;
+    }
+    const auto* simulation=m_pending_simulation ? &*m_pending_simulation : m_simulation ? &*m_simulation : nullptr;
+    return ::game::backend::settings::SmacBadgeSlots(*profiles,players,simulation ? simulation->value.dominance_native_keys : std::nullopt);
+}
+
 std::optional<std::array<int32_t,8>> Game::NativeDominanceScores(const std::array<int32_t,8>& scores) const {
     const auto& state=m_simulation->value;
     const auto& profiles=*m_state->m_settings.global.GetSmacFactionStartupRules();

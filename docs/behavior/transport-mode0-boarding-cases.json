@@ -1,0 +1,2192 @@
+{
+  "research_id": "RE-SMAC-TRANSPORT-MODE0-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "cases": [
+    {
+      "id": "conventional_existing_capacity_stack_order",
+      "before": {
+        "count": 10,
+        "CRT_seed": 2115878600,
+        "shared_seed": 2000,
+        "pact": [
+          1,
+          1
+        ],
+        "native_plan": 0,
+        "peer_plan": 9,
+        "units": [
+          {
+            "id": 0,
+            "label": "carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 257,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": -1,
+            "previous": 1
+          },
+          {
+            "id": 1,
+            "label": "existing",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 256,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 0,
+            "previous": 2
+          },
+          {
+            "id": 2,
+            "label": "A",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 257,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 1,
+            "previous": 4
+          },
+          {
+            "id": 3,
+            "label": "B",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 256,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 9,
+            "previous": -1
+          },
+          {
+            "id": 4,
+            "label": "C",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 2,
+            "previous": 5
+          },
+          {
+            "id": 5,
+            "label": "D",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 4,
+            "previous": 6
+          },
+          {
+            "id": 6,
+            "label": "E",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 5,
+            "previous": 7
+          },
+          {
+            "id": 7,
+            "label": "foreign_pact",
+            "owner": 2,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 257,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 6,
+            "previous": 8
+          },
+          {
+            "id": 8,
+            "label": "air",
+            "owner": 1,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 7,
+            "previous": 9
+          },
+          {
+            "id": 9,
+            "label": "sea",
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 8,
+            "previous": 3
+          }
+        ]
+      },
+      "after": {
+        "count": 10,
+        "CRT_seed": 2115878600,
+        "shared_seed": 2000,
+        "pact": [
+          1,
+          1
+        ],
+        "native_plan": 0,
+        "peer_plan": 9,
+        "units": [
+          {
+            "id": 0,
+            "label": "carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 256,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": -1,
+            "previous": 1
+          },
+          {
+            "id": 1,
+            "label": "existing",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 257,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 0,
+            "previous": 2
+          },
+          {
+            "id": 2,
+            "label": "A",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 256,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 1,
+            "previous": 4
+          },
+          {
+            "id": 3,
+            "label": "B",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 257,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 9,
+            "previous": -1
+          },
+          {
+            "id": 4,
+            "label": "C",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 2,
+            "previous": 5
+          },
+          {
+            "id": 5,
+            "label": "D",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 4,
+            "previous": 6
+          },
+          {
+            "id": 6,
+            "label": "E",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 5,
+            "previous": 7
+          },
+          {
+            "id": 7,
+            "label": "foreign_pact",
+            "owner": 2,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 256,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 6,
+            "previous": 8
+          },
+          {
+            "id": 8,
+            "label": "air",
+            "owner": 1,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 7,
+            "previous": 9
+          },
+          {
+            "id": 9,
+            "label": "sea",
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 8,
+            "previous": 3
+          }
+        ]
+      },
+      "reported_carrier_capacity": 2,
+      "returned": 0,
+      "processed_cargo_order": [
+        "existing",
+        "B"
+      ],
+      "casualty_order": [],
+      "RNG_calls": 0,
+      "opaque_nonorder_bytes_preserved": true
+    },
+    {
+      "id": "conventional_already_full_repeat",
+      "before": {
+        "count": 10,
+        "CRT_seed": 2115878600,
+        "shared_seed": 2000,
+        "pact": [
+          1,
+          1
+        ],
+        "native_plan": 0,
+        "peer_plan": 9,
+        "units": [
+          {
+            "id": 0,
+            "label": "carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 256,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": -1,
+            "previous": 1
+          },
+          {
+            "id": 1,
+            "label": "existing",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 257,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 0,
+            "previous": 2
+          },
+          {
+            "id": 2,
+            "label": "A",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 256,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 1,
+            "previous": 4
+          },
+          {
+            "id": 3,
+            "label": "B",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 257,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 9,
+            "previous": -1
+          },
+          {
+            "id": 4,
+            "label": "C",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 2,
+            "previous": 5
+          },
+          {
+            "id": 5,
+            "label": "D",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 4,
+            "previous": 6
+          },
+          {
+            "id": 6,
+            "label": "E",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 5,
+            "previous": 7
+          },
+          {
+            "id": 7,
+            "label": "foreign_pact",
+            "owner": 2,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 256,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 6,
+            "previous": 8
+          },
+          {
+            "id": 8,
+            "label": "air",
+            "owner": 1,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 7,
+            "previous": 9
+          },
+          {
+            "id": 9,
+            "label": "sea",
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 8,
+            "previous": 3
+          }
+        ]
+      },
+      "after": {
+        "count": 10,
+        "CRT_seed": 2115878600,
+        "shared_seed": 2000,
+        "pact": [
+          1,
+          1
+        ],
+        "native_plan": 0,
+        "peer_plan": 9,
+        "units": [
+          {
+            "id": 0,
+            "label": "carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 256,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": -1,
+            "previous": 1
+          },
+          {
+            "id": 1,
+            "label": "existing",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 257,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 0,
+            "previous": 2
+          },
+          {
+            "id": 2,
+            "label": "A",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 256,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 1,
+            "previous": 4
+          },
+          {
+            "id": 3,
+            "label": "B",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 257,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 9,
+            "previous": -1
+          },
+          {
+            "id": 4,
+            "label": "C",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 2,
+            "previous": 5
+          },
+          {
+            "id": 5,
+            "label": "D",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 4,
+            "previous": 6
+          },
+          {
+            "id": 6,
+            "label": "E",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 5,
+            "previous": 7
+          },
+          {
+            "id": 7,
+            "label": "foreign_pact",
+            "owner": 2,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 256,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 6,
+            "previous": 8
+          },
+          {
+            "id": 8,
+            "label": "air",
+            "owner": 1,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 7,
+            "previous": 9
+          },
+          {
+            "id": 9,
+            "label": "sea",
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 8,
+            "previous": 3
+          }
+        ]
+      },
+      "reported_carrier_capacity": 2,
+      "returned": 0,
+      "processed_cargo_order": [
+        "B",
+        "existing"
+      ],
+      "casualty_order": [],
+      "RNG_calls": 0,
+      "opaque_nonorder_bytes_preserved": true
+    },
+    {
+      "id": "native_capacity_override99",
+      "before": {
+        "count": 7,
+        "CRT_seed": 2115878600,
+        "shared_seed": 2000,
+        "pact": [
+          1,
+          1
+        ],
+        "native_plan": 7,
+        "peer_plan": 1,
+        "units": [
+          {
+            "id": 0,
+            "label": "native_carrier",
+            "owner": 0,
+            "design": 9,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": -1,
+            "previous": 1
+          },
+          {
+            "id": 1,
+            "label": "other_native_carrier",
+            "owner": 0,
+            "design": 9,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 0,
+            "previous": 2
+          },
+          {
+            "id": 2,
+            "label": "native_land0",
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 1,
+            "payload": 1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 1,
+            "previous": 3
+          },
+          {
+            "id": 3,
+            "label": "native_land1",
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 2,
+            "previous": 4
+          },
+          {
+            "id": 4,
+            "label": "native_land2",
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 3,
+            "previous": 5
+          },
+          {
+            "id": 5,
+            "label": "native_land3",
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 4,
+            "previous": 6
+          },
+          {
+            "id": 6,
+            "label": "native_land4",
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 5,
+            "previous": -1
+          }
+        ]
+      },
+      "after": {
+        "count": 7,
+        "CRT_seed": 2115878600,
+        "shared_seed": 2000,
+        "pact": [
+          1,
+          1
+        ],
+        "native_plan": 7,
+        "peer_plan": 1,
+        "units": [
+          {
+            "id": 0,
+            "label": "native_carrier",
+            "owner": 0,
+            "design": 9,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": -1,
+            "previous": 1
+          },
+          {
+            "id": 1,
+            "label": "other_native_carrier",
+            "owner": 0,
+            "design": 9,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 0,
+            "previous": 2
+          },
+          {
+            "id": 2,
+            "label": "native_land0",
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 1,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 1,
+            "previous": 3
+          },
+          {
+            "id": 3,
+            "label": "native_land1",
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 1,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 2,
+            "previous": 4
+          },
+          {
+            "id": 4,
+            "label": "native_land2",
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 1,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 3,
+            "previous": 5
+          },
+          {
+            "id": 5,
+            "label": "native_land3",
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 1,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 4,
+            "previous": 6
+          },
+          {
+            "id": 6,
+            "label": "native_land4",
+            "owner": 0,
+            "design": 8,
+            "domain": 0,
+            "plan": 1,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 1,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 5,
+            "previous": -1
+          }
+        ]
+      },
+      "reported_carrier_capacity": 2,
+      "returned": 94,
+      "processed_cargo_order": [
+        "native_land4",
+        "native_land3",
+        "native_land2",
+        "native_land1",
+        "native_land0"
+      ],
+      "casualty_order": [],
+      "RNG_calls": 0,
+      "opaque_nonorder_bytes_preserved": true
+    },
+    {
+      "id": "conventional_eligibility",
+      "before": {
+        "count": 7,
+        "CRT_seed": 2115878600,
+        "shared_seed": 2000,
+        "pact": [
+          1,
+          1
+        ],
+        "native_plan": 0,
+        "peer_plan": 6,
+        "units": [
+          {
+            "id": 0,
+            "label": "carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": -1,
+            "previous": 1
+          },
+          {
+            "id": 1,
+            "label": "other_carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 0,
+            "previous": 2
+          },
+          {
+            "id": 2,
+            "label": "assigned_other",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 1,
+            "payload": 1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 1,
+            "previous": 3
+          },
+          {
+            "id": 3,
+            "label": "waiting",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 1,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 2,
+            "previous": 4
+          },
+          {
+            "id": 4,
+            "label": "foreign_pact",
+            "owner": 2,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 3,
+            "previous": 5
+          },
+          {
+            "id": 5,
+            "label": "air",
+            "owner": 1,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 4,
+            "previous": 6
+          },
+          {
+            "id": 6,
+            "label": "sea",
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 5,
+            "previous": -1
+          }
+        ]
+      },
+      "after": {
+        "count": 7,
+        "CRT_seed": 2115878600,
+        "shared_seed": 2000,
+        "pact": [
+          1,
+          1
+        ],
+        "native_plan": 0,
+        "peer_plan": 6,
+        "units": [
+          {
+            "id": 0,
+            "label": "carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": -1,
+            "previous": 1
+          },
+          {
+            "id": 1,
+            "label": "other_carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 0,
+            "previous": 2
+          },
+          {
+            "id": 2,
+            "label": "assigned_other",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 1,
+            "payload": 1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 1,
+            "previous": 3
+          },
+          {
+            "id": 3,
+            "label": "waiting",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 1,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 2,
+            "previous": 4
+          },
+          {
+            "id": 4,
+            "label": "foreign_pact",
+            "owner": 2,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 3,
+            "previous": 5
+          },
+          {
+            "id": 5,
+            "label": "air",
+            "owner": 1,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 4,
+            "previous": 6
+          },
+          {
+            "id": 6,
+            "label": "sea",
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 5,
+            "previous": -1
+          }
+        ]
+      },
+      "reported_carrier_capacity": 2,
+      "returned": 1,
+      "processed_cargo_order": [
+        "waiting"
+      ],
+      "casualty_order": [],
+      "RNG_calls": 0,
+      "opaque_nonorder_bytes_preserved": true
+    },
+    {
+      "id": "carrier_loss_old_sea",
+      "before": {
+        "count": 7,
+        "CRT_seed": 2115878600,
+        "shared_seed": 2000,
+        "pact": [
+          1,
+          1
+        ],
+        "native_plan": 0,
+        "peer_plan": 6,
+        "units": [
+          {
+            "id": 0,
+            "label": "carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": -1,
+            "previous": 1
+          },
+          {
+            "id": 1,
+            "label": "other_carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 0,
+            "previous": 2
+          },
+          {
+            "id": 2,
+            "label": "assigned_other",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 1,
+            "payload": 1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 1,
+            "previous": 3
+          },
+          {
+            "id": 3,
+            "label": "waiting",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 1,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 2,
+            "previous": 4
+          },
+          {
+            "id": 4,
+            "label": "foreign_pact",
+            "owner": 2,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 3,
+            "previous": 5
+          },
+          {
+            "id": 5,
+            "label": "air",
+            "owner": 1,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 4,
+            "previous": 6
+          },
+          {
+            "id": 6,
+            "label": "sea",
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 5,
+            "previous": -1
+          }
+        ]
+      },
+      "after": {
+        "count": 5,
+        "CRT_seed": 2115878600,
+        "shared_seed": 2000,
+        "pact": [
+          1,
+          1
+        ],
+        "native_plan": 0,
+        "peer_plan": 4,
+        "units": [
+          {
+            "id": 0,
+            "label": "other_carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 4,
+            "previous": -1
+          },
+          {
+            "id": 1,
+            "label": "assigned_other",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 321,
+            "morale": 1,
+            "next": -1,
+            "previous": 2
+          },
+          {
+            "id": 2,
+            "label": "foreign_pact",
+            "owner": 2,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 1,
+            "previous": 3
+          },
+          {
+            "id": 3,
+            "label": "air",
+            "owner": 1,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 2,
+            "previous": 4
+          },
+          {
+            "id": 4,
+            "label": "sea",
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 3,
+            "previous": 0
+          }
+        ]
+      },
+      "reported_carrier_capacity": 2,
+      "returned": 0,
+      "processed_cargo_order": [
+        "waiting"
+      ],
+      "casualty_order": [
+        "carrier",
+        "waiting"
+      ],
+      "RNG_calls": 0,
+      "opaque_nonorder_bytes_preserved": false
+    },
+    {
+      "id": "carrier_loss_old_land",
+      "before": {
+        "count": 7,
+        "CRT_seed": 2115878600,
+        "shared_seed": 2000,
+        "pact": [
+          1,
+          1
+        ],
+        "native_plan": 0,
+        "peer_plan": 6,
+        "units": [
+          {
+            "id": 0,
+            "label": "carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": -1,
+            "previous": 1
+          },
+          {
+            "id": 1,
+            "label": "other_carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 0,
+            "previous": 2
+          },
+          {
+            "id": 2,
+            "label": "assigned_other",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 1,
+            "payload": 1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 1,
+            "previous": 3
+          },
+          {
+            "id": 3,
+            "label": "waiting",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 1,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 2,
+            "previous": 4
+          },
+          {
+            "id": 4,
+            "label": "foreign_pact",
+            "owner": 2,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 3,
+            "previous": 5
+          },
+          {
+            "id": 5,
+            "label": "air",
+            "owner": 1,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 4,
+            "previous": 6
+          },
+          {
+            "id": 6,
+            "label": "sea",
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 5,
+            "previous": -1
+          }
+        ]
+      },
+      "after": {
+        "count": 6,
+        "CRT_seed": 2115878600,
+        "shared_seed": 2000,
+        "pact": [
+          1,
+          1
+        ],
+        "native_plan": 0,
+        "peer_plan": 5,
+        "units": [
+          {
+            "id": 0,
+            "label": "other_carrier",
+            "owner": 1,
+            "design": 3,
+            "domain": 1,
+            "plan": 7,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": -1,
+            "previous": 1
+          },
+          {
+            "id": 1,
+            "label": "assigned_other",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 1,
+            "payload": 0,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 0,
+            "previous": 2
+          },
+          {
+            "id": 2,
+            "label": "waiting",
+            "owner": 1,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 1,
+            "flags": 0,
+            "order": 0,
+            "payload": 0,
+            "order_aux": 0,
+            "morale": 1,
+            "next": 1,
+            "previous": 3
+          },
+          {
+            "id": 3,
+            "label": "foreign_pact",
+            "owner": 2,
+            "design": 2,
+            "domain": 0,
+            "plan": 3,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 2,
+            "previous": 4
+          },
+          {
+            "id": 4,
+            "label": "air",
+            "owner": 1,
+            "design": 10,
+            "domain": 2,
+            "plan": 4,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 3,
+            "previous": 5
+          },
+          {
+            "id": 5,
+            "label": "sea",
+            "owner": 1,
+            "design": 4,
+            "domain": 1,
+            "plan": 9,
+            "position": [
+              64,
+              16
+            ],
+            "home": -1,
+            "state": 0,
+            "flags": 0,
+            "order": 0,
+            "payload": -1,
+            "order_aux": 321,
+            "morale": 1,
+            "next": 4,
+            "previous": -1
+          }
+        ]
+      },
+      "reported_carrier_capacity": 2,
+      "returned": 0,
+      "processed_cargo_order": [],
+      "casualty_order": [
+        "carrier"
+      ],
+      "RNG_calls": 0,
+      "opaque_nonorder_bytes_preserved": false
+    }
+  ],
+  "scope": "Four mode0 invocations including repeated full-capacity call, one native capacity override, and two loss-wrapper returns from the same boarded snapshot. Original factories, capacity/reset/stack/compaction helpers execute; declared open-sea/no-Base marker, resolved foreign faction/Pact and diagnostic order auxiliary word321. Labels tracked by host deletion observer, not inserted in original records. No broad air-carrier, safe-Base, automation or combat matrix.",
+  "passed": true
+}

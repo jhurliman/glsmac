@@ -305,33 +305,15 @@ void BaseManager::RemoveStarvedSmacBase(GSE_CALLABLE, Base& base) {
     const auto regional=m_game->PrepareCanonicalRegionalBaseDelta(base,-1,map->GetTerritoryTopology());
     const auto totals=faction::AdjustSmacBaseTotal(m_game->m_simulation->value.retained_base_totals,base.GetSmacResourceContext().owner_simulation_id,-1);
     auto& economy=m_game->m_simulation->value.economy.at(base.GetSmacResourceContext().owner_simulation_id);
+    auto* um=m_game->GetUM();um->RequireConventionalUnitsReady();
+    auto units=um->PrepareBaseCenterRemoval(GSE_CALL,base);
+    units.PrepareBaseRemovalHomes(base,*replacement);
     std::optional<map::GlsmacTerritoryTopology> topology;
-    auto territory=m_game->PrepareBaseTerritory(nullptr,&base,false,&topology);
-    if (!territory) {THROW("Canonical starvation requires saved worker knowledge and territory");}
-
-    auto* um=m_game->GetUM();
-    um->RequireConventionalUnitsReady();
-    auto unit_updates=um->m_unit_updates;
-    std::vector<std::pair<unit::Unit*,unit::ConventionalUnitState>> homes;
-    homes.reserve(um->m_units.size());
-    for (const auto id:um->m_unit_order) {
-        auto* current=um->GetUnit(id);
-        if (!current) {THROW("Starvation requires registered Unit records");}
-        if(current->IsNative()) {(void)um->QueryNativeUnit(current->Native(),0);continue;}
-        if (!current->IsConventional()) {THROW("Starvation requires current conventional Unit records");}
-        auto state=current->Conventional();
-        if (state.home_base_id!=base.m_id) {continue;}
-        // Accepted live homes already require the same owner. Capture-created
-        // foreign home links are not admitted by this world's Unit resolver.
-        if (current->m_owner!=base.m_owner) {THROW("Foreign captured home repair is not admitted");}
-        state.home=unit::ConventionalUnitState::Home::Base;
-        state.home_base_id=replacement->m_id;
-        (void)m_game->ResolveConventionalUnit(state,current->m_owner);
-        homes.emplace_back(current,state);
-        auto& update=unit_updates.try_emplace(id,unit::UnitManager::unit_update_t{unit::UnitManager::UUO_NONE,current}).first->second;
-        if (update.ops & unit::UnitManager::UUO_DESPAWN) {THROW("Rehomed Unit has a pending removal");}
-        update.ops=static_cast<unit::UnitManager::unit_update_op_t>(update.ops|unit::UnitManager::UUO_REFRESH);
-    }
+    std::optional<map::SmacWorkerKnowledge> territory;
+    // Derive final claims from the candidate Unit registry and observations.
+    // Publishing a territory copy from the old roster would resurrect casualties.
+    um->QueryDefectionUnits(nullptr,units,[&]{territory=m_game->PrepareBaseTerritory(nullptr,&base,false,&topology);});
+    if(!territory) {THROW("Canonical starvation requires saved worker knowledge and territory");}
     auto bases=m_bases; bases.erase(base.m_id);
     auto order=m_base_order;
     order.erase(std::remove(order.begin(),order.end(),base.m_id),order.end());
@@ -345,9 +327,8 @@ void BaseManager::RemoveStarvedSmacBase(GSE_CALLABLE, Base& base) {
     static_assert(std::is_nothrow_copy_assignable_v<unit::ConventionalUnitState>);
     static_assert(std::is_nothrow_swappable_v<decltype(bases)> && std::is_nothrow_swappable_v<decltype(order)>
         && std::is_nothrow_swappable_v<decltype(assignments)> && std::is_nothrow_swappable_v<decltype(updates)>
-        && std::is_nothrow_swappable_v<decltype(unit_updates)> && std::is_nothrow_swappable_v<decltype(triggers)>);
-    for (const auto& home:homes) {std::get<unit::ConventionalUnitState>(home.first->m_state)=home.second;}
-    um->m_unit_updates.swap(unit_updates);
+        && std::is_nothrow_swappable_v<decltype(triggers)>);
+    units.Commit();
     m_bases.swap(bases); m_base_order.swap(order); m_work_assignments.swap(assignments);
     m_base_updates.swap(updates); m_updated_bases.swap(triggers); tile->base=nullptr;
     m_game->CommitBaseTerritory(territory,topology);
@@ -355,6 +336,7 @@ void BaseManager::RemoveStarvedSmacBase(GSE_CALLABLE, Base& base) {
     m_game->m_simulation->value.retained_base_totals=totals;
     std::unique_ptr<Base> retired(&base);
     lock.unlock();
+    units.Notify(GSE_CALL);
     // Stable IDs are unchanged; only record order compacts. Retire Pop/Base
     // wrappers even if the postcommit notification throws.
     m_game->GetState()->TriggerObject(this,"base_despawn",ARGS_F(&base) {{"base",base.Wrap(GSE_CALL)},};});

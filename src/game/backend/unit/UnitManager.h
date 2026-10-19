@@ -134,6 +134,7 @@ public:
 		friend class UnitManager;
 		friend class base::BaseManager;
 		void Query(const std::function<void()>& query) const;
+        void PrepareBaseRemovalHomes(const base::Base& removed,const base::Base& replacement);
         void QueryWithNativeRecords(const std::function<void()>& query) const;
 		void DiscoverDefendedBase(base::Base* target, int32_t observer);
 		struct Data;
@@ -141,6 +142,11 @@ public:
 		std::unique_ptr<Data> m_data;
 	};
 	PreparedConventionalRemoval PrepareConventionalRemoval( GSE_CALLABLE, const std::vector<size_t>& ids, PreparedConventionalUnit* created = nullptr, Unit* battle_survivor = nullptr );
+    // Environmental transactions share the same atomic registry/knowledge plan,
+    // admitting native casualties in addition to conventional Units. The owning
+    // terrain/Base transaction selects casualties before changing surface class.
+    PreparedConventionalRemoval PrepareWorldUnitRemoval(GSE_CALLABLE,const std::vector<size_t>& ids);
+    PreparedConventionalRemoval PrepareBaseCenterRemoval(GSE_CALLABLE,const base::Base& removed);
 	// Last-base disposition: retire this owner's complete old roster and stage
 	// the admitted restart package at one site. The Base caller commits its own
 	// registry and faction state in the same accumulation, before Notify.
@@ -299,7 +305,7 @@ private:
     PreparedDefectionUnits PrepareDefectionUnitsForQuery(slot::Slot* recipient,
         const std::vector<std::pair<size_t,ConventionalUnitState>>& changes,
         const PreparedConventionalUnit* created=nullptr,const PreparedConventionalRemoval* removed=nullptr);
-	PreparedConventionalRemoval PrepareRemovalForQuery(const std::vector<size_t>& ids,PreparedConventionalUnit* created=nullptr,Unit* survivor=nullptr);
+	PreparedConventionalRemoval PrepareRemovalForQuery(const std::vector<size_t>& ids,PreparedConventionalUnit* created=nullptr,Unit* survivor=nullptr,bool allow_native=false);
 	PreparedFactionUnits PrepareFactionUnitsForQuery(slot::Slot* owner,map::tile::Tile* destination,
 		const std::vector<std::pair<Def*,ConventionalUnitState>>& replacements,const map::SmacWorkerKnowledge& territory,
 		PreparedConventionalUnit* transient=nullptr,const PreparedConventionalRemoval* supplied=nullptr);

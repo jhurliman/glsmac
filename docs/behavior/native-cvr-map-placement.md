@@ -1,6 +1,6 @@
 # Native CVR map placement
 
-The original populated viewport copies the model renderer's complete 256-square color bitmap at 1:1 in the measured zoom0 scene-flag1 path. For the visible Scout, dispatcher anchor624,288 produces final copy origin546,210: the returned target anchor adds50 on each axis and the copy subtracts128. See [the frozen original viewport evidence](viewport-populated.md). Another original scene branch can use a2:1 copy; that branch and arbitrary display profiles are outside this zoom0 control.
+The original populated viewport copies the model renderer's complete 256-square color bitmap at 1:1 in the measured zoom0 scene-flag1 path. For the visible Scout, dispatcher anchor624,288 produces final copy origin546,210: the returned target anchor adds50 on each axis and the copy subtracts128. See [the frozen original viewport evidence](viewport-populated.md). Another original scene branch passes scale arguments [1,2], halving the image; that branch and arbitrary display profiles are outside this zoom0 control.
 
 The port previously retained the correct model pixels but mapped the256-square texture onto the explicitly stored1x1 world rectangle. In the native96x48 projection that reduces the image to96x48 screen pixels. Native standard CVR map sprites now use256/96 by256/48 world extents and the renderer's cached returned target anchor. The model bitmap and target metadata share one immutable cache entry. Separate actors share the same pixel owner across native/legacy placement.
 

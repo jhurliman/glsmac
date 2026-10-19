@@ -30,6 +30,7 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
     if(!planet || GetWidth()!=80 || GetHeight()!=80 || !m_territory_topology) {return {};}
     auto result=std::make_unique<::game::native_terrain::World>();
     result->horizontal_wrap=m_territory_topology->Wraps();
+    result->retained_geometry=true;
     result->resource_pattern=planet->ResourcePattern();
     result->automatic_land_resources=m_resource_policy->AutomaticLandResources();
     auto* geometry=GetNativeGeometry();
@@ -98,16 +99,17 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         // Pholus is height-only in this prefix. Its live adapter feature must
         // not veto the now-proven original profile; an unrelated port-only
         // ridge still lacks the retained source authority needed for admission.
-        const auto unsupported_ridge=(landmarks&0x800u) && output.heights
+        const auto unsupported_ridge=(landmarks&0x800u) && result->retained_geometry
             ?0u:static_cast<unsigned>(tile::FEATURE_FOSSIL_FIELD_RIDGE);
-        const bool quad_geometry=output.band<3 || output.heights;
+        const bool quad_geometry=output.band<3 || output.heights || result->retained_geometry;
         const auto unsupported_quads=((landmarks&2u) && quad_geometry?0u:static_cast<unsigned>(tile::FEATURE_VOLCANO)) |
             ((landmarks&1u) && quad_geometry?0u:static_cast<unsigned>(tile::FEATURE_GARLAND_CRATER));
         const auto unsupported_jungle=(landmarks&4u)?0u:static_cast<unsigned>(tile::FEATURE_JUNGLE);
         const auto unsupported_dunes=(landmarks&0x40u)?0u:static_cast<unsigned>(tile::FEATURE_DUNES);
         const auto unsupported_features=unsupported_jungle|unsupported_quads|unsupported_ridge|unsupported_dunes;
         const auto unsupported_work=live->terraforming&~((1u<<13)-1);
-        output.ordinary=!output.deformed && !unsupported_art_detail && !unsupported_landmark_materials && !(live->features&unsupported_features) && !unsupported_work;
+        output.material_admitted=!unsupported_art_detail && !unsupported_landmark_materials && !(live->features&unsupported_features) && !unsupported_work;
+        output.ordinary=!output.deformed && output.material_admitted;
     }}
     return result;
 }

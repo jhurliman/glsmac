@@ -29,7 +29,7 @@ std::vector<Placement> View(int x,int y,bool wrap) {
     return SelectView(Layout(x,y,0,wrap));
 }
 
-Frame Render(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags,uint8_t initial_index) {
+static Frame RenderImpl(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags,uint8_t initial_index,const std::vector<ViewGeometry::Terrain>* prepared,const Frame* previous=nullptr,Point scroll={{0,0}},raster::Clip clip={{0,0,1024,511}}) {
     if(source.loaded.width<=0 || source.loaded.height<=0 ||
         uint64_t(source.loaded.width)*static_cast<uint32_t>(source.loaded.height)!=source.loaded.pixels.size()) {
         throw std::invalid_argument("Invalid indexed terrain source");
@@ -140,15 +140,19 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             command.shadow_lookup=&source.shadow_lookup;commands.push_back(command);
         }
     };
+    size_t placement_index=0;
     for(const auto& placement:placements) {
+        const auto* submission=prepared?&prepared->at(placement_index):nullptr;++placement_index;
         const auto x=placement.tile[0],y=placement.tile[1];
         if(x<0 || x>=80 || y<0 || y>=80 || ((x^y)&1) ||
             placement.record_offset!=static_cast<uint32_t>(44*(40*y+x/2)) ||
             placement.flat_center[0]<-4096 || placement.flat_center[0]>4096 ||
             placement.flat_center[1]<-4096 || placement.flat_center[1]>4096) {throw std::invalid_argument("Invalid native terrain placement");}
         const auto& tile=*At(world,x,y);
-        if(!tile.ordinary) {continue;}
-        const auto fx=placement.flat_center[0]+offset[0],fy=placement.flat_center[1]+offset[1];
+        const bool admitted=submission && world.retained_geometry?tile.material_admitted:tile.ordinary;
+        if(!admitted) {continue;}
+        const auto center=submission?submission->flat_center:placement.flat_center;
+        const auto fx=center[0]+offset[0],fy=center[1]+offset[1];
         const auto resources=tile.resource_ready && !source.ter1.pixels.empty()
             ?smac_resource_art::Select(x,y,tile.band,tile.resource_items,world.resource_pattern,world.automatic_land_resources,display_flags)
             :std::vector<smac_resource_art::Pick>{};
@@ -171,7 +175,7 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         // Owned backend geometry already authenticates the exact height and
         // lighting inputs. Only the legacy ordinary fallback needs this broad
         // guard against unimplemented neighboring profile stencils.
-        if(!tile.heights || !tile.lighting) {
+        if(!submission && (!tile.heights || !tile.lighting)) {
             bool ordinary=true;
             for(int dy=-4;dy<=4;++dy) {for(int dx=-4;dx<=4;++dx) {if((dx-dy)%2) {continue;}
                 const auto* neighbor=At(world,x+dx,y+dy);
@@ -179,8 +183,8 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             }}
             if(!ordinary) {continue;}
         }
-        const auto light=tile.lighting?tile.lighting:terrain::OrdinaryLighting(x,y,bands);if(!light) {continue;}
-        const auto heights=tile.heights?*tile.heights:terrain::OrdinaryHeights(x,y,bands);
+        const auto light=submission?std::optional<std::array<int,5>>{submission->lighting}:tile.lighting?tile.lighting:terrain::OrdinaryLighting(x,y,bands);if(!light) {continue;}
+        const auto heights=submission?submission->heights:tile.heights?*tile.heights:terrain::OrdinaryHeights(x,y,bands);
         frame.landmark_tiles[static_cast<size_t>(y)*40+x/2]=!source.ter1.pixels.empty();
         const std::array<Point,5> points{{{{fx,fy-heights[0]}},{{fx-48,fy-heights[1]}},
             {{fx,fy-24-heights[2]}},{{fx+48,fy-heights[3]}},{{fx,fy+24-heights[4]}}}};
@@ -211,18 +215,45 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
             command.shader=pass.shader;command.shade_limits=pass.shade_limits;commands.push_back(command);
         }
-        const Point anchor{{fx-48,fy-24-terrain::LandmarkGeometry::FloorQuarter(heights[1]+heights[2]+heights[3]+heights[4])}};
+        const Point anchor=submission?Point{{submission->projector[0]+offset[0],submission->projector[1]+offset[1]}}
+            :Point{{fx-48,fy-24-terrain::LandmarkGeometry::FloorQuarter(heights[1]+heights[2]+heights[3]+heights[4])}};
         append_resources(anchor,false);append_developed(tile,anchor,false);
         append_marker(smac_landmark_art::Nexus(tile.landmarks,display_flags),anchor);append_resources(anchor,true);
         frame.resource_tiles[static_cast<size_t>(y)*40+x/2]=tile.resource_ready && !source.ter1.pixels.empty();
         frame.developed_tiles[static_cast<size_t>(y)*40+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
         ++frame.tiles;
     }
-    const raster::Bitmap background{1024,511,std::vector<uint8_t>(1024*511,initial_index)};
-    const auto drawn=raster::DrawBatch(background,commands,{{0,0,1024,511}},true);
+    raster::Bitmap background{1024,511,std::vector<uint8_t>(1024*511,initial_index)};
+    std::vector<uint8_t> retained_coverage(1024*511,0);
+    if(previous) {
+        if(previous->indexed.size()!=1024*511 || previous->coverage.size()!=1024*511 || scroll[1]!=0 ||
+            (scroll[0]!=-96 && scroll[0]!=96)) {throw std::invalid_argument("Invalid native horizontal bitmap history");}
+        for(int y=0;y<511;++y) {for(int x=0;x<1024;++x) {
+            const int sx=x-scroll[0];if(sx<0 || sx>=1024) {continue;}
+            const size_t dest=size_t(y)*1024+x,src=size_t(y)*1024+sx;
+            background.pixels[dest]=previous->indexed[src];retained_coverage[dest]=previous->coverage[src];
+        }}
+        for(size_t i=0;i<3200;++i) {
+            frame.developed_tiles[i]=frame.developed_tiles[i] || previous->developed_tiles[i];
+            frame.landmark_tiles[i]=frame.landmark_tiles[i] || previous->landmark_tiles[i];
+            frame.resource_tiles[i]=frame.resource_tiles[i] || previous->resource_tiles[i];
+        }
+    }
+    auto drawn=raster::DrawBatch(background,commands,clip,true);
+    for(size_t i=0;i<drawn.coverage.size();++i) {drawn.coverage[i]|=retained_coverage[i];}
     frame.rgba=material::ResolveRgba(drawn.bitmap.pixels,source.palette);
     for(size_t i=0;i<drawn.coverage.size();++i) {frame.rgba[4*i+3]=drawn.coverage[i]?255:0;}
+    frame.indexed=drawn.bitmap.pixels;frame.coverage=drawn.coverage;
     frame.attempts=drawn.attempts;frame.writes=drawn.writes;
     return frame;
+}
+Frame Render(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t flags,uint8_t initial_index) {
+    return RenderImpl(world,source,placements,base,offset,flags,initial_index,nullptr);
+}
+Frame RenderPrepared(const World& world,const Source& source,const ViewGeometry::Plan& plan,uint16_t base,uint32_t flags,uint8_t initial_index,const Frame* previous) {
+    if(bool(plan.regions)!=bool(previous)) {throw std::invalid_argument("Native dirty plan requires matching retained bitmap history");}
+    std::vector<Placement> placements;placements.reserve(plan.terrain.size());
+    for(const auto& tile:plan.terrain) {placements.push_back(tile.placement);}
+    return RenderImpl(world,source,placements,base,{{0,0}},flags,initial_index,&plan.terrain,previous,plan.scroll,plan.clip);
 }
 }

@@ -6,6 +6,7 @@
 #include "game/backend/map/tile/TileState.h"
 #include "types/mesh/Render.h"
 #include "util/FinallyGuard.h"
+#include "game/backend/map/Consts.h"
 
 namespace game {
 namespace frontend {
@@ -574,13 +575,25 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
     m_render_data.terrain_instances.swap(terrain_instances);
 	m_is_water = tile.is_water_tile;
 
-	for ( const auto& it : m_units ) {
-		it.second->UpdateFromTile();
-	}
-	if ( m_base ) {
-		m_base->UpdateFromTile();
-	}
+    m_canonical_coords=m_render_data.coords;m_canonical_name_anchor=m_render_data.name_anchor;
+    ApplyNativeProjectorHeight();UpdateObjectPositions();
 
+}
+
+void Tile::ApplyNativeProjectorHeight() {
+    m_render_data.coords=m_canonical_coords;m_render_data.name_anchor=m_canonical_name_anchor;
+    if(m_native_projector_height) {
+        m_render_data.coords.z=backend::map::s_consts.tile.scale.z+*m_native_projector_height*(backend::map::s_consts.tile.scale.y/48.0f);
+        m_render_data.name_anchor=m_render_data.coords;
+    }
+}
+void Tile::UpdateObjectPositions() {
+    for(const auto& entry:m_units) {if(!entry.second->IsMoving()) {entry.second->UpdateFromTile();}}
+    if(m_base) {m_base->UpdateFromTile();}
+}
+void Tile::SetNativeProjectorHeight(std::optional<int> height) {
+    if(height==m_native_projector_height) {return;}
+    m_native_projector_height=height;ApplyNativeProjectorHeight();UpdateObjectPositions();
 }
 
 }

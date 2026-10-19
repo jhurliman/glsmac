@@ -3,6 +3,12 @@
 #include "game/backend/map/Map.h"
 #include "game/backend/map/MapState.h"
 #include "game/backend/map/Consts.h"
+#include "game/backend/map/SmacTerrainGeometry.h"
+#include "game/backend/map/SmacPlanetMap.h"
+#include "game/backend/map/module/Finalize.h"
+#include "fixtures/SmacTerrainHeights.h"
+#include "types/mesh/Render.h"
+#include "types/mesh/Data.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/Random.h"
 #include "game/FrontendRequest.h"
@@ -76,6 +82,48 @@ public:
     size_t NextId() const { return world.m_next_sprite_instance_id; }
     bool InstancesEmpty() const { return world.m_sprite_instances.empty(); }
     bool ContextIdle() const { return !world.m_land_canvas && !world.m_current_ts; }
+    bool CheckNativeFinalizer(bool coast) {
+        using Planet=map::SmacPlanetMap;
+        std::string wire(Planet::FILE_BYTES,'\0');
+        wire.replace(0,11,"TERRANMAP\0\x1a",11);
+        wire[11]=5;wire[15]=80;wire[19]=80;wire[15+0xa30]=4;
+        for(size_t i=0;i<Planet::TILE_COUNT;++i) {
+            wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES]=char(4<<5);
+        }
+        // A sea contributor must flatten the whole shared west vertex.
+        if(coast) {wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+80*Planet::RECORD_BYTES]=char(2<<5);}
+        world.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+        types::mesh::Render render(25,20);
+        types::mesh::Data picking(5,4);
+        world.m_meshes.terrain=&render;world.m_meshes.terrain_data=&picking;
+        world.m_land_random=&gameplay;
+        auto* t=world.GetTile(2,2);auto* ts=world.GetTileState(t);
+        ts->coord={10,20};ts->has_water=coast;ts->is_coastline_corner=coast;
+        t->W->is_water_tile=coast;
+        world.m_map_state->first_run=true;
+        const auto state=gameplay.GetStateString();
+        game::backend::Random expected(nullptr,741);
+        if(!coast) {for(int i=0;i<2;++i) {expected.GetFloat(-2,2);}}
+        map::module::Finalize finalizer(&world);
+        finalizer.GenerateTile(t,ts,world.m_map_state);
+        types::Vec3 center,west,pick_center,pick_west;
+        render.GetVertexCoord(ts->layers[tile::LAYER_LAND].indices.center,&center);
+        render.GetVertexCoord(ts->layers[tile::LAYER_LAND].indices.left,&west);
+        picking.GetVertexCoord(ts->data_mesh.indices.center,&pick_center);
+        picking.GetVertexCoord(ts->data_mesh.indices.left,&pick_west);
+        const float center_z=map::s_consts.tile.scale.z+25.0f/48;
+        const auto close_coord=[](const types::Vec3& a,const types::Vec3& b) {
+            return std::abs(a.x-b.x)<0.000001f && std::abs(a.y-b.y)<0.000001f && std::abs(a.z-b.z)<0.000001f;
+        };
+        const bool result=close_coord(center,types::Vec3(10,20,center_z)) &&
+            close_coord(west,types::Vec3(9.5f,20,coast?2.0f:center_z)) &&
+            pick_center==center && pick_west==west &&
+            ts->layers[tile::LAYER_LAND].coords.center==center &&
+            gameplay.GetStateString()==expected.GetStateString() &&
+            (coast?gameplay.GetStateString()==state:gameplay.GetStateString()!=state);
+        world.m_meshes.terrain=nullptr;world.m_meshes.terrain_data=nullptr;
+        return result;
+    }
     auto Replay(const map::TerrainCoastRecipes::Land& land) { return world.m_coast_recipes.Prepare(land); }
 	void Commit( tile::Tile* t, uint16_t bits, map::Map::PreparedTerrainUpdate& update ) {
 		t->terraforming = bits; world.CommitOrdinaryTerrainUpdate( update );
@@ -83,6 +131,26 @@ public:
 };
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
+
+    task->AddTest("SMAC ordinary land heights match 18 original terrain contexts",GT(){
+        for(const auto& c:terrain_cases::ALL) {
+            const auto band_at=[&](int x,int y)->std::optional<uint8_t> {
+                if(y<0 || y>=80) {return std::nullopt;}
+                if(!c.flat) {x=(x+80)%80;}
+                if(x<0 || x>=80) {return std::nullopt;}
+                if(c.uniform_sea>=0) {return uint8_t(c.uniform_sea);}
+                for(const auto& b:c.bands) {if(b[0]==x && b[1]==y) {return uint8_t(b[2]);}}
+                return std::nullopt;
+            };
+            GT_ASSERT(map::smac_terrain::OrdinaryHeights(c.x,c.y,band_at,c.low)==c.expected,"Case: "+std::string(c.name));
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC ordinary land finalizer shares display picking and sprite heights without jitter",GT(){
+        {TerrainRenderFixture f;GT_ASSERT(f.CheckNativeFinalizer(false),"Interior fan or visual RNG schedule differs");}
+        {TerrainRenderFixture f;GT_ASSERT(f.CheckNativeFinalizer(true),"Coastal picking replaced native shared heights");}
+        GT_OK();
+    });
 
     task->AddTest("Bloom terrain appearance stages land fungus rockiness sprites and neighbors atomically", GT() {
         TerrainRenderFixture f; auto* t=f.world.GetTile(2,2); auto* peer=f.world.GetTile(4,4);

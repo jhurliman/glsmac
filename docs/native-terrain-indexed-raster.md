@@ -1,5 +1,10 @@
 # Ordinary indexed terrain raster
 
+The [ordered keyed batch extension](native-keyed-terrain-raster.md) adds native
+Rock/Forest/Fungus polygon coverage while retaining this triangle API and its
+measured controls. Its ordinary shaded profile uses [-4,4]; this original
+explicit triangle control profile remains [-256,256].
+
 `game::frontend::smac_terrain_raster` implements the bounded ordinary triangle
 contract in [the native reference](behavior/ordinary-land-triangle-spans.md).
 It is not yet connected to the live terrain painter. Texture selection,

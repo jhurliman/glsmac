@@ -226,7 +226,9 @@ const std::vector< types::Vec2< float > > InstancedFont::GetSymbolOffsets( const
 				oy * s_font_scale.y
 			}
 		);
-		const float offset = ( pos.dst.advance.x + pos.dst.top_left.x ) * s_font_scale.x;
+		// The bearing places this bitmap relative to the pen; it is not
+		// additional spacing before the next glyph.
+		const float offset = pos.dst.advance.x * s_font_scale.x;
 		total_offset += offset;
 		if ( i < middle ) {
 			x_center += offset;

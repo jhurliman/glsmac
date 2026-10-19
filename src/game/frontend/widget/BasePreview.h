@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Widget.h"
+#include <memory>
 
 namespace game {
 namespace frontend {
@@ -15,6 +16,9 @@ public:
 
 protected:
 	void Register( ui::dom::Widget* const widget ) override;
+
+private:
+	std::shared_ptr<const bool> m_lifetime=std::make_shared<const bool>(true);
 
 };
 

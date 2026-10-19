@@ -200,6 +200,7 @@ return {
 		});
 
 		this.frame.listen(p.map, 'base_preview', (e) => {
+			if (e.base == null || !#is_defined(e.base)) { return; }
 			const tile = e.base.get_tile();
 			if (tile != this.selected_tile) {
 				this.update_tile(tile);

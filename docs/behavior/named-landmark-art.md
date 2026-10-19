@@ -5,8 +5,10 @@ original caller contexts. Live quad composition passes land/sea and Forest/sea
 Fungus ordering controls. Uranium/Geothermal/Nexus marker selection, live
 composition and separate legacy-instance replacement are connected and tested.
 Jungle adjacency and Dunes/Farm precedence match all 76 additional original
-material contexts and are connected to live composition. Complete indexed-frame
-verification and a runtime visual capture remain pending. The contract below describes the
+material contexts and are connected to live composition. All 443 captured indexed frames replay exactly through the production rasterizer
+under ASan/UBSan, using owned external assets. This captured-command replay does
+not prove the complete live scene assembler. Live capture and original-scene
+parity remain pending. The contract below describes the
 original executable; it is not a production-completion claim.
 
 This closes the normal named-art continuation at zoom0 with known viewer3,

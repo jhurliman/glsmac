@@ -1,0 +1,2007 @@
+{
+  "scope": "Complete native height, vertex shade and projection returns; radius-six homogeneous metadata stencil, fresh geometry cache per case. No profile-bearing b03 bits, material raster, RGB or live-game claim.",
+  "total": 87,
+  "cases": [
+    {
+      "band": 2,
+      "word": "0x00000000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x75400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x01400400",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00000400",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x80000400",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x01400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x08400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x09400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x7f400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x80400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0xff400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00000004",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00000008",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00000010",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00000020",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00000040",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00000080",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00001000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00002000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00004000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00008000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00010000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00020000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00040000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00080000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00100000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00200000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 2,
+      "word": "0x00800000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00000000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x75400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x01400400",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00000400",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x80000400",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x01400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x08400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x09400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x7f400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x80400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0xff400000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00000004",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00000008",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00000010",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00000020",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00000040",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00000080",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00001000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00002000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00004000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00008000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00010000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00020000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00040000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00080000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00100000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00200000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 3,
+      "word": "0x00800000",
+      "heights": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        264
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00000000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00400000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x75400000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x01400400",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00000400",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x80000400",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x01400000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x08400000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x09400000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x7f400000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x80400000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0xff400000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00000004",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00000008",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00000010",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00000020",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00000040",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00000080",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00001000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00002000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00004000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00008000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00010000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00020000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00040000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00080000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00100000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00200000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    },
+    {
+      "band": 4,
+      "word": "0x00800000",
+      "heights": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "shades": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "projection": [
+        528,
+        239
+      ],
+      "equals_unmarked": true
+    }
+  ]
+}

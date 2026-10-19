@@ -191,6 +191,29 @@ public:
             if(!retained || retained->horizontal_wrap) return false;
             const auto& before=retained->tiles[40*40+20];
             if(before.band!=3 || before.contour!=50 || before.moisture!=2 || before.rockiness!=1 || before.items!=0x200020 || !before.ordinary) return false;
+            // The original landmark word combines profile memberships,
+            // dirty bookkeeping and an upper detail byte. Metadata alone
+            // must not create sea holes or exclude a neighboring land stencil.
+            const size_t record=Planet::PREFIX_BYTES+Planet::HEADER_BYTES+(40*40+20)*Planet::RECORD_BYTES;
+            for(const uint32_t word:{0x00400000u,0x75400000u,0x01400400u,0x80000001u}) {
+                for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=static_cast<char>(word>>(8*byte));
+                local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+                const auto metadata=local.CopyNativeTerrain();const auto& cell=metadata->tiles[40*40+20];
+                if(cell.deformed!=bool(word&0xb03u) || cell.ordinary==bool(word&0xb03u)) return false;
+            }
+            for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=0;
+            local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+            wire[record]=char(2<<5);
+            for(const uint32_t word:{0x00400010u,0x75400080u,0xff400090u,0x00400040u,0x80000001u,0x80000100u}) {
+                for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=static_cast<char>(word>>(8*byte));
+                local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+                const auto metadata=local.CopyNativeTerrain();const auto& cell=metadata->tiles[40*40+20];
+                const bool special_art=word&0x103u;
+                if(cell.deformed || cell.ordinary==special_art) return false;
+            }
+            wire[record]=char(3<<5);
+            for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=0;
+            local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
             live->terraforming=tile::TERRAFORMING_FARM;
             const auto farm=local.CopyNativeTerrain();
             if(!farm->tiles[40*40+20].ordinary || farm->tiles[40*40+20].items!=0x8020) return false;

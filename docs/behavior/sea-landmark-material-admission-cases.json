@@ -1,0 +1,331 @@
+{
+  "scope": "Full46fd00 return; known viewer3 flags1 zoom0. Native source/geometry/adjacency/material selection; existing final draw sinks. Radius-six homogeneous metadata, no new raster stores or bitmap copies in public fixtures.",
+  "total": 27,
+  "commands": 153,
+  "cases": [
+    {
+      "input": {
+        "id": "deep_00000000",
+        "band": 0,
+        "contour": 10,
+        "items": 0,
+        "landmark_word": 0,
+        "group": "deep"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 8
+    },
+    {
+      "input": {
+        "id": "deep_00000010",
+        "band": 0,
+        "contour": 10,
+        "items": 0,
+        "landmark_word": 16,
+        "group": "deep"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 8
+    },
+    {
+      "input": {
+        "id": "deep_00000080",
+        "band": 0,
+        "contour": 10,
+        "items": 0,
+        "landmark_word": 128,
+        "group": "deep"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 8
+    },
+    {
+      "input": {
+        "id": "deep_00400000",
+        "band": 0,
+        "contour": 10,
+        "items": 0,
+        "landmark_word": 4194304,
+        "group": "deep"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 8
+    },
+    {
+      "input": {
+        "id": "deep_75400000",
+        "band": 0,
+        "contour": 10,
+        "items": 0,
+        "landmark_word": 1967128576,
+        "group": "deep"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 8
+    },
+    {
+      "input": {
+        "id": "deep_01400010",
+        "band": 0,
+        "contour": 10,
+        "items": 0,
+        "landmark_word": 20971536,
+        "group": "deep"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 8
+    },
+    {
+      "input": {
+        "id": "deep_01400080",
+        "band": 0,
+        "contour": 10,
+        "items": 0,
+        "landmark_word": 20971648,
+        "group": "deep"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 8
+    },
+    {
+      "input": {
+        "id": "deep_80400080",
+        "band": 0,
+        "contour": 10,
+        "items": 0,
+        "landmark_word": 2151678080,
+        "group": "deep"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 8
+    },
+    {
+      "input": {
+        "id": "deep_ff400010",
+        "band": 0,
+        "contour": 10,
+        "items": 0,
+        "landmark_word": 4282384400,
+        "group": "deep"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 8
+    },
+    {
+      "input": {
+        "id": "shelf_00000000",
+        "band": 2,
+        "contour": 50,
+        "items": 0,
+        "landmark_word": 0,
+        "group": "shelf"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 4
+    },
+    {
+      "input": {
+        "id": "shelf_00000010",
+        "band": 2,
+        "contour": 50,
+        "items": 0,
+        "landmark_word": 16,
+        "group": "shelf"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 4
+    },
+    {
+      "input": {
+        "id": "shelf_00000080",
+        "band": 2,
+        "contour": 50,
+        "items": 0,
+        "landmark_word": 128,
+        "group": "shelf"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 4
+    },
+    {
+      "input": {
+        "id": "shelf_00400000",
+        "band": 2,
+        "contour": 50,
+        "items": 0,
+        "landmark_word": 4194304,
+        "group": "shelf"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 4
+    },
+    {
+      "input": {
+        "id": "shelf_75400000",
+        "band": 2,
+        "contour": 50,
+        "items": 0,
+        "landmark_word": 1967128576,
+        "group": "shelf"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 4
+    },
+    {
+      "input": {
+        "id": "shelf_01400010",
+        "band": 2,
+        "contour": 50,
+        "items": 0,
+        "landmark_word": 20971536,
+        "group": "shelf"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 4
+    },
+    {
+      "input": {
+        "id": "shelf_01400080",
+        "band": 2,
+        "contour": 50,
+        "items": 0,
+        "landmark_word": 20971648,
+        "group": "shelf"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 4
+    },
+    {
+      "input": {
+        "id": "shelf_80400080",
+        "band": 2,
+        "contour": 50,
+        "items": 0,
+        "landmark_word": 2151678080,
+        "group": "shelf"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 4
+    },
+    {
+      "input": {
+        "id": "shelf_ff400010",
+        "band": 2,
+        "contour": 50,
+        "items": 0,
+        "landmark_word": 4282384400,
+        "group": "shelf"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 4
+    },
+    {
+      "input": {
+        "id": "shelf_fungus_00000000",
+        "band": 2,
+        "contour": 50,
+        "items": 32,
+        "landmark_word": 0,
+        "group": "shelf_fungus"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 5
+    },
+    {
+      "input": {
+        "id": "shelf_fungus_00000010",
+        "band": 2,
+        "contour": 50,
+        "items": 32,
+        "landmark_word": 16,
+        "group": "shelf_fungus"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 5
+    },
+    {
+      "input": {
+        "id": "shelf_fungus_00000080",
+        "band": 2,
+        "contour": 50,
+        "items": 32,
+        "landmark_word": 128,
+        "group": "shelf_fungus"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 5
+    },
+    {
+      "input": {
+        "id": "shelf_fungus_00400000",
+        "band": 2,
+        "contour": 50,
+        "items": 32,
+        "landmark_word": 4194304,
+        "group": "shelf_fungus"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 5
+    },
+    {
+      "input": {
+        "id": "shelf_fungus_75400000",
+        "band": 2,
+        "contour": 50,
+        "items": 32,
+        "landmark_word": 1967128576,
+        "group": "shelf_fungus"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 5
+    },
+    {
+      "input": {
+        "id": "shelf_fungus_01400010",
+        "band": 2,
+        "contour": 50,
+        "items": 32,
+        "landmark_word": 20971536,
+        "group": "shelf_fungus"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 5
+    },
+    {
+      "input": {
+        "id": "shelf_fungus_01400080",
+        "band": 2,
+        "contour": 50,
+        "items": 32,
+        "landmark_word": 20971648,
+        "group": "shelf_fungus"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 5
+    },
+    {
+      "input": {
+        "id": "shelf_fungus_80400080",
+        "band": 2,
+        "contour": 50,
+        "items": 32,
+        "landmark_word": 2151678080,
+        "group": "shelf_fungus"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 5
+    },
+    {
+      "input": {
+        "id": "shelf_fungus_ff400010",
+        "band": 2,
+        "contour": 50,
+        "items": 32,
+        "landmark_word": 4282384400,
+        "group": "shelf_fungus"
+      },
+      "equals_unmarked": true,
+      "expected_draw_count": 5
+    }
+  ]
+}

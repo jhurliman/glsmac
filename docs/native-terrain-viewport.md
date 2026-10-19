@@ -82,3 +82,19 @@ python tools/reference/verify_native_water_coast.py --texture-pcx PATH/TEXTURE.P
 
 Add `--sanitize --cxx clang++` for the focused ASan/UBSan replay. This is static
 terrain material composition, not animated water or whole-map pixel parity.
+
+### Retained landmark metadata admission
+
+The live map capture exposed an overly broad landmark filter. The retained word
+contains dirty bookkeeping and a shared upper detail byte, as well as membership
+bits. Land geometry now checks the source-proved0xb03 profile mask without a
+blanket negative-detail exemption. Metadata alone no longer rejects tiles or
+their neighboring geometry stencil. Unsupported material memberships remain a
+separate admission decision; sea0x10/Freshwater0x80 and the land-only0x40 base
+branch do not alter this ordinary sea profile. Special-art1/2/0x100 stays excluded
+on sea even though sea heights are zero. The original retained word is unchanged.
+
+See [87 geometry controls](behavior/terrain-landmark-field-admission.md) and
+[27 complete-renderer sea controls](behavior/sea-landmark-material-admission.md).
+These clarify the existing flags1/zoom0 inspector; they do not implement other
+landmark profiles, optional object overlays or dirty-only redraw scheduling.

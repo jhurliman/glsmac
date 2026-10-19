@@ -111,7 +111,7 @@ void AddSmacDetailMinimapTests(task::gsetests::GSETests* task) {
                 result=[&]()->std::string {
                     std::string packed(3200*12,'\0'),rgba(3200*4,'\0');
                     for(size_t i=0;i<3200;++i) {packed[i*12]=3;packed[i*12+1]=7;rgba[i*4]=static_cast<char>(255);rgba[i*4+3]=static_cast<char>(255);}
-                    const auto frame=[&](const std::string& bytes) {return new value::Object(GSE_CALL,{{"kind",VALUE(value::String,,"smac-detail-ordinary-v1")},{"horizontal_wrap",VALUE(value::Bool,,true)},{"tiles",VALUE(value::String,,bytes)},{"bases",new value::Array(gc_space,{})}});};
+                    const auto frame=[&](const std::string& bytes) {return new value::Object(GSE_CALL,{{"kind",VALUE(value::String,,"smac-detail-ordinary-v2")},{"horizontal_wrap",VALUE(value::Bool,,true)},{"tiles",VALUE(value::String,,bytes)},{"bases",new value::Array(gc_space,{})}});};
                     auto* overview=new value::Object(GSE_CALL,{{"kind",VALUE(value::String,,"smac-coarse-physical-v1")},{"width",VALUE(value::Int,,80)},{"height",VALUE(value::Int,,80)},{"horizontal_wrap",VALUE(value::Bool,,true)},{"rgba",VALUE(value::String,,rgba)}});
                     widget->WrapSet("data",new value::Object(GSE_CALL,{{"overview",overview},{"detail",frame(packed)},{"mode",VALUE(value::String,,"detail")}}),GSE_CALL);
                     const auto known=pixels();

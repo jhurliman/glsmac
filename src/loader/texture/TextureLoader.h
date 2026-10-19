@@ -48,7 +48,7 @@ CLASS( TextureLoader, Loader )
 	virtual types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant);
     // Owned retained native Base art; unsupported backends return absence.
     virtual std::shared_ptr<const SmacBaseCard> GetSmacNativeBaseCard(const std::string& faction,size_t x,size_t y,bool roster);
-    virtual std::shared_ptr<const game::smac_detail::Sprite> GetSmacDetailBaseSprite(const std::string& faction,size_t frame_y);
+    virtual std::shared_ptr<const game::smac_detail::Sprite> GetSmacDetailBaseSprite(const std::string& faction,size_t frame_y,size_t column=0);
     virtual std::shared_ptr<const game::frontend::native_terrain::Source> GetSmacTerrainSource(const std::array<std::string,8>& faction_files={});
     virtual std::shared_ptr<types::texture::Texture> GetSmacEffectTexture(bool death);
 

@@ -57,7 +57,7 @@ std::shared_ptr<const SmacGraphPalette> SDL2::GetSmacGraphPalette() {
     using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
     Surface image(load_image(bytes),SDL_FreeSurface);
     if(!image || !image->format || image->format->BitsPerPixel!=8 || !image->pixels
-        || image->w<637 || image->h<32 || image->w>2048 || image->h>2048 || image->pitch<image->w) {
+        || image->w<637 || image->h<40 || image->w>2048 || image->h>2048 || image->pitch<image->w) {
         THROW("Dominance graph palette metadata unavailable");
     }
     auto result=std::make_shared<SmacGraphPalette>();
@@ -66,6 +66,7 @@ std::shared_ptr<const SmacGraphPalette> SDL2::GetSmacGraphPalette() {
     for(size_t slot=0;slot<8;++slot) {
         result->normal[slot]=static_cast<uint8_t>(static_cast<const uint8_t*>(image->pixels)[23*size_t(image->pitch)+580+8*slot]+10);
         result->alternate[slot]=static_cast<uint8_t>(static_cast<const uint8_t*>(image->pixels)[31*size_t(image->pitch)+580+8*slot]+10);
+        result->text[slot]=static_cast<uint8_t>(static_cast<const uint8_t*>(image->pixels)[39*size_t(image->pitch)+580+8*slot]+10);
     }
     return m_graph_palettes.emplace(path,std::move(result)).first->second;
 }
@@ -98,17 +99,17 @@ struct SmacBaseCardSource {
     std::vector<uint8_t> indexed;
     std::array<types::Color::rgba_t,256> palette;
 };
-std::shared_ptr<const game::smac_detail::Sprite> SDL2::GetSmacDetailBaseSprite(const std::string& faction,size_t frame_y) {
-    if(frame_y!=1 && frame_y!=77) {throw std::invalid_argument("Unclosed Detail Base row");}
-    const auto path=GetCustomFilename(faction),key=path+":"+std::to_string(frame_y);
+std::shared_ptr<const game::smac_detail::Sprite> SDL2::GetSmacDetailBaseSprite(const std::string& faction,size_t frame_y,size_t column) {
+    if(frame_y<1 || frame_y>381 || (frame_y-1)%76 || column>3) {throw std::invalid_argument("Unclosed Detail Base bank");}
+    const auto path=GetCustomFilename(faction),key=path+":"+std::to_string(frame_y)+":"+std::to_string(column);
     const auto found=m_detail_bases.find(key);if(found!=m_detail_bases.end()) {return found->second;}
     std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,path);
     using Surface=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
     Surface image(load_image(bytes),SDL_FreeSurface);
-    if(!image || !image->format || image->format->BitsPerPixel!=8 || !image->pixels || image->w<101 || image->h<int(frame_y+75)
+    if(!image || !image->format || image->format->BitsPerPixel!=8 || !image->pixels || image->w<int(101+101*column) || image->h<int(frame_y+75)
         || image->w>2048 || image->h>2048 || image->pitch<image->w) {throw std::runtime_error("Unsupported Detail Base atlas");}
     int left=100,top=75,right=0,bottom=0;
-    const auto pixel=[&](int x,int y) {return static_cast<uint8_t>(static_cast<const uint8_t*>(image->pixels)[(frame_y+y)*size_t(image->pitch)+1+x]+10);};
+    const auto pixel=[&](int x,int y) {return static_cast<uint8_t>(static_cast<const uint8_t*>(image->pixels)[(frame_y+y)*size_t(image->pitch)+1+101*column+x]+10);};
     for(int y=0;y<75;++y) {for(int x=0;x<100;++x) {if(pixel(x,y)!=9) {left=std::min(left,x);top=std::min(top,y);right=std::max(right,x+1);bottom=std::max(bottom,y+1);}}}
     if(right<=left || bottom<=top) {throw std::runtime_error("Empty Detail Base source");}
     auto sprite=std::make_shared<game::smac_detail::Sprite>();sprite->width=right-left;sprite->height=bottom-top;sprite->offset={left,top};

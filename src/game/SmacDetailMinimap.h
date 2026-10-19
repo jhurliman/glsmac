@@ -7,13 +7,14 @@
 #include <string>
 #include <vector>
 #include "game/backend/map/SmacTerrainCorners.h"
+#include "game/SmacBaseBody.h"
 
 namespace game::smac_detail {
 using Point=std::array<int,2>;
 using Rect=std::array<int,4>;
 inline bool AdmitsBase(bool active,bool present,bool geography_known,bool owned,bool visited) {return active && present && geography_known && (owned || visited);}
 struct Tile {uint8_t band=0;bool known=false,base_known=false,supported=true;std::array<int,5> heights{};};
-struct Base {Point tile;std::string file;int population=1;bool owned=true;int crop_y=1;};
+struct Base {Point tile;std::string file;int population=1;bool owned=true;int crop_y=1;int column=0,native_owner=3;bool filled=false,spartans=false,style_known=true;};
 struct World {bool wrap=true;std::array<Tile,3200> tiles{};std::vector<Base> bases;};
 struct Geometry {Point first;std::array<int,4> span{{5,5,5,5}};};
 inline Geometry View(Point center,bool wrap=true) {
@@ -118,11 +119,12 @@ inline void Composite(Frame& frame,Point anchor,const Sprite& sprite,const std::
         }sy+=steps.at(y-top);
     }
 }
-inline void PopulationBox(Frame& frame,Point anchor,bool owned) {
-    const int left=anchor[0],top=anchor[1],right=left+10,bottom=top+11;
+inline void PopulationBox(Frame& frame,Point anchor,const smac_base_body::Layout& layout,const smac_base_body::Style& style) {
+    const int left=anchor[0],top=anchor[1],right=left+layout.width,bottom=top+layout.height;
     for(int y=std::max(top,0);y<std::min(bottom,119);++y) {for(int x=std::max(left,0);x<std::min(right,239);++x) {
-        if(x==left || x==right-1 || y==top || y==bottom-1) {frame.pixels[y*240+x]=0;}
-        else if(!owned) {frame.pixels[y*240+x]=252;}
+        if(x==left || x==right-1 || y==top || y==bottom-1) {frame.pixels[y*240+x]=style.border;}
+        else if(style.filled) {frame.pixels[y*240+x]=style.inner;}
     }}
 }
+inline void PopulationBox(Frame& frame,Point anchor,bool owned) {PopulationBox(frame,anchor,{10,11,9},{!owned,0,252,155});}
 }

@@ -54,11 +54,25 @@ Base visibility is explored-or-revealed plus ownership-or-visited; survey alone
 cannot reveal a Base. Units are bypassed by this painter.
 
 Live admission remains intentionally bounded: 80×80 maps, ordinary default-relief
-geometry, stock land population1 art, no Perimeter/Tachyon walls or projects.
+geometry and the measured stock four-size/two-land-sea/three-defense body banks.
+Base variants now use saved population, Hab limits and facility IDs, with an HQ
+size increment. CDF/Empath are explicitly absent under the admitted no-project
+capability; project-bearing saves remain unsupported. Captured Bases lack a
+separate retained art-family authority and are omitted. Ambiguous duplicate
+faction-profile identities retain the body without guessing native owner colors.
 Unclosed deformed tiles and dependent corners are omitted. Other map sizes retain
-the functioning observer-filtered World view. Base population glyph1 uses the
-existing FreeType Arial Bold9 service; no historical GDI raster parity is claimed.
+the functioning observer-filtered World view. Population labels use measured 8/88 boxes and signed decimal text. The
+existing FreeType Arial Bold9 service supplies glyphs; no historical GDI raster parity is claimed.
 The active camera is resolved through the port's existing projected recenter
 coordinates, rather than a stale selected object. World outline geometry is
 measured, but original blink timing remains unclosed. These limits do not amount
 to complete lower-console or whole-frame parity.
+
+
+The frozen `behavior/base-body-variants.md` matrix adds85 native helper contexts:
+24 retained University banks,74 Detail pre-font composites and120058 source
+samples. Population style uses actual garrison, directed Pact/infiltration,
+revelation, Governor and neighboring-viewer-unit state, after Base visibility.
+The main-map frontend still needs a separate safe selector DTO for HQ/defense
+and custom Hab limits; this Detail-only slice does not silently read backend
+mutable state from that renderer. Native glyph output remains a font boundary.

@@ -1,5 +1,5 @@
 const create = #include('_restored_minimap');
-let detail = {kind: 'smac-detail-ordinary-v1'};
+let detail = {kind: 'smac-detail-ordinary-v2'};
 let listeners = {};
 const game = {
     get_year: () => { return 2105; }, get_turn_status: () => { return 'active'; }, get_smac_credits: () => { return 15; },

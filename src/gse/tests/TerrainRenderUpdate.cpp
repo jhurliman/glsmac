@@ -230,6 +230,20 @@ public:
                 // Sea heights remain zero and negative detail skips quads.
                 if(cell.deformed || !cell.ordinary) return false;
             }
+            // Passive memberships must not leave holes in implemented terrain.
+            // Keep retained words and live item variants intact downstream.
+            for(const uint8_t band:{uint8_t(2),uint8_t(3)}) {
+                wire[record]=char(band<<5);
+                for(const uint32_t membership:{0x10u,0x20u,0x80u,0x1000u,0x4000u,0x50b0u}) {
+                    for(const uint32_t detail:{0u,0x01000000u,0x80000000u,0xff000000u}) {
+                        const auto word=membership|detail|0x400000u;
+                        for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=static_cast<char>(word>>(8*byte));
+                        local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+                        const auto metadata=local.CopyNativeTerrain();const auto& cell=metadata->tiles[40*40+20];
+                        if(!cell.ordinary || cell.deformed || cell.landmarks!=word || cell.items!=before.items) return false;
+                    }
+                }
+            }
             wire[record]=char(3<<5);
             for(unsigned byte=0;byte<4;++byte) wire[record+12+byte]=0;
             local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);

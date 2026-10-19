@@ -2402,7 +2402,8 @@ public:
                 });
                 frontend.m_fm->DefineFaction(&faction_source);
                 game::FrontendRequest slots(game::FrontendRequest::FR_SLOT_DEFINE);
-                slots.data.slot_define.slotdefs=new game::FrontendRequest::slot_defines_t{{6,"TEST",3}};
+                NEW(slots.data.slot_define.slotdefs,game::FrontendRequest::slot_defines_t);
+                slots.data.slot_define.slotdefs->push_back({6,"TEST",3});
                 frontend.ProcessRequest(&slots); // actual dispatch -> UnitManager -> SlotBadges
                 std::weak_ptr<types::texture::Texture> overlay_retained;
                 {

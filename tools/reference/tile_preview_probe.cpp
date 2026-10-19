@@ -32,6 +32,11 @@ int main(int argc,char** argv) {
         std::ofstream out(dir+"/frame-"+std::to_string(i)+".bin",std::ios::binary);
         out.write(reinterpret_cast<const char*>(frame->indexed.data()),frame->indexed.size());
         std::cout<<i<<' '<<frame->writes<<'\n';
+        // Actual retained Planet records carry this inert detail/dirty word.
+        // Preserve it; it must not veto the independent ordinary painter.
+        for(auto& tile:world.tiles) {tile.landmarks=0xff400000u;}
+        const auto retained=game::frontend::smac_tile_preview::Paint(world,source,8,8,0xbf60,backing,{{148,67}},{{146,66,235,183}});
+        if(!retained || retained->indexed!=frame->indexed || retained->coverage!=frame->coverage) {return 5;}
         // Same actual source must keep unknown centers, unknown neighbor
         // memory, unsupported sea and unmeasured features unavailable.
         center.selected_known=false;if(game::frontend::smac_tile_preview::Paint(world,source,8,8,0,backing)) {return 2;}

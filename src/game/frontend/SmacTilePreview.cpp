@@ -43,7 +43,10 @@ std::optional<native_terrain::Frame> Paint(const ::game::native_terrain::World& 
     // and Fungus, and live resource sprites. Other feature painters need their
     // own preview-scale receipts; preserve the existing working fallback.
     constexpr uint32_t admitted_items=0x4u|0x20u|0x400u|0x20000000u;
-    if(!own.selected_known || own.band<3 || own.landmarks ||
+    // Upper-byte detail and0x400000 dirty bookkeeping are present even on
+    // ordinary Planet tiles. They do not select independent landmark art.
+    constexpr uint32_t semantic_memberships=~0xff400000u;
+    if(!own.selected_known || own.band<3 || (own.landmarks&semantic_memberships) ||
         (own.selected_items&~admitted_items) || !own.resource_ready) {return {};}
     bool complete=true;
     const material::TileAt materials=[&](int tx,int ty)->std::optional<material::Tile> {

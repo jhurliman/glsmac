@@ -20,9 +20,13 @@ void AddSmacTilePreviewTests(task::gsetests::GSETests* task) {
             else {GT_ASSERT(a->indexed[p]==73 && a->rgba[4*p+3]==0,"Preview cleared backing or invented alpha outside stores");}
         }}
         GT_ASSERT(left==148 && top==68 && right==228 && bottom==107,"Original painted bounds/top-tip rule differs");
+        for(auto& cell:world.tiles) {cell.landmarks=0xff400000u;}
         auto& tile=world.tiles[8*40+4];tile.band=4;tile.contour=87;tile.heights={{71,-38,53,99,-17}};tile.lighting={{-4,3,4,2,-2}};
         const auto b=preview::Paint(world,source,8,8,0xbf60,background,{{148,67}},{{146,66,235,183}});
         GT_ASSERT(b && b->indexed==a->indexed,"NULL-view preview borrowed slope geometry or lighting");
+        tile.landmarks|=4u;
+        GT_ASSERT(!preview::Paint(world,source,8,8,0xbf60,background),"Semantic named art was confused with inert detail/dirty metadata");
+        tile.landmarks=0xff400000u;
         const auto local=preview::Paint(world,source,8,8,0xbf60,{89,117,std::vector<uint8_t>(89*117,73)});
         GT_ASSERT(local && local->writes==1600,"Independent widget clip lost original stores");
         for(int y=0;y<117;++y) {for(int x=0;x<89;++x) {

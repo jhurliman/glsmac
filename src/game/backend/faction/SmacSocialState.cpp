@@ -7,7 +7,7 @@
 namespace game::backend::faction {
 namespace {
 constexpr int64_t MAGIC = 0x534d534f; // SMSO
-constexpr int64_t VERSION = 1;
+constexpr int64_t VERSION = 2;
 using Bonus = settings::SmacFactionStartupBonus;
 using Phase = SmacFactionSocialState::Phase;
 
@@ -63,7 +63,7 @@ std::optional< SmacSocialRatings > ReadOptional( types::Buffer& buffer ) {
 
 bool SmacFactionSocialState::operator==( const SmacFactionSocialState& other ) const {
 	return admission == other.admission && selected == other.selected && pending == other.pending && current == other.current
-		&& intrinsic == other.intrinsic && retained == other.retained && phase == other.phase;
+		&& intrinsic == other.intrinsic && retained == other.retained && third == other.third && phase == other.phase;
 }
 
 void SmacSocialState::Validate( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles ) const {
@@ -105,13 +105,30 @@ void SmacSocialState::ResetForStartup( SmacFactionSocialState& faction ) noexcep
 	faction.selected.fill( 0 ); faction.pending.fill( 0 ); faction.current.fill( 0 ); faction.phase = Phase::Early;
 }
 
+SmacSocialSnapshotStorage SmacSocialState::FreshImageSnapshots() {
+    SmacSocialSnapshotStorage result{};
+    // Native virtual .data storage supplies all eight slots, not the Early reset.
+    for(auto& owner:result) {owner.retained=SmacSocialRatings{};owner.third=SmacSocialRatings{};}return result;
+}
+void SmacSocialState::PreserveSnapshots(SmacSocialSnapshotStorage& storage) const {
+    std::array<bool,8> seen{};
+    for(const auto& owner:factions) {const auto id=owner.admission.simulation_id;
+        if(id<1 || id>7 || seen[id]) {throw std::invalid_argument("Social snapshot retirement has an invalid owner");}seen[id]=true;
+    }
+    auto staged=storage;
+    for(const auto& owner:factions) {staged[owner.admission.simulation_id]={owner.retained,owner.third};}
+    storage=std::move(staged); // absent legacy authority stays absent, including third
+}
+
 SmacSocialState SmacSocialState::NewWorld( const std::vector< SmacSimulationAdmission >& admissions,
-	const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles ) {
+	const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles,
+    const SmacSocialSnapshotStorage* snapshots ) {
 	if ( admissions.empty() || admissions.size() > 7 ) { throw std::invalid_argument( "SMAC new social state requires 1..7 explicit admissions" ); }
 	SmacSocialState result;
 	for ( const auto& admission : admissions ) { result.factions.push_back( { admission } ); }
 	result.Validate( technologies, profiles );
-	for ( const auto& faction : result.factions ) {
+	for ( auto& faction : result.factions ) {
+        if(snapshots) {const auto& saved=snapshots->at(faction.admission.simulation_id);faction.retained=saved.retained;faction.third=saved.third;}
 		// Preflight arithmetic without making the late intrinsic/retained state
 		// visible to create_world or initial founding consumers.
 		Intrinsic( Profile( faction.admission.faction_id, profiles ) );
@@ -147,7 +164,7 @@ void SmacSocialState::RefreshOwnerForFirstCommand(int32_t owner,const settings::
     // An owned supplied intrinsic vector is authoritative and is not reparsed.
     const auto intrinsic=found->intrinsic ? *found->intrinsic:Intrinsic(profile);
     const auto current=Refreshed(intrinsic,profile);
-    found->intrinsic=intrinsic;found->current=current;found->retained=current;found->phase=Phase::Refreshed;
+    found->intrinsic=intrinsic;found->current=current;found->retained=current;found->third=current;found->phase=Phase::Refreshed; // neutral mode0/mode1 outputs are independent copies
 }
 
 void SmacSocialState::RefreshForFirstCommand(const settings::SmacTechnologyRules& technologies,const settings::SmacFactionStartupRules& profiles) {
@@ -165,7 +182,7 @@ types::Buffer SmacSocialState::Serialize( const settings::SmacTechnologyRules& t
 	for ( const auto& faction : factions ) {
 		buffer.WriteInt( faction.admission.simulation_id ); buffer.WriteString( faction.admission.faction_id ); buffer.WriteInt( static_cast< int32_t >( faction.phase ) );
 		WriteArray( buffer, faction.selected ); WriteArray( buffer, faction.pending ); WriteArray( buffer, faction.current );
-		WriteOptional( buffer, faction.intrinsic ); WriteOptional( buffer, faction.retained );
+		WriteOptional( buffer, faction.intrinsic ); WriteOptional( buffer, faction.retained ); WriteOptional( buffer, faction.third );
 	}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC social state exceeds wire budget" ); }
 	return buffer;
@@ -176,7 +193,8 @@ SmacSocialState SmacSocialState::Deserialize( const std::string& wire, const set
 	if ( wire.size() > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC social state exceeds wire budget" ); }
 	try {
 		types::Buffer buffer( wire );
-		if ( buffer.ReadInt() != MAGIC || buffer.ReadInt() != VERSION ) { throw std::runtime_error( "Unsupported SMAC social format" ); }
+		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC social format");}
+        const auto version=buffer.ReadInt();if(version!=1 && version!=VERSION) {throw std::runtime_error("Unsupported SMAC social format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC social state requires 1..7 owners" ); }
 		SmacSocialState result;
@@ -188,6 +206,7 @@ SmacSocialState SmacSocialState::Deserialize( const std::string& wire, const set
 			faction.phase = static_cast< Phase >( phase );
 			ReadArray( buffer, faction.selected ); ReadArray( buffer, faction.pending ); ReadArray( buffer, faction.current );
 			faction.intrinsic = ReadOptional( buffer ); faction.retained = ReadOptional( buffer );
+            if(version>=2) {faction.third=ReadOptional(buffer);}
 			result.factions.push_back( std::move( faction ) );
 		}
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC social trailing fields" ); }

@@ -31,10 +31,10 @@ SmacFactionStartupRules WithBonuses( const std::string& line ) {
 
 bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( const std::exception& ) { return true; } return false; }
 
-std::string Wire( const SmacSocialState& value, size_t changed_number = SIZE_MAX, int64_t replacement = 0 ) {
+std::string Wire( const SmacSocialState& value, size_t changed_number = SIZE_MAX, int64_t replacement = 0, int64_t version = 2 ) {
 	types::Buffer buffer; size_t number = 0;
 	const auto write = [ & ]( int64_t item ) { buffer.WriteInt( number++ == changed_number ? replacement : item ); };
-	write( 0x534d534f ); write( 1 ); write( value.factions.size() );
+	write( 0x534d534f ); write( version ); write( value.factions.size() );
 	for ( const auto& faction : value.factions ) {
 		write( faction.admission.simulation_id ); buffer.WriteString( faction.admission.faction_id ); write( static_cast< int32_t >( faction.phase ) );
 		for ( const auto* model : { &faction.selected, &faction.pending } ) { for ( const auto item : *model ) { write( item ); } }
@@ -42,6 +42,7 @@ std::string Wire( const SmacSocialState& value, size_t changed_number = SIZE_MAX
 		for ( const auto* values : { &faction.intrinsic, &faction.retained } ) {
 			buffer.WriteBool( values->has_value() ); if ( *values ) { for ( const auto item : **values ) { write( item ); } }
 		}
+        if(version>=2) {buffer.WriteBool(faction.third.has_value());if(faction.third) {for(const auto item:*faction.third) {write(item);}}}
 	}
 	return buffer.ToString();
 }
@@ -70,13 +71,14 @@ void AddSmacSocialStateTests( task::gsetests::GSETests* task ) {
         const auto tech=fixture::Technologies();const auto profiles=Profiles();
         std::vector<SmacSimulationAdmission> admissions;
         for(int32_t id=7;id>=1;--id) {admissions.push_back({id,SmacFactionStartupRules::Bindings()[id-1].port_id});}
-        auto state=SmacSocialState::NewWorld(admissions,tech,profiles);
+        const auto baseline=SmacSocialState::FreshImageSnapshots();
+        auto state=SmacSocialState::NewWorld(admissions,tech,profiles,&baseline);
         const auto ratings=[](const YAML::Node& n) {SmacSocialRatings out{};for(size_t a=0;a<11;++a) {out[a]=n[a].as<int32_t>();}return out;};
         for(int32_t id=1;id<=7;++id) {
             const auto before=state;
             state.BuildStartupIntrinsic(id,tech,profiles);
             GT_ASSERT(state.Find(id)->intrinsic==ratings(receipt["before"]["factions"][id-1]["social_intrinsic"])
-                && state.Find(id)->current==SmacSocialRatings{} && state.Find(id)->phase==Phase::Early && !state.Find(id)->retained,"Late intrinsic publication refreshed current/retained ratings");
+                && state.Find(id)->current==SmacSocialRatings{} && state.Find(id)->phase==Phase::Early && state.Find(id)->retained==SmacSocialRatings{} && state.Find(id)->third==SmacSocialRatings{},"Late intrinsic publication refreshed current/retained ratings");
             for(const auto& other:before.factions) {if(other.admission.simulation_id!=id) {GT_ASSERT(*state.Find(other.admission.simulation_id)==other,"Late intrinsic publication changed a different owner");}}
         }
         state.ValidateTurn(0);
@@ -113,6 +115,38 @@ void AddSmacSocialStateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(Rejects([&]{state.BuildStartupIntrinsic(owner.admission.simulation_id,tech,profiles);}) && state==ready,"Late initializer replayed after upkeep");
         auto invalid=profiles;invalid.initial_social_models.back().modifiers="+MORALE";
         GT_ASSERT(Rejects([&]{state.RefreshOwnerForFirstCommand(1,tech,invalid);}) && state==ready,"Owner refresh context failure changed another owner");GT_OK();
+    });
+    task->AddTest("SMAC social snapshots match native fresh-image and second full setup lifetime",GT(){
+        const auto native=YAML::LoadFile("docs/behavior/social-snapshot-lifetime-cases.json");const auto tech=fixture::Technologies();const auto profiles=Profiles();
+        const auto ratings=[](const YAML::Node& n) {SmacSocialRatings a{};for(size_t i=0;i<11;++i) {a[i]=n[i].as<int32_t>();}return a;};
+        auto storage=SmacSocialState::FreshImageSnapshots();
+        for(size_t owner=0;owner<8;++owner) {const auto n=native["first_setup"][std::to_string(owner)];
+            GT_ASSERT(storage[owner].retained==ratings(n["retained"]) && storage[owner].third==ratings(n["third"]),"Fresh snapshot baseline differs from native image storage");}
+        std::vector<SmacSimulationAdmission> admissions;for(int32_t owner=1;owner<=7;++owner) {admissions.push_back({owner,SmacFactionStartupRules::Bindings()[owner-1].port_id});}
+        auto first=SmacSocialState::NewWorld(admissions,tech,profiles,&storage);
+        for(int32_t owner=1;owner<=7;++owner) {first.BuildStartupIntrinsic(owner,tech,profiles);first.RefreshOwnerForFirstCommand(owner,tech,profiles);
+            const auto* f=first.Find(owner);const auto n=native["previous_world_after_native_refresh"][std::to_string(owner)];
+            GT_ASSERT(f->current==ratings(n["current"]) && f->intrinsic==ratings(n["intrinsic"]) && f->retained==ratings(n["retained"]) && f->third==ratings(n["third"]),"Prior world neutral refresh differs from native snapshot receipt");}
+        first.PreserveSnapshots(storage);const auto carried=storage;
+        auto second=SmacSocialState::NewWorld(admissions,tech,profiles,&storage);
+        for(int32_t owner=1;owner<=7;++owner) {second.BuildStartupIntrinsic(owner,tech,profiles);const auto* f=second.Find(owner);const auto n=native["second_setup"][std::to_string(owner)];
+            GT_ASSERT(f->phase==Phase::Early && f->current==ratings(n["current"]) && f->intrinsic==ratings(n["intrinsic"])
+                && f->retained==ratings(n["retained"]) && f->third==ratings(n["third"]),"Second setup erased retained authority or refreshed an owner");}
+        GT_ASSERT(storage==carried && SmacSocialState::Deserialize(second.Serialize(tech,profiles).ToString(),tech,profiles)==second,"Setup or codec mutated carried snapshots");
+        auto& owner=second.factions.front();const auto retained=owner.retained;owner.third->at(0)=77;
+        GT_ASSERT(owner.retained==retained,"Third social vector aliases retained storage");const auto third=owner.third;
+        SmacSocialState::ResetForStartup(owner);GT_ASSERT(owner.third==third && owner.retained==retained,"Early reset cleared untouched snapshot storage");GT_OK();
+    });
+    task->AddTest("SMAC social V1 migration preserves unknown third authority across retirement and new world",GT(){
+        const auto tech=fixture::Technologies();const auto profiles=Profiles();auto ready=State();ready.RefreshForFirstCommand(tech,profiles);
+        const auto legacy=SmacSocialState::Deserialize(Wire(ready,SIZE_MAX,0,1),tech,profiles);
+        auto storage=SmacSocialState::FreshImageSnapshots();legacy.PreserveSnapshots(storage);
+        std::vector<SmacSimulationAdmission> admissions;
+        for(const auto& owner:legacy.factions) {GT_ASSERT(owner.retained && !owner.third,"Legacy codec invented third ratings");admissions.push_back(owner.admission);}
+        const auto next=SmacSocialState::NewWorld(admissions,tech,profiles,&storage);
+        for(const auto& owner:next.factions) {GT_ASSERT(owner.retained==legacy.Find(owner.admission.simulation_id)->retained && !owner.third
+            && owner.phase==Phase::Early && owner.current==SmacSocialRatings{},"New-world baseline guessed missing legacy authority");}
+        GT_ASSERT(SmacSocialState::Deserialize(next.Serialize(tech,profiles).ToString(),tech,profiles)==next,"V2 round-trip replaced unknown third state");GT_OK();
     });
 	task->AddTest( "SMAC social first refresh derives all seven profiles and preserves later exact state", GT() {
 		// Reduced all-axis outputs from RE-SMAC-START-FACTION-001.
@@ -221,7 +255,7 @@ void AddSmacSocialStateTests( task::gsetests::GSETests* task ) {
 		const auto wire = Wire( before );
 		for ( size_t size = 0; size < wire.size(); ++size ) { GT_ASSERT( reject( wire.substr( 0, size ) ), "truncated payload published" ); }
 		GT_ASSERT( reject( wire + "x" ) && reject( std::string( SmacSocialState::MAX_WIRE_BYTES + 1, 'x' ) ), "extra/oversized payload accepted" );
-		for ( size_t index = 0; index < 46; ++index ) {
+		for ( size_t index = 0; index < 57; ++index ) {
 			for ( const int64_t bad : { INT64_MIN, int64_t( INT32_MIN ) - 1, int64_t( INT32_MAX ) + 1, INT64_MAX } ) {
 				GT_ASSERT( reject( Wire( before, index, bad ) ), "wide numeric field narrowed" );
 			}

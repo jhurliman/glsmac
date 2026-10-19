@@ -452,6 +452,13 @@ public:
                 for(size_t i=0;i<8;++i) {governor[i]=0x80000000u+static_cast<uint32_t>(i);}
                 m_game.m_simulation->value.remembered_governor=governor;
                 m_game.m_simulation->value.regional_strategy=rows;m_game.m_simulation->value.ranking_scores=scores;
+                auto snapshots=m_game.m_smac_cross_world_social;
+                for(auto& social:m_game.m_simulation->value.social.factions) {
+                    social.retained.reset();social.third.reset();
+                    if(present) {social.retained=faction::SmacSocialRatings{};social.third=faction::SmacSocialRatings{};
+                        for(size_t axis=0;axis<11;++axis) {social.retained->at(axis)=100+int32_t(axis);social.third->at(axis)=200+int32_t(axis);}}
+                    snapshots.at(social.admission.simulation_id)={social.retained,social.third};
+                }
                 ResetWorld();
                 GT_ASSERT(!m_game.m_simulation && !m_game.m_map && !m_state->GetGame(),"Real reset retained its preceding world");
                 m_state->SetGame(&m_game);
@@ -459,6 +466,12 @@ public:
                 for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<8;x+=2) {map->GetTile(x,y)->Update();}}
                 m_game.m_bm=new base::BaseManager(&m_game);EnableWorldSnapshot();
                 m_game.PrepareNewSimulation();
+                GT_ASSERT(m_game.m_smac_cross_world_social==snapshots,"Real reset changed unrelated or unknown snapshot authority");
+                for(const auto& social:m_game.m_simulation->value.social.factions) {
+                    const auto& previous=snapshots.at(social.admission.simulation_id);
+                    GT_ASSERT(social.retained==previous.retained && social.third==previous.third
+                        && social.current==faction::SmacSocialRatings{} && social.phase==faction::SmacFactionSocialState::Phase::Early,"New world reset or refreshed carried social snapshots");
+                }
                 for(const auto& participant:m_game.m_simulation->value.roster) {governor[participant.simulation_id]=base::SmacBaseResourceContext::NewGameGovernorOptions(m_game.m_simulation->value.designs.global_difficulty);}
                 GT_ASSERT(m_game.m_simulation->value.remembered_governor==governor,"New world cleared peer/slot0 Governor templates or failed fresh owner initialization");
                 GT_ASSERT(m_game.m_simulation->value.perihelion==std::optional<bool>{false},"Accepted new world retained active perihelion");
@@ -4805,7 +4818,10 @@ public:
 				require( m_game.GetTurnId() == 0 && m_game.GetUM()->GetUnit( unit->m_id ) == unit && unit->GetTile()->units.at( unit->m_id ) == unit
 					&& unit->IsConventionalPending() && raw.stored_morale == 1 && raw.damage == 0 && raw.spent == 0 && !raw.failed_move
 					&& raw.home == ConventionalUnitState::Home::None, "Early raw identity/state was delayed or fabricated" );
-				require( !m_game.m_simulation->value.social.Find( raw.owner_simulation_id )->retained, "Early raw unit invented retained morale" );
+				const auto* early_social=m_game.m_simulation->value.social.Find(raw.owner_simulation_id);
+                require(early_social->phase==faction::SmacFactionSocialState::Phase::Early && early_social->current==faction::SmacSocialRatings{}
+                    && early_social->retained==faction::SmacSocialRatings{} && early_social->third==faction::SmacSocialRatings{},"Fresh startup lost known zero snapshots or refreshed current state");
+                require(m_game.ResolveConventionalUnit(raw,unit->m_owner).retained_morale==0,"Early derived context ignored known retained baseline");
                 if(raw.design_id==0) {require(m_game.m_simulation->value.social.Find(raw.owner_simulation_id)->intrinsic.has_value(),"Compensation Pod preceded late intrinsic publication");}
 
 				const auto reject = [ & ]( const auto& operation ) { try { operation(); } catch ( const std::exception& ) { return true; } return false; };
@@ -4813,7 +4829,8 @@ public:
 					&& reject( [ & ] { unit->HasMovesLeft(); } ) && reject( [ & ] { Unit::Serialize( unit ); } )
 					&& reject( [ & ] { types::Buffer out; m_game.GetUM()->Serialize( out ); } ) && reject( [ & ] { WorldSnapshot(); } )
 					&& reject( [ & ] { call( GSE_CALL, static_cast< value::Object* >( m_game.Wrap( GSE_CALL ) ), "select_unit", { wrapper } ); } )
-					&& reject( [ & ] { m_game.GetUM()->UpdateConventionalUnit( GSE_CALL, unit, raw ); } ), "Early unit escaped a derived/publication guard" );
+					&& reject( [ & ] { m_game.GetUM()->UpdateConventionalUnit( GSE_CALL, unit, raw ); } )
+                    && reject([&]{m_game.GetUM()->SpawnConventionalUnit(GSE_CALL,Unit::GetNextId(),unit->m_def,unit->m_owner,unit->GetTile(),raw);}), "Early unit escaped a derived/publication guard" );
 				// Social becoming available alone cannot make the object commandable.
 				auto prior = m_game.m_simulation->value.social;
 				m_game.m_simulation->value.social.RefreshForFirstCommand( *m_state->m_settings.global.GetSmacTechnologyRules(), *m_state->m_settings.global.GetSmacFactionStartupRules() );
@@ -4838,7 +4855,7 @@ public:
 			} ) );
 			auto* noop = NATIVE_CALL() { return VALUE( value::Undefined ); } );
 			auto* hq = NATIVE_CALL( this, &order, require ) {
-				require( m_game.GetTurnId() == 0 && m_game.GetUM()->GetUnits().empty() && !m_game.m_simulation->value.social.factions.front().retained, "HQ event was reordered" );
+				require( m_game.GetTurnId() == 0 && m_game.GetUM()->GetUnits().empty() && m_game.m_simulation->value.social.factions.front().phase==faction::SmacFactionSocialState::Phase::Early, "HQ event was reordered" );
 				AddBaseWithPop( 601, 7 ); order.push_back( "hq" ); return VALUE( value::Undefined );
 			} );
 			auto* raw = NATIVE_CALL( this, scenario, spawn, &reset, &ticket, require ) {
@@ -4867,7 +4884,7 @@ public:
 				++errors; if ( !arguments.empty() ) { startup_error = static_cast< value::String* >( static_cast< value::Object* >( arguments.front() )->Get( "error" ) )->value; }
 				if ( m_game.m_simulation && m_game.GetUM()->HasPendingConventionalUnits() ) {
 					partial_seal = m_game.GetTurnId() != 0;
-					for ( const auto& owner : m_game.m_simulation->value.social.factions ) { partial_seal = partial_seal || owner.retained.has_value(); }
+					for ( const auto& owner : m_game.m_simulation->value.social.factions ) { partial_seal = partial_seal || owner.phase!=faction::SmacFactionSocialState::Phase::Early; }
 					for ( const auto& entry : m_game.GetUM()->GetUnits() ) { partial_seal = partial_seal || !entry.second->IsConventionalPending(); }
 				}
 				return VALUE( value::Undefined );
@@ -5204,7 +5221,7 @@ public:
 			bm->On(GSE_CALL,"base_spawn",NATIVE_CALL(this,&callbacks,require,scenario) {
 				N_EXPECT_ARGS(1);N_GETVALUE(args,0,Object);N_GETPROP_UNWRAP(base,args,"base",Base);
 				++callbacks;const auto state=base->GetSmacResourceContext();
-				require(m_game.GetTurnId()==0 && !m_game.m_simulation->value.social.Find(state.owner_simulation_id)->retained,"first Base refreshed social before callback");
+				require(m_game.GetTurnId()==0 && m_game.m_simulation->value.social.Find(state.owner_simulation_id)->phase==faction::SmacFactionSocialState::Phase::Early,"first Base refreshed social before callback");
 				require(base->GetSmacAllocation().has_value() && base->GetTile()->base==base && m_game.GetMap()->GetSmacWorkerKnowledge().has_value(),"callback observed partial Base publication");
 				require(m_game.m_simulation->value.victory_history && m_game.m_simulation->value.victory_history->last_base_expansion_or_advice_turn[state.owner_simulation_id]==0,
 					"starting Base callback observed stale expansion history");
@@ -5291,7 +5308,7 @@ public:
 			GT_ASSERT(repeated && m_game.GetTurnId()==1 && m_game.GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge,"repeated first transition changed turn/knowledge");
 			for(const auto id:created) {
 				auto* base=m_game.GetBM()->GetBase(id);GT_ASSERT(base && base->GetSmacAllocation(),"first turn lost Base authority");
-				const auto context=base->GetSmacResourceContext();GT_ASSERT(m_game.m_simulation->value.social.Find(context.owner_simulation_id)->retained.has_value(),"actual first transition failed");
+				const auto context=base->GetSmacResourceContext();GT_ASSERT(m_game.m_simulation->value.social.Find(context.owner_simulation_id)->phase==faction::SmacFactionSocialState::Phase::Refreshed,"actual first transition failed");
 				const auto bytes=Base::Serialize(base).ToString();GT_ASSERT(!bytes.empty() && base->GetProductionState()->queue->empty(),"first Base cannot save complete state");
 				GT_ASSERT(base->GetProductionState()->minerals==initial_minerals.at(id)+1
 					&& base->GetProductionState()->baseline_minerals==base->GetProductionState()->minerals,"first upkeep did not post exactly one mineral and baseline");
@@ -5399,7 +5416,7 @@ public:
 				if(!regional || std::count(regional->begin(),regional->end(),uint8_t(1))!=1
 					|| std::count(regional->begin(),regional->end(),uint8_t(0))!=127) {throw std::runtime_error("generic canonical spawn omitted its regional count");}
 				if ( m_game.GetTurnId() != 0 || state.golden_age || state.resource_events || state.resource_event_timer || state.governor_options != (difficulty==0 ? 0xc0dfbe41u : 0x00dfbe41u)
-					|| state.GovernorActive() != (difficulty==0) || !state.ManageCitizens() || m_game.m_simulation->value.social.Find( state.owner_simulation_id )->retained ) {
+					|| state.GovernorActive() != (difficulty==0) || !state.ManageCitizens() || m_game.m_simulation->value.social.Find( state.owner_simulation_id )->phase!=faction::SmacFactionSocialState::Phase::Early ) {
 					throw std::runtime_error( "first-base context producer or Early event position differs" );
 				}
 				++produced;
@@ -5629,7 +5646,9 @@ public:
 					GT_ASSERT( participant->Get( "social_before" )->ToString() == participant->Get( "social_after" )->ToString(), "script copy mutated social state" );
 					const auto social = static_cast< value::Object* >( participant->Get( "social_after" ) );
 					GT_ASSERT( static_cast< value::String* >( social->Get( "phase" ) )->value == "early" && social->Get( "intrinsic" )->type == VT_UNDEFINED
-						&& social->Get( "retained" )->type == VT_UNDEFINED, "create/start invented pre-refresh social snapshots" );
+						&& social->Get("retained")->type==VT_ARRAY && social->Get("third")->type==VT_ARRAY, "create/start lost known image snapshots or invented late intrinsic state" );
+                    for(const auto* key:{"retained","third"}) {const auto* snapshot=static_cast<value::Array*>(social->Get(key));GT_ASSERT(snapshot->value.size()==11,"early snapshot width changed");
+                        for(const auto* item:snapshot->value) {GT_ASSERT(static_cast<const value::Int*>(item)->value==0,"fresh image snapshot was not zero");}}
 					for ( const auto* item : static_cast< value::Array* >( social->Get( "current" ) )->value ) { GT_ASSERT( static_cast< const value::Int* >( item )->value == 0, "early current rating was not reset" ); }
 					const auto design_state = static_cast< value::Object* >( participant->Get( "designs_after" ) );
 					const auto designs = static_cast< value::Array* >( design_state->Get( "designs" ) );

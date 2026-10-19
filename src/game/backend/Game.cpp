@@ -3345,6 +3345,7 @@ void Game::ResetGame() {
 			for(size_t i=0;i<8;++i) {m_smac_secondary_relations.at(owner.first)[i]=owner.second.directions[i].secondary;}
 		}}
 		if(m_simulation) {
+            m_simulation->value.social.PreserveSnapshots(m_smac_cross_world_social);
 			m_smac_cross_world_strategy=m_simulation->value.regional_strategy;
 			m_smac_cross_world_scores=m_simulation->value.ranking_scores;
 			m_smac_cross_world_ecology=m_simulation->value.ecology_history;

@@ -38,10 +38,13 @@ direct-MORALE scalar or flag to runtime state.
 ## Early state, transition and restoration
 
 Each owner has an explicit simulation ID and frozen source-profile ID, four
-selected and pending model indices, eleven current ratings, optional intrinsic
-and retained eleven-value snapshots, and an Early or Refreshed phase. New-world
-admission keeps current ratings zero and both snapshots absent. Absence is
-observable and must not be interpreted as retained MORALE zero. The original
+selected and pending model indices, eleven current ratings, optional intrinsic,
+retained and third eleven-value snapshots, and an Early or Refreshed phase.
+The backend supplies known zero retained/third storage from its fresh-image
+baseline. Real world retirement preserves each admitted owner's snapshots for
+the next setup; absent legacy authority stays absent. A bare value-level
+NewWorld without supplied storage still represents unavailable history. Early
+phase alone does not mean retained MORALE is unavailable. The original
 early reset does not initialize those snapshots, so the value-level
 `ResetForStartup` preserves supplied snapshots while resetting only the model
 indices, current ratings and phase. World retirement still clears the whole
@@ -50,12 +53,12 @@ simulation through the existing reset path.
 New-world admission preflights intrinsic arithmetic without exposing it to
 initial founding. In the authenticated default SMAC Start, each owner's late
 intrinsic producer runs after its actual Base and Scout/Rover factories and
-before global compensation. Current ratings stay zero, retained state stays
-unavailable, and the owner stays Early until upkeep. Compensation Pods observe
+before global compensation. Current ratings stay zero; retained/third keep their
+existing baseline, and the owner stays Early until upkeep. Compensation Pods observe
 the completed late intrinsic producer.
 
 The owner-specific first refresh validates all bound state, consumes that owner's
-owned intrinsic vector and publishes only its current/retained ratings. Legacy
+owned intrinsic vector and publishes its current, retained and third ratings. Legacy
 port snapshots without intrinsic authority derive it from their frozen profile.
 The existing all-human controller stages these transitions for all owners before
 publishing the first turn. Native per-faction scheduling must instead call the
@@ -83,13 +86,16 @@ the existing technology/design queries.
 
 ## Wire contract
 
-Social V1 is an owned framed value with marker `SMSO`, version, bounded owner
+Social V2 is an owned framed value with marker `SMSO`, version, bounded owner
 count, identities, phase, model arrays, current ratings and explicit optional
 snapshot presences. Integers are range-checked before narrowing. Counts are
 limited to seven; source IDs are bounded before string allocation; the entire
 nested payload has an 8 KiB port budget. Unknown versions/phases, unsupported
 models, duplicate owners, incomplete Refreshed snapshots, truncation and trailing
-data reject before publishing a result.
+data reject before publishing a result. V1 records decode with third-vector
+authority unavailable; decoding never substitutes current/retained or zero.
+The normal getter returns a separate copied `third` array when that authority
+is known. Neutral model mode0/mode1 outputs are equal values, not aliases.
 
 Simulation V3 appends this framed social payload after technology and designs,
 within the existing 64 KiB simulation budget. World V13 requires that complete

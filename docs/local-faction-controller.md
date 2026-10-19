@@ -58,7 +58,9 @@ Site-search admission and runtime balancing are now implemented and connected to
 the immediate-HQ local-human startup path. The [first-upkeep authority](behavior/seven-first-upkeep-authority.md)
 adds exact faction-scoped social timing, University numeric TECH timing, and
 production/Unit changes before computer command entry. Late intrinsic publication
-and the owner-specific social transition are implemented; native scheduler
+and the owner-specific social transition are implemented. [Retained/third snapshot
+lifetime](behavior/social-snapshot-lifetime.md) now supplies known fresh storage
+and actual Reset/new-world preservation independently of refresh phase. Native scheduler
 admission and whole-world mixed-phase validation remain required.
 
 1. Admit the local controller roster explicitly, preserving transport identity,

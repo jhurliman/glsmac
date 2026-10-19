@@ -83,8 +83,21 @@ The input named region_density in the reference is the retained ocean-coverage
 category at native0x9b952c, already owned by the map/settings ocean-category
 producer. It is not derived from regional wetness.
 
-The live default-world startup caller still needs connection to this producer,
-initial cache preparation, sequential Base/Unit creation and subsequent site
-balancing. This checkpoint alone does not replace provisional placement or
-admit computer factions. Targeted correctness analysis passes for the new
-production translation unit; cached native replay and budget groups pass.
+The authenticated local SMAC default-world Start now clears/refills the owned
+rating cache once, selects sites in simulation-owner order, and creates each
+actual Base and Scout/Rover before selecting the next owner. This replaces the
+provisional script picker for the currently admitted immediate-HQ local human
+profile. It uses retained regional Base presence and the existing Base factory's
+exclusion/cache history. Late event replays and cancelled admissions are rejected.
+Look First, computer admission and post-selection balancing remain incomplete;
+in particular, the mandatory balancing RNG draw is not yet part of this caller.
+SMAX/network startup still uses its existing placeholder path.
+
+Validation: the full private original replay and synthetic budget groups pass;
+twelve focused actual default-start/research/lifecycle groups cover Gaian and
+Spartan production, movement, next turn and save/restore. Targeted analysis of
+five production translation units and focused ten-TU ASan/UBSan checks pass
+(the remaining linked objects are uninstrumented; leak detection is disabled).
+A fresh generated small-world Gaian game using the owned GOG assets reaches
+research selection and the playable map, then exits through normal Menu Quit
+with status0. This smoke is not a seven-faction Planet or visual-diff claim.

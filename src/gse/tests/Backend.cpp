@@ -4719,7 +4719,9 @@ public:
 		bool partial_seal = false, raw_valid = true; std::string startup_error;
 		common::mt_id_t reset = 0; world_ticket_t ticket = 0;
 		// Eight native-initializer CRT advances from supplied29; shared11 is untouched.
-		const SmacGameplayRandomState expected_random( 11, 847431173 ); size_t entropy = 0;
+		// The independent startup reference selects(5,5) after962 pairs on this
+        // uniform10x8 arid fixture, continuing the eight-draw initializer.
+        const SmacGameplayRandomState expected_random( 11, default_world ? 3308098009u:847431173u ); size_t entropy = 0;
 		m_game.m_gameplay_entropy_word_source = [ & ]() { return ++entropy == 1 ? 11u : 29u; };
 		const auto call = [ & ]( GSE_CALLABLE, value::Object* object, const std::string& name, const value::function_arguments_t& args = {} ) {
 			return static_cast< value::Callable* >( object->Get( name ) )->Run( GSE_CALL, args );
@@ -4746,14 +4748,10 @@ public:
 				for ( size_t y = 0; y < 8; ++y ) { for ( size_t x = y % 2; x < 10; x += 2 ) {
 					auto* tile = m_game.GetMap()->GetTile( x, y );
 					tile->Update(); tile->moisture=MOISTURE_ARID; tile->bonus=BONUS_NONE;
-					tile->rockiness = ROCKINESS_FLAT; tile->features = 0; tile->terraforming = TERRAFORMING_ROAD;
-					// One clear fixture center keeps both real random-picker runs on
-					// the same barren worker radius. Roads add no resource yield.
-					if ( x == 4 && y == 4 ) { tile->terraforming = 0; }
-					// Preserve unsuitable centers outside that radius: Gaia's fungus
-					// and the monolith would otherwise invalidate the zero-food input.
-					if ( x == 0 && y == 0 ) { tile->features = FEATURE_XENOFUNGUS; }
-					if ( x == 9 && y == 7 ) { tile->features = FEATURE_MONOLITH; }
+					tile->rockiness = ROCKINESS_FLAT; tile->features = 0; tile->terraforming = 0;
+                    // Uniform barren terrain lets native placement vary without
+                    // changing the zero-food startup/upkeep control.
+                    if(x==0 && y==0) {tile->features=FEATURE_XENOFUNGUS|FEATURE_MONOLITH;}
 				} }
 				for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {m_game.GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
 				for ( const auto* name : { "define_moraleset", "define_unit", "define_base_pop", "define_base_facility" } ) {
@@ -5018,13 +5016,14 @@ public:
 				auto* unit = m_game.GetUM()->GetUnit( identities.front() ); auto* origin = unit->GetTile();
 				auto* base=origin->base; const auto first=*base->GetProductionState();
 				const auto initial=initial_minerals;
-				GT_ASSERT(origin==m_game.GetMap()->GetTile(4,4) && base->GetSmacAllocation()->selected==1
+				GT_ASSERT(origin==m_game.GetMap()->GetTile(5,5) && base->GetSmacAllocation()->selected==1
 					&& base->GetSmacAllocation()->specialists.total_count==1,"default fixture did not retain its barren center and specialist");
 				GT_ASSERT(first.minerals==initial+1 && first.baseline_minerals==first.minerals && base->GetAccumulatedNutrients()==0,
 					"real default first upkeep or legacy growth posted incorrect stores: minerals="+std::to_string(first.minerals)+", initial="+std::to_string(initial)+", food="+std::to_string(base->GetAccumulatedNutrients()));
 				const auto next_base=base::Base::GetNextId(),next_unit=Unit::GetNextId();
-				for(const auto* name:{"spawn_starting_smac_base","spawn_starting_conventional_unit"}) {
-					bool rejected=false;try{m_game.Event(GSE_CALL,name,{{"owner",unit->m_owner->GetPlayer()->Wrap(GSE_CALL)},{"tile",origin->Wrap(GSE_CALL)}});}catch(const std::exception&){rejected=true;}
+				for(const auto* name:{"spawn_starting_smac_factions","spawn_starting_smac_base","spawn_starting_conventional_unit"}) {
+					bool rejected=false;try{if(std::string(name)=="spawn_starting_smac_factions") {m_game.Event(GSE_CALL,name,{});}
+                        else {m_game.Event(GSE_CALL,name,{{"owner",unit->m_owner->GetPlayer()->Wrap(GSE_CALL)},{"tile",origin->Wrap(GSE_CALL)}});}}catch(const std::exception&){rejected=true;}
 					GT_ASSERT(rejected && base::Base::GetNextId()==next_base && Unit::GetNextId()==next_unit,"late native startup event escaped its claim");
 				}
 				GT_ASSERT(m_game.GetBM()->GetPopDef("WORKER") && m_game.GetBM()->GetPopDef("TALENT") && m_game.GetSmacBasePresentations()[0]=="WORKER",
@@ -5061,8 +5060,8 @@ public:
 					"default command could not continue through actual next-turn handler" );
 				GT_ASSERT(base->GetProductionState()->minerals==initial+2 && base->GetAccumulatedNutrients()==0,
 					"real default second upkeep skipped or double-posted legacy economy");
-				GT_ASSERT( m_game.GetMap()->GetTile( 0, 0 )->features == map::tile::FEATURE_XENOFUNGUS, "startup silently cleared fungus" );
-				GT_ASSERT( m_game.GetMap()->GetTile( 9, 7 )->features == map::tile::FEATURE_MONOLITH, "startup silently cleared a landmark" );
+				GT_ASSERT( m_game.GetMap()->GetTile( 0, 0 )->features == (map::tile::FEATURE_XENOFUNGUS|map::tile::FEATURE_MONOLITH), "startup silently changed the distant fungus/monolith control" );
+				GT_ASSERT( m_game.GetMap()->GetTile( 9, 7 )->features == 0, "startup invented a terrain feature" );
 			}
 			saved = WorldSnapshot();
 			for ( const auto id : identities ) { saved_units.push_back( Unit::Serialize( m_game.GetUM()->GetUnit( id ) ).ToString() ); }

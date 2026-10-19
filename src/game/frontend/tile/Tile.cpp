@@ -560,7 +560,7 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 		preview_lines.push_back( info_line );
 	}
 
-	m_render_data.coords = layer.coords.center;
+	m_render_data.coords = ts.GetProjectorCoords(lt);
     m_render_data.name_anchor=lt==backend::map::tile::LAYER_LAND && ts.smac_projector_height
         ? std::optional<types::Vec3>(ts.GetProjectorCoords(lt)) : std::nullopt;
 	m_render_data.selection_coords = selection_coords;

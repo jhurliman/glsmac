@@ -1,5 +1,6 @@
 #include "TerrainRenderUpdate.h"
 #include "game/frontend/tile/Tile.h"
+#include "game/backend/MapObject.h"
 #include "game/frontend/unit/SelectionBlink.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/MapState.h"
@@ -128,9 +129,12 @@ public:
         const bool projected=ts->smac_projector_height==std::optional<uint8_t>(expected_height) &&
             close_coord(anchor,types::Vec3(10,20,2.0f+expected_height/48.0f)) &&
             shown.GetRenderData().name_anchor==std::optional<types::Vec3>(anchor) &&
-            shown.GetRenderData().coords==center && shown.GetRenderData().selection_coords.left==west;
+            shown.GetRenderData().coords==anchor && shown.GetRenderData().selection_coords.left==west &&
+            shown.GetRenderData().selection_coords.center==center &&
+            game::backend::MapObject(&world,t).GetRenderCoords()==anchor.InvertY();
         ts->smac_projector_height.reset();shown.Update(*t,*ts);
-        const bool legacy=!shown.GetRenderData().name_anchor && ts->GetProjectorCoords(tile::LAYER_LAND)==center;
+        const bool legacy=!shown.GetRenderData().name_anchor && ts->GetProjectorCoords(tile::LAYER_LAND)==center &&
+            shown.GetRenderData().coords==center && game::backend::MapObject(&world,t).GetRenderCoords()==center.InvertY();
         world.m_meshes.terrain=nullptr;world.m_meshes.terrain_data=nullptr;
         return result && projected && legacy;
     }

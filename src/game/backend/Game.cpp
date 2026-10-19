@@ -1734,8 +1734,7 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 	const auto l = tile->is_water_tile
 		? map::tile::LAYER_WATER
 		: map::tile::LAYER_LAND;
-	const auto& layer = ts->layers[ l ];
-	const auto& c = layer.coords.center;
+	const auto c = ts->GetProjectorCoords(l);
 	return {
 		c.x,
 		-c.y,

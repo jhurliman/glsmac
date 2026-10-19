@@ -94,8 +94,8 @@ std::shared_ptr<const SmacBaseCard> SDL2::GetSmacNativeBaseCard(const std::strin
             decoded->indexed[row*decoded->width+col]=static_cast<uint8_t>(raw+10);
         }}
         util::FS::ReadFile(bytes,palette_path);
-        const auto colors=loader::cvr::CvrActorMaterial::ReadSoftwareColors(
-            std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));
+        Surface common(load_image(bytes),SDL_FreeSurface);
+        const auto colors=MakeSmacSoftwarePalette(common && common->format ? common->format->palette : nullptr);
         for(size_t c=0;c<256;++c) {decoded->palette[c]=types::Color::RGB(colors[c][0],colors[c][1],colors[c][2]);}
         source=m_base_card_sources.emplace(source_key,std::move(decoded)).first;
     }

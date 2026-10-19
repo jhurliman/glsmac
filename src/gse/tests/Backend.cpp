@@ -2590,6 +2590,7 @@ public:
 		resource::ResourceManager resources("");
 		for(auto id:{resource::TTF_ARIALN,resource::TTF_ARIALNB}) {resources.m_resource_paths[id]="resource/font/terminus/TerminusTTF-4.49.3-minified.ttf";}
 		resources.m_custom_resource_paths["synthetic-base-grid"]="synthetic-base-grid";
+        resources.m_custom_resource_paths["univ.pcx"]="univ.pcx";
 		auto* old_resources=g_engine->m_resource_manager;auto* old_textures=g_engine->m_texture_loader;auto* old_fonts=g_engine->m_font_loader;
 		{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;g_engine->m_texture_loader=&textures;g_engine->m_font_loader=&fonts;}
 		util::FinallyGuard restore([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=old_resources;g_engine->m_texture_loader=old_textures;g_engine->m_font_loader=old_fonts;});
@@ -2698,18 +2699,46 @@ public:
                     auto* base=Base::Unwrap(args.at("base"));valid=valid && base && base->m_id==9;
                     return VALUE(value::Undefined);
                 }));
-                if(scenario==6) {
+                if(scenario==6 || scenario==7) {
                     frontend.m_bm=&manager;
                     util::FinallyGuard detach_base([&]{frontend.m_bm=nullptr;frontend.m_widgets.BasePreview=nullptr;frontend.m_widget_relations.clear();});
+                    if(scenario==7) {
+                        game::backend::faction::Faction definition("CARD","Native card");
+                        definition.m_bases_render={"univ.pcx",1,1,100,75,50,37,1,1,1};
+                        factions.DefineFaction(&definition);
+                        textures.bitmap.Fill(28,18,68,55,types::Color::FromRGB(20,40,60));
+                        manager.UpdateBaseIdentity(captured,6,factions.GetFactionById("CARD"),"Native card");
+                    }
                     auto presenter=std::make_unique<game::frontend::widget::BasePreview>(&frontend,ui);
                     frontend.m_widgets.BasePreview=presenter.get();
                     auto* root=static_cast<value::Object*>(ui->GetRoot()->Wrap(GSE_CALL));
                     auto* widget=static_cast<::ui::dom::Widget*>(::ui::dom::Object::Unwrap(
                         static_cast<value::Callable*>(root->Get("widget"))->Run(GSE_CALL,{new value::Object(GSE_CALL,{
                             {"type",VALUE(value::String,,"base-preview")},{"width",VALUE(value::Int,,116)},{"height",VALUE(value::Int,,68)},
-                            {"data",new value::Object(GSE_CALL,{{"base",native->Wrap(GSE_CALL)}})}
+                            {"data",new value::Object(GSE_CALL,{{"base",native->Wrap(GSE_CALL)},{"no_badge",VALUE(value::Bool,,scenario==7)}})}
                         })})));
                     GT_ASSERT(frontend.m_widget_relations.at(::ui::WT_BASE_PREVIEW).at(widget)==9,"Base widget did not render actual registered Base");
+                    std::weak_ptr<types::texture::Texture> retained_card;
+                    if(scenario==7) {
+                        GT_ASSERT(presenter->m_cards.size()==1,"actual native Base widget used fitted fallback");
+                        auto card=presenter->m_cards.begin()->second;
+                        const std::array<int,2> offset{{20,12}};
+                        GT_ASSERT(card.offset==offset && card.texture->GetWidth()==30 && card.texture->GetHeight()==28,
+                            "actual selected Base widget did not preserve original retained crop geometry");
+                        widget->WrapSet("data",new value::Object(GSE_CALL,{{"base",native->Wrap(GSE_CALL)},
+                            {"no_badge",VALUE(value::Bool,,true)},{"roster",VALUE(value::Bool,,true)}}),GSE_CALL);
+                        presenter->Update(widget,captured);
+                        GT_ASSERT(presenter->m_cards.size()==2,"roster Base reused selected portrait scale");
+                        for(const auto& entry:presenter->m_cards) {if(entry.first.find("_roster")!=std::string::npos) {card=entry.second;}}
+                        const std::array<int,2> roster_offset{{13,8}};
+                        GT_ASSERT(card.offset==roster_offset && card.texture->GetWidth()==20 && card.texture->GetHeight()==19,
+                            "actual roster Base widget lost native half-scale dimensions");
+                        retained_card=card.texture;
+                        presenter.reset();frontend.m_widgets.BasePreview=nullptr;
+                        GT_ASSERT(!retained_card.expired(),"native Base widget borrowed presenter-owned card texture");
+                        widget->Clear();card.texture.reset();
+                        GT_ASSERT(retained_card.expired(),"cleared native Base widget retained a retired texture");
+                    }
                     widget->Hide();presenter.reset();frontend.m_widgets.BasePreview=nullptr;
                     widget->WrapSet("data",new value::Object(GSE_CALL,{}),GSE_CALL);
                     GT_OK();
@@ -2736,7 +2765,7 @@ public:
         if(!checked.empty()) {return checked;}
         if(scenario>=0) {
             ProcessAccumulations();
-            const auto expected_preview=scenario==1 || scenario==3 || scenario==6?0u:1u;
+            const auto expected_preview=scenario==1 || scenario==3 || scenario>=6?0u:1u;
             const auto expected_select=scenario==0?1u:0u;
             const auto expected_tile=scenario==0 || scenario==2?1u:0u;
             GT_ASSERT(valid && previews==expected_preview && selections==expected_select && tiles==expected_tile,
@@ -11192,7 +11221,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
 	task->AddTest("frontend Base ownership refresh retains identity rendering and owner navigation",GT(){
 		return BackendFixture::WithControllerViewport([] {BackendFixture fixture;return fixture.CheckFrontendBaseOwnership();});
 	});
-    for(const int scenario:{0,1,2,3,4,5,6}) {
+    for(const int scenario:{0,1,2,3,4,5,6,7}) {
         task->AddTest("frontend Base deferred selection and card notification "+std::to_string(scenario),GT(scenario){
             return BackendFixture::WithControllerViewport([&] {BackendFixture fixture;return fixture.CheckFrontendBaseOwnership(scenario);});
         });

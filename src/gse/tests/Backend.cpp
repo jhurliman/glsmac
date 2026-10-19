@@ -1977,7 +1977,7 @@ public:
 			std::unordered_set< const types::texture::Texture* > watched;
 			bool released_while_borrowed = false;
 		} graphics;
-		// Only badge assets are doubled; Scout files use the installed resolver,
+		// Badge/font services are doubled; Scout files use the installed resolver,
 		// complete production readers, camera/lighting/composition and texture.
 		class BadgeLoader final : public loader::texture::TextureLoader {
 		public:
@@ -1991,6 +1991,18 @@ public:
 			types::texture::Texture* LoadTextureImpl( const std::string&, types::texture::texture_flag_t ) override { return &bitmap; }
 			types::texture::Texture* LoadTextureImpl( const std::string&, size_t, size_t, size_t, size_t, uint8_t, float, types::texture::texture_flag_t ) override { return &bitmap; }
 		};
+        class OrderFonts final : public loader::font::FontLoader {
+        protected:
+            types::Font* LoadFontImpl(const std::string& name,const std::vector<unsigned char>&,unsigned char,loader::font::RasterMode) override {
+                NEWV(font,types::Font,name);
+                util::FinallyGuard cleanup([&]{if(font) {DELETE(font);}});
+                for(size_t code=32;code<128;++code) {
+                    auto& glyph=font->m_symbols[code];glyph={8,0,1,1,0,9,static_cast<unsigned char*>(malloc(1))};
+                    if(!glyph.data) {throw std::bad_alloc();}glyph.data[0]=255;
+                }
+                auto* result=font;font=nullptr;return result;
+            }
+        } fonts;
 		const auto directory = std::filesystem::temp_directory_path() / ( "glsmac-scout-unit-" + util::UUID::Generate() );
 		std::filesystem::create_directory( directory );
 		std::filesystem::create_directory( directory / "default" );
@@ -2008,20 +2020,22 @@ public:
 		const char* installed = std::getenv( rover ? "GLSMAC_ROVER_ASSETS" : initialized ? "GLSMAC_INITIALIZED_SCOUT_ASSETS" : "GLSMAC_SCOUT_ASSETS" );
 		resource::ResourceManager resources( installed && *installed ? installed : directory.string() );
 		if ( installed && *installed ) { resources.m_smac_path = installed; }
+        resources.m_custom_resource_paths["arialbd.ttf"]="resource/font/terminus/TerminusTTF-4.49.3-minified.ttf";
 		resources.m_resource_paths[ resource::PCX_FLAGS ] = "synthetic-badge";
 		resources.m_resource_paths[ resource::PCX_TEXTURE ] = "synthetic-selection";
 		auto badges_loader = std::make_unique< BadgeLoader >();
 		auto* old_graphics = g_engine->m_graphics;
 		auto* old_resources = g_engine->m_resource_manager;
 		auto* old_textures = g_engine->m_texture_loader;
+        auto* old_fonts = g_engine->m_font_loader;
 		{
 			std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex );
-			g_engine->m_graphics = &graphics; g_engine->m_resource_manager = &resources; g_engine->m_texture_loader = badges_loader.get();
+			g_engine->m_graphics = &graphics; g_engine->m_resource_manager = &resources; g_engine->m_texture_loader = badges_loader.get(); g_engine->m_font_loader = &fonts;
 		}
 		util::FinallyGuard restore( [ & ] {
 			std::lock_guard guard( g_engine->GetGC()->m_spaces_mutex );
 			badges_loader.reset();
-			g_engine->m_graphics = old_graphics; g_engine->m_resource_manager = old_resources; g_engine->m_texture_loader = old_textures;
+			g_engine->m_graphics = old_graphics; g_engine->m_resource_manager = old_resources; g_engine->m_texture_loader = old_textures; g_engine->m_font_loader = old_fonts;
 		} );
 		BackendFixture fixture; // runtime dies before services are restored
 		if ( rover || initialized ) { fixture.ConfigureConventional( true, 3, false, rover ); }
@@ -2212,12 +2226,27 @@ public:
 			// morale refresh, then return this shared preview fixture to legacy mode.
 			unit->SetMovement( 0.01f ); unit->SetActionability( true, true, 2 );
 			GT_ASSERT( unit->CanMove() && unit->GetStatsString() == "? - ? - 2", "frontend discarded integer actionability or fresh full allowance" );
-            unit->SetHeld(true);unit->Refresh();
+            const auto* source_badge=unit->GetBadgeSprite()->instanced_sprite->actor->GetSpriteActor()->GetTexture();
+            const std::string source_badge_pixels(reinterpret_cast<const char*>(source_badge->GetBitmap()),source_badge->GetBitmapSize());
+            unit->SetHeld(true);unit->SetOrderGlyph('H',0);unit->Refresh();
+            auto* hold_badge=unit->GetBadgeSprite();
+            std::weak_ptr<types::texture::Texture> order_badge_owner=hold_badge->instanced_sprite->texture_owner;
+            GT_ASSERT(!order_badge_owner.expired() && unit->GetRenderData().badge.texture->GetPixel(11,7)==types::Color::RGB(0,0,0),
+                "real Hold refresh did not paint its centered glyph in an owned texture");
+            GT_ASSERT(std::string(reinterpret_cast<const char*>(source_badge->GetBitmap()),source_badge->GetBitmapSize())==source_badge_pixels,
+                "order composition modified the shared flag atlas");
+            unit->SetOrderGlyph('-',0);unit->Refresh();
+            GT_ASSERT(unit->GetBadgeSprite()!=hold_badge,"Activate glyph reused stale Hold pixels");
+            unit->SetOrderGlyph('H',0);unit->Refresh();
+            GT_ASSERT(unit->GetBadgeSprite()==hold_badge,"identical order glyph did not reuse its cached actor");
             GT_ASSERT(unit->CanMove() && !unit->IsActive(),"Frontend Hold faked movement exhaustion or retained controller eligibility");
             unit->SetHeld(false);unit->Refresh();
             GT_ASSERT(unit->IsActive(),"Frontend Activate did not restore unspent eligibility");
 			unit->SetActionability( true, false );
 			GT_ASSERT( !unit->CanMove(), "frontend ignored exact conventional exhaustion" );
+            unit->Refresh();
+            GT_ASSERT(unit->IsBadgeVisible(),"exhausted Unit refresh hid its stationary overlays");
+            unit->SetOrderGlyph(0,0);unit->Refresh();
 
 			unit->SetActionability( false, true );
 			GT_ASSERT( !unit->CanMove(), "legacy frontend threshold changed" );
@@ -2310,6 +2339,7 @@ public:
 			frontend.HideTileSelector();
 			def.reset(); badges.reset(); um.reset(); ism.reset(); frontend.m_ism = nullptr; frontend.m_um = nullptr;
             for(const auto& native:native_badge_owners) {GT_ASSERT(native.expired(),"Native badge texture survived its actor bank retirement");}
+            GT_ASSERT(order_badge_owner.expired(),"Order badge texture survived its actor bank retirement");
 			GT_ASSERT( !retained.expired() && graphics.Count( scout_texture ) == before_scout,
 				"scene/cache retirement released a still-borrowed Scout image" );
 			GT_ASSERT( std::string( reinterpret_cast< char* >( scout_texture->GetBitmap() ), scout_texture->GetBitmapSize() ) == baseline,
@@ -2535,11 +2565,24 @@ public:
 			types::texture::Texture* LoadTextureImpl(const std::string&,types::texture::texture_flag_t) override {return &bitmap;}
 			types::texture::Texture* LoadTextureImpl(const std::string&,size_t,size_t,size_t,size_t,uint8_t,float,types::texture::texture_flag_t) override {return &bitmap;}
 		} textures;
+        class OrderFonts final : public loader::font::FontLoader {
+        protected:
+            types::Font* LoadFontImpl(const std::string& name,const std::vector<unsigned char>&,unsigned char,loader::font::RasterMode) override {
+                NEWV(font,types::Font,name);
+                util::FinallyGuard cleanup([&]{if(font) {DELETE(font);}});
+                for(size_t code=32;code<128;++code) {
+                    auto& glyph=font->m_symbols[code];glyph={8,0,1,1,0,9,static_cast<unsigned char*>(malloc(1))};
+                    if(!glyph.data) {throw std::bad_alloc();}glyph.data[0]=255;
+                }
+                auto* result=font;font=nullptr;return result;
+            }
+        } fonts;
 		resource::ResourceManager resources( "" );
+        resources.m_custom_resource_paths["arialbd.ttf"]="resource/font/terminus/TerminusTTF-4.49.3-minified.ttf";
 		resources.m_resource_paths[resource::PCX_FLAGS]="synthetic-command-badges";
-		auto* old_resources=g_engine->m_resource_manager;auto* old_textures=g_engine->m_texture_loader;auto* old_game=g_engine->m_game;
-		{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;g_engine->m_texture_loader=&textures;g_engine->m_game=&m_game;}
-		util::FinallyGuard restore_services([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=old_resources;g_engine->m_texture_loader=old_textures;g_engine->m_game=old_game;});
+		auto* old_resources=g_engine->m_resource_manager;auto* old_textures=g_engine->m_texture_loader;auto* old_game=g_engine->m_game;auto* old_fonts=g_engine->m_font_loader;
+		{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;g_engine->m_texture_loader=&textures;g_engine->m_game=&m_game;g_engine->m_font_loader=&fonts;}
+		util::FinallyGuard restore_services([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=old_resources;g_engine->m_texture_loader=old_textures;g_engine->m_game=old_game;g_engine->m_font_loader=old_fonts;});
 		scene::Scene scene("Command completion fixture",scene::SCENE_TYPE_WORLD);
 		game::frontend::sprite::InstancedSpriteManager sprites(&scene);
 		game::backend::faction::Faction faction_source("COMMAND_TEST","Commands");

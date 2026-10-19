@@ -1,5 +1,8 @@
 #include "BadgeDefs.h"
 #include "game/SmacHealthbar.h"
+#include "loader/cvr/CvrActorMaterial.h"
+#include "util/FS.h"
+#include "resource/ResourceManager.h"
 #include <memory>
 
 #include "engine/Engine.h"
@@ -255,6 +258,17 @@ sprite::Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health, int32_t 
 	return &it->second;
 }
 
+
+types::Color BadgeDefs::GetOrderColor(uint8_t index) {
+    if(index==0) {return types::Color::FromRGB(0,0,0);}
+    if(index!=44) {throw std::invalid_argument("Unsupported ordinary order foreground index");}
+    if(!m_order_color_loaded) {
+        std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath("PALETTE.PCX"));
+        const auto palette=loader::cvr::CvrActorMaterial::ReadSoftwareColors(std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));
+        m_spartan_order_color=types::Color::FromRGB(std::min<unsigned char>(palette[44][0],235),std::min<unsigned char>(palette[44][1],235),std::min<unsigned char>(palette[44][2],235));m_order_color_loaded=true;
+    }
+    return m_spartan_order_color;
+}
 
 const types::Vec3 BadgeDefs::GetFakeBadgeCoords( const types::Vec3& coords, const uint8_t offset ) const {
 	return {

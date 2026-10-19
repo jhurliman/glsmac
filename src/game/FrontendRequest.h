@@ -172,6 +172,8 @@ public:
 			backend::unit::health_t health;
 			bool conventional, has_moves, native;
             bool held;
+            char order_glyph;
+            uint8_t order_color_index;
             int32_t maximum_hit_points;
 			backend::unit::movement_t full_movement;
 		} unit_spawn;
@@ -186,6 +188,8 @@ public:
 			const std::string* morale_string;
 			bool conventional, has_moves;
             bool held;
+            char order_glyph;
+            uint8_t order_color_index;
             int32_t maximum_hit_points;
 			backend::unit::movement_t full_movement;
 			struct {

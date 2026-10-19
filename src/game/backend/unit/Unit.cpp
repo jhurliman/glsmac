@@ -133,6 +133,22 @@ Unit::Presentation Unit::GetPresentation( int32_t native_viewer ) const {
 const movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.025f;
 const movement_t Unit::MINIMUM_HEALTH_TO_KEEP = 0.025f;
 
+char Unit::VisibleOrderGlyph(size_t viewer_slot) const {
+    if(!IsConventional()) {return 0;}
+    const auto& state=Conventional();
+    // Retained opaque status bits can override ordinary glyphs/colors. Do not
+    // pretend these unimplemented status branches are ordinary orders.
+    constexpr uint32_t known=ConventionalUnitState::PAID_SUPPORT|ConventionalUnitState::PACIFISM_PENALIZED|ConventionalUnitState::PACIFISM_EXEMPT;
+    if(state.retained_state_word && (*state.retained_state_word & ~known)) {return 0;}
+    if(m_owner->GetIndex()!=viewer_slot) {return '-';}
+    if(state.IsHeld()) {return 'H';}
+    using Work=ConventionalUnitState::WorkOrder;
+    switch(state.work_order) {
+        case Work::None:return '-';case Work::Farm:return 'f';case Work::Road:return 'R';
+        case Work::Forest:return 'F';case Work::Solar:return 'S';case Work::Mine:return 'M';
+    }
+    throw std::runtime_error("Invalid conventional work glyph");
+}
 const bool Unit::HasMovesLeft() const {
     if(IsNative()) {return m_um->QueryNativeUnit(Native()).remaining_allowance>0;}
 	return IsConventional() ? QueryStats( SmacMoraleMode::Mode1 ).remaining_allowance > 0 : Legacy().movement >= unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;

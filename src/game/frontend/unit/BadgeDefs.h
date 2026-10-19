@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "types/Vec3.h"
+#include "types/Color.h"
 
 #include "game/backend/unit/Types.h"
 
@@ -45,6 +46,7 @@ public:
 	sprite::InstancedSprite* GetFakeBadgeSprite();
 	sprite::Sprite* GetBadgeHealthbarSprite( const float health, int32_t maximum_hit_points = 0 );
 
+    types::Color GetOrderColor(uint8_t palette_index);
 	const types::Vec3 GetFakeBadgeCoords( const types::Vec3& coords, const uint8_t offset ) const;
 
     void SetSelectionBlinkAdmission(bool admitted) {m_selection_blink_admitted=admitted;}
@@ -53,6 +55,8 @@ public:
 
 private:
 	SelectionBlink m_selection_blink;
+    bool m_order_color_loaded=false;
+    types::Color m_spartan_order_color;
     bool m_selection_blink_admitted=false;
 
 	static const struct consts_t {

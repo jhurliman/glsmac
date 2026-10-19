@@ -7,8 +7,10 @@
 #include "loader/texture/SmacEffect.h"
 #include "game/ScoutBattlePresentation.h"
 #include "game/SmacHealthbar.h"
+#include "game/SmacUnitOrder.h"
 #include "game/frontend/base/SmacPopulationBadge.h"
 #include "game/frontend/unit/BadgeDefs.h"
+#include "game/frontend/unit/SmacOrderGlyph.h"
 #include "game/backend/map/Consts.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "scene/Scene.h"
@@ -63,6 +65,26 @@ bool StepMatches( const fixture::Step& e, const model::Survivor& s, const model:
 }
 
 void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC order glyph retains native center baseline and neighboring badge pixels",GT(){
+        GT_ASSERT(game::SmacOrderForegroundIndex("SPARTANS")==44 && game::SmacOrderForegroundIndex("UNIV")==0
+            && game::SmacOrderForegroundIndex("spartans")==0,"Order foreground used faction slot or a case-folded filename");
+        types::Font font("original order metrics");
+        for(const char letter:std::string("H-fRFSM")) {
+            auto& glyph=font.m_symbols[static_cast<unsigned char>(letter)];
+            glyph={letter=='-'?4:8,0,1,1,0,9,static_cast<unsigned char*>(malloc(1))};if(!glyph.data){throw std::bad_alloc();}glyph.data[0]=255;
+        }
+        const auto white=types::Color::FromRGB(255,255,255),black=types::Color::FromRGB(0,0,0),green=types::Color::FromRGB(0,255,0);
+        types::texture::Texture badge(23,30);badge.Fill(0,0,22,29,white);badge.SetPixel(6,6,green);
+        game::frontend::unit::PaintSmacOrderGlyph(badge,font,'H',black);
+        GT_ASSERT(badge.GetPixel(11,7)==black.GetRGBA() && badge.GetPixel(6,6)==green.GetRGBA() && badge.GetPixel(10,7)==white.GetRGBA(),"H lost measured x11/baseline16 or altered health backing");
+        game::frontend::unit::PaintSmacOrderGlyph(badge,font,'-',black);
+        GT_ASSERT(badge.GetPixel(13,7)==black.GetRGBA() && badge.GetWidth()==23 && badge.GetHeight()==30,"Dash centering or flag geometry changed");
+        auto& glyph=font.m_symbols['H'];glyph.width=129;
+        GT_ASSERT(Rejects([&]{game::frontend::unit::PaintSmacOrderGlyph(badge,font,'H',black);}),"Unbounded order glyph bitmap accepted");
+        glyph.width=1;glyph.left=INT32_MIN;glyph.top=INT32_MAX;
+        game::frontend::unit::PaintSmacOrderGlyph(badge,font,'H',black);
+        GT_ASSERT(badge.GetPixel(6,6)==green.GetRGBA(),"Extreme bearings wrote outside glyph bounds");GT_OK();
+    });
     task->AddTest("SMAC population badge admits resolved stock metadata and preserves mod colors",GT(){
         std::array<types::Color,256> palette{};
         palette[241]=types::Color::FromRGB(0,252,0);palette[32]=types::Color::FromRGB(45,72,41);

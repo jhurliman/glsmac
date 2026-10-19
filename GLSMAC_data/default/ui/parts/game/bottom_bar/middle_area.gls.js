@@ -7,6 +7,9 @@ return {
 	init: (p) => {
 
 		this.pp = {};
+		const margin = 263;
+		const page_inset = 3;
+		const button_strip = 30;
 
 		p.ui.class('bottombar-panel-page-button').extend('bottombar-panel-button').set({
 			width: 21,
@@ -16,26 +19,29 @@ return {
 		});
 
 		p.ui.class('bottombar-panel-page').set({
-			left: 3,
+			left: page_inset,
 			top: 3,
 			bottom: 3,
-			right: 30,
+			right: button_strip,
 		});
 
 		this.pp = {
 			ui: p.ui,
 			game: p.game,
+			// Query live viewport geometry. A stored DOM wrapper's width may be
+			// its construction snapshot, before the parent margins have settled.
+			get_info_width: () => { return p.ui.get_width() - margin * 2 - page_inset - button_strip; },
 			frame: p.el.panel({
 				class: 'bottombar-panel',
-				left: 263,
+				left: margin,
 				top: 69,
-				right: 263,
+				right: margin,
 				bottom: 86,
 			}),
 			pages: {},
 		};
 
-		this.pp.pages_order = ['messages', 'info_panels'];
+		this.pp.pages_order = ['info_panels', 'messages'];
 		for (s of this.pp.pages_order) {
 			this.pp.pages[s] = #include('middle_area/' + s);
 		}

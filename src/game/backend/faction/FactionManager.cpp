@@ -77,6 +77,18 @@ WRAPIMPL_BEGIN( FactionManager )
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
 		{
+			"import_display_identity",
+			NATIVE_CALL() {
+				N_EXPECT_ARGS(2); N_GETVALUE(filename,0,String); N_GETVALUE(section,1,String);
+				const auto identity = g_engine->GetTXTLoaders()->factions->GetDisplayIdentity(filename, section);
+				return VALUEEXT(gse::value::Object, GSE_CALL, (gse::value::object_properties_t{
+					{"faction_name", VALUE(gse::value::String,,identity.faction_name)},
+					{"leader_title", VALUE(gse::value::String,,identity.leader_title)},
+					{"leader_name", VALUE(gse::value::String,,identity.leader_name)}
+				}));
+			})
+		},
+		{
 			"import_base_names",
 			NATIVE_CALL() {
 				N_EXPECT_ARGS( 1 );
@@ -127,8 +139,15 @@ WRAPIMPL_BEGIN( FactionManager )
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE( faction_def, 1, Object );
 				N_GETPROP( name, faction_def, "name", String );
+				std::optional<DisplayIdentity> identity;
+				if (faction_def.find("display_identity") != faction_def.end()) {
+					N_GETPROP(fields,faction_def,"display_identity",Object);
+					N_GETPROP(faction_name,fields,"faction_name",String); N_GETPROP(title,fields,"leader_title",String); N_GETPROP(leader,fields,"leader_name",String);
+					identity=DisplayIdentity{faction_name,title,leader}; identity->Validate();
+				}
 
 				auto* faction = new Faction( id, name );
+				faction->m_display_identity = std::move(identity);
 
 				N_GETPROP( colors, faction_def, "colors", Object );
 				N_GETPROP_UNWRAP( colors_text, colors, "text", types::Color );

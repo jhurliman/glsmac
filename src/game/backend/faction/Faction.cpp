@@ -3,6 +3,7 @@
 #include "types/texture/Texture.h"
 #include "gse/value/String.h"
 #include "gse/value/Bool.h"
+#include "gse/value/Undefined.h"
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "resource/ResourceManager.h"
@@ -19,7 +20,7 @@ namespace faction {
 namespace {
 
 constexpr char snapshot_marker[] = "GLSMAC_FACTION";
-constexpr long long snapshot_version = 1;
+constexpr long long snapshot_version = 2;
 constexpr auto known_flags = Faction::FF_NAVAL | Faction::FF_PROGENITOR;
 
 void CheckFlags( const long long flags ) {
@@ -74,6 +75,7 @@ Faction::Faction( const std::string& id, const std::string& name )
 
 const types::Buffer Faction::Serialize() const {
 	CheckFlags( m_flags );
+	if (m_display_identity) { m_display_identity->Validate(); }
 	types::Buffer buf;
 
 	buf.WriteString( snapshot_marker );
@@ -98,14 +100,22 @@ const types::Buffer Faction::Serialize() const {
 	WriteSize( buf, m_bases_render.cell_padding );
 	buf.WriteFloat( m_bases_render.scale_x );
 	buf.WriteFloat( m_bases_render.scale_y );
+	buf.WriteBool(m_display_identity.has_value());
+	if (m_display_identity) {
+		buf.WriteString(m_display_identity->faction_name);
+		buf.WriteString(m_display_identity->leader_title);
+		buf.WriteString(m_display_identity->leader_name);
+	}
 
 	return buf;
 }
 
 void Faction::Deserialize( types::Buffer buf ) {
-	if ( buf.ReadString() != snapshot_marker || buf.ReadInt() != snapshot_version ) {
+	if ( buf.ReadString() != snapshot_marker ) {
 		throw std::runtime_error( "Unsupported faction snapshot format" );
 	}
+	const auto version = buf.ReadInt();
+	if (version != 1 && version != snapshot_version) { throw std::runtime_error("Unsupported faction snapshot version"); }
 
 	Faction next;
 	next.m_id = buf.ReadString();
@@ -130,12 +140,17 @@ void Faction::Deserialize( types::Buffer buf ) {
 	next.m_bases_render.cell_padding = ReadSize( buf );
 	next.m_bases_render.scale_x = buf.ReadFloat();
 	next.m_bases_render.scale_y = buf.ReadFloat();
+	if (version >= 2 && buf.ReadBool()) {
+		next.m_display_identity = DisplayIdentity{buf.ReadString(DisplayIdentity::MAX_FIELD_BYTES), buf.ReadString(DisplayIdentity::MAX_FIELD_BYTES), buf.ReadString(DisplayIdentity::MAX_FIELD_BYTES)};
+		next.m_display_identity->Validate();
+	}
 	if ( buf.lenr != buf.lenw ) { throw std::runtime_error( "Unexpected trailing faction snapshot data" ); }
 
 	// Publish only complete validated fields. Do not replace Wrappable state
 	// (callbacks, linked script objects or dependents) with the temporary's.
 	m_id.swap( next.m_id );
 	m_name.swap( next.m_name );
+	m_display_identity.swap(next.m_display_identity);
 	m_flags = next.m_flags;
 	m_base_names.land.swap( next.m_base_names.land );
 	m_base_names.water.swap( next.m_base_names.water );
@@ -147,6 +162,14 @@ void Faction::Deserialize( types::Buffer buf ) {
 
 WRAPIMPL_BEGIN( Faction )
 	WRAPIMPL_PROPS
+			{
+				"display_identity",
+				m_display_identity ? static_cast<gse::Value*>(VALUEEXT(gse::value::Object, GSE_CALL, (gse::value::object_properties_t{
+					{"faction_name", VALUE(gse::value::String,,m_display_identity->faction_name)},
+					{"leader_title", VALUE(gse::value::String,,m_display_identity->leader_title)},
+					{"leader_name", VALUE(gse::value::String,,m_display_identity->leader_name)}
+				}))) : VALUE(gse::value::Undefined)
+			},
 			{
 				"id",
 				VALUE( gse::value::String, , m_id )

@@ -4,6 +4,7 @@
 #include "game/backend/faction/FactionManager.h"
 #include "task/gsetests/GSETests.h"
 #include "types/Buffer.h"
+#include "loader/txt/FactionTXTLoader.h"
 
 #include <limits>
 #include <memory>
@@ -17,6 +18,7 @@ using game::backend::faction::FactionManager;
 static void Populate( Faction& faction, const std::string& id, const uint8_t flags ) {
 	faction.m_id = id;
 	faction.m_name = "Synthetic " + id;
+	faction.m_display_identity = game::backend::faction::DisplayIdentity{"Retained " + id, "Director", "Leader " + id};
 	faction.m_flags = flags;
 	faction.m_base_names.land = { "Land One", "", "Land One", "Land Two" };
 	faction.m_base_names.water = { "Water One", "Water Two" };
@@ -28,6 +30,7 @@ static void Populate( Faction& faction, const std::string& id, const uint8_t fla
 
 static std::string Match( const Faction& actual, const Faction& expected ) {
 	GT_ASSERT( actual.m_id == expected.m_id && actual.m_name == expected.m_name, "faction identity changed" );
+	GT_ASSERT( actual.m_display_identity == expected.m_display_identity, "retained display identity changed" );
 	GT_ASSERT( actual.m_flags == expected.m_flags, "faction flags were lost or changed" );
 	GT_ASSERT( actual.m_base_names.land == expected.m_base_names.land, "land base names were lost or reordered" );
 	GT_ASSERT( actual.m_base_names.water == expected.m_base_names.water, "water base names were lost or reordered" );
@@ -40,7 +43,7 @@ static std::string Match( const Faction& actual, const Faction& expected ) {
 
 // Independent synthetic wire writer makes malformed scalar cases without
 // corrupting Buffer checksums or depending on the production serializer.
-static types::Buffer Record( const Faction& f, const std::string& marker = "GLSMAC_FACTION", const long long version = 1, const std::optional< long long > flags = {}, const std::optional< long long > land_count = {}, const std::optional< long long > water_count = {}, const std::optional< long long > grid_x = {} ) {
+static types::Buffer Record( const Faction& f, const std::string& marker = "GLSMAC_FACTION", const long long version = 2, const std::optional< long long > flags = {}, const std::optional< long long > land_count = {}, const std::optional< long long > water_count = {}, const std::optional< long long > grid_x = {} ) {
 	types::Buffer buf;
 	buf.WriteString( marker );
 	buf.WriteInt( version );
@@ -64,6 +67,12 @@ static types::Buffer Record( const Faction& f, const std::string& marker = "GLSM
 	buf.WriteInt( f.m_bases_render.cell_padding );
 	buf.WriteFloat( f.m_bases_render.scale_x );
 	buf.WriteFloat( f.m_bases_render.scale_y );
+	if (version >= 2) {
+		buf.WriteBool(f.m_display_identity.has_value());
+		if (f.m_display_identity) {
+			buf.WriteString(f.m_display_identity->faction_name);buf.WriteString(f.m_display_identity->leader_title);buf.WriteString(f.m_display_identity->leader_name);
+		}
+	}
 	return buf;
 }
 
@@ -81,6 +90,33 @@ static std::string RejectRecord( const std::string& bytes ) {
 }
 
 void AddFactionTests( task::gsetests::GSETests* task ) {
+	task->AddTest("faction display identity parses source headers independently of controller names", GT() {
+		using loader::txt::FactionTXTLoader;
+		const std::string source="; synthetic records around installed University identity fields\n#UNIV\nUniversity of Planet, The Scientist, University, M, 1, Zakharov, M, 0, 0, 1, 0, 0,\n\nValues, Knowledge, RESEARCH\nPolitics, Fundamentalist, nil\nUniversity, Univ.\nAssistant, Surname, Base\nProvost, brilliant, unethical, talented, reckless\n#BASES\nOne\n";
+		const auto identity=FactionTXTLoader::ParseDisplayIdentity(source,"UNIV");
+		GT_ASSERT(identity.faction_name=="University of Planet" && identity.leader_title=="Provost" && identity.leader_name=="Zakharov","source display fields were confused with priorities or controller name");
+		for (const std::string bonus : {"", "TECH, Biogen"}) {
+			const auto formatted = std::string("#UNIV\n\nUniversity of Planet, The Scientist, University, M, 1, Zakharov, M, 0, 0, 1, 0, 0,\n") + bonus
+				+ "\n\nValues, Knowledge, RESEARCH\n \t\nPolitics, Fundamentalist, nil\n\nUniversity, Univ.\n; comment\n\nAssistant, Surname, Base\n\nProvost, brilliant, unethical, talented, reckless\n";
+			GT_ASSERT(FactionTXTLoader::ParseDisplayIdentity(formatted,"UNIV")==identity,"formatting blanks shifted faction identity records or empty bonus row");
+		}
+		for(const auto& bad:{source+source, std::string("#UNIV\nIncomplete\n"),std::string("N\0UL",4)+source}) {
+			bool rejected=false;try{FactionTXTLoader::ParseDisplayIdentity(bad,"UNIV");}catch(const std::exception&){rejected=true;}
+			GT_ASSERT(rejected,"malformed display identity accepted");
+		}
+		GT_OK();
+	});
+	task->AddTest("faction snapshot v1 preserves absent display identity and v2 retains explicit metadata", GT() {
+		Faction source,restored;Populate(source,"source",Faction::FF_NONE);Populate(restored,"destination",Faction::FF_NONE);
+		restored.Deserialize(Record(source,"GLSMAC_FACTION",1));
+		GT_ASSERT(!restored.m_display_identity,"old save acquired current installed leader metadata");
+		source.m_display_identity.reset();const auto absent=Match(restored,source);GT_ASSERT(absent.empty(),"v1 changed existing faction fields");
+		source.m_display_identity=game::backend::faction::DisplayIdentity{"Custom Faction","Custom Title","Custom Leader"};
+		restored.Deserialize(source.Serialize());GT_ASSERT(restored.m_display_identity==source.m_display_identity,"custom retained identity was replaced");
+		const auto before=restored.Serialize().ToString();Faction malformed;Populate(malformed,"source",Faction::FF_NONE);malformed.m_display_identity->leader_name="";
+		bool rejected=false;try{restored.Deserialize(Record(malformed));}catch(const std::runtime_error&){rejected=true;}
+		GT_ASSERT(rejected && restored.Serialize().ToString()==before,"bad metadata partially replaced destination");GT_OK();
+	});
 	task->AddTest( "faction snapshot preserves flags, ordered names and existing fields", GT() {
 		for ( uint8_t flags = 0 ; flags <= ( Faction::FF_NAVAL | Faction::FF_PROGENITOR ) ; ++flags ) {
 			for ( unsigned empty_lists = 0 ; empty_lists < 4 ; ++empty_lists ) {
@@ -102,7 +138,7 @@ void AddFactionTests( task::gsetests::GSETests* task ) {
 		Populate( source, "source", Faction::FF_NAVAL );
 		std::vector< std::string > bad;
 		bad.push_back( Record( source, "unknown" ).ToString() );
-		for ( const auto version : { -1LL, 0LL, 2LL } ) { bad.push_back( Record( source, "GLSMAC_FACTION", version ).ToString() ); }
+		for ( const auto version : { -1LL, 0LL, 3LL } ) { bad.push_back( Record( source, "GLSMAC_FACTION", version ).ToString() ); }
 		for ( const auto flags : { -1LL, 4LL, 255LL, 256LL } ) { bad.push_back( Record( source, "GLSMAC_FACTION", 1, flags ).ToString() ); }
 		for ( const auto count : { -1LL, std::numeric_limits< long long >::max() } ) {
 			bad.push_back( Record( source, "GLSMAC_FACTION", 1, {}, count ).ToString() );

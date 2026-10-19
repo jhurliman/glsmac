@@ -36,6 +36,7 @@ return {
 		for (f of get_roster(ruleset)) {
 			fm.add(#uppercase(f[0]), {
 				name: f[0],
+				display_identity: fm.import_display_identity(f[1] + '.txt', #uppercase(f[1])),
 				colors: fm.import_colors(f[1] + '.pcx'),
 				bases: {
 					render: {

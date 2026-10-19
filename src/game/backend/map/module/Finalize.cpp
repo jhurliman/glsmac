@@ -1,4 +1,5 @@
 #include "Finalize.h"
+#include "game/backend/map/SmacLandmarkGeometry.h"
 
 #include "game/backend/map/Map.h"
 #include "game/backend/map/MapState.h"

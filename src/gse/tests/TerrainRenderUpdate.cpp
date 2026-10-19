@@ -1,4 +1,5 @@
 #include "TerrainRenderUpdate.h"
+#include "game/backend/map/SmacLandmarkGeometry.h"
 #include "game/frontend/NativeTerrainRenderer.h"
 #include "fixtures/NativeTerrainView.h"
 #include "Mesh.h"

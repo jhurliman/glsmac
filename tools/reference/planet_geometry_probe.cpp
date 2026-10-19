@@ -1,21 +1,9 @@
 #include "game/backend/map/SmacLandmarkGeometry.h"
 #include <fstream>
 #include <iostream>
-#include <iterator>
+#include "planet_geometry_input.h"
 #include <stdexcept>
 using game::backend::map::smac_terrain::LandmarkGeometry;
-std::vector<LandmarkGeometry::Cell> Cells(const std::string& path) {
-    std::ifstream file(path,std::ios::binary);std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(file),{}};
-    if(bytes.size()!=15+0xaa4+3200*44+128) {throw std::runtime_error("Unexpected pinned Planet size");}
-    std::vector<LandmarkGeometry::Cell> cells;
-    for(size_t i=0;i<3200;++i) {
-        const auto offset=2739+44*i;
-        const uint32_t word=uint32_t(bytes[offset+12])|(uint32_t(bytes[offset+13])<<8)|
-            (uint32_t(bytes[offset+14])<<16)|(uint32_t(bytes[offset+15])<<24);
-        cells.push_back({uint8_t(bytes[offset]>>5),word});
-    }
-    return cells;
-}
 int Value(std::optional<int> value) {if(!value) {throw std::runtime_error("Unsupported authored geometry query");}return *value;}
 std::array<int,2> Projector(LandmarkGeometry& model,int x,int y) {
     int dx=x-28;const int wrapped=(dx%80+80)%80;
@@ -25,7 +13,7 @@ std::array<int,2> Projector(LandmarkGeometry& model,int x,int y) {
 }
 int main(int argc,char** argv) {
     if(argc!=3) {throw std::invalid_argument("Expected pinned asset and owned output directory");}
-    const auto cells=Cells(argv[1]);const std::string dir=argv[2];
+    const auto cells=PlanetCells(argv[1]);const std::string dir=argv[2];
     for(int reverse=0;reverse<2;++reverse) {
         LandmarkGeometry model(80,80,true,cells,false,true);std::ofstream out(dir+"/traversal-"+std::to_string(reverse)+".txt");
         for(int position=0;position<3200;++position) {

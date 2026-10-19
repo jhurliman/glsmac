@@ -27,6 +27,8 @@ public:
         }
         cache_.resize(cells_.size());
         for(auto& entry:cache_) {entry.fill(std::nullopt);}
+        face_cache_.resize(cells_.size());
+        relief_=step_;
         profiles_=landmark_tables::HEIGHT;
         for(const auto& cell:cells_) {
             const unsigned detail=cell.landmarks>>24;
@@ -54,13 +56,10 @@ public:
             for(const auto& offset:CORNERS[vertex-1]) {
                 const auto neighbor=Index(x+offset[0],y+offset[1]);
                 if(!neighbor || cells_[*neighbor].band<3) {land=false;break;}
-            }
-            if(land) {
-                for(const auto& offset:CORNERS[vertex-1]) {
-                    const auto height=Height(x+offset[0],y+offset[1],0);
-                    if(!height) {return std::nullopt;}
-                    sum+=*height;
-                }
+                // Native early sea exits preserve earlier center-cache writes.
+                const auto height=Height(x+offset[0],y+offset[1],0);
+                if(!height) {return std::nullopt;}
+                sum+=*height;
             }
             base=land?FloorQuarter(sum):0;
         }
@@ -87,6 +86,20 @@ public:
         int sum=0;
         for(unsigned v=4;v>0;--v) {const auto height=Height(x,y,v);if(!height) {return {};}sum+=*height;}
         return FloorQuarter(sum);
+    }
+    // Camera movement preserves both caches. Zoom changes invalidate both;
+    // relief changes invalidate heights while retaining ordinary face shades.
+    void Configure(int zoom,int relief) {
+        if(zoom< -14 || zoom>8 || (relief!=8 && relief!=25)) {
+            throw std::invalid_argument("Unsupported native geometry view configuration");
+        }
+        if(zoom!=zoom_) {
+            for(auto& entry:face_cache_) {entry.fill(std::nullopt);}
+        }
+        if(zoom!=zoom_ || relief!=relief_) {
+            for(auto& entry:cache_) {entry.fill(std::nullopt);}
+        }
+        zoom_=zoom;relief_=relief;step_=relief*(zoom+16)/16;
     }
     std::optional<int> Shade(int x,int y,unsigned vertex) {
         if(vertex>=5 || !Index(x,y)) {return {};}
@@ -120,11 +133,17 @@ private:
         return int(unsigned(sum-4*int(cells_[*own].band)+4)&15u)-4;
     }
     std::optional<int> FaceShade(int x,int y,unsigned face) {
-        const auto own=Index(x,y);if(!own || cells_[*own].band<3) {return 0;}
-        if(!Height(x,y,face+1) || !Height(x,y,((face+1)&3)+1)) {return {};}
+        // Unlike height queries, native face shading rejects off-map X rather
+        // than wrapping it to the opposite edge.
+        if(x<0 || x>=width_) {return 0;}
+        const auto own=Index(x,y);if(!own) {return 0;}
+        auto& cached=face_cache_[*own][face];
+        if(cached && *cached!=127) {return cached;}
+        if(cells_[*own].band<3) {cached=0;return cached;}
+        for(unsigned v=1;v<5;++v) {if(!Height(x,y,v)) {return {};}}
         const auto first=Slope(x,y,face),second=Slope(x,y,(face+1)&3);
         if(!first || !second) {return {};}
-        return FaceLighting(*first,*second,face);
+        cached=FaceLighting(*first,*second,face);return cached;
     }
     std::optional<size_t> Index(int x,int y) const {
         if(y<0 || y>=rows_) {return std::nullopt;}
@@ -160,8 +179,10 @@ private:
     int width_,rows_;bool wrap_;
     std::vector<Cell> cells_;
     int step_;
+    int zoom_=0,relief_=25;
     bool pinned_planet_;
     std::vector<std::array<std::optional<int>,5>> cache_;
+    std::vector<std::array<std::optional<int>,4>> face_cache_;
     std::array<std::array<uint8_t,113>,5> profiles_;
     std::array<bool,5> prepared_{{true,true,true,true,true}};
 };

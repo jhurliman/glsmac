@@ -27,6 +27,8 @@ struct Frame {
 };
 // Explicit reference allocation-base low16; never a coordinate hash or a
 // gameplay RNG stream. Offset translates a visible copy without changing UVs.
+// Initial indexed backdrop is explicit for controlled replay; coverage still
+// identifies submitted stores rather than making the initial plane opaque.
 Frame Render(const ::game::native_terrain::World& world,const Source& source,
-    const std::vector<Placement>& placements,uint16_t variation_base_low16,Point offset={{0,0}},uint32_t display_flags=0x10421);
+    const std::vector<Placement>& placements,uint16_t variation_base_low16,Point offset={{0,0}},uint32_t display_flags=0x10421,uint8_t initial_index=0);
 }

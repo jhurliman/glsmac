@@ -44,7 +44,7 @@ std::vector<Placement> View(int x,int y,bool wrap) {
     return result;
 }
 
-Frame Render(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags) {
+Frame Render(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags,uint8_t initial_index) {
     if(source.loaded.width<=0 || source.loaded.height<=0 ||
         uint64_t(source.loaded.width)*static_cast<uint32_t>(source.loaded.height)!=source.loaded.pixels.size()) {
         throw std::invalid_argument("Invalid indexed terrain source");
@@ -233,7 +233,7 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
         frame.developed_tiles[static_cast<size_t>(y)*40+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
         ++frame.tiles;
     }
-    const raster::Bitmap background{1024,511,std::vector<uint8_t>(1024*511)};
+    const raster::Bitmap background{1024,511,std::vector<uint8_t>(1024*511,initial_index)};
     const auto drawn=raster::DrawBatch(background,commands,{{0,0,1024,511}},true);
     frame.rgba=material::ResolveRgba(drawn.bitmap.pixels,source.palette);
     for(size_t i=0;i<drawn.coverage.size();++i) {frame.rgba[4*i+3]=drawn.coverage[i]?255:0;}

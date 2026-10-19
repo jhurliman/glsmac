@@ -35,7 +35,7 @@ return {
 			pages: {},
 		};
 
-		this.pp.pages_order = ['messages', 'info_panels'];
+		this.pp.pages_order = ['info_panels', 'messages'];
 		for (s of this.pp.pages_order) {
 			this.pp.pages[s] = #include('middle_area/' + s);
 		}

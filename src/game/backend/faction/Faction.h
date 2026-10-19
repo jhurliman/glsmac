@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <string>
+#include <optional>
+#include "DisplayIdentity.h"
 
 #include "types/Serializable.h"
 #include "gse/Wrappable.h"
@@ -25,6 +27,7 @@ CLASS2( Faction, types::Serializable, gse::Wrappable )
 
 	std::string m_id = "";
 	std::string m_name = "";
+	std::optional<DisplayIdentity> m_display_identity;
 	faction_flag_t m_flags = FF_NONE;
 
 	struct {

@@ -1758,6 +1758,25 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_OK();
         });
     });
+    task->AddTest("SMAC lower console binds retained faction leader identity independently of controller", [](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* local=game->GetState()->m_slots->GetSlot(0).GetPlayer()->GetFaction();
+            local->m_display_identity=faction::DisplayIdentity{"Retained Collective","Director","Source Leader"};
+            auto* initialize=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_faction_console_identity"));
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            auto* check=static_cast<value::Callable*>(initialize->Run(GSE_CALL,{game->Wrap(GSE_CALL)}));
+            check->Run(GSE_CALL,{VALUE(value::String,,"Retained Collective"),VALUE(value::String,,"Director Source Leader")});
+            GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"identity panel changed gameplay state");
+            const auto saved=local->Serialize();local->m_display_identity.reset();
+            game->GetState()->TriggerObject(game,"turn",ARGS_F(){};});
+            check->Run(GSE_CALL,{VALUE(value::String,,local->m_name),VALUE(value::String,,"Leader unavailable")});
+            local->Deserialize(saved);
+            game->GetState()->TriggerObject(game,"player_update",ARGS_F(){};});
+            check->Run(GSE_CALL,{VALUE(value::String,,"Retained Collective"),VALUE(value::String,,"Director Source Leader")});
+            GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"identity save/restore or UI refresh changed gameplay state");GT_OK();
+        });
+    });
     task->AddTest("SMAC lower console refreshes real Base production and retires its preview", [](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {

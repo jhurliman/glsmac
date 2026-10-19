@@ -34,3 +34,12 @@ for every gameplay change.
 
 If a focused test or review exposes a broader problem, expand validation to
 resolve that specific risk, then return to the tight loop.
+
+## Visual pull requests
+
+Include inline screenshots or comparison images in visual PR descriptions when
+practical. Caption each image with its runtime or original-reference origin,
+scene/build, and remaining mismatches. Prefer immutable media URLs so reviewers
+can see the result without adding binary reference assets to the code diff.
+Reuse captures when the rendered source is unchanged; do not create a separate
+validation cycle solely to update this policy.

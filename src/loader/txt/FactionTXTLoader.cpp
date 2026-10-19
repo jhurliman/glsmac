@@ -4,6 +4,7 @@
 #include "resource/ResourceManager.h"
 
 #include <stdexcept>
+#include "util/String.h"
 
 namespace loader {
 namespace txt {
@@ -72,6 +73,39 @@ std::array< game::backend::settings::SmacStartupSocialModel, 4 > ValidateLookupT
 	return models;
 }
 
+}
+
+game::backend::faction::DisplayIdentity FactionTXTLoader::ParseDisplayIdentity(const std::string& source, const std::string& section) {
+	if (source.find('\0') != std::string::npos) { throw std::invalid_argument("NUL in faction identity source"); }
+	bool found = false, inside = false;
+	std::vector<std::string> rows;
+	for (const auto& raw : util::String::Split(source, '\n')) {
+		const auto line = Field(raw);
+		if (line.rfind("##", 0) == 0 || (!line.empty() && line.front() == ';')) { continue; }
+		if (!line.empty() && line.front() == '#') {
+			inside = line == "#" + section;
+			if (inside && found) { throw std::invalid_argument("Duplicate faction identity section"); }
+			found = found || inside;
+			continue;
+		}
+		if (inside && (!rows.empty() || !line.empty()) && rows.size() < 7) { rows.push_back(Field(line.substr(0, line.find(';')))); }
+	}
+	if (!found || rows.size() < 7) { throw std::invalid_argument("Missing faction display identity records"); }
+	auto header = Fields(rows[0]);
+	if (header.size() == 13 && header.back().empty()) { header.pop_back(); }
+	auto titles = Fields(rows[6]);
+	if (!titles.empty() && titles.back().empty()) { titles.pop_back(); }
+	if (header.size() != 12 || titles.size() != 5) { throw std::invalid_argument("Unsupported faction display identity records"); }
+	game::backend::faction::DisplayIdentity result{header[0], titles[0], header[5]};
+	result.Validate();
+	return result;
+}
+
+game::backend::faction::DisplayIdentity FactionTXTLoader::GetDisplayIdentity(const std::string& filename, const std::string& section) {
+	const auto& data = GetTXTData(g_engine->GetResourceManager()->GetCustomPath(filename));
+	std::string source;
+	for (const auto& line : data.lines) { source += line + '\n'; }
+	return ParseDisplayIdentity(source, section);
 }
 
 std::vector< game::backend::settings::SmacFactionStartupBonus > FactionTXTLoader::ParseStartupBonuses(

@@ -12,8 +12,9 @@ namespace game {
 namespace frontend {
 namespace unit {
 
-UnitDef::UnitDef( sprite::InstancedSpriteManager* ism, const backend::unit::Def* unitdef )
+UnitDef::UnitDef( sprite::InstancedSpriteManager* ism, const backend::unit::Def* unitdef, bool native_projection )
 	: m_ism( ism )
+    , m_native_projection(native_projection)
 	, m_id( unitdef->m_id )
 	, m_name( unitdef->m_name )
 	, m_type( unitdef->m_type ) {
@@ -91,7 +92,11 @@ sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
 	}
 	if ( m_scout_render ) {
 		if ( !static_.render.sprite.instanced_sprite ) {
-			static_.render.sprite.instanced_sprite = m_ism->GetScoutSprite( "Unit_" + m_id, *m_scout_render );
+            const auto& render=*m_scout_render;const auto& view=render.view;
+            const bool native=m_native_projection &&
+                render.size==types::Vec2<float>(1,1) && render.center==types::Vec2<float>(128,128) && view.zoom==0 &&
+                (view.scale_numerator<=0 || view.scale_numerator==view.scale_denominator);
+			static_.render.sprite.instanced_sprite = m_ism->GetScoutSprite( "Unit_" + m_id, render, native );
 		}
 		return &static_.render.sprite;
 	}

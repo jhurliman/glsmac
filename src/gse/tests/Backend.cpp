@@ -2156,6 +2156,39 @@ public:
 				new CvrScoutRender( *static_cast< const CvrScoutRender* >( static_cast< StaticDef* >( copied.get() )->m_render ) ) );
 			game::frontend::unit::UnitDef other_def( ism.get(), &other_source );
 			auto* other_sprite = other_def.GetSprite( 0 )->instanced_sprite;
+             {
+                frontend.m_map_data.native_projection=true;
+                util::FinallyGuard restore_projection([&]{frontend.m_map_data.native_projection=false;});
+                StaticDef native_source("NATIVE_WORLD_SCOUT",manager->GetMoraleSet("SCOUT_TEST"),"Native map Scout",MT_LAND,1,
+                    new CvrScoutRender(2,0,100,100,{1,1},{128,128},profile));
+                um->DefineUnit(&native_source);
+                auto* native=um->m_unitdefs.at("NATIVE_WORLD_SCOUT")->GetSprite(0)->instanced_sprite;
+                game::frontend::unit::UnitDef legacy(ism.get(),&native_source);
+                auto* explicit_sprite=legacy.GetSprite(0)->instanced_sprite;
+                GT_ASSERT(native->actor!=explicit_sprite->actor && native->texture_owner==explicit_sprite->texture_owner &&
+                    explicit_sprite->actor->GetSpriteActor()->GetDimensions()==types::Vec2<float>(1,1),
+                    "Native placement altered legacy descriptor geometry or duplicated model pixels");
+                scene::Camera camera(scene::Camera::CT_ORTHOGRAPHIC);
+                camera.SetCustomAspectRatio(768.0f/1024);camera.SetAngle({-float(M_PI)*0.5f,float(M_PI)*0.75f,0});
+                camera.SetScale(game::frontend::map_projection::CameraScale(0.125f,true));camera.SetPosition({0.75f,0.5f,0.5f});
+                scene.SetCamera(&camera);scene.SetWorldInstancePositions({{0,0,0}});
+                util::FinallyGuard detach_camera([&]{native->actor->RemoveInstance(1);scene.SetCamera(nullptr);});
+                for(const int height:{0,25,6,3}) {
+                    const types::Vec3 coords{0,0,2+height/48.0f};native->actor->SetInstance(1,coords);
+                    const auto matrix=camera.GetMatrix()*native->actor->GetInstanceMatrices().front();
+                    auto mesh=native->actor->GetSpriteActor()->GenerateMesh();types::Vec3 a,z;mesh->GetVertexCoord(0,&a);mesh->GetVertexCoord(2,&z);
+                    const auto project=[](const auto& transform,const types::Vec3& c) {const auto& m=transform.m;return types::Vec2<float>{
+                        (m[0][0]*c.x+m[0][1]*c.y+m[0][2]*c.z+m[0][3]+1)*512,
+                        (1-m[1][0]*c.x-m[1][1]*c.y-m[1][2]*c.z-m[1][3])*384};};
+                    const auto first=project(matrix,a),last=project(matrix,z);
+                    const auto anchor=project(camera.GetMatrix(),types::Vec3{coords.x-0.5f,coords.y+1,coords.z});
+                    GT_ASSERT(std::abs(first.x-(anchor.x-78))<0.001f && std::abs(first.y-(anchor.y-78))<0.001f &&
+                        std::abs(last.x-first.x-256)<0.001f && std::abs(last.y-first.y-256)<0.001f,
+                        "Native Scout lost original256-square final copy or target anchor: "+first.ToString()+".."+last.ToString());
+                }
+                auto* card=um->m_unitdefs.at("NATIVE_WORLD_SCOUT")->GetCardSprite(false);
+                GT_ASSERT(card->actor->GetSpriteActor()->GetDimensions()==types::Vec2<float>(1,1),"Native map placement changed independent console-card geometry");
+            }
 			if ( rover || initialized ) {
 				// Same name and placement must never reuse the Scout's actor/pixels.
 				CvrScoutRender scout_view( decoded.view.facing, decoded.view.zoom, decoded.view.scale_numerator,

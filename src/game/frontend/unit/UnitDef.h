@@ -33,7 +33,7 @@ namespace unit {
 
 class UnitDef {
 public:
-	UnitDef( sprite::InstancedSpriteManager* ism, const backend::unit::Def* unitdef );
+	UnitDef( sprite::InstancedSpriteManager* ism, const backend::unit::Def* unitdef, bool native_projection = false );
 	~UnitDef();
 
 	const bool IsArtillery() const;
@@ -53,6 +53,7 @@ private:
 
 	backend::unit::sprite_render_info_t m_render = {};
 	std::optional< backend::unit::CvrScoutRender > m_scout_render;
+    const bool m_native_projection;
 	bool m_former_marker = false;
 	bool m_colony_marker = false;
 

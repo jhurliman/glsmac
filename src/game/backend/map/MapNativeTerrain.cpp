@@ -29,6 +29,8 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
     if(!planet || GetWidth()!=80 || GetHeight()!=80 || !m_territory_topology) {return {};}
     auto result=std::make_unique<::game::native_terrain::World>();
     result->horizontal_wrap=m_territory_topology->Wraps();
+    result->resource_pattern=planet->ResourcePattern();
+    result->automatic_land_resources=m_resource_policy->AutomaticLandResources();
     auto* geometry=GetNativeGeometry();
     const auto band_at=[&](int x,int y)->std::optional<uint8_t> {
         if(y<0 || y>=80) {return std::nullopt;}
@@ -56,6 +58,10 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain() const {
         output.items=NativeTerrainItems(live->terraforming,live->features);
         output.items|=original.Items()&0x200u; // retained raw extra-River conditional
         output.landmarks=original.Landmarks();
+        // Resource/site flags belong to the current retained native policy,
+        // not explored improvement memory. Monolith presence is live terrain.
+        output.resource_items=(original.Items()&~0x2000u)|((live->features&tile::FEATURE_MONOLITH)?0x2000u:0u);
+        output.resource_ready=true;
         // Retained landmark memberships select the shared native height profiles.
         const auto landmarks=original.Landmarks();
         // Only these low memberships select land height/shading profiles.

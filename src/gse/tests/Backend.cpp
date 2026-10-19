@@ -5468,6 +5468,11 @@ public:
                 "Landmark replacement consumed an improvement or Monolith");
             frontend.UpdateNativeTerrainSpriteVisibility(nullptr);
             GT_ASSERT(monolith->actor->HasInstance(14),"Legacy marker did not restore after native coverage ended");
+            frontend.UpdateNativeTerrainSpriteVisibility(nullptr,nullptr,&covered);
+            GT_ASSERT(!monolith->actor->HasInstance(12) && monolith->actor->HasInstance(14) && solar->actor->HasInstance(11),
+                "Resource replacement consumed named marker or improvement");
+            frontend.UpdateNativeTerrainSpriteVisibility(nullptr);
+            GT_ASSERT(monolith->actor->HasInstance(12),"Legacy resource did not restore after native coverage ended");
             frontend.UpdateNativeTerrainSpriteVisibility(&covered);
             GT_ASSERT(!solar->actor->HasInstance(11) && monolith->actor->HasInstance(12),"Native pass double-rendered improvement or hid an unimplemented family");
             frontend.UpdateNativeTerrainSpriteVisibility(nullptr);

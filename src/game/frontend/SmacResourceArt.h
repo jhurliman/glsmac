@@ -3,10 +3,18 @@
 #include "game/backend/resource/SmacSiteSignal.h"
 #include <array>
 #include <vector>
+#include <string_view>
 
 namespace game::frontend::smac_resource_art {
 enum class Stage { Resource, Pod, Monolith };
 struct Pick {std::array<int,4> crop;bool shadow;Stage stage;};
+inline bool ReplacesLegacySprite(std::string_view name) {
+    for(const auto candidate:{"NutrientBonusLand","NutrientBonusSea","EnergyBonusLand","EnergyBonusSea",
+        "MineralsBonusLand","MineralsBonusSea","UnityPodLand","UnityPodSea","Monolith"}) {
+        if(name==candidate) {return true;}
+    }
+    return false;
+}
 
 // Live native item word, independent of remembered improvement authority.
 // Resource and site queries are the existing source-backed gameplay resolvers.

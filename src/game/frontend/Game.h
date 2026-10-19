@@ -290,7 +290,7 @@ private:
 	void Deinitialize();
     void UpdateNativeTerrain();
     void ClearNativeTerrain();
-    void UpdateNativeTerrainSpriteVisibility(const std::array<bool,3200>* covered,const std::array<bool,3200>* landmarks=nullptr);
+    void UpdateNativeTerrainSpriteVisibility(const std::array<bool,3200>* covered,const std::array<bool,3200>* landmarks=nullptr,const std::array<bool,3200>* resources=nullptr);
     std::unordered_map<size_t,std::pair<std::string,types::Vec3>> m_native_legacy_instances;
     std::unordered_set<size_t> m_native_hidden_instances;
     bool m_native_inspector=false,m_native_snapshot_dirty=false,m_native_frame_dirty=false;

@@ -190,6 +190,11 @@ public:
             retained=local.CopyNativeTerrain();
             if(!retained || retained->horizontal_wrap) return false;
             const auto& before=retained->tiles[40*40+20];
+            if(!before.resource_ready || before.resource_items!=0 || !retained->automatic_land_resources) return false;
+            live->features|=tile::FEATURE_MONOLITH;
+            const auto monolith=local.CopyNativeTerrain();
+            if(monolith->tiles[40*40+20].resource_items!=0x2000u || before.resource_items!=0) return false;
+            live->features&=~tile::FEATURE_MONOLITH;
             if(before.band!=3 || before.contour!=50 || before.moisture!=2 || before.rockiness!=1 || before.items!=0x200020 || !before.ordinary) return false;
             // The original landmark word combines profile memberships,
             // dirty bookkeeping and an upper detail byte. Metadata alone
@@ -316,6 +321,37 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         std::fill(source.pixels.begin(),source.pixels.end(),9);
         const auto skipped=raster::DrawBatch(initial,{command},{{0,0,8,8}},true);
         GT_ASSERT(skipped.writes==0 && std::all_of(skipped.coverage.begin(),skipped.coverage.end(),[](auto n){return !n;}),"Transparent key wrote coverage");GT_OK();
+    });
+    task->AddTest("SMAC native resource overlays compose shadows common improvements Nexus and sites",GT(){
+        namespace native=game::frontend::native_terrain;
+        ::game::native_terrain::World world;
+        for(auto& cell:world.tiles) {cell.band=3;cell.ordinary=true;}
+        auto& cell=world.tiles[40*40+20];cell.resource_ready=true;cell.resource_items=0x20000400u;
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,10)};
+        source.ter1={1024,768,std::vector<uint8_t>(1024*768,9)};
+        source.coast_mask={56,56,std::vector<uint8_t>(56*56,0)};
+        for(unsigned i=0;i<256;++i) {source.palette[i]={uint8_t(i),0,0};source.shadow_lookup[i]=80;}
+        const auto fill=[&](int x,int y,uint8_t color) {for(int dy=0;dy<62;++dy) {for(int dx=0;dx<100;++dx) {
+            source.ter1.pixels[(y+dy)*1024+x+dx]=color;
+        }}};
+        fill(203,253,50);fill(1,253,50);fill(607,127,60);fill(607,190,60);
+        fill(304,1,70);fill(519,379,90);fill(579,695,60);
+        source.ter1.pixels[(253+24)*1024+203+47]=0;
+        const std::vector<native::Placement> view{{{{40,40}},{{576,288}},44*(40*40+20)}};
+        const auto draw=[&](){return native::Render(world,source,view,0,{{0,0}},0x10621);};
+        const auto ink=[](const native::Frame& f){return f.rgba[(288*1024+575)*4];};
+        GT_ASSERT(ink(draw())==80,"Resource source0 did not use destination shadow lookup");
+        cell.selected_known=cell.developed_ready=true;cell.selected_items=0x40;
+        GT_ASSERT(ink(draw())==60,"Resource icon drew over the common improvement group");
+        cell.selected_items=0;cell.resource_items=0x10000000u;cell.landmarks=0x2000;
+        GT_ASSERT(ink(draw())==90,"Supply Pod did not follow Nexus");
+        cell.resource_items|=0x2000;
+        GT_ASSERT(ink(draw())==70,"Monolith failed to suppress site and draw last");
+        cell.landmarks=0;cell.selected_items=0x8000;cell.resource_items=0x20000400u;
+        for(auto& water:world.tiles) {water.band=2;water.contour=40;}
+        GT_ASSERT(ink(draw())==50,"Resource icon did not follow Kelp");
+        cell.resource_ready=false;
+        GT_ASSERT(!draw().resource_tiles[40*40+20],"Unavailable resource input consumed legacy sprites");GT_OK();
     });
     task->AddTest("SMAC native Jungle and Dunes preserve live material order and Farm precedence",GT(){
         namespace native=game::frontend::native_terrain;

@@ -2,8 +2,13 @@
 
 Implementation checkpoint: the C++ selector matches all 52 captured caller
 contexts using the production resource/site resolvers, plus two zoom gates,
-under ASan/UBSan. Live snapshot authority, composition and legacy replacement
-remain pending. The source contract below is not a production-completion claim.
+under ASan/UBSan. Owned live snapshots now carry the current retained native
+resource/site flags and live Monolith presence. The renderer composes the three
+stages and independently replaces/restores legacy resource sprites. All 46
+affected native groups, targeted analysis and focused eleven-TU ASan/UBSan pass.
+Site pickup state changes remain separate gameplay work; this presentation pass
+reads current retained policy flags and does not implement pickup outcomes.
+Runtime capture and full live-assembler comparison remain pending. The source contract below is not a production-completion claim.
 
 The ordinary renderer's flag `0x200` enables this display continuation.
 The [cases](resource-pod-monolith-art-cases.json) and

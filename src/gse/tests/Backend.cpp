@@ -4766,6 +4766,7 @@ public:
 					const auto& production = *base->GetProductionState();
 					// Founding credit uses Early INDUSTRY0. Recomputing its cost after
 					// first-turn refresh changes Sparta's half-cost rounding.
+                    require(!m_game.m_simulation->value.social.Find(base->GetSmacResourceContext().owner_simulation_id)->intrinsic,"Initial founding observed prematurely published intrinsic ratings");
 					initial_minerals = m_game.GetSmacProductionCost( base->m_owner, production.current_item ) / 2;
 					require( production.minerals == initial_minerals && production.baseline_minerals == initial_minerals
 						&& production.baseline_item == production.current_item, "default founding credit/baseline did not use its Early cost" );
@@ -4805,6 +4806,8 @@ public:
 					&& unit->IsConventionalPending() && raw.stored_morale == 1 && raw.damage == 0 && raw.spent == 0 && !raw.failed_move
 					&& raw.home == ConventionalUnitState::Home::None, "Early raw identity/state was delayed or fabricated" );
 				require( !m_game.m_simulation->value.social.Find( raw.owner_simulation_id )->retained, "Early raw unit invented retained morale" );
+                if(raw.design_id==0) {require(m_game.m_simulation->value.social.Find(raw.owner_simulation_id)->intrinsic.has_value(),"Compensation Pod preceded late intrinsic publication");}
+
 				const auto reject = [ & ]( const auto& operation ) { try { operation(); } catch ( const std::exception& ) { return true; } return false; };
 				require( reject( [ & ] { unit->QueryStats( SmacMoraleMode::Mode0 ); } ) && reject( [ & ] { unit->GetPresentation(); } )
 					&& reject( [ & ] { unit->HasMovesLeft(); } ) && reject( [ & ] { Unit::Serialize( unit ); } )

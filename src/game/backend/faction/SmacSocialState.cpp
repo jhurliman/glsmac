@@ -129,16 +129,34 @@ SmacSocialRatings SmacSocialState::RefreshNeutral( const SmacSocialRatings& intr
 	profiles.Validate( technologies ); return Refreshed( intrinsic, Profile( faction_id, profiles ) );
 }
 
-void SmacSocialState::RefreshForFirstCommand( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles ) {
-	Validate( technologies, profiles );
-	auto staged = *this;
-	for ( auto& faction : staged.factions ) {
-		if ( faction.phase != Phase::Early ) { continue; }
-		const auto& profile = Profile( faction.admission.faction_id, profiles );
-		faction.intrinsic = Intrinsic( profile ); faction.current = Refreshed( *faction.intrinsic, profile );
-		faction.retained = faction.current; faction.phase = Phase::Refreshed;
-	}
-	*this = std::move( staged );
+void SmacSocialState::BuildStartupIntrinsic(int32_t owner,const settings::SmacTechnologyRules& technologies,const settings::SmacFactionStartupRules& profiles) {
+    Validate(technologies,profiles);
+    const auto found=std::find_if(factions.begin(),factions.end(),[&](const auto& f){return f.admission.simulation_id==owner;});
+    if(found==factions.end() || found->phase!=Phase::Early) {throw std::invalid_argument("Late intrinsic initialization requires an admitted Early owner");}
+    const auto intrinsic=Intrinsic(Profile(found->admission.faction_id,profiles));
+    found->intrinsic=intrinsic; // no callbacks/allocations after complete arithmetic
+}
+
+void SmacSocialState::RefreshOwnerForFirstCommand(int32_t owner,const settings::SmacTechnologyRules& technologies,const settings::SmacFactionStartupRules& profiles) {
+    Validate(technologies,profiles);
+    const auto found=std::find_if(factions.begin(),factions.end(),[&](const auto& f){return f.admission.simulation_id==owner;});
+    if(found==factions.end()) {throw std::invalid_argument("First social refresh owner is not admitted");}
+    if(found->phase!=Phase::Early) {return;}
+    const auto& profile=Profile(found->admission.faction_id,profiles);
+    // Old port snapshots/direct initializer users may lack the late producer.
+    // An owned supplied intrinsic vector is authoritative and is not reparsed.
+    const auto intrinsic=found->intrinsic ? *found->intrinsic:Intrinsic(profile);
+    const auto current=Refreshed(intrinsic,profile);
+    found->intrinsic=intrinsic;found->current=current;found->retained=current;found->phase=Phase::Refreshed;
+}
+
+void SmacSocialState::RefreshForFirstCommand(const settings::SmacTechnologyRules& technologies,const settings::SmacFactionStartupRules& profiles) {
+    Validate(technologies,profiles);
+    auto staged=*this;
+    // Existing explicit all-human controller policy. The native faction
+    // controller calls the owner-specific transition at each upkeep boundary.
+    for(const auto& owner:factions) {staged.RefreshOwnerForFirstCommand(owner.admission.simulation_id,technologies,profiles);}
+    *this=std::move(staged);
 }
 
 types::Buffer SmacSocialState::Serialize( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles ) const {

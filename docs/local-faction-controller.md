@@ -25,7 +25,7 @@ not hardcoded constants for the port.
 
 ## Current integration boundaries
 
-Inspected at integration 84336af1 (through PR375):
+Inspected through startup-compensation commit607e8a71 (PR382):
 
 - `GameSimulation.cpp::PrepareNewSimulation` assigns human membership to every
   occupied participant. `Player`/`RosterRecords` transport roles do not encode
@@ -53,6 +53,13 @@ Inspected at integration 84336af1 (through PR375):
   does not itself implement computer admission, scheduling, or decisions.
 
 ## Implementation and acceptance order
+
+Site-search admission and runtime balancing are now implemented and connected to
+the immediate-HQ local-human startup path. The [first-upkeep authority](behavior/seven-first-upkeep-authority.md)
+adds exact faction-scoped social timing, University numeric TECH timing, and
+production/Unit changes before computer command entry. Late intrinsic publication
+and the owner-specific social transition are implemented; native scheduler
+admission and whole-world mixed-phase validation remain required.
 
 1. Admit the local controller roster explicitly, preserving transport identity,
    local human focus, native faction IDs, and separate human/computer ownership.

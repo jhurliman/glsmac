@@ -39,6 +39,12 @@ struct SmacSocialState {
 		const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles );
 	static SmacSocialRatings RefreshNeutral( const SmacSocialRatings& intrinsic, const std::string& faction_id,
 		const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles );
+    // Late turn-zero faction initializer, after the original package factories.
+    // Preserve current/retained ratings and Early phase until this owner's upkeep.
+    void BuildStartupIntrinsic(int32_t owner,const settings::SmacTechnologyRules& technologies,const settings::SmacFactionStartupRules& profiles);
+    // Owner identity is the saved simulation ID, independently of transport/faction.
+    // Already refreshed owners remain exact; unrelated owners are never refreshed.
+    void RefreshOwnerForFirstCommand(int32_t owner,const settings::SmacTechnologyRules& technologies,const settings::SmacFactionStartupRules& profiles);
 	// Stage all owners before replacing this value. Already refreshed owners
 	// remain byte-for-byte values; decoding never invokes this transition.
 	void RefreshForFirstCommand( const settings::SmacTechnologyRules& technologies, const settings::SmacFactionStartupRules& profiles );

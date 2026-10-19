@@ -118,6 +118,9 @@ bool Game::HandleCanonicalStartupEvent(GSE_CALLABLE,const std::string& name,
             m_bm->SpawnStartingSmacBase(GSE_CALL,owner,tile,configured[0],specialists);
             const auto raw=PrepareStartingConventionalUnit(owner,unit::SmacMoraleMode::Mode0);
             m_um->SpawnStartingConventionalUnit(GSE_CALL,ResolveSmacProductionPresentation(owner,raw.design_id),owner,tile,unit::SmacMoraleMode::Mode0);
+            // Native5ca14f follows initial Base/Scout creation, before the
+            // global balancing call. Current/retained ratings remain Early.
+            m_simulation->value.social.BuildStartupIntrinsic(participant->simulation_id,*global.GetSmacTechnologyRules(),*global.GetSmacFactionStartupRules());
         }
         const auto& geography=*m_map->GetTerritoryTopology();
         const auto& policy=*m_map->GetResourcePolicy();const auto* source=policy.OriginalPlanet();

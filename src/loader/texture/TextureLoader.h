@@ -23,6 +23,7 @@ namespace texture {
 struct SmacBaseCard;
 struct SmacTurnFrames;
 struct SmacGraphPalette;
+struct SmacUnitBadge;
 
 CLASS( TextureLoader, Loader )
 
@@ -46,6 +47,8 @@ CLASS( TextureLoader, Loader )
 
 	// Caller owns this original native owner0 badge texture (gamma100).
 	virtual types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant);
+    // Indexed conventional card art; owner is the original loaded palette slot.
+    virtual std::shared_ptr<const SmacUnitBadge> GetSmacUnitBadge(int owner,int level,int variant);
     // Owned retained native Base art; unsupported backends return absence.
     virtual std::shared_ptr<const SmacBaseCard> GetSmacNativeBaseCard(const std::string& faction,size_t x,size_t y,bool roster);
     virtual std::shared_ptr<const game::smac_detail::Sprite> GetSmacDetailBaseSprite(const std::string& faction,size_t frame_y,size_t column=0);

@@ -2,6 +2,8 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
+#include <tuple>
 
 #include "game/frontend/TileObject.h"
 
@@ -75,6 +77,7 @@ public:
 
 	sprite::Sprite* GetSprite() const;
 	sprite::InstancedSprite* GetCardSprite( bool roster ) const;
+    std::shared_ptr<types::texture::Texture> GetCardOverlay() const;
 	sprite::Sprite* GetBadgeSprite() const;
 	sprite::Sprite* GetBadgeHealthbarSprite() const;
 
@@ -173,6 +176,9 @@ private:
 	backend::unit::movement_t m_full_movement = 0;
 
 	bool m_need_refresh = true;
+    using CardOverlayKey=std::tuple<int,bool,float,int32_t,char,uint8_t>;
+    mutable std::optional<CardOverlayKey> m_card_overlay_key;
+    mutable std::shared_ptr<types::texture::Texture> m_card_overlay;
 	uint8_t m_fake_badge_offset = 0;
 
 	const bool ShouldBeActive() const;

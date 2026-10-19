@@ -73,6 +73,7 @@ public:
 	struct slot_define_t {
 		size_t slot_index;
 		std::string faction_id;
+        uint8_t native_palette_slot=255; // absent/unadmitted original loaded-slot identity
 	};
 	typedef std::vector< slot_define_t > slot_defines_t;
 

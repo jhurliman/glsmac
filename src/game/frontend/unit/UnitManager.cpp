@@ -415,12 +415,12 @@ SlotBadges* UnitManager::GetNativeBadges() {
     return m_native_badges;
 }
 
-void UnitManager::DefineSlotBadges( const size_t slot_index, const faction::Faction* faction ) {
+void UnitManager::DefineSlotBadges( const size_t slot_index, const faction::Faction* faction, uint8_t native_palette_slot ) {
 	ASSERT( m_slot_badges.find( slot_index ) == m_slot_badges.end(), "slot unit badges for index " + std::to_string( slot_index ) + " already defined" );
 	m_slot_badges.insert(
 		{
 			slot_index,
-			new SlotBadges( m_badge_defs, m_ism, slot_index, faction )
+			new SlotBadges( m_badge_defs, m_ism, slot_index, faction, native_palette_slot )
 		}
 	);
 }

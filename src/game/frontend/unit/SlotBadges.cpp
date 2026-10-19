@@ -9,6 +9,11 @@
 #include "SmacOrderGlyph.h"
 #include "engine/Engine.h"
 #include "loader/font/FontLoader.h"
+#include "loader/texture/TextureLoader.h"
+#include "loader/texture/SmacUnitBadge.h"
+#include "loader/texture/SmacGraphPalette.h"
+#include "game/SmacHealthbar.h"
+#include <cstring>
 #include "game/backend/map/Consts.h"
 
 namespace game {
@@ -19,12 +24,13 @@ SlotBadges::SlotBadges(
 	BadgeDefs* badge_defs,
 	sprite::InstancedSpriteManager* ism,
 	const size_t slot_index,
-	const faction::Faction* faction
+	const faction::Faction* faction,
+    uint8_t native_palette_slot
 )
 	: m_badge_defs( badge_defs )
 	, m_ism( ism )
 	, m_badges_key( faction ? "UnitBadges_" + std::to_string( slot_index ) : "NativeBadges" )
-	, m_faction( faction ) {
+	, m_faction( faction ), m_native_palette_slot(native_palette_slot) {
 
 	const auto c = faction ? faction->m_colors.border.value : types::Color::color_t(1.0f,0.0f,0.0f);
 	m_repaint_rules = {
@@ -44,6 +50,30 @@ SlotBadges::SlotBadges(
 		rule.second = types::Color( ( 0.6f + c.red / 2.5 ) / 2, ( 0.6f + c.green / 2.5 ) / 2, ( 0.6f + c.blue / 2.5 ) / 2 ).GetRGBA();
 	}
 
+}
+
+std::shared_ptr<types::texture::Texture> SlotBadges::MakeCardOverlay(int level,int variant,float health,int32_t maximum,char glyph,uint8_t color) const {
+    if(!m_faction || m_native_palette_slot<1 || m_native_palette_slot>7) {return {};}
+    const auto source=g_engine->GetTextureLoader()->GetSmacUnitBadge(m_native_palette_slot,level,variant);
+    if(!source) {return {};}
+    const auto bar=CalculateSmacHealthbar(health,maximum);
+    auto image=std::make_shared<types::texture::Texture>("SMAC console Unit overlay",23,30,types::texture::TF_SMAC_PALETTE);
+    std::memcpy(image->GetBitmap(),source->rgba.data(),source->rgba.size());
+    image->Fill(6,6,7,26,types::Color::FromRGB(0,0,0));
+    if(bar.filled) {
+        const auto rgb=bar.color==SmacHealthbar::Color::Green ? types::Color::FromRGB(0,255,0)
+            : bar.color==SmacHealthbar::Color::Yellow ? types::Color::FromRGB(255,255,0) : types::Color::FromRGB(255,0,0);
+        image->Fill(6,6,7,5+bar.filled,rgb);
+    }
+    if(glyph) {
+        const auto palette=g_engine->GetTextureLoader()->GetSmacGraphPalette();
+        if(!palette) {return {};}
+        const auto& rgb=palette->colors[color];
+        auto* font=g_engine->GetFontLoader()->LoadCustomFont("arialbd.ttf",12,loader::font::RasterMode::MONOCHROME);
+        if(!font) {throw std::runtime_error("Console order font unavailable");}
+        PaintSmacOrderGlyph(*image,*font,glyph,types::Color::FromRGB(rgb[0],rgb[1],rgb[2]));
+    }
+    image->FullUpdate();return image;
 }
 
 SlotBadges::~SlotBadges() {

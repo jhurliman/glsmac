@@ -1074,7 +1074,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			for ( const auto& d : *request->data.slot_define.slotdefs ) {
 				auto* faction = m_fm->GetFactionById( d.faction_id );
 				DefineSlot( d.slot_index, faction );
-				m_um->DefineSlotBadges( d.slot_index, faction );
+				m_um->DefineSlotBadges( d.slot_index, faction, d.native_palette_slot );
 				m_bm->DefineSlotBadges( d.slot_index, faction );
 			}
 			break;

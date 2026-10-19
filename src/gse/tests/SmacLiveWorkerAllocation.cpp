@@ -4868,6 +4868,98 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             });if(!error.empty()){return error;}
         }return {};
     });
+    task->AddTest("SMAC starvation center cleanup removes sea native and joins homes observations and dense links",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        const auto source=[](const std::string& filename) {
+            const auto text=UpkeepSource(filename);if(filename!="alpha.txt") {return text;}
+            std::istringstream input(text);std::string line,section,result;int index=-1;
+            while(std::getline(input,line)) {
+                if(!line.empty() && line[0]=='#') {section=line;index=-1;}
+                else if(section=="#UNITS") {
+                    if(index==9 || index==10) {
+                        std::istringstream row(line);std::vector<std::string> fields;std::string field;while(std::getline(row,field,',')) {fields.push_back(field);}
+                        fields.at(5)=index==9 ? "8":"10";fields.at(6)=index==9 ? "4":"0";
+                        line.clear();for(const auto& value:fields) {if(!line.empty()) {line+=',';}line+=value;}
+                    }++index;
+                }result+=line+'\n';
+            }return result;
+        };
+        for(const bool sea:{false,true}) {
+        const std::vector<int> designs=sea ? std::vector<int>{9,8,8,8,8,8,9,10}:std::vector<int>{8,9,10};
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS");std::string seeded,saved;
+        const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* bm=game->GetBM();auto* um=game->GetUM();auto* lost=Populate(GSE_CALL,fixture,true);
+            game->GetMap()->GetTile(4,2)->terraforming=0;
+            const auto scout=game->MakeSmacProductionItem(lost->m_owner,ProductionItemKind::Unit,2);lost->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+            const auto roles=Roles();auto context=lost->GetSmacResourceContext();context.resource_events=SmacBaseResourceContext::Famine;lost->SetSmacResourceContext(GSE_CALL,context);lost->SetAccumulatedNutrients(0);
+            Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(19),std::forward_as_tuple(nullptr,19,bm->GetPopDef(roles.specialists[1]),1));
+            auto* peer=new Base(game,702,lost->m_owner,lost->m_faction,game->GetMap()->GetTile(6,2),"Cleanup survivor",{},pops,20,10,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}},SmacBaseResourceContext{1,false,0,0,0,false});bm->SpawnBase(GSE_CALL,peer);
+            SmacBaseAllocationState allocation{1,{{},1}};allocation.specialists.types[0]=1;peer->PublishSmacAllocation(GSE_CALL,allocation,roles);
+            auto home=um->GetUnit(91)->Conventional();home.home=ConventionalUnitState::Home::Base;home.home_base_id=lost->m_id;
+            um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-scout"),lost->m_owner,game->GetMap()->GetTile(10,6),home);
+            for(const auto design:{8,9,10}) {
+                const auto* name=design==8 ? "MindWorms":design==9 ? "IsleOfTheDeep":"LocustsOfChiron";
+                um->DefineUnit(new StaticDef(name,um->GetMoraleSet("live-morale"),name,design==8 ? MT_LAND:design==9 ? MT_WATER:MT_AIR,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
+            }
+            if(sea) {for(auto* corner:lost->GetTile()->elevation.corners) {*corner=-500;}for(size_t y=0;y<game->GetMap()->GetHeight();++y) {for(size_t x=y&1;x<game->GetMap()->GetWidth();x+=2) {game->GetMap()->GetTile(x,y)->Update();}}fixture.ResourcePolicy(true);fixture.TerritoryTopology(game->GetMap()->PrepareFreshTerritoryTopology().Serialize());}
+            // Admit a complete saved native-only stack at the Base, rather than
+            // relaxing the live birth factory's occupied-Base admission.
+            types::Buffer definitions;um->Serialize(definitions);types::Buffer loaded;loaded.WriteString(definitions.ReadString());
+            for(int group=0;group<2;++group) {const auto count=definitions.ReadInt();loaded.WriteInt(count);for(int64_t n=0;n<count;++n) {loaded.WriteString(definitions.ReadString());loaded.WriteString(definitions.ReadString());}}
+            GT_ASSERT(definitions.ReadInt()==2,"Cleanup fixture existing Unit count changed");loaded.WriteInt(2+designs.size());loaded.WriteString(definitions.ReadString());loaded.WriteString(definitions.ReadString());
+            for(size_t n=0;n<designs.size();++n) {
+                auto record=SmacNativeUnitRecord::InitializeWild(2+n,designs[n],2);record.x=2;record.y=2;record.stack_previous=n==0 ? -1:1+n;record.stack_next=n+1==designs.size() ? -1:3+n;record.flags=0x20;
+                if(sea) {record.state=0x101;record.waypoint_y[0]=321;if(designs[n]==8) {record.order=1;record.waypoint_x[0]=8;}}
+                types::Buffer unit;unit.WriteInt(5);unit.WriteInt(2);unit.WriteInt(100+n);unit.WriteString(designs[n]==8 ? "MindWorms":designs[n]==9 ? "IsleOfTheDeep":"LocustsOfChiron");unit.WriteInt(-1);unit.WriteInt(2);unit.WriteInt(2);unit.WriteString(record.Serialize().ToString());loaded.WriteString(unit.ToString());
+            }loaded.WriteInt(100+designs.size());
+            auto knowledge=KnowledgeValue(true,true,128,64).CopyData();knowledge.units.push_back({92,0,false});
+            for(uint64_t id=100;id<100+designs.size();++id) {knowledge.units.push_back({id,0,false});}
+            knowledge.occupancy=map::SmacOccupancyCache::Blank(128,64,true);knowledge.occupancy->FoundBase({2,2},1);knowledge.occupancy->PlaceUnit({2,2},0,true);knowledge.occupancy->FoundBase({6,2},1);knowledge.occupancy->PlaceUnit({6,6},1,true);knowledge.occupancy->PlaceUnit({10,6},1,true);
+            const auto candidate_knowledge=Knowledge::Create(knowledge).Serialize();
+            auto ordinary=knowledge;ordinary.units.erase(std::remove_if(ordinary.units.begin(),ordinary.units.end(),[](const auto& row){return row.id>=100;}),ordinary.units.end());
+            ordinary.occupancy->RemoveUnit({2,2},true);game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(ordinary));
+            fixture.ResourceState([](auto& state){state.social.factions.front().current[2]=3;state.native_factory=faction::SmacNativeFactoryState{4,{{17,19}},1000,{}};for(const auto design:{8,9,10}) {state.native_factory->active_designs[design]=17;}});
+            fixture.BasePresentationRoles({roles.worker,roles.specialists[0],roles.specialists[1],roles.specialists[2],roles.specialists[3],roles.specialists[4],roles.specialists[5],roles.specialists[6]});
+            const auto replace=[](std::string whole,const std::string& before,const std::string& after) {
+                types::Buffer old_frame,new_frame;old_frame.WriteString(before);new_frame.WriteString(after);const auto old=old_frame.ToString();const auto at=whole.find(old);
+                if(at==std::string::npos || whole.find(old,at+1)!=std::string::npos) {throw std::runtime_error("Expected one owned cleanup snapshot frame");}
+                whole.replace(at,old.size(),new_frame.ToString());return whole;
+            };
+            seeded=replace(replace(fixture.Snapshot(),definitions.ToString(),loaded.ToString()),game->GetMap()->GetSmacWorkerKnowledge()->Serialize(),candidate_knowledge);GT_OK();
+        });if(!result.empty()) {return result;}
+        ConventionalUnitFixture admitted;admitted.ConfigureProduction(source,"GAIANS");
+        const auto executed=admitted.Run([&](GSE_CALLABLE)->std::string {
+            admitted.RestoreThroughStart(GSE_CALL,seeded,[](GSE_CALLABLE){});
+            admitted.PrepareBaseCallbacks();auto* setup=static_cast<value::Callable*>(admitted.Script(GSE_CALL,"./GLSMAC_data/tests/_base_growth"));setup->Run(GSE_CALL,{admitted.Game()->Wrap(GSE_CALL)});
+            auto* game=admitted.Game();auto* bm=game->GetBM();auto* um=game->GetUM();auto* lost=bm->GetBase(701);const auto roles=Roles();
+            const auto before=admitted.Snapshot();{auto discarded=um->PrepareBaseCenterRemoval(GSE_CALL,*lost);}
+            GT_ASSERT(admitted.Snapshot()==before,"Preparing center cleanup mutated registry or factory");
+            auto* isle=static_cast<value::Object*>(um->GetUnit(101)->Wrap(GSE_CALL));auto* tile=lost->GetTile();const auto random=admitted.GameplayRandom();
+            admitted.BasePresentationRoles({roles.worker,roles.specialists[0],roles.specialists[1],roles.specialists[2],roles.specialists[3],roles.specialists[4],roles.specialists[5],roles.specialists[6]});
+            game->Event(GSE_CALL,"complete_turn",{});admitted.DrainEvents();
+            if(sea) {
+                GT_ASSERT(!bm->GetBase(701) && !tile->base && um->GetUnit(100) && um->GetUnit(106) && um->GetUnit(107),"Sea Base removal lost carrier or air native");
+                for(size_t id=101;id<=105;++id) {const auto& cargo=um->GetUnit(id)->Native();GT_ASSERT(cargo.order==1 && cargo.waypoint_x[0]==8 && cargo.waypoint_y[0]==0 && cargo.state==0x101,"Native mode0 did not retain five cargo associations and order writes");}
+                GT_ASSERT(um->GetUnit(100)->Native().state==0x100 && um->GetUnit(106)->Native().state==0x100 && um->GetUnit(107)->Native().state==0x100,"Native mode0 failed whole-stack processed-bit clearing");
+            } else {
+            GT_ASSERT(!bm->GetBase(701) && !tile->base && !um->GetUnit(101) && !isle->wrapobj && um->GetUnit(100) && um->GetUnit(102),"Old-land removal did not select only the sea native or retire its wrapper");
+            GT_ASSERT(um->GetUnit(100)->Native().id==2 && um->GetUnit(100)->Native().stack_next==3 && um->GetUnit(102)->Native().id==3 && um->GetUnit(102)->Native().stack_previous==2,"Center cleanup failed native dense/link compaction");
+            }
+            GT_ASSERT(um->GetUnit(92)->Conventional().home_base_id==702 && admitted.GameplayRandom()==random,"Center cleanup dropped home repair or changed RNG");
+            const auto after=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+            GT_ASSERT(after.occupancy->At({2,2}).presence==2 && std::none_of(after.units.begin(),after.units.end(),[&](const auto& row){return !sea && row.id==101;})
+                && std::none_of(after.bases.begin(),after.bases.end(),[](const auto& row){return row.id==701;}),"Territory publication resurrected a removed Unit or Base observation");
+            admitted.ResourceState([&](const auto& state){if(state.native_factory->active_designs[9]!=(sea ? 17:16) || state.native_factory->active_designs[8]!=17 || state.native_factory->active_designs[10]!=17 || state.native_factory->active_plan_tally!=(sea ? 1000:999)) {throw std::runtime_error("Native center casualty debit differs");}});
+            saved=admitted.Snapshot();GT_OK();
+        });if(!executed.empty()) {return executed;}
+        ConventionalUnitFixture restored;restored.ConfigureProduction(source,"GAIANS");
+        const auto final=restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();
+            GT_ASSERT(!game->GetBM()->GetBase(701) && (sea ? game->GetUM()->GetUnit(101)!=nullptr:game->GetUM()->GetUnit(101)==nullptr) && game->GetUM()->GetUnit(100) && game->GetUM()->GetUnit(102)
+                && game->GetUM()->GetUnit(92)->Conventional().home_base_id==702,"Actual Start lost joined Base/Unit removal or home repair");GT_OK();
+        });if(!final.empty()) {return final;}
+        }return "";
+    });
     task->AddTest("SMAC starvation removes first middle and last records through the real turn",[](GSE*,context::Context*) -> std::string {
         for (size_t lost_index=0;lost_index<3;++lost_index) {
             ConventionalUnitFixture fixture; fixture.ConfigureProduction(UpkeepSource,"GAIANS");

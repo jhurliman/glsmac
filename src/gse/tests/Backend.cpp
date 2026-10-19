@@ -5608,12 +5608,14 @@ public:
 	}
 
 	const std::vector< game::FrontendRequest >& PushBaseUpdates() {
+		auto* map=m_game.GetMap();
+		if(!map) {throw std::runtime_error("Frontend fixture requires its current admitted map");}
 		// Frontend spawn messages need tile coordinates, but no rendered assets.
-		if ( !m_map->m_map_state ) {
-			NEW( m_map->m_map_state, game::backend::map::MapState );
-			m_map->m_map_state->dimensions = { static_cast< uint32_t >( m_map->GetWidth() ), static_cast< uint32_t >( m_map->GetHeight() ) };
+		if ( !map->m_map_state ) {
+			NEW( map->m_map_state, game::backend::map::MapState );
+			map->m_map_state->dimensions = { static_cast< uint32_t >( map->GetWidth() ), static_cast< uint32_t >( map->GetHeight() ) };
 			const common::mt_flag_t canceled = false;
-			m_map->m_map_state->LinkTileStates( canceled );
+			map->m_map_state->LinkTileStates( canceled );
 		}
 		m_frontend_requests.clear();
 		m_game.GetBM()->PushUpdates();

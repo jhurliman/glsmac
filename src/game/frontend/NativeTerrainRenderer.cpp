@@ -141,8 +141,8 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
             if(neighbor && neighbor->band>=3 && neighbor->deformed) {ordinary=false;}
         }}
         if(!ordinary) {continue;}
-        const auto light=terrain::OrdinaryLighting(x,y,bands);if(!light) {continue;}
-        const auto heights=terrain::OrdinaryHeights(x,y,bands);
+        const auto light=tile.lighting?tile.lighting:terrain::OrdinaryLighting(x,y,bands);if(!light) {continue;}
+        const auto heights=tile.heights?*tile.heights:terrain::OrdinaryHeights(x,y,bands);
         const std::array<Point,5> points{{{{fx,fy-heights[0]}},{{fx-48,fy-heights[1]}},
             {{fx,fy-24-heights[2]}},{{fx+48,fy-heights[3]}},{{fx,fy+24-heights[4]}}}};
         const auto seed=static_cast<uint16_t>(base+placement.record_offset);

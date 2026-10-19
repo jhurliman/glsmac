@@ -2,6 +2,7 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <optional>
 
 namespace game::native_terrain {
 // Original Base-specific owner/visibility gate after a matching live record.
@@ -21,6 +22,7 @@ struct Tile {
     uint8_t region=0;
     int8_t owner=-1;
     bool ordinary=false,deformed=false;
+    std::optional<std::array<int,5>> heights,lighting;
 };
 struct World {
     static constexpr int WIDTH=80,HEIGHT=80;

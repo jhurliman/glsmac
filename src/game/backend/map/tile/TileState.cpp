@@ -99,8 +99,8 @@ const types::Buffer TileState::Serialize() const {
 	}
 
     if(smac_projector_height) {
-        if(*smac_projector_height>127) {THROW("Invalid native projector height");}
-        buf.WriteString("SMAC_PROJECTOR_HEIGHT_V1");buf.WriteInt(*smac_projector_height);
+        if(*smac_projector_height< -127 || *smac_projector_height>127) {THROW("Invalid native projector height");}
+        buf.WriteString(*smac_projector_height<0?"SMAC_PROJECTOR_HEIGHT_V2":"SMAC_PROJECTOR_HEIGHT_V1");buf.WriteInt(*smac_projector_height);
     }
 
 	return buf;
@@ -202,10 +202,11 @@ void TileState::Deserialize( types::Buffer buf ) {
 	}
 
     if(buf.lenr<buf.lenw) {
-        if(buf.ReadString(32)!="SMAC_PROJECTOR_HEIGHT_V1") {THROW("Unknown TileState projector extension");}
+        const auto version=buf.ReadString(32);
+        if(version!="SMAC_PROJECTOR_HEIGHT_V1" && version!="SMAC_PROJECTOR_HEIGHT_V2") {THROW("Unknown TileState projector extension");}
         const auto height=buf.ReadInt();
-        if(height<0 || height>127 || buf.lenr!=buf.lenw) {THROW("Invalid native projector height payload");}
-        smac_projector_height=static_cast<uint8_t>(height);
+        if(height<(version=="SMAC_PROJECTOR_HEIGHT_V1"?0:-127) || height>127 || buf.lenr!=buf.lenw) {THROW("Invalid native projector height payload");}
+        smac_projector_height=static_cast<int16_t>(height);
     }
 
 }

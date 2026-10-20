@@ -1,4 +1,5 @@
 #include "Base.h"
+#include "game/ActorVisibilitySnapshot.h"
 #include <stdexcept>
 
 #include "game/frontend/Game.h"
@@ -91,7 +92,7 @@ void Base::SetIdentity( Slot* owner, faction::Faction* faction, std::string name
 	std::unique_ptr<const types::mesh::Render,decltype(destroy_mesh)> base_mesh(next_base.mesh,destroy_mesh);
 	UpdateMeshTex(next_badge,badge->instanced_sprite);
 	std::unique_ptr<const types::mesh::Render,decltype(destroy_mesh)> badge_mesh(next_badge.mesh,destroy_mesh);
-	const bool shown=m_render.is_rendered;Hide();
+	const bool shown=m_render.is_rendered || m_name_rendered;Hide();
 	delete m_render.name_sprite;
 	if(m_render_data.base.mesh) {DELETE(m_render_data.base.mesh);}
 	if(m_render_data.badge.mesh) {DELETE(m_render_data.badge.mesh);}
@@ -139,14 +140,17 @@ void Base::SetNativeBody(std::optional<::game::smac_base_body::Selection> select
     if(!selection) {source=nullptr;}
     if(selection && (selection->column<0 || selection->column>3 || selection->row<0 || selection->row>5)) {throw std::invalid_argument("Invalid main-map Base body");}
     if(source==m_native_body_faction && bool(selection)==bool(m_native_body) && (!selection || (selection->column==m_native_body->column && selection->row==m_native_body->row))) {return;}
-    const bool shown=m_render.is_rendered;Hide();m_native_body=selection;m_native_body_faction=source;
+    const bool shown=m_render.is_rendered || m_name_rendered;Hide();m_native_body=selection;m_native_body_faction=source;
     // Instance IDs belong to the selected sprite actor, not the Base globally.
     m_render.instance_id=0;UpdateMeshTex(m_render_data.base,GetSprite()->instanced_sprite);
     if(shown) {Show();}
 }
 
 void Base::Show() {
-	if ( !m_render.is_rendered ) {
+    const auto visibility=m_bm->GetBaseVisibility(m_id);
+    if(!visibility.body) {HideBody();}
+    if(visibility.name) {ShowName();}else{HideName();}
+	if ( visibility.body && !m_render.is_rendered ) {
 
 		if ( m_render.badge.pops_count != GetPopulation() ) {
 			m_render.badge.pops_count = GetPopulation();
@@ -170,17 +174,6 @@ void Base::Show() {
 			}
 		);
 
-        if ( m_bm->m_smac_population ) {
-            const auto& anchor=m_tile->GetRenderData().name_anchor;
-            m_render.name_sprite->ShowAt(anchor?anchor->InvertY():c);
-        }
-		else { m_render.name_sprite->ShowAt(
-			{
-				m_render.coords.x,
-				m_render.coords.y - 0.25f,
-				m_render.coords.z - 0.25f
-			}
-		); }
 
 		ShowBadge();
 
@@ -188,10 +181,24 @@ void Base::Show() {
 	}
 }
 
-void Base::Hide() {
+void Base::ShowName() {
+    if(m_name_rendered) {return;}
+    if(m_bm->m_smac_population) {
+        const auto& anchor=m_tile->GetRenderData().name_anchor;
+        m_render.name_sprite->ShowAt(anchor ? anchor->InvertY():m_render.coords);
+    } else {
+        m_render.name_sprite->ShowAt({m_render.coords.x,m_render.coords.y-0.25f,m_render.coords.z-0.25f});
+    }
+    m_name_rendered=true;
+}
+void Base::HideName() {
+    if(m_name_rendered) {m_render.name_sprite->Hide();m_name_rendered=false;}
+}
+void Base::Hide() {HideBody();HideName();}
+
+void Base::HideBody() {
 	if ( m_render.is_rendered ) {
 		m_render.sprite->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
-		m_render.name_sprite->Hide();
 		HideBadge();
 		m_render.is_rendered = false;
 	}

@@ -97,7 +97,9 @@ Do not wire all scene actors to one terrain-known Boolean:
   also require separate event mutations. [Disclosure effects](unit-disclosure-effects.md)
   now commit with admitted sight transactions. The [owned actor snapshot](actor-visibility-snapshot.md)
   delivers current disclosure and separate discovery to the frontend across map
-  sizes; duration expiry and the ordinary body/name/stack drawing gates remain open.
+  sizes. [Base disclosure drawing](base-disclosure-drawing.md) now separates live
+  models/population badges from primary names. Duration expiry, remaining Base
+  view options and the ordinary Unit/head/stack gates remain open.
 - Admit the lookup/head Unit before native stack promotion; filtering and sorting
   all members independently changes the mixed-owner control. Use retained source
   links/status/domain and the actual selection/control/pending context.

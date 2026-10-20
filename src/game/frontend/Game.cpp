@@ -1156,6 +1156,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
         case FrontendRequest::FR_ACTOR_VISIBILITY: {
             const auto* snapshot=request->data.actor_visibility.snapshot;
             m_actor_visibility=snapshot ? std::make_unique<actor_visibility::Snapshot>(*snapshot):nullptr;
+            if(m_bm) {m_bm->RefreshVisibility();}
             if(m_widgets.TilePreview) {m_widgets.TilePreview->Refresh();}
             break;
         }

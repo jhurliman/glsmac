@@ -17,6 +17,7 @@ struct Unit {
     std::optional<Stack> stack;
     std::optional<uint8_t> order;
 };
+struct BaseVisibility {bool body=false,name=false;};
 struct Base {
     std::array<int32_t,2> tile;
     int32_t owner;
@@ -31,6 +32,19 @@ struct Snapshot {
     std::vector<uint8_t> explored_by;
     std::map<uint64_t,Unit> units;
     std::map<uint64_t,Base> bases;
+    bool HasViewer() const noexcept {
+        return available && viewer>=1 && viewer<=7 && (observers&(1u<<viewer))
+            && width>0 && !(width&1) && height>0
+            && uint64_t(width/2)*uint64_t(height)==explored_by.size();
+    }
+    BaseVisibility BaseDisclosure(uint64_t id) const noexcept {
+        if(!HasViewer()) {return {};}
+        const auto found=bases.find(id);if(found==bases.end()) {return {};}
+        const auto& base=found->second;const auto x=base.tile[0],y=base.tile[1];
+        if(x<0 || x>=width || y<0 || y>=height || ((x^y)&1)) {return {};}
+        const bool disclosed=base.owner==viewer || (base.known_by && (*base.known_by&(1u<<viewer)));
+        return {disclosed && Known(x,y),disclosed};
+    }
     bool Known(int32_t x,int32_t y) const noexcept {
         if(!available || viewer<1 || viewer>7 || !(observers&(1u<<viewer))
             || width<=0 || (width&1) || height<=0 || x<0 || x>=width || y<0 || y>=height || ((x^y)&1)) {return false;}

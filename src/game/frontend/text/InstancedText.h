@@ -27,6 +27,7 @@ public:
 
 	void ShowAt( const types::Vec3& coords );
 	void Hide();
+    bool IsVisible() const noexcept {return !m_instance_ids.empty();}
 
 private:
 	const std::string m_text = "";

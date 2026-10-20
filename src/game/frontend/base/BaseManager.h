@@ -27,6 +27,7 @@ namespace gse::tests { class BackendFixture; }
 namespace types { class Font; }
 
 namespace game {
+namespace actor_visibility {struct BaseVisibility;}
 namespace frontend {
 
 class Game;
@@ -63,6 +64,8 @@ CLASS( BaseManager, common::Class )
 
 	base::Base* GetBaseById( const size_t id ) const;
     bool UsesNativeMapProjection() const;
+    actor_visibility::BaseVisibility GetBaseVisibility(size_t id) const;
+    void RefreshVisibility();
 
 	void DefinePop( const backend::base::PopDef* def );
 	void UndefinePop( const std::string& id );

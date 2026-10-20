@@ -13,6 +13,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacInitialClimateGeneration.cpp
 	${PWD}/SmacFinalGeneration.cpp
 	${PWD}/SmacLandmarkGeneration.cpp
+	${PWD}/SmacCompleteTerrainGeneration.cpp
 	${PWD}/SmacGlobalSpread.cpp
 	${PWD}/MapGlobalSpread.cpp
 	${PWD}/SmacGlobalWildlife.cpp

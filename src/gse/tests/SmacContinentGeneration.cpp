@@ -14,6 +14,8 @@
 #include "fixtures/SmacFinalGeneration.h"
 #include "game/backend/map/SmacLandmarkGeneration.h"
 #include "fixtures/SmacLandmarkGeneration.h"
+#include "game/backend/map/SmacCompleteTerrainGeneration.h"
+#include "fixtures/SmacCompleteTerrainGeneration.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 #include <string>
@@ -77,6 +79,59 @@ struct ClimateObservation {
 };
 }
 void AddSmacContinentGenerationTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC complete terrain generation matches final climate and original startup input",GT(){
+        uint64_t draws=0,shared=0;
+        for(const auto& c:fixtures::complete_terrain::Cases()) {
+            const generation::Geometry g{c.width,c.height};
+            generation::State s{std::vector<generation::Record>(size_t(g.width/2)*size_t(g.height)),{{2,1,1,1,c.temperature,c.rainfall,1}},
+                game::backend::SmacGameplayRandomState(1234567,7)};
+            generation::Regions regions;PrepareRegionInput(s,g,regions,c.profile,c.areas);
+            s.stage=generation::Stage::Prelandmarks;s.generation_flags={{1,1}};s.topology=c.flat?1:0;s.resource_pattern=c.pattern;s.dirty_flags=16;
+            s.working_land_table={{0,15,32,45,60,75,80,100,100,100,100}};
+            for(auto& record:s.records) {for(unsigned k=0;k<4;++k) {record[8+k]=uint8_t(c.items>>(8*k));record[12+k]=uint8_t(c.marks>>(8*k));}}
+            for(const auto& p:c.patches) {s.records.at(size_t(p.y)*size_t(g.width/2)+size_t(p.x/2)).at(p.field)=p.value;}
+            GT_ASSERT(util::SHA256(Bytes(s))==c.input_hash && util::SHA256(RegionBytes(regions))==c.input_regions_hash,"Original final climate input differs");
+            ClimateObservation observed;generation::FinalClimate(s,g,generation::DEFAULT_WORLD_RULES,regions,c.clock,&observed.trace);
+            GT_ASSERT(util::SHA256(Bytes(s))==c.output_hash && util::SHA256(RegionBytes(regions))==c.output_regions_hash
+                && util::SHA256(SummaryBytes(regions))==c.summary_hash && regions.secondary_flags==c.secondary
+                && s.random.Crt()==c.crt && s.random.Shared()==c.shared && s.dirty_flags==c.dirty,"Original final climate result differs: "+std::string(c.id));
+            GT_ASSERT(util::SHA256(observed.rng)==c.rng_hash && util::SHA256(observed.shared)==c.shared_hash
+                && observed.trace.crt_draws==c.draws && observed.trace.shared_events==c.shared_events,"Original final climate RNG differs: "+std::string(c.id));
+            draws+=observed.trace.crt_draws;shared+=observed.trace.shared_events;
+        }
+        GT_ASSERT(draws==1250 && shared==16138,"Final climate native coverage changed");
+        generation::State s{std::vector<generation::Record>(3200),{{2,1,1,1,1,1,1}},game::backend::SmacGameplayRandomState(1,1)};
+        generation::Regions regions;regions.summary_width=16;regions.summary_height=16;regions.summary_initial=0;
+        generation::GeneratePretemperature(s,{80,80},generation::DEFAULT_WORLD_RULES,regions);
+        generation::GenerateInitialClimate(s,{80,80},generation::DEFAULT_WORLD_RULES);
+        generation::Landmarks landmarks;ClimateObservation observed;
+        for(size_t i=0;i<13;++i) {generation::PlaceLandmark(s,{80,80},generation::DEFAULT_WORLD_RULES,regions,landmarks,generation::Landmark(i),{{-1,-1}},100,false,&observed.trace);}
+        const auto profiles=game::backend::map::smac_terrain::landmark_tables::PrepareHeightProfiles(s.records.size(),[&](size_t i){
+            const auto& r=s.records[i];return uint32_t(r[12])|(uint32_t(r[13])<<8)|(uint32_t(r[14])<<16)|(uint32_t(r[15])<<24);
+        });
+        std::string profile_bytes;for(const auto& p:profiles.values) {profile_bytes.append(reinterpret_cast<const char*>(p.data()),p.size());}
+        GT_ASSERT(util::SHA256(profile_bytes)==fixtures::complete_terrain::PROFILE_HASH,"Original five prepared height profiles differ");
+        const auto boundaries=fixtures::complete_terrain::Boundaries();
+        for(size_t i=0;i<3;++i) {
+            if(i==0) {generation::NormalizeContours(s,{80,80},&observed.trace);s.generation_flags[0]=0;}
+            else if(i==1) {generation::FinalClimate(s,{80,80},generation::DEFAULT_WORLD_RULES,regions,110,&observed.trace);}
+            else {generation::FinalFeatures(s,{80,80},&observed.trace);}
+            const auto& b=boundaries[i];
+            GT_ASSERT(util::SHA256(Bytes(s))==b.plane && util::SHA256(RegionBytes(regions))==b.regions && s.random.Crt()==b.crt
+                && s.random.Shared()==b.shared && s.dirty_flags==b.dirty,"Actual setup final boundary differs: "+std::to_string(i));
+        }
+        GT_ASSERT(observed.trace.crt_draws==3008 && observed.trace.shared_events==6795
+            && util::SHA256(observed.rng)==fixtures::complete_terrain::TAIL_RNG_HASH && util::SHA256(observed.shared)==fixtures::complete_terrain::TAIL_SHARED_HASH,
+            "Actual setup full generation tail RNG differs");
+        generation::State composed{std::vector<generation::Record>(3200),{{2,1,1,1,1,1,1}},game::backend::SmacGameplayRandomState(1,1)};
+        generation::Regions composed_regions;composed_regions.summary_width=16;composed_regions.summary_height=16;composed_regions.summary_initial=0;
+        const auto result=generation::GenerateTerrain(composed,{80,80},generation::DEFAULT_WORLD_RULES,composed_regions,{100,110});
+        const std::array<int32_t,2> cleared_flags{{0,0}};
+        GT_ASSERT(Bytes(composed)==Bytes(s) && composed.random==s.random && composed_regions.records==regions.records && composed_regions.summary==regions.summary
+            && result.profiles.values==profiles.values && result.profiles.admitted==profiles.admitted && result.landmarks.EncodeNames(generation::StockLandmarkNames())==landmarks.EncodeNames(generation::StockLandmarkNames())
+            && result.attempts.accepted && result.attempts.retries==1 && composed.stage==generation::Stage::Prestartup && composed.generation_flags==cleared_flags,
+            "Composed native producer differs from original startup input");GT_OK();
+    });
     task->AddTest("SMAC landmark generation matches original placement shaping clocks and freshwater",GT(){
         uint64_t draws=0;size_t cases=0;
         for(const auto& c:fixtures::landmarks::Cases()) {

@@ -168,7 +168,7 @@ void Map::QueryGlobalSpread(const PreparedGlobalSpread& prepared,const std::func
     auto policy=std::optional<GlsmacResourceMapPolicy>{data.policy};
     auto knowledge=std::optional<SmacWorkerKnowledge>{data.knowledge};
     std::unique_ptr<smac_terrain::LandmarkGeometry> geometry;
-    std::shared_ptr<const SmacPlanetMap> geometry_source;
+    std::shared_ptr<const SmacTerrainAuthority> geometry_source;
     const bool wrap=m_native_geometry_wrap,ready=m_worker_knowledge_ready;
     bool applied=false;
     static_assert(noexcept(m_resource_policy.swap(policy)) && noexcept(m_worker_knowledge.swap(knowledge)));

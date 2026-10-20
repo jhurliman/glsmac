@@ -12,7 +12,7 @@ pre-startup terrain must not be presented as a completed playable world.
 | --- | --- | --- |
 | Generation | `map/Map.cpp::Generate` uses `SimplePerlin` and `DisplayedTerrainV1` for generated SMAC maps | Generate owned native state, preserve the selected settings and explicit RNG inputs, then publish only completed state |
 | Raw authority | `SmacTerrainAuthority` now owns installed/generated read views; installed resource queries use it | Connect the remaining live consumers and generated publication while keeping container decoding/provenance separate |
-| Snapshot | `map/MapNativeTerrain.cpp` takes geometry, contours, landmarks and resource flags from `OriginalPlanet()` | Read those fields from the common native authority; combine them with current worker knowledge and live improvements as today |
+| Snapshot | `map/MapNativeTerrain.cpp` now reads geometry, contours, landmarks, resource fields and cache identity from the common terrain owner | Preserve observer/live-terrain composition when generated policy/publication is connected; the current render snapshot remains80x80 |
 | Rendering | `frontend/NativeTerrainSession.h::Admits` requires wrapped 80x80 retained geometry | Admit completed generated authority through the same proven geometry/material path, with explicit profile checks |
 | Campaign restore | `GameCampaign.cpp` equates an original-plane policy with `MT_INSTALLED_PLANET` | Validate origin, geometry and selected categories against the authority's actual provenance |
 | Save/network snapshot | `Game.cpp` repeats the installed-origin invariant | Save and restore generated raw authority together with gameplay RNG, topology, knowledge and simulation state |
@@ -43,7 +43,10 @@ must be separated at its callers.
 3. **Connect resource and terrain consumers.** Use that owner for altitude,
    landmark membership/detail, resource conditions, geometry and native snapshot
    export. Preserve current live-terrain/observer filtering and cache invalidation.
-   Audit every `OriginalPlanet()` use, including production cases listed above;
+   Snapshot export and geometry cache now use the common immutable owner,
+   including flora preview restoration. Installed-origin negative detail remains
+   explicit; generated publication and codec admission remain separate.
+   Audit every remaining `OriginalPlanet()` use, including production cases listed above;
    changing the renderer's admission boolean alone is insufficient.
 4. **Connect startup and settings.** Transfer selected size, ocean, erosion,
    temperature, rainfall, life and Standard Rules without drawing replacement

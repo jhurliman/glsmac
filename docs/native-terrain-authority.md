@@ -40,6 +40,33 @@ separate owners; this class does not create competing mutable copies of those
 authorities. Cross-queue consumers retain shared ownership of the terrain
 snapshot rather than borrowing a temporary producer's record vector.
 
+## Live snapshot and geometry bridge
+
+`Map::CopyNativeTerrain` now reads raw fields and resource pattern through the
+common owner. `Map::GetNativeGeometry` retains that same immutable owner as its
+cache identity and builds cells using the owner's dimensions. Authored negative
+detail mappings are selected by installed origin explicitly; generated terrain
+does not silently acquire installed-Planet provenance. The flora preview
+transaction saves and restores the common cache owner along with its geometry.
+
+Snapshot export validates authority/live/topology dimensions before reading
+buffers. The existing live topology remains the wrapping input; this bridge does
+not introduce a header-wrap requirement into preview or geometry sampling.
+Campaign origin/options validation remains a separate admission boundary.
+NULL-view previews continue to avoid creating or touching geometry caches, and
+source replacement still refreshes full-view geometry while old snapshots own
+their copied values. Current renderer snapshot admission remains80x80.
+
+This migration does not add a generated policy/codec or switch generated games.
+Installed snapshots retain current observer filtering, material fields, geometry
+and lifetime behavior. There is no new runtime image claimed for the migration.
+Cached incremental build and29 selected native groups pass, including actual
+queued admission/cancellation, owned snapshots, authored geometry and flora
+transactions. Four affected production TUs pass correctness analysis. A focused
+six-TU ASan/UBSan build instruments Map/Game, snapshot/transaction code and direct
+render/backend tests and passes the same groups; other objects are normal and
+leak detection is disabled. No duplicate platform matrix was run.
+
 ## Verification
 
 The generated test runs the genuine complete terrain producer, compares every

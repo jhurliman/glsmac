@@ -1,39 +1,44 @@
 #include "Map.h"
 #include "SmacLandmarkGeometry.h"
 #include "game/NativeTerrainWorld.h"
-#include "SmacPlanetMap.h"
+#include "SmacTerrainAuthority.h"
 #include "SmacNativeTerrainItems.h"
 #include "SmacTerrainLighting.h"
 #include "tile/Tile.h"
 
 namespace game::backend::map {
 smac_terrain::LandmarkGeometry* Map::GetNativeGeometry() const {
-    const auto source=m_resource_policy?m_resource_policy->OriginalPlanetSource():nullptr;
+    const auto source=m_resource_policy?m_resource_policy->NativeTerrainSource():nullptr;
     if(!source) {
         m_native_geometry.reset();m_native_geometry_source.reset();return nullptr;
     }
-    const bool wrap=m_territory_topology?m_territory_topology->Wraps():true;
+    const auto& metadata=source->Info();
+    const bool wrap=m_territory_topology?m_territory_topology->Wraps():metadata.horizontal_wrap;
     if(!m_native_geometry || source!=m_native_geometry_source || wrap!=m_native_geometry_wrap) {
         std::vector<smac_terrain::LandmarkGeometry::Cell> cells;
-        cells.reserve(3200);
-        for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
+        cells.reserve(size_t(metadata.width/2)*size_t(metadata.height));
+        for(uint32_t y=0;y<metadata.height;++y) {for(uint32_t x=y&1;x<metadata.width;x+=2) {
             const auto& tile=source->At(x,y);
             cells.push_back({uint8_t(tile.Climate()>>5),tile.Landmarks()});
         }}
-        // The retained Planet path uses the same bounded authored negative-detail
-        // mappings as the view renderer; rejecting them mixes legacy/native fans.
-        auto geometry=std::make_unique<smac_terrain::LandmarkGeometry>(80,80,wrap,std::move(cells),false,true);
+        // Authored negative-detail mappings belong to installed Planet only.
+        const bool installed=source->SourceOrigin()==SmacTerrainAuthority::Origin::Installed;
+        auto geometry=std::make_unique<smac_terrain::LandmarkGeometry>(int(metadata.width),int(metadata.height),wrap,std::move(cells),false,installed);
         m_native_geometry=std::move(geometry);m_native_geometry_source=source;m_native_geometry_wrap=wrap;
     }
     return m_native_geometry.get();
 }
 std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain(bool include_geometry) const {
-    const auto* planet=m_resource_policy?m_resource_policy->OriginalPlanet():nullptr;
-    if(!planet || GetWidth()!=80 || GetHeight()!=80 || !m_territory_topology) {return {};}
+    const auto source=m_resource_policy?m_resource_policy->NativeTerrainSource():nullptr;
+    if(!source || GetWidth()!=80 || GetHeight()!=80 || !m_territory_topology) {return {};}
+    const auto& metadata=source->Info();
+    if(metadata.width!=GetWidth() || metadata.height!=GetHeight() || m_territory_topology->Width()!=int(metadata.width) || m_territory_topology->Height()!=int(metadata.height)) {
+        throw std::runtime_error("Native snapshot authority and live topology disagree");
+    }
     auto result=std::make_unique<::game::native_terrain::World>();
     result->horizontal_wrap=m_territory_topology->Wraps();
     result->retained_geometry=true;
-    result->resource_pattern=planet->ResourcePattern();
+    result->resource_pattern=metadata.pattern;
     result->automatic_land_resources=m_resource_policy->AutomaticLandResources();
     // The original console passes a NULL view: producing its material inputs
     // must not create, refresh or traverse the shared height/face-light cache.
@@ -42,7 +47,7 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain(bool inclu
         if(y<0 || y>=80) {return std::nullopt;}
         if(result->horizontal_wrap) {x=(x%80+80)%80;}
         if(x<0 || x>=80) {return std::nullopt;}
-        return planet->At(x,y).Climate()>>5;
+        return source->At(x,y).Climate()>>5;
     };
     const auto knowledge=m_worker_knowledge && m_worker_knowledge_ready?std::optional<SmacWorkerKnowledge::Data>{m_worker_knowledge->CopyData()}:std::nullopt;
     if(knowledge && (knowledge->width!=80 || knowledge->height!=80 || knowledge->tiles.size()!=3200 ||
@@ -52,7 +57,7 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain(bool inclu
         for(unsigned owner=1;owner<8;++owner) {if(knowledge->observers[owner]) {result->observers_present|=static_cast<uint8_t>(1u<<owner);}}
     }
     for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
-        const auto& original=planet->At(x,y);
+        const auto& original=source->At(x,y);
         const auto* live=GetTile(x,y);
         auto& output=result->tiles[static_cast<size_t>(y)*40+x/2];
         output.band=original.Climate()>>5;

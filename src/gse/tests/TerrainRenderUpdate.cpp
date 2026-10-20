@@ -394,6 +394,14 @@ public:
                 preview_cell.items!=0x200020 || !preview_cell.resource_ready) return false;
             for(const auto& cell:preview->tiles) {if(cell.heights || cell.lighting) return false;}
             retained=local.CopyNativeTerrain();
+            if(local.m_native_geometry_source!=local.m_resource_policy->NativeTerrainSource()) return false;
+            const auto source_cache=local.m_native_geometry_source;
+            auto* const geometry_cache=local.m_native_geometry.get();
+            local.m_territory_topology=map::GlsmacTerritoryTopology::Build(32,24,false,std::vector<bool>(384,false));
+            bool rejected=false;try {local.CopyNativeTerrain(false);}catch(const std::runtime_error&) {rejected=true;}
+            if(!rejected || local.m_native_geometry_source!=source_cache || local.m_native_geometry.get()!=geometry_cache) return false;
+            local.m_territory_topology=map::GlsmacTerritoryTopology::Build(80,80,false,std::vector<bool>(3200,false));
+
             if(!retained || retained->horizontal_wrap) return false;
             auto* cached_geometry=local.m_native_geometry.get();const auto cached_source=local.m_native_geometry_source;
             if(!cached_geometry || !cached_source) return false;

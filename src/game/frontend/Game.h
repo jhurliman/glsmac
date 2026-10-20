@@ -75,6 +75,7 @@ class Game;
 }
 
 namespace game {
+namespace actor_visibility {struct Snapshot;}
 class FrontendRequest;
 namespace backend {
 class State;
@@ -193,6 +194,7 @@ CLASS( Game, common::Module )
     bool UsesNativeMapProjection() const {return m_map_data.native_projection;}
     std::shared_ptr<types::texture::Texture> GetNativeTilePreview(int x,int y);
     bool AllowsNativeTileInspection(int x,int y) const;
+    const actor_visibility::Snapshot* GetActorVisibility() const {return m_world_retired ? nullptr:m_actor_visibility.get();}
 	text::InstancedTextManager* GetITM() const;
 
 	types::texture::Texture* GetSourceTexture( const ::resource::resource_t res );
@@ -300,6 +302,7 @@ private:
     std::unordered_set<size_t> m_native_hidden_instances;
     bool m_native_inspector=false,m_native_snapshot_dirty=false,m_native_frame_dirty=false;
     std::unique_ptr<::game::native_terrain::World> m_native_world;
+    std::unique_ptr<actor_visibility::Snapshot> m_actor_visibility;
     std::shared_ptr<const native_terrain::Source> m_native_source;
     std::optional<std::array<int,2>> m_native_preview_tile;
     std::shared_ptr<types::texture::Texture> m_native_preview_texture;

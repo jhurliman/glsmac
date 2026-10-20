@@ -1,4 +1,7 @@
 #include "Game.h"
+#include "game/ActorVisibilitySnapshot.h"
+#include "Player.h"
+#include "slot/Slot.h"
 #include "LocalMoveCommand.h"
 
 #include <stdexcept>
@@ -428,12 +431,53 @@ void Game::CommitConventionalSight(unit::PreparedConventionalSight& prepared) no
 }
 
 void Game::PublishMapKnowledgeUpdate( GSE_CALLABLE ) {
-    if ( !m_map_knowledge_dirty || !IsRunning() ) { return; }
-    // CommitConventionalSight is noexcept: publishing/allocating callbacks only
-    // happens at the owner checkpoint, after every authoritative event write.
-    // Clear first so a callback that commits new sight schedules another update.
-    m_map_knowledge_dirty = false;
-    m_state->TriggerObject( this, "map_knowledge", {} );
+    if(!m_map_knowledge_dirty || !IsRunning()) {return;}
+    // Callbacks can commit more sight; leave that next notification pending.
+    m_map_knowledge_dirty=false;m_actor_visibility_dirty=true;
+    m_state->TriggerObject(this,"map_knowledge",{});
+}
+
+void Game::PublishActorVisibilityUpdate() {
+    const bool actors_dirty=(m_um && !m_um->m_unit_updates.empty()) || (m_bm && !m_bm->m_base_updates.empty());
+    if((!m_actor_visibility_dirty && !actors_dirty) || !IsRunning()) {return;}
+    actor_visibility::Snapshot snapshot;
+    if(m_map && m_map->m_worker_knowledge_ready && m_map->m_worker_knowledge && m_simulation
+        && m_player && m_slot && !m_state->GetConnection() && m_player->GetRole()==Player::PR_SINGLE) {
+        const auto& participant=RequireSimulationParticipant(m_player);
+        if(participant.slot!=static_cast<int32_t>(m_slot->GetIndex())) {throw std::runtime_error("Actor snapshot local participant mismatch");}
+        const auto knowledge=m_map->m_worker_knowledge->CopyData();
+        snapshot.available=true;snapshot.width=knowledge.width;snapshot.height=knowledge.height;snapshot.viewer=participant.simulation_id;
+        snapshot.revealed_by=knowledge.all_map_revealed;snapshot.horizontal_wrap=knowledge.horizontal_wrap;
+        std::map<uint64_t,uint8_t> unit_masks,base_masks;
+        for(const auto& row:knowledge.units) {unit_masks.emplace(row.id,row.visible_to);}
+        for(const auto& row:knowledge.bases) {base_masks.emplace(row.id,row.known_by);}
+        for(size_t i=0;i<knowledge.observers.size();++i) {if(knowledge.observers[i]) {snapshot.observers|=uint8_t(1u<<i);}}
+        snapshot.explored_by.reserve(knowledge.tiles.size());
+        for(const auto& tile:knowledge.tiles) {snapshot.explored_by.push_back(tile.explored_by);}
+        for(const auto& entry:m_um->GetUnits()) {
+            const auto* unit=entry.second;if(!unit->IsConventional() && !unit->IsNative()) {continue;}
+            const auto* tile=unit->GetTile();
+            actor_visibility::Unit row{{int32_t(tile->coord.x),int32_t(tile->coord.y)},unit->SimulationOwner(),{},{},{},{},{}};
+            const auto observation=unit_masks.find(entry.first);
+            if(observation!=unit_masks.end()) {row.visible_to=observation->second;}
+            if(unit->IsNative()) {const auto& native=unit->Native();row.flags=native.flags;row.status=native.state;row.order=native.order;}
+            else {const auto& state=unit->Conventional();row.flags=state.native_flags;row.status=state.retained_state_word;
+                if(state.work_order==unit::ConventionalUnitState::WorkOrder::None) {row.order=static_cast<uint8_t>(state.order);}}
+            if(const auto stack=unit->SourceStack()) {row.stack=actor_visibility::Stack{stack->id,stack->next,stack->previous};}
+            snapshot.units.emplace(entry.first,std::move(row));
+        }
+        for(const auto& entry:m_bm->GetBases()) {
+            const auto* base=entry.second;const auto* tile=base->GetTile();
+            actor_visibility::Base row{{int32_t(tile->coord.x),int32_t(tile->coord.y)},base->GetSmacResourceContext().owner_simulation_id,{}};
+            const auto observation=base_masks.find(entry.first);
+            if(observation!=base_masks.end()) {row.known_by=observation->second;}
+            snapshot.bases.emplace(entry.first,row);
+        }
+    }
+    auto request=FrontendRequest(FrontendRequest::FR_ACTOR_VISIBILITY);
+    NEW(request.data.actor_visibility.snapshot,actor_visibility::Snapshot,std::move(snapshot));
+    AddFrontendRequest(request);
+    m_actor_visibility_dirty=false;
 }
 
 bool Game::HandleConventionalMoveEvent( GSE_CALLABLE, const std::string& name,

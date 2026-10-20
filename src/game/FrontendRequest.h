@@ -9,6 +9,7 @@
 
 namespace game {
 namespace scout_presentation {struct Plan;}
+namespace actor_visibility {struct Snapshot;}
 
 namespace backend {
 namespace map { struct TerrainRenderUpdate; }
@@ -61,6 +62,7 @@ public:
 		FR_LOADER_TEXT,
 		FR_LOADER_HIDE,
 		FR_MAP_CENTER,
+        FR_ACTOR_VISIBILITY,
 	};
 	FrontendRequest( const request_type_t type );
 	FrontendRequest( const FrontendRequest& other );
@@ -142,6 +144,7 @@ public:
 		struct {
 			size_t x,y;
 		} map_center;
+        struct {const actor_visibility::Snapshot* snapshot;} actor_visibility;
 		struct {
 			size_t unit_id;
 		} unit_select;

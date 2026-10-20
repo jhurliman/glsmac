@@ -1,5 +1,6 @@
 #include "FrontendRequest.h"
 #include "ScoutBattlePresentation.h"
+#include "ActorVisibilitySnapshot.h"
 
 #include <cstring>
 #include "backend/map/TerrainRenderUpdate.h"
@@ -34,6 +35,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.update_terrain.update, backend::map::TerrainRenderUpdate, *other.data.update_terrain.update );
 			break;
 		}
+        case FR_ACTOR_VISIBILITY: {
+            if(other.data.actor_visibility.snapshot) {NEW(data.actor_visibility.snapshot,actor_visibility::Snapshot,*other.data.actor_visibility.snapshot);}
+            break;
+        }
 		case FR_UPDATE_TILES: {
 			NEW( data.update_tiles.tile_updates, tile_updates_t, *other.data.update_tiles.tile_updates );
 			break;
@@ -135,6 +140,7 @@ FrontendRequest::~FrontendRequest() {
 			DELETE( data.update_terrain.update );
 			break;
 		}
+        case FR_ACTOR_VISIBILITY: {DELETE(data.actor_visibility.snapshot);break;}
 		case FR_UPDATE_TILES: {
 			DELETE( data.update_tiles.tile_updates );
 			break;

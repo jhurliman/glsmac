@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "game/ActorVisibilitySnapshot.h"
 #include "SmacResourceArt.h"
 #include "NativeTerrainRenderer.h"
 #include "NativeTerrainSession.h"
@@ -24,7 +25,9 @@
 
 namespace game::frontend {
 bool Game::AllowsNativeTileInspection(int x,int y) const {
-    if(!m_map_data.native_projection || m_native_inspector) {return true;}
+    if(m_native_inspector) {return true;}
+    if(m_actor_visibility) {return !m_world_retired && m_actor_visibility->Known(x,y);}
+    if(!m_map_data.native_projection) {return true;}
     if(m_world_retired || !m_native_world || x<0 || x>=80 || y<0 || y>=80 || ((x^y)&1)) {return false;}
     return m_native_world->KnowledgeAt(size_t(y)*40+size_t(x)/2)==::game::native_terrain::World::Knowledge::Known;
 }

@@ -295,7 +295,16 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirths(GSE_CALLABLE,
         auto value=SmacNativeUnitRecord::InitializeWild(static_cast<int32_t>(d->order.size()),design_id,d->factory->definition_morale);
         value.x=static_cast<int16_t>(x);value.y=static_cast<int16_t>(y);
         ValidateNativeCreation(static_cast<size_t>(next),def,tile,value);
-        if(tile->base) {throw std::runtime_error("Native birth on an occupied Base requires mixed-owner stack admission");}
+        // Direct construction accepts foreign occupied Bases without capture.
+        // Authenticate the center before retaining its separate affiliation.
+        if(tile->base) {
+            const auto& bases=m_game->GetBM()->GetBases();
+            const auto base=std::find_if(bases.begin(),bases.end(),[&](const auto& row){return row.second==tile->base;});
+            if(base==bases.end() || base->second->GetTile()!=tile
+                || (knowledge.occupancy && !(knowledge.occupancy->At({x,y}).presence&1u))) {
+                throw std::runtime_error("Native Base construction requires a canonical retained Base center");
+            }
+        }
         auto& stack=d->occupants.try_emplace(tile,tile->units).first->second;
         if(knowledge.occupancy) {knowledge.occupancy->PlaceUnit({x,y},0,stack.empty());}
         Unit* head=nullptr;
@@ -353,7 +362,7 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirths(GSE_CALLABLE,
         for(int32_t observer=1;observer<=7;++observer) {if(disclosed&(1u<<observer)) {
             mark(tile,observer);knowledge.tiles[index(tile)].explored_by|=static_cast<uint8_t>(1u<<observer);
             auto& memory=knowledge.remembered[observer];if(memory.empty()) {memory.resize(knowledge.tiles.size());}
-            memory[index(tile)]=map::SmacWorkerKnowledge::Improvements{tile->features,tile->terraforming,false,true};
+            memory[index(tile)]=map::SmacWorkerKnowledge::Improvements{tile->features,tile->terraforming,tile->base!=nullptr,true};
         }}
         // The ecology attribution write is after the full factory return.
         if(ecology_owner) {record(born).ecology_owner_tag=*ecology_owner;}

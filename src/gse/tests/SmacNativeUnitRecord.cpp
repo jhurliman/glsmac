@@ -35,6 +35,7 @@
 #include "fixtures/SmacDenseUnitIdentity.h"
 #include "fixtures/SmacSeaNativeRecord.h"
 #include "game/backend/unit/SmacConventionalStats.h"
+#include "game/backend/unit/ColonyMarkerRender.h"
 #include "game/backend/unit/SmacNativeUnitRecord.h"
 #include "task/gsetests/GSETests.h"
 #include <limits>
@@ -192,6 +193,78 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
             GT_ASSERT((scout->Conventional().stack==Stack{0,-1,1} && third->Conventional().stack==Stack{1,0,-1}),"Combined conventional creation/casualty lost source links");
             types::Buffer roundtrip;manager->Serialize(roundtrip);GT_OK();
         });GT_ASSERT(restore_error.empty(),"Mixed factory restore/departure: "+restore_error);GT_OK();
+    });
+
+    task->AddTest("SMAC native occupied Base factory retains affiliation sight and restored mixed links",GT(){
+        using namespace game::backend;using namespace game::backend::unit;using Knowledge=map::SmacWorkerKnowledge;using Stack=ConventionalUnitState::Stack;
+        for(const int design:{8,9}) {for(const bool occupied:{false,true}) {for(const bool remove_scout:{false,true}) {
+            if(remove_scout && !occupied) {continue;}
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);std::string saved;
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* manager=game->GetUM();BirthDefinitions(game);auto* base=BirthBase(GSE_CALL,game);
+                auto* tile=base->GetTile();const auto base_wire=base::Base::Serialize(base).ToString();
+                manager->DefineUnit(new StaticDef("birth-pod",manager->GetMoraleSet("birth-morale"),"Pod",MT_LAND,999,new ColonyMarkerRender()));
+                if(occupied) {
+                    types::Buffer definitions;manager->Serialize(definitions);types::Buffer loaded;loaded.WriteString(definitions.ReadString());
+                    for(int group=0;group<2;++group) {const auto count=definitions.ReadInt();loaded.WriteInt(count);for(int64_t n=0;n<count;++n) {loaded.WriteString(definitions.ReadString());loaded.WriteString(definitions.ReadString());}}
+                    GT_ASSERT(definitions.ReadInt()==0,"Base constructor fixture already contains Units");loaded.WriteInt(2);
+                    // Retained initial order Pod1 -> Scout0, not ID sorting.
+                    for(int n=0;n<2;++n) {
+                        types::Buffer unit;unit.WriteInt(8);unit.WriteInt(1);unit.WriteInt(71+n);unit.WriteString(n?"birth-pod":"birth-human");unit.WriteInt(0);unit.WriteInt(16);unit.WriteInt(16);
+                        ConventionalUnitState state{n?0:2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
+                        state.stack=n?Stack{1,0,-1}:Stack{0,-1,1};state.Serialize(unit,true,true,true);loaded.WriteString(unit.ToString());
+                    }
+                    loaded.WriteInt(73);manager->Clear();manager->Deserialize(GSE_CALL,loaded);
+                }
+                Knowledge::Data data{80,80,true,true,0,{},{},{}};data.observers[1]=Knowledge::Observer{};data.observers[1]->pact_with=0;
+                data.tiles.resize(3200,{0,std::nullopt});Knowledge::BaseObservation known{901,2,{}};known.population[1]=1;data.bases.push_back(known);ExploreNine(data,16,16,2);
+                data.occupancy=map::SmacOccupancyCache::Blank(80,80,true);data.occupancy->FoundBase({16,16},1);
+                if(occupied) {data.units={{71,0,false},{72,0,false}};data.occupancy->PlaceUnit({16,16},1,true);}
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+                const auto next=Unit::GetNextId();const int born_index=occupied?2:0;
+                const auto produce=[&](const auto& factory) {
+                    if(factory.create(design,{16,16},{})!=born_index) {throw std::runtime_error("Base constructor dense result differs");}
+                    const auto& view=factory.knowledge();const auto point=16*40+8;
+                    if(!(view.occupancy->At({16,16})==map::SmacOccupancyCache::Cell{1,3})
+                        || view.tiles[point].explored_by!=3 || !view.remembered[1][point]
+                        || !view.remembered[1][point]->base_present || !view.remembered[1][point]->unit_present) {
+                        throw std::runtime_error("Prepared Base constructor lost affiliation, presence or memory");
+                    }
+                    for(const auto& unit:view.units) {if(unit.visible_to!=2) {throw std::runtime_error("Base center sight omitted an occupant");}}
+                };
+                GT_ASSERT(Rejects([&]{(void)manager->PrepareNativeBirths(GSE_CALL,80,80,true,[&](const auto& f){produce(f);throw std::runtime_error("Injected Base birth failure");});})
+                    && fixture.Snapshot()==before,"Failed Base construction published state");
+                {auto discard=manager->PrepareNativeBirths(GSE_CALL,80,80,true,produce);}
+                GT_ASSERT(fixture.Snapshot()==before && Unit::GetNextId()==next,"Discarded Base construction changed world or allocator");
+                auto birth=manager->PrepareNativeBirths(GSE_CALL,80,80,true,produce);birth.Commit();birth.Notify(GSE_CALL);
+                GT_ASSERT(manager->GetUnit(next)->Native().stack_previous==-1
+                    && manager->GetUnit(next)->Native().stack_next==(occupied?1:-1)
+                    && (!occupied || (manager->GetUnit(72)->Conventional().stack==Stack{1,0,2}
+                        && manager->GetUnit(71)->Conventional().stack==Stack{0,-1,1})),"Base constructor did not prepend to retained order");
+                GT_ASSERT(base::Base::Serialize(base).ToString()==base_wire && fixture.GameplayRandom()==random,"Base birth captured, damaged or randomized the Base");
+                saved=fixture.Snapshot();GT_OK();
+            });GT_ASSERT(error.empty(),"Occupied Base constructor: "+error);
+            ConventionalUnitFixture restored;restored.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);
+            const auto roundtrip=restored.Run([&](GSE_CALLABLE)->std::string {
+                restored.Restore(GSE_CALL,saved,true);auto* game=restored.Game();auto* manager=game->GetUM();auto* tile=game->GetMap()->GetTile(16,16);
+                const auto knowledge=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();const auto base_wire=base::Base::Serialize(tile->base).ToString();
+                const auto victim=remove_scout?size_t(71):manager->GetUnitRecordOrder().back();
+                auto removal=manager->PrepareWorldUnitRemoval(GSE_CALL,{victim});removal.Commit();removal.Notify(GSE_CALL);
+                const auto after=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                GT_ASSERT(after.tiles==knowledge.tiles && after.remembered==knowledge.remembered
+                    && after.occupancy->At({16,16}).affiliation==1 && base::Base::Serialize(tile->base).ToString()==base_wire,
+                    "Base casualty rewound sight, affiliation or Base state");
+                for(const auto& observation:after.units) {GT_ASSERT(observation.visible_to==2,"Base casualty rewound surviving observation");}
+                if(remove_scout) {
+                    GT_ASSERT((manager->GetUnit(72)->Conventional().stack==Stack{0,-1,1}
+                        && manager->GetUnit(manager->GetUnitRecordOrder().back())->Native().stack_next==0),"Scout casualty failed dense mixed repair");
+                } else if(occupied) {
+                    GT_ASSERT((manager->GetUnit(72)->Conventional().stack==Stack{1,0,-1}
+                        && manager->GetUnit(71)->Conventional().stack==Stack{0,-1,1}),"Newborn casualty did not restore original Base stack");
+                } else {GT_ASSERT(tile->units.empty() && after.occupancy->At({16,16}).presence==1,"Last Base Unit casualty lost Base presence");}
+                GT_OK();
+            });GT_ASSERT(roundtrip.empty(),"Occupied Base restore/casualty: "+roundtrip);
+        }}}GT_OK();
     });
 
     task->AddTest("SMAC mixed owner source stacks unlink conventional and native casualties before compaction",GT(){

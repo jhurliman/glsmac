@@ -68,9 +68,9 @@ an arbitrarily long invisible prefix. All 709 prior native line controls and
   `c++-stdlib-inlining=false`; this narrower analyzer run is a recorded tool
   limitation, not a full-policy pass. No repository analysis rule was disabled.
 
-Known material/sprite composition still requires zoom-zero geometry. Nonzero
-zoom plans with known terrain reject explicitly; sprite resampling and texture
-geometry must be completed before enabling those combinations. The normal-game
+Known terrain fans now use the original zoom geometry; see
+[native zoom materials](native-zoom-materials.md). Retained improvement/resource
+sprite resampling at nonzero zoom remains explicitly unsupported. The normal-game
 saved-exploration bridge, generic backend terrain authority, and general camera
 integration remain unfinished. These renderer results do not claim that the
 ordinary playtest's revealed terrain is fixed.

@@ -23,6 +23,7 @@ struct Frame {
     std::vector<uint8_t> rgba,indexed,coverage;
     uint64_t attempts=0,writes=0;
     size_t tiles=0;
+    int unit=12,zoom=0;
     Point dimensions{{1024,511}},world{{80,80}};
     bool opaque_background=false;
     std::vector<bool> developed_tiles=std::vector<bool>(3200),landmark_tiles=std::vector<bool>(3200),resource_tiles=std::vector<bool>(3200);
@@ -36,7 +37,8 @@ Frame Render(const ::game::native_terrain::World& world,const Source& source,
 // Render an owned view schedule. Projector anchors are consumed directly;
 // they must not be reconstructed from later height-cache observations.
 // Unknown backing/outlines accept dimensioned worlds/viewports and native zoom
-// units. Known material/sprite composition still requires zoom-zero geometry.
+// units. Material fans use the quantized diamond; nonzero retained sprite
+// resampling still requires its separate original scale contract.
 Frame RenderPrepared(const ::game::native_terrain::World& world,const Source& source,
     const ViewGeometry::Plan& plan,uint16_t variation_base_low16,
     uint32_t display_flags=0x10421,uint8_t initial_index=0,const Frame* previous=nullptr);

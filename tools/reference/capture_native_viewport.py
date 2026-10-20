@@ -27,6 +27,7 @@ def main():
     parser.add_argument('--viewer',type=int,choices=[0,3],default=0,help='Original diagnostic viewer0 or valid revealed faction3')
     parser.add_argument('--cxx',default='c++')
     parser.add_argument('--sanitize',action='store_true')
+    parser.add_argument('--prepare-only',action='store_true',help='Decode and validate owned inputs without compiling or drawing')
     args=parser.parse_args();root=Path(__file__).resolve().parents[2];data=root/'docs/behavior'
     partial=args.exploration_profile in ('partial21','survey-partial21')
     survey=args.exploration_profile.startswith('survey-')
@@ -63,6 +64,7 @@ def main():
             raise ValueError('Partial21 record transform differs from original control')
     (out/'planet.bin').write_bytes(planet)
     (out/'input.txt').write_bytes((' '.join(map(str,dimensions+[args.variation_low16,int(args.automatic_resources),args.initial_index,int(args.observer0_alias),args.viewer,profile]))+'\n').encode())
+    if args.prepare_only:return
     sources=['tools/reference/native_viewport_probe.cpp','src/game/frontend/NativeTerrainRenderer.cpp',
         'src/game/frontend/SmacTerrainRaster.cpp','src/game/frontend/SmacLandMaterial.cpp',
         'src/game/frontend/SmacWaterCoast.cpp','src/game/frontend/SmacTerritoryBoundary.cpp',

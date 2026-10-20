@@ -9,7 +9,7 @@ namespace game::backend::map::smac_generation {
 using Record=std::array<uint8_t,44>;
 using Categories=std::array<int32_t,7>;
 struct Rules {int32_t land_base,land_modifier,islands;};
-enum class Stage {Allocated,ContinentLoop};
+enum class Stage {Allocated,ContinentLoop,Pretemperature};
 enum class Entry {First,Retry};
 struct Draw {
     enum class Kind {Crt,Shared};
@@ -38,6 +38,7 @@ struct State {
     uint32_t dirty_flags=0;
     std::array<int32_t,8> flood_counts{};
     std::array<int32_t,8> affected_bases{{-1,-1,-1,-1,-1,-1,-1,-1}};
+    uint32_t primary_rules=0x1a0e; // caller-owned Standard Rules flags; resource placement uses bit 0x2000
 };
 
 // Original 0x5a8450 only: preserve bytes 6/7, reset the other record fields,

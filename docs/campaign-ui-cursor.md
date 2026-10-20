@@ -79,9 +79,11 @@ Production serialization ordering was not changed in this slice.
 
 ## Remaining scope
 
-Later original Unit-controller selection is separate: signed invalid-cursor
-origins, persisted selected Unit identity, retaining exhausted/Sentry selections
-and the interior recenter margin still need implementation. The original 32-slot
+The [signed cursor selector connection](signed-selection-cursor.md) now preserves
+raw invalid origins through the queued selection path. Later original controller
+behavior remains separate: persisted selected Unit identity, retaining
+exhausted/Sentry selections and the interior recenter margin need implementation.
+The original 32-slot
 cursor history, nine-view ledger and profile preferences are not serialized here.
 Odd-parity cursors cannot select a physical tile in the legacy renderer; broader
 legacy visual behavior remains unverified. This change does not generalize native

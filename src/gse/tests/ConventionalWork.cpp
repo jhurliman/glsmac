@@ -1,6 +1,8 @@
 #include "ConventionalWork.h"
 #include "ConventionalUnits.h"
 #include "fixtures/SmacStartupSource.h"
+#include "fixtures/SignedSelectionCursor.h"
+#include "game/backend/unit/SmacSelectionDistance.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
 #include "game/FrontendRequest.h"
@@ -288,6 +290,55 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
                 GT_OK();
             });if(!error.empty()){return error;}
         }GT_OK();
+    });
+    task->AddTest("Conventional native selection matches forty original signed metric controls",GT(){
+        for(const auto& control:fixtures::signed_selection::Cases) {
+            std::optional<int> selected;int32_t best=9999;
+            for(int i=0;i<2;++i) {
+                const auto distance=selection_distance::Metric(control.cursor,{{20+4*i,40}},80,!control.flat);
+                GT_ASSERT(distance==control.distances[i],"signed metric differs from original x86 return: "+std::string(control.id));
+                if(distance<best) {best=distance;selected=i;}
+            }
+            GT_ASSERT(selected.value_or(-1)==control.selected,"original cutoff/order result differs: "+std::string(control.id));
+        }GT_OK();
+    });
+    task->AddTest("Conventional native selection keeps raw saved cursor separate from fallback camera",GT(){
+        return ConventionalUnitFixture::WithControllerViewport([&]()->std::string{
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+            const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string{
+                auto* game=fixture.Game();game->GetState()->m_settings.global.SelectSmacCustomSize(80,80);
+                auto* tiles=game->GetMap()->GetTilesPtr();tiles->Resize(80,80);tiles->Clear();
+                auto* exhausted=Populate(GSE_CALL,fixture,2,false,{{16,16},{20,40},{24,40}});
+                auto state=exhausted->Conventional();state.spent=3;game->GetUM()->UpdateConventionalUnit(GSE_CALL,exhausted,state);
+                const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+                for(const auto& control:fixtures::signed_selection::Cases) {if(!control.flat) {
+                    const auto selected=game->SelectLocalConventionalUnitFromCursor(game->GetTurnId(),{},{},control.cursor,false);
+                    const auto expected=control.selected<0?std::optional<size_t>{}:std::optional<size_t>{72+size_t(control.selected)};
+                    GT_ASSERT(selected==expected,"actual selector differs from original signed-origin result: "+std::string(control.id));
+                }}
+                GT_ASSERT(game->SelectLocalConventionalUnitFromCursor(game->GetTurnId(),{},{},{{80,38}},false)==72,
+                    "Original invalid saved cursor did not select first ready record");
+                GT_ASSERT(game->SelectLocalConventionalUnitFromCursor(game->GetTurnId(),{},{},{{40,40}},false)==73,
+                    "Midpoint camera control did not distinguish raw cursor origin");
+                GT_ASSERT(game->SelectLocalConventionalUnitFromCursor(game->GetTurnId(),{},73,{{80,38}},false)==73,
+                    "Owned reference Unit did not override independent cursor origin");
+                // Source524e63..524e71 admits the current ID at an exact9999
+                // tie, even without an earlier selected candidate. This derived
+                // origin gives distances10002/9999 for the two ready records.
+                GT_ASSERT(!game->SelectLocalConventionalUnitFromCursor(game->GetTurnId(),{},{},{{13436,40}},false),
+                    "Unselected candidate at initial9999 cutoff was admitted");
+                GT_ASSERT(game->SelectLocalConventionalUnitFromCursor(game->GetTurnId(),73,{},{{13436,40}},false)==73,
+                    "Current selection lost the source-proven exact9999 equality branch");
+                GT_ASSERT(!game->SelectLocalConventionalUnitFromCursor(game->GetTurnId()+1,{},{},{{80,38}},false),
+                    "Stale turn admitted a raw-cursor selection");
+                GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,
+                    "Cursor selection mutated simulation or consumed random draws");GT_OK();
+            });
+            if(!setup.empty()){return setup;}
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            const auto error=fixture.CheckRawCursorSelection();if(!error.empty()){return error;}
+            GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"Queued cursor selector mutated authority");GT_OK();
+        });
     });
     task->AddTest("Conventional native selection retains working Former when Scout resets ready",GT(){
         return ConventionalUnitFixture::WithControllerViewport([&]()->std::string{

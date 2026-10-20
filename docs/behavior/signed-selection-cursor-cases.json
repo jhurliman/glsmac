@@ -1,0 +1,646 @@
+{
+  "manifest_sha256": "9a2293d05887cae5477f042d8319ea8fcf5eaf6d283ac8c22c98239c517ce9d1",
+  "scope": "Complete native524cc0 metric/selector returns with real5d9ad0/allowance on supplied ordinary chassis. Separate real524f40 focus prefix through52519d including actual geometry/cache setup and477a40 writes; caption/render/notification and524880 success0 services supplied. Valid Unit positions; raw cursor signed extremes intentional. No full GUI/event loop.",
+  "selector_cases": [
+    {
+      "input": {
+        "id": "select_0_-1_38",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          -1,
+          38
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        16,
+        19
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_80_38",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          80,
+          38
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        15,
+        18
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_-81_38",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          -81,
+          38
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        16,
+        19
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_160_38",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          160,
+          38
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        45,
+        42
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_241_38",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          241,
+          38
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        106,
+        103
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_-2147483648_38",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          -2147483648,
+          38
+        ]
+      },
+      "selected": -1,
+      "distances": [
+        1610612661,
+        1610612658
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_2147483647_38",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          2147483647,
+          38
+        ]
+      },
+      "selected": -1,
+      "distances": [
+        1610612661,
+        1610612658
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_22_-1",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          22,
+          -1
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        31,
+        31
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_22_80",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          22,
+          80
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        30,
+        30
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_22_-81",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          22,
+          -81
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        91,
+        91
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_22_160",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          22,
+          160
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        90,
+        90
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_22_-2147483648",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          22,
+          -2147483648
+        ]
+      },
+      "selected": -1,
+      "distances": [
+        1610612706,
+        1610612706
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_22_2147483647",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          22,
+          2147483647
+        ]
+      },
+      "selected": -1,
+      "distances": [
+        1610612706,
+        1610612706
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_-2147483648_-2147483648",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          -2147483648,
+          -2147483648
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        -1073741879,
+        -1073741880
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_2147483647_2147483647",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          2147483647,
+          2147483647
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        -1073741880,
+        -1073741881
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_-2147483648_2147483647",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        -1073741880,
+        -1073741881
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_2147483647_-2147483648",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          2147483647,
+          -2147483648
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        -1073741879,
+        -1073741880
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_-160_160",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          -160,
+          160
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        115,
+        116
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_160_-160",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          160,
+          -160
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        165,
+        164
+      ]
+    },
+    {
+      "input": {
+        "id": "select_0_22_38",
+        "kind": "selector",
+        "flat": false,
+        "cursor": [
+          22,
+          38
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        2,
+        2
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_-1_38",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          -1,
+          38
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        16,
+        19
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_80_38",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          80,
+          38
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        45,
+        42
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_-81_38",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          -81,
+          38
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        76,
+        79
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_160_38",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          160,
+          38
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        105,
+        102
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_241_38",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          241,
+          38
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        166,
+        163
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_-2147483648_38",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          -2147483648,
+          38
+        ]
+      },
+      "selected": -1,
+      "distances": [
+        1610612721,
+        1610612718
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_2147483647_38",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          2147483647,
+          38
+        ]
+      },
+      "selected": -1,
+      "distances": [
+        1610612721,
+        1610612718
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_22_-1",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          22,
+          -1
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        31,
+        31
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_22_80",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          22,
+          80
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        30,
+        30
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_22_-81",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          22,
+          -81
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        91,
+        91
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_22_160",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          22,
+          160
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        90,
+        90
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_22_-2147483648",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          22,
+          -2147483648
+        ]
+      },
+      "selected": -1,
+      "distances": [
+        1610612706,
+        1610612706
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_22_2147483647",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          22,
+          2147483647
+        ]
+      },
+      "selected": -1,
+      "distances": [
+        1610612706,
+        1610612706
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_-2147483648_-2147483648",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          -2147483648,
+          -2147483648
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        -1073741849,
+        -1073741852
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_2147483647_2147483647",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          2147483647,
+          2147483647
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        -1073741850,
+        -1073741853
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_-2147483648_2147483647",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          -2147483648,
+          2147483647
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        -1073741849,
+        -1073741852
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_2147483647_-2147483648",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          2147483647,
+          -2147483648
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        -1073741850,
+        -1073741853
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_-160_160",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          -160,
+          160
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        165,
+        168
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_160_-160",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          160,
+          -160
+        ]
+      },
+      "selected": 1,
+      "distances": [
+        185,
+        184
+      ]
+    },
+    {
+      "input": {
+        "id": "select_1_22_38",
+        "kind": "selector",
+        "flat": true,
+        "cursor": [
+          22,
+          38
+        ]
+      },
+      "selected": 0,
+      "distances": [
+        2,
+        2
+      ]
+    }
+  ]
+}

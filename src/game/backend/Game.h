@@ -377,6 +377,8 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	bool QueueSelectedConventionalWork( GSE_CALLABLE, size_t unit_id, size_t turn_id );
 	std::optional<size_t> SelectLocalConventionalUnit(size_t turn_id, std::optional<size_t> current,
 		std::optional<size_t> reference, types::Vec2<size_t> focus, bool retain_current) const;
+    std::optional<size_t> SelectLocalConventionalUnitFromCursor(size_t turn_id,std::optional<size_t> current,
+        std::optional<size_t> reference,ui_view::Cursor focus,bool retain_current) const;
 	void AddEvent( event::Event* const event );
 	void AddEventResponse( const std::string& event_id, const bool result, gse::Value* const resolved );
 

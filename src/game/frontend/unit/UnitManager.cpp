@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 
 #include "Unit.h"
 #include "game/frontend/base/BaseManager.h"
@@ -147,6 +148,11 @@ void UnitManager::Iterate() {
 }
 
 void UnitManager::QueueAutomaticSelectionAt( types::Vec2<size_t> focus ) {
+    if(focus.x>INT32_MAX || focus.y>INT32_MAX) {throw std::runtime_error("Unit selection focus exceeds signed cursor fields");}
+    QueueAutomaticSelectionFromCursor({{int32_t(focus.x),int32_t(focus.y)}});
+}
+
+void UnitManager::QueueAutomaticSelectionFromCursor(ui_view::Cursor focus) {
 	const auto turn = m_game->m_turn_id;
 	if ( m_selection_visit && m_selection_visit->turn_id == turn && m_selection_visit->current == m_controller_selection
 		&& m_selection_visit->focus == focus ) { return; }
@@ -159,7 +165,7 @@ void UnitManager::QueueAutomaticSelectionAt( types::Vec2<size_t> focus ) {
 	auto* state = m_game->GetGame()->GetState();
 	state->WithGameSession( state->CaptureGameSession(), state, [ weak ]( backend::Game* const game, GSE_CALLABLE ) {
 		if ( const auto request = weak.lock() ) {
-			request->selected = game->SelectLocalConventionalUnit( request->turn_id, request->current, request->current, request->focus, true );
+			request->selected = game->SelectLocalConventionalUnitFromCursor( request->turn_id, request->current, request->current, request->focus, true );
 			request->ready.store( true, std::memory_order_release );
 		}
 	} );
@@ -174,9 +180,8 @@ bool UnitManager::QueueAutomaticSelection() {
     // metadata on their existing camera-derived path until a tile is selected.
 	const auto width = m_game->m_map_data.width, height = m_game->m_map_data.height;
 	if ( !width || !height ) { return false; }
-    if(const auto& cursor=m_game->GetUiCursor();cursor && (*cursor)[0]>=0 && (*cursor)[1]>=0
-        && size_t((*cursor)[0])<width && size_t((*cursor)[1])<height) {
-        QueueAutomaticSelectionAt({size_t((*cursor)[0]),size_t((*cursor)[1])});return true;
+    if(const auto& cursor=m_game->GetUiCursor();cursor) {
+        QueueAutomaticSelectionFromCursor(*cursor);return true;
     }
 	const auto& camera = m_game->m_camera_position;
 	const auto& view = m_game->m_viewport;

@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "unit/Unit.h"
 #include "unit/UnitManager.h"
+#include "unit/SmacSelectionDistance.h"
 #include "slot/Slot.h"
 #include "map/Map.h"
 #include "map/tile/Tile.h"
@@ -32,11 +33,20 @@ std::optional<size_t> Game::SelectLocalConventionalUnit(size_t turn_id,std::opti
     std::optional<size_t> reference,types::Vec2<size_t> focus,bool retain_current) const {
     if(!IsRunning() || !m_um || !m_map || !m_state || !m_slot || turn_id!=GetTurnId()
         || m_canonical_turn_in_progress || m_canonical_turn_failed || m_canonical_continuation) {return {};}
+    if(focus.x>=m_map->GetWidth() || focus.y>=m_map->GetHeight()
+        || focus.x>INT32_MAX || focus.y>INT32_MAX) {throw std::runtime_error("Unit selection requires actual map focus and geometry");}
+    return SelectLocalConventionalUnitFromCursor(turn_id,current,reference,
+        {{int32_t(focus.x),int32_t(focus.y)}},retain_current);
+}
+
+std::optional<size_t> Game::SelectLocalConventionalUnitFromCursor(size_t turn_id,std::optional<size_t> current,
+    std::optional<size_t> reference,ui_view::Cursor focus,bool retain_current) const {
+    if(!IsRunning() || !m_um || !m_map || !m_state || !m_slot || turn_id!=GetTurnId()
+        || m_canonical_turn_in_progress || m_canonical_turn_failed || m_canonical_continuation) {return {};}
     RequireSmacLocalHumanOwner(m_slot);
     RequireConventionalSightWorld();
     const auto width=m_map->GetWidth(),height=m_map->GetHeight();
-    if(!m_map->GetSmacWorkerKnowledge() || width>INT32_MAX || height>INT32_MAX
-        || focus.x>=width || focus.y>=height) {throw std::runtime_error("Unit selection requires actual map focus and geometry");}
+    if(!m_map->GetSmacWorkerKnowledge() || width>INT32_MAX || height>INT32_MAX) {throw std::runtime_error("Unit selection requires actual map focus and geometry");}
     const auto knowledge=m_map->GetSmacWorkerKnowledge()->CopyData();
     const auto valid=[&](const unit::Unit* actor){
         const auto* tile=actor?actor->GetTile():nullptr;
@@ -46,9 +56,11 @@ std::optional<size_t> Game::SelectLocalConventionalUnit(size_t turn_id,std::opti
     auto origin=focus;
     if(reference) {
         const auto* actor=m_um->GetUnit(*reference);
-        if(actor && actor->m_owner==m_slot && valid(actor)) {origin=actor->GetTile()->coord;}
+        if(actor && actor->m_owner==m_slot && valid(actor)) {
+            const auto& tile=actor->GetTile()->coord;origin={{int32_t(tile.x),int32_t(tile.y)}};
+        }
     }
-    std::optional<size_t> selected; int64_t best=std::numeric_limits<int64_t>::max();
+    std::optional<size_t> selected; int32_t best=9999;
     std::set<size_t> seen;
     for(const auto id:m_um->GetUnitRecordOrder()) {
         const auto* actor=m_um->GetUnit(id);
@@ -66,11 +78,9 @@ std::optional<size_t> Game::SelectLocalConventionalUnit(size_t turn_id,std::opti
         // invoking the nearest-candidate scan. The scan itself only breaks ties.
         if(retain_current && current==id) {return id;}
         const auto position=actor->GetTile()->coord;
-        int64_t dx=std::abs(int64_t(position.x)-int64_t(origin.x));
-        const int64_t dy=std::abs(int64_t(position.y)-int64_t(origin.y));
-        if(knowledge.horizontal_wrap) {dx=std::min(dx,int64_t(width)-dx);}
-        const auto distance=std::max(dx,dy)-(((dx+dy)/2-std::min(dx,dy)+1)/2);
-        if(!selected || distance<best || (distance==best && current==id)) {selected=id;best=distance;}
+        const auto distance=unit::selection_distance::Metric(origin,
+            {{int32_t(position.x),int32_t(position.y)}},int32_t(width),knowledge.horizontal_wrap);
+        if(distance<best || (distance==best && current==id)) {selected=id;best=distance;}
     }
     if(seen.size()!=m_um->GetUnits().size()) {throw std::runtime_error("Unit selection omitted a registered record");}
     return selected;

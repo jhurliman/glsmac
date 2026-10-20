@@ -21,6 +21,8 @@
 #include "game/backend/unit/CvrScoutRender.h"
 #include "game/FrontendRequest.h"
 #include "game/ActorVisibilitySnapshot.h"
+#include "game/UnitVisibility.h"
+#include "fixtures/SmacUnitAdmission.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Int.h"
 #include "gse/value/String.h"
@@ -120,6 +122,67 @@ bool Unchanged( ConventionalUnitFixture& fixture, const World& world, const Save
 }
 
 void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC ordinary Unit drawing matches60 original admission controls",GT(){
+        namespace av=game::actor_visibility;
+        for(const auto& c:unit_admission_fixture::Cases) {
+            av::Snapshot s;s.available=c.live;s.width=80;s.height=80;s.viewer=c.display;s.observers=255;
+            s.explored_by.assign(3200,c.explored ? 8:0);s.revealed_by=c.reveal ? uint8_t(1u<<c.display):0;
+            s.occupancy.assign(3200,av::Occupancy{c.tag,uint8_t(int(c.base)+2*int(c.unit))});
+            if(c.unit) {
+                av::Unit first{{22,38},c.owner,c.seen,c.flags,uint32_t(0),av::Stack{0,int16_t(c.stack ? 1:-1),-1},c.order};first.domain=0;
+                s.units.emplace(101,first);
+                if(c.stack) {av::Unit second{{22,38},c.second_owner,uint8_t(0),uint16_t(0),uint32_t(0),av::Stack{1,-1,0},c.order};second.domain=1;s.units.emplace(102,second);}
+            }
+            const auto result=av::OrdinaryUnits(s,22,38,c.selected ? std::optional<uint64_t>(101):std::nullopt,c.control,c.pending);
+            GT_ASSERT(result.body==(c.expected<0 ? std::nullopt:std::optional<uint64_t>(101+c.expected)),
+                "Original ordinary Unit body differs: "+std::string(c.id));
+        }GT_OK();
+    });
+    task->AddTest("SMAC ordinary Unit drawing admits lookup before source stack promotion",GT(){
+        namespace av=game::actor_visibility;
+        av::Snapshot s;s.available=true;s.width=80;s.height=80;s.viewer=3;s.observers=8;
+        s.explored_by.assign(3200,8);s.occupancy.assign(3200,av::Occupancy{15,2});
+        const auto make=[](int owner,uint16_t flags,uint8_t seen,int source,int next,int previous,int domain) {
+            av::Unit unit{{22,38},owner,seen,flags,uint32_t(0),av::Stack{int16_t(source),int16_t(next),int16_t(previous)},uint8_t(0)};
+            unit.domain=uint8_t(domain);return unit;
+        };
+        const auto paint=[&](std::optional<uint64_t> selected={},bool control=true,bool pending=true) {
+            return av::OrdinaryUnits(s,22,38,selected,control,pending).body;
+        };
+        for(const int flags:{0,0x40,0x400,0x440,0x441}) {for(const int seen:{0,8}) {
+            s.units={{101,make(3,uint16_t(flags),uint8_t(seen),0,-1,-1,0)}};
+            GT_ASSERT(paint()==(((flags&0x440)!=0x440 || seen==8) ? std::optional<uint64_t>(101):std::nullopt),
+                "Own-unit stored-mask exception differs from original flags controls");
+        }}
+        s.units={{101,make(2,0,0,0,1,-1,0)},{102,make(3,0,0,1,-1,0,0)}};
+        GT_ASSERT(!paint(),"Own tail bypassed hidden foreign head before native promotion");
+        s.units.at(101).visible_to=8;GT_ASSERT(paint()==102,"Disclosed foreign head failed to promote own tail");
+        s.units.at(101).visible_to=0;GT_ASSERT(paint(102)==102,"Eligible selected own tail did not precede ordinary lookup");
+        s.units.at(102).flags=0x440;GT_ASSERT(!paint(102),"Exceptional own tail incorrectly entered selected admission");
+        s.units.at(101).visible_to=8;GT_ASSERT(paint(102)==102,"Post-admission stack selection independently filtered selected tail");
+        s.units.at(101)=make(3,0,0,0,1,-1,0);s.units.at(102)=make(3,0,0,1,-1,0,1);
+        GT_ASSERT(paint()==102 && paint(101)==101,"Native domain rank or eligible selected override differs");
+        s.units.at(101).domain=1;GT_ASSERT(paint()==101,"Source-order tie was replaced by an unordered sort");
+        s.units.at(102).domain.reset();GT_ASSERT(!paint(),"Unknown competing domain invented a representative");s.units.at(102).domain=1;
+        s.units.at(102).stack->next=0;GT_ASSERT(!paint(),"Cyclic native stack was admitted");s.units.at(102).stack->next=-1;
+        s.units.at(101).stack->previous=1;GT_ASSERT(!paint(),"Headless native stack was admitted");
+        s.units={{101,make(3,0,0,0,-1,-1,0)}};
+        const auto index=38*40+22/2;s.occupancy[index]={3,3};
+        GT_ASSERT(!paint() && paint(101)==101,"Base garrison gate did not retain selected actionable unit");
+        s.units.at(101).order=2;GT_ASSERT(!paint(101),"Held Base garrison passed the actionable gate");
+        s.units.at(101).order.reset();s.units.at(101).working=true;GT_ASSERT(paint(101)==101,"Active work was guessed to be a passive general order");
+        s.units.at(101).working=false;s.units.at(101).order=0;s.units.at(101).status=0x4200;
+        GT_ASSERT(!paint(101),"Selected status exclusion was ignored");s.units.at(101).status=0;
+        s.occupancy[index].tag=15;GT_ASSERT(paint()==101,"Unknown affiliation tag inherited Base garrison suppression");
+        s.explored_by.assign(3200,0);GT_ASSERT(!paint(101),"Unknown square exposed selected unit");
+        s.revealed_by=4;GT_ASSERT(!paint(),"Foreign reveal admitted local unit body");s.revealed_by=8;GT_ASSERT(paint()==101,"Local reveal did not admit owned body");
+        s.units.at(101).owner=2;GT_ASSERT(!paint(),"Faction reveal bypassed foreign stored disclosure");
+        s.units.at(101).visible_to=8;GT_ASSERT(paint()==101,"Disclosed foreign unit was omitted");
+        s.units.at(101).flags.reset();GT_ASSERT(paint()==101,"Missing flags overrode sufficient stored disclosure");
+        s.occupancy.clear();GT_ASSERT(!paint(),"Missing occupancy authority became a reveal fallback");
+        GT_OK();
+    });
+
     task->AddTest("SMAC occupancy cache retains source history and repairs Units before Bases",GT() {
         using Cache=map::SmacOccupancyCache;
         auto cache=Cache::Blank(8,8,true);

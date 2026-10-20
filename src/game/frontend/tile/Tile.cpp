@@ -1,6 +1,7 @@
 #include "Tile.h"
 
 #include "game/frontend/unit/Unit.h"
+#include "game/frontend/unit/UnitManager.h"
 #include "game/frontend/base/Base.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/map/tile/TileState.h"
@@ -117,6 +118,29 @@ void Tile::Render( size_t selected_unit_id ) {
 	}
 	m_render.currently_rendered_fake_badges.clear();
 
+    if(!m_units.empty()) {
+        auto* manager=m_units.begin()->second->GetManager();
+        if(const auto plan=manager->GetTilePresentation(*this)) {
+            for(const auto& row:m_units) {row.second->Hide();row.second->HideBadge();}
+            if(m_base) {m_base->Show();}
+            if(plan->body) {
+                const auto found=m_units.find(*plan->body);
+                if(found!=m_units.end()) {
+                    m_render.currently_rendered_unit=found->second;
+                    found->second->Show();
+                    if(found->second==manager->GetSelectedUnit() && found->second->IsActive()) {found->second->StartBadgeBlink();}
+                    // Retain the port's bounded stacked-badge layout, admitted
+                    // by the one source lookup rather than per-member masks.
+                    for(const auto id:plan->stack) {if(id!=*plan->body && m_render.currently_rendered_fake_badges.size()<11) {
+                        const auto member=m_units.find(id);if(member!=m_units.end()) {m_render.currently_rendered_fake_badges.push_back(member->second);}
+                    }}
+                    const auto& badges=m_render.currently_rendered_fake_badges;
+                    for(size_t i=0;i<badges.size();++i) {badges[badges.size()-1-i]->ShowFakeBadge(uint8_t(i));}
+                }
+            }
+            return;
+        }
+    }
 	bool should_show_units = !m_units.empty();
 	if ( m_base ) {
 		m_base->Show();

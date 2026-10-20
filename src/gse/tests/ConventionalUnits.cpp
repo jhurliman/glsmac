@@ -1004,7 +1004,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				game->GetUM()->ValidateConventionalMove( unit, destination, 0 );
 				GT_ASSERT( fixture.MovementHistory() == history && fixture.GameplayRandom() == SmacGameplayRandomState( 12345, 0xa1b2c3d4 ), "ordinary validation changed authority" );
 				fixture.MoveEvent( GSE_CALL, unit, destination );
-				auto expected = record; expected.native_flags=0;expected.facing=0; // original fixtures move (+1,-1), north-east
+				auto expected = record; expected.native_flags=0;expected.retained_state_word=0;expected.facing=0; // original fixtures move (+1,-1), north-east
                 expected.spent = static_cast< uint8_t >( c.spent );
 				GT_ASSERT( unit->GetTile() == destination && unit->Conventional() == expected && source->units.empty()
 					&& destination->units.size() == 1 && destination->units.at( unit->m_id ) == unit
@@ -1046,7 +1046,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				bool admitted=true;try{manager->ValidateConventionalMove(unit,destination,0);}catch(const std::exception&){admitted=false;}
 				GT_ASSERT(admitted==c.moved && fixture.GameplayRandom()==SmacGameplayRandomState(12345,77),"Base presence overrode current allowance or validation drew RNG");
 				fixture.MoveEvent(GSE_CALL,unit,destination);
-				auto expected=record;expected.native_flags=0;expected.facing=2;expected.spent=static_cast<uint8_t>(c.spent_after);
+				auto expected=record;expected.native_flags=0;expected.retained_state_word=0;expected.facing=2;expected.spent=static_cast<uint8_t>(c.spent_after);
 				GT_ASSERT(unit->Conventional()==expected && unit->GetTile()==(c.moved ? destination : source)
 					&& source->units.count(unit->m_id)==(c.moved ? 0u : 1u) && destination->units.count(unit->m_id)==(c.moved ? 1u : 0u),
 					"damaged/promoted command failed to move once or changed health/morale");
@@ -1162,7 +1162,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		ConventionalUnitFixture source, destination; source.Configure( true, 3, false, true ); destination.Configure( true, 3, false, true );
 		const auto next = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( next ); } );
 		ConventionalUnitState record{ 128, 2, 1, 0, 1, true, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
-        record.native_flags=0;record.facing=2; // this control creates a fresh native factory record
+        record.native_flags=0;record.retained_state_word=0;record.facing=2; // this control creates a fresh native factory record
 		std::string bytes;
 		const auto setup = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto* game = source.Game(); auto* manager = game->GetUM(); Define( manager, true );
@@ -1216,7 +1216,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			// A genuine retained Spartan source is global identity. A different
 			// current controller may keep128; its own fabricated192 is still rejected.
 			ConventionalUnitState retained{128,3,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
-            retained.native_flags=0;retained.facing=2;
+            retained.native_flags=0;retained.retained_state_word=0;retained.facing=2;
 			auto* unit=Spawn(GSE_CALL,fixture,retained,next,6,"EXPLICIT_ROVER");
 			GT_ASSERT(unit->Conventional()==retained && unit->m_owner==&game->GetState()->m_slots->GetSlot(6) && hooks==1,
 				"retained Spartan128 was rebound to the recipient's invalid local192 or rejected");GT_OK();
@@ -1689,7 +1689,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			ConventionalUnitFixture fixture; fixture.Configure( true, 3, true );
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager );
-				fixture.RetainedPlanet( scenario == 1 ? 1 : 0, 9 ); auto record = Record();record.native_flags=0;record.facing=2;
+				fixture.RetainedPlanet( scenario == 1 ? 1 : 0, 9 ); auto record = Record();record.native_flags=0;record.retained_state_word=0;record.facing=2;
 				if ( scenario == 2 ) { record.spent = 1; record.failed_move = true; }
 				auto* unit = Spawn( GSE_CALL, fixture, record ); auto* source = unit->GetTile(); auto* destination = source->E;
 				destination->features = FEATURE_XENOFUNGUS; if ( scenario == 3 ) { source->features = FEATURE_XENOFUNGUS; }
@@ -1895,11 +1895,11 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			auto input=Record();input.native_flags=0xffff;
             auto* unit=manager->SpawnConventionalUnit(GSE_CALL,71,def,&game->GetState()->m_slots->GetSlot(0),game->GetMap()->GetTile(2,2),input);
 			GT_ASSERT( hooks == 1 && unit == manager->GetUnit( 71 ) && unit->m_def == def && unit->m_owner == &game->GetState()->m_slots->GetSlot( 0 )
-				&& unit->GetTile()->units.at( 71 ) == unit && [&]{auto fresh=Record();fresh.native_flags=0;fresh.facing=2;return unit->Conventional()==fresh;}(), "actual spawn lost canonical ownership or stored bytes" );
+				&& unit->GetTile()->units.at( 71 ) == unit && [&]{auto fresh=Record();fresh.native_flags=0;fresh.retained_state_word=0;fresh.facing=2;return unit->Conventional()==fresh;}(), "actual spawn lost canonical ownership or stored bytes" );
 			auto* wrapper = static_cast< value::Object* >( unit->Wrap( GSE_CALL ) );
 			auto* owned_state = static_cast< value::Object* >( Call( GSE_CALL, wrapper, "get_conventional_state" ) );
 			owned_state->Assign( "spent", VALUE( value::Int,, 255 ) );
-			auto expected_fresh=Record();expected_fresh.native_flags=0;expected_fresh.facing=2;
+			auto expected_fresh=Record();expected_fresh.native_flags=0;expected_fresh.retained_state_word=0;expected_fresh.facing=2;
             GT_ASSERT( unit->Conventional() == expected_fresh, "copied state exposed a mutable native scalar" );
 			GT_ASSERT( wrapper->Get( "movement" )->type == VT_UNDEFINED && wrapper->Get( "health" )->type == VT_UNDEFINED, "conventional wrapper exposes mutable float authority" );
 			auto* before = Call( GSE_CALL, wrapper, "query_conventional_stats", { VALUE( value::Int,, 0 ) } );
@@ -1967,7 +1967,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "conventional unit snapshots resolve private downloaded context and destination identities", []( GSE* unused_gse, context::Context* unused_ctx ) -> std::string {
 		ConventionalUnitFixture source, destination; source.Configure(); destination.Configure();
 		const auto next = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ]() { Unit::SetNextId( next ); } );
-		std::string bytes; ConventionalUnitState saved = Record(); saved.native_flags=0;saved.facing=2; saved.stored_morale = 255; saved.damage = 4; saved.spent = 5; saved.failed_move = true;
+		std::string bytes; ConventionalUnitState saved = Record(); saved.native_flags=0;saved.retained_state_word=0;saved.facing=2; saved.stored_morale = 255; saved.damage = 4; saved.spent = 5; saved.failed_move = true;
 		const auto setup = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			Define( source.Game()->GetUM() ); source.RetainedMorale( -4, 4 ); Spawn( GSE_CALL, source, saved ); bytes = source.Snapshot(); GT_OK();
 		} ); if ( !setup.empty() ) { return setup; }
@@ -1991,7 +1991,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		ConventionalUnitFixture fixture; fixture.Configure();
 		const auto next = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ]() { Unit::SetNextId( next ); } );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
-			auto* game = fixture.Game(); Define( game->GetUM() ); auto record = Record(); record.native_flags=0;record.facing=2; record.damage = 4; record.spent = 2; record.failed_move = true;
+			auto* game = fixture.Game(); Define( game->GetUM() ); auto record = Record(); record.native_flags=0;record.retained_state_word=0;record.facing=2; record.damage = 4; record.spent = 2; record.failed_move = true;
 			auto* unit = Spawn( GSE_CALL, fixture, record ); auto* wrapper = static_cast< value::Object* >( unit->Wrap( GSE_CALL ) );
 			const auto rng = game->GetRandom()->GetStateString();
 			auto* data = VALUEEXT( value::Object, GSE_CALL, ( value::object_properties_t{ { "unit", wrapper }, { "attacker", wrapper }, { "defender", wrapper },

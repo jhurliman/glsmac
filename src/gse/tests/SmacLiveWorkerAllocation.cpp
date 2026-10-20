@@ -4721,7 +4721,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 for(size_t i=0;i<specs.size();++i) {
                     order.push_back(first+i);const auto* unit=um->GetUnit(first+i);
                     GT_ASSERT(unit,"Restart factory lost its created identity");
-                    auto expected=specs[i].second;expected.stack=unit->SourceStack();expected.native_flags=0;expected.facing=2;
+                    auto expected=specs[i].second;expected.stack=unit->SourceStack();expected.native_flags=0;expected.retained_state_word=0;expected.facing=2;
                     GT_ASSERT(unit && unit->Conventional()==expected && unit->GetTile()==site,"replacement lost factory order or fresh unhomed state");
                 }
                 GT_ASSERT(um->GetUnitRecordOrder()==order && Unit::Serialize(foreign).ToString()==foreign_bytes

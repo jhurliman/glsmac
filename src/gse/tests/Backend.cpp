@@ -1,5 +1,6 @@
 #include "Backend.h"
 #include "game/ActorVisibilitySnapshot.h"
+#include "game/UnitVisibility.h"
 #include "game/NativeTerrainWorld.h"
 #include "game/backend/map/SmacLandmarkGeometry.h"
 #include "util/String.h"
@@ -2384,8 +2385,63 @@ public:
 			// scoped owner remains here; remove the entry before either teardown.
 			um->m_units.emplace( 1, unit.get() );
 			util::FinallyGuard unlink_unit( [ & ] { if ( um ) { um->m_units.erase( 1 ); } } );
-			frontend.m_um = um.get();
-			auto* instanced = unit->GetSprite()->instanced_sprite;
+            frontend.m_um=um.get();
+            {
+                auto previous=std::move(frontend.m_actor_visibility);
+                auto sibling=std::make_unique<game::frontend::unit::Unit>(um.get(),badges.get(),2,&other_def,&slot,&tile,types::Vec3{3,5,0},true,1,0,"Sibling",1);
+                um->m_units.emplace(2,sibling.get());
+                util::FinallyGuard restore_disclosure([&]{
+                    um->m_selected_unit=nullptr;frontend.m_is_turn_active=false;
+                    frontend.m_actor_visibility=std::move(previous);um->m_units.erase(2);sibling.reset();unit->StopBadgeBlink(true);tile.Render();
+                });
+                namespace av=game::actor_visibility;
+                av::Snapshot knowledge;knowledge.available=true;knowledge.width=80;knowledge.height=80;knowledge.viewer=1;knowledge.observers=2;
+                knowledge.explored_by.assign(3200,2);knowledge.occupancy.assign(3200,av::Occupancy{15,2});
+                av::Unit head{{2,2},2,uint8_t(0),uint16_t(0),uint32_t(0),av::Stack{0,1,-1},uint8_t(0)};head.domain=0;
+                av::Unit tail{{2,2},1,uint8_t(0),uint16_t(0),uint32_t(0),av::Stack{1,-1,0},uint8_t(0)};tail.domain=0;
+                knowledge.units={{1,head},{2,tail}};
+                const auto publish=[&]{game::FrontendRequest request(game::FrontendRequest::FR_ACTOR_VISIBILITY);
+                    NEW(request.data.actor_visibility.snapshot,av::Snapshot,knowledge);frontend.ProcessRequest(&request);};
+                const auto body=[](const auto* u){return u->m_render.is_rendered && u->m_render.body->instanced_sprite->actor->HasInstance(u->m_render.instance_id);};
+                const auto no_overlays=[](const auto* u){return !u->IsBadgeVisible() && !u->m_render.badge.healthbar.def->instanced_sprite->actor->HasInstance(u->m_render.badge.healthbar.instance_id)
+                    && !u->m_render.fake_badge.instance_id;};
+                publish();
+                GT_ASSERT(!body(unit.get()) && !body(sibling.get()) && no_overlays(unit.get()) && no_overlays(sibling.get()),
+                    "Hidden foreign head exposed own tail or orphaned flag/health/stack instances");
+                sibling->Show();sibling->ShowFakeBadge(0);sibling->ShowBadge();
+                GT_ASSERT(!body(sibling.get()) && no_overlays(sibling.get()),"Direct Unit draw path bypassed head disclosure");
+                knowledge.units.at(1).visible_to=2;publish();
+                GT_ASSERT(!body(unit.get()) && body(sibling.get()) && sibling->IsBadgeVisible(),"Disclosed source head did not promote and draw own tail");
+                knowledge.units.at(1).visible_to=0;um->m_selected_unit=sibling.get();frontend.m_is_turn_active=true;publish();
+                GT_ASSERT(body(sibling.get()),"Live selected admission did not precede hidden ordinary head lookup");
+                knowledge.units.at(2).flags=0x440;publish();
+                GT_ASSERT(!body(unit.get()) && !body(sibling.get()) && no_overlays(unit.get()) && no_overlays(sibling.get()),
+                    "Exceptional selected Unit bypassed native lookup admission");
+                knowledge.units.at(1).visible_to=2;publish();GT_ASSERT(body(sibling.get()),"Admitted source stack promotion incorrectly filtered special selected tail");
+                um->m_selected_unit=nullptr;knowledge.units.at(1).owner=1;knowledge.units.at(1).domain=0;
+                knowledge.units.at(2).flags=0;knowledge.units.at(2).domain=1;publish();
+                GT_ASSERT(!body(unit.get()) && body(sibling.get()),"Live representative ignored source domain rank");
+                knowledge.units.at(1).domain=1;publish();GT_ASSERT(body(unit.get()) && !body(sibling.get()),"Live tied stack ignored first source member");
+                um->m_selected_unit=sibling.get();tile.Render();
+                GT_ASSERT(!body(unit.get()) && body(sibling.get()),"Cached representative ignored local selection change");
+                um->m_selected_unit=nullptr;tile.Render();
+                GT_ASSERT(body(unit.get()) && !body(sibling.get()),"Cached representative retained a retired selection");
+                knowledge.explored_by.assign(3200,0);publish();
+                unit->SetHealth(0.6f);unit->Refresh();unit->Show();unit->ShowBadge();sibling->ShowFakeBadge(0);
+                GT_ASSERT(!body(unit.get()) && !body(sibling.get()) && no_overlays(unit.get()) && no_overlays(sibling.get()),
+                    "Unknown tile or stat refresh restored hidden body/overlays");
+                knowledge.explored_by.assign(3200,2);knowledge.units.at(1).flags=0;knowledge.units.at(1).status=0;
+                knowledge.units.erase(2);knowledge.units.at(1).stack=av::Stack{0,-1,-1};
+                um->m_units.erase(2);sibling.reset();
+                const auto cell=2*40+2/2;knowledge.occupancy[cell]={1,3};um->m_selected_unit=unit.get();publish();
+                GT_ASSERT(body(unit.get()),"Selected actionable garrison disappeared");
+                knowledge.units.at(1).order=2;publish();GT_ASSERT(!body(unit.get()) && no_overlays(unit.get()),"Held garrison retained a drawn model or overlays");
+                knowledge.units.at(1).order=0;publish();
+                game::FrontendRequest inactive(game::FrontendRequest::FR_TURN_STATUS);inactive.data.turn_status.status=game::backend::turn::TS_PLEASE_WAIT;frontend.ProcessRequest(&inactive);
+                GT_ASSERT(!body(unit.get()) && no_overlays(unit.get()),"Turn-context change failed to repaint garrison admission");
+                unit->SetHealth(1);unit->Refresh();
+            }
+            auto* instanced = unit->GetSprite()->instanced_sprite;
 			auto* actor = instanced->actor->GetSpriteActor();
 			GT_ASSERT( other_sprite->actor != instanced->actor && other_sprite->texture_owner == instanced->texture_owner,
 				"independent UnitDef instance counters share an actor or duplicate immutable pixels" );

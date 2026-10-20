@@ -22,6 +22,10 @@ public:
     };
     static SmacTerrainAuthority Installed(SmacPlanetMap source);
     static SmacTerrainAuthority GeneratedPrestartup(const smac_generation::State& state,smac_generation::Geometry geometry);
+    // Owned retained gameplay terrain, independent of a TERRANMAP container.
+    // Entity registries/settings are authenticated by the owning world boundary.
+    static SmacTerrainAuthority GeneratedRetained(Metadata metadata,const std::string& records);
+    bool operator==(const SmacTerrainAuthority& other) const;
     Origin SourceOrigin() const {return m_origin;}
     const Metadata& Info() const {return m_metadata;}
     const Cell& At(uint32_t x,uint32_t y) const;

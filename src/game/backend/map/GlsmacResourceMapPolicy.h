@@ -24,9 +24,10 @@ class SmacTerrainAuthority;
 // admitted resource consumer interprets them. Absence is explicitly unavailable.
 class GlsmacResourceMapPolicy {
 public:
-	static constexpr uint32_t MAX_WIRE_BYTES = 256 * 1024;
+	static constexpr uint32_t MAX_WIRE_BYTES = 4 * 1024 * 1024;
 	static GlsmacResourceMapPolicy DisplayedTerrainV1();
 	static GlsmacResourceMapPolicy InstalledPlanetV1( SmacPlanetMap source, bool automatic_land_resources );
+    static GlsmacResourceMapPolicy GeneratedTerrainV3(SmacTerrainAuthority source);
 	bool operator==( const GlsmacResourceMapPolicy& other ) const;
 	const SmacPlanetMap* OriginalPlanet() const { return m_planet.get(); }
     const std::shared_ptr<const SmacPlanetMap>& OriginalPlanetSource() const { return m_planet; }

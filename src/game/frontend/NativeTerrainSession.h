@@ -3,7 +3,7 @@
 namespace game::frontend::native_terrain {
 struct Session {
     static bool Admits(const ::game::native_terrain::World& world) {
-        if(!world.retained_geometry || !world.horizontal_wrap) {return false;}
+        if(!world.ValidDimensions() || world.width!=80 || world.height!=80 || !world.retained_geometry || !world.horizontal_wrap) {return false;}
         for(const auto& cell:world.tiles) {
             if(cell.band>7) {return false;}
             if(cell.band<3 || !(cell.landmarks&0xb03u)) {continue;}

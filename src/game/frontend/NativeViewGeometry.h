@@ -39,7 +39,7 @@ public:
         : bands_(Bands(cells)),geometry_(width,height,wrap,std::move(cells),false,pinned_planet),
           world_{{width,height}},wrap_(wrap) {}
     explicit ViewGeometry(const ::game::native_terrain::World& world)
-        : ViewGeometry(80,80,world.horizontal_wrap,Cells(world),true) {}
+        : ViewGeometry(world.width,world.height,world.horizontal_wrap,Cells(world),world.width==80 && world.height==80) {}
     Plan Prepare(const ViewLayout& view,int zoom,int relief,bool incremental,
         bool paint=true,const Observer& observer={},const Knowledge* known=nullptr,std::optional<int> survey_light=std::nullopt) {
         if(view.world!=world_ || view.horizontal_wrap!=wrap_ || view.viewport[0]<=0 || view.viewport[1]<=0) {

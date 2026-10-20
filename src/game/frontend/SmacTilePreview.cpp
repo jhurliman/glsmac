@@ -31,13 +31,14 @@ raster::Bitmap Scale(const raster::Bitmap& input) {
 std::optional<native_terrain::Frame> Paint(const ::game::native_terrain::World& world,
     const native_terrain::Source& source,int x,int y,uint16_t base,
     const raster::Bitmap& backing,raster::Point anchor,raster::Clip clip) {
+    if(!world.ValidDimensions()) {return {};}
     for(const auto value:anchor) {if(value < -32000 || value > 32000) {throw std::invalid_argument("Unsupported preview anchor");}}
     const auto at=[&](int tx,int ty)->const ::game::native_terrain::Tile* {
-        if(ty<0 || ty>=80 || ((tx^ty)&1)) {return nullptr;}
-        if(world.horizontal_wrap) {tx=(tx%80+80)%80;}
-        if(tx<0 || tx>=80) {return nullptr;}return &world.tiles[size_t(ty)*40+size_t(tx)/2];
+        if(ty<0 || ty>=world.height || ((tx^ty)&1)) {return nullptr;}
+        if(world.horizontal_wrap) {tx=(tx%world.width+world.width)%world.width;}
+        if(tx<0 || tx>=world.width) {return nullptr;}return &world.tiles[size_t(ty)*size_t(world.width/2)+size_t(tx)/2];
     };
-    if(x<0 || x>=80 || y<0 || y>=80 || ((x^y)&1)) {return {};}
+    if(x<0 || x>=world.width || y<0 || y>=world.height || ((x^y)&1)) {return {};}
     const auto& own=*at(x,y);
     // Current original controls close bare/rocky/moist land, remembered Road
     // and Fungus, and live resource sprites. Other feature painters need their
@@ -94,7 +95,9 @@ std::optional<native_terrain::Frame> Paint(const ::game::native_terrain::World& 
         command.shadow_lookup=&source.shadow_lookup;commands.push_back(command);
     }
     auto result=raster::DrawBatch(backing,commands,clip,true);
-    native_terrain::Frame frame;frame.indexed=std::move(result.bitmap.pixels);frame.coverage=std::move(result.coverage);
+    native_terrain::Frame frame;frame.dimensions={{backing.width,backing.height}};frame.world={{world.width,world.height}};
+    frame.developed_tiles.assign(world.tiles.size(),false);frame.landmark_tiles.assign(world.tiles.size(),false);frame.resource_tiles.assign(world.tiles.size(),false);
+    frame.indexed=std::move(result.bitmap.pixels);frame.coverage=std::move(result.coverage);
     frame.rgba=material::ResolveRgba(frame.indexed,source.palette);
     for(size_t i=0;i<frame.coverage.size();++i) {frame.rgba[4*i+3]=frame.coverage[i]?255:0;}
     frame.attempts=result.attempts;frame.writes=result.writes;frame.tiles=1;return frame;

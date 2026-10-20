@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <string>
 #include <optional>
+#include <vector>
+#include <stdexcept>
 
 namespace game::native_terrain {
 // Original Base-specific owner/visibility gate after a matching live record.
@@ -28,6 +30,17 @@ struct Tile {
 };
 struct World {
     static constexpr int WIDTH=80,HEIGHT=80;
+    explicit World(int w=WIDTH,int h=HEIGHT):width(w),height(h) {
+        if(w<=0 || h<=0 || (w&1) || (h&1) || w>65534 || h>65534 ||
+            uint64_t(w/2)*uint64_t(h)>UINT32_MAX/44u) {throw std::invalid_argument("Invalid native terrain world dimensions");}
+        tiles.resize(size_t(w/2)*size_t(h));
+    }
+    int width=WIDTH,height=HEIGHT;
+    bool ValidDimensions() const {
+        return width>0 && height>0 && width<=65534 && height<=65534 && !(width&1) && !(height&1) &&
+            uint64_t(width/2)*uint64_t(height)<=UINT32_MAX/44u &&
+            uint64_t(width/2)*uint64_t(height)==tiles.size();
+    }
     bool horizontal_wrap=true,retained_geometry=false;
     int viewer=0;
     bool exploration_ready=false;
@@ -45,6 +58,6 @@ struct World {
     bool automatic_land_resources=false;
     std::array<uint32_t,8> relations{};
     std::array<std::string,8> faction_files{};
-    std::array<Tile,WIDTH*HEIGHT/2> tiles{};
+    std::vector<Tile> tiles;
 };
 }

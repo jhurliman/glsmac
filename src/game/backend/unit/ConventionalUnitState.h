@@ -40,10 +40,20 @@ struct ConventionalUnitState {
     bool HasOrderState() const noexcept {return IsHeld() || order_countdown != 0;}
     void AdvanceOrderUpkeep() noexcept;
 
+    // Optional source-pool binding. Absence on old records is unknown, not a
+    // guessed head/link order. Physical ownership remains on the Unit.
+    struct Stack {
+        int16_t id,next,previous;
+        bool operator==(const Stack& other) const noexcept {return id==other.id && next==other.next && previous==other.previous;}
+        void Validate() const;
+        // The caller first unlinks the retiring node, then compacts source IDs.
+        Stack AfterUnlinkedIndexErasure(int32_t removed) const;
+    };
+    std::optional<Stack> stack;
 	bool operator==( const ConventionalUnitState& other ) const;
 	void Validate() const;
-	void Serialize( types::Buffer& buffer, bool include_state_history = true, bool include_orders = false ) const;
-	static ConventionalUnitState Deserialize( types::Buffer& buffer, bool include_state_history = true, bool include_orders = false );
+	void Serialize( types::Buffer& buffer, bool include_state_history = true, bool include_orders = false, bool include_stack = false ) const;
+	static ConventionalUnitState Deserialize( types::Buffer& buffer, bool include_state_history = true, bool include_orders = false, bool include_stack = false );
 };
 
 // An owned resolved copy produced from a checked current or downloaded bound

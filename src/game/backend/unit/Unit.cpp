@@ -158,8 +158,15 @@ const std::string& Unit::GetMoraleString() const {
 	return m_def->m_moraleset->m_morale_values.at( GetPresentation().morale ).m_name;
 }
 
+std::optional<ConventionalUnitState::Stack> Unit::SourceStack() const {
+    if(IsNative()) {const auto& n=Native();return ConventionalUnitState::Stack{int16_t(n.id),n.stack_next,n.stack_previous};}
+    if(IsConventional()) {return Conventional().stack;}return std::nullopt;
+}
+
 void Unit::CommitConventionalMove( const ConventionalUnitState& state, map::tile::Tile* tile ) noexcept {
+    const auto stack=Conventional().stack;
 	std::get< ConventionalUnitState >( m_state ) = state;
+    std::get<ConventionalUnitState>(m_state).stack=stack;
 	m_tile = tile;
 }
 
@@ -189,7 +196,7 @@ void Unit::Place( GSE_CALLABLE, map::tile::Tile* tile, bool record_placement ) {
 const types::Buffer Unit::Serialize( const Unit* unit ) {
 	if ( unit->IsConventional() ) { unit->QueryStats( unit->Conventional().render_morale_mode ); }
 	types::Buffer buf;
-	buf.WriteInt( unit->IsNative() ? 5 : unit->IsConventional() && unit->Conventional().HasOrderState() ? 7 : unit->IsConventional() && unit->Conventional().HasStateHistory() ? 6 : 4 );
+	buf.WriteInt( unit->IsNative() ? 5 : unit->IsConventional() && unit->Conventional().stack ? 8 : unit->IsConventional() && unit->Conventional().HasOrderState() ? 7 : unit->IsConventional() && unit->Conventional().HasStateHistory() ? 6 : 4 );
 	buf.WriteInt( unit->IsNative() ? 2 : unit->IsConventional() ? 1 : 0 );
 	buf.WriteInt( unit->m_id );
 	buf.WriteString( unit->m_def->m_id );
@@ -197,7 +204,7 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	buf.WriteInt( unit->m_tile->coord.x );
 	buf.WriteInt( unit->m_tile->coord.y );
 	if ( unit->IsNative() ) { buf.WriteString(unit->Native().Serialize().ToString()); }
-	else if ( unit->IsConventional() ) { unit->Conventional().Serialize( buf, unit->Conventional().HasStateHistory() || unit->Conventional().HasOrderState(), unit->Conventional().HasOrderState() ); }
+	else if ( unit->IsConventional() ) { unit->Conventional().Serialize( buf, unit->Conventional().HasStateHistory() || unit->Conventional().HasOrderState() || unit->Conventional().stack.has_value(), unit->Conventional().HasOrderState() || unit->Conventional().stack.has_value(), unit->Conventional().stack.has_value() ); }
 	else {
 		const auto& state = unit->Legacy();
 		buf.WriteFloat( state.movement ); buf.WriteInt( state.morale );
@@ -209,9 +216,9 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, const ConventionalUnitResolver& resolver, bool defer_home ) {
 	if ( !um || !um->GetMap() ) { THROW( "unit snapshot requires a manager and map" ); }
 	const auto version=buf.ReadInt();
-	if ( version!=4 && version!=5 && version!=6 && version!=7 ) { THROW( "unsupported unit record version" ); }
+	if ( version!=4 && version!=5 && version!=6 && version!=7 && version!=8 ) { THROW( "unsupported unit record version" ); }
 	const auto kind = buf.ReadInt();
-	if ( !((kind==0 && version==4) || (kind==1 && (version==4 || version==6 || version==7)) || (kind==2 && version==5)) ) { THROW( "unsupported unit record kind" ); }
+	if ( !((kind==0 && version==4) || (kind==1 && (version==4 || version==6 || version==7 || version==8)) || (kind==2 && version==5)) ) { THROW( "unsupported unit record kind" ); }
 	const auto id = buf.ReadInt();
 	const auto def_id = buf.ReadString();
 	const auto owner = buf.ReadInt();
@@ -221,7 +228,7 @@ Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um, cons
 	std::optional< SmacNativeUnitRecord > native;
 	LegacyState legacy{};
 	if ( kind == 2 ) {native=SmacNativeUnitRecord::Deserialize(buf.ReadString());}
-	else if ( kind == 1 ) { conventional = ConventionalUnitState::Deserialize( buf, version>=6, version>=7 ); }
+	else if ( kind == 1 ) { conventional = ConventionalUnitState::Deserialize( buf, version>=6, version>=7, version>=8 ); }
 	else {
 		legacy.movement = static_cast< movement_t >( buf.ReadFloat() ); legacy.morale = buf.ReadInt();
 		legacy.health = static_cast< health_t >( buf.ReadFloat() ); legacy.moved_this_turn = buf.ReadBool();

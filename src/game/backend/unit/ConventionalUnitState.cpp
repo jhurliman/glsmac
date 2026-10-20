@@ -12,13 +12,27 @@ int32_t Integer( types::Buffer& buffer, int32_t minimum, int32_t maximum ) {
 }
 }
 
+void ConventionalUnitState::Stack::Validate() const {
+    if(id<0 || id>=2048 || next < -1 || next>=2048 || previous < -1 || previous>=2048 || next==id || previous==id) {
+        throw std::runtime_error("Invalid conventional source-pool stack binding");
+    }
+}
+ConventionalUnitState::Stack ConventionalUnitState::Stack::AfterUnlinkedIndexErasure(int32_t removed) const {
+    Validate();
+    if(removed<0 || removed>=2048 || id==removed || next==removed || previous==removed) {
+        throw std::runtime_error("Conventional stack erasure requires an already-unlinked survivor");
+    }
+    auto result=*this;if(result.id>removed) {--result.id;}if(result.next>removed) {--result.next;}if(result.previous>removed) {--result.previous;}
+    result.Validate();return result;
+}
+
 bool ConventionalUnitState::operator==( const ConventionalUnitState& other ) const {
 	return design_id == other.design_id && owner_simulation_id == other.owner_simulation_id
 		&& stored_morale == other.stored_morale && damage == other.damage && spent == other.spent
 		&& failed_move == other.failed_move && home == other.home && home_base_id == other.home_base_id && render_morale_mode == other.render_morale_mode
 		&& work_order == other.work_order && work_progress == other.work_progress
         && order == other.order && order_countdown == other.order_countdown
-		&& retained_state_word==other.retained_state_word && accounting_markers==other.accounting_markers;
+		&& stack==other.stack && retained_state_word==other.retained_state_word && accounting_markers==other.accounting_markers;
 }
 
 uint8_t ConventionalUnitState::AccountingMarkers(uint32_t word) noexcept {
@@ -40,6 +54,7 @@ void ConventionalUnitState::AdvanceOrderUpkeep() noexcept {
     }
 }
 void ConventionalUnitState::Validate() const {
+    if(stack) {stack->Validate();}
     if ((order != Order::None && order != Order::Hold) || (IsHeld() && work_order != WorkOrder::None)) {
         throw std::runtime_error("Invalid conventional general/work order combination");
     }
@@ -54,8 +69,9 @@ void ConventionalUnitState::Validate() const {
 	}
 }
 
-void ConventionalUnitState::Serialize( types::Buffer& buffer, bool include_state_history, bool include_orders ) const {
+void ConventionalUnitState::Serialize( types::Buffer& buffer, bool include_state_history, bool include_orders, bool include_stack ) const {
 	Validate();
+    if(!include_stack && stack) {throw std::runtime_error("Cannot discard retained stack binding in legacy unit codec");}
     if(!include_orders && HasOrderState()) {throw std::runtime_error("Cannot discard retained orders in legacy unit codec");}
 	buffer.WriteInt( design_id ); buffer.WriteInt( owner_simulation_id );
 	buffer.WriteInt( stored_morale ); buffer.WriteInt( damage ); buffer.WriteInt( spent );
@@ -68,9 +84,10 @@ void ConventionalUnitState::Serialize( types::Buffer& buffer, bool include_state
 		buffer.WriteBool(accounting_markers.has_value());if(accounting_markers) {buffer.WriteInt(*accounting_markers);}
 	}
     if(include_orders) {buffer.WriteInt(static_cast<int32_t>(order));buffer.WriteInt(order_countdown);}
+    if(include_stack) {buffer.WriteBool(stack.has_value());if(stack) {buffer.WriteInt(stack->id);buffer.WriteInt(stack->next);buffer.WriteInt(stack->previous);}}
 }
 
-ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer, bool include_state_history, bool include_orders ) {
+ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer, bool include_state_history, bool include_orders, bool include_stack ) {
 	const auto design = Integer( buffer, 0, 511 ), owner = Integer( buffer, 1, 7 );
 	const auto morale = Integer( buffer, 0, 255 ), damage = Integer( buffer, 0, 255 ), spent = Integer( buffer, 0, 255 );
 	const bool failed = buffer.ReadBool();
@@ -92,6 +109,7 @@ ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer,
         result.order = static_cast<Order>(Integer(buffer,0,2));
         result.order_countdown = static_cast<int16_t>(Integer(buffer,INT16_MIN,INT16_MAX));
     }
+    if(include_stack && buffer.ReadBool()) {result.stack=Stack{int16_t(Integer(buffer,0,2047)),int16_t(Integer(buffer,-1,2047)),int16_t(Integer(buffer,-1,2047))};}
 	result.Validate(); return result;
 }
 

@@ -65,6 +65,7 @@ public:
 	LegacyState& Legacy();
 	const LegacyState& Legacy() const;
 	const ConventionalUnitState& Conventional() const;
+    std::optional<ConventionalUnitState::Stack> SourceStack() const;
 	ConventionalUnitStats QueryStats( SmacMoraleMode mode ) const;
 	// Native map badges use the viewing faction; descriptions retain neutral context.
 	Presentation GetPresentation( int32_t native_viewer = 0 ) const;

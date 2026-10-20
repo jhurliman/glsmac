@@ -119,35 +119,37 @@ void UnitManager::ValidateNativeCreation(size_t id,const Def* def,const map::til
     }
 }
 void UnitManager::ValidateNativeIndexBindings(const std::vector<Unit*>& ordered) const {
+    using Stack=ConventionalUnitState::Stack;
+    const auto state=[](const Unit* unit)->std::optional<Stack> {
+        if(unit->IsNative()) {const auto& n=unit->Native();return Stack{int16_t(n.id),n.stack_next,n.stack_previous};}
+        if(unit->IsConventional()) {return unit->Conventional().stack;}return std::nullopt;
+    };
     for(size_t index=0;index<ordered.size();++index) {
-        const auto* unit=ordered[index];
-        if(!unit->IsNative()) {continue;}
-        const auto& record=unit->Native();
-        if(ordered.size()>2048 || record.id!=index) {throw std::runtime_error("Native source index differs from dense Unit order");}
+        const auto* unit=ordered[index];const auto binding=state(unit);if(!binding) {continue;}
+        binding->Validate();
+        if(ordered.size()>2048 || binding->id!=index) {throw std::runtime_error("Source stack index differs from dense Unit order");}
         const auto linked=[&](int16_t target)->const Unit* {
             if(target<0) {return nullptr;}
-            if(static_cast<size_t>(target)>=ordered.size() || !ordered[target]->IsNative() || ordered[target]->GetTile()!=unit->GetTile()) {
-                throw std::runtime_error("Native stack reference is not a same-tile native record");
-            }
-            return ordered[target];
+            if(size_t(target)>=ordered.size() || !state(ordered[target]) || state(ordered[target])->id!=target || ordered[target]->GetTile()!=unit->GetTile()) {
+                throw std::runtime_error("Stack reference is not a bound same-tile Unit record");
+            }return ordered[target];
         };
-        const auto* next=linked(record.stack_next);const auto* previous=linked(record.stack_previous);
-        if((next && next->Native().stack_previous!=record.id) || (previous && previous->Native().stack_next!=record.id)) {
-            throw std::runtime_error("Native stack references are not reciprocal");
+        const auto* next=linked(binding->next);const auto* previous=linked(binding->previous);
+        if((next && state(next)->previous!=binding->id) || (previous && state(previous)->next!=binding->id)) {
+            throw std::runtime_error("Source stack references are not reciprocal");
         }
-        if(record.stack_previous==-1) {
+        if(binding->previous==-1) {
             size_t count=0;const Unit* cursor=unit;
             while(cursor) {
-                if(++count>ordered.size()) {throw std::runtime_error("Native stack contains a cycle");}
-                cursor=linked(cursor->Native().stack_next);
+                if(++count>ordered.size()) {throw std::runtime_error("Source stack contains a cycle");}
+                cursor=linked(state(cursor)->next);
             }
-            if(count!=unit->GetTile()->units.size()) {throw std::runtime_error("Native stack omits physical tile members");}
+            if(count!=unit->GetTile()->units.size()) {throw std::runtime_error("Source stack omits physical tile members");}
         } else {
-            // Every node must reach a head, including an otherwise reciprocal cycle.
             size_t count=0;const Unit* cursor=unit;
             while(cursor) {
-                if(++count>ordered.size()) {throw std::runtime_error("Native stack has no head");}
-                cursor=linked(cursor->Native().stack_previous);
+                if(++count>ordered.size()) {throw std::runtime_error("Source stack has no head");}
+                cursor=linked(state(cursor)->previous);
             }
         }
     }
@@ -162,6 +164,7 @@ struct UnitManager::PreparedNativeBirths::Data {
     std::unordered_map<size_t,unit_update_t> updates;
     PreparedOccupants occupants;
     std::map<Unit*,SmacNativeUnitRecord> records;
+    std::map<Unit*,ConventionalUnitState::Stack> conventional_stacks;
     std::optional<map::SmacWorkerKnowledge> knowledge;
     std::optional<faction::SmacNativeFactoryState> factory;
     bool committed=false,notified=false;
@@ -180,14 +183,18 @@ const Unit& UnitManager::PreparedNativeBirths::Candidate(size_t index) const {
 void UnitManager::PreparedNativeBirths::Query(const std::function<void()>& query) const {
     if(!m_data || m_data->committed) {throw std::runtime_error("Native birth query is not pending");}
     auto previous=m_data->records;
+    std::map<Unit*,std::optional<ConventionalUnitState::Stack>> previous_stacks;
+    for(const auto& row:m_data->conventional_stacks) {previous_stacks.emplace(row.first,row.first->Conventional().stack);}
     auto factory=m_data->factory;
     for(auto& row:previous) {row.second=row.first->Native();}
     util::FinallyGuard restore([&]{
         m_data->manager->m_game->m_simulation->value.native_factory.swap(factory);
         for(const auto& row:previous) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+        for(const auto& row:previous_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     });
     m_data->manager->m_game->m_simulation->value.native_factory.swap(factory);
     for(const auto& row:m_data->records) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+    for(const auto& row:m_data->conventional_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     m_data->manager->QueryPreparedUnits(m_data->units,m_data->order,m_data->occupants,m_data->knowledge,{},query);
 }
 void UnitManager::PreparedNativeBirths::Commit() noexcept {
@@ -196,6 +203,7 @@ void UnitManager::PreparedNativeBirths::Commit() noexcept {
     static_assert(std::is_nothrow_swappable_v<decltype(d.units)> && std::is_nothrow_swappable_v<decltype(d.order)>
         && std::is_nothrow_swappable_v<decltype(d.updates)> && std::is_nothrow_swappable_v<decltype(d.factory)>);
     for(const auto& row:d.records) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+    for(const auto& row:d.conventional_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     d.manager->m_units.swap(d.units);d.manager->m_unit_order.swap(d.order);d.manager->m_unit_updates.swap(d.updates);
     for(auto& row:d.occupants) {row.first->units.swap(row.second);}
     d.manager->m_game->m_simulation->value.native_factory.swap(d.factory);
@@ -244,6 +252,22 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirths(GSE_CALLABLE,
         const auto found=d->occupants.find(tile);return found==d->occupants.end()?tile->units:found->second;
     };
     const auto record=[&](Unit* unit)->SmacNativeUnitRecord& {return d->records.try_emplace(unit,unit->Native()).first->second;};
+    using Stack=ConventionalUnitState::Stack;
+    const auto stack_state=[&](Unit* unit)->Stack {
+        if(unit->IsNative()) {const auto& n=record(unit);return {int16_t(n.id),n.stack_next,n.stack_previous};}
+        if(!unit->IsConventional()) {throw std::runtime_error("Native birth requires an admitted conventional/native stack");}
+        auto found=d->conventional_stacks.find(unit);if(found!=d->conventional_stacks.end()) {return found->second;}
+        if(const auto known=unit->SourceStack()) {return d->conventional_stacks.emplace(unit,*known).first->second;}
+        if(occupants(unit->GetTile()).size()!=1) {throw std::runtime_error("Native birth requires retained legacy stack order");}
+        const auto index=std::find(d->order.begin(),d->order.end(),unit->m_id);
+        if(index==d->order.end()) {throw std::runtime_error("Native birth lost conventional dense identity");}
+        return d->conventional_stacks.emplace(unit,Stack{int16_t(index-d->order.begin()),-1,-1}).first->second;
+    };
+    const auto set_stack=[&](Unit* unit,const Stack& value) {
+        value.Validate();
+        if(unit->IsNative()) {auto& n=record(unit);n.id=value.id;n.stack_next=value.next;n.stack_previous=value.previous;}
+        else {d->conventional_stacks[unit]=value;}
+    };
     const auto observation=[&](size_t id)->map::SmacWorkerKnowledge::UnitObservation& {
         const auto found=std::find_if(knowledge.units.begin(),knowledge.units.end(),[id](const auto& row){return row.id==id;});
         if(found==knowledge.units.end()) {throw std::runtime_error("Native sight lost an existing Unit observation");}return *found;
@@ -276,11 +300,11 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirths(GSE_CALLABLE,
         if(knowledge.occupancy) {knowledge.occupancy->PlaceUnit({x,y},0,stack.empty());}
         Unit* head=nullptr;
         for(const auto& row:stack) {
-            if(!row.second || !row.second->IsNative() || row.second->SimulationOwner()!=0) {throw std::runtime_error("Native birth requires an ordinary same-native stack");}
-            if(record(row.second).stack_previous==-1) {if(head) {throw std::runtime_error("Native birth stack has multiple heads");}head=row.second;}
+            if(!row.second) {throw std::runtime_error("Native birth stack has a null member");}
+            if(stack_state(row.second).previous==-1) {if(head) {throw std::runtime_error("Native birth stack has multiple heads");}head=row.second;}
         }
         if(!stack.empty() && !head) {throw std::runtime_error("Native birth stack has no head");}
-        if(head) {value.stack_next=static_cast<int16_t>(record(head).id);record(head).stack_previous=static_cast<int16_t>(value.id);}
+        if(head) {auto changed=stack_state(head);value.stack_next=changed.id;changed.previous=value.id;set_stack(head,changed);}
         auto candidate=std::unique_ptr<Unit>(new Unit(Unit::Unplaced{},this,static_cast<size_t>(next),def,tile,value));
         auto* born=candidate.get();
         if(!d->units.emplace(born->m_id,born).second || !stack.emplace(born->m_id,born).second
@@ -306,8 +330,9 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirths(GSE_CALLABLE,
             auto* other=row.second;if(other->IsNative()) {continue;}
             const auto owner=other->SimulationOwner();auto* position=other->GetTile();
             if(distance(tile,position)>2) {continue;}
-            if(position==tile) {throw std::runtime_error("Native birth cannot share a positive-owner square");}
-            mark(position,0);disclosed|=static_cast<uint8_t>(1u<<owner);
+            // Co-located positive Units receive their owner disclosure below;
+            // the original constructor does not add native-observer bit0 here.
+            if(position!=tile) {mark(position,0);}disclosed|=static_cast<uint8_t>(1u<<owner);
         }
         for(const auto& row:m_game->GetBM()->GetBases()) {
             auto* base=row.second;if(distance(tile,base->GetTile())>2) {continue;}
@@ -351,16 +376,20 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirths(GSE_CALLABLE,
         auto* unit=by_index(id);auto& value=record(unit);
         if(value.stack_previous<0) {return;}
         auto* head=unit;size_t traversed=0;
-        while(record(head).stack_previous>=0) {
+        while(stack_state(head).previous>=0) {
             if(++traversed>d->order.size()) {throw std::runtime_error("Native promotion encountered a cyclic stack");}
-            head=by_index(record(head).stack_previous);
+            const auto parent=stack_state(head).previous;
+            if(parent<0 || size_t(parent)>=d->order.size()) {throw std::runtime_error("Native promotion lost its parent");}
+            head=d->units.at(d->order[parent]);
             if(head->GetTile()!=unit->GetTile()) {throw std::runtime_error("Native promotion crosses tile boundaries");}
         }
-        auto* previous=by_index(value.stack_previous);record(previous).stack_next=value.stack_next;
-        if(value.stack_next>=0) {record(by_index(value.stack_next)).stack_previous=value.stack_previous;}
-        value.stack_previous=-1;value.stack_next=record(head).id;record(head).stack_previous=value.id;
+        const auto any_index=[&](int16_t id){if(id<0 || size_t(id)>=d->order.size()) {throw std::runtime_error("Native promotion lost a neighbor");}return d->units.at(d->order[id]);};
+        auto* previous=any_index(value.stack_previous);auto previous_state=stack_state(previous);previous_state.next=value.stack_next;set_stack(previous,previous_state);
+        if(value.stack_next>=0) {auto* next=any_index(value.stack_next);auto state=stack_state(next);state.previous=value.stack_previous;set_stack(next,state);}
+        auto head_state=stack_state(head);value.stack_previous=-1;value.stack_next=head_state.id;head_state.previous=value.id;set_stack(head,head_state);
     };
     factory.record=[&](int32_t id){return record(by_index(id));};
+    factory.knowledge=[&]()->const map::SmacWorkerKnowledge::Data& {return knowledge;};
     produce(factory);
     for(auto& row:d->records) {
         // Candidate queries must expose the final prepared record, not a body

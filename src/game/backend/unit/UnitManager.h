@@ -84,6 +84,7 @@ public:
         std::function<int32_t(int32_t)> capacity;
         std::function<void(int32_t)> sentry,promote_stack;
         std::function<SmacNativeUnitRecord(int32_t)> record;
+        std::function<const map::SmacWorkerKnowledge::Data&()> knowledge;
     };
     PreparedNativeBirths PrepareNativeBirths(GSE_CALLABLE,int32_t width,int32_t height,bool horizontal_wrap,
         const std::function<void(const NativeBirthFactory&)>& produce);
@@ -254,6 +255,9 @@ private:
 	void ApplyConventionalAttack(GSE_CALLABLE,PreparedConventionalAttack prepared);
 	void ValidateConventionalCreation( size_t id, const Def* def, const slot::Slot* owner, const map::tile::Tile* tile,
 		const ConventionalUnitState& state, const ConventionalUnitResolver& resolver, bool early_startup = false, bool defer_home = false ) const;
+    using StackChanges=std::vector<std::pair<Unit*,ConventionalUnitState::Stack>>;
+    StackChanges PrepareConventionalStackMove(Unit* unit,map::tile::Tile* destination) const;
+    static void CommitStackChanges(const StackChanges& changes) noexcept;
 	struct PreparedConventionalMove {
 		Unit* unit;
 		map::tile::Tile* source;
@@ -264,6 +268,7 @@ private:
 		std::optional< int32_t > nearest_distance;
 		bool update_nearest = false;
 		std::optional< map::SmacWorkerKnowledge > sight;
+        StackChanges stacks;
 	};
 	PreparedConventionalMove PrepareConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
 	struct PreparedConventionalWork {

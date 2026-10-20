@@ -268,6 +268,27 @@ struct WireRecord {
 }
 
 void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
+    task->AddTest("Conventional source stack codec retains absence links and dense erasure preconditions",GT(){
+        using Stack=ConventionalUnitState::Stack;
+        for(const auto binding:{Stack{0,-1,-1},Stack{13,-1,15},Stack{2047,0,2046}}) {
+            auto input=Record();input.stack=binding;
+            types::Buffer wire;input.Serialize(wire,true,true,true);const auto restored=ConventionalUnitState::Deserialize(wire,true,true,true);
+            GT_ASSERT(restored==input && wire.lenr==wire.lenw,"Source stack binding did not roundtrip");
+            bool rejected=false;try {types::Buffer old;input.Serialize(old);}catch(const std::exception&) {rejected=true;}
+            GT_ASSERT(rejected,"Legacy codec discarded source stack authority");
+        }
+        auto absent=Record();types::Buffer old;absent.Serialize(old,false,false,false);
+        GT_ASSERT(!ConventionalUnitState::Deserialize(old,false,false,false).stack,"Legacy Unit invented a stack head");
+        const auto repaired=Stack{13,-1,15}.AfterUnlinkedIndexErasure(8);
+        GT_ASSERT((repaired==Stack{12,-1,14}),"Dense stack repair differs from mixed-owner Scout source indices");
+        for(const auto bad:{Stack{-1,-1,-1},Stack{2048,-1,-1},Stack{13,13,-1},Stack{13,-1,13},Stack{13,-2,-1},Stack{13,-1,2048}}) {
+            bool rejected=false;try {bad.Validate();}catch(const std::exception&) {rejected=true;}
+            GT_ASSERT(rejected,"Invalid source stack binding accepted");
+        }
+        bool rejected=false;try {(void)Stack{13,-1,15}.AfterUnlinkedIndexErasure(15);}catch(const std::exception&) {rejected=true;}
+        GT_ASSERT(rejected,"Dense repair silently unlinked a live target");GT_OK();
+    });
+
     task->AddTest("SMAC live regional military recount preserves peer history and actual Start",GT(){
         ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);fixture.ResourcePolicy(true);std::string saved;
         const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {

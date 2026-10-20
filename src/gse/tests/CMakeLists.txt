@@ -70,6 +70,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacFactionTurn.cpp
 	${PWD}/SmacComputerGoals.cpp
 	${PWD}/SmacGlobalSpread.cpp
+    ${PWD}/SmacNativeAI.cpp
 	${PWD}/SmacGlobalWildlife.cpp
 	${PWD}/SmacSimulationState.cpp
 	${PWD}/SmacStartupDesignState.cpp

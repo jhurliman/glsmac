@@ -64,6 +64,7 @@
 #include "SmacFactionTurn.h"
 #include "SmacComputerGoals.h"
 #include "SmacGlobalSpread.h"
+#include "SmacNativeAI.h"
 #include "SmacGlobalWildlife.h"
 #include "SmacSimulationState.h"
 #include "SmacStartupDesignState.h"
@@ -402,6 +403,7 @@ void AddTests( task::gsetests::GSETests* task ) {
         tests::AddSmacFactionTurnTests( task );
         tests::AddSmacComputerGoalsTests( task );
         tests::AddSmacGlobalSpreadTests( task );
+        tests::AddSmacNativeAITests( task );
         tests::AddSmacGlobalWildlifeTests( task );
 	AddSmacSimulationStateTests( task );
 	AddSmacStartupDesignStateTests( task );

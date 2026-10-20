@@ -235,6 +235,7 @@ void OpenGL::Start() {
 	);
 
 	m_capture_to_texture_fbo = CreateFBO();
+    m_presentation_fbo = CreateFBO();
 
 	// Fullscreen resizing calls GL and resize handlers, so it needs the
 	// context, loader and graphics children to be ready first.
@@ -264,6 +265,7 @@ void OpenGL::AbortStartup( const bool video_initialized ) noexcept {
 	}
 	m_fbos.clear();
 	m_capture_to_texture_fbo = nullptr;
+    m_presentation_fbo = nullptr;
 	m_textures.clear();
 	m_texture_objs_to_unload.clear();
 	m_no_texture = 0;
@@ -289,6 +291,7 @@ void OpenGL::Stop() {
 	Log( "Uninitializing OpenGL" );
 
 	DestroyFBO( m_capture_to_texture_fbo );
+    DestroyFBO( m_presentation_fbo );
 
 	glDeleteTextures( 1, &m_no_texture );
     ReleaseEffectBackground();
@@ -339,17 +342,27 @@ void OpenGL::Iterate() {
 	ApplyDefaultViewport();
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	Lock();
-	// Retired objects can have their addresses reused by the next UI texture.
-	// Delete their old GPU entries before any replacement is loaded this frame;
-	// draining after Draw could delete a newly loaded entry at the same address.
-	ProcessPendingUnloads();
+    // Nested world-data/UI captures restore this canonical target, not the
+    // physical window. Effects consequently copy the same logical backdrop.
+    BindPresentationTarget(true);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    {
+        util::FinallyGuard finish_frame([this] {BindPresentationTarget(false);});
+        Lock();
+        util::FinallyGuard unlock([this] {Unlock();});
+        // Retired objects can have their addresses reused by the next UI texture.
+        // Delete their old GPU entries before any replacement is loaded this frame;
+        // draining after Draw could delete a newly loaded entry at the same address.
+        ProcessPendingUnloads();
 
-	for ( auto it = m_routines.begin(); it != m_routines.end(); ++it ) {
-		( *it )->Iterate();
-	}
+        for ( auto it = m_routines.begin(); it != m_routines.end(); ++it ) {
+            ( *it )->Iterate();
+        }
 
-	Unlock();
+    }
+    int drawable_width=0,drawable_height=0;
+    SDL_GL_GetDrawableSize(m_window,&drawable_width,&drawable_height);
+    m_presentation_fbo->Present(PresentationViewport::Canonical(drawable_width,drawable_height),drawable_height);
 
 	GLenum errcode;
 	if ( ( errcode = glGetError() ) != GL_NO_ERROR ) {
@@ -804,7 +817,7 @@ void OpenGL::WithTexture( const types::texture::Texture* texture, const f_t& f )
 }
 
 FBO* OpenGL::CreateFBO() {
-	NEWV( fbo, FBO, this, m_options.viewport_width, m_options.viewport_height );
+	NEWV( fbo, FBO, this, m_viewport_size.x, m_viewport_size.y );
 	const auto delete_fbo = []( FBO* value ) { DELETE( value ); };
 	std::unique_ptr< FBO, decltype( delete_fbo ) > pending( fbo, delete_fbo );
 	Log( "Created FBO " + fbo->GetName() );
@@ -852,9 +865,16 @@ void OpenGL::WithBindTexture( GLuint texture, const f_t& f ) const {
 }
 
 void OpenGL::WithBindFramebufferBegin( GLenum target, GLuint buffer ) const {
-	glBindFramebuffer( target, buffer );
+    const GLuint effective=buffer ? buffer : (m_frame_active ? m_presentation_fbo->GetFramebuffer() : 0);
+#ifdef DEBUG
+    glBindFramebuffer(target,buffer); // tracker maps logical default to the presentation canvas
+#else
+    glBindFramebuffer(target,effective);
+#endif
+    if(target!=GL_DRAW_FRAMEBUFFER) {glReadBuffer(effective?GL_COLOR_ATTACHMENT0:GL_BACK);}
 	if ( target != GL_READ_FRAMEBUFFER ) {
-		if ( buffer ) { glViewport( 0, 0, m_viewport_size.x, m_viewport_size.y ); }
+        glDrawBuffer(effective?GL_COLOR_ATTACHMENT0:GL_BACK);
+		if ( effective ) { glViewport( 0, 0, m_viewport_size.x, m_viewport_size.y ); }
 		else { ApplyDefaultViewport(); }
 	}
 }
@@ -970,20 +990,36 @@ void OpenGL::SetWindowed() {
 	ResizeViewport( m_window_size.x, m_window_size.y );
 }
 
-void OpenGL::UpdateViewportSize( const size_t width, const size_t height ) {
-	m_presentation_viewport = PresentationViewport::Fit( static_cast<int>(width), static_cast<int>(height) );
-	m_viewport_size.x = static_cast<unsigned short>(m_presentation_viewport.width);
-	m_viewport_size.y = static_cast<unsigned short>(m_presentation_viewport.height);
+void OpenGL::UpdateViewportSize( const size_t, const size_t ) {
+    m_viewport_size.x = PresentationViewport::LOGICAL_WIDTH;
+    m_viewport_size.y = PresentationViewport::LOGICAL_HEIGHT;
 }
 
 bool OpenGL::MapWindowPoint( int& x, int& y ) const {
-	return m_presentation_viewport.MapPoint( x, y );
+    int window_width=0,window_height=0,drawable_width=0,drawable_height=0;
+    SDL_GetWindowSize(m_window,&window_width,&window_height);
+    SDL_GL_GetDrawableSize(m_window,&drawable_width,&drawable_height);
+    return PresentationViewport::MapCanonicalWindowPoint(x,y,window_width,window_height,drawable_width,drawable_height);
+}
+
+void OpenGL::BindPresentationTarget(bool active) {
+    const GLuint target=active ? m_presentation_fbo->GetFramebuffer() : 0;
+#ifdef DEBUG
+    debug::g_memory_watcher->GLSetDefaultFramebuffer(target,__FILE__,__LINE__);
+#else
+    glBindFramebuffer(GL_FRAMEBUFFER,target);
+#endif
+    m_frame_active=active;
+    glDrawBuffer(active?GL_COLOR_ATTACHMENT0:GL_BACK);
+    glReadBuffer(active?GL_COLOR_ATTACHMENT0:GL_BACK);
+    if(active) {glViewport(0,0,m_viewport_size.x,m_viewport_size.y);}
+    else {ApplyDefaultViewport();}
 }
 
 void OpenGL::ApplyDefaultViewport() const {
 	int width = 0, height = 0;
 	SDL_GL_GetDrawableSize( m_window, &width, &height );
-	const auto area = PresentationViewport::Fit( width, height );
+	const auto area = PresentationViewport::Canonical( width, height );
 	// Drawable pixels may differ from SDL window coordinates on Retina displays.
 	glViewport( area.x, height - area.y - area.height, area.width, area.height );
 }

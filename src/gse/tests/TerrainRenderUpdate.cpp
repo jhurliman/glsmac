@@ -30,6 +30,11 @@
 #include "task/gsetests/GSETests.h"
 #include "graphics/opengl/TexturePaging.h"
 #include "graphics/PresentationViewport.h"
+#include "graphics/opengl/OpenGL.h"
+#include "graphics/opengl/FBO.h"
+#include "graphics/opengl/routine/Routine.h"
+#include "util/FinallyGuard.h"
+#include <cstdlib>
 #include <cstring>
 #include <algorithm>
 #include <stdexcept>
@@ -969,6 +974,122 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(cadence.Poll(epoch+milliseconds(i*150+16),true),"late poll missed original cadence boundary");
             GT_ASSERT(!cadence.Poll(epoch+milliseconds(i*150+17),true),"late poll replayed a delivery");
         }
+        GT_OK();
+    });
+    if(std::getenv("GLSMAC_TEST_PRESENTATION_GPU")) {
+        task->AddTest("canonical OpenGL presentation restores nested captures effects resize and exact nearest pixels",GT(){
+            class ProbeRoutine:public graphics::opengl::routine::Routine {
+            public:
+                ProbeRoutine(graphics::opengl::OpenGL* graphics,std::function<void()> check):Routine(graphics),check(check) {}
+                void Start() override {} void Stop() override {} void Iterate() override {check();}
+                bool SceneBelongs(const scene::Scene*) const override {return false;}
+                std::function<void()> check;
+            };
+            class ProbeGraphics:public graphics::opengl::OpenGL {
+            public:
+                ProbeGraphics():OpenGL("Canonical presentation control",1280,960,false,false) {}
+                void AddProbe(std::function<void()> check) {NEWV(probe,ProbeRoutine,this,check);m_routines.push_back(probe);}
+                void ResizeActual(int w,int h) {SDL_SetWindowSize(m_window,w,h);ResizeWindow(w,h);}
+                std::array<int,2> Drawable() {int w=0,h=0;SDL_GL_GetDrawableSize(m_window,&w,&h);return {{w,h}};}
+            } renderer;
+            renderer.Start();util::FinallyGuard stop([&]{renderer.Stop();});
+            bool capture_ok=false,effect_ok=false,fail_next=false;
+            renderer.AddProbe([&] {
+                if(fail_next) {fail_next=false;throw std::runtime_error("presentation fault control");}
+                GLint before=0,draw=0,read=0,viewport[4]{};
+                glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING,&before);
+                types::texture::Texture captured;
+                renderer.CaptureToTexture(&captured,{0,0},{8,6},[] {glClearColor(0,0,1,1);glClear(GL_COLOR_BUFFER_BIT);});
+                glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING,&draw);glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING,&read);
+                glGetIntegerv(GL_VIEWPORT,viewport);
+                capture_ok=before!=0 && draw==before && read==before && viewport[0]==0 && viewport[1]==0
+                    && viewport[2]==1024 && viewport[3]==768 && captured.GetWidth()==8 && captured.GetHeight()==6
+                    && captured.GetPixel(0,0)==types::Color::FromRGB(0,0,255).GetRGBA();
+                glClearColor(1,0,1,1);glClear(GL_COLOR_BUFFER_BIT);
+                const auto origin=renderer.PrepareEffectBackground();
+                glActiveTexture(GL_TEXTURE2);
+                GLint width=0,height=0;glGetTexLevelParameteriv(GL_TEXTURE_2D,0,GL_TEXTURE_WIDTH,&width);
+                glGetTexLevelParameteriv(GL_TEXTURE_2D,0,GL_TEXTURE_HEIGHT,&height);
+                std::vector<uint8_t> pixels(size_t(width)*height*4);
+                glGetTexImage(GL_TEXTURE_2D,0,GL_RGBA,GL_UNSIGNED_BYTE,pixels.data());glActiveTexture(GL_TEXTURE0);
+                effect_ok=origin.x==0 && origin.y==0 && width==1024 && height==768
+                    && pixels[0]==255 && pixels[1]==0 && pixels[2]==255 && pixels[3]==255;
+                glClearColor(0,0,0,0);
+            });
+            renderer.Iterate();
+            GT_ASSERT(capture_ok && effect_ok,"nested capture restored window instead of canonical scene/effect source");
+            auto* target=renderer.CreateFBO();util::FinallyGuard destroy([&]{renderer.DestroyFBO(target);});
+            target->Write([] {
+                glClearColor(1,0,0,1);glClear(GL_COLOR_BUFFER_BIT);
+                glEnable(GL_SCISSOR_TEST);glScissor(13,29,1,1);glClearColor(0,0,1,1);glClear(GL_COLOR_BUFFER_BIT);
+                glScissor(512,384,17,11);glClearColor(0,1,0,1);glClear(GL_COLOR_BUFFER_BIT);
+                glDisable(GL_SCISSOR_TEST);glClearColor(0,0,0,0);
+            });
+            for(const auto size: {std::array<int,2>{{1280,960}},{{2048,1536}},{{800,600}}}) {
+                renderer.ResizeActual(size[0],size[1]);
+                GT_ASSERT(renderer.GetViewportWidth()==1024 && renderer.GetViewportHeight()==768,
+                    "resize changed logical game dimensions");
+                const auto drawable=renderer.Drawable();const auto area=graphics::PresentationViewport::Canonical(drawable[0],drawable[1]);
+                glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+                target->Present(area,drawable[1]);
+                glReadBuffer(GL_BACK);glPixelStorei(GL_PACK_ALIGNMENT,1);
+                std::vector<uint8_t> pixels(size_t(drawable[0])*drawable[1]*3);
+                glReadPixels(0,0,drawable[0],drawable[1],GL_RGB,GL_UNSIGNED_BYTE,pixels.data());
+                const int bottom=drawable[1]-area.y-area.height;
+                for(int y=0;y<drawable[1];++y) {for(int x=0;x<drawable[0];++x) {
+                    std::array<uint8_t,3> expected{{0,0,0}};
+                    if(x>=area.x && x<area.x+area.width && y>=bottom && y<bottom+area.height) {
+                        // Pixel centers are the GL_NEAREST blit sampling authority.
+                        const int sx=int((int64_t(2*(x-area.x)+1)*1024)/(2*area.width));
+                        const int sy=int((int64_t(2*(y-bottom)+1)*768)/(2*area.height));
+                        expected={{255,0,0}};
+                        if(sx==13 && sy==29) {expected={{0,0,255}};}
+                        if(sx>=512 && sx<529 && sy>=384 && sy<395) {expected={{0,255,0}};}
+                    }
+                    const size_t offset=(size_t(y)*drawable[0]+x)*3;
+                    GT_ASSERT(pixels[offset]==expected[0] && pixels[offset+1]==expected[1] && pixels[offset+2]==expected[2],
+                        "presented framebuffer pixel differs from canonical nearest source or black bar");
+                }}
+                int x=area.x,y=area.y;
+                GT_ASSERT(renderer.MapWindowPoint(x,y) && x==0 && y==0,"actual window input does not reach canonical canvas");
+                renderer.Iterate();GT_ASSERT(capture_ok && effect_ok,"resize broke nested scene capture/effect restoration");
+            }
+            fail_next=true;bool caught=false;
+            try {renderer.Iterate();} catch(const std::runtime_error&) {caught=true;}
+            GLint target_after_failure=-1;glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING,&target_after_failure);
+            GT_ASSERT(caught && target_after_failure==0,"failed frame retained presentation target");
+            renderer.Iterate();GT_ASSERT(capture_ok && effect_ok,"failed frame retained render lock or capture scope");
+            GT_ASSERT(glGetError()==GL_NO_ERROR,"canonical framebuffer pipeline produced GL errors");GT_OK();
+        });
+    }
+    task->AddTest("canonical presentation preserves original proportions integer pixels and Retina input",GT(){
+        using P=graphics::PresentationViewport;
+        struct Case {int w,h,x,y,width,height;};
+        for(const auto c: {Case{1024,768,0,0,1024,768},Case{1280,960,128,96,1024,768},
+            Case{1920,1080,448,156,1024,768},Case{2048,1536,0,0,2048,1536},
+            Case{2560,1440,768,336,1024,768},Case{3840,2160,896,312,2048,1536},
+            Case{800,600,0,0,800,600},Case{1000,1000,0,125,1000,750}}) {
+            const auto a=P::Canonical(c.w,c.h);
+            GT_ASSERT(a.x==c.x && a.y==c.y && a.width==c.width && a.height==c.height,"canonical presentation changed source aspect/integer scale");
+            for(const auto point: {std::array<int,2>{{a.x,a.y}},{{a.x+a.width-1,a.y+a.height-1}}}) {
+                int x=point[0],y=point[1];
+                GT_ASSERT(P::MapCanonicalWindowPoint(x,y,c.w,c.h,c.w,c.h),"rendered edge rejected");
+                GT_ASSERT(x==(2*(point[0]-a.x)+1)*1024/(2*a.width) && y==(2*(point[1]-a.y)+1)*768/(2*a.height),"inverse logical point differs");
+            }
+            for(const auto point: {std::array<int,2>{{a.x-1,a.y}},{{a.x+a.width,a.y}},{{a.x,a.y-1}},{{a.x,a.y+a.height}}}) {
+                int x=point[0],y=point[1];
+                GT_ASSERT(!P::MapCanonicalWindowPoint(x,y,c.w,c.h,c.w,c.h),"letterbox accepted pointer input");
+            }
+        }
+        // At 2x Retina density a 1280x960 window has a 2048x1536
+        // centered canvas: its top-left window point remains128,96.
+        for(int y=0;y<768;++y) {for(int x=0;x<1024;++x) {
+            int px=x+128,py=y+96;
+            GT_ASSERT(P::MapCanonicalWindowPoint(px,py,1280,960,2560,1920) && px==x && py==y,
+                "Retina window coordinate mapped to wrong logical pixel");
+        }}
+        int x=127,y=96;GT_ASSERT(!P::MapCanonicalWindowPoint(x,y,1280,960,2560,1920),"Retina left bar accepted");
+        x=0;y=0;GT_ASSERT(!P::MapCanonicalWindowPoint(x,y,0,0,0,0),"empty drawable accepted input");
         GT_OK();
     });
 	task->AddTest("4:3 presentation fits windows and maps only the rendered area",GT(){

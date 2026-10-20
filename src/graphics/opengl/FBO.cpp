@@ -197,6 +197,19 @@ void FBO::WriteEnd() {
 	m_is_enabled = false;
 }
 
+void FBO::Present(const PresentationViewport& area, int drawable_height) {
+    ASSERT(!m_is_enabled, "cannot present an active framebuffer");
+    m_opengl->WithBindFramebuffer(GL_READ_FRAMEBUFFER,m_fbo,[&] {
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glDrawBuffer(GL_BACK);
+        if(area.width>0 && area.height>0) {
+            const int bottom=drawable_height-area.y-area.height;
+            glBlitFramebuffer(0,0,m_width,m_height,area.x,bottom,area.x+area.width,bottom+area.height,
+                GL_COLOR_BUFFER_BIT,GL_NEAREST);
+        }
+    });
+}
+
 void FBO::Draw( shader_program::Orthographic* sp ) {
 	ASSERT( !m_is_enabled, "can't draw fbo that is being written to" );
 	ASSERT( m_width > 0, "fbo width is zero" );

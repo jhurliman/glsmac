@@ -40,6 +40,8 @@ public:
 	void GLDeleteTextures( GLsizei n, GLuint* textures, const std::string& file, const size_t line );
 	void GLGenFramebuffers( GLsizei n, GLuint* buffers, const std::string& file, const size_t line );
 	void GLBindFramebuffer( GLenum target, GLuint buffer, const std::string& file, const size_t line );
+    // The presentation canvas is the logical default, not an allocation scope.
+    void GLSetDefaultFramebuffer(GLuint buffer,const std::string& file,size_t line);
 	void GLFramebufferTexture2D( GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, const std::string& file, const size_t line );
 	void GLDeleteFramebuffers( GLsizei n, const GLuint* buffers, const std::string& file, const size_t line );
 	GLuint GLCreateProgram( const std::string& file, const size_t line );
@@ -115,6 +117,7 @@ private:
 		std::unordered_map<GLenum,GLuint> current_array_textures;
         std::unordered_map<GLenum,GLuint> current_aux_2d_textures;
 		GLuint current_framebuffer = 0;
+        GLuint default_framebuffer = 0;
 		GLuint current_program = 0;
 		framebuffer_mode_t current_framebuffer_mode = FM_NONE;
 		std::unordered_set< GLuint > buffers = {};

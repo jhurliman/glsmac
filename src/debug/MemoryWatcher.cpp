@@ -860,6 +860,20 @@ void MemoryWatcher::GLGenFramebuffers( GLsizei n, GLuint* buffers, const std::st
 	DEBUG_STAT_INC( opengl_framebuffers_count );
 }
 
+void MemoryWatcher::GLSetDefaultFramebuffer(GLuint buffer,const std::string& file,size_t line) {
+    std::lock_guard guard(*m_mutex);
+    const auto source=file+":"+std::to_string(line);
+    CheckGLThread(source);
+    ASSERT(!m_opengl.current_framebuffer && m_opengl.current_framebuffer_mode==FM_NONE,
+        "Presentation target changed inside a framebuffer capture @"+source);
+    ASSERT(!m_opengl.current_vertex_buffer && !m_opengl.current_index_buffer,
+        "Presentation target changed inside buffer scope @"+source);
+    ASSERT(!buffer || m_opengl.framebuffers.find(buffer)!=m_opengl.framebuffers.end(),
+        "Presentation target was not generated @"+source);
+    m_opengl.default_framebuffer=buffer;
+    glBindFramebuffer_real(GL_FRAMEBUFFER,buffer);
+}
+
 void MemoryWatcher::GLBindFramebuffer( GLenum target, GLuint buffer, const std::string& file, const size_t line ) {
 	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
@@ -917,7 +931,7 @@ void MemoryWatcher::GLBindFramebuffer( GLenum target, GLuint buffer, const std::
 	}
 	m_opengl.current_framebuffer = buffer;
 
-	glBindFramebuffer_real( target, buffer );
+	glBindFramebuffer_real( target, buffer ? buffer : m_opengl.default_framebuffer );
 }
 
 void MemoryWatcher::GLFramebufferTexture2D( GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, const std::string& file, const size_t line ) {
@@ -984,6 +998,7 @@ void MemoryWatcher::GLDeleteFramebuffers( GLsizei n, const GLuint* buffers, cons
 	ASSERT( it->second.textures.depth == 0, "glDeleteFramebuffers depth texture still active @" + source );
 
 	ASSERT( m_opengl.current_framebuffer != *buffers, "glDeleteFramebuffers destroying framebuffer while it's still bound @" + source );
+    ASSERT(m_opengl.default_framebuffer!=*buffers,"glDeleteFramebuffers destroying active presentation target @"+source);
 
 	ASSERT( it->second.generated_buffers.empty(), "glDeleteFramebuffers framebuffer destroyed but some owned buffers still active @" + source );
 	ASSERT( it->second.generated_textures.empty(), "glDeleteFramebuffers framebuffer destroyed but some owned textures still active @" + source );

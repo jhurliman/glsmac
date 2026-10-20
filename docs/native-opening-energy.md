@@ -1,7 +1,8 @@
 # First-HQ energy and settled citizen processing
 
 `CalculateSmacOpeningCitizens` implements complete original `4ffa00` for selected
-and indexed Base0 in the settled neutral first-Base profile. It uses the existing
+and indexed context at the same selected Base in the settled neutral first-Base
+profile. `selected_base` defaults to zero for existing callers. It uses the existing
 citizen prefix and shared cancellation core, preserving every conditional write
 and all five original talent/drone/extra-burden snapshots. Human difficulty is
 read from the owner; AI uses3. Definition DRONE/TALENT values remain divisors,
@@ -65,3 +66,32 @@ live citizen, energy and canonical resource consumers. Five production TUs pass
 correctness analysis. Focused six-TU ASan/UBSan instrumentation of the producers
 and direct rule/control tests passes the same groups; other objects are normal,
 with leak detection disabled. No duplicate full platform matrix was run.
+
+## Relocated first-HQ context
+
+The selected record can now occupy a later index in a shared Base pool. Reads,
+Network Node detection and citizen writes use that selected record; observed
+Base stores include its pool offset. Global commerce/citizen scratch addresses
+remain unchanged. Invalid negative/out-of-range indices reject before writes.
+The selected pointer and indexed facility context still refer to the same Base;
+this does not admit multiple owned Bases, non-neutral social ratings, eligible
+commerce or arbitrary mismatched contexts.
+
+The fully verified 279-file frozen bundle
+`independent-startup-relocated-resources-evidence-20261020` has manifest SHA256
+`a7c98b0b6b7aa193c5bf5c514bf4e0d9892a12c1599b70282c77a60a4946bdbb`.
+Its 84 original-executable controls cover all seven owners, selected indices
+1/3/6, human mask2, population1/7 and Network Node absent/present. Each has six
+foreign decoy Bases, with Base zero deliberately at a different owner/location.
+All2,128 Base bytes,67,040 faction bytes,124 scratch bytes and5,208 ordered
+stores match. Inputs are rebuilt from the declared recipe; native output and
+journals are comparison expectations only. The prior437 Base-zero controls
+continue to pass unchanged.
+
+Cached incremental build and eleven affected native groups pass. Both the
+energy producer and its first-Base composition consumer pass targeted C++
+analysis. Focused five-TU ASan/UBSan instrumentation passes the complete opening
+energy/citizen controls, first-worker controls and generated startup composition;
+other objects are normal and leak detection is disabled. No new rendered
+gameplay result is claimed. All-seven startup controller composition and the
+ordinary generated-game connection remain required.

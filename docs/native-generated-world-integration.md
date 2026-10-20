@@ -92,8 +92,10 @@ must be separated at its callers.
    derive all304 original Base bytes from the independently generated Gaia world,
    including exact worker query/score/store journals and unchanged map/regions/RNG.
    [Automatic Base naming and cursor progression](native-base-naming.md) now
-   close the complete first Gaia faction comparison as well. Relocated
-   other Base contexts and all-seven controller composition still need closing.
+   close the complete first Gaia faction comparison as well.
+   [Relocated first-HQ energy/citizens](native-opening-energy.md) now match
+   all seven owners at later Base indices with foreign decoys. Actual later
+   faction worker/resource and all-seven controller composition still need closing.
    [Canonical Unit initialization and stack placement](native-startup-units.md)
    now match original complete-record/pool controls; Base founding, complete
    factory visibility and seven-faction starting-package composition remain

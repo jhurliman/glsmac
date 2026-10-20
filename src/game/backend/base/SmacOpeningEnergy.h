@@ -4,9 +4,9 @@
 namespace game::backend::base {
 // Original commerce/citizen scratch words, ascending 0x9185f8..0x918670.
 using SmacOpeningEnergyScratch=std::array<int32_t,31>;
-struct SmacOpeningCitizenInputs {uint8_t human_mask;int32_t definition_drone,definition_talent;};
+struct SmacOpeningCitizenInputs {uint8_t human_mask;int32_t definition_drone,definition_talent;int32_t selected_base=0;};
 struct SmacOpeningEnergyInputs {SmacOpeningCitizenInputs citizens;int32_t incoming,outgoing,flat_labs;};
-// Complete 4ffa00, selected/indexed Base0: one settled owned Base, neutral
+// Complete 4ffa00, selected/indexed context at the same Base: one settled owned Base, neutral
 // social ratings, no Units/projects/mood facilities, mode0. Specialist exclusion
 // and produced psych are inputs. HQ/Perimeter/Node are admitted.
 void CalculateSmacOpeningCitizens(std::vector<SmacStartupBaseRecord>& bases,const std::array<faction::SmacStartupFaction,8>& actors,

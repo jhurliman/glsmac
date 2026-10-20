@@ -11,8 +11,9 @@ namespace {
 template<class Record> int32_t Read(const Record& r,size_t off) {uint32_t v=0;for(unsigned k=0;k<4;++k) {v|=uint32_t(r.at(off+k))<<(8*k);}return SmacWrap32(v);}
 int32_t Checked(int64_t v) {if(v<INT32_MIN || v>INT32_MAX) {throw std::overflow_error("Opening energy/citizens exceed measured signed32 arithmetic");}return int32_t(v);}
 uint8_t Admit(const std::vector<SmacStartupBaseRecord>& bases,const std::array<faction::SmacStartupFaction,8>& actors,const SmacOpeningCitizenInputs& in) {
-    if(bases.empty() || bases.size()>512 || bases[0][4]<1 || bases[0][4]>7) {throw std::invalid_argument("Opening citizens require positive Base0 owner");}
-    const auto& b=bases[0];const auto owner=b[4];const auto& a=actors[owner].record;
+    if(bases.empty() || bases.size()>512 || in.selected_base<0 || size_t(in.selected_base)>=bases.size()
+        || bases[in.selected_base][4]<1 || bases[in.selected_base][4]>7) {throw std::invalid_argument("Opening citizens require a valid selected Base with positive owner");}
+    const auto& b=bases[in.selected_base];const auto owner=b[4];const auto& a=actors[owner].record;
     if(b[6]<1 || b[6]>127 || b[7] || b[8] || Read(b,0x7c)<0 || Read(b,0x7c)>b[6]
         || in.definition_drone<0 || in.definition_drone>127 || in.definition_talent<0 || in.definition_talent>127
         || Read(a,0x95d3f8-0x95d1a8) || Read(a,0x95d400-0x95d1a8) || Read(a,0x95d408-0x95d1a8)
@@ -23,20 +24,20 @@ uint8_t Admit(const std::vector<SmacStartupBaseRecord>& bases,const std::array<f
     return owner;
 }
 struct Writer {
-    std::vector<SmacStartupBaseRecord>& bases;SmacOpeningEnergyScratch& scratch;const SmacBaseAccountingObserver& observer;
-    int32_t Base(uint32_t off,int64_t value,uint32_t pc) {const auto v=Checked(value);for(unsigned k=0;k<4;++k) {bases[0].at(off+k)=uint8_t(uint32_t(v)>>(8*k));}
-        if(observer) {observer({SmacBaseAccountingStore::Space::Bases,off,4,uint32_t(v),pc});}return v;}
+    std::vector<SmacStartupBaseRecord>& bases;SmacOpeningEnergyScratch& scratch;const SmacBaseAccountingObserver& observer;size_t selected;
+    int32_t Base(uint32_t off,int64_t value,uint32_t pc) {const auto v=Checked(value);for(unsigned k=0;k<4;++k) {bases[selected].at(off+k)=uint8_t(uint32_t(v)>>(8*k));}
+        if(observer) {observer({SmacBaseAccountingStore::Space::Bases,uint32_t(304*selected)+off,4,uint32_t(v),pc});}return v;}
     void Global(uint32_t address,int32_t value,uint32_t pc) {scratch.at((address-0x9185f8)/4)=value;
         if(observer) {observer({SmacBaseAccountingStore::Space::Global,address,4,uint32_t(value),pc});}}
 };
 }
 void CalculateSmacOpeningCitizens(std::vector<SmacStartupBaseRecord>& bases,const std::array<faction::SmacStartupFaction,8>& actors,
     SmacOpeningEnergyScratch& scratch,const SmacOpeningCitizenInputs& in,const SmacBaseAccountingObserver& observer) {
-    const auto owner=Admit(bases,actors,in);const auto& b=bases[0];const int32_t population=b[6],excluded=Read(b,0x7c);
+    const auto owner=Admit(bases,actors,in);const auto& b=bases[in.selected_base];const int32_t population=b[6],excluded=Read(b,0x7c);
     const bool human=in.human_mask&(1u<<owner);
     const auto prefix=CalculateSmacCitizenPrefix(population,human,human?Read(actors[owner].record,8):3,in.definition_drone,in.definition_talent,0);
-    Writer w{bases,scratch,observer};
-    const auto get=[&](size_t off){return Read(bases[0],off);};
+    Writer w{bases,scratch,observer,size_t(in.selected_base)};
+    const auto get=[&](size_t off){return Read(bases[in.selected_base],off);};
     const auto clamp=[&](int64_t value){return int32_t(std::clamp<int64_t>(value,0,population));};
     const auto normalize=[&](std::array<uint32_t,5> pcs){
         SmacCitizenCounts c{get(0x114),get(0x118),get(0x11c)};
@@ -59,10 +60,10 @@ void CalculateSmacOpeningCitizens(std::vector<SmacStartupBaseRecord>& bases,cons
 void AccountSmacOpeningEnergy(std::vector<SmacStartupBaseRecord>& bases,const std::array<faction::SmacStartupFaction,8>& actors,
     SmacOpeningEnergyScratch& scratch,const SmacOpeningEnergyInputs& in,const SmacBaseAccountingObserver& observer) {
     const auto owner=Admit(bases,actors,in.citizens);const auto& a=actors[owner].record;
-    if(!(bases[0][0x8c]&2) || Read(bases[0],0x7c)) {throw std::invalid_argument("Opening energy requires HQ without specialists");}
+    if(!(bases[in.citizens.selected_base][0x8c]&2) || Read(bases[in.citizens.selected_base],0x7c)) {throw std::invalid_argument("Opening energy requires HQ without specialists");}
     for(size_t f=1;f<8;++f) {if(f!=owner && ((Read(a,0x18+4*f)&2) || (Read(actors[f].record,0x18+4*owner)&2))) {throw std::invalid_argument("Opening energy excludes trade-eligible contacts");}}
     const SmacEnergyRates rates{Read(a,0x95d4cc-0x95d1a8),Read(a,0x95d4d0-0x95d1a8)};rates.Validate();
-    Writer w{bases,scratch,observer};const auto get=[&](size_t off){return Read(bases[0],off);};
+    Writer w{bases,scratch,observer,size_t(in.citizens.selected_base)};const auto get=[&](size_t off){return Read(bases[in.citizens.selected_base],off);};
     const auto gross=w.Base(0xc4,int64_t(get(0xc4))+in.incoming,0x50089e);w.Base(0xf4,in.outgoing,0x5008b2);w.Base(0xe4,0,0x5008de);
     const auto net=w.Base(0xd4,int64_t(gross)-in.outgoing,0x500901);
     for(unsigned i=0;i<7;++i) {w.Global(0x918618+4*i,0,0x500981);w.Global(0x9185f8+4*i,0,0x500987);}
@@ -71,7 +72,7 @@ void AccountSmacOpeningEnergy(std::vector<SmacStartupBaseRecord>& bases,const st
     const auto psych=w.Base(0x100,allocation.psych,0x500c20);auto econ=w.Base(0xfc,allocation.economy,0x500c72);auto labs=w.Base(0x104,allocation.labs,0x500c91);
     const auto energy=std::clamp(net,0,9999);const auto shadow=w.Base(0x108,std::clamp((energy*(9-rates.psych-rates.labs)+4)/10,0,energy-psych),0x500ce1);
     labs=w.Base(0x104,int64_t(labs)+in.flat_labs,0x500e73);
-    w.Base(0x100,MultiplySmacEnergyQuarters(psych,4,Checked),0x5011bf);labs=w.Base(0x104,MultiplySmacEnergyQuarters(labs,(bases[0][0x8d]&1)?6:4,Checked),0x5011e0);
+    w.Base(0x100,MultiplySmacEnergyQuarters(psych,4,Checked),0x5011bf);labs=w.Base(0x104,MultiplySmacEnergyQuarters(labs,(bases[in.citizens.selected_base][0x8d]&1)?6:4,Checked),0x5011e0);
     econ=w.Base(0xfc,MultiplySmacEnergyQuarters(econ,4,Checked),0x501244);w.Base(0x108,MultiplySmacEnergyQuarters(shadow,4,Checked),0x5012bd);
     const auto imbalance=std::abs(rates.psych+2*rates.labs-10)/2,coefficient=8*imbalance;
     const auto reduce=[&](int32_t value,int32_t percent){return ReduceSmacEnergyPercent(value,percent,Checked);};

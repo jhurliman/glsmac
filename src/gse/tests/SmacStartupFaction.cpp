@@ -12,6 +12,8 @@
 #include "fixtures/SmacStartupTechnology.h"
 #include "fixtures/SmacFactionStartupSource.h"
 #include "loader/txt/FactionTXTLoader.h"
+#include "game/backend/base/SmacFirstWorker.h"
+#include "fixtures/SmacFirstWorker.h"
 #include "game/backend/base/SmacStartupBase.h"
 #include "fixtures/SmacStartupBase.h"
 #include "game/backend/map/SmacStartupTerritory.h"
@@ -141,6 +143,27 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
             && rebuilt.uncached==3155 && query_count==3155 && store_count==9555 && util::SHA256(territory_stores)==territory_expected::GENERATED_STORES
             && util::SHA256(territory_queries)==territory_expected::GENERATED_QUERIES && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
             "Original generated full territory/region/Base and faction statistics/goals projection differs");
+        // Complete resource producer from the calculated world, not captured
+        // worker selections, yield/helper results or accounting fields.
+        std::vector<SmacStartupBaseRecord> first_bases{base};SmacFirstBaseScratch accounting{};
+        std::string worker_stores,worker_queries,worker_scores;size_t worker_store_count=0,worker_query_count=0,worker_score_count=0;
+        const auto chosen_worker=CalculateSmacFirstBase(terrain.records,first_bases,actors,{},ownership,fixtures::first_worker::Rules(),
+            {{80,80,true,terrain.resource_pattern,terrain.primary_rules},{2,0,0},3,0,5,1,0,0},accounting,[&](const auto& v){
+                if(v.caller>=0x4fc000 && v.caller<=0x4feaff) {
+                    pack(worker_stores,uint8_t(v.space),1);pack(worker_stores,v.offset,4);pack(worker_stores,v.size,1);pack(worker_stores,v.value,4);pack(worker_stores,v.caller,4);++worker_store_count;}
+            },[&](const auto& q){pack(worker_queries,q.dispatcher?1:0,1);for(const auto value:{q.resource,q.x,q.y,q.value}) {pack(worker_queries,uint32_t(value),4);}++worker_query_count;},
+            [&](int32_t index,int32_t score){pack(worker_scores,uint32_t(index),4);pack(worker_scores,uint32_t(score),4);++worker_score_count;});
+        base=first_bases[0];const auto& complete_actor=actors[1].record;
+        const std::string complete_actor_bytes(reinterpret_cast<const char*>(complete_actor.data()),complete_actor.size());
+        namespace first_base_expected=fixtures::first_worker;
+        GT_ASSERT(chosen_worker==2 && util::SHA256(baseBytes())==first_base_expected::GENERATED_BASE
+            && util::SHA256(planeBytes())==first_base_expected::GENERATED_TILES && util::SHA256(region_bytes)==first_base_expected::GENERATED_REGIONS
+            && util::SHA256(complete_actor_bytes)==first_base_expected::GENERATED_FACTION_DECLARED_NAME_CURSOR
+            && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
+            "Original complete generated first Base/map/region or declared-name faction projection differs");
+        GT_ASSERT(worker_store_count==102 && worker_query_count==68 && worker_score_count==20
+            && util::SHA256(worker_stores)==first_base_expected::GENERATED_STORES && util::SHA256(worker_queries)==first_base_expected::GENERATED_QUERIES
+            && util::SHA256(worker_scores)==first_base_expected::GENERATED_SCORES,"Original generated worker journals differ");
         using namespace game::backend::unit;
         SmacStartupUnitFactoryState factory;factory.dirty=rebuilt.dirty|2;factory.cached_base=0; // original Base-return dirty tail
         std::vector<SmacNativeUnitRecord> units;

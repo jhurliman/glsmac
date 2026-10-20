@@ -83,8 +83,12 @@ must be separated at its callers.
    remain required before publishing a generated game.
    [First-HQ energy and settled citizens](native-opening-energy.md) now match
    complete native records, commerce/citizen scratch and ordered stores. The
-   actual calculated psych feeds the citizen tail. Worker/intake and full
-   generated first-Base orchestration are still required.
+   actual calculated psych feeds the citizen tail.
+   [Worker intake and complete first-Base composition](native-first-worker.md) now
+   derive all304 original Base bytes from the independently generated Gaia world,
+   including exact worker query/score/store journals and unchanged map/regions/RNG.
+   Automatic naming/cursor, complete installed design initialization, other Base
+   contexts and all-seven controller composition still need closing.
    [Canonical Unit initialization and stack placement](native-startup-units.md)
    now match original complete-record/pool controls; Base founding, complete
    factory visibility and seven-faction starting-package composition remain

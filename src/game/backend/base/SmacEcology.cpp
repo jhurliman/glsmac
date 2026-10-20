@@ -1,3 +1,4 @@
+#include "SmacTerraformingPoints.h"
 #include "SmacEcology.h"
 #include "SmacEcologyOriginal.h"
 #include "game/backend/SmacOriginalArithmetic.h"
@@ -28,15 +29,7 @@ SmacTerraformingEcology CalculateSmacTerraformingEcology(const SmacWorkerRadiusM
         const auto coordinate=SmacWorkedSquareCollection::Resolve(map,i);
         if(!coordinate) {continue;}
         const auto tile=query((*coordinate)[0],(*coordinate)[1]);
-        auto counted=tile.improvements&511u;int32_t points=0;
-        while(counted) {counted&=counted-1;++points;}
-        if(tile.worked) {points*=2;}
-        if(tile.improvements&SmacEcologySquare::Borehole) {points+=8;}
-        if(tile.improvements&SmacEcologySquare::EchelonMirror) {points+=6;}
-        if(tile.improvements&SmacEcologySquare::Condenser) {points+=4;}
-        if(tile.improvements&SmacEcologySquare::Forest) {--points;}
-        if(tree_farm && hybrid_forest) {points=0;}
-        else if(tree_farm || hybrid_forest) {points/=2;}
+        const auto points=CalculateSmacTerraformingSquarePoints(tile,tree_farm,hybrid_forest);
         total+=points;
     }
     return {total,FloorEighth(total)};

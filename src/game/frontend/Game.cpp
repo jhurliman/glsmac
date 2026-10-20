@@ -1,5 +1,6 @@
 #include "MapProjection.h"
 #include "Game.h"
+#include "game/ActorVisibilitySnapshot.h"
 #include "game/NativeTerrainWorld.h"
 #include "gse/value/Bool.h"
 #include "game/backend/LocalMoveCommand.h"
@@ -1152,6 +1153,12 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			m_um->UndefineUnit( *request->data.unit_undefine.id );
 			break;
 		}
+        case FrontendRequest::FR_ACTOR_VISIBILITY: {
+            const auto* snapshot=request->data.actor_visibility.snapshot;
+            m_actor_visibility=snapshot ? std::make_unique<actor_visibility::Snapshot>(*snapshot):nullptr;
+            if(m_widgets.TilePreview) {m_widgets.TilePreview->Refresh();}
+            break;
+        }
 		case FrontendRequest::FR_UNIT_SPAWN: {
             m_native_snapshot_dirty=true; // Movement/placement can publish remembered improvements.
 			const auto& d = request->data.unit_spawn;
@@ -1881,6 +1888,7 @@ void Game::Deinitialize() {
 	ASSERT( m_is_initialized, "not initialized" );
 
 	m_is_initialized = false;
+    m_actor_visibility.reset();
     ClearNativeTerrain();
 
 	DeselectTileOrUnit();

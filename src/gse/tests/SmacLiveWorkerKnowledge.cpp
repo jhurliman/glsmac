@@ -20,6 +20,7 @@
 #include "game/backend/unit/MoraleSet.h"
 #include "game/backend/unit/CvrScoutRender.h"
 #include "game/FrontendRequest.h"
+#include "game/ActorVisibilitySnapshot.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Int.h"
 #include "gse/value/String.h"
@@ -362,6 +363,32 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT(foreign->Conventional().native_flags==(relation==2 ? std::optional<uint16_t>{}:std::optional<uint16_t>{0xfbbf}),
                     "Repeated admitted disclosure failed to clear only the pair or invented legacy flags");
 				const auto seen=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                if(relation==0) {game->On(GSE_CALL,"map_knowledge",NATIVE_CALL(game,foreign) {
+                    auto changed=foreign->Conventional();changed.native_flags=0x8844;
+                    game->GetUM()->UpdateConventionalUnit(GSE_CALL,foreign,changed);
+                    return VALUE(value::Undefined);
+                }));}
+                fixture.PublishMapKnowledge(GSE_CALL);
+                const auto& requests=fixture.QueuedFrontendRequests();
+                const auto packet=std::find_if(requests.rbegin(),requests.rend(),[](const auto& r){return r.type==game::FrontendRequest::FR_ACTOR_VISIBILITY;});
+                GT_ASSERT(packet!=requests.rend() && packet->data.actor_visibility.snapshot,"Committed sight omitted actor authority publication");
+                const auto& authority=*packet->data.actor_visibility.snapshot;
+                GT_ASSERT(authority.available && authority.viewer==1 && authority.width==128 && authority.height==64
+                    && authority.units.at(71).visible_to==2 && authority.units.at(72).visible_to==4
+                    && authority.units.at(71).flags==foreign->Conventional().native_flags && authority.units.at(71).stack.has_value()==foreign->SourceStack().has_value()
+                    && authority.Known(18,16) && !authority.Known(-1,0) && !authority.Known(1,0),
+                    "Actor authority lost authenticated viewer, generic geometry, stored disclosure or independent flags");
+                GT_ASSERT(authority.bases.at(901).owner==1 && !authority.bases.at(901).known_by,
+                    "Base discovery snapshot invented a missing stored observation");
+                auto hidden=authority;hidden.explored_by.assign(hidden.explored_by.size(),0);hidden.revealed_by=4;
+                GT_ASSERT(!hidden.Known(18,16),"Foreign faction reveal exposed local knowledge");
+                hidden.revealed_by=2;GT_ASSERT(hidden.Known(18,16),"Local faction reveal was lost");
+                hidden.observers=4;GT_ASSERT(!hidden.Known(18,16),"Absent observer became reveal authority");
+                hidden.observers=6;hidden.explored_by.clear();GT_ASSERT(!hidden.Known(18,16),"Malformed geometry admitted tile knowledge");
+                game::FrontendRequest copied(*packet);
+                GT_ASSERT(copied.data.actor_visibility.snapshot!=packet->data.actor_visibility.snapshot,"Actor request copy borrowed payload");
+                GT_ASSERT(fixture.CheckActorVisibilityDelivery(GSE_CALL,copied).empty(),"Actual frontend snapshot delivery failed ownership or clearing");
+
 				GT_ASSERT(seen.units[0].visible_to==2 && seen.units[1].visible_to==4 && local->GetTile()->units.at(72)==local && foreign->GetTile()->units.at(71)==foreign,
 					"factory did not publish mutual adjacent visibility with identity");
 				GT_OK();

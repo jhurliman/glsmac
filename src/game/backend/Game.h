@@ -570,7 +570,9 @@ private:
 
 	std::vector< FrontendRequest >* m_pending_frontend_requests = nullptr;
 	bool m_map_knowledge_dirty = false;
+    bool m_actor_visibility_dirty=false;
 	void PublishMapKnowledgeUpdate( GSE_CALLABLE );
+    void PublishActorVisibilityUpdate();
 
 	enum class StartupStage { Complete, InitializeConfigure, PrepareBindings, ConfigureEvents, RestoreCampaign, AcquireMap, AwaitDownload, InitializeMap, Start, Failure, Ingress, AwaitFirstBase };
 	struct WorldAdmission {

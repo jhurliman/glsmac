@@ -1,4 +1,5 @@
 #include "Backend.h"
+#include "game/ActorVisibilitySnapshot.h"
 #include "game/NativeTerrainWorld.h"
 #include "game/backend/map/SmacLandmarkGeometry.h"
 #include "util/String.h"
@@ -3908,7 +3909,25 @@ public:
         });
     }
 
-	void PublishMapKnowledge( GSE_CALLABLE ) { m_game.PublishMapKnowledgeUpdate( GSE_CALL ); }
+	void PublishMapKnowledge( GSE_CALLABLE ) { m_game.PublishMapKnowledgeUpdate( GSE_CALL );m_game.PublishActorVisibilityUpdate(); }
+    std::string CheckActorVisibilityDelivery(GSE_CALLABLE,const game::FrontendRequest& request) {
+        auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+        util::FinallyGuard close_ui([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
+        game::frontend::Game frontend(m_glsmac.get(),m_state,ui,{},{});
+        frontend.ProcessRequest(&request);
+        const auto* received=frontend.GetActorVisibility();
+        const auto* sent=request.data.actor_visibility.snapshot;
+        if(!received || !sent || received==sent || received->units.size()!=sent->units.size()
+            || received->viewer!=sent->viewer || received->explored_by!=sent->explored_by) {return "Frontend did not own actor visibility snapshot";}
+        frontend.m_world_retired=true;
+        if(frontend.GetActorVisibility()) {return "Retired frontend exposed actor authority";}
+        frontend.m_world_retired=false;
+        game::FrontendRequest unavailable(game::FrontendRequest::FR_ACTOR_VISIBILITY);
+        frontend.ProcessRequest(&unavailable);
+        if(frontend.GetActorVisibility()) {return "Unavailable delivery retained stale actor authority";}
+        return {};
+    }
+
 	void ProcessEvents() { m_game.ProcessEvents(); }
 	void FlushEvents() { m_game.GetState()->GetConnection()->ProcessPending( true ); }
 	size_t PendingWireEvents() { return m_game.GetState()->GetConnection()->m_pending_game_events.size(); }
@@ -7186,6 +7205,7 @@ void ConventionalUnitFixture::RestoreThroughStart( GSE_CALLABLE, const std::stri
 void ConventionalUnitFixture::QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback ) { fixture->QueueKnowledgeProbeEvent( GSE_CALL, callback ); }
 void ConventionalUnitFixture::DrainEvents() { fixture->ProcessEvents(); }
 void ConventionalUnitFixture::PublishMapKnowledge( GSE_CALLABLE ) { fixture->PublishMapKnowledge( GSE_CALL ); }
+std::string ConventionalUnitFixture::CheckActorVisibilityDelivery(GSE_CALLABLE,const game::FrontendRequest& request) {return fixture->CheckActorVisibilityDelivery(GSE_CALL,request);}
 game::backend::faction::SmacHumanResearchInputs ConventionalUnitFixture::HumanResearchInputs(int32_t owner,bool blind) {return fixture->HumanResearchInputs(owner,blind);}
 std::string ConventionalUnitFixture::SaveCampaign(const std::string& path) {return fixture->SaveCampaign(path);}
 std::string ConventionalUnitFixture::CheckCampaignSaveOwnership(const std::string& path,const std::string& cancelled) {return fixture->CheckCampaignSaveOwnership(path,cancelled);}

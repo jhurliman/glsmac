@@ -95,8 +95,9 @@ Do not wire all scene actors to one terrain-known Boolean:
   zero, while older port saves retain absence and native imports must preserve
   their original word. The [initializer/event controls](behavior/conventional-unit-flags16-authority.md)
   also require separate event mutations. [Disclosure effects](unit-disclosure-effects.md)
-  now commit with admitted sight transactions; duration expiry, frontend
-  transport and the ordinary actor consumers remain open.
+  now commit with admitted sight transactions. The [owned actor snapshot](actor-visibility-snapshot.md)
+  delivers current disclosure and separate discovery to the frontend across map
+  sizes; duration expiry and the ordinary body/name/stack drawing gates remain open.
 - Admit the lookup/head Unit before native stack promotion; filtering and sorting
   all members independently changes the mixed-owner control. Use retained source
   links/status/domain and the actual selection/control/pending context.

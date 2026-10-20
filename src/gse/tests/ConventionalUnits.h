@@ -65,6 +65,7 @@ public:
 	void QueueProbeEvent( GSE_CALLABLE, const std::function< void() >& callback );
 	void DrainEvents();
 	void PublishMapKnowledge( GSE_CALLABLE );
+    std::string CheckActorVisibilityDelivery(GSE_CALLABLE,const game::FrontendRequest& request);
 	game::backend::faction::SmacHumanResearchInputs HumanResearchInputs(int32_t owner,bool blind);
 	std::string SaveCampaign(const std::string& path); // actual owner request, immediate fixture checkpoint
 	std::string CheckCampaignSaveOwnership(const std::string& path, const std::string& cancelled_path);

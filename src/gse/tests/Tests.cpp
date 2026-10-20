@@ -22,6 +22,7 @@
 #include "RosterRecords.h"
 #include "SmacGameplayRandomState.h"
 #include "SmacGenerationBootstrap.h"
+#include "SmacContinentGeneration.h"
 #include "SmacScoutCombat.h"
 #include "SmacEmptyGroundMovement.h"
 #include "SmacGroundEdgeCost.h"
@@ -191,6 +192,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddRosterRecordTests( task );
 		tests::AddSmacGameplayRandomStateTests( task );
         tests::AddSmacGenerationBootstrapTests(task);
+        tests::AddSmacContinentGenerationTests(task);
 		tests::AddSmacScoutCombatTests( task );
 		tests::AddSmacEmptyGroundMovementTests( task );
 		tests::AddSmacGroundEdgeCostTests( task );

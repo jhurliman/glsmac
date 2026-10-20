@@ -34,6 +34,10 @@ struct State {
     std::array<int32_t,11> working_land_table{};
     int32_t continent_attempts=0,attempt_iterations=0,continent_minimum=0;
     Stage stage=Stage::Allocated;
+    int32_t painted=0;
+    uint32_t dirty_flags=0;
+    std::array<int32_t,8> flood_counts{};
+    std::array<int32_t,8> affected_bases{{-1,-1,-1,-1,-1,-1,-1,-1}};
 };
 
 // Original 0x5a8450 only: preserve bytes 6/7, reset the other record fields,

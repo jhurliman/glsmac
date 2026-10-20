@@ -1,0 +1,5353 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Complete native5da7f0,5da700,5da370,5d9f60 and turn-zero class/contour/resource helpers. Only CRT TLS665681 and final event-pump615c40 supplied. Declared raw record inputs, working bootstrap thresholds, turn0, generation flags1, editor0. No terrain/RNG/resource helper returns replaced. Caller outer attempt argument and budgets supplied and preserved; full5e0100 retry controller not rerun.",
+  "tables": {
+    "directions": [
+      [
+        1,
+        -1
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        -1,
+        1
+      ],
+      [
+        -2,
+        0
+      ],
+      [
+        -1,
+        -1
+      ],
+      [
+        0,
+        -2
+      ]
+    ],
+    "shaping_offsets": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        -1
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        -1,
+        1
+      ],
+      [
+        -2,
+        0
+      ],
+      [
+        -1,
+        -1
+      ],
+      [
+        0,
+        -2
+      ],
+      [
+        2,
+        -2
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        -2,
+        2
+      ],
+      [
+        -2,
+        -2
+      ],
+      [
+        1,
+        -3
+      ],
+      [
+        3,
+        -1
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        -1,
+        3
+      ],
+      [
+        -3,
+        1
+      ],
+      [
+        -3,
+        -1
+      ],
+      [
+        -1,
+        -3
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        -4,
+        0
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        0,
+        -4
+      ],
+      [
+        1,
+        -5
+      ],
+      [
+        2,
+        -4
+      ],
+      [
+        3,
+        -3
+      ],
+      [
+        4,
+        -2
+      ],
+      [
+        5,
+        -1
+      ],
+      [
+        5,
+        1
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        -1,
+        5
+      ],
+      [
+        -2,
+        4
+      ],
+      [
+        -3,
+        3
+      ],
+      [
+        -4,
+        2
+      ],
+      [
+        -5,
+        1
+      ],
+      [
+        -5,
+        -1
+      ],
+      [
+        -4,
+        -2
+      ],
+      [
+        -3,
+        -3
+      ],
+      [
+        -2,
+        -4
+      ],
+      [
+        -1,
+        -5
+      ],
+      [
+        0,
+        6
+      ],
+      [
+        6,
+        0
+      ],
+      [
+        0,
+        -6
+      ],
+      [
+        -6,
+        0
+      ],
+      [
+        0,
+        -8
+      ],
+      [
+        1,
+        -7
+      ],
+      [
+        2,
+        -6
+      ],
+      [
+        3,
+        -5
+      ],
+      [
+        4,
+        -4
+      ],
+      [
+        5,
+        -3
+      ],
+      [
+        6,
+        -2
+      ],
+      [
+        7,
+        -1
+      ],
+      [
+        8,
+        0
+      ],
+      [
+        7,
+        1
+      ],
+      [
+        6,
+        2
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        3,
+        5
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        1,
+        7
+      ],
+      [
+        0,
+        8
+      ],
+      [
+        -1,
+        7
+      ],
+      [
+        -2,
+        6
+      ],
+      [
+        -3,
+        5
+      ],
+      [
+        -4,
+        4
+      ],
+      [
+        -5,
+        3
+      ],
+      [
+        -6,
+        2
+      ],
+      [
+        -7,
+        1
+      ],
+      [
+        -8,
+        0
+      ],
+      [
+        -7,
+        -1
+      ],
+      [
+        -6,
+        -2
+      ],
+      [
+        -5,
+        -3
+      ],
+      [
+        -4,
+        -4
+      ],
+      [
+        -3,
+        -5
+      ],
+      [
+        -2,
+        -6
+      ],
+      [
+        -1,
+        -7
+      ],
+      [
+        0,
+        -10
+      ],
+      [
+        1,
+        -9
+      ],
+      [
+        2,
+        -8
+      ],
+      [
+        3,
+        -7
+      ],
+      [
+        4,
+        -6
+      ],
+      [
+        5,
+        -5
+      ],
+      [
+        6,
+        -4
+      ],
+      [
+        7,
+        -3
+      ],
+      [
+        8,
+        -2
+      ],
+      [
+        9,
+        -1
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        9,
+        1
+      ],
+      [
+        8,
+        2
+      ],
+      [
+        7,
+        3
+      ],
+      [
+        6,
+        4
+      ],
+      [
+        5,
+        5
+      ],
+      [
+        4,
+        6
+      ],
+      [
+        3,
+        7
+      ],
+      [
+        2,
+        8
+      ],
+      [
+        1,
+        9
+      ],
+      [
+        0,
+        10
+      ],
+      [
+        -1,
+        9
+      ],
+      [
+        -2,
+        8
+      ],
+      [
+        -3,
+        7
+      ],
+      [
+        -4,
+        6
+      ],
+      [
+        -5,
+        5
+      ],
+      [
+        -6,
+        4
+      ],
+      [
+        -7,
+        3
+      ],
+      [
+        -8,
+        2
+      ],
+      [
+        -9,
+        1
+      ],
+      [
+        -10,
+        0
+      ],
+      [
+        -9,
+        -1
+      ],
+      [
+        -8,
+        -2
+      ],
+      [
+        -7,
+        -3
+      ],
+      [
+        -6,
+        -4
+      ],
+      [
+        -5,
+        -5
+      ],
+      [
+        -4,
+        -6
+      ],
+      [
+        -3,
+        -7
+      ],
+      [
+        -2,
+        -8
+      ],
+      [
+        -1,
+        -9
+      ],
+      [
+        0,
+        -12
+      ],
+      [
+        1,
+        -11
+      ],
+      [
+        2,
+        -10
+      ],
+      [
+        3,
+        -9
+      ],
+      [
+        4,
+        -8
+      ],
+      [
+        5,
+        -7
+      ],
+      [
+        6,
+        -6
+      ],
+      [
+        7,
+        -5
+      ],
+      [
+        8,
+        -4
+      ],
+      [
+        9,
+        -3
+      ],
+      [
+        10,
+        -2
+      ],
+      [
+        11,
+        -1
+      ],
+      [
+        12,
+        0
+      ],
+      [
+        11,
+        1
+      ],
+      [
+        10,
+        2
+      ],
+      [
+        9,
+        3
+      ],
+      [
+        8,
+        4
+      ],
+      [
+        7,
+        5
+      ],
+      [
+        6,
+        6
+      ],
+      [
+        5,
+        7
+      ],
+      [
+        4,
+        8
+      ],
+      [
+        3,
+        9
+      ],
+      [
+        2,
+        10
+      ],
+      [
+        1,
+        11
+      ],
+      [
+        0,
+        12
+      ],
+      [
+        -1,
+        11
+      ],
+      [
+        -2,
+        10
+      ],
+      [
+        -3,
+        9
+      ],
+      [
+        -4,
+        8
+      ],
+      [
+        -5,
+        7
+      ],
+      [
+        -6,
+        6
+      ],
+      [
+        -7,
+        5
+      ],
+      [
+        -8,
+        4
+      ],
+      [
+        -9,
+        3
+      ],
+      [
+        -10,
+        2
+      ],
+      [
+        -11,
+        1
+      ],
+      [
+        -12,
+        0
+      ],
+      [
+        -11,
+        -1
+      ],
+      [
+        -10,
+        -2
+      ],
+      [
+        -9,
+        -3
+      ],
+      [
+        -8,
+        -4
+      ],
+      [
+        -7,
+        -5
+      ],
+      [
+        -6,
+        -6
+      ],
+      [
+        -5,
+        -7
+      ],
+      [
+        -4,
+        -8
+      ],
+      [
+        -3,
+        -9
+      ],
+      [
+        -2,
+        -10
+      ],
+      [
+        -1,
+        -11
+      ],
+      [
+        0,
+        -14
+      ],
+      [
+        1,
+        -13
+      ],
+      [
+        2,
+        -12
+      ],
+      [
+        3,
+        -11
+      ],
+      [
+        4,
+        -10
+      ],
+      [
+        5,
+        -9
+      ],
+      [
+        6,
+        -8
+      ],
+      [
+        7,
+        -7
+      ],
+      [
+        8,
+        -6
+      ],
+      [
+        9,
+        -5
+      ],
+      [
+        10,
+        -4
+      ],
+      [
+        11,
+        -3
+      ],
+      [
+        12,
+        -2
+      ],
+      [
+        13,
+        -1
+      ],
+      [
+        14,
+        0
+      ],
+      [
+        13,
+        1
+      ],
+      [
+        12,
+        2
+      ],
+      [
+        11,
+        3
+      ],
+      [
+        10,
+        4
+      ],
+      [
+        9,
+        5
+      ],
+      [
+        8,
+        6
+      ],
+      [
+        7,
+        7
+      ],
+      [
+        6,
+        8
+      ],
+      [
+        5,
+        9
+      ],
+      [
+        4,
+        10
+      ],
+      [
+        3,
+        11
+      ],
+      [
+        2,
+        12
+      ],
+      [
+        1,
+        13
+      ],
+      [
+        0,
+        14
+      ],
+      [
+        -1,
+        13
+      ],
+      [
+        -2,
+        12
+      ],
+      [
+        -3,
+        11
+      ],
+      [
+        -4,
+        10
+      ],
+      [
+        -5,
+        9
+      ],
+      [
+        -6,
+        8
+      ],
+      [
+        -7,
+        7
+      ],
+      [
+        -8,
+        6
+      ],
+      [
+        -9,
+        5
+      ],
+      [
+        -10,
+        4
+      ],
+      [
+        -11,
+        3
+      ],
+      [
+        -12,
+        2
+      ],
+      [
+        -13,
+        1
+      ],
+      [
+        -14,
+        0
+      ],
+      [
+        -13,
+        -1
+      ],
+      [
+        -12,
+        -2
+      ],
+      [
+        -11,
+        -3
+      ],
+      [
+        -10,
+        -4
+      ],
+      [
+        -9,
+        -5
+      ],
+      [
+        -8,
+        -6
+      ],
+      [
+        -7,
+        -7
+      ],
+      [
+        -6,
+        -8
+      ],
+      [
+        -5,
+        -9
+      ],
+      [
+        -4,
+        -10
+      ],
+      [
+        -3,
+        -11
+      ],
+      [
+        -2,
+        -12
+      ],
+      [
+        -1,
+        -13
+      ]
+    ],
+    "ring_ends": [
+      1,
+      9,
+      25,
+      49,
+      81,
+      121,
+      169,
+      225
+    ],
+    "thresholds": [
+      0,
+      15,
+      32,
+      45,
+      60,
+      75,
+      80,
+      100
+    ]
+  },
+  "receipt": {
+    "filename": "continent-generation-original-x86-20261020.json.z",
+    "sha256": "d8c2d2121ca7f59b874648ede1f16ff3f925b150be9567a3cc6eaa6ba7af0454",
+    "compressed_sha256": "215d5e1f4d868daa4deba929f54b357c48030201a38b21929b8d00c628f262ec"
+  },
+  "byte_write_hash_encoding": "Ordered repeated little-endian uint32 record-plane byte offset, uint8 value. Includes unchanged writes; original PC annotations retained only in full receipt.",
+  "rng_hash_encoding": "Ordered repeated little-endian uint32 stateBefore,uint32 stateAfter,uint16 raw15,uint32 originalCallerReturnAddress.",
+  "bootstrap_continuation": {
+    "control": "bootstrap_o1_s1",
+    "input_sha256": "662bea444e62e652ce65f01e8bfa6afdc8a511e397b470721de9eef49249efb2",
+    "crt": 1,
+    "shared": 1015568748,
+    "pattern": 11446
+  },
+  "controls": 50,
+  "native_crt_draws": 7331,
+  "ordered_native_tile_writes": 113022,
+  "cases": [
+    {
+      "input": {
+        "id": "bootstrap_native_prefix",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 1,
+        "shared": 1015568748,
+        "pattern": 11446,
+        "bootstrap_poison": 11,
+        "region_poison": 0
+      },
+      "input_sha256": "662bea444e62e652ce65f01e8bfa6afdc8a511e397b470721de9eef49249efb2",
+      "output_sha256": "c6bea2bf620a30c52d3fef577b66e03fa39162ce8dec3a38b3f3450dd1909786",
+      "crt_after": 1978610859,
+      "shared_after": 1015568748,
+      "progress_after": 36,
+      "land_target_after": 640,
+      "painted_after": 36,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          36
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 1978610859,
+          "shared": 1015568748,
+          "progress": 36,
+          "painted": 36,
+          "output_sha256": "c6bea2bf620a30c52d3fef577b66e03fa39162ce8dec3a38b3f3450dd1909786",
+          "write_count": 3526,
+          "rng_count": 138
+        }
+      ],
+      "rng_count": 138,
+      "rng_sha256": "c36a886bc0e4645787bec2a69dd1be16492894cc2dde94570e3a6090fa32c881",
+      "ordered_tile_write_count": 3526,
+      "ordered_tile_write_sha256": "a5a68b273241c968278a710d765de8b02136bd3f72586db48e7395265fa60c39",
+      "paint_calls": 26,
+      "changed_tiles": 75,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "08d7189f13d6af95257233f720b6041ad215d078e7ee78bb1524602100582ed4",
+      "direction_trace_sha256": "ea1699e5b755eadfee5c13906b30f9a9c83cffa8ba3fb66de79bf83c765960b9"
+    },
+    {
+      "input": {
+        "id": "seed_land0_s1",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "land": 0,
+        "crt": 1
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "a5f51059dd2f4c45370efab7531f556b0c3e9b4a01e70d38dca0fee34225e643",
+      "crt_after": 571730744,
+      "shared_after": 1234567,
+      "progress_after": 12,
+      "land_target_after": 640,
+      "painted_after": 12,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          12
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 571730744,
+          "shared": 1234567,
+          "progress": 12,
+          "painted": 12,
+          "output_sha256": "a5f51059dd2f4c45370efab7531f556b0c3e9b4a01e70d38dca0fee34225e643",
+          "write_count": 3343,
+          "rng_count": 57
+        }
+      ],
+      "rng_count": 57,
+      "rng_sha256": "2ad663b9ead5b5902f12f67c5c21a4d0f73ff4dd990f0082e41f62a23e67dc9e",
+      "ordered_tile_write_count": 3343,
+      "ordered_tile_write_sha256": "954e10858f11eefc5a31ac90a827b1ca40c6fed35462e745b320c12cc6ea9bcc",
+      "paint_calls": 7,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "c4c1d420a0d03aced773e47d12c99a216b9d36c03982c179f0cc017569d92fd8",
+      "direction_trace_sha256": "ab20f63508c1979c0c891da2b03041e0d91ad26691d0b8f0dc2c4b28357382f8"
+    },
+    {
+      "input": {
+        "id": "seed_land0_s7",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "land": 0,
+        "crt": 7
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "5b44f8e746e6a9acf4584d26d7f55df69a456cec619f304ebe74e63ddc6047eb",
+      "crt_after": 1126866877,
+      "shared_after": 1234567,
+      "progress_after": 12,
+      "land_target_after": 640,
+      "painted_after": 12,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          60,
+          74
+        ]
+      ],
+      "walks": [
+        [
+          60,
+          74,
+          3,
+          12
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 1126866877,
+          "shared": 1234567,
+          "progress": 12,
+          "painted": 12,
+          "output_sha256": "5b44f8e746e6a9acf4584d26d7f55df69a456cec619f304ebe74e63ddc6047eb",
+          "write_count": 3332,
+          "rng_count": 54
+        }
+      ],
+      "rng_count": 54,
+      "rng_sha256": "e1225cc2ac63800be39d8231521d569ffad5a33dcfc08627f71ddb900b4d40d8",
+      "ordered_tile_write_count": 3332,
+      "ordered_tile_write_sha256": "9270775ad074402b5f6b75829d0e1addc85b54bebc92999d382b9ea88d1e4781",
+      "paint_calls": 7,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "7ac750eac6369d737ec8055e702238fd4fba12bdd7063f6315f7b3f515b7fc5e",
+      "direction_trace_sha256": "e57bbb51a1e6c4c351ec3958e4f887affe469056386b8fb45c53d7544e630700"
+    },
+    {
+      "input": {
+        "id": "seed_land1_s1",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "land": 1,
+        "crt": 1
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "e9e595ba9e982ec1bd09910d5c0079fa10bc0ae247270efea47e40d786aa594f",
+      "crt_after": 1978610859,
+      "shared_after": 1234567,
+      "progress_after": 36,
+      "land_target_after": 640,
+      "painted_after": 36,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          36
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 1978610859,
+          "shared": 1234567,
+          "progress": 36,
+          "painted": 36,
+          "output_sha256": "e9e595ba9e982ec1bd09910d5c0079fa10bc0ae247270efea47e40d786aa594f",
+          "write_count": 3526,
+          "rng_count": 138
+        }
+      ],
+      "rng_count": 138,
+      "rng_sha256": "c36a886bc0e4645787bec2a69dd1be16492894cc2dde94570e3a6090fa32c881",
+      "ordered_tile_write_count": 3526,
+      "ordered_tile_write_sha256": "a5a68b273241c968278a710d765de8b02136bd3f72586db48e7395265fa60c39",
+      "paint_calls": 26,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "08d7189f13d6af95257233f720b6041ad215d078e7ee78bb1524602100582ed4",
+      "direction_trace_sha256": "ea1699e5b755eadfee5c13906b30f9a9c83cffa8ba3fb66de79bf83c765960b9"
+    },
+    {
+      "input": {
+        "id": "seed_land1_s7",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "land": 1,
+        "crt": 7
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "a85439b7cf29c7829fcb024b9ef96c59dca7327188f9df3adb05509898fce349",
+      "crt_after": 3259162466,
+      "shared_after": 1234567,
+      "progress_after": 36,
+      "land_target_after": 640,
+      "painted_after": 36,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          60,
+          74
+        ]
+      ],
+      "walks": [
+        [
+          60,
+          74,
+          3,
+          36
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 3259162466,
+          "shared": 1234567,
+          "progress": 36,
+          "painted": 36,
+          "output_sha256": "a85439b7cf29c7829fcb024b9ef96c59dca7327188f9df3adb05509898fce349",
+          "write_count": 3537,
+          "rng_count": 149
+        }
+      ],
+      "rng_count": 149,
+      "rng_sha256": "e175a05f4a8940ad72347dad1fa12b78d3e7496585ef65d2e09ee9b19b68b75a",
+      "ordered_tile_write_count": 3537,
+      "ordered_tile_write_sha256": "a00c83ae52c7379f1f631bde4af6fb5845115def90318a8685089008498ddbdf",
+      "paint_calls": 33,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "9404a088c656bcce12596e7e87aa102ff18dd84fd684586b44c648e601972c65",
+      "direction_trace_sha256": "0651592b54ea6fd8e17e68a115f39ad1836e554e1b51d478111a2b79c8d09964"
+    },
+    {
+      "input": {
+        "id": "seed_land2_s1",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "land": 2,
+        "crt": 1
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "e2888ad06a50162ef05d178ae4101269e800f8e18f22c401fa598a183b9d6494",
+      "crt_after": 1460076670,
+      "shared_after": 1234567,
+      "progress_after": 162,
+      "land_target_after": 640,
+      "painted_after": 162,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          162
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 1460076670,
+          "shared": 1234567,
+          "progress": 162,
+          "painted": 162,
+          "output_sha256": "e2888ad06a50162ef05d178ae4101269e800f8e18f22c401fa598a183b9d6494",
+          "write_count": 4576,
+          "rng_count": 615
+        }
+      ],
+      "rng_count": 615,
+      "rng_sha256": "bdbb5465404ea3ad263f3594b720b4d7fd30f20d1aa470a64960b2fe4e3277c0",
+      "ordered_tile_write_count": 4576,
+      "ordered_tile_write_sha256": "ad3260a242ce9d6fd94ef78b62722019a154b5398e21f97b86b91efe600fadda",
+      "paint_calls": 148,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "313b346a0b70ec1acc3e60d9d183d92a0330bef916eff95dfc12081ce6a185f6",
+      "direction_trace_sha256": "796e72245cd2d388792f9b3c8802d511ac1bdb0f4a7574111cd524c6fbf5777f"
+    },
+    {
+      "input": {
+        "id": "seed_land2_s7",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "land": 2,
+        "crt": 7
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "c755a83a3b818568ce475cb638ebb2045564609351b780c5d844c44e5ffe6593",
+      "crt_after": 3564634935,
+      "shared_after": 1234567,
+      "progress_after": 163,
+      "land_target_after": 640,
+      "painted_after": 163,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          60,
+          74
+        ]
+      ],
+      "walks": [
+        [
+          60,
+          74,
+          3,
+          162
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 3564634935,
+          "shared": 1234567,
+          "progress": 163,
+          "painted": 163,
+          "output_sha256": "c755a83a3b818568ce475cb638ebb2045564609351b780c5d844c44e5ffe6593",
+          "write_count": 4454,
+          "rng_count": 624
+        }
+      ],
+      "rng_count": 624,
+      "rng_sha256": "c8944a0c9f19b5c9ae352e4dc871be0637c4ad7f3b391263a5959bb9ae8d21ba",
+      "ordered_tile_write_count": 4454,
+      "ordered_tile_write_sha256": "1aac38bfa93d33563d61bb0d377289fde69959b7bf197bec0f31ee43cb05fe21",
+      "paint_calls": 199,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "b04b6afc6c46a2dab685bd0ec4701fb1a7033c71669e003ba482b25e885a8bb5",
+      "direction_trace_sha256": "af0905437407e3f0cba9b2546ed732e7e3ec96c47ac08c9c3ec3922546db08da"
+    },
+    {
+      "input": {
+        "id": "ratio_attempt3",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 1,
+        "attempts": [
+          3
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "e9e595ba9e982ec1bd09910d5c0079fa10bc0ae247270efea47e40d786aa594f",
+      "crt_after": 1978610859,
+      "shared_after": 1234567,
+      "progress_after": 36,
+      "land_target_after": 640,
+      "painted_after": 36,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          36
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            3
+          ],
+          "crt": 1978610859,
+          "shared": 1234567,
+          "progress": 36,
+          "painted": 36,
+          "output_sha256": "e9e595ba9e982ec1bd09910d5c0079fa10bc0ae247270efea47e40d786aa594f",
+          "write_count": 3526,
+          "rng_count": 138
+        }
+      ],
+      "rng_count": 138,
+      "rng_sha256": "c36a886bc0e4645787bec2a69dd1be16492894cc2dde94570e3a6090fa32c881",
+      "ordered_tile_write_count": 3526,
+      "ordered_tile_write_sha256": "a5a68b273241c968278a710d765de8b02136bd3f72586db48e7395265fa60c39",
+      "paint_calls": 26,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "08d7189f13d6af95257233f720b6041ad215d078e7ee78bb1524602100582ed4",
+      "direction_trace_sha256": "ea1699e5b755eadfee5c13906b30f9a9c83cffa8ba3fb66de79bf83c765960b9"
+    },
+    {
+      "input": {
+        "id": "ratio_attempt6",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 1,
+        "attempts": [
+          6
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "e9e595ba9e982ec1bd09910d5c0079fa10bc0ae247270efea47e40d786aa594f",
+      "crt_after": 1978610859,
+      "shared_after": 1234567,
+      "progress_after": 36,
+      "land_target_after": 640,
+      "painted_after": 36,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          36
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            6
+          ],
+          "crt": 1978610859,
+          "shared": 1234567,
+          "progress": 36,
+          "painted": 36,
+          "output_sha256": "e9e595ba9e982ec1bd09910d5c0079fa10bc0ae247270efea47e40d786aa594f",
+          "write_count": 3526,
+          "rng_count": 138
+        }
+      ],
+      "rng_count": 138,
+      "rng_sha256": "c36a886bc0e4645787bec2a69dd1be16492894cc2dde94570e3a6090fa32c881",
+      "ordered_tile_write_count": 3526,
+      "ordered_tile_write_sha256": "a5a68b273241c968278a710d765de8b02136bd3f72586db48e7395265fa60c39",
+      "paint_calls": 26,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "08d7189f13d6af95257233f720b6041ad215d078e7ee78bb1524602100582ed4",
+      "direction_trace_sha256": "ea1699e5b755eadfee5c13906b30f9a9c83cffa8ba3fb66de79bf83c765960b9"
+    },
+    {
+      "input": {
+        "id": "ratio_attempt7",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 1,
+        "attempts": [
+          7
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "02627bc603e233e566f9f68762ecc4545a51dc14746cd35a6696eca1baaf5dec",
+      "crt_after": 2038257055,
+      "shared_after": 1234567,
+      "progress_after": 18,
+      "land_target_after": 640,
+      "painted_after": 18,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          18
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            7
+          ],
+          "crt": 2038257055,
+          "shared": 1234567,
+          "progress": 18,
+          "painted": 18,
+          "output_sha256": "02627bc603e233e566f9f68762ecc4545a51dc14746cd35a6696eca1baaf5dec",
+          "write_count": 3386,
+          "rng_count": 78
+        }
+      ],
+      "rng_count": 78,
+      "rng_sha256": "ba2eb785ec47a54276e34cffd209ce0d496d181f9b59be843ae644a42613569b",
+      "ordered_tile_write_count": 3386,
+      "ordered_tile_write_sha256": "c3b2d01e8caaabefd7a9ad4cfb0436dfe055b2364a699511be1d2a5f9aaeef6a",
+      "paint_calls": 12,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "467ec4a7abea46edce68d14f209fa70dbbc38d5f9a4f87100e2f93f3c6df3475",
+      "direction_trace_sha256": "3be0af3e8e3551cf77be8c5895bf626424af5d856f5e71ecbe30baffb1bbba83"
+    },
+    {
+      "input": {
+        "id": "ratio_attempt12",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 1,
+        "attempts": [
+          12
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "02627bc603e233e566f9f68762ecc4545a51dc14746cd35a6696eca1baaf5dec",
+      "crt_after": 2038257055,
+      "shared_after": 1234567,
+      "progress_after": 18,
+      "land_target_after": 640,
+      "painted_after": 18,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          18
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            12
+          ],
+          "crt": 2038257055,
+          "shared": 1234567,
+          "progress": 18,
+          "painted": 18,
+          "output_sha256": "02627bc603e233e566f9f68762ecc4545a51dc14746cd35a6696eca1baaf5dec",
+          "write_count": 3386,
+          "rng_count": 78
+        }
+      ],
+      "rng_count": 78,
+      "rng_sha256": "ba2eb785ec47a54276e34cffd209ce0d496d181f9b59be843ae644a42613569b",
+      "ordered_tile_write_count": 3386,
+      "ordered_tile_write_sha256": "c3b2d01e8caaabefd7a9ad4cfb0436dfe055b2364a699511be1d2a5f9aaeef6a",
+      "paint_calls": 12,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "467ec4a7abea46edce68d14f209fa70dbbc38d5f9a4f87100e2f93f3c6df3475",
+      "direction_trace_sha256": "3be0af3e8e3551cf77be8c5895bf626424af5d856f5e71ecbe30baffb1bbba83"
+    },
+    {
+      "input": {
+        "id": "ratio_attempt13",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 1,
+        "attempts": [
+          13
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "03fcafd970014951e4dd9dcf925a4dc4ff2b6c512b0b3a69ffdd24beaecbbc4c",
+      "crt_after": 1005999421,
+      "shared_after": 1234567,
+      "progress_after": 18,
+      "land_target_after": 640,
+      "painted_after": 18,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          18
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            13
+          ],
+          "crt": 1005999421,
+          "shared": 1234567,
+          "progress": 18,
+          "painted": 18,
+          "output_sha256": "03fcafd970014951e4dd9dcf925a4dc4ff2b6c512b0b3a69ffdd24beaecbbc4c",
+          "write_count": 3384,
+          "rng_count": 76
+        }
+      ],
+      "rng_count": 76,
+      "rng_sha256": "08f0ff00c63b13fd320c98a727f0d138c11babd3d825fd6180ecd971f28543f9",
+      "ordered_tile_write_count": 3384,
+      "ordered_tile_write_sha256": "307644fa8e27ad95473b39bbed79d984a1a7ba7fd242f97b3d62594480fb18c5",
+      "paint_calls": 12,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "32ae431d6624702be336217b63075fac0339d65bc125dd8220d6950bebafb8f8",
+      "direction_trace_sha256": "d75a6965bc67b545a576b4d0b14004e611e5dd8a70419ad74d82da02a5656dfb"
+    },
+    {
+      "input": {
+        "id": "ratio_attempt18",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 1,
+        "attempts": [
+          18
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "03fcafd970014951e4dd9dcf925a4dc4ff2b6c512b0b3a69ffdd24beaecbbc4c",
+      "crt_after": 1005999421,
+      "shared_after": 1234567,
+      "progress_after": 18,
+      "land_target_after": 640,
+      "painted_after": 18,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          18
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            18
+          ],
+          "crt": 1005999421,
+          "shared": 1234567,
+          "progress": 18,
+          "painted": 18,
+          "output_sha256": "03fcafd970014951e4dd9dcf925a4dc4ff2b6c512b0b3a69ffdd24beaecbbc4c",
+          "write_count": 3384,
+          "rng_count": 76
+        }
+      ],
+      "rng_count": 76,
+      "rng_sha256": "08f0ff00c63b13fd320c98a727f0d138c11babd3d825fd6180ecd971f28543f9",
+      "ordered_tile_write_count": 3384,
+      "ordered_tile_write_sha256": "307644fa8e27ad95473b39bbed79d984a1a7ba7fd242f97b3d62594480fb18c5",
+      "paint_calls": 12,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "32ae431d6624702be336217b63075fac0339d65bc125dd8220d6950bebafb8f8",
+      "direction_trace_sha256": "d75a6965bc67b545a576b4d0b14004e611e5dd8a70419ad74d82da02a5656dfb"
+    },
+    {
+      "input": {
+        "id": "ratio_attempt19",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 1,
+        "attempts": [
+          19
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "a5f51059dd2f4c45370efab7531f556b0c3e9b4a01e70d38dca0fee34225e643",
+      "crt_after": 571730744,
+      "shared_after": 1234567,
+      "progress_after": 12,
+      "land_target_after": 640,
+      "painted_after": 12,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          12
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            19
+          ],
+          "crt": 571730744,
+          "shared": 1234567,
+          "progress": 12,
+          "painted": 12,
+          "output_sha256": "a5f51059dd2f4c45370efab7531f556b0c3e9b4a01e70d38dca0fee34225e643",
+          "write_count": 3343,
+          "rng_count": 57
+        }
+      ],
+      "rng_count": 57,
+      "rng_sha256": "2ad663b9ead5b5902f12f67c5c21a4d0f73ff4dd990f0082e41f62a23e67dc9e",
+      "ordered_tile_write_count": 3343,
+      "ordered_tile_write_sha256": "954e10858f11eefc5a31ac90a827b1ca40c6fed35462e745b320c12cc6ea9bcc",
+      "paint_calls": 7,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "c4c1d420a0d03aced773e47d12c99a216b9d36c03982c179f0cc017569d92fd8",
+      "direction_trace_sha256": "ab20f63508c1979c0c891da2b03041e0d91ad26691d0b8f0dc2c4b28357382f8"
+    },
+    {
+      "input": {
+        "id": "ratio_attempt24",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 1,
+        "attempts": [
+          24
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "a5f51059dd2f4c45370efab7531f556b0c3e9b4a01e70d38dca0fee34225e643",
+      "crt_after": 571730744,
+      "shared_after": 1234567,
+      "progress_after": 12,
+      "land_target_after": 640,
+      "painted_after": 12,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          12
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            24
+          ],
+          "crt": 571730744,
+          "shared": 1234567,
+          "progress": 12,
+          "painted": 12,
+          "output_sha256": "a5f51059dd2f4c45370efab7531f556b0c3e9b4a01e70d38dca0fee34225e643",
+          "write_count": 3343,
+          "rng_count": 57
+        }
+      ],
+      "rng_count": 57,
+      "rng_sha256": "2ad663b9ead5b5902f12f67c5c21a4d0f73ff4dd990f0082e41f62a23e67dc9e",
+      "ordered_tile_write_count": 3343,
+      "ordered_tile_write_sha256": "954e10858f11eefc5a31ac90a827b1ca40c6fed35462e745b320c12cc6ea9bcc",
+      "paint_calls": 7,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "c4c1d420a0d03aced773e47d12c99a216b9d36c03982c179f0cc017569d92fd8",
+      "direction_trace_sha256": "ab20f63508c1979c0c891da2b03041e0d91ad26691d0b8f0dc2c4b28357382f8"
+    },
+    {
+      "input": {
+        "id": "ratio_attempt25",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 1,
+        "attempts": [
+          25
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "af7087de547068d0d396a4d8839ea6b70f21e5d19cc192c3dcc0e7c445b7f604",
+      "crt_after": 2597632883,
+      "shared_after": 1234567,
+      "progress_after": 10,
+      "land_target_after": 640,
+      "painted_after": 10,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          9
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            25
+          ],
+          "crt": 2597632883,
+          "shared": 1234567,
+          "progress": 10,
+          "painted": 10,
+          "output_sha256": "af7087de547068d0d396a4d8839ea6b70f21e5d19cc192c3dcc0e7c445b7f604",
+          "write_count": 3325,
+          "rng_count": 50
+        }
+      ],
+      "rng_count": 50,
+      "rng_sha256": "a767e2d5d5639f60d128fabe14e17b9196dbc1b465aaee4ee462b5170aae4cc0",
+      "ordered_tile_write_count": 3325,
+      "ordered_tile_write_sha256": "b8c8560c5a36a1a24379b4d06b62c3d2712512b612aaaae5f7dad029f9f64a02",
+      "paint_calls": 6,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "c710681a98f689c1de3d593824123df32ebeacd8161f1affee4fe2e9a066ef54",
+      "direction_trace_sha256": "53ae193df0d44a4b0869e2dac757abf976d0ae5cb04cca52e1b02669cb6b499c"
+    },
+    {
+      "input": {
+        "id": "progress639_a1",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 7,
+        "progress": 639,
+        "attempts": [
+          1
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "a85439b7cf29c7829fcb024b9ef96c59dca7327188f9df3adb05509898fce349",
+      "crt_after": 3259162466,
+      "shared_after": 1234567,
+      "progress_after": 675,
+      "land_target_after": 640,
+      "painted_after": 36,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          60,
+          74
+        ]
+      ],
+      "walks": [
+        [
+          60,
+          74,
+          3,
+          36
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 3259162466,
+          "shared": 1234567,
+          "progress": 675,
+          "painted": 36,
+          "output_sha256": "a85439b7cf29c7829fcb024b9ef96c59dca7327188f9df3adb05509898fce349",
+          "write_count": 3537,
+          "rng_count": 149
+        }
+      ],
+      "rng_count": 149,
+      "rng_sha256": "e175a05f4a8940ad72347dad1fa12b78d3e7496585ef65d2e09ee9b19b68b75a",
+      "ordered_tile_write_count": 3537,
+      "ordered_tile_write_sha256": "a00c83ae52c7379f1f631bde4af6fb5845115def90318a8685089008498ddbdf",
+      "paint_calls": 33,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "9404a088c656bcce12596e7e87aa102ff18dd84fd684586b44c648e601972c65",
+      "direction_trace_sha256": "0651592b54ea6fd8e17e68a115f39ad1836e554e1b51d478111a2b79c8d09964"
+    },
+    {
+      "input": {
+        "id": "progress639_a25",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 7,
+        "progress": 639,
+        "attempts": [
+          25
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "22d6660b4b83ca70e36652ed1b98160fa1cc0b97a1bc05a78faab256beea6a02",
+      "crt_after": 488091349,
+      "shared_after": 1234567,
+      "progress_after": 649,
+      "land_target_after": 640,
+      "painted_after": 10,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          60,
+          74
+        ]
+      ],
+      "walks": [
+        [
+          60,
+          74,
+          3,
+          9
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            25
+          ],
+          "crt": 488091349,
+          "shared": 1234567,
+          "progress": 649,
+          "painted": 10,
+          "output_sha256": "22d6660b4b83ca70e36652ed1b98160fa1cc0b97a1bc05a78faab256beea6a02",
+          "write_count": 3315,
+          "rng_count": 46
+        }
+      ],
+      "rng_count": 46,
+      "rng_sha256": "6163243d572277b1c9dea17e8e04b9cd2966f79c4e161c95eab00d47b6805852",
+      "ordered_tile_write_count": 3315,
+      "ordered_tile_write_sha256": "06808d790454fa6a3731cb59871a3e495192f48f36f04855dc7bfc41573d41e9",
+      "paint_calls": 5,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "51e281aa5894de5486dbf401bc569712de434859a44d5a1615cf1c8f6d8b9a9f",
+      "direction_trace_sha256": "f70c91ee19ac4a622e89dee86c30233d73f90c4fc93fefa5f8899e7b8d68683e"
+    },
+    {
+      "input": {
+        "id": "progress640_a1",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 7,
+        "progress": 640,
+        "attempts": [
+          1
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "ac938969bbc4d012c40c4827e26dd4c9c29367019a6f947e3f2f7aac7330dd8b",
+      "crt_after": 3164135755,
+      "shared_after": 1234567,
+      "progress_after": 643,
+      "land_target_after": 640,
+      "painted_after": 3,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          60,
+          74
+        ]
+      ],
+      "walks": [
+        [
+          60,
+          74,
+          3,
+          3
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 3164135755,
+          "shared": 1234567,
+          "progress": 643,
+          "painted": 3,
+          "output_sha256": "ac938969bbc4d012c40c4827e26dd4c9c29367019a6f947e3f2f7aac7330dd8b",
+          "write_count": 3251,
+          "rng_count": 20
+        }
+      ],
+      "rng_count": 20,
+      "rng_sha256": "a278c215c469ca365ecf18c8d3d3a1297ecadc15ba4d7c456714821a2b258995",
+      "ordered_tile_write_count": 3251,
+      "ordered_tile_write_sha256": "6b0a27c6ca3d9ed02ecc92dcc2b0ad9a16ce7600f169770a4f69013baa9c36cf",
+      "paint_calls": 1,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "b019831671a8f3e5c8743d066896fa92d6ffce3d588ae54d52f07affe8218302",
+      "direction_trace_sha256": "7d450465ceb49083708a6970827f0e0b116ed285072a95b451e55f583f56da8d"
+    },
+    {
+      "input": {
+        "id": "progress640_a25",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 7,
+        "progress": 640,
+        "attempts": [
+          25
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "6885525487e5bd6615a03e545607a4986680cf7769dae334b40479c15b693f2b",
+      "crt_after": 169141986,
+      "shared_after": 1234567,
+      "progress_after": 643,
+      "land_target_after": 640,
+      "painted_after": 3,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          60,
+          74
+        ]
+      ],
+      "walks": [
+        [
+          60,
+          74,
+          3,
+          3
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            25
+          ],
+          "crt": 169141986,
+          "shared": 1234567,
+          "progress": 643,
+          "painted": 3,
+          "output_sha256": "6885525487e5bd6615a03e545607a4986680cf7769dae334b40479c15b693f2b",
+          "write_count": 3251,
+          "rng_count": 21
+        }
+      ],
+      "rng_count": 21,
+      "rng_sha256": "65052914272b235ae4e7016261fb9e2bf47b1e324499779a21cb93a35e66fa2f",
+      "ordered_tile_write_count": 3251,
+      "ordered_tile_write_sha256": "b90432acd9c88f0720de276fd79e11d1f06833c1d63e03a056e49516bd9192a5",
+      "paint_calls": 1,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "b019831671a8f3e5c8743d066896fa92d6ffce3d588ae54d52f07affe8218302",
+      "direction_trace_sha256": "164b79f0aed0cf1f454e4a270f004d5f6c84420ee21fb73191bd3490c2f700e4"
+    },
+    {
+      "input": {
+        "id": "progress641_a1",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 7,
+        "progress": 641,
+        "attempts": [
+          1
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "ac938969bbc4d012c40c4827e26dd4c9c29367019a6f947e3f2f7aac7330dd8b",
+      "crt_after": 3164135755,
+      "shared_after": 1234567,
+      "progress_after": 644,
+      "land_target_after": 640,
+      "painted_after": 3,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          60,
+          74
+        ]
+      ],
+      "walks": [
+        [
+          60,
+          74,
+          3,
+          3
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 3164135755,
+          "shared": 1234567,
+          "progress": 644,
+          "painted": 3,
+          "output_sha256": "ac938969bbc4d012c40c4827e26dd4c9c29367019a6f947e3f2f7aac7330dd8b",
+          "write_count": 3251,
+          "rng_count": 20
+        }
+      ],
+      "rng_count": 20,
+      "rng_sha256": "a278c215c469ca365ecf18c8d3d3a1297ecadc15ba4d7c456714821a2b258995",
+      "ordered_tile_write_count": 3251,
+      "ordered_tile_write_sha256": "6b0a27c6ca3d9ed02ecc92dcc2b0ad9a16ce7600f169770a4f69013baa9c36cf",
+      "paint_calls": 1,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "b019831671a8f3e5c8743d066896fa92d6ffce3d588ae54d52f07affe8218302",
+      "direction_trace_sha256": "7d450465ceb49083708a6970827f0e0b116ed285072a95b451e55f583f56da8d"
+    },
+    {
+      "input": {
+        "id": "progress641_a25",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 7,
+        "progress": 641,
+        "attempts": [
+          25
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "6885525487e5bd6615a03e545607a4986680cf7769dae334b40479c15b693f2b",
+      "crt_after": 169141986,
+      "shared_after": 1234567,
+      "progress_after": 644,
+      "land_target_after": 640,
+      "painted_after": 3,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          60,
+          74
+        ]
+      ],
+      "walks": [
+        [
+          60,
+          74,
+          3,
+          3
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            25
+          ],
+          "crt": 169141986,
+          "shared": 1234567,
+          "progress": 644,
+          "painted": 3,
+          "output_sha256": "6885525487e5bd6615a03e545607a4986680cf7769dae334b40479c15b693f2b",
+          "write_count": 3251,
+          "rng_count": 21
+        }
+      ],
+      "rng_count": 21,
+      "rng_sha256": "65052914272b235ae4e7016261fb9e2bf47b1e324499779a21cb93a35e66fa2f",
+      "ordered_tile_write_count": 3251,
+      "ordered_tile_write_sha256": "b90432acd9c88f0720de276fd79e11d1f06833c1d63e03a056e49516bd9192a5",
+      "paint_calls": 1,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "b019831671a8f3e5c8743d066896fa92d6ffce3d588ae54d52f07affe8218302",
+      "direction_trace_sha256": "164b79f0aed0cf1f454e4a270f004d5f6c84420ee21fb73191bd3490c2f700e4"
+    },
+    {
+      "input": {
+        "id": "all_land_100_candidates",
+        "kind": "seed",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "initial_band": 3,
+        "initial_contour": 45
+      },
+      "input_sha256": "17e091938654269eafa1eecd1a03c8f40aa5f62746b442759a998b8d9e3739ed",
+      "output_sha256": "ec421a32ef16949c789c226af133a26f6480274d506d0540cad77e2ce93ac5d3",
+      "crt_after": 2771013161,
+      "shared_after": 1234567,
+      "progress_after": 0,
+      "land_target_after": 640,
+      "painted_after": 77,
+      "dirty_after": 16,
+      "flood_after": [
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107
+      ],
+      "affected_after": [
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207
+      ],
+      "seeds": [
+        [
+          9,
+          7
+        ],
+        [
+          30,
+          8
+        ],
+        [
+          0,
+          16
+        ],
+        [
+          22,
+          18
+        ],
+        [
+          18,
+          4
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          17,
+          15
+        ],
+        [
+          9,
+          15
+        ],
+        [
+          18,
+          10
+        ],
+        [
+          26,
+          16
+        ],
+        [
+          6,
+          16
+        ],
+        [
+          31,
+          13
+        ],
+        [
+          4,
+          18
+        ],
+        [
+          12,
+          16
+        ],
+        [
+          7,
+          11
+        ],
+        [
+          6,
+          18
+        ],
+        [
+          18,
+          6
+        ],
+        [
+          12,
+          12
+        ],
+        [
+          3,
+          15
+        ],
+        [
+          10,
+          10
+        ],
+        [
+          31,
+          7
+        ],
+        [
+          27,
+          17
+        ],
+        [
+          8,
+          12
+        ],
+        [
+          5,
+          19
+        ],
+        [
+          28,
+          8
+        ],
+        [
+          10,
+          16
+        ],
+        [
+          23,
+          9
+        ],
+        [
+          5,
+          15
+        ],
+        [
+          19,
+          17
+        ],
+        [
+          8,
+          14
+        ],
+        [
+          29,
+          15
+        ],
+        [
+          14,
+          6
+        ],
+        [
+          0,
+          14
+        ],
+        [
+          16,
+          18
+        ],
+        [
+          0,
+          12
+        ],
+        [
+          23,
+          17
+        ],
+        [
+          19,
+          13
+        ],
+        [
+          18,
+          10
+        ],
+        [
+          31,
+          17
+        ],
+        [
+          8,
+          16
+        ],
+        [
+          13,
+          19
+        ],
+        [
+          20,
+          6
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          10,
+          8
+        ],
+        [
+          17,
+          11
+        ],
+        [
+          19,
+          15
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          22,
+          6
+        ],
+        [
+          17,
+          17
+        ],
+        [
+          1,
+          15
+        ],
+        [
+          30,
+          14
+        ],
+        [
+          16,
+          14
+        ],
+        [
+          24,
+          6
+        ],
+        [
+          24,
+          6
+        ],
+        [
+          29,
+          13
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          31,
+          9
+        ],
+        [
+          25,
+          9
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          18,
+          14
+        ],
+        [
+          8,
+          16
+        ],
+        [
+          19,
+          19
+        ],
+        [
+          6,
+          10
+        ],
+        [
+          30,
+          8
+        ],
+        [
+          22,
+          18
+        ],
+        [
+          12,
+          16
+        ],
+        [
+          14,
+          10
+        ],
+        [
+          3,
+          19
+        ],
+        [
+          23,
+          13
+        ],
+        [
+          1,
+          19
+        ],
+        [
+          9,
+          19
+        ],
+        [
+          1,
+          17
+        ],
+        [
+          16,
+          18
+        ],
+        [
+          28,
+          16
+        ],
+        [
+          22,
+          6
+        ],
+        [
+          18,
+          10
+        ],
+        [
+          28,
+          4
+        ],
+        [
+          5,
+          19
+        ],
+        [
+          11,
+          11
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          9,
+          13
+        ],
+        [
+          13,
+          7
+        ],
+        [
+          11,
+          13
+        ],
+        [
+          18,
+          18
+        ],
+        [
+          18,
+          8
+        ],
+        [
+          30,
+          16
+        ],
+        [
+          21,
+          9
+        ],
+        [
+          21,
+          19
+        ],
+        [
+          20,
+          8
+        ],
+        [
+          24,
+          18
+        ],
+        [
+          21,
+          19
+        ],
+        [
+          18,
+          6
+        ],
+        [
+          20,
+          16
+        ],
+        [
+          15,
+          7
+        ],
+        [
+          17,
+          17
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          15,
+          9
+        ],
+        [
+          7,
+          13
+        ],
+        [
+          28,
+          14
+        ]
+      ],
+      "walks": [],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 2771013161,
+          "shared": 1234567,
+          "progress": 0,
+          "painted": 77,
+          "output_sha256": "ec421a32ef16949c789c226af133a26f6480274d506d0540cad77e2ce93ac5d3",
+          "write_count": 384,
+          "rng_count": 200
+        }
+      ],
+      "rng_count": 200,
+      "rng_sha256": "6fcddbd28cf0ea77f0707362465dd7ff420ae216a7f83b47cbc26d61426e6942",
+      "ordered_tile_write_count": 384,
+      "ordered_tile_write_sha256": "44279091e4e6b6c9666790a31a44fe19704ef072d4a8bd5f7ef56a5984ff40e2",
+      "paint_calls": 0,
+      "changed_tiles": 384,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "direction_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "input": {
+        "id": "three_continents",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 1,
+        "attempts": [
+          1,
+          2,
+          3
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "5394aa156c98519af28acf23ec5d3b3b55ef786aca490c2b17ea11d7a39ce426",
+      "crt_after": 4168209241,
+      "shared_after": 1234567,
+      "progress_after": 109,
+      "land_target_after": 640,
+      "painted_after": 37,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          41,
+          39
+        ],
+        [
+          7,
+          37
+        ],
+        [
+          57,
+          73
+        ]
+      ],
+      "walks": [
+        [
+          41,
+          39,
+          3,
+          36
+        ],
+        [
+          7,
+          37,
+          3,
+          36
+        ],
+        [
+          57,
+          73,
+          3,
+          36
+        ]
+      ],
+      "pumps": 3,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 1978610859,
+          "shared": 1234567,
+          "progress": 36,
+          "painted": 36,
+          "output_sha256": "e9e595ba9e982ec1bd09910d5c0079fa10bc0ae247270efea47e40d786aa594f",
+          "write_count": 3526,
+          "rng_count": 138
+        },
+        {
+          "arguments": [
+            2
+          ],
+          "crt": 2059581365,
+          "shared": 1234567,
+          "progress": 72,
+          "painted": 36,
+          "output_sha256": "d0c4928cbd57b8b92accca734b09aa50fb16cf90fe219cc79f4062ecdaed95a4",
+          "write_count": 7059,
+          "rng_count": 292
+        },
+        {
+          "arguments": [
+            3
+          ],
+          "crt": 4168209241,
+          "shared": 1234567,
+          "progress": 109,
+          "painted": 37,
+          "output_sha256": "5394aa156c98519af28acf23ec5d3b3b55ef786aca490c2b17ea11d7a39ce426",
+          "write_count": 10589,
+          "rng_count": 440
+        }
+      ],
+      "rng_count": 440,
+      "rng_sha256": "e59c25039800ef39c9d9a5b4838301e22c6b6c0accbd519f6d4e0114fc168f2a",
+      "ordered_tile_write_count": 10589,
+      "ordered_tile_write_sha256": "9fa19b8e37bb931debefebdab360c7251abe84993631132dae07efecd278b31c",
+      "paint_calls": 100,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "42520762a3f24f9605f62dc1c12a9b075387f6c75b24f8946b14b48860f3aaaf",
+      "direction_trace_sha256": "fb4b5a37ce1fe751b366e967ed9913bd58d2dff2c6fa1ba1d1191f8954b3a433"
+    },
+    {
+      "input": {
+        "id": "flat_seed",
+        "kind": "seed",
+        "width": 32,
+        "height": 24,
+        "crt": 7,
+        "flat": true
+      },
+      "input_sha256": "322b2ccfe377334d066f75941410340950744f4d94ead7adaf048908859c2916",
+      "output_sha256": "97d5d47770d75d7c60042e4c8ab12c9dfa4828c1e58387810e09d494d67f498d",
+      "crt_after": 1175829164,
+      "shared_after": 1234567,
+      "progress_after": 18,
+      "land_target_after": 640,
+      "painted_after": 18,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          16,
+          18
+        ]
+      ],
+      "walks": [
+        [
+          16,
+          18,
+          3,
+          18
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 1175829164,
+          "shared": 1234567,
+          "progress": 18,
+          "painted": 18,
+          "output_sha256": "97d5d47770d75d7c60042e4c8ab12c9dfa4828c1e58387810e09d494d67f498d",
+          "write_count": 570,
+          "rng_count": 87
+        }
+      ],
+      "rng_count": 87,
+      "rng_sha256": "54b2cc7568769fbc000488807fafbeb3fe1926b14dd566a52309ce19cc1c79e6",
+      "ordered_tile_write_count": 570,
+      "ordered_tile_write_sha256": "bbd8eb64b071a100ab02a429eb6b6080fb2f05de05703254c6bb2e7ea759985c",
+      "paint_calls": 21,
+      "changed_tiles": 384,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "7218cd2dfa38bd01768d4dc731f71605bc4a7463e86e1e6655726716b4d99df9",
+      "direction_trace_sha256": "56528f2e963c30e4ee436e143f808fbc9a89c8e89e7570e7f2ecf2ea91f796f6"
+    },
+    {
+      "input": {
+        "id": "low_bits_occupant",
+        "kind": "seed",
+        "width": 32,
+        "height": 24,
+        "crt": 9,
+        "low_climate": 27,
+        "occupant": 163
+      },
+      "input_sha256": "846e3addfb663c9e745924cd913bccf8bbc113faad240938d9718c179aab13c2",
+      "output_sha256": "ae808c575f4ce391ad0dfa979f3a59356729336ee8a6d555f2b3361f5447d091",
+      "crt_after": 695606469,
+      "shared_after": 1234567,
+      "progress_after": 18,
+      "land_target_after": 640,
+      "painted_after": 18,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          5,
+          11
+        ]
+      ],
+      "walks": [
+        [
+          5,
+          11,
+          3,
+          18
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 695606469,
+          "shared": 1234567,
+          "progress": 18,
+          "painted": 18,
+          "output_sha256": "ae808c575f4ce391ad0dfa979f3a59356729336ee8a6d555f2b3361f5447d091",
+          "write_count": 575,
+          "rng_count": 76
+        }
+      ],
+      "rng_count": 76,
+      "rng_sha256": "0013edfb9786357ed2baead651c55e389f2c0afb5c5717af19506008bc293c26",
+      "ordered_tile_write_count": 575,
+      "ordered_tile_write_sha256": "1c082232a0d747818ce519371e45185acbbe967e88ca037915c6d49d17bdb840",
+      "paint_calls": 9,
+      "changed_tiles": 384,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "eebb6e71628d0b918e5eca4cdf934a9a80707f12f8f7019c036b149e5191e671",
+      "direction_trace_sha256": "458123660efe3580af278ce7a3760df3a49accd3ef7a0353c2148df2816df397"
+    },
+    {
+      "input": {
+        "id": "grow_0_0_12",
+        "kind": "grow",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "flat": false,
+        "arguments": [
+          0,
+          12,
+          3,
+          8
+        ]
+      },
+      "input_sha256": "322b2ccfe377334d066f75941410340950744f4d94ead7adaf048908859c2916",
+      "output_sha256": "b31302bda2fccb23c6d74c7cda500de20f839bfdadb887ed12a14e0fd7c83bdf",
+      "crt_after": 1881138856,
+      "shared_after": 1234567,
+      "progress_after": 9,
+      "land_target_after": 640,
+      "painted_after": 9,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [
+        [
+          0,
+          12,
+          3,
+          8
+        ]
+      ],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            0,
+            12,
+            3,
+            8
+          ],
+          "crt": 1881138856,
+          "shared": 1234567,
+          "progress": 9,
+          "painted": 9,
+          "output_sha256": "b31302bda2fccb23c6d74c7cda500de20f839bfdadb887ed12a14e0fd7c83bdf",
+          "write_count": 109,
+          "rng_count": 41
+        }
+      ],
+      "rng_count": 41,
+      "rng_sha256": "88b44c4915c2cf4cb15ed703e1e86b324657aeeaf90b14f7d682f9bd2c3fc019",
+      "ordered_tile_write_count": 109,
+      "ordered_tile_write_sha256": "fab032f1f89866d2b9cd64512e96e8749c3731e7adc317f302c8ec7990111b11",
+      "paint_calls": 4,
+      "changed_tiles": 29,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "e0ec2a93d57cc3436d51afe281039547a95faafb914c5921792f98d6af88d36d",
+      "direction_trace_sha256": "f4e07763d1fe5d561e4b37d34eeb9fd71e0ec151c6304e591ebd545c7b3ae87a"
+    },
+    {
+      "input": {
+        "id": "grow_0_30_12",
+        "kind": "grow",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "flat": false,
+        "arguments": [
+          30,
+          12,
+          3,
+          8
+        ]
+      },
+      "input_sha256": "322b2ccfe377334d066f75941410340950744f4d94ead7adaf048908859c2916",
+      "output_sha256": "9cbcd6914b5df8ae13fb8e408993e1dadd643e7cde64c6ab8bad240e2e9f8a50",
+      "crt_after": 1881138856,
+      "shared_after": 1234567,
+      "progress_after": 9,
+      "land_target_after": 640,
+      "painted_after": 9,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [
+        [
+          30,
+          12,
+          3,
+          8
+        ]
+      ],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            30,
+            12,
+            3,
+            8
+          ],
+          "crt": 1881138856,
+          "shared": 1234567,
+          "progress": 9,
+          "painted": 9,
+          "output_sha256": "9cbcd6914b5df8ae13fb8e408993e1dadd643e7cde64c6ab8bad240e2e9f8a50",
+          "write_count": 109,
+          "rng_count": 41
+        }
+      ],
+      "rng_count": 41,
+      "rng_sha256": "88b44c4915c2cf4cb15ed703e1e86b324657aeeaf90b14f7d682f9bd2c3fc019",
+      "ordered_tile_write_count": 109,
+      "ordered_tile_write_sha256": "8cb666a2759fe9e8628f23043ac51df354743a8f37ec1f82444b32908cfca53d",
+      "paint_calls": 4,
+      "changed_tiles": 29,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "b3f33f07af6de216416dddb21d3afe7d6604f812e9ee0ae2881e9e3d5f00c03e",
+      "direction_trace_sha256": "f4e07763d1fe5d561e4b37d34eeb9fd71e0ec151c6304e591ebd545c7b3ae87a"
+    },
+    {
+      "input": {
+        "id": "grow_0_0_0",
+        "kind": "grow",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "flat": false,
+        "arguments": [
+          0,
+          0,
+          3,
+          8
+        ]
+      },
+      "input_sha256": "322b2ccfe377334d066f75941410340950744f4d94ead7adaf048908859c2916",
+      "output_sha256": "03ae00105aac3ab0591de8a40a5d5380fb8823e835ac3dd7935fecf0efa0617a",
+      "crt_after": 756189987,
+      "shared_after": 1234567,
+      "progress_after": 8,
+      "land_target_after": 640,
+      "painted_after": 8,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [
+        [
+          0,
+          0,
+          3,
+          8
+        ]
+      ],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            0,
+            0,
+            3,
+            8
+          ],
+          "crt": 756189987,
+          "shared": 1234567,
+          "progress": 8,
+          "painted": 8,
+          "output_sha256": "03ae00105aac3ab0591de8a40a5d5380fb8823e835ac3dd7935fecf0efa0617a",
+          "write_count": 85,
+          "rng_count": 34
+        }
+      ],
+      "rng_count": 34,
+      "rng_sha256": "bd31a96c64ca71cc1ab8bf2244ca140c43f4aec55c3657048a9ea698c5417432",
+      "ordered_tile_write_count": 85,
+      "ordered_tile_write_sha256": "1678b5c67b2aa045978d90a0341aa0accf4cbd29e8d2ad64c45c4dadfa99538e",
+      "paint_calls": 5,
+      "changed_tiles": 22,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "699bb76599fe6672e57845f931fa60c7277a2450afa93e896bd2ab8c2f5f85ba",
+      "direction_trace_sha256": "4aa155fb267b4d88eb7046675d5b3ad2b20005d574f10138e231654ed9700ed2"
+    },
+    {
+      "input": {
+        "id": "grow_0_31_23",
+        "kind": "grow",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "flat": false,
+        "arguments": [
+          31,
+          23,
+          3,
+          8
+        ]
+      },
+      "input_sha256": "322b2ccfe377334d066f75941410340950744f4d94ead7adaf048908859c2916",
+      "output_sha256": "949e32ed825ef56b5b47df22bce92d09186624f1cbde45c5b63f4423e563d075",
+      "crt_after": 1423890337,
+      "shared_after": 1234567,
+      "progress_after": 8,
+      "land_target_after": 640,
+      "painted_after": 8,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [
+        [
+          31,
+          23,
+          3,
+          8
+        ]
+      ],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            31,
+            23,
+            3,
+            8
+          ],
+          "crt": 1423890337,
+          "shared": 1234567,
+          "progress": 8,
+          "painted": 8,
+          "output_sha256": "949e32ed825ef56b5b47df22bce92d09186624f1cbde45c5b63f4423e563d075",
+          "write_count": 82,
+          "rng_count": 32
+        }
+      ],
+      "rng_count": 32,
+      "rng_sha256": "dbff834a9de53cc36c3eb44d0eeb5f6ac68e6b527541735572732d601266ec64",
+      "ordered_tile_write_count": 82,
+      "ordered_tile_write_sha256": "93991e240f27a04420c1d2a54e351b11e8efe86d73b031e417fe00fb4c4b0b86",
+      "paint_calls": 4,
+      "changed_tiles": 21,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "44a8f170ce5d545e18e554df9c2c3ef5421f19b5843ed57803747b1a961edc11",
+      "direction_trace_sha256": "809cc6d5871660550208c5b71ae6382269e68cff1cf665dd8a15324f6827082c"
+    },
+    {
+      "input": {
+        "id": "grow_1_0_12",
+        "kind": "grow",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "flat": true,
+        "arguments": [
+          0,
+          12,
+          3,
+          8
+        ]
+      },
+      "input_sha256": "322b2ccfe377334d066f75941410340950744f4d94ead7adaf048908859c2916",
+      "output_sha256": "ec22aa0fff761c3d63835c37a05228cfd1a10eda921139b5a893b9b3371004e1",
+      "crt_after": 3115572192,
+      "shared_after": 1234567,
+      "progress_after": 8,
+      "land_target_after": 640,
+      "painted_after": 8,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [
+        [
+          0,
+          12,
+          3,
+          8
+        ]
+      ],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            0,
+            12,
+            3,
+            8
+          ],
+          "crt": 3115572192,
+          "shared": 1234567,
+          "progress": 8,
+          "painted": 8,
+          "output_sha256": "ec22aa0fff761c3d63835c37a05228cfd1a10eda921139b5a893b9b3371004e1",
+          "write_count": 89,
+          "rng_count": 33
+        }
+      ],
+      "rng_count": 33,
+      "rng_sha256": "64ddcbea8e8474792c1de70cfbb7970f6a2b34f217dfa3870462c55189cbe8be",
+      "ordered_tile_write_count": 89,
+      "ordered_tile_write_sha256": "53d601cc5b5dc5b1c48dcdbd78dd4683a049b98feeb7ea8c78caafa3472ea79e",
+      "paint_calls": 3,
+      "changed_tiles": 23,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "4810a6f396fee64a79ad9cc317162b92f03c6f94adde6ffd672074f0386a057b",
+      "direction_trace_sha256": "5aa9a124e92f5809f93cf069dfc029d41a8769a87ca7486e42e30c49e4f18916"
+    },
+    {
+      "input": {
+        "id": "grow_1_30_12",
+        "kind": "grow",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "flat": true,
+        "arguments": [
+          30,
+          12,
+          3,
+          8
+        ]
+      },
+      "input_sha256": "322b2ccfe377334d066f75941410340950744f4d94ead7adaf048908859c2916",
+      "output_sha256": "204df341d1ea0affdf3ea85515f2f36b0e9b7b45a3974056af1b1482d4f91e83",
+      "crt_after": 1682158244,
+      "shared_after": 1234567,
+      "progress_after": 9,
+      "land_target_after": 640,
+      "painted_after": 9,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [
+        [
+          30,
+          12,
+          3,
+          8
+        ]
+      ],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            30,
+            12,
+            3,
+            8
+          ],
+          "crt": 1682158244,
+          "shared": 1234567,
+          "progress": 9,
+          "painted": 9,
+          "output_sha256": "204df341d1ea0affdf3ea85515f2f36b0e9b7b45a3974056af1b1482d4f91e83",
+          "write_count": 93,
+          "rng_count": 37
+        }
+      ],
+      "rng_count": 37,
+      "rng_sha256": "f234149973ed78d8ef956d82ce5a7196a104ce155beae5afc0a81d049463d41e",
+      "ordered_tile_write_count": 93,
+      "ordered_tile_write_sha256": "fa68e9159d1268b1858cc984fed00f5298c37db05bc9cbd5dc8dbc43060d7c6e",
+      "paint_calls": 6,
+      "changed_tiles": 23,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "a961fb95a7881419e34ccb16a4dbdfa4096365bc325b76e7b380ca37980e7e6a",
+      "direction_trace_sha256": "a5eee0621a14d7893f9589715ed530dc8056588692d1fa529b9d58eb46be42d8"
+    },
+    {
+      "input": {
+        "id": "grow_1_0_0",
+        "kind": "grow",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "flat": true,
+        "arguments": [
+          0,
+          0,
+          3,
+          8
+        ]
+      },
+      "input_sha256": "322b2ccfe377334d066f75941410340950744f4d94ead7adaf048908859c2916",
+      "output_sha256": "2a376373af01d0a29b30de4f4d992d29fa5301594369178934cc2498c217d770",
+      "crt_after": 3115572192,
+      "shared_after": 1234567,
+      "progress_after": 9,
+      "land_target_after": 640,
+      "painted_after": 9,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [
+        [
+          0,
+          0,
+          3,
+          8
+        ]
+      ],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            0,
+            0,
+            3,
+            8
+          ],
+          "crt": 3115572192,
+          "shared": 1234567,
+          "progress": 9,
+          "painted": 9,
+          "output_sha256": "2a376373af01d0a29b30de4f4d992d29fa5301594369178934cc2498c217d770",
+          "write_count": 82,
+          "rng_count": 33
+        }
+      ],
+      "rng_count": 33,
+      "rng_sha256": "35d5a31840a50dadfceb5c9477a7dd894a3f627e3dbcd073b568bbd086ba0426",
+      "ordered_tile_write_count": 82,
+      "ordered_tile_write_sha256": "e4cd925ac8edd5fea9552470d59eabdf26160b28966b504bc8b2c7ddaced1954",
+      "paint_calls": 5,
+      "changed_tiles": 20,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "f180b4c7ba8e3ee905ba0318c7bc6f3ae6707d4616cf9e0959fc3d5bd4396f4e",
+      "direction_trace_sha256": "7bb05e4057dfdfc7101a9952452d174a680e8848a2bbdfb5653d1594cc0a08d3"
+    },
+    {
+      "input": {
+        "id": "grow_1_31_23",
+        "kind": "grow",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "flat": true,
+        "arguments": [
+          31,
+          23,
+          3,
+          8
+        ]
+      },
+      "input_sha256": "322b2ccfe377334d066f75941410340950744f4d94ead7adaf048908859c2916",
+      "output_sha256": "7e66d4b158cd6b45e6f816a46948abfbc61f3a6b42b790504253c04a0ce79f70",
+      "crt_after": 2140559924,
+      "shared_after": 1234567,
+      "progress_after": 9,
+      "land_target_after": 640,
+      "painted_after": 9,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [
+        [
+          31,
+          23,
+          3,
+          8
+        ]
+      ],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            31,
+            23,
+            3,
+            8
+          ],
+          "crt": 2140559924,
+          "shared": 1234567,
+          "progress": 9,
+          "painted": 9,
+          "output_sha256": "7e66d4b158cd6b45e6f816a46948abfbc61f3a6b42b790504253c04a0ce79f70",
+          "write_count": 83,
+          "rng_count": 53
+        }
+      ],
+      "rng_count": 53,
+      "rng_sha256": "326ca6edcd6ebdf15db8c57f54b79cd02c1b54f6b61af2a2cab43451b9cd824a",
+      "ordered_tile_write_count": 83,
+      "ordered_tile_write_sha256": "c99ac7f88a6c73d06e5c64d018d44d85ac35b519b9233f15c6ce8fab497fe9f0",
+      "paint_calls": 25,
+      "changed_tiles": 20,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "83061b82fcf17e05050e9782abb5b14b7a0387418ed744d5d8e40da28841a85a",
+      "direction_trace_sha256": "e1ab8ed7d9553fb7313c4fb3e340674069dab30dd11924e2eb9ffeab90d48d55"
+    },
+    {
+      "input": {
+        "id": "growth_limit_no_paints",
+        "kind": "grow",
+        "width": 16,
+        "height": 16,
+        "crt": 1,
+        "initial_band": 3,
+        "initial_contour": 45,
+        "arguments": [
+          8,
+          8,
+          3,
+          4
+        ]
+      },
+      "input_sha256": "cfbee10aaff571a7e8d1aad960904867ba20ca0f74829c21c7e12d2b37238938",
+      "output_sha256": "cfbee10aaff571a7e8d1aad960904867ba20ca0f74829c21c7e12d2b37238938",
+      "crt_after": 721004762,
+      "shared_after": 1234567,
+      "progress_after": 0,
+      "land_target_after": 640,
+      "painted_after": 0,
+      "dirty_after": 16,
+      "flood_after": [
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107
+      ],
+      "affected_after": [
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207
+      ],
+      "seeds": [],
+      "walks": [
+        [
+          8,
+          8,
+          3,
+          4
+        ]
+      ],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            8,
+            8,
+            3,
+            4
+          ],
+          "crt": 721004762,
+          "shared": 1234567,
+          "progress": 0,
+          "painted": 0,
+          "output_sha256": "cfbee10aaff571a7e8d1aad960904867ba20ca0f74829c21c7e12d2b37238938",
+          "write_count": 0,
+          "rng_count": 1955
+        }
+      ],
+      "rng_count": 1955,
+      "rng_sha256": "2e5f1fc9f8975010e4c0a5ecb96b782769bdb4f472f4b16924da9d11fc0c9dcd",
+      "ordered_tile_write_count": 0,
+      "ordered_tile_write_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "paint_calls": 1955,
+      "changed_tiles": 0,
+      "direction_corrections": 3,
+      "paint_trace_sha256": "ced98e57d223a97452dbd3a400a2c77d9e3472f3ce69da693e716d69a06f713d",
+      "direction_trace_sha256": "7efffa03cdf33300822250b99379b580102c3460a9b8a83b2909a379c7a03a3d"
+    },
+    {
+      "input": {
+        "id": "paint_clear",
+        "kind": "paint",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "region_poison": 1,
+        "arguments": [
+          16,
+          12,
+          3
+        ],
+        "patches": []
+      },
+      "input_sha256": "c465bb98c6c03ed958417eb7849bac2fa0bc301bd46509442a2bd3d2852d7283",
+      "output_sha256": "9f04d7c7c4df9a5208167e887617bfc1a401ee0787991051daf0a82b5fb18d53",
+      "crt_after": 196285776,
+      "shared_after": 1234567,
+      "progress_after": 3,
+      "land_target_after": 640,
+      "painted_after": 80,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            16,
+            12,
+            3
+          ],
+          "crt": 196285776,
+          "shared": 1234567,
+          "progress": 3,
+          "painted": 80,
+          "output_sha256": "9f04d7c7c4df9a5208167e887617bfc1a401ee0787991051daf0a82b5fb18d53",
+          "write_count": 50,
+          "rng_count": 17
+        }
+      ],
+      "rng_count": 17,
+      "rng_sha256": "c943fade3ae153fd71b4d1ea571dc7397b3ff57d6046c149b7038e9ec054beae",
+      "ordered_tile_write_count": 50,
+      "ordered_tile_write_sha256": "f9ad07a802f1f2e82b51a4a0c80503b57f8437aa832d93386c5e662760c19add",
+      "paint_calls": 1,
+      "changed_tiles": 15,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "a7388b1c5b0aeeebcbfc1ee0e34baee882edcbb400625aebe7424d527eb5de7d",
+      "direction_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "input": {
+        "id": "paint_foreign_neighbor",
+        "kind": "paint",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "region_poison": 0,
+        "arguments": [
+          16,
+          12,
+          3
+        ],
+        "patches": [
+          [
+            18,
+            12,
+            {
+              "0": 96,
+              "1": 45,
+              "3": 0
+            }
+          ]
+        ]
+      },
+      "input_sha256": "19f682e4559b88ea2dcd670eb7f787d77925c4322ea47016d696e306d2be6e8c",
+      "output_sha256": "19f682e4559b88ea2dcd670eb7f787d77925c4322ea47016d696e306d2be6e8c",
+      "crt_after": 1,
+      "shared_after": 1234567,
+      "progress_after": 0,
+      "land_target_after": 640,
+      "painted_after": 77,
+      "dirty_after": 16,
+      "flood_after": [
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107
+      ],
+      "affected_after": [
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207
+      ],
+      "seeds": [],
+      "walks": [],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            16,
+            12,
+            3
+          ],
+          "crt": 1,
+          "shared": 1234567,
+          "progress": 0,
+          "painted": 77,
+          "output_sha256": "19f682e4559b88ea2dcd670eb7f787d77925c4322ea47016d696e306d2be6e8c",
+          "write_count": 0,
+          "rng_count": 0
+        }
+      ],
+      "rng_count": 0,
+      "rng_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "ordered_tile_write_count": 0,
+      "ordered_tile_write_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "paint_calls": 1,
+      "changed_tiles": 0,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "a7388b1c5b0aeeebcbfc1ee0e34baee882edcbb400625aebe7424d527eb5de7d",
+      "direction_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "input": {
+        "id": "paint_own_neighbor",
+        "kind": "paint",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "region_poison": 1,
+        "arguments": [
+          16,
+          12,
+          3
+        ],
+        "patches": [
+          [
+            17,
+            11,
+            {
+              "0": 96,
+              "1": 45,
+              "3": 1
+            }
+          ]
+        ]
+      },
+      "input_sha256": "40251ef2ab3b52e3fce6997d3cc3aba5819d1da71ba069d3fb7cbb771ca43def",
+      "output_sha256": "e3cf2973a19aeebcebb7d84943d84afac6ba22e85908b0081a33995e57018730",
+      "crt_after": 1844513277,
+      "shared_after": 1234567,
+      "progress_after": 2,
+      "land_target_after": 640,
+      "painted_after": 79,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            16,
+            12,
+            3
+          ],
+          "crt": 1844513277,
+          "shared": 1234567,
+          "progress": 2,
+          "painted": 79,
+          "output_sha256": "e3cf2973a19aeebcebb7d84943d84afac6ba22e85908b0081a33995e57018730",
+          "write_count": 35,
+          "rng_count": 12
+        }
+      ],
+      "rng_count": 12,
+      "rng_sha256": "2ec84da1fe70efc827bf997558af1441495c7acd33ef40597ee76ec9b756ea21",
+      "ordered_tile_write_count": 35,
+      "ordered_tile_write_sha256": "2007403c780972775cf3a2e4edb4609f7223daddbd835f10873e79faea318fa9",
+      "paint_calls": 1,
+      "changed_tiles": 11,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "a7388b1c5b0aeeebcbfc1ee0e34baee882edcbb400625aebe7424d527eb5de7d",
+      "direction_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "input": {
+        "id": "paint_bridge",
+        "kind": "paint",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "region_poison": 1,
+        "arguments": [
+          16,
+          12,
+          3
+        ],
+        "patches": [
+          [
+            18,
+            12,
+            {
+              "0": 96,
+              "1": 45,
+              "3": 1
+            }
+          ]
+        ]
+      },
+      "input_sha256": "c2891dd722802ba04707fbbfc9c562412a3ceeed25cf0698eda156ce0c615911",
+      "output_sha256": "e170d92acc8cfb4d97703fb52549bbde743733f9243c5ac9934de9888c810870",
+      "crt_after": 3250303071,
+      "shared_after": 1234567,
+      "progress_after": 2,
+      "land_target_after": 640,
+      "painted_after": 79,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            16,
+            12,
+            3
+          ],
+          "crt": 3250303071,
+          "shared": 1234567,
+          "progress": 2,
+          "painted": 79,
+          "output_sha256": "e170d92acc8cfb4d97703fb52549bbde743733f9243c5ac9934de9888c810870",
+          "write_count": 41,
+          "rng_count": 14
+        }
+      ],
+      "rng_count": 14,
+      "rng_sha256": "07af1fb43ae94c5ef08087110f6c0dd02975130ec1c60ae1c25a6ac9df0b2a05",
+      "ordered_tile_write_count": 41,
+      "ordered_tile_write_sha256": "ecbe287a47cfb5c8fa14e9c6db69ff8beaceba523c69c3b7bde6fadeff176546",
+      "paint_calls": 1,
+      "changed_tiles": 13,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "a7388b1c5b0aeeebcbfc1ee0e34baee882edcbb400625aebe7424d527eb5de7d",
+      "direction_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "input": {
+        "id": "paint_bridge_filled",
+        "kind": "paint",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "region_poison": 1,
+        "arguments": [
+          16,
+          12,
+          3
+        ],
+        "patches": [
+          [
+            18,
+            12,
+            {
+              "0": 96,
+              "1": 45,
+              "3": 1
+            }
+          ],
+          [
+            17,
+            11,
+            {
+              "0": 96,
+              "1": 45,
+              "3": 1
+            }
+          ]
+        ]
+      },
+      "input_sha256": "68dc2bb1caa5bc95684b43a0f83d2085dd4fb579db8ac7548ccdeebccceef47b",
+      "output_sha256": "a4b147a053c41b0a64d05ac912a072c4e17cfa292b4970201d86021bd122e22c",
+      "crt_after": 373929026,
+      "shared_after": 1234567,
+      "progress_after": 2,
+      "land_target_after": 640,
+      "painted_after": 79,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            16,
+            12,
+            3
+          ],
+          "crt": 373929026,
+          "shared": 1234567,
+          "progress": 2,
+          "painted": 79,
+          "output_sha256": "a4b147a053c41b0a64d05ac912a072c4e17cfa292b4970201d86021bd122e22c",
+          "write_count": 32,
+          "rng_count": 11
+        }
+      ],
+      "rng_count": 11,
+      "rng_sha256": "014a97d0192f8b1ef8d99b91b77ee26879ee19dca269e1937a13de14a0dbe8e6",
+      "ordered_tile_write_count": 32,
+      "ordered_tile_write_sha256": "723060e265a7b958c5c6c823b6be147fe641d1ae847aa37f69e650a34dea950f",
+      "paint_calls": 1,
+      "changed_tiles": 10,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "a7388b1c5b0aeeebcbfc1ee0e34baee882edcbb400625aebe7424d527eb5de7d",
+      "direction_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "input": {
+        "id": "paint_high_neighbor",
+        "kind": "paint",
+        "width": 32,
+        "height": 24,
+        "crt": 1,
+        "region_poison": 1,
+        "arguments": [
+          16,
+          12,
+          3
+        ],
+        "patches": [
+          [
+            18,
+            12,
+            {
+              "0": 128,
+              "1": 60,
+              "3": 1
+            }
+          ]
+        ]
+      },
+      "input_sha256": "054b670d0289a444d6d03429c063d891bb5c621341608cb9db97099435e8b289",
+      "output_sha256": "39cd9f027b70422d734d18c5e33663ce5255fd53ef6c87fc028e86f07687fd08",
+      "crt_after": 2179684817,
+      "shared_after": 1234567,
+      "progress_after": 3,
+      "land_target_after": 640,
+      "painted_after": 80,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [],
+      "walks": [],
+      "pumps": 0,
+      "calls": [
+        {
+          "arguments": [
+            16,
+            12,
+            3
+          ],
+          "crt": 2179684817,
+          "shared": 1234567,
+          "progress": 3,
+          "painted": 80,
+          "output_sha256": "39cd9f027b70422d734d18c5e33663ce5255fd53ef6c87fc028e86f07687fd08",
+          "write_count": 47,
+          "rng_count": 16
+        }
+      ],
+      "rng_count": 16,
+      "rng_sha256": "157009570dac8e973a9643ab72e4aab28244e80131982e180dcdab2ce8305e5d",
+      "ordered_tile_write_count": 47,
+      "ordered_tile_write_sha256": "a2839c2eb479884e90acef71bde3b4ae3cd25c486b8b3f4e32ac9b2b3a2e4ee7",
+      "paint_calls": 1,
+      "changed_tiles": 14,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "a7388b1c5b0aeeebcbfc1ee0e34baee882edcbb400625aebe7424d527eb5de7d",
+      "direction_trace_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "input": {
+        "id": "ratio7_land0_s2",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 2,
+        "land": 0,
+        "attempts": [
+          7
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "00e716eb54b75ae6f16f9eb37e56adaedecb8b7b4ff9ab65a4246489e17182bb",
+      "crt_after": 3387538474,
+      "shared_after": 1234567,
+      "progress_after": 8,
+      "land_target_after": 640,
+      "painted_after": 8,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          44,
+          60
+        ]
+      ],
+      "walks": [
+        [
+          44,
+          60,
+          3,
+          6
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            7
+          ],
+          "crt": 3387538474,
+          "shared": 1234567,
+          "progress": 8,
+          "painted": 8,
+          "output_sha256": "00e716eb54b75ae6f16f9eb37e56adaedecb8b7b4ff9ab65a4246489e17182bb",
+          "write_count": 3301,
+          "rng_count": 40
+        }
+      ],
+      "rng_count": 40,
+      "rng_sha256": "6132e7b295f9e7a3c60f9914c4209a7d6400770ddbc0b1ad4a94151dba3ff43a",
+      "ordered_tile_write_count": 3301,
+      "ordered_tile_write_sha256": "d65ab27e433587921c79ce44699720b2a008a117250b622bc42ca1d64dfc2af0",
+      "paint_calls": 3,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "4d75dd3aedcc7f400b70e3138a52a4dffbafcc2837f6db4b075eed917759085c",
+      "direction_trace_sha256": "71bf86f1877a4fdc6133d700255677a7022b07eb82767996854f40f0b4fddcef"
+    },
+    {
+      "input": {
+        "id": "ratio7_land0_s3",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 3,
+        "land": 0,
+        "attempts": [
+          7
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "9c19ae5f0a44f3a51fa396395cf31e1fd148886ce5638fc54871614f254c1d42",
+      "crt_after": 3979134027,
+      "shared_after": 1234567,
+      "progress_after": 8,
+      "land_target_after": 640,
+      "painted_after": 8,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          48,
+          72
+        ]
+      ],
+      "walks": [
+        [
+          48,
+          72,
+          3,
+          6
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            7
+          ],
+          "crt": 3979134027,
+          "shared": 1234567,
+          "progress": 8,
+          "painted": 8,
+          "output_sha256": "9c19ae5f0a44f3a51fa396395cf31e1fd148886ce5638fc54871614f254c1d42",
+          "write_count": 3300,
+          "rng_count": 40
+        }
+      ],
+      "rng_count": 40,
+      "rng_sha256": "2f4b0c236a38601b192bf2f784e180614766dc4e60652212368aaf87bae1a6cc",
+      "ordered_tile_write_count": 3300,
+      "ordered_tile_write_sha256": "81622586d337c2f7c18d48bdd90c95e1cd14bfcf3f3a096e5f2a2ac98d286bda",
+      "paint_calls": 3,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "6bf2a5c7b164b80b9e34cda3e9ef46ece1f789c52c3aaf022898d26005027cc4",
+      "direction_trace_sha256": "09dcb4c765662e1e867ea8be95d10bcd547edb8232a16351bd51eff1490ec7d8"
+    },
+    {
+      "input": {
+        "id": "ratio7_land1_s2",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 2,
+        "land": 1,
+        "attempts": [
+          7
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "6183618ac1581ee4bab7720fb9f37ac211fd69f018ec846e98811b866f98b6b6",
+      "crt_after": 96855751,
+      "shared_after": 1234567,
+      "progress_after": 36,
+      "land_target_after": 640,
+      "painted_after": 36,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          44,
+          60
+        ]
+      ],
+      "walks": [
+        [
+          44,
+          60,
+          3,
+          36
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            7
+          ],
+          "crt": 96855751,
+          "shared": 1234567,
+          "progress": 36,
+          "painted": 36,
+          "output_sha256": "6183618ac1581ee4bab7720fb9f37ac211fd69f018ec846e98811b866f98b6b6",
+          "write_count": 3537,
+          "rng_count": 139
+        }
+      ],
+      "rng_count": 139,
+      "rng_sha256": "ce38108202532963268fd14c9405e6af0aa782005ab8bad02806cead6dff052a",
+      "ordered_tile_write_count": 3537,
+      "ordered_tile_write_sha256": "a58bbc6f42346338d147bab3d73d47c1228eb06a4c10aa9cf8da283ae2772fd3",
+      "paint_calls": 22,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "78e27e0e5b288e2947d5b0f69c8e8e18077259aef2d4755c44d5f3d8e5d78027",
+      "direction_trace_sha256": "7dec122600bec8ddb271ac2d07eaf9c4580426728a5d8cb17b2f7f0793908dde"
+    },
+    {
+      "input": {
+        "id": "ratio7_land1_s3",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 3,
+        "land": 1,
+        "attempts": [
+          7
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "66fa7f12e79c5dfccd1c3e16abf8f120048838692554a47c0635c48b951d8b18",
+      "crt_after": 110521270,
+      "shared_after": 1234567,
+      "progress_after": 36,
+      "land_target_after": 640,
+      "painted_after": 36,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          48,
+          72
+        ]
+      ],
+      "walks": [
+        [
+          48,
+          72,
+          3,
+          36
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            7
+          ],
+          "crt": 110521270,
+          "shared": 1234567,
+          "progress": 36,
+          "painted": 36,
+          "output_sha256": "66fa7f12e79c5dfccd1c3e16abf8f120048838692554a47c0635c48b951d8b18",
+          "write_count": 3571,
+          "rng_count": 157
+        }
+      ],
+      "rng_count": 157,
+      "rng_sha256": "1257e77cdfaa677f95b5d33b9cd90cc69ead275e6f488eac8fec9ee4a2e35273",
+      "ordered_tile_write_count": 3571,
+      "ordered_tile_write_sha256": "8d67c786649982f7aa703255f0449002781eb1dd55a733f85c590ea149cb85e5",
+      "paint_calls": 28,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "0f4485ac2460ffb7e3d4ac44c7ac4669d910bc0b0019adb4c1e2481cb0534043",
+      "direction_trace_sha256": "c7e5ce8d31333abad0d30a401062bdf0c039bde232f42cf452a585fad88b7f34"
+    },
+    {
+      "input": {
+        "id": "ratio7_land2_s2",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 2,
+        "land": 2,
+        "attempts": [
+          7
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "d29ddaf25217c57b95a268c213097d82d39de1837cb71b04cfd05abeddbf9d63",
+      "crt_after": 1179114465,
+      "shared_after": 1234567,
+      "progress_after": 109,
+      "land_target_after": 640,
+      "painted_after": 109,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          44,
+          60
+        ]
+      ],
+      "walks": [
+        [
+          44,
+          60,
+          3,
+          108
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            7
+          ],
+          "crt": 1179114465,
+          "shared": 1234567,
+          "progress": 109,
+          "painted": 109,
+          "output_sha256": "d29ddaf25217c57b95a268c213097d82d39de1837cb71b04cfd05abeddbf9d63",
+          "write_count": 4117,
+          "rng_count": 405
+        }
+      ],
+      "rng_count": 405,
+      "rng_sha256": "902fc0dea5a3c458509d2f0861799768ec06194f4b431e0d6d2cc1722fec3a62",
+      "ordered_tile_write_count": 4117,
+      "ordered_tile_write_sha256": "78e771e20a2e4185242f6d35136da6fa78da5e9c1527ba09d5f92f3833703d42",
+      "paint_calls": 92,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "3e55119c4f880e2afa7611ce61fe15ed58f7bb022fc62e2a96716b99c1d15d9b",
+      "direction_trace_sha256": "245c99b616b85394278fc2c0f0360187bf7eed8afde2eb4810a8b45788525fef"
+    },
+    {
+      "input": {
+        "id": "ratio7_land2_s3",
+        "kind": "seed",
+        "width": 80,
+        "height": 80,
+        "crt": 3,
+        "land": 2,
+        "attempts": [
+          7
+        ]
+      },
+      "input_sha256": "bced193c07d8783bebe8e4029cba428a54e70e640abb7fb261e7fb83d3365a1c",
+      "output_sha256": "ab5a7ae2bfbc434b83c9aa43d62f336e461db1c727a22ba24514d6a9e1c4ca30",
+      "crt_after": 1048709079,
+      "shared_after": 1234567,
+      "progress_after": 109,
+      "land_target_after": 640,
+      "painted_after": 109,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          48,
+          72
+        ]
+      ],
+      "walks": [
+        [
+          48,
+          72,
+          3,
+          108
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            7
+          ],
+          "crt": 1048709079,
+          "shared": 1234567,
+          "progress": 109,
+          "painted": 109,
+          "output_sha256": "ab5a7ae2bfbc434b83c9aa43d62f336e461db1c727a22ba24514d6a9e1c4ca30",
+          "write_count": 4098,
+          "rng_count": 420
+        }
+      ],
+      "rng_count": 420,
+      "rng_sha256": "c87f806264715f97a78ebd8c8a2ec568c0426edfcb522d81cbec67bac370ed82",
+      "ordered_tile_write_count": 4098,
+      "ordered_tile_write_sha256": "cb7f9acf2d91a2d2c80f9eeca6f5c0754821a6bf6ceaa0f04500223061f9c944",
+      "paint_calls": 114,
+      "changed_tiles": 3200,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "e8dddb326e0772a78b3f5e1a615bd07fab4be8b7ea4523c5a936bef404893179",
+      "direction_trace_sha256": "268c23b42897b3beb3c4d150ece976cbbf51a649b14ccca90536a00ff0839ccb"
+    },
+    {
+      "input": {
+        "id": "no_natural_resources",
+        "kind": "seed",
+        "width": 32,
+        "height": 24,
+        "crt": 9,
+        "pattern": 0,
+        "occupant": 163
+      },
+      "input_sha256": "83219ced8830f60c7892d88a08d500ddfe747cb7e8d4db440692917cbe55884a",
+      "output_sha256": "b4072e8f171328bf7d327b13d8d443fc36065d8917d987fc95a24d972903d526",
+      "crt_after": 695606469,
+      "shared_after": 1234567,
+      "progress_after": 18,
+      "land_target_after": 640,
+      "painted_after": 18,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          5,
+          11
+        ]
+      ],
+      "walks": [
+        [
+          5,
+          11,
+          3,
+          18
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 695606469,
+          "shared": 1234567,
+          "progress": 18,
+          "painted": 18,
+          "output_sha256": "b4072e8f171328bf7d327b13d8d443fc36065d8917d987fc95a24d972903d526",
+          "write_count": 576,
+          "rng_count": 76
+        }
+      ],
+      "rng_count": 76,
+      "rng_sha256": "0013edfb9786357ed2baead651c55e389f2c0afb5c5717af19506008bc293c26",
+      "ordered_tile_write_count": 576,
+      "ordered_tile_write_sha256": "48cc3931bca5efe144a23163c68586fe0ebb40f16f057d10c1976665a9ea1eed",
+      "paint_calls": 9,
+      "changed_tiles": 384,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "eebb6e71628d0b918e5eca4cdf934a9a80707f12f8f7019c036b149e5191e671",
+      "direction_trace_sha256": "458123660efe3580af278ce7a3760df3a49accd3ef7a0353c2148df2816df397"
+    },
+    {
+      "input": {
+        "id": "automatic_land_resources",
+        "kind": "seed",
+        "width": 32,
+        "height": 24,
+        "crt": 9,
+        "rules": 14862,
+        "occupant": 163
+      },
+      "input_sha256": "83219ced8830f60c7892d88a08d500ddfe747cb7e8d4db440692917cbe55884a",
+      "output_sha256": "0fee1cd46fd7b35c13f893834e03fe60296b335de00715f978753b15a114dbc0",
+      "crt_after": 695606469,
+      "shared_after": 1234567,
+      "progress_after": 18,
+      "land_target_after": 640,
+      "painted_after": 18,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          5,
+          11
+        ]
+      ],
+      "walks": [
+        [
+          5,
+          11,
+          3,
+          18
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 695606469,
+          "shared": 1234567,
+          "progress": 18,
+          "painted": 18,
+          "output_sha256": "0fee1cd46fd7b35c13f893834e03fe60296b335de00715f978753b15a114dbc0",
+          "write_count": 575,
+          "rng_count": 76
+        }
+      ],
+      "rng_count": 76,
+      "rng_sha256": "0013edfb9786357ed2baead651c55e389f2c0afb5c5717af19506008bc293c26",
+      "ordered_tile_write_count": 575,
+      "ordered_tile_write_sha256": "1c9b000320f0fff104adc2cfa00a291177b8ac9d52f3690048cbff9e5ffe951e",
+      "paint_calls": 9,
+      "changed_tiles": 384,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "eebb6e71628d0b918e5eca4cdf934a9a80707f12f8f7019c036b149e5191e671",
+      "direction_trace_sha256": "458123660efe3580af278ce7a3760df3a49accd3ef7a0353c2148df2816df397"
+    },
+    {
+      "input": {
+        "id": "seed_draw_suppression",
+        "kind": "seed",
+        "width": 8,
+        "height": 9,
+        "crt": 1,
+        "flat": true
+      },
+      "input_sha256": "4d0637bf00c30c850bd6f7b8f69e8f9dd0a342ba435ec4eb9dab21b4b36b26b8",
+      "output_sha256": "6bd8a4ec071a11ffedd60dd471011a6d745c0481767046642508aac50f99e91c",
+      "crt_after": 2453175039,
+      "shared_after": 1234567,
+      "progress_after": 9,
+      "land_target_after": 640,
+      "painted_after": 9,
+      "dirty_after": 20,
+      "flood_after": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "affected_after": [
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+      ],
+      "seeds": [
+        [
+          4,
+          4
+        ]
+      ],
+      "walks": [
+        [
+          4,
+          4,
+          3,
+          9
+        ]
+      ],
+      "pumps": 1,
+      "calls": [
+        {
+          "arguments": [
+            1
+          ],
+          "crt": 2453175039,
+          "shared": 1234567,
+          "progress": 9,
+          "painted": 9,
+          "output_sha256": "6bd8a4ec071a11ffedd60dd471011a6d745c0481767046642508aac50f99e91c",
+          "write_count": 139,
+          "rng_count": 46
+        }
+      ],
+      "rng_count": 46,
+      "rng_sha256": "032b951da14b9746c806a49bdc243d5bf3a0f1562f4f2994014d66292b806836",
+      "ordered_tile_write_count": 139,
+      "ordered_tile_write_sha256": "b6d6e7efb72c718af70d4a4bd0d9edba68b0da71bf10e4e74b2663dc887aa5a1",
+      "paint_calls": 11,
+      "changed_tiles": 36,
+      "direction_corrections": 0,
+      "paint_trace_sha256": "e4ef2b9aea9b85aee8f61c002cfd26d9ef88f401eede9a33cd11d10c1ac95c6a",
+      "direction_trace_sha256": "cd6e91d1f6b156944d9d40396c0b1aecaa1ffcd0f0080298678d15cc05e31d49"
+    }
+  ],
+  "manifest_sha256": "e4cd97f9b086a0f0c610476a729c6204777ab6bc32171f4fd8be45a51a640d4b",
+  "paint_direction_hash_encoding": "Ordered little-endian signed32 triples: paint(x,y,category), direction(actual,previousRaw,streak)."
+}

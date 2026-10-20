@@ -31,6 +31,7 @@ SET( SRC ${SRC}
 	${PWD}/RosterRecords.cpp
 	${PWD}/SmacGameplayRandomState.cpp
 	${PWD}/SmacGenerationBootstrap.cpp
+	${PWD}/SmacContinentGeneration.cpp
 	${PWD}/SmacScoutCombat.cpp
 	${PWD}/SmacEmptyGroundMovement.cpp
 	${PWD}/LiveRoster.cpp

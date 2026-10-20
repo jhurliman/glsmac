@@ -3,7 +3,8 @@
 namespace gse::tests::fixtures::generation_bootstrap {
 namespace generation=game::backend::map::smac_generation;
 struct Case {const char* id;bool reset,retry;size_t count;uint32_t shared,crt;uint8_t poison;generation::Categories categories;generation::Rules rules;int32_t carried;std::array<int32_t,9> before,after;generation::Categories resolved;uint32_t shared_after,crt_after;std::array<int32_t,11> table;int32_t attempts,iterations,minimum;const char* record_hash;const char* preserved_hash;std::vector<generation::Draw> calls;};
-inline const Case Cases[]={
+inline const auto& Cases() {
+    static const Case cases[]={
     {"pattern_low16_0",true,false,1,4069u,1u,11,{{2,1,1,1,1,1,1}},{384,256,36},0,{{12345,67,89,101,0,103,107,109,113}},{{1,0,0,0,0,103,107,109,113}},{{2,1,1,1,1,1,1}},3491889152u,1u,{{-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811}},0,0,0,"f78c737d94f1cbd479358f19395ecf9c0169ef60505c97684529a620fcd6bc1a","1c9ac8a6740efa8df8b01e2f99784b92b14e1038a15b3a5659cf1f55da94cb23",{{generation::Draw::Kind::Shared,4069u,3491889152u,0}}},
     {"pattern_low16_65535",true,false,1,46880u,1u,11,{{2,1,1,1,1,1,1}},{384,256,36},0,{{12345,67,89,101,0,103,107,109,113}},{{32767,0,0,0,0,103,107,109,113}},{{2,1,1,1,1,1,1}},1737424895u,1u,{{-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811}},0,0,0,"f78c737d94f1cbd479358f19395ecf9c0169ef60505c97684529a620fcd6bc1a","1c9ac8a6740efa8df8b01e2f99784b92b14e1038a15b3a5659cf1f55da94cb23",{{generation::Draw::Kind::Shared,46880u,1737424895u,32766}}},
     {"reset_0_0",true,false,0,0u,305419896u,11,{{2,1,1,1,1,1,1}},{384,256,36},0,{{12345,67,89,101,0,103,107,109,113}},{{31151,0,0,0,0,103,107,109,113}},{{2,1,1,1,1,1,1}},1013904223u,305419896u,{{-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811,-1515870811}},0,0,0,"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",{{generation::Draw::Kind::Shared,0u,1013904223u,31150}}},
@@ -39,4 +40,6 @@ inline const Case Cases[]={
     {"retry_carried_17",false,true,3200,1015568748u,946301246u,11,{{2,1,1,1,1,1,1}},{384,256,36},17,{{12345,67,89,101,0,103,107,109,113}},{{17133,0,0,0,0,640,0,1,1}},{{2,1,1,1,1,1,1}},1586005467u,946301246u,{{0,15,32,45,60,75,80,100,100,100,100}},17,0,36,"662bea444e62e652ce65f01e8bfa6afdc8a511e397b470721de9eef49249efb2","aa1cfe7585c3b92bc9c39b946377f80e24335f5c7068bbf68fd726b76cefde50",{{generation::Draw::Kind::Shared,1015568748u,1586005467u,17132}}},
     {"retry_carried_99",false,true,3200,1015568748u,946301246u,11,{{2,1,1,1,1,1,1}},{384,256,36},99,{{12345,67,89,101,0,103,107,109,113}},{{17133,0,0,0,0,640,0,1,1}},{{2,1,1,1,1,1,1}},1586005467u,946301246u,{{0,15,32,45,60,75,80,100,100,100,100}},99,0,36,"662bea444e62e652ce65f01e8bfa6afdc8a511e397b470721de9eef49249efb2","aa1cfe7585c3b92bc9c39b946377f80e24335f5c7068bbf68fd726b76cefde50",{{generation::Draw::Kind::Shared,1015568748u,1586005467u,17132}}},
 };
+    return cases;
+}
 }

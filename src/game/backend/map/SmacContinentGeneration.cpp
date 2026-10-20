@@ -14,17 +14,19 @@ int32_t Checked(int64_t value) {
 }
 class Worker {
 public:
-    Worker(State& state,Geometry geometry,const ContinentRules& rules,ContinentTrace* trace)
+    Worker(State& state,Geometry geometry,const ContinentRules& rules,ContinentTrace* trace,bool landmark=false)
         :s(state),g(geometry),r(rules),t(trace),land(state.categories[2]),wrap(state.topology==0) {
         if(g.width<8 || g.height<8 || g.width>65534 || g.height>65534 || (g.width&1)
             || uint64_t(g.width/2)*uint64_t(g.height)!=s.records.size() || s.records.size()>UINT32_MAX/44u
-            || land<0 || land>2 || s.stage!=Stage::ContinentLoop || s.generation_flags!=std::array<int32_t,2>{{1,1}}) {
+            || land<0 || land>2 || (s.stage!=Stage::ContinentLoop && !(landmark && s.stage==Stage::Prelandmarks))
+            || s.generation_flags!=std::array<int32_t,2>{{1,1}}) {
             throw std::invalid_argument("Continent stage requires a complete admitted turn-zero plane");
         }
         for(size_t i=1;i<9;++i) {if(s.working_land_table[i]<s.working_land_table[i-1]) {
             throw std::invalid_argument("Continent shaping requires ordered working thresholds");
         }}
     }
+    void ShapeLandmark(Coordinate point,int32_t category) {RequirePoint(point,category);Shape(point,category);}
     void Seed(int32_t ordinal) {
         for(size_t i=0;i<s.records.size();++i) {Write(i,3,0);}
         const auto effective=land && s.land_progress>=s.land_target?land-1:land;
@@ -223,4 +225,5 @@ void PaintContinent(State& s,Geometry g,const ContinentRules& r,Coordinate p,int
 void SeedHill(State& s,Geometry g,const ContinentRules& r,int32_t base,int32_t modifier,int32_t category,ContinentTrace* t) {Worker(s,g,r,t).Hill(base,modifier,category);}
 void SeedPolarContours(State& s,Geometry g,const ContinentRules& r,ContinentTrace* t) {Worker(s,g,r,t).Polar();}
 void ReconstructAltitudes(State& s,Geometry g,const ContinentRules& r,ContinentTrace* t) {Worker(s,g,r,t).Reconstruct();}
+void ShapeGeneratedTerrain(State& s,Geometry g,const ContinentRules& r,Coordinate p,int32_t category,ContinentTrace* t) {Worker(s,g,r,t,true).ShapeLandmark(p,category);}
 }

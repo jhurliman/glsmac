@@ -39,8 +39,8 @@ void ValidateRules(const World& world,const Rules& rules) {
 void World::Validate() const {
     Require(width>=16 && width<=512 && !(width&1) && height>=1 && height<=256
         && tiles.size()==size_t(width/2)*height,"Climate requires a complete bounded doubled-coordinate plane");
-    for(const auto& t:tiles) {Require(t.elevation>=0 && t.elevation<=7 && t.temperature>=0 && t.temperature<=2
-        && t.moisture>=0 && t.moisture<=2 && t.contour>=0 && t.contour<=255 && t.aux>=0 && t.aux<=255
+    for(const auto& t:tiles) {Require(t.elevation>=0 && t.elevation<=7 && t.temperature>=0 && t.temperature<=7
+        && t.moisture>=0 && t.moisture<=3 && t.contour>=0 && t.contour<=255 && t.aux>=0 && t.aux<=255
         && t.cached_occupant>=0 && t.cached_occupant<=15 && t.rockiness>=0 && t.rockiness<=2,"Invalid retained climate tile");}
 }
 Tile* World::At(int32_t x,int32_t y) {

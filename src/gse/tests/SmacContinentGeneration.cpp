@@ -12,6 +12,8 @@
 #include "fixtures/SmacInitialClimateGeneration.h"
 #include "game/backend/map/SmacFinalGeneration.h"
 #include "fixtures/SmacFinalGeneration.h"
+#include "game/backend/map/SmacLandmarkGeneration.h"
+#include "fixtures/SmacLandmarkGeneration.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 #include <string>
@@ -75,6 +77,57 @@ struct ClimateObservation {
 };
 }
 void AddSmacContinentGenerationTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC landmark generation matches original placement shaping clocks and freshwater",GT(){
+        uint64_t draws=0;size_t cases=0;
+        for(const auto& c:fixtures::landmarks::Cases()) {
+            const generation::Geometry g{c.width,c.height};
+            generation::State s{std::vector<generation::Record>(size_t(g.width/2)*size_t(g.height)),{{2,1,1,1,c.temperature,c.rainfall,1}},
+                game::backend::SmacGameplayRandomState(1234567,c.crt_before)};
+            generation::Regions regions;PrepareRegionInput(s,g,regions,c.profile,c.areas);
+            s.stage=generation::Stage::Prelandmarks;s.generation_flags={{1,1}};s.topology=c.flat?1:0;s.resource_pattern=c.pattern;s.dirty_flags=16;
+            s.working_land_table={{0,15,32,45,60,75,80,100,100,100,100}};
+            for(auto& record:s.records) {
+                record[3]=uint8_t(c.region);
+                for(unsigned k=0;k<4;++k) {record[8+k]=uint8_t(c.items>>(8*k));record[12+k]=uint8_t(c.marks>>(8*k));}
+            }
+            for(const auto& p:c.patches) {s.records.at(size_t(p.y)*size_t(g.width/2)+size_t(p.x/2)).at(p.field)=p.value;}
+            for(const auto& p:c.region_cells) {s.records.at(size_t(p[1])*size_t(g.width/2)+size_t(p[0]/2))[3]=uint8_t(p[2]);}
+            for(const auto& p:c.areas_values) {for(unsigned k=0;k<4;++k) {regions.records.at(size_t(p[0])*28+k)=uint8_t(uint32_t(p[1])>>(8*k));}}
+            GT_ASSERT(util::SHA256(Bytes(s))==c.input_hash && util::SHA256(RegionBytes(regions))==c.input_regions_hash,"Original landmark input differs: "+std::string(c.id));
+            ClimateObservation observed;generation::Landmarks landmarks;
+            generation::PlaceLandmark(s,g,generation::DEFAULT_WORLD_RULES,regions,landmarks,generation::Landmark(c.kind),c.center,c.clock,c.suppress,&observed.trace);
+            GT_ASSERT(util::SHA256(Bytes(s))==c.output_hash && util::SHA256(RegionBytes(regions))==c.output_regions_hash
+                && s.random.Crt()==c.crt && s.random.Shared()==c.shared && s.dirty_flags==c.dirty,
+                "Original landmark output differs: "+std::string(c.id));
+            GT_ASSERT(observed.trace.crt_draws==c.draws && util::SHA256(observed.rng)==c.rng_hash && observed.trace.shared_events==0,
+                "Original landmark random continuation differs: "+std::string(c.id));
+            if(c.kind!=int(generation::Landmark::Jungle) && c.kind!=int(generation::Landmark::Dunes)) {
+                GT_ASSERT(observed.trace.stores==c.stores && util::SHA256(observed.stores)==c.store_hash,"Original ordered landmark stores differ: "+std::string(c.id));
+            }
+            GT_ASSERT(landmarks.labels.size()==c.labels.size(),"Original landmark label count differs: "+std::string(c.id));
+            for(size_t i=0;i<c.labels.size();++i) {GT_ASSERT(landmarks.labels[i].position==c.labels[i] && int(landmarks.labels[i].kind)==c.kind,"Original landmark label position differs");}
+            if(landmarks.mount_center) {GT_ASSERT(*landmarks.mount_center==c.mount,"Original volcano center differs");}
+            draws+=observed.trace.crt_draws;++cases;
+        }
+        GT_ASSERT(cases==73 && draws==14196,"Original landmark coverage changed");
+        generation::State s{std::vector<generation::Record>(3200),{{2,1,1,1,1,1,1}},game::backend::SmacGameplayRandomState(1,1)};
+        generation::Regions regions;regions.summary_width=16;regions.summary_height=16;regions.summary_initial=0;
+        generation::GeneratePretemperature(s,{80,80},generation::DEFAULT_WORLD_RULES,regions);
+        generation::GenerateInitialClimate(s,{80,80},generation::DEFAULT_WORLD_RULES);
+        generation::Landmarks landmarks;ClimateObservation observed;const auto boundaries=fixtures::landmarks::Boundaries();
+        for(size_t i=0;i<13;++i) {
+            generation::PlaceLandmark(s,{80,80},generation::DEFAULT_WORLD_RULES,regions,landmarks,generation::Landmark(i),{{-1,-1}},100,false,&observed.trace);
+            const auto& b=boundaries[i];
+            GT_ASSERT(util::SHA256(Bytes(s))==b.plane_hash && util::SHA256(RegionBytes(regions))==b.region_hash
+                && util::SHA256(observed.rng)==b.rng_hash && observed.trace.crt_draws==b.draws && s.random.Crt()==b.crt && s.random.Shared()==b.shared
+                && s.dirty_flags==b.dirty && landmarks.labels.size()==b.labels,"Actual setup landmark boundary differs: "+std::to_string(i));
+        }
+        GT_ASSERT(landmarks.labels.size()==12 && util::SHA256(landmarks.EncodeNames(generation::StockLandmarkNames()))==fixtures::landmarks::NAME_HASH,
+            "Actual original 480-byte landmark name records differ");
+        auto names=generation::StockLandmarkNames();names[0]=std::string(32,'x');bool rejected=false;
+        try {landmarks.EncodeNames(names);}catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Overlong native landmark name escaped its 32-byte slot");GT_OK();
+    });
     task->AddTest("SMAC final generation passes match original contours wet counts and features",GT(){
         uint64_t stores=0,draws=0,pumps=0;
         for(const auto& c:fixtures::final_generation::Cases()) {

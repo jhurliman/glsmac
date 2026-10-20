@@ -1,6 +1,7 @@
 #include "game/frontend/NativeViewGeometry.h"
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <vector>
 namespace native=game::frontend::native_terrain;
 void Write(std::ofstream& out,int value) {
@@ -8,7 +9,8 @@ void Write(std::ofstream& out,int value) {
     const char bytes[4]={char(bits),char(bits>>8),char(bits>>16),char(bits>>24)};out.write(bytes,4);
 }
 int main(int argc,char** argv) {
-    if(argc!=3) {return 1;}
+    if(argc!=3 && argc!=4) {return 1;}
+    const bool landmarks=argc==4 && std::string(argv[3])=="--landmarks";
     std::ifstream input(argv[1]);std::ofstream out(argv[2],std::ios::binary);
     int w,h,vw,vh,cx,cy,zoom,relief,wrap,pattern;size_t count;
     if(!(input>>w>>h>>vw>>vh>>cx>>cy>>zoom>>relief>>wrap>>pattern>>count) || count>100000 || !out) {return 1;}
@@ -17,12 +19,19 @@ int main(int argc,char** argv) {
         auto& cell=world.tiles[size_t(y)*size_t(w/2)+size_t(x/2)];
         cell.band=pattern==1?(x==cx && y==cy?5:3):pattern==2?(x<cx?3:x<cx+4?4:5):pattern==3?(x<cx?2:4):3;
     }}
-    native::ViewGeometry geometry(world);const auto view=native::Layout(cx,cy,zoom,wrap,{{w,h}},{{vw,vh}});
-    for(const int n:{view.first[0],view.first[1],view.unit,view.span[0],view.span[1],view.span[2],view.span[3],view.offset[0],view.offset[1]}) {Write(out,n);}
+    if(landmarks) {for(auto& cell:world.tiles) {
+        unsigned band,word;if(!(input>>band>>word) || band>7) {return 1;}
+        cell.band=band;cell.landmarks=word;
+    }}
+    auto geometry=std::make_unique<native::ViewGeometry>(world);const auto view=native::Layout(cx,cy,zoom,wrap,{{w,h}},{{vw,vh}});
+    if(landmarks) {for(const int n:{view.first[0],view.first[1],view.offset[0],view.offset[1],view.unit}) {Write(out,n);}}
+    else {for(const int n:{view.first[0],view.first[1],view.unit,view.span[0],view.span[1],view.span[2],view.span[3],view.offset[0],view.offset[1]}) {Write(out,n);}}
     for(size_t i=0;i<count;++i) {
+        if(landmarks) {int cold;if(!(input>>cold)) {return 1;}
+            if(cold) {geometry=std::make_unique<native::ViewGeometry>(world);}Write(out,cold);}
         int px,py;if(!(input>>px>>py)) {return 1;}
         std::vector<std::array<int,4>> queries,edges;
-        const auto result=geometry.Pick(view,zoom,relief,{{px,py}},[&](const auto& q) {
+        const auto result=geometry->Pick(view,zoom,relief,{{px,py}},[&](const auto& q) {
             queries.push_back({{q.tile[0],q.tile[1],int(q.vertex),q.result[0]}});
         },[&](const auto& step) {edges.push_back({{step.lhs,step.rhs,step.next_x,step.row}});});
         int ties=0;for(const auto& edge:edges) {ties+=edge[0]==edge[1];}
@@ -30,6 +39,8 @@ int main(int argc,char** argv) {
         for(const int n:{px,py,result.code,tile[0],tile[1],int(queries.size()),int(edges.size()),ties}) {Write(out,n);}
         for(const auto& query:queries) {for(const int n:query) {Write(out,n);}}
         for(const auto& edge:edges) {for(const int n:edge) {Write(out,n);}}
+        if(landmarks) {const auto bytes=geometry->CacheBytes();
+            for(size_t cell=0;cell<world.tiles.size();++cell) {out.write(reinterpret_cast<const char*>(bytes.data()+cell*9+4),5);}}
     }
     if(!out) {return 1;}
 }

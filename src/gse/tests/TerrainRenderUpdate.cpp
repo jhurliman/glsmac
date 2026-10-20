@@ -1005,6 +1005,19 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(mask==c.repaints,"Native repaint membership differs: "+std::string(c.id));
         }GT_OK();
     });
+    task->AddTest("SMAC native saturated corners return cold heights before publishing capped shared bytes",GT(){
+        namespace native=game::frontend::native_terrain;
+        using Geometry=game::backend::map::smac_terrain::LandmarkGeometry;
+        std::vector<Geometry::Cell> cells(3200,Geometry::Cell{7,0});
+        Geometry geometry(80,80,true,cells);geometry.Configure(5,25);
+        GT_ASSERT(geometry.Height(17,29,1)==128 && geometry.CachedHeight(17,29,1)==127 &&
+            geometry.Height(17,29,1)==127,"Cold corner was clamped before returning or shared cache was not capped");
+        native::ViewGeometry view(80,80,true,std::move(cells));
+        const auto layout=native::Layout(22,38,8,true);
+        const auto cold=view.Pick(layout,8,25,{{532,169}}),warm=view.Pick(layout,8,25,{{532,169}});
+        GT_ASSERT((cold.code==0 && cold.written==native::Point{{22,38}} && warm.code==0 && warm.written==native::Point{{21,37}}),
+            "Repeated native pick lost its original view-local cold/warm height history");GT_OK();
+    });
     task->AddTest("SMAC native live canvas is opaque and does not require observer authority",GT(){
         namespace native=game::frontend::native_terrain;
         game::native_terrain::World world;world.retained_geometry=true;for(auto& cell:world.tiles) {cell.band=3;}

@@ -12,6 +12,8 @@
 #include "fixtures/SmacStartupTechnology.h"
 #include "fixtures/SmacFactionStartupSource.h"
 #include "loader/txt/FactionTXTLoader.h"
+#include "game/backend/base/SmacBaseNaming.h"
+#include "fixtures/SmacBaseNaming.h"
 #include "game/backend/base/SmacFirstWorker.h"
 #include "fixtures/SmacFirstWorker.h"
 #include "game/backend/base/SmacStartupBase.h"
@@ -116,8 +118,13 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
             && util::SHA256(planeBytes())==expected::PREPARED_TILES_SHA256 && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
             "Original generated complete first faction differs after capability refresh");
         for(const auto& bonus:gaia->Records()) {if(bonus.kind==game::backend::settings::SmacFactionStartupBonus::Kind::FACILITY) {catalog.facility_bonuses.push_back(bonus.parameter);}}
+        // First source label is declared input; no later list entries are read
+        // at this boundary. Full owned catalogs are checked by the text verifier.
+        SmacBaseNameCatalog names{"Gaians",std::vector<std::string>(27,"Unused land"),std::vector<std::string>(8,"Unused sea"),std::vector<std::string>(24,"Unused generic")};
+        names.land[0]="Gaia's Landing";std::array<uint8_t,128> name_buffer{};
+        const auto first_name=GenerateSmacBaseName(state,name_buffer,names,1,terrain.resource_pattern,true,false);
         SmacStartupBaseRecord base{};
-        const auto seeded=SeedSmacStartupBase(base,terrain.records,state,{{80,80,true},*selected.site,1,0,3,2,2,10,0,false,false,false,false,"Gaia's Landing"},catalog);
+        const auto seeded=SeedSmacStartupBase(base,terrain.records,state,{{80,80,true},*selected.site,1,0,3,2,2,10,0,false,false,false,false,first_name},catalog);
         const auto baseBytes=[&](){return std::string(reinterpret_cast<const char*>(base.data()),base.size());};
         GT_ASSERT(seeded.index==0 && seeded.count==1 && util::SHA256(baseBytes())==fixtures::startup_base::SEEDED_BASES_HEX
             && util::SHA256(planeBytes())==fixtures::startup_base::SEEDED_TILES_HEX,"Original generated Base/tile seed projection differs");
@@ -158,9 +165,9 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
         namespace first_base_expected=fixtures::first_worker;
         GT_ASSERT(chosen_worker==2 && util::SHA256(baseBytes())==first_base_expected::GENERATED_BASE
             && util::SHA256(planeBytes())==first_base_expected::GENERATED_TILES && util::SHA256(region_bytes)==first_base_expected::GENERATED_REGIONS
-            && util::SHA256(complete_actor_bytes)==first_base_expected::GENERATED_FACTION_DECLARED_NAME_CURSOR
+            && util::SHA256(complete_actor_bytes)==fixtures::base_naming::GENERATED_NAMED_FACTION
             && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
-            "Original complete generated first Base/map/region or declared-name faction projection differs");
+            "Original complete generated first Base/map/region or complete faction differs");
         GT_ASSERT(worker_store_count==102 && worker_query_count==68 && worker_score_count==20
             && util::SHA256(worker_stores)==first_base_expected::GENERATED_STORES && util::SHA256(worker_queries)==first_base_expected::GENERATED_QUERIES
             && util::SHA256(worker_scores)==first_base_expected::GENERATED_SCORES,"Original generated worker journals differ");

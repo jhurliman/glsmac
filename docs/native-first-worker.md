@@ -38,11 +38,12 @@ scores on that independently generated world. Gaia selects radius2, with collect
 and raw intake3 nutrients/2 minerals/2 energy/0 fourth resource. This replaces the
 earlier seeded-Base projection with complete accounting for this fixture.
 
-The faction comparison still declares automatic Base naming: expected cursor
-byte0x0c is normalized from1 to0 only in the comparison fixture, while every other
-faction byte must match. The producer neither patches that cursor nor claims full
-faction equality. Actual localized names/cursor progression, installed predefined
-design initialization and all-seven controller equality remain required.
+[Automatic Base naming](native-base-naming.md) now derives the first source
+label and cursor before construction. The complete Gaia faction record now
+matches too, with no expected cursor normalization or producer patch. The
+original worker fixture's cursor-normalized comparison is superseded by this
+later naming boundary. Installed design initialization and all-seven controller
+equality remain required.
 
 ## Admission and validation
 

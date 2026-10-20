@@ -649,6 +649,15 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 
 WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
+        {"get_pending_first_base_name",NATIVE_CALL(this) {
+            N_EXPECT_ARGS(0);return GetPendingFirstBaseName(GSE_CALL);
+        })},
+        {"finish_first_base_name",NATIVE_CALL(this,session=m_state ? m_state->CaptureGameSession():State::game_session_t{}) {
+            N_EXPECT_ARGS(2);N_GETVALUE(id,0,Int);N_GETVALUE(name,1,String);
+            try {QueueFirstBaseName(session,id,name);}
+            catch(const std::exception& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+            return VALUE(gse::value::Undefined);
+        })},
         {"is_campaign_restore", NATIVE_CALL(this) {
             N_EXPECT_ARGS(0);
             bool restoring=false;
@@ -2383,7 +2392,8 @@ bool Game::AdvanceInitialization() {
 				InitializeMap();
 				SetStartupStage( admission, StartupStage::Start );
 				break;
-			case StartupStage::AwaitDownload: break;
+			case StartupStage::AwaitDownload:
+            case StartupStage::AwaitFirstBase: break;
 			default: PublishOwnerTransition( admission, stage ); break;
 		}
 	}
@@ -2474,8 +2484,11 @@ void Game::RunOwnerTransition( GSE_CALLABLE, const std::shared_ptr< OwnerTransit
 				}
 				break;
 			case StartupStage::Start:
-				StartInitializedWorld( GSE_CALL );
-				SetStartupStage( admission, StartupStage::Complete );
+                if(admission->resume_first_turn) {
+                    FirstTurn(GSE_CALL);ProcessEvents();m_um->RequireConventionalUnitsReady();
+                    admission->resume_first_turn=false;
+                } else {StartInitializedWorld(GSE_CALL);}
+                if(!m_first_base_request) {SetStartupStage(admission,StartupStage::Complete);}
 				break;
 			case StartupStage::Failure:
 				InitFailed( admission->error );
@@ -2612,6 +2625,12 @@ void Game::StartInitializedWorld( GSE_CALLABLE ) {
 			return;
 		}
 		if ( m_game_state == GS_RUNNING ) {
+            // Finish turn-zero entity creation before asking about its existing
+            // first Base. The advance/upkeep remains suspended in this admission.
+            if(CanBeginFirstBaseIntroduction()) {
+                ProcessEvents();
+                if(BeginFirstBaseIntroduction(GSE_CALL)) {return;}
+            }
 			FirstTurn( GSE_CALL );
 		}
 	}
@@ -3357,6 +3376,7 @@ void Game::ResetGame() {
 		m_smac_base_presentations.reset();
 		m_canonical_turn_in_progress=false; m_canonical_turn_failed=false;
 		m_canonical_continuation.reset();m_research_request.reset();m_colony_request.reset();m_canonical_screen_edit_in_progress=false;
+        m_first_base_request.reset();
 		ClearHandlers();
 
 		if ( m_game_state != GS_NONE ) {

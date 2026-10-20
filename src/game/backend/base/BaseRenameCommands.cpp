@@ -84,6 +84,11 @@ gse::Value* Base::CopySmacRenameChoices(GSE_CALLABLE) const {
 void BaseManager::RenameSmacBase(GSE_CALLABLE,Base& base,std::string name) {
     m_game->CheckRW(GSE_CALL);RequireSmacWorkerRecalculation();
     if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() || GetBase(base.m_id)!=&base || !base.CanSmacRename()) {THROW("Base Rename requires current owned registry authority");}
+    PublishBaseName(GSE_CALL,base,std::move(name));
+}
+void BaseManager::PublishBaseName(GSE_CALLABLE,Base& base,std::string name) {
+    m_game->CheckRW(GSE_CALL);
+    if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() || GetBase(base.m_id)!=&base) {THROW("Base name publication requires current registry authority");}
     auto names=m_registered_base_names;auto updates=m_base_updates;
     const bool old_retained=std::any_of(m_bases.begin(),m_bases.end(),[&](const auto& entry){return entry.second!=&base && entry.second->m_name==base.m_name;});
     if(!old_retained) {names.erase(base.m_name);}names.insert(name);

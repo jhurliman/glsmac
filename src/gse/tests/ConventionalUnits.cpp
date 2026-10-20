@@ -1,4 +1,5 @@
 #include "ConventionalUnits.h"
+#include "game/backend/base/SmacFirstBaseName.h"
 #include "fixtures/SmacStartupSource.h"
 #include "game/backend/LocalMoveCommand.h"
 #include "fixtures/FriendlyHQMovement.h"
@@ -1091,7 +1092,19 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
-	const std::array< const char*, 13 > early_names = {{
+    task->AddTest("First Base naming preserves original byte prefix and single-pass duplicate suffix",GT(){
+        using game::backend::base::NormalizeSmacFirstBaseName;
+        GT_ASSERT(NormalizeSmacFirstBaseName("Alpha",{"alpha"})=="Alpha","duplicate matching became case insensitive");
+        GT_ASSERT(NormalizeSmacFirstBaseName("Alpha",{"Alpha","Alpha"})=="Alpha-3","exact duplicate count changed");
+        GT_ASSERT(NormalizeSmacFirstBaseName("Alpha",{"Alpha","Alpha-2"})=="Alpha-2","normalization searched for an unused suffix");
+        GT_ASSERT(NormalizeSmacFirstBaseName("",{})=="" && NormalizeSmacFirstBaseName("  ",{})=="  ","empty result or whitespace was replaced");
+        GT_ASSERT(NormalizeSmacFirstBaseName(std::string_view("ab\0tail",7),{})=="ab","first NUL did not terminate the narrow result");
+        const auto long_name=std::string(30,'x');const auto truncated=std::string(23,'x');
+        GT_ASSERT(NormalizeSmacFirstBaseName(long_name,{truncated})==std::string(21,'x')+"-2","23/21-byte prefix boundary changed");
+        GT_ASSERT(NormalizeSmacFirstBaseName(long_name,std::vector<std::string_view>(20,truncated))==std::string(21,'x')+"-21","multi-digit duplicate suffix was clamped");
+        GT_OK();
+    });
+	const std::array< const char*, 15 > early_names = {{
 		"Early conventional claimed queued Start preserves raw order then seals before upkeep",
 		"Early conventional claimed immediate Start preserves raw order then seals before upkeep",
 		"Early conventional missing first turn retires raw identities without publication",
@@ -1104,7 +1117,9 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		"Default conventional Spartan startup scripts select Rover and continue next turn",
 		"SMAC research claimed Start pauses then completes Secrets and stable restore exactly once",
 		"SMAC research claimed Start pending choice resets without replay",
-        "Default conventional Thinker startup grants real independent Colony Pod and restores without replay"
+        "Default conventional Thinker startup grants real independent Colony Pod and restores without replay",
+        "First Base introduction pauses claimed Start and resumes first upkeep exactly once",
+        "First Base introduction reset retires pending names and session authority"
 	}};
 	for ( int scenario = 0; scenario < static_cast< int >( early_names.size() ); ++scenario ) {
 		task->AddTest( early_names[ scenario ], GT( scenario ) { ConventionalUnitFixture fixture; return fixture.CheckEarlyStartup( scenario ); } );

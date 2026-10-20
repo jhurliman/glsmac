@@ -93,5 +93,6 @@ the setup script asserts all six per-field limits. Input.cpp and its Container
 consumer pass targeted C++ analysis with zero findings. No new visual parity
 claim follows from this interaction change. Empty-input acceptance and full
 code-page/selection behavior still need matching.
-First-base naming and the main-map exploration mask remain separate unfinished
-features in the [playthrough audit](smac-playthrough-ui-audit.md).
+The functional [first-base naming continuation](first-base-introduction.md) now
+runs before initial upkeep. Its visual styling and the main-map exploration mask
+remain unfinished in the [playthrough audit](smac-playthrough-ui-audit.md).

@@ -4789,6 +4789,8 @@ public:
 		// rendering remains asset-free, while creation, movement and turn are real.
 		const bool default_world = scenario >= 8, local_rover = scenario == 9;
 		const bool research=scenario==10 || scenario==11, compensation=scenario==12;
+        const bool introduction=scenario==13 || scenario==14;
+        if(introduction) {m_state->m_settings.local.game_mode=settings::LocalSettings::GM_SINGLEPLAYER;}
 		const size_t expected_units = default_world ? (compensation ? 2:1) : 3;
 		EnableWorldSnapshot();
 		if(default_world) {
@@ -5017,6 +5019,58 @@ public:
 			if ( reset ) { GT_ASSERT( m_game.MT_GetResponse( reset ).result == R_SUCCESS, "Early reset failed to make actual MT progress" ); }
 			GT_OK();
 		}
+        if(default_world && !introduction) {
+            // Existing movement/research scenarios now pass through the real
+            // required intro result before exercising their later milestones.
+            GT_ASSERT(m_game.m_first_base_request && m_game.GetTurnId()==0 && !m_game.m_research_request,
+                "default startup skipped naming or ran research before introduction");
+            const auto named=WithScriptValues([&](GSE_CALLABLE)->std::string {
+                const auto request=*m_game.m_first_base_request;
+                m_game.QueueFirstBaseName(m_state->CaptureGameSession(),request.id,m_game.GetBM()->GetBase(request.base)->m_name);
+                GT_OK();
+            });GT_ASSERT(named.empty(),"default intro result: "+named);
+            m_game.Iterate();m_game.Iterate();
+        }
+        if(introduction) {
+            GT_ASSERT(errors==0 && m_game.m_first_base_request && m_game.GetTurnId()==0 && !m_game.m_research_request
+                && !m_game.m_canonical_continuation && turns==0 && m_game.GetBM()->GetBases().size()==1,
+                "first Base introduction did not suspend actual Start before advance/upkeep: "+startup_error);
+            const auto request=*m_game.m_first_base_request;
+            const bool presented=std::any_of(m_frontend_requests.begin(),m_frontend_requests.end(),[&](const auto& fr){
+                return fr.type==game::FrontendRequest::FR_BASE_SPAWN && fr.data.base_spawn.base_id==request.base;
+            });
+            const auto* first_tile=m_game.GetBM()->GetBase(request.base)->GetTile();
+            const bool centered=std::any_of(m_frontend_requests.begin(),m_frontend_requests.end(),[&](const auto& fr){
+                return fr.type==game::FrontendRequest::FR_MAP_CENTER && fr.data.map_center.x==first_tile->coord.x && fr.data.map_center.y==first_tile->coord.y;
+            });
+            GT_ASSERT(presented && centered,"first Base prompt has no created Base presentation or focused map backdrop");
+            if(scenario==14) {
+                const auto session=m_state->CaptureGameSession();
+                reset=m_game.MT_Reset(ticket);m_game.Iterate();ProcessAccumulations();
+                GT_ASSERT(m_game.MT_GetResponse(reset).result==R_SUCCESS && !m_game.m_first_base_request && !m_game.m_map
+                    && m_game.m_next_first_base_request==request.id,"intro reset retained Base authority or reused request identity");
+                m_game.QueueFirstBaseName(session,request.id,"Stale result");
+                GT_ASSERT(!m_game.m_first_base_request,"stale intro result revived a retired request");GT_OK();
+            }
+            auto* first=m_game.GetBM()->GetBase(request.base);const auto original_name=first->m_name;
+            const auto random=m_game.m_simulation->value.gameplay_random;
+            const auto queued=WithScriptValues([&](GSE_CALLABLE)->std::string {
+                const auto session=m_state->CaptureGameSession();
+                bool rejected=false;try {m_game.QueueCampaignSave(session,"unused-intro-save");}catch(const std::exception&){rejected=true;}
+                GT_ASSERT(rejected,"intro save escaped the unfinished admission");
+                rejected=false;try{m_game.Event(GSE_CALL,"complete_turn",{});}catch(const std::exception&){rejected=true;}
+                GT_ASSERT(rejected,"gameplay advanced before first naming finished");
+                m_game.QueueFirstBaseName(session,request.id,std::string(30,'N'));
+                m_game.QueueFirstBaseName(session,request.id,"Duplicate click");
+                GT_ASSERT(first->m_name==original_name && m_game.GetTurnId()==0,"queue applied name or advanced synchronously");
+                GT_OK();
+            });GT_ASSERT(queued.empty(),"intro answer enqueue: "+queued);
+            m_game.Iterate();
+            GT_ASSERT(!m_game.m_first_base_request && first->m_name==std::string(23,'N') && m_game.GetTurnId()==0
+                && m_game.m_simulation->value.gameplay_random==random && m_game.GetBM()->GetBases().size()==1,
+                "intro answer changed RNG/entities, copied stale text or ran upkeep in the result phase");
+            m_game.Iterate();
+        }
 		if(research) {
 			GT_ASSERT(m_game.m_simulation && m_game.m_simulation->value.capabilities &&
 				m_game.m_simulation->value.capabilities->factions[0].available[0]==1 &&

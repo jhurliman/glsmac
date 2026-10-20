@@ -327,6 +327,7 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 }
 
 void Game::RequireSmacGameplayActive() const {
+    if(m_first_base_request) {throw std::runtime_error("Finish naming the first Base before issuing gameplay commands");}
 	if(m_simulation && m_simulation->value.HasEnding()) {throw std::runtime_error("Campaign has an ending request");}
 }
 

@@ -125,6 +125,14 @@ void AddUIClassTests(task::gsetests::GSETests* task) {
                     node->WrapSet("max_bytes",VALUE(value::Int,,0),GSE_CALL);
                     node->WrapSet("value",VALUE(value::String,,std::string(80,'u')),GSE_CALL);
                     GT_ASSERT(text().size()==80,"unbounded legacy control was unexpectedly limited");
+                    auto* second=AsObject(Call(GSE_CALL,root,"input",{VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{
+                        {"value",VALUE(value::String,,"target")}
+                    }))}));
+                    Call(GSE_CALL,second,"focus",{});
+                    ::ui::dom::Object::Unwrap(root)->ProcessEvent(GSE_CALL,key);
+                    auto* focused=::ui::dom::Object::Unwrap(second);
+                    GT_ASSERT(text().size()==80 && static_cast<value::String*>(AsObject(focused->Wrap(GSE_CALL))->value.at("value"))->value=="targetb",
+                        "explicit modal focus did not route real root keyboard input to the requested field");
                     GT_OK();
                 }();
             });}catch(const std::exception& error){result=std::string("Input byte limit check threw: ")+error.what();}

@@ -197,6 +197,7 @@ private:
 	void RegisterBase( Base* base );
 	void PrepareBaseName( Base* base ) const;
 	void RenameSmacBase(GSE_CALLABLE,Base& base,std::string name);
+    void PublishBaseName(GSE_CALLABLE,Base& base,std::string name);
 
 private:
 	std::mutex m_updated_bases_mutex;

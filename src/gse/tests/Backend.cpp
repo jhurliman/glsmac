@@ -608,6 +608,16 @@ public:
 		util::FinallyGuard clear( [ & ] { m_glsmac->m_state = nullptr; } );
 		m_glsmac->AddSinglePlayerSlot( id,setup );
 	}
+    void EditSinglePlayerLeader(const std::string& id,const std::string& name) {
+        m_glsmac->m_state=m_state;
+        util::FinallyGuard clear([&]{m_glsmac->m_state=nullptr;});
+        m_glsmac->SetSinglePlayerLeader(id,name);
+    }
+    void RestoreSinglePlayerIdentity(const std::string& id,game::backend::faction::DisplayIdentity identity) {
+        m_glsmac->m_state=m_state;
+        util::FinallyGuard clear([&]{m_glsmac->m_state=nullptr;});
+        m_glsmac->RestoreSinglePlayerIdentity(id,std::move(identity));
+    }
 	BackendFixture()
 		: m_random( new game::backend::Random( &m_game, 12345 ) )
 		, m_gse( CreateRuntime() )
@@ -9329,6 +9339,37 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
+    task->AddTest("single-player name acceptance and defaults commit before any roster",GT(){
+        using namespace game::backend;
+        BackendFixture fixture;
+        const auto error=fixture.WithScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* state=fixture.GetGame()->GetState();state->m_slots->Clear();
+            state->m_settings.local.game_mode=settings::LocalSettings::GM_SINGLEPLAYER;
+            state->m_settings.local.network_role=settings::LocalSettings::NR_NONE;
+            auto* selected=state->GetFM()->Get("GAIANS");
+            faction::DisplayIdentity defaults{"Gaia's Stepdaughters","Lady","Deirdre"};
+            defaults.setup=faction::DisplayIdentity::SetupFields{"Gaians",std::string(127,'a'),std::string(127,'d'),true};
+            selected->m_display_identity=defaults;
+            fixture.EditSinglePlayerLeader("GAIANS","Ada");
+            auto edited=defaults;edited.leader_name="Ada";
+            GT_ASSERT(selected->m_display_identity==edited && state->m_slots->GetSlots().empty(),"name acceptance lost unchanged TXT fields or created a roster");
+            for(const auto& bad:{std::string{},std::string(24,'x'),std::string("a\nb"),std::string(1,127)}) {
+                GT_ASSERT(RejectsSettings([&]{fixture.EditSinglePlayerLeader("GAIANS",bad);}) && selected->m_display_identity==edited,"invalid name partially replaced the accepted definition");
+            }
+            GT_ASSERT(RejectsSettings([&]{fixture.EditSinglePlayerLeader("UNKNOWN","Other");}),"unknown faction accepted name");
+            state->m_settings.local.network_role=settings::LocalSettings::NR_SERVER;
+            GT_ASSERT(RejectsSettings([&]{fixture.EditSinglePlayerLeader("GAIANS","Other");}),"network setup accepted local identity edit");
+            state->m_settings.local.network_role=settings::LocalSettings::NR_NONE;
+            auto invalid=defaults;invalid.setup.reset();
+            GT_ASSERT(RejectsSettings([&]{fixture.RestoreSinglePlayerIdentity("GAIANS",invalid);}) && selected->m_display_identity==edited,"invalid defaults changed accepted name");
+            fixture.RestoreSinglePlayerIdentity("GAIANS",defaults);
+            GT_ASSERT(selected->m_display_identity==defaults && state->m_slots->GetSlots().empty(),"restored definition did not replace previously accepted name before start");
+            fixture.SelectSinglePlayerFaction("GAIANS");
+            GT_ASSERT(RejectsSettings([&]{fixture.EditSinglePlayerLeader("GAIANS","Other");}) && selected->m_display_identity==defaults,"existing roster allowed setup edit");
+            GT_OK();
+        });
+        GT_ASSERT(error.empty(),"name/default setup boundary: "+error);GT_OK();
+    });
     task->AddTest("single-player accepted identity reaches the selected live faction and saved definitions",GT(){
         using namespace game::backend;
         BackendFixture fixture;

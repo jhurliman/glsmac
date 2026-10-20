@@ -4,6 +4,8 @@
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "resource/ResourceManager.h"
+#include "loader/txt/TXTLoaders.h"
+#include "loader/txt/FactionTXTLoader.h"
 #include "scheduler/Scheduler.h"
 #include "util/LogHelper.h"
 #include "gc/Space.h"
@@ -342,6 +344,27 @@ WRAPIMPL_BEGIN( GLSMAC )
 			} ),
 		},
 		{
+            "set_singleplayer_leader",
+            NATIVE_CALL(this) {
+                N_EXPECT_ARGS(2); N_GETVALUE(id,0,String); N_GETVALUE(name,1,String);
+                try {SetSinglePlayerLeader(id,name);}
+                catch(const std::exception& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+                return VALUE(gse::value::Undefined);
+            })
+        },
+        {
+            "restore_singleplayer_identity",
+            NATIVE_CALL(this) {
+                N_EXPECT_ARGS(3); N_GETVALUE(id,0,String); N_GETVALUE(filename,1,String); N_GETVALUE(section,2,String);
+                try {
+                    auto* faction=GetEditableSinglePlayerFaction(id);
+                    RestoreSinglePlayerIdentity(id,g_engine->GetTXTLoaders()->factions->GetDisplayIdentity(filename,section));
+                    return faction->Wrap(GSE_CALL);
+                }
+                catch(const std::exception& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+            })
+        },
+        {
 			"start_game",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS_MIN_MAX( 0, 2 );
@@ -667,6 +690,38 @@ void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
 	}
 }
 
+game::backend::faction::Faction* GLSMAC::GetEditableSinglePlayerFaction(const std::string& id) const {
+    if(!m_state || m_is_game_running || m_is_loading || m_reset_needed || m_campaign_previous_state
+        || m_state->m_connection || !m_state->m_slots->GetSlots().empty()
+        || m_state->m_settings.local.game_mode!=game::backend::settings::LocalSettings::GM_SINGLEPLAYER
+        || m_state->m_settings.local.network_role!=game::backend::settings::LocalSettings::NR_NONE) {
+        THROW("Faction identity can only be edited before the single-player roster is created");
+    }
+    auto* faction=m_state->GetFM()->Get(id);
+    if(!faction || !faction->m_display_identity || !faction->m_display_identity->setup) {
+        THROW("Faction setup identity is unavailable: "+id);
+    }
+    return faction;
+}
+
+void GLSMAC::SetSinglePlayerLeader(const std::string& id,const std::string& name) {
+    auto* faction=GetEditableSinglePlayerFaction(id);
+    if(name.empty() || name.size()>23) {THROW("Leader name must contain 1 to 23 bytes");}
+    for(unsigned char c:name) {if(c<32 || c>126) {THROW("Leader name currently supports printable ASCII only");}}
+    auto identity=*faction->m_display_identity;
+    identity.leader_name=name;
+    // Only the name was edited. TXT defaults may exceed the other edit-box limits.
+    RestoreSinglePlayerIdentity(id,std::move(identity));
+}
+
+void GLSMAC::RestoreSinglePlayerIdentity(const std::string& id,game::backend::faction::DisplayIdentity identity) {
+    auto* faction=GetEditableSinglePlayerFaction(id);
+    identity.Validate();
+    if(!identity.setup) {THROW("Faction setup fields are unavailable");}
+    std::optional<game::backend::faction::DisplayIdentity> accepted(std::move(identity));
+    faction->m_display_identity.swap(accepted);
+}
+
 void GLSMAC::AddSinglePlayerSlot( const std::optional< std::string >& faction_id, const game::backend::faction::DisplayIdentity* setup ) {
 	if ( !m_state || m_state->m_connection || !m_state->m_slots->GetSlots().empty()
 		|| m_state->m_settings.local.game_mode != game::backend::settings::LocalSettings::GM_SINGLEPLAYER
@@ -687,11 +742,11 @@ void GLSMAC::AddSinglePlayerSlot( const std::optional< std::string >& faction_id
     const auto difficulty = rules.m_difficulty_levels.GetVK().find( static_cast<int>(m_state->m_settings.global.difficulty_level) );
     if (difficulty == rules.m_difficulty_levels.GetVK().end()) { THROW("Unknown single-player difficulty"); }
     m_state->m_settings.local.player_name = "Player";
+    if(accepted) {m_state->GetFM()->Get(*faction_id)->m_display_identity.swap(accepted);}
     m_state->CreatePlayerSlot(0, {m_state->m_settings.local.player_name, game::backend::roster::Role::Single,
         faction_id, difficulty->second},
         m_state->m_settings.local.account.GetGSID(), 0, "", false);
     m_state->m_slots->GetSlot(0).SetPlayerFlag(game::backend::slot::PF_READY);
-    if(accepted) {m_state->GetFM()->Get(*faction_id)->m_display_identity.swap(accepted);}
 
 }
 

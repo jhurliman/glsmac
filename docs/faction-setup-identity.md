@@ -45,6 +45,18 @@ runs used normal Quit, exit0, with no tracked GL leaks.
 
 ![Actual campaign after reload](https://raw.githubusercontent.com/jhurliman/glsmac/32f61ba9df7c3f0130375c9dec057681bd71134d/faction-identity-setup/reloaded.png)
 
+The cancellation/default follow-up passed a cached incremental build, three
+targeted native setup groups, the identity script with the real popup manager
+and Escape routing, existing faction-selection/ruleset navigation scripts,
+and changed-production analysis of GLSMAC.cpp (zero findings). A real SDL run
+accepted Morganb, escaped customization, and reopened Name with Morganb;
+Restore Defaults followed by Cancel and reentry showed Morgan. It exited
+normally through the title menu (exit0, no tracked GL leaks).
+
+![Name retained after cancelling customization](https://raw.githubusercontent.com/jhurliman/glsmac/5b3abb01ac26bd7502189c98ec6d8eeea2561e3f/setup-name-boundaries/retained-name.png)
+
+![Defaults retained after cancelling customization](https://raw.githubusercontent.com/jhurliman/glsmac/5b3abb01ac26bd7502189c98ec6d8eeea2561e3f/setup-name-boundaries/default-name.png)
+
 ## Remaining fidelity work
 
 This is functional setup wiring, not dialog pixel parity. Portrait/quotation
@@ -54,9 +66,16 @@ editing remains deferred because the original static binding is unverified.
 The form currently offers an explicit Customize button instead of claiming the
 source Change Gender secondary action is reproduced.
 
-The port stages drafts until startup. The original copies an accepted leader
-name before extended customization; its cancellation/default-reload mutation
-boundary still needs matching. Research UI also still uses the controller's
-name in some headings. These are explicit follow-ups, not completed fidelity.
+Name acceptance now commits to the live selected definition before optional
+customization. Cancel or Escape from Customize returns directly to faction
+selection, keeping the accepted name and discarding unaccepted form edits.
+Restore Defaults reloads the catalog's TXT identity immediately, so cancelling
+afterwards keeps the restored defaults. This covers the supported catalog flow;
+OTHER definitions and source graphics reload remain unfinished. Name-only
+acceptance checks its23-byte edit limit without rejecting untouched TXT fields
+that can legitimately exceed their own form edit limits. Research UI still
+uses the separate controller name in some headings.
+Empty-input handling and automatic byte truncation at control construction
+still need matching; this pass retains the port's explicit input validation.
 First-base naming and the main-map exploration mask remain separate unfinished
 features in the [playthrough audit](smac-playthrough-ui-audit.md).

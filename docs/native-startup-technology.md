@@ -60,6 +60,10 @@ original research-pool controls and existing technology initialization/codec
 callers. Four selected production translation units pass correctness analysis.
 A focused five-TU ASan/UBSan build passes the same groups, with other objects
 uninstrumented and leak detection disabled. No platform matrix was repeated.
+The combined first-site/technology branch also passes 36 selected native groups
+after integration with the merged faction and Unit startup helpers. Unchanged
+production analysis and the separate seven-TU first-site sanitizer results were
+reused.
 
 Next requirements are automatic designs/capabilities, full Base/territory/resource
 construction, full Unit factory/visibility and controller ordering for all seven

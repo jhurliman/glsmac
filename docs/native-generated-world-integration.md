@@ -11,7 +11,7 @@ pre-startup terrain must not be presented as a completed playable world.
 | Boundary | Current implementation | Required change |
 | --- | --- | --- |
 | Generation | `map/Map.cpp::Generate` uses `SimplePerlin` and `DisplayedTerrainV1` for generated SMAC maps | Generate owned native state, preserve the selected settings and explicit RNG inputs, then publish only completed state |
-| Raw authority | `GlsmacResourceMapPolicy` stores `shared_ptr<const SmacPlanetMap>` | Retain a common native raw-map authority with explicit generated/installed provenance; keep installed-container decoding separate |
+| Raw authority | `SmacTerrainAuthority` now owns installed/generated read views; installed resource queries use it | Connect the remaining live consumers and generated publication while keeping container decoding/provenance separate |
 | Snapshot | `map/MapNativeTerrain.cpp` takes geometry, contours, landmarks and resource flags from `OriginalPlanet()` | Read those fields from the common native authority; combine them with current worker knowledge and live improvements as today |
 | Rendering | `frontend/NativeTerrainSession.h::Admits` requires wrapped 80x80 retained geometry | Admit completed generated authority through the same proven geometry/material path, with explicit profile checks |
 | Campaign restore | `GameCampaign.cpp` equates an original-plane policy with `MT_INSTALLED_PLANET` | Validate origin, geometry and selected categories against the authority's actual provenance |
@@ -32,7 +32,9 @@ must be separated at its callers.
    profiles/names, clocks and RNG. Retain the discriminating controls and
    distinguish initial source placement from later river routing when
    extending admitted world profiles.
-2. **Introduce the common owner.** Own dimensions/topology, every 44-byte record,
+2. **Connect the common owner.** The [shared terrain authority](native-terrain-authority.md)
+   now retains installed/generated read views and serves installed resource
+   queries. Connect dimensions/topology, every 44-byte record,
    resolved generation categories, resource pattern, sea/climate offsets and
    relevant rule flags independently of file format. Keep the complete raw
    authority rather than reconstructing it from display elevations. Installed

@@ -16,6 +16,7 @@
 #include "fixtures/SmacLandmarkGeneration.h"
 #include "game/backend/map/SmacCompleteTerrainGeneration.h"
 #include "fixtures/SmacCompleteTerrainGeneration.h"
+#include "game/backend/map/SmacTerrainAuthority.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 #include <string>
@@ -79,6 +80,34 @@ struct ClimateObservation {
 };
 }
 void AddSmacContinentGenerationTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC generated terrain authority owns completed records without installed provenance",GT(){
+        using Authority=game::backend::map::SmacTerrainAuthority;
+        std::shared_ptr<const Authority> snapshot;
+        {
+            generation::State s{std::vector<generation::Record>(3200),{{2,1,1,1,1,1,1}},game::backend::SmacGameplayRandomState(1,1)};
+            generation::Regions regions;regions.summary_width=16;regions.summary_height=16;regions.summary_initial=0;
+            generation::GenerateTerrain(s,{80,80},generation::DEFAULT_WORLD_RULES,regions,{100,110});
+            snapshot=std::make_shared<const Authority>(Authority::GeneratedPrestartup(s,{80,80}));
+            GT_ASSERT(snapshot->SourceOrigin()==Authority::Origin::Generated && !snapshot->InstalledSource(),"Generated terrain acquired fake installed provenance");
+            const auto& meta=snapshot->Info();
+            GT_ASSERT(meta.width==80 && meta.height==80 && meta.horizontal_wrap && meta.pattern==17133 && meta.sea_offset==0 && meta.climate_extra==0
+                && meta.generation_primary_rules==s.primary_rules,"Generated terrain lost its producer metadata");
+            for(size_t i=0;i<7;++i) {GT_ASSERT(meta.categories[i]==s.categories[i],"Generated terrain changed a resolved category");}
+            for(uint32_t y=0;y<80;++y) {for(uint32_t x=y&1;x<80;x+=2) {
+                GT_ASSERT(snapshot->At(x,y).bytes==s.records[size_t(y)*40+x/2],"Generated authority changed an original field");
+            }}
+            s.records[0][7]^=255;s.records.back()[43]^=255;s.resource_pattern=99;
+            bool rejected=false;s.stage=generation::Stage::Prelandmarks;
+            try {Authority::GeneratedPrestartup(s,{80,80});}catch(const std::invalid_argument&) {rejected=true;}
+            GT_ASSERT(rejected,"Incomplete generation was admitted as finished terrain");
+        }
+        GT_ASSERT(util::SHA256(snapshot->RecordBytes())=="17095ab34ed6a22f2e47429aa14d7eb0bb5d40001c6b21e9641d41cad9c733f9" && snapshot->Info().pattern==17133,
+            "Queued generated terrain depended on mutable producer storage");
+        bool rejected=false;try {snapshot->At(80,0);}catch(const std::out_of_range&) {rejected=true;}
+        GT_ASSERT(rejected,"Generated terrain accepted an out-of-bounds coordinate");
+        rejected=false;try {snapshot->At(0,1);}catch(const std::out_of_range&) {rejected=true;}
+        GT_ASSERT(rejected,"Generated terrain accepted the wrong row parity");GT_OK();
+    });
     task->AddTest("SMAC complete terrain generation matches final climate and original startup input",GT(){
         uint64_t draws=0,shared=0;
         for(const auto& c:fixtures::complete_terrain::Cases()) {

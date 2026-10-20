@@ -40,6 +40,10 @@
 #include "game/backend/unit/SmacConventionalStats.h"
 #include "game/backend/unit/ColonyMarkerRender.h"
 #include "game/backend/unit/SmacNativeUnitRecord.h"
+#include "game/backend/unit/SmacUnitInitialization.h"
+#include "game/backend/unit/SmacUnitStackPlacement.h"
+#include "fixtures/SmacStartupUnits.h"
+#include "util/SHA256.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/WorldSnapshotRules.h"
 #include "game/backend/WorldSnapshotRandom.h"
@@ -146,6 +150,63 @@ void ExploreNine(game::backend::map::SmacWorkerKnowledge::Data& data,int32_t x,i
 
 }
 void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC startup Unit initialization matches sixty four original complete records",GT(){
+        using namespace game::backend::unit;
+        for(const auto& c:fixtures::startup_units::Initializations()) {
+            const auto record=InitializeSmacUnitRecord(5,c.design,c.owner,c.morale);
+            GT_ASSERT(record.id==5 && OriginalSmacUnitBytes(record)==c.bytes,"Original full Unit initialization differs");
+            GT_ASSERT(Record::Deserialize(record.Serialize().ToString())==record,"Initialized Unit does not roundtrip");
+            if(c.owner==0 && c.design==2) {
+                auto wild=Record::InitializeWild(5,8,c.morale);auto common=record;common.design=8;
+                GT_ASSERT(wild==common,"Live wild factory does not use canonical Unit initialization");
+            }
+        }
+        GT_ASSERT(Rejects([]{InitializeSmacUnitRecord(2048,2,1,0);}) && Rejects([]{InitializeSmacUnitRecord(0,512,1,0);})
+            && Rejects([]{InitializeSmacUnitRecord(0,2,8,0);}),"Unit initializer accepts out of pool inputs");
+        return {};
+    });
+    task->AddTest("SMAC startup Unit placement and unlink match sixty five original complete pools",GT(){
+        using namespace game::backend::unit;
+        const auto unitBytes=[](const std::vector<Record>& units) {std::string result;for(const auto& unit:units) {
+            const auto bytes=OriginalSmacUnitBytes(unit);result.append(reinterpret_cast<const char*>(bytes.data()),bytes.size());}return result;};
+        const auto tileBytes=[](const std::vector<std::array<uint8_t,44>>& tiles) {std::string result;for(const auto& tile:tiles) {
+            result.append(reinterpret_cast<const char*>(tile.data()),tile.size());}return result;};
+        for(const auto& c:fixtures::startup_units::Placements()) {
+            std::vector<std::array<uint8_t,44>> tiles(16*24);
+            for(size_t i=0;i<tiles.size();++i) {for(size_t k=0;k<44;++k) {tiles[i][k]=uint8_t((i*44+k)*13+7);}
+                for(size_t k=8;k<12;++k) {tiles[i][k]=0;}}
+            std::vector<Record> units;for(int i=0;i<c.existing+int(c.place);++i) {
+                units.push_back(InitializeSmacUnitRecord(i,2,i<c.existing?c.existing_owner:c.owner,0));}
+            const std::vector<int> order=c.existing==3?std::vector<int>{2,0,1}:c.existing==1?std::vector<int>{0}:std::vector<int>{};
+            for(size_t j=0;j<order.size();++j) {auto& u=units.at(order[j]);u.x=16;u.y=12;
+                u.stack_next=j+1<order.size()?order[j+1]:-1;u.stack_previous=j?order[j-1]:-1;}
+            tiles[16*12+8][2]=0xa9;tiles[16*12+8][8]=uint8_t((c.existing?2:0)|(c.base?1:0)|0x80);
+            GT_ASSERT(util::SHA256(tileBytes(tiles))==c.input_tiles && util::SHA256(unitBytes(units))==c.input_units,
+                "Native placement input recipe differs: "+std::string(c.id));
+            SmacUnitPlacementInvalidation invalidation{99,777,888};SmacUnitPlacementWorld world{units,tiles,32,24,invalidation};
+            if(c.place) {PlaceSmacUnit(world,size_t(c.index),c.x,c.y,c.triad);}else {UnlinkSmacUnit(world,size_t(c.index));}
+            GT_ASSERT(util::SHA256(tileBytes(tiles))==c.tiles && util::SHA256(unitBytes(units))==c.units
+                && invalidation.unit==c.last_unit && invalidation.x==c.last_x && invalidation.y==c.last_y,
+                "Original full placement/unlink output differs: "+std::string(c.id));
+        }
+        return {};
+    });
+    task->AddTest("SMAC startup Unit placement rejects stale occupancy and broken local links before mutation",GT(){
+        using namespace game::backend::unit;
+        std::vector<Record> units{InitializeSmacUnitRecord(0,2,1,0),InitializeSmacUnitRecord(1,2,1,0)};
+        std::vector<std::array<uint8_t,44>> tiles(16*24);tiles[16*12+8][8]=2;
+        SmacUnitPlacementInvalidation invalidation{99,777,888};SmacUnitPlacementWorld world{units,tiles,32,24,invalidation};
+        const auto initial_units=units;const auto initial_tiles=tiles;
+        GT_ASSERT(Rejects([&]{PlaceSmacUnit(world,1,16,12,0);}),"Stale tile occupancy was admitted");
+        GT_ASSERT(units==initial_units && tiles==initial_tiles && invalidation.unit==99,"Rejected placement mutated world");
+        units[0].x=units[1].x=16;units[0].y=units[1].y=12;units[0].stack_next=1;
+        const auto broken=units;
+        GT_ASSERT(Rejects([&]{UnlinkSmacUnit(world,0);}) && units==broken && tiles==initial_tiles && invalidation.unit==99,
+            "Rejected reciprocal link mutated world");
+        units[0].stack_next=0;units[0].stack_previous=0;const auto cyclic=units;
+        GT_ASSERT(Rejects([&]{UnlinkSmacUnit(world,0);}) && units==cyclic,"Self linked Unit was unlinked");
+        return {};
+    });
     task->AddTest("SMAC composed live flora and wildlife retain evolving factory knowledge and restore",[](GSE*,context::Context*) -> std::string {
         using namespace game::backend;using namespace game::backend::unit;using Planet=map::SmacPlanetMap;using Knowledge=map::SmacWorkerKnowledge;
         for(const bool repeated:{false,true}) {

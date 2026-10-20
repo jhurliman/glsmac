@@ -1,4 +1,5 @@
 #include "SmacNativeUnitRecord.h"
+#include "SmacUnitInitialization.h"
 
 #include <algorithm>
 #include <limits>
@@ -21,10 +22,7 @@ SmacNativeUnitRecord SmacNativeUnitRecord::InitializeMindWorm(int32_t identity, 
 
 SmacNativeUnitRecord SmacNativeUnitRecord::InitializeWild(int32_t identity, int32_t design, int32_t native_direct_morale) {
     if (identity<0 || identity>=2048 || design<8 || design>10) throw std::runtime_error("Native Unit pool or wild design invalid");
-    SmacNativeUnitRecord result; result.id=static_cast<uint16_t>(identity); result.design=static_cast<int16_t>(design);
-    // Native direct scalar plus1, stored through the original byte domain.
-    result.stored_morale=static_cast<uint8_t>(static_cast<uint32_t>(native_direct_morale)+1u);
-    result.Validate(); return result;
+    return InitializeSmacUnitRecord(identity,design,0,native_direct_morale);
 }
 
 SmacNativeUnitRecord SmacNativeUnitRecord::AfterUnlinkedIndexErasure(int32_t removed) const {

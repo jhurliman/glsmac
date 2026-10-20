@@ -45,6 +45,27 @@ coverage does not imply the complete gameplay rules that created that scene.
 Prefer importing the corresponding original save if it becomes available;
 otherwise document that this is a controlled equivalent scene.
 
+## Additional map fidelity findings (2026-10-20)
+
+The user's native playthrough reports excessive contrast/saturation, jagged
+coastlines, absent unexplored black/grid presentation, and possibly exaggerated
+terrain height. These are acceptance defects to investigate against the same
+original scene, rather than independent artistic adjustments.
+
+| Finding | First comparison | Acceptance |
+| --- | --- | --- |
+| Terrain contrast/saturation | Compare unlit source palette entries, indexed terrain output, and final framebuffer separately at the same tile, zoom and animation phase. Identify whether lighting, palette conversion, filtering or compositing introduces the difference. | Preserve the original palette and measured shade mapping. No global saturation correction that compensates for an incorrect render path. |
+| Jagged coastline | Compare original coast mask selection/orientation and neighboring tile topology before comparing scaled edges. Include bays, capes, small islands and wrapped joins. | Match original shoreline silhouette and blend pixels at logical resolution; retain original pixel-art edges rather than adding arbitrary smoothing. |
+| Unknown black/grid | Supply saved observer exploration to the main view and separately gate terrain, objects, names and console inspection. The [unknown-view core](unknown-view-renderer.md) has original-matched controls but is not yet the ordinary-game presentation. | Black backing and relief-following dark-blue outlines match the original; movement, reload and new-game reset never expose hidden layers or stale pixels. Unknown outlines remain independent of the normal grid toggle. |
+| Exaggerated height | Compare tile anchors, shared corners and vertical displacement for flat, rolling, rocky, elevated and authored-landmark tiles at the same original zoom and relief setting. | Match measured projection and shared edges. Do not flatten elevations to compensate for zoom, lighting or a geometry defect. |
+
+The ordinary renderer and the native inspector currently have different live
+presentation paths. This is a confirmed integration gap; its contribution to
+each reported visual difference remains an inference until scene comparisons
+isolate it. Prioritize the ordinary exploration bridge, then compare palette,
+coast masks and relief independently. Show before/original/after crops in the
+relevant PRs, with capture conditions and remaining mismatches stated.
+
 ## Target B: functional bottom console
 
 - Original frame, panel subdivision, fonts, colors, spacing and button states.
@@ -76,4 +97,4 @@ otherwise document that this is a controlled equivalent scene.
 
 Use cached native builds and affected tests during development. Reserve the
 platform matrix for shared rendering/input changes and integration gates.
-Each PR requires exact-head GitHub Codex review and relevant validation.
+Each PR requires relevant validation. Request GitHub Codex review when credit is available; the user has waived that gate while credit is exhausted.

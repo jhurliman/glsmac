@@ -1,4 +1,5 @@
 #include "SmacTerrainRaster.h"
+#include "types/texture/SmacIndexedLine.h"
 
 #include <algorithm>
 #include <limits>
@@ -145,6 +146,7 @@ Result Draw(const Bitmap& initial,const Bitmap& texture,const std::vector<Triang
 Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,const Clip& clip,bool track_coverage) {
     ValidateBitmap(initial);
     for(const auto& command:commands) {
+        if(command.shader==Shader::IndexedLine) {continue;}
         if(!command.texture || (command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded && command.shader!=Shader::KeyedUnlit && command.shader!=Shader::WaterDepth16 && command.shader!=Shader::CoastMapped && command.shader!=Shader::OwnerClut && command.shader!=Shader::Sprite && command.shader!=Shader::SpriteShadow)) {Invalid();}
         ValidateBitmap(*command.texture);
         if(command.shader==Shader::OwnerClut && (!command.owner_clut || std::any_of(command.owner_mapping.begin(),command.owner_mapping.end(),[](auto selector){return selector>8;}))) {Invalid();}
@@ -162,6 +164,17 @@ Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,cons
     Result result{initial,0};
     if(track_coverage) {result.coverage.resize(initial.pixels.size());}
     for(const auto& command:commands) {
+        if(command.shader==Shader::IndexedLine) {
+            const auto visible=Intersection(command.clip,bounded);
+            if(visible[0]<visible[2] && visible[1]<visible[3]) {
+                types::texture::SmacIndexedLine(command.line,visible,command.line_color,[&](int32_t x,int32_t y,uint8_t color) {
+                    const auto at=size_t(y)*size_t(initial.width)+size_t(x);
+                    result.bitmap.pixels[at]=color;++result.attempts;++result.writes;
+                    if(track_coverage) {result.coverage[at]=1;}
+                });
+            }
+            continue;
+        }
         const auto& texture=*command.texture;
         if(command.shader==Shader::Sprite || command.shader==Shader::SpriteShadow) {
             const auto visible=Intersection(Intersection(command.clip,bounded),{{command.sprite_origin[0],command.sprite_origin[1],

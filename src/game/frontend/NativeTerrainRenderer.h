@@ -23,6 +23,7 @@ struct Frame {
     std::vector<uint8_t> rgba,indexed,coverage;
     uint64_t attempts=0,writes=0;
     size_t tiles=0;
+    bool opaque_background=false;
     std::array<bool,3200> developed_tiles{},landmark_tiles{},resource_tiles{};
 };
 // Explicit reference allocation-base low16; never a coordinate hash or a

@@ -10,12 +10,14 @@ terrain exploration, remembered improvements, unit disclosure and base discovery
 - `Map::CopyNativeTerrain` and `OP_GET_NATIVE_TERRAIN` copy live/remembered
   improvements and base admission into an owned80x80 local snapshot. The
   snapshot currently omits tile exploration, editor/reveal and survey policy.
-- `NativeViewGeometry::Prepare` always schedules land material height/shade
+- `NativeViewGeometry::Prepare` without a knowledge input schedules land height/shade
   queries. Unknown terrain bypasses that material pass in the original; the
-  unknown outline's geometry/cache schedule needs its own comparison.
-- `NativeTerrainRenderer` emits terrain/features without an exploration gate.
-  Its coverage-based alpha exposes the legacy plane beneath unpainted regions;
-  an unknown region must not become a transparent hole over revealed terrain.
+  unknown outline's geometry/cache schedule now has an independently matched
+  [production core](unknown-view-renderer.md); the ordinary caller must supply it.
+- `NativeTerrainRenderer` now gates unknown materials and owns opaque black
+  backing when given a knowledge-profile plan. The ordinary caller does not yet
+  supply that plan. Its legacy presentation must not expose revealed terrain
+  beneath unknown regions.
 - `Game::UpdateNativeTerrain` presents that renderer only in the explicit
   inspector at the admitted viewport/zoom. The ordinary map remains the GPU
   path. Implementing a detached fog helper alone will not close the user issue.
@@ -45,6 +47,8 @@ terrain exploration, remembered improvements, unit disclosure and base discovery
    camera and platform integration checks when the live boundary is complete.
 
 The existing known-terrain view controls prove their declared geometry/material
-profiles. The new unknown-frame receipt independently replays captured line
-geometry; it does not yet independently derive every scheduled geometry query.
-That distinction is retained while the reverse-engineering follow-up resolves it.
+profiles. The new [unknown query/backing receipt](behavior/unknown-map-query-order-and-backing.md)
+independently derives the scheduled geometry and retained unknown frames. The
+production core matches those controls; ordinary-game caller integration is
+still required. Partial-known final pixels and known grid presentation retain
+their separate unclosed boundaries.

@@ -15,10 +15,13 @@ public:
         Kind kind;Point tile;unsigned vertex;Point result;
     };
     using Observer=std::function<void(const Query&)>;
+    using Knowledge=std::array<bool,3200>; // synchronous owned-caller input; never retained
     struct Terrain {
         Placement placement;
         Point projector,flat_center;
         std::array<int,5> heights{},lighting{};
+        bool unknown=false;
+        std::array<Point,4> outline{};
     };
     struct Object {Point tile,projector,dispatcher;};
     struct Plan {
@@ -27,15 +30,16 @@ public:
         std::array<int,4> clip{{0,0,1024,511}};
         std::vector<Terrain> terrain;
         std::vector<Object> objects;
+        bool opaque_background=false;
     };
     explicit ViewGeometry(const ::game::native_terrain::World& world)
         : geometry_(80,80,world.horizontal_wrap,Cells(world),false,true) {
         if(!world.horizontal_wrap) {throw std::invalid_argument("Native view schedule requires wrapped Planet");}
     }
     Plan Prepare(const ViewLayout& view,int zoom,int relief,bool incremental,
-        bool paint=true,const Observer& observer={}) {
+        bool paint=true,const Observer& observer={},const Knowledge* known=nullptr) {
         if(!view.horizontal_wrap) {throw std::invalid_argument("Native view schedule requires wrapped Planet");}
-        geometry_.Configure(zoom,relief);Plan result;
+        geometry_.Configure(zoom,relief);Plan result;result.opaque_background=known!=nullptr;
         if(!paint) {return result;}
         if(incremental && previous_ && zoom==zoom_ && relief==relief_) {
             result.regions=HorizontalPan(*previous_,view);
@@ -55,7 +59,16 @@ public:
             output.flat_center={{output.projector[0]+4*view.unit,
                 output.projector[1]+Geometry::FloorQuarter(sum)+2*view.unit}};
             const auto index=size_t(tile[1])*40+size_t(tile[0])/2;
-            if(bands_[index]>=3) {
+            output.unknown=known && !known->at(index);
+            if(output.unknown) {
+                constexpr unsigned triangles[4][3]={{0,1,2},{0,2,3},{0,3,4},{0,4,1}};
+                const Point delta[5]={{{0,0}},{{-4*view.unit,0}},{{0,-2*view.unit}},{{4*view.unit,0}},{{0,2*view.unit}}};
+                for(unsigned t=0;t<4;++t) {for(unsigned j=0;j<3;++j) {
+                    const auto v=triangles[t][j];Height(tile,v,observer);
+                    const auto cached=Require(geometry_.CachedHeight(tile[0],tile[1],v));
+                    if(j==1) {output.outline[t]={{output.flat_center[0]+delta[v][0],output.flat_center[1]+delta[v][1]-cached}};}
+                }}
+            } else if(bands_[index]>=3) {
                 constexpr unsigned triangles[4][3]={{0,1,2},{0,2,3},{0,3,4},{0,4,1}};
                 for(const auto& triangle:triangles) {for(const auto v:triangle) {
                     output.heights[v]=Height(tile,v,observer);
@@ -71,6 +84,7 @@ public:
         }
         previous_=view;zoom_=zoom;relief_=relief;return result;
     }
+    std::vector<uint8_t> CacheBytes() const {return geometry_.CacheBytes();}
 private:
     using Geometry=backend::map::smac_terrain::LandmarkGeometry;
     std::vector<Geometry::Cell> Cells(const ::game::native_terrain::World& world) {

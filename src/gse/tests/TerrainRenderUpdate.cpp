@@ -3,6 +3,7 @@
 #include "game/frontend/NativeTerrainRenderer.h"
 #include "game/frontend/NativeTerrainSession.h"
 #include "fixtures/NativeTerrainView.h"
+#include "fixtures/SmacUnknownOutline.h"
 #include "Mesh.h"
 #include "scene/Camera.h"
 #include "game/frontend/MapProjection.h"
@@ -814,6 +815,60 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         const auto empty=raster::Draw(initial,texture,{triangle},{12,0,12,32});
         GT_ASSERT(empty.writes==0 && empty.bitmap.pixels==unchanged && initial.pixels==unchanged,"Empty clip or failure mutated caller pixels");
         GT_OK();
+    });
+
+    task->AddTest("SMAC unknown view uses signed cold sea cache and opaque backing",GT(){
+        namespace native=game::frontend::native_terrain;
+        game::native_terrain::World world;world.retained_geometry=true;
+        for(auto& cell:world.tiles) {cell.band=2;}
+        native::ViewGeometry geometry(world);native::ViewGeometry::Knowledge known{};
+        std::array<size_t,3> counts{};
+        const auto layout=native::Layout(22,38,0,true);
+        const auto plan=geometry.Prepare(layout,0,25,false,true,[&](const auto& query) {++counts[size_t(query.kind)];},&known);
+        const std::array<native::Point,4> outline{{{{-48,1}},{{0,-23}},{{48,1}},{{0,25}}}};
+        GT_ASSERT(plan.terrain.size()==288 && plan.terrain.front().unknown && plan.terrain.front().outline==outline,
+            "Unknown sea used height return0 instead of the signed cold cache byte FF");
+        GT_ASSERT(counts[0]==4608 && counts[1]==0 && counts[2]==576,"Unknown query schedule warmed material shade caches");
+        known.fill(true); // Preparing a frame must not retain this borrowed mask.
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,9)};
+        const auto full=native::RenderPrepared(world,source,plan,0);
+        GT_ASSERT(full.opaque_background && full.indexed[100*1024+1]==65,"Unknown full redraw lost its original black backing");
+        for(size_t i=3;i<full.rgba.size();i+=4) {GT_ASSERT(full.rgba[i]==255,"Unknown backdrop exposed the underlying revealed map");}
+        const auto revealed_plan=geometry.Prepare(layout,0,25,false);
+        const auto revealed=native::RenderPrepared(world,source,revealed_plan,0);
+        GT_ASSERT(!revealed.opaque_background && revealed.rgba[3]==0,"Unrequested diagnostic coverage mode changed");
+        const auto pan=geometry.Prepare(native::Layout(24,38,0,true),0,25,true);
+        bool rejected=false;try {(void)native::RenderPrepared(world,source,pan,0,0x10421,0,&full);}
+        catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"A revealed view retained an incompatible unknown backing");GT_OK();
+    });
+
+    task->AddTest("SMAC unknown outlines raster matches original full indexed buffers",GT(){
+        namespace raster=game::frontend::smac_terrain_raster;
+        for(const auto& c:unknown_map_fixture::Cases) {
+            raster::Bitmap background{c.width,c.height,std::vector<uint8_t>(size_t(c.width)*c.height,65)};
+            std::vector<raster::Command> commands;commands.reserve(c.count);
+            for(size_t i=0;i<c.count;++i) {const auto& line=c.lines[i];raster::Command command;
+                command.shader=raster::Shader::IndexedLine;command.line={line[0],line[1],line[2],line[3]};
+                command.line_color=static_cast<uint8_t>(line[4]);commands.push_back(command);}
+            const auto result=raster::DrawBatch(background,commands,{0,0,c.width,c.height},true);
+            uint64_t hash=14695981039346656037ull;size_t blue=0,coverage=0;
+            for(size_t i=0;i<result.bitmap.pixels.size();++i) {const auto value=result.bitmap.pixels[i];
+                hash=(hash^value)*1099511628211ull;blue+=value==194;coverage+=result.coverage[i]!=0;}
+            GT_ASSERT(hash==c.hash && blue==c.blue && coverage==blue,"Unknown full-frame line raster differs: "+std::string(c.id));
+        }GT_OK();
+    });
+    task->AddTest("SMAC indexed lines preserve terrain batch ordering and opaque key bytes",GT(){
+        namespace raster=game::frontend::smac_terrain_raster;
+        const raster::Bitmap background{8,8,std::vector<uint8_t>(64,65)},before{1,1,{5}},after{1,1,{6}};
+        raster::Command a;a.shader=raster::Shader::Sprite;a.texture=&before;a.sprite_origin={3,3};
+        raster::Command line;line.shader=raster::Shader::IndexedLine;line.line={0,3,7,3};line.line_color=194;
+        raster::Command b=a;b.texture=&after;b.sprite_origin={4,3};
+        raster::Command key=line;key.line={1,1,3,1};key.line_color=9;
+        const auto result=raster::DrawBatch(background,{a,line,b,key},{0,0,8,8},true);
+        GT_ASSERT(result.bitmap.pixels[3*8+3]==194 && result.bitmap.pixels[3*8+4]==6,"Line commands escaped their painter order");
+        GT_ASSERT(result.bitmap.pixels[9]==9 && result.coverage[9]==1,"An indexed-line byte was treated as sprite source transparency");
+        GT_ASSERT(background.pixels[9]==65,"Ordered drawing mutated the caller background");GT_OK();
     });
 
     task->AddTest("SMAC native camera provenance survives all ocean tiles without land metadata",GT(){

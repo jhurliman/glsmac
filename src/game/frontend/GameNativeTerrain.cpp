@@ -157,7 +157,7 @@ void Game::UpdateNativeTerrain() {
             bool(native_terrain::HorizontalPan(*m_native_view->layout,layout));
         const auto plan=m_native_view->geometry.Prepare(layout,0,25,incremental);
         frame=native_terrain::RenderPrepared(*m_native_world,*m_native_source,plan,
-            g_engine->GetConfig()->GetNativeTerrainBaseLow16(),0x10621,0,incremental?&*m_native_view->frame:nullptr);
+            g_engine->GetConfig()->GetNativeTerrainBaseLow16(),0x10621,0,plan.regions?&*m_native_view->frame:nullptr);
         // The object pass already performed its own projector query. Reuse
         // that result for bodies, badges and names without touching caches.
         for(const auto& object:plan.objects) {

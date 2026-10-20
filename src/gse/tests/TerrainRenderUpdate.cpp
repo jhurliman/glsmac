@@ -976,6 +976,67 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(rejected,"Same-footprint different-zoom bitmap history admitted");GT_OK();
     });
 
+    task->AddTest("SMAC observer knowledge changes redraw retained native interior pixels",GT(){
+        namespace native=game::frontend::native_terrain;
+        game::native_terrain::World world;world.retained_geometry=true;
+        for(auto& tile:world.tiles) {tile.band=4;tile.material_admitted=true;}
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,77)};
+        const auto start=native::Layout(22,38,0,true),next=native::Layout(24,38,0,true);
+        const size_t interior=38*40+11;
+        // Each transition previously admitted a narrow dirty strip, retaining
+        // pixels from the old observer/presentation in the interior.
+        for(int change=0;change<6;++change) {
+            native::ViewGeometry geometry(world),fresh(world);
+            native::ViewGeometry::Knowledge known(3200,false);
+            const native::ViewGeometry::Knowledge* before=&known;
+            std::optional<int> light;
+            if(change==1) {known[interior]=true;}
+            if(change==3 || change==4) {light=2;}
+            if(change==5) {before=nullptr;}
+            const auto initial=geometry.Prepare(start,0,25,false,true,{},before,light);
+            const auto old=native::RenderPrepared(world,source,initial,0);
+            const native::ViewGeometry::Knowledge* after=&known;
+            if(change==0) {known[interior]=true;}
+            if(change==1) {known[interior]=false;}
+            if(change==2) {light=2;}
+            if(change==3) {light=3;}
+            if(change==4) {after=nullptr;light.reset();}
+            const auto plan=geometry.Prepare(next,0,25,true,true,{},after,light);
+            GT_ASSERT(!plan.regions && plan.scroll==native::Point({{0,0}}) && (plan.clip==std::array<int,4>({{0,0,1024,511}})),
+                "Changed exploration/survey/reveal mode reused old interior pixels");
+            const auto actual=native::RenderPrepared(world,source,plan,0);
+            const auto expected=native::RenderPrepared(world,source,fresh.Prepare(next,0,25,false,true,{},after,light),0);
+            GT_ASSERT(actual.indexed==expected.indexed && actual.coverage==expected.coverage && actual.rgba==expected.rgba,
+                "Observer transition differs from a complete fresh view");
+            bool rejected=false;try {(void)native::RenderPrepared(world,source,plan,0,0x10421,0,&old);}
+            catch(const std::invalid_argument&) {rejected=true;}
+            GT_ASSERT(rejected,"Full observer redraw accepted stale retained bitmap history");
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC native pan owns knowledge identity and preserves unchanged fast path",GT(){
+        namespace native=game::frontend::native_terrain;
+        game::native_terrain::World world;for(auto& tile:world.tiles) {tile.band=4;}
+        native::ViewGeometry geometry(world);
+        native::ViewGeometry::Knowledge known(3200,false);
+        geometry.Prepare(native::Layout(22,38,0,true),0,25,false,true,{},&known,2);
+        auto equal=known;
+        const auto pan=geometry.Prepare(native::Layout(24,38,0,true),0,25,true,true,{},&equal,2);
+        GT_ASSERT(pan.regions && pan.scroll==native::Point({{-96,0}}),"Equal masks at different addresses lost dirty pan");
+        // A skipped paint must not replace the successful frame's identity.
+        known[38*40+11]=true;
+        const auto skipped=geometry.Prepare(native::Layout(26,38,0,true),0,25,true,false,{},&known,3);
+        GT_ASSERT(skipped.terrain.empty() && !skipped.regions,"Skipped paint submitted geometry");
+        const auto resumed=geometry.Prepare(native::Layout(26,38,0,true),0,25,true,true,{},&equal,2);
+        GT_ASSERT(resumed.regions,"Skipped paint replaced successful observer history");
+        native::ViewGeometry::Knowledge wrong(1,false);
+        bool rejected=false;try {(void)geometry.Prepare(native::Layout(28,38,0,true),0,25,true,true,{},&wrong,2);}
+        catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Mismatched observer dimensions accepted");
+        const auto final=geometry.Prepare(native::Layout(28,38,0,true),0,25,true,true,{},&equal,2);
+        GT_ASSERT(final.regions,"Rejected observer input replaced successful history");GT_OK();
+    });
+
     task->AddTest("SMAC dimensioned bitmap keeps flat zoomed unknown terrain opaque across pan",GT(){
         namespace native=game::frontend::native_terrain;
         game::native_terrain::World world(64,32);world.horizontal_wrap=false;

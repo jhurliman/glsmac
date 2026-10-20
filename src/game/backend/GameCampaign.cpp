@@ -15,6 +15,11 @@
 #include <limits>
 
 namespace game::backend {
+void Game::UpdateUiCursor(world_ticket_t world,ui_view::Cursor cursor) {
+    std::lock_guard lock(m_admission_mutex);
+    if(world && MatchesActiveAdmission(world)) {m_active_admission->ui_cursor=cursor;}
+}
+
 uint64_t Game::QueueCampaignSave(const State::game_session_t& session, const std::string& path) {
     if(path.empty()) {THROW("Campaign path is empty");}
     std::lock_guard lock(m_admission_mutex);
@@ -28,7 +33,7 @@ uint64_t Game::QueueCampaignSave(const State::game_session_t& session, const std
     const auto id=ReserveWorldTicket();
     if(id>static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {THROW("Campaign request IDs exhausted");}
     m_campaign_save=std::make_shared<CampaignSave>(CampaignSave{
-        m_active_admission->ticket,CampaignSave::Queued,{id,path,{}}});
+        m_active_admission->ticket,CampaignSave::Queued,{id,path,{}},m_active_admission->ui_cursor});
     return id;
 }
 
@@ -71,7 +76,7 @@ void Game::RunCampaignSave(const std::shared_ptr<OwnerTransition>& owner,const s
     }
     util::FinallyGuard finish([this,owner]{FinishOwnerTransition(owner);});
     std::string path,error;
-    try {path=SaveCampaign(save->result.path);}
+    try {path=SaveCampaign(save->result.path,save->cursor);}
     catch(const std::exception& failure) {error=failure.what();}
     std::lock_guard lock(m_admission_mutex);
     if(m_campaign_save==save && MatchesActiveAdmission(save->world)) {
@@ -90,7 +95,7 @@ std::optional<Game::CampaignSaveResult> Game::TakeCampaignSaveResult(const world
     return result;
 }
 
-std::string Game::SaveCampaign(const std::string& path) {
+std::string Game::SaveCampaign(const std::string& path,std::optional<ui_view::Cursor> cursor) {
     {
         std::lock_guard lock(m_admission_mutex);
         if(!m_owner_transition || m_owner_transition->stage!=StartupStage::Complete ||
@@ -103,7 +108,7 @@ std::string Game::SaveCampaign(const std::string& path) {
     {std::lock_guard lock(m_pending_events_mutex); if(!m_pending_events.empty()) {THROW("Finish queued commands before saving");}}
     if(m_energy_rate_session) {THROW("Close the energy allocation window before saving");}
     ValidateCurrentSimulation();
-    campaign::Record record{m_state->Serialize().ToString(),m_state->ExportRoster(),m_slot_num,SerializeWorldSnapshot()};
+    campaign::Record record{m_state->Serialize().ToString(),m_state->ExportRoster(),m_slot_num,SerializeWorldSnapshot(),cursor};
     return campaign::Write(path,record);
 }
 

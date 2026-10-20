@@ -1,5 +1,6 @@
 #pragma once
 #include <deque>
+#include "game/PrimaryViewState.h"
 namespace input {class Event;}
 #include <array>
 namespace game::native_terrain {struct World;}
@@ -153,7 +154,7 @@ CLASS( Game, common::Module )
 
 	static constexpr size_t SCROLL_DURATION_MS = 100;
 
-	Game( GLSMAC* glsmac, backend::State* state, ui::UI* const ui, const std::function< void() > on_start = 0, const std::function< void() > on_cancel = 0, std::optional<std::string> campaign_world = {} );
+	Game( GLSMAC* glsmac, backend::State* state, ui::UI* const ui, const std::function< void() > on_start = 0, const std::function< void() > on_cancel = 0, std::optional<std::string> campaign_world = {}, std::optional<ui_view::Cursor> campaign_cursor = {} );
 	~Game();
 
 	void Start() override;
@@ -197,6 +198,8 @@ CLASS( Game, common::Module )
     bool AllowsNativeTileInspection(int x,int y) const;
     bool IsNativeTerrainInspector() const {return m_native_inspector;}
     bool IsNativeObjectTile(const types::Vec2<size_t>& tile) const;
+    void SetUiCursor(ui_view::Cursor cursor);
+    const std::optional<ui_view::Cursor>& GetUiCursor() const {return m_ui_cursor;}
     const actor_visibility::Snapshot* GetActorVisibility() const {return m_world_retired ? nullptr:m_actor_visibility.get();}
 	text::InstancedTextManager* GetITM() const;
 
@@ -298,6 +301,8 @@ private:
 	);
 	void Deinitialize();
     void UpdateNativeTerrain();
+    void RestoreCampaignCursor();
+    std::optional<ui_view::Cursor> m_campaign_cursor,m_ui_cursor;
     void PresentNativeCanvas(const native_terrain::Frame* frame);
     bool TryNativeTileAt(size_t screen_x,size_t screen_inverse_y);
     bool HandleNativeZoom(const input::Event& event);

@@ -7,6 +7,7 @@
 #include <atomic>
 #include <stdexcept>
 #include <cerrno>
+#include <limits>
 #ifdef _WIN32
 #define NOMINMAX
 #include <windows.h>
@@ -41,21 +42,34 @@ std::string Encode(const Record& record) {
     Validate(record);
     const auto roster=roster::EncodeRoster(record.roster,State::ROSTER_LIMITS);
     types::Buffer buffer;
-    buffer.WriteString(MAGIC);buffer.WriteInt(1);buffer.WriteInt(record.local_slot);
+    buffer.WriteString(MAGIC);buffer.WriteInt(record.cursor?2:1);buffer.WriteInt(record.local_slot);
     buffer.WriteString(record.settings);buffer.WriteString(roster);buffer.WriteString(record.world);
+    if(record.cursor) {for(const auto coordinate:*record.cursor) {buffer.WriteInt(coordinate);}}
     if(buffer.lenw>MAX_BYTES) throw std::runtime_error("GLSMAC campaign file is too large");
     return buffer.ToString();
 }
 Record Decode(const std::string& bytes) {
     if(bytes.size()>MAX_BYTES) throw std::runtime_error("GLSMAC campaign file is too large");
     types::Buffer buffer(bytes);
-    if(buffer.ReadString(32)!=MAGIC || buffer.ReadInt()!=1) throw std::runtime_error("Unsupported GLSMAC campaign format");
+    if(buffer.ReadString(32)!=MAGIC) throw std::runtime_error("Unsupported GLSMAC campaign format");
+    const auto version=buffer.ReadInt();
+    if(version!=1 && version!=2) throw std::runtime_error("Unsupported GLSMAC campaign format");
     const auto local=buffer.ReadInt();
     if(local!=0) throw std::runtime_error("Unsupported campaign local player");
     Record value{buffer.ReadString(SETTINGS_LIMIT),{},static_cast<size_t>(local),{}};
     try { value.roster=roster::DecodeRoster(buffer.ReadString(State::ROSTER_LIMITS.max_encoded_bytes),State::ROSTER_LIMITS); }
     catch(const std::invalid_argument& error) { throw std::runtime_error(error.what()); }
     value.world=buffer.ReadString(MAX_BYTES-SETTINGS_LIMIT-65536);
+    if(version==2) {
+        ui_view::Cursor cursor{};
+        for(auto& coordinate:cursor) {
+            const auto value=buffer.ReadInt();
+            if(value<std::numeric_limits<int32_t>::min() || value>std::numeric_limits<int32_t>::max())
+                throw std::runtime_error("Campaign cursor exceeds its signed 32-bit field");
+            coordinate=static_cast<int32_t>(value);
+        }
+        value.cursor=cursor;
+    }
     if(buffer.lenr!=buffer.lenw) throw std::runtime_error("Trailing GLSMAC campaign data");
     Validate(value);return value;
 }

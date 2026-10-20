@@ -70,10 +70,12 @@ remain unavailable rather than exposing hidden legacy terrain. The existing
 non-native map path has not gained faithful unknown rendering from this change.
 Generalizing those authorities remains required for1.0.
 
-View/profile persistence is still missing. The reload run restored exploration,
-Units, Base and turn, but initially centered (40,40), an unexplored area, because
-no active Unit supplied focus. Minimum zoom exposed the saved known patch. Do
-not describe this as saved camera restoration. Display-preference ownership,
+The original reload run restored exploration, Units, Base and turn, but initially
+centered (40,40), an unexplored area, because no active Unit supplied focus.
+[Campaign cursor persistence](campaign-ui-cursor.md) now fixes that for new saves:
+ordinary reopen uses the saved cursor and resets zoom. Old version-1 saves lack
+that cursor. Arbitrary saved camera/zoom restoration is not the original policy.
+Display-preference ownership,
 foreign-object interactive scenarios, arbitrary pan histories and additional
 map/platform integration still need their acceptance passes. Full actor/font
 matching, minimap presentation and initial console-card population also remain

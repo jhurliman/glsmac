@@ -1,5 +1,8 @@
 #include "CampaignPersistence.h"
 #include "ConventionalUnits.h"
+#include "fixtures/PrimaryViewCursor.h"
+#include "game/frontend/NativeViewContext.h"
+#include <limits>
 #include "task/gsetests/GSETests.h"
 #include "game/backend/CampaignFile.h"
 #include "game/backend/Game.h"
@@ -29,6 +32,38 @@ bool Rejects(const std::function<void()>& call) {try{call();}catch(const std::ex
 std::string Temporary() {return (std::filesystem::temp_directory_path()/("glsmac-campaign-test-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count())+".glsmac")).string();}
 }
 void AddCampaignPersistenceTests(task::gsetests::GSETests* task) {
+    task->AddTest("Campaign cursor codec preserves legacy absence signed fields and original reopen policy",GT(){
+        return ConventionalUnitFixture::WithControllerViewport([]()->std::string {
+            using namespace game::backend;
+            ConventionalUnitFixture fixture;fixture.Configure(true,3,true);fixture.ResourcePolicy(true);
+            const auto path=Temporary();util::FinallyGuard cleanup([&]{std::error_code ignored;std::filesystem::remove(path,ignored);});
+            return fixture.Run([&](GSE_CALLABLE)->std::string {
+                fixture.SaveCampaign(path);const auto legacy=campaign::Read(path);const auto old_bytes=campaign::Encode(legacy);
+                GT_ASSERT(!legacy.cursor && campaign::Encode(campaign::Decode(old_bytes))==old_bytes,"Version-one campaign invented cursor state or changed bytes");
+                for(const auto& control:fixtures::primary_cursor::Cases) {
+                    auto record=legacy;record.cursor=control.cursor;const auto encoded=campaign::Encode(record);const auto loaded=campaign::Decode(encoded);
+                    GT_ASSERT(loaded.cursor==record.cursor && loaded.world==legacy.world && loaded.settings==legacy.settings,
+                        "Cursor round trip normalized its fields or rewrote simulation bytes");
+                    game::frontend::native_terrain::ViewContext context;
+                    context.index=7;context.active=0;context.flags=0x12345678;context.zoom=8;context.camera={{70,20}};
+                    const auto preferences=context.preferences;context.Reopen(*loaded.cursor,{{80,80}});
+                    const std::array<int,6> actual{{context.index,context.active,int(context.flags),context.zoom,context.camera[0],context.camera[1]}};
+                    GT_ASSERT(actual==control.view && context.preferences==preferences,"Original primary reopen differs: "+std::string(control.id));
+                    GT_ASSERT(Rejects([&]{campaign::Decode(encoded.substr(0,encoded.size()-1));}) && Rejects([&]{campaign::Decode(encoded+"x");}),
+                        "Truncated or trailing version-two cursor data admitted");
+                }
+                auto edge=legacy;edge.cursor=game::ui_view::Cursor{{INT32_MIN,INT32_MAX}};
+                GT_ASSERT(campaign::Decode(campaign::Encode(edge)).cursor==edge.cursor,"Signed cursor endpoints were normalized or narrowed");
+                types::Buffer input(old_bytes);const auto magic=input.ReadString();input.ReadInt();const auto local=input.ReadInt();
+                const auto settings=input.ReadString(),roster=input.ReadString(),world=input.ReadString();
+                types::Buffer malformed;malformed.WriteString(magic);malformed.WriteInt(2);malformed.WriteInt(local);
+                malformed.WriteString(settings);malformed.WriteString(roster);malformed.WriteString(world);
+                malformed.WriteInt(std::numeric_limits<int64_t>::max());malformed.WriteInt(0);
+                GT_ASSERT(Rejects([&]{campaign::Decode(malformed.ToString());}),"Wide cursor integer silently narrowed");GT_OK();
+            });
+        });
+    });
+
     task->AddTest("Campaign file restores owned settings roster world and next actual turn",GT(){
         return ConventionalUnitFixture::WithControllerViewport([&]() -> std::string {
         return ConventionalUnitFixture::WithCampaignMapSources([&]() -> std::string {

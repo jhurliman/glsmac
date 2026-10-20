@@ -170,10 +170,14 @@ bool UnitManager::QueueAutomaticSelection() {
 		return entry.second->IsOwned() && entry.second->IsConventional();
 	} );
 	if ( !canonical ) { return false; }
-	// Camera-to-tile projection is the port's view-focus input. Native selection
-	// owns the original integer distance and record-order semantics.
+    // The cursor is independent of the camera. Keep old saves without cursor
+    // metadata on their existing camera-derived path until a tile is selected.
 	const auto width = m_game->m_map_data.width, height = m_game->m_map_data.height;
 	if ( !width || !height ) { return false; }
+    if(const auto& cursor=m_game->GetUiCursor();cursor && (*cursor)[0]>=0 && (*cursor)[1]>=0
+        && size_t((*cursor)[0])<width && size_t((*cursor)[1])<height) {
+        QueueAutomaticSelectionAt({size_t((*cursor)[0]),size_t((*cursor)[1])});return true;
+    }
 	const auto& camera = m_game->m_camera_position;
 	const auto& view = m_game->m_viewport;
 	if ( camera.z <= 0 || view.window_aspect_ratio <= 0 || view.ratio.y <= 0 ) { return false; }
@@ -205,7 +209,7 @@ void UnitManager::ReceiveAutomaticSelection() {
 	} else {
 		m_selection_visit.reset();
 		const auto retained = m_controller_selection;
-		m_game->SelectUnitOrSelectedTile( m_selected_unit );
+        if(m_selected_unit) {m_game->SelectUnitOrSelectedTile(m_selected_unit);}
 		m_selected_unit = nullptr;
 		m_controller_selection = retained;
 	}

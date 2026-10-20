@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "game/PrimaryViewState.h"
 namespace game::native_terrain {struct World;}
 #include <functional>
 #include <array>
@@ -317,6 +318,7 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	static void ValidateCampaignWorld(State* state, const std::string& world);
 	// Path-only request from the UI; serialization is claimed at a native checkpoint.
 	uint64_t QueueCampaignSave(const State::game_session_t& session, const std::string& path);
+    void UpdateUiCursor(world_ticket_t world,ui_view::Cursor cursor);
 	struct CampaignSaveResult { uint64_t request_id; std::string path, error; };
 	std::optional<CampaignSaveResult> TakeCampaignSaveResult(world_ticket_t world);
 	pending_initialization_t MT_LoadMap( world_ticket_t world, const std::string& path );
@@ -586,6 +588,7 @@ private:
 		const world_ticket_t previous;
 		const std::optional< std::string > map_path;
 		const std::optional<std::string> campaign_world;
+        std::optional<ui_view::Cursor> ui_cursor; // admission mutex, independent of simulation and view camera
 		common::mt_id_t request = 0;
 		State::game_session_t admitted_binding;
 		bool cancelled = false;
@@ -633,11 +636,12 @@ private:
 		world_ticket_t world;
 		Phase phase = Queued;
 		CampaignSaveResult result;
+        std::optional<ui_view::Cursor> cursor;
 	};
 	std::shared_ptr<CampaignSave> m_campaign_save; // admission mutex; no world pointers
 	bool ProcessCampaignSave();
 	void RunCampaignSave(const std::shared_ptr<OwnerTransition>& owner, const std::shared_ptr<CampaignSave>& save);
-	std::string SaveCampaign(const std::string& path); // claimed owner only
+	std::string SaveCampaign(const std::string& path,std::optional<ui_view::Cursor> cursor={}); // claimed owner only
 	bool HasInitializationFailure() const;
 	bool PublishInitializationFailure();
 	bool AdvanceInitialization();

@@ -60,8 +60,11 @@ must be separated at its callers.
    automatic designs, full Unit factory and controller stages still follow it.
    [Capability refresh](native-startup-capability.md) now matches complete
    original faction buffers and ordered stores; the generated first faction
-   composes through the capability boundary. Custom design construction and
-   caller marking/selection are still required.
+   composes through the capability boundary.
+   [Opening design construction and caller Scout selection](native-opening-designs.md)
+   now match the stock named-grant controls and run in the Gaia composition.
+   Installed predefined catalog initialization, actual localized names and later
+   workshop branches remain required.
    [Base seed and radius preparation](native-startup-base.md) now match complete
    original controls and the generated first-Base/tile projection.
    [Territory/cache rebuilding](native-startup-territory.md) now extends that

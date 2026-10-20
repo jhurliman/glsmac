@@ -48,17 +48,13 @@ std::optional<native_terrain::Frame> Paint(const ::game::native_terrain::World& 
     constexpr uint32_t semantic_memberships=~0xff400000u;
     if(!own.selected_known || own.band<3 || (own.landmarks&semantic_memberships) ||
         (own.selected_items&~admitted_items) || !own.resource_ready) {return {};}
-    bool complete=true;
     const material::TileAt materials=[&](int tx,int ty)->std::optional<material::Tile> {
         const auto* cell=at(tx,ty);if(!cell) {return {};}
-        // Bare material connectivity reads actual neighboring climate, not
-        // improvement knowledge. Only a center Fungus pass consumes this
-        // neighbor item field (Forest is outside this admitted profile).
-        if(!cell->selected_known && (own.selected_items&0x20u)) {complete=false;return {};}
-        return material::Tile{cell->band,cell->moisture,cell->rockiness,cell->selected_known?cell->selected_items:0u};
+        // Center admission/memory is separate from the original selectors'
+        // live neighbor climate and Fungus connectivity reads.
+        return material::Tile{cell->band,cell->moisture,cell->rockiness,cell->items};
     };
-    const auto passes=material::Select({{x,y}},materials,static_cast<uint16_t>(base+44*(40*y+x/2)));
-    if(!complete) {return {};}
+    const auto passes=material::Select({{x,y}},materials,static_cast<uint16_t>(base+44*(40*y+x/2)),own.selected_items);
     const std::array<raster::Point,5> points{{{{anchor[0]+40,anchor[1]+20}},
         {{anchor[0],anchor[1]+20}},{{anchor[0]+40,anchor[1]}},
         {{anchor[0]+80,anchor[1]+20}},{{anchor[0]+40,anchor[1]+40}}}};
@@ -74,6 +70,7 @@ std::optional<native_terrain::Frame> Paint(const ::game::native_terrain::World& 
         }
         commands.push_back(command);
     }
+    bool complete=true; // Road connectivity keeps its separate remembered-item authority.
     const smac_road_tube::CellAt roads=[&](int tx,int ty)->std::optional<smac_road_tube::Cell> {
         const auto* cell=at(tx,ty);if(!cell) {return {};}
         if(!cell->selected_known) {complete=false;return {};}

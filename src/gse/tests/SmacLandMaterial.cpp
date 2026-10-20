@@ -2,10 +2,36 @@
 #include "fixtures/SmacLandMaterial.h"
 #include "task/gsetests/GSETests.h"
 #include <stdexcept>
+#include <algorithm>
 
 namespace gse::tests {
 namespace material=game::frontend::smac_land_material;
 void AddSmacLandMaterialTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC land material separates remembered center from live neighbor items",GT(){
+        size_t checked=0;
+        for(const auto& c:land_material_fixture::Cases()) {
+            if(std::string(c.name)!="fungus_connected_NW" && std::string(c.name)!="forest_connected_NW") {continue;}
+            const auto original=land_material_fixture::Lookup(c);
+            const material::TileAt live=[&](int x,int y) {
+                auto tile=original(x,y);
+                if(tile && material::Point{{x,y}}==c.coord) {tile->items=0;}
+                return tile;
+            };
+            const auto got=material::Select(c.coord,live,c.seed,c.center.items);
+            GT_ASSERT(got.size()==c.expected.size(),"Remembered center lost original connected feature");
+            for(size_t i=0;i<got.size();++i) {
+                const auto& a=got[i];const auto& expected=c.expected[i];
+                GT_ASSERT(a.role==expected.role && a.crop==expected.crop && a.uv==expected.uv,
+                    "Connected material used memory instead of live neighbor inputs");
+            }
+            const auto bare=material::Select(c.coord,original,c.seed,uint32_t{0});
+            GT_ASSERT(std::none_of(bare.begin(),bare.end(),[](const auto& pass) {
+                return pass.role==material::Role::Forest || pass.role==material::Role::Fungus;
+            }),"Live center bypassed explicit remembered absence");
+            ++checked;
+        }
+        GT_ASSERT(checked==2,"Missing original Fungus/Forest connectivity controls");GT_OK();
+    });
     task->AddTest("SMAC land material reproduces193 ordered native texture calls",GT(){
         size_t count=0;
         for(const auto& c:land_material_fixture::Cases()) {

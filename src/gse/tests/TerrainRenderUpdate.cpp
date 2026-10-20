@@ -703,6 +703,14 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(native::Render(world,source,view,0).rgba==water.rgba,"Sea Fungus leaked live flags into observer-selected terrain");
         center.items=0;center.selected_items=0x20;
         GT_ASSERT(native::Render(world,source,view,0).rgba==fungus.rgba,"Sea Fungus discarded remembered presence");
+        auto& neighbor=world.tiles[39*40+19];neighbor.items=0x20;neighbor.selected_known=true;neighbor.selected_items=0;
+        source.palette[43]={0,0,255};
+        for(int y=516;y<572;++y) {std::fill_n(source.loaded.pixels.begin()+y*1024+565,56,43);}
+        GT_ASSERT(native::Render(world,source,view,0).rgba[(288*1024+575)*4+2]==255,
+            "Sea Fungus connected using remembered rather than live neighbor items");
+        neighbor.items=0;neighbor.selected_items=0x20;
+        GT_ASSERT(native::Render(world,source,view,0).rgba==fungus.rgba,
+            "Sea Fungus used remembered-only neighbor presence");
         center.selected_known=false;center.items=0x20;
 
         center.band=1;

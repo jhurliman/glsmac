@@ -14,6 +14,9 @@
 #include "fixtures/SmacStartupBase.h"
 #include "game/backend/map/SmacStartupTerritory.h"
 #include "fixtures/SmacStartupTerritory.h"
+#include "game/backend/unit/SmacStartupGroundUnit.h"
+#include "game/backend/unit/SmacUnitInitialization.h"
+#include "fixtures/SmacStartupGroundUnit.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 
@@ -41,7 +44,7 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
         }
         return {};
     });
-    task->AddTest("SMAC generated startup derives first Base territory from zero storage",GT(){
+    task->AddTest("SMAC generated startup derives first Scout map and Unit from zero storage",GT(){
         using namespace game::backend::faction;namespace generation=game::backend::map::smac_generation;
         namespace expected=fixtures::generated_first_site;
         generation::State terrain{std::vector<generation::Record>(3200),{{2,1,1,1,1,1,1}},game::backend::SmacGameplayRandomState(1,1)};
@@ -115,7 +118,21 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
             && util::SHA256(owner_goals)==territory_expected::GENERATED_GOALS && rebuilt.dirty==territory_expected::GENERATED_DIRTY
             && rebuilt.uncached==3155 && query_count==3155 && store_count==9555 && util::SHA256(territory_stores)==territory_expected::GENERATED_STORES
             && util::SHA256(territory_queries)==territory_expected::GENERATED_QUERIES && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
-            "Original generated full territory/region/Base and faction statistics/goals projection differs");return {};
+            "Original generated full territory/region/Base and faction statistics/goals projection differs");
+        using namespace game::backend::unit;
+        SmacStartupUnitFactoryState factory;factory.dirty=rebuilt.dirty|2;factory.cached_base=0; // original Base-return dirty tail
+        std::vector<SmacNativeUnitRecord> units;
+        const auto scout=CreateSmacStartupGroundUnit(terrain.records,units,actors[1],{base},factory,{{80,80,true},*selected.site,1,2,3,0,1});
+        GT_ASSERT(scout==0 && units.size()==1 && units[0].home_base==0,"Startup Scout nearest-home assignment differs");
+        units[0].home_base=-1; // separate startup caller 0x5c9f5d, not the general factory
+        const auto record=OriginalSmacUnitBytes(units[0]);const std::string unit_bytes(reinterpret_cast<const char*>(record.data()),record.size());
+        const auto& factory_actor=actors[1].record;const size_t role_off=0x95e1fc-0x95d1a8;
+        const auto role_count=uint32_t(factory_actor[role_off])|(uint32_t(factory_actor[role_off+1])<<8)|(uint32_t(factory_actor[role_off+2])<<16)|(uint32_t(factory_actor[role_off+3])<<24);
+        namespace scout_expected=fixtures::startup_ground;
+        GT_ASSERT(util::SHA256(unit_bytes)==scout_expected::GENERATED_UNITS_HEX && util::SHA256(planeBytes())==scout_expected::GENERATED_TILES_HEX
+            && role_count==scout_expected::GENERATED_ROLE_COUNT && factory_actor[0x95d9fc-0x95d1a8+2]==scout_expected::GENERATED_DESIGN_COUNT
+            && factory.dirty==scout_expected::GENERATED_DIRTY && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
+            "Original generated first Scout map/Unit and factory counters projection differs");return {};
     });
     task->AddTest("SMAC startup site strategy and exploration match eighty one original complete records and stores",GT(){
         using namespace game::backend::faction;

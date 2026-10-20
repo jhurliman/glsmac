@@ -63,6 +63,10 @@ must be separated at its callers.
    [Territory/cache rebuilding](native-startup-territory.md) now extends that
    projection through `4faa88`, including all generated uncached ratings and
    ordered tile writes. Resource/citizen passes and automatic designs still follow.
+   [Ordinary ground factory and sight](native-startup-ground-unit.md) now extend
+   the first-faction Unit/map projection through the initial Scout at `5c9fb5`,
+   including the caller's home reset. This does not substitute for full Base
+   resources, automatic designs, other factory profiles or controller equality.
    [Canonical Unit initialization and stack placement](native-startup-units.md)
    now match original complete-record/pool controls; Base founding, complete
    factory visibility and seven-faction starting-package composition remain

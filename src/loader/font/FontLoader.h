@@ -15,7 +15,7 @@ class Font;
 namespace loader {
 namespace font {
 
-enum class RasterMode { GRAYSCALE, MONOCHROME };
+enum class RasterMode { GRAYSCALE, MONOCHROME, MONOCHROME_BOLD };
 
 CLASS( FontLoader, Loader )
 	virtual ~FontLoader();

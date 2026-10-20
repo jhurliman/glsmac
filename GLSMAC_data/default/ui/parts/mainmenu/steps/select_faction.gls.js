@@ -24,9 +24,9 @@ return (i) => {
 		portrait.smacfactionportrait(sources[id] + '.pcx');
 		const paragraphs = details ? data.details : data.quotation;
 		let top = 10;
-		const probe = preview_panel.text({class: 'popup-text', font: 'arialnb.ttf:18:mono', text: ''});
+		const probe = preview_panel.text({class: 'popup-text', font: 'arialn.ttf:16:mono-bold', text: ''});
 		const draw_line = (line) => {
-			preview_panel.text({class: 'popup-text', font: 'arialnb.ttf:18:mono', left: 152, top: top, text: line});
+			preview_panel.text({class: 'popup-text', font: 'arialn.ttf:16:mono-bold', left: 152, top: top, text: line});
 			top += 20;
 		};
 		for (paragraph of paragraphs) {

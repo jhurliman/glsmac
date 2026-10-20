@@ -11,6 +11,7 @@
 #include "fixtures/SmacIndexedSpriteScaleCases.inc"
 #include "game/frontend/NativeTerrainRenderer.h"
 #include "game/frontend/NativeTerrainSession.h"
+#include "fixtures/SmacKnownGrid.h"
 #include "fixtures/NativeTerrainView.h"
 #include "fixtures/SmacUnknownOutline.h"
 #include "Mesh.h"
@@ -974,6 +975,52 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         bool rejected=false;try {(void)native::RenderPrepared(world,source,pan,0,0x10421,0,&a);}
         catch(const std::invalid_argument&) {rejected=true;}
         GT_ASSERT(rejected,"Same-footprint different-zoom bitmap history admitted");GT_OK();
+    });
+
+    task->AddTest("SMAC known grid matches original northern edges colors and preferences",GT(){
+        namespace grid=game::frontend::smac_known_grid;
+        for(const auto& c:fixtures::smac_known_grid::Cases) {
+            std::array<grid::Point,5> points{};
+            for(size_t i=0;i<4;++i) {points[i+1]={{c.quad[2*i],c.quad[2*i+1]}};}
+            const auto bands=[&](int x,int y)->std::optional<uint8_t> {
+                if(x==c.tile[0] && y==c.tile[1]) {return c.current;}
+                if(y==c.tile[1]-1 && x==(c.tile[0]-1+80)%80) {return c.nw;}
+                if(y==c.tile[1]-1 && x==(c.tile[0]+1)%80) {return c.ne;}
+                return {};
+            };
+            const auto actual=grid::Select(c.tile,points,bands,{{80,80}},c.wrap,{c.primary,c.more},c.flags);
+            GT_ASSERT(actual.count==c.count,"Known grid edge count differs: "+std::string(c.id));
+            for(size_t i=0;i<c.count;++i) {
+                const auto& line=actual.values[i];const auto& expected=c.lines[i];
+                GT_ASSERT(line.from==grid::Point({{expected[0],expected[1]}}) && line.to==grid::Point({{expected[2],expected[3]}}) && line.color==expected[4],
+                    "Known grid line arguments/order differ: "+std::string(c.id));
+            }
+        }GT_OK();
+    });
+    task->AddTest("SMAC known grid is per tile and rejects incompatible retained preferences",GT(){
+        namespace native=game::frontend::native_terrain;
+        game::native_terrain::World world;world.retained_geometry=true;
+        for(auto& tile:world.tiles) {tile.band=4;tile.material_admitted=true;}
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,77)};
+        native::ViewGeometry geometry(world);native::ViewGeometry::Knowledge known(3200,true);
+        const auto plan=geometry.Prepare(native::Layout(22,38,0,true),0,25,false,true,{},&known);
+        const auto off=native::RenderPrepared(world,source,plan,0);
+        const auto on=native::RenderPrepared(world,source,plan,0,0x10421,0,nullptr,{0x100,0});
+        GT_ASSERT(off.indexed!=on.indexed && on.grid_preferences.primary==0x100 && on.display_flags==0x10421,
+            "Production terrain caller omitted grid preferences");
+        const auto pan=geometry.Prepare(native::Layout(24,38,0,true),0,25,true,true,{},&known);
+        const auto retained=native::RenderPrepared(world,source,pan,0,0x10421,0,&on,{0x100,0});
+        GT_ASSERT(retained.opaque_background,"Grid pan lost opaque observed backing");
+        bool rejected=false;try {(void)native::RenderPrepared(world,source,pan,0,0x10421,0,&on);}
+        catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Grid toggle retained old interior pixels");
+        rejected=false;try {(void)native::RenderPrepared(world,source,pan,0,0x10423,0,&on,{0x100,0});}
+        catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Changed draw flags retained old interior pixels");
+        std::fill(known.begin(),known.end(),false);
+        const auto unknown=geometry.Prepare(native::Layout(22,38,0,true),0,25,false,true,{},&known);
+        GT_ASSERT(native::RenderPrepared(world,source,unknown,0).indexed==native::RenderPrepared(world,source,unknown,0,0x10421,0,nullptr,{0x100,0x800000}).indexed,
+            "Known grid preferences changed unknown outlines");GT_OK();
     });
 
     task->AddTest("SMAC observer knowledge changes redraw retained native interior pixels",GT(){

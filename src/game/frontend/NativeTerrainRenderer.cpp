@@ -30,7 +30,7 @@ std::vector<Placement> View(int x,int y,bool wrap) {
     return SelectView(Layout(x,y,0,wrap));
 }
 
-static Frame RenderImpl(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags,uint8_t initial_index,const std::vector<ViewGeometry::Terrain>* prepared,const Frame* previous=nullptr,Point scroll={{0,0}},raster::Clip clip={{0,0,1024,511}},bool opaque_background=false,Point dimensions={{1024,511}},int unit=12,int zoom=0) {
+static Frame RenderImpl(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags,uint8_t initial_index,const std::vector<ViewGeometry::Terrain>* prepared,const Frame* previous=nullptr,Point scroll={{0,0}},raster::Clip clip={{0,0,1024,511}},bool opaque_background=false,Point dimensions={{1024,511}},int unit=12,int zoom=0,smac_known_grid::Preferences grid_preferences={}) {
     if(!world.ValidDimensions() || dimensions[0]<=0 || dimensions[1]<=0 || dimensions[0]>32767 || dimensions[1]>32767) {throw std::invalid_argument("Invalid native bitmap dimensions");}
     const int width=dimensions[0],height=dimensions[1],half_width=4*unit,half_height=2*unit;
     const size_t pixels=size_t(width)*size_t(height);
@@ -92,14 +92,24 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             command.shader=pass->shader;command.shade_limits=pass->shade_limits;commands.push_back(command);
         }
     };
+    const auto append_grid=[&](int x,int y,const std::array<Point,5>& points) {
+        const auto lines=smac_known_grid::Select({{x,y}},points,bands,{{world.width,world.height}},
+            world.horizontal_wrap,grid_preferences,display_flags);
+        for(size_t i=0;i<lines.count;++i) {
+            const auto& line=lines.values[i];raster::Command command;
+            command.shader=raster::Shader::IndexedLine;command.line_color=line.color;
+            command.line={{line.from[0],line.from[1],line.to[0],line.to[1]}};commands.push_back(command);
+        }
+    };
     const auto append_water=[&](int x,int y,const std::array<Point,5>& points,bool survey=false) {
-        const bool sea=At(world,x,y)->band<3;bool quads=false;
+        const bool sea=At(world,x,y)->band<3;bool quads=false,grid_done=!sea;
         const auto& tile=*At(world,x,y);
         for(const auto& pass:smac_water_coast::Select(x,y,points,cells,
             survey?std::optional<uint32_t>{tile.selected_items&~0x20u}:
             tile.selected_known?std::optional<uint32_t>{tile.selected_items}:std::nullopt)) {
             if(!survey && sea && !quads && pass.shader==raster::Shader::KeyedUnlit) {
                 append_quads(x,y,points,{});quads=true;
+                append_grid(x,y,points);grid_done=true;
             }
             raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
             command.shader=pass.shader;command.shade_limits=pass.shade_limits;command.alternate_rows=survey;
@@ -107,6 +117,7 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             commands.push_back(command);
         }
         if(!survey && sea && !quads) {append_quads(x,y,points,{});}
+        if(sea && !grid_done) {append_grid(x,y,points);}
     };
     const auto append_boundary=[&](int x,int y,const std::array<Point,5>& points) {
         if(world.viewer<=0) {return;}
@@ -189,7 +200,7 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
         const std::array<Point,5> points{{{{fx,fy-heights[0]}},{{fx-half_width,fy-heights[1]}},
             {{fx,fy-half_height-heights[2]}},{{fx+half_width,fy-heights[3]}},{{fx,fy+half_height-heights[4]}}}};
         const auto seed=static_cast<uint16_t>(base+placement.record_offset);
-        bool quads=false;
+        bool quads=false,grid_done=false;
         const material::TileAt center_materials=survey?material::TileAt{[&materials,x,y](int tx,int ty) {
             auto cell=materials(tx,ty);
             if(cell && tx==x && ty==y) {cell->moisture=0;cell->rockiness=0;}
@@ -202,6 +213,9 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             if(!quads && (pass.role==material::Role::Forest || pass.role==material::Role::Fungus)) {
                 append_quads(x,y,points,*light);quads=true;
             }
+            if(!grid_done && (pass.role==material::Role::Forest || pass.role==material::Role::Fungus)) {
+                append_grid(x,y,points);grid_done=true;
+            }
             const auto dunes=survey?std::optional<material::Crop>{}:smac_landmark_art::Dunes(tile.landmarks,true,tile.selected_known?tile.selected_items:tile.items,display_flags);
             raster::Command command;command.texture=crop(pass.role==material::Role::Base && dunes?*dunes:pass.crop);command.polygon.count=pass.vertices;command.alternate_rows=survey;
             command.shader=pass.role==material::Role::Base?raster::Shader::OpaqueShaded:
@@ -213,6 +227,7 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             commands.push_back(command);
         }
         if(!survey && !quads) {append_quads(x,y,points,*light);}
+        if(!grid_done) {append_grid(x,y,points);}
         if(!survey) {append_boundary(x,y,points);}
         append_water(x,y,points,survey);
         for(const auto& pass:smac_river::Select(x,y,points,*light,cells,display_flags)) {
@@ -232,10 +247,11 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
         frame.developed_tiles[static_cast<size_t>(y)*size_t(world.width/2)+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
         ++frame.tiles;
     }
+    frame.display_flags=display_flags;frame.grid_preferences=grid_preferences;
     raster::Bitmap background{width,height,std::vector<uint8_t>(pixels,opaque_background?(previous?0:65):initial_index)};
     std::vector<uint8_t> retained_coverage(pixels,0);
     if(previous) {
-        if(previous->opaque_background!=opaque_background || previous->unit!=unit || previous->zoom!=zoom || previous->dimensions!=dimensions || previous->world!=frame.world || previous->indexed.size()!=pixels || previous->coverage.size()!=pixels || previous->developed_tiles.size()!=world.tiles.size() || previous->landmark_tiles.size()!=world.tiles.size() || previous->resource_tiles.size()!=world.tiles.size() || scroll[1]!=0 ||
+        if(previous->display_flags!=display_flags || !(previous->grid_preferences==grid_preferences) || previous->opaque_background!=opaque_background || previous->unit!=unit || previous->zoom!=zoom || previous->dimensions!=dimensions || previous->world!=frame.world || previous->indexed.size()!=pixels || previous->coverage.size()!=pixels || previous->developed_tiles.size()!=world.tiles.size() || previous->landmark_tiles.size()!=world.tiles.size() || previous->resource_tiles.size()!=world.tiles.size() || scroll[1]!=0 ||
             (scroll[0]!=-8*unit && scroll[0]!=8*unit)) {throw std::invalid_argument("Invalid native horizontal bitmap history");}
         for(int y=0;y<height;++y) {for(int x=0;x<width;++x) {
             const int sx=x-scroll[0];if(sx<0 || sx>=width) {continue;}
@@ -258,10 +274,10 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
     frame.attempts=drawn.attempts;frame.writes=drawn.writes;
     return frame;
 }
-Frame Render(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t flags,uint8_t initial_index) {
-    return RenderImpl(world,source,placements,base,offset,flags,initial_index,nullptr);
+Frame Render(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t flags,uint8_t initial_index,smac_known_grid::Preferences grid_preferences) {
+    return RenderImpl(world,source,placements,base,offset,flags,initial_index,nullptr,nullptr,{{0,0}},{{0,0,1024,511}},false,{{1024,511}},12,0,grid_preferences);
 }
-Frame RenderPrepared(const World& world,const Source& source,const ViewGeometry::Plan& plan,uint16_t base,uint32_t flags,uint8_t initial_index,const Frame* previous) {
+Frame RenderPrepared(const World& world,const Source& source,const ViewGeometry::Plan& plan,uint16_t base,uint32_t flags,uint8_t initial_index,const Frame* previous,smac_known_grid::Preferences grid_preferences) {
     if(plan.world!=Point{{world.width,world.height}} || plan.zoom< -14 || plan.zoom>16 ||
         plan.unit!=::game::native_zoom::Unit(plan.zoom)) {
         throw std::invalid_argument("Native material plan has inconsistent zoom geometry");
@@ -269,6 +285,6 @@ Frame RenderPrepared(const World& world,const Source& source,const ViewGeometry:
     if(bool(plan.regions)!=bool(previous)) {throw std::invalid_argument("Native dirty plan requires matching retained bitmap history");}
     std::vector<Placement> placements;placements.reserve(plan.terrain.size());
     for(const auto& tile:plan.terrain) {placements.push_back(tile.placement);}
-    return RenderImpl(world,source,placements,base,{{0,0}},flags,initial_index,&plan.terrain,previous,plan.scroll,plan.clip,plan.opaque_background,plan.viewport,plan.unit,plan.zoom);
+    return RenderImpl(world,source,placements,base,{{0,0}},flags,initial_index,&plan.terrain,previous,plan.scroll,plan.clip,plan.opaque_background,plan.viewport,plan.unit,plan.zoom,grid_preferences);
 }
 }

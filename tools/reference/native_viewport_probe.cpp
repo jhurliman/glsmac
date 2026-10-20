@@ -13,7 +13,7 @@ uint32_t Word(const std::vector<uint8_t>& bytes,size_t offset) {
     return uint32_t(bytes.at(offset))|(uint32_t(bytes.at(offset+1))<<8)|(uint32_t(bytes.at(offset+2))<<16)|(uint32_t(bytes.at(offset+3))<<24);
 }
 int main(int argc,char** argv) {
-    if(argc!=2) {return 1;}const std::string dir=argv[1];std::ifstream input(dir+"/input.txt");
+    if(argc!=2 && argc!=4 && argc!=5) {return 1;}const std::string dir=argv[1];std::ifstream input(dir+"/input.txt");
     int tw,th,sw,sh,rw,rh,seed,automatic,initial,observer0_alias,viewer;
     if(!(input>>tw>>th>>sw>>sh>>rw>>rh>>seed>>automatic>>initial>>observer0_alias>>viewer) || seed<0 || seed>65535 || initial<0 || initial>255) {return 1;}
     int partial=0;if(input>>partial) {if(partial<0 || partial>3 || (partial && viewer!=3)) {return 1;}}
@@ -33,6 +33,13 @@ int main(int argc,char** argv) {
         if(partial) {tile.selected_items=Word(bytes,p+24);known[i]=(bytes[p+4]&8)!=0;}
         tile.ordinary=tile.material_admitted=tile.resource_ready=tile.developed_ready=tile.selected_known=true;
     }
+    const bool grid_control=argc>=4;
+    const auto preference=grid_control?uint32_t(std::stoul(argv[2],nullptr,0)):0u;
+    const auto flags=grid_control?uint32_t(std::stoul(argv[3],nullptr,0)):partial?0x60010ee3u:0x10621u;
+    if(argc==5) {
+        if(std::string(argv[4])!="unknown" || partial!=1) {return 1;}
+        std::fill(known.begin(),known.end(),false);
+    }
     native::ViewGeometry geometry(world);std::optional<native::Frame> previous;
     constexpr int cameras[4][2]={{22,38},{22,38},{24,38},{22,38}};
     for(int i=0;i<4;++i) {
@@ -43,7 +50,7 @@ int main(int argc,char** argv) {
             },partial?&known:nullptr,partial>=2?std::optional<int>{2}:std::nullopt);
         const auto cache=geometry.CacheBytes();std::ofstream cache_file(dir+"/frame-"+std::to_string(i)+".cache",std::ios::binary);
         cache_file.write(reinterpret_cast<const char*>(cache.data()),cache.size());
-        auto frame=native::RenderPrepared(world,source,plan,uint16_t(seed),partial?0x60010ee3u:0x10621u,uint8_t(initial),pan?&*previous:nullptr);
+        auto frame=native::RenderPrepared(world,source,plan,uint16_t(seed),flags,uint8_t(initial),plan.regions?&*previous:nullptr,{preference,0});
         std::ofstream output(dir+"/frame-"+std::to_string(i)+".bin",std::ios::binary);
         output.write(reinterpret_cast<const char*>(frame.indexed.data()),frame.indexed.size());
         std::cout<<i<<' '<<frame.tiles<<' '<<frame.attempts<<' '<<frame.writes<<'\n';previous=std::move(frame);

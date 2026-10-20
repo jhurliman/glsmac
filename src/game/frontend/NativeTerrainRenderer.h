@@ -5,6 +5,7 @@
 #include "SmacTerrainRaster.h"
 #include "SmacLandMaterial.h"
 #include "SmacTerritoryBoundary.h"
+#include "SmacKnownGrid.h"
 #include <memory>
 
 namespace game::frontend::native_terrain {
@@ -26,6 +27,8 @@ struct Frame {
     int unit=12,zoom=0;
     Point dimensions{{1024,511}},world{{80,80}};
     bool opaque_background=false;
+    uint32_t display_flags=0;
+    smac_known_grid::Preferences grid_preferences{};
     std::vector<bool> developed_tiles=std::vector<bool>(3200),landmark_tiles=std::vector<bool>(3200),resource_tiles=std::vector<bool>(3200);
 };
 // Explicit reference allocation-base low16; never a coordinate hash or a
@@ -33,7 +36,7 @@ struct Frame {
 // Initial indexed backdrop is explicit for controlled replay; coverage still
 // identifies submitted stores rather than making the initial plane opaque.
 Frame Render(const ::game::native_terrain::World& world,const Source& source,
-    const std::vector<Placement>& placements,uint16_t variation_base_low16,Point offset={{0,0}},uint32_t display_flags=0x10421,uint8_t initial_index=0);
+    const std::vector<Placement>& placements,uint16_t variation_base_low16,Point offset={{0,0}},uint32_t display_flags=0x10421,uint8_t initial_index=0,smac_known_grid::Preferences grid_preferences={});
 // Render an owned view schedule. Projector anchors are consumed directly;
 // they must not be reconstructed from later height-cache observations.
 // Unknown backing/outlines accept dimensioned worlds/viewports and native zoom
@@ -41,5 +44,5 @@ Frame Render(const ::game::native_terrain::World& world,const Source& source,
 // resampling still requires its separate original scale contract.
 Frame RenderPrepared(const ::game::native_terrain::World& world,const Source& source,
     const ViewGeometry::Plan& plan,uint16_t variation_base_low16,
-    uint32_t display_flags=0x10421,uint8_t initial_index=0,const Frame* previous=nullptr);
+    uint32_t display_flags=0x10421,uint8_t initial_index=0,const Frame* previous=nullptr,smac_known_grid::Preferences grid_preferences={});
 }

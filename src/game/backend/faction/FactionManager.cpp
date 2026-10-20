@@ -94,7 +94,24 @@ WRAPIMPL_BEGIN( FactionManager )
 				}));
 			})
 		},
-		{
+        {
+            "import_selection_preview",
+            NATIVE_CALL() {
+                N_EXPECT_ARGS(2);N_GETVALUE(filename,0,String);N_GETVALUE(section,1,String);
+                try {
+                    const auto preview=g_engine->GetTXTLoaders()->factions->GetSelectionPreview(filename,section);
+                    gse::value::array_elements_t quotation,details;
+                    for(const auto& line:preview.quotation) {quotation.push_back(VALUE(gse::value::String,,line));}
+                    for(const auto& line:preview.details) {details.push_back(VALUE(gse::value::String,,line));}
+                    return VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+                        {"descriptor",VALUE(gse::value::String,,preview.descriptor)},
+                        {"quotation",VALUE(gse::value::Array,,quotation)},
+                        {"details",VALUE(gse::value::Array,,details)}
+                    }));
+                } catch(const std::exception& error) {GSE_ERROR(gse::EC.LOADER_ERROR,error.what());}
+            })
+        },
+        {
 			"import_base_names",
 			NATIVE_CALL() {
 				N_EXPECT_ARGS( 1 );

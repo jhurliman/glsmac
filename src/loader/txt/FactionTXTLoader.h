@@ -22,6 +22,12 @@ CLASS( FactionTXTLoader, TXTLoader )
 	const faction_data_t& GetFactionData( const std::string& filename );
 	game::backend::faction::DisplayIdentity GetDisplayIdentity(const std::string& filename, const std::string& section);
 	static game::backend::faction::DisplayIdentity ParseDisplayIdentity(const std::string& source, const std::string& section);
+    struct SelectionPreview {
+        std::string descriptor;
+        std::vector<std::string> quotation, details;
+    };
+    SelectionPreview GetSelectionPreview(const std::string& filename,const std::string& section);
+    static SelectionPreview ParseSelectionPreview(const std::string& source,const std::string& section);
 	// Pure, canonical SMAC startup metadata. No filesystem/cache access or
 	// gameplay effects; callers provide the host's selected source texts.
 	using StartupSource = std::function< std::string( const std::string& filename ) >;

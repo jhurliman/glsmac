@@ -1,9 +1,11 @@
 return (m) => {
 	let current_menublock = null;
+	let current_preview = null;
 
 	let active_entry_index = null;
 
 	const remove_active_menublock = () => {
+		if (current_preview != null) { current_preview.remove(); current_preview = null; }
 		if (current_menublock != null) {
 			current_menublock.remove();
 			current_menublock = null;
@@ -41,13 +43,14 @@ return (m) => {
 				window_class += '-noheader';
 			}
 
+			const placement = #is_defined(data.placement) ? data.placement : {};
 			current_menublock = m.root.window({
 				class: window_class,
 				title: data.title,
 				width: data.width,
 				height: data.height,
 				blocker: 'transparent',
-			});
+			} + placement);
 
 			let body_class = 'popup-body popup-body-noheader';
 			if (!#is_defined(data.buttons)) {
@@ -60,6 +63,7 @@ return (m) => {
 			if (#is_defined(data.generator)) {
 				data.generator(body);
 			}
+			if (#is_defined(data.preview)) { current_preview = data.preview(m.root); }
 
 			if (#is_defined(data.buttons)) {
 				const footer = current_menublock.panel({

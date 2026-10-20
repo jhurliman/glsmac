@@ -97,6 +97,19 @@ static std::string RejectRecord( const std::string& bytes ) {
 }
 
 void AddFactionTests( task::gsetests::GSETests* task ) {
+    task->AddTest("faction selection preview keeps source paragraphs and ordered Datalinks",GT(){
+        using loader::txt::FactionTXTLoader;
+        const std::string source="#TEST\nTest Faction, The Builder, Citizens, M, 1, Ada, F, 0, 0, 0, 0, 0\n#BLURB\n^ First line\ncontinued on disk.\n^\n^ -- Director Ada\n^ Work\n#DATALINKS1\n^LEADER: {Ada}\n^\n#DATALINKS2\n^+1 INDUSTRY: {Building}\n";
+        const auto preview=FactionTXTLoader::ParseSelectionPreview(source,"TEST");
+        GT_ASSERT(preview.descriptor=="The Builder","descriptor confused with identity or leader");
+        GT_ASSERT(preview.quotation==std::vector<std::string>({"First line continued on disk.","","-- Director Ada","Work"}),"quotation paragraph markers or continuation lines lost");
+        GT_ASSERT(preview.details==std::vector<std::string>({"LEADER: Ada","","+1 INDUSTRY: Building"}),"Datalinks source order or emphasis delimiters changed displayed wording");
+        for(const auto& bad:{source+"#BLURB\nDuplicate\n",std::string("#TEST\nMissing fields\n"),std::string("N\0UL",4)+source}) {
+            bool rejected=false;try{FactionTXTLoader::ParseSelectionPreview(bad,"TEST");}catch(const std::exception&){rejected=true;}
+            GT_ASSERT(rejected,"ambiguous or malformed preview source accepted");
+        }
+        GT_OK();
+    });
 	task->AddTest("faction display identity parses source headers independently of controller names", GT() {
 		using loader::txt::FactionTXTLoader;
 		const std::string source="; synthetic records around installed University identity fields\n#UNIV\nUniversity of Planet, The Scientist, University, M, 1, Zakharov, M, 0, 0, 1, 0, 0,\n\nValues, Knowledge, RESEARCH\nPolitics, Fundamentalist, nil\nUniversity, Univ.\nAssistant, Surname, Base\nProvost, brilliant, unethical, talented, reckless\n#BASES\nOne\n";

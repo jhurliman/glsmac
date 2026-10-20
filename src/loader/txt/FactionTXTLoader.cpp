@@ -4,6 +4,7 @@
 #include "resource/ResourceManager.h"
 
 #include <stdexcept>
+#include <algorithm>
 #include "util/String.h"
 
 namespace loader {
@@ -113,6 +114,47 @@ game::backend::faction::DisplayIdentity FactionTXTLoader::GetDisplayIdentity(con
 	std::string source;
 	for (const auto& line : data.lines) { source += line + '\n'; }
 	return ParseDisplayIdentity(source, section);
+}
+
+FactionTXTLoader::SelectionPreview FactionTXTLoader::ParseSelectionPreview(const std::string& source,const std::string& section) {
+    if(source.find('\0')!=std::string::npos) {throw std::invalid_argument("NUL in faction preview source");}
+    const auto header=ReadUniqueSection(source,section);
+    if(header.empty()) {throw std::invalid_argument("Missing faction preview header");}
+    const auto fields=Fields(header.front().substr(0,header.front().find(';')));
+    if(fields.size()<2 || fields[1].empty()) {throw std::invalid_argument("Missing faction selection descriptor");}
+    SelectionPreview result;result.descriptor=fields[1];
+    const auto paragraphs=[&](const std::string& name) {
+        std::vector<std::string> output;
+        std::string current;bool started=false;
+        for(auto line:ReadUniqueSection(source,name)) {
+            if(!line.empty() && line.front()=='^') {
+                if(started) {output.push_back(current);}
+                current=Field(line.substr(1));started=true;
+            } else {
+                if(!current.empty()) {current+=' ';}
+                current+=line;started=true;
+            }
+        }
+        if(started) {output.push_back(current);}
+        // Braces mark emphasis in installed Datalinks text, not literal glyphs.
+        // Preserve its wording while the UI's span styling is implemented.
+        for(auto& text:output) {
+            text.erase(std::remove_if(text.begin(),text.end(),[](char c){return c=='{' || c=='}';}),text.end());
+        }
+        return output;
+    };
+    result.quotation=paragraphs("BLURB");
+    result.details=paragraphs("DATALINKS1");
+    const auto second=paragraphs("DATALINKS2");
+    result.details.insert(result.details.end(),second.begin(),second.end());
+    return result;
+}
+
+FactionTXTLoader::SelectionPreview FactionTXTLoader::GetSelectionPreview(const std::string& filename,const std::string& section) {
+    const auto& data=GetTXTData(g_engine->GetResourceManager()->GetCustomPath(filename));
+    std::string source;
+    for(const auto& line:data.lines) {source+=line+'\n';}
+    return ParseSelectionPreview(source,section);
 }
 
 std::vector< game::backend::settings::SmacFactionStartupBonus > FactionTXTLoader::ParseStartupBonuses(

@@ -305,6 +305,12 @@ types::texture::Texture* TextureLoader::TryLoadCustomTexture( const std::string&
 		m_fix_yellow_shadows = s_fix_yellow_shadow.find( res ) != s_fix_yellow_shadow.end();
 	}
 	const auto path = TryGetCustomFilename( filename );
+    if(flags & types::texture::TF_SMAC_SOFTWARE_TERRAIN) {
+        // Explicit indexed software imports preserve the source key/palette.
+        // Named faction sheets otherwise inherit legacy RGB shadow filters.
+        m_transparent_colors.clear();
+        m_fix_yellow_shadows=false;
+    }
 	auto* result = path.empty()
 		? nullptr
 		: LoadTextureImpl( path, flags );

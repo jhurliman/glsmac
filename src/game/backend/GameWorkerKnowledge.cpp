@@ -454,6 +454,14 @@ void Game::PublishActorVisibilityUpdate() {
         for(size_t i=0;i<knowledge.observers.size();++i) {if(knowledge.observers[i]) {snapshot.observers|=uint8_t(1u<<i);}}
         snapshot.explored_by.reserve(knowledge.tiles.size());
         for(const auto& tile:knowledge.tiles) {snapshot.explored_by.push_back(tile.explored_by);}
+        if(knowledge.occupancy) {
+            snapshot.occupancy.reserve(knowledge.tiles.size());
+            for(int32_t y=0;y<knowledge.height;++y) {for(int32_t x=y&1;x<knowledge.width;x+=2) {
+                const auto& cell=knowledge.occupancy->At({x,y});snapshot.occupancy.push_back({cell.affiliation,cell.presence});
+            }}
+        }
+        const auto& predefined=m_state->m_settings.global.GetSmacPredefinedUnitRules();
+
         for(const auto& entry:m_um->GetUnits()) {
             const auto* unit=entry.second;if(!unit->IsConventional() && !unit->IsNative()) {continue;}
             const auto* tile=unit->GetTile();
@@ -461,9 +469,21 @@ void Game::PublishActorVisibilityUpdate() {
             const auto observation=unit_masks.find(entry.first);
             if(observation!=unit_masks.end()) {row.visible_to=observation->second;}
             if(unit->IsNative()) {const auto& native=unit->Native();row.flags=native.flags;row.status=native.state;row.order=native.order;}
-            else {const auto& state=unit->Conventional();row.flags=state.native_flags;row.status=state.retained_state_word;
+            else {const auto& state=unit->Conventional();row.flags=state.native_flags;row.status=state.retained_state_word;row.working=state.work_order!=unit::ConventionalUnitState::WorkOrder::None;
                 if(state.work_order==unit::ConventionalUnitState::WorkOrder::None) {row.order=static_cast<uint8_t>(state.order);}}
             if(const auto stack=unit->SourceStack()) {row.stack=actor_visibility::Stack{stack->id,stack->next,stack->previous};}
+            if(predefined) {
+                std::optional<int32_t> chassis;
+                if(unit->IsNative()) {
+                    const auto& designs=predefined->catalog.units;
+                    const auto design=std::find_if(designs.begin(),designs.end(),[&](const auto& d){return d.source_id==unit->Native().design;});
+                    if(design!=designs.end()) {chassis=design->chassis_id;}
+                } else if(!unit->IsConventionalPending()) {chassis=ResolveConventionalDesign(unit->Conventional(),*m_simulation).chassis;}
+                if(chassis && *chassis>=0 && size_t(*chassis)<predefined->catalog.chassis.chassis.size()) {
+                    const auto domain=static_cast<int32_t>(predefined->catalog.chassis.chassis[*chassis].triad);
+                    if(domain>=0 && domain<=2) {row.domain=static_cast<uint8_t>(domain);}
+                }
+            }
             snapshot.units.emplace(entry.first,std::move(row));
         }
         for(const auto& entry:m_bm->GetBases()) {

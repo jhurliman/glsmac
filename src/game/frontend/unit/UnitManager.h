@@ -9,6 +9,7 @@
 #include "common/Common.h"
 
 #include "game/backend/unit/Types.h"
+#include "game/UnitVisibility.h"
 
 #include "types/Vec2.h"
 #include "types/Vec3.h"
@@ -49,6 +50,10 @@ CLASS( UnitManager, common::Class )
 
 	void Iterate();
     bool IsSelectionBlinkAdmitted(const Unit* unit) const;
+    const actor_visibility::UnitPlan* GetTilePresentation(const tile::Tile& tile) const;
+    bool IsBodyAdmitted(const Unit* unit) const;
+    bool IsStackBadgeAdmitted(const Unit* unit) const;
+    void RefreshVisibility();
 
 	Unit* GetUnitById( const size_t id ) const;
 
@@ -88,6 +93,13 @@ private:
 	friend class gse::tests::BackendFixture;
 
 	Game* m_game;
+    mutable const actor_visibility::Snapshot* m_visibility_snapshot=nullptr;
+    mutable std::optional<uint64_t> m_visibility_selected;
+    mutable bool m_visibility_active=false;
+    mutable std::map<std::array<int32_t,2>,std::vector<uint64_t>> m_visibility_members;
+    mutable std::map<std::array<int32_t,2>,actor_visibility::UnitPlan> m_visibility_plans;
+    const actor_visibility::UnitPlan m_hidden_plan;
+
 	sprite::InstancedSpriteManager* m_ism;
 
 	Unit* m_selected_unit = nullptr;

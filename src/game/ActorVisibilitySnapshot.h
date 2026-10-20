@@ -7,6 +7,7 @@
 #include <vector>
 
 namespace game::actor_visibility {
+struct Occupancy {uint8_t tag,presence;};
 struct Stack {int16_t id,next,previous;};
 struct Unit {
     std::array<int32_t,2> tile;
@@ -16,6 +17,8 @@ struct Unit {
     std::optional<uint32_t> status;
     std::optional<Stack> stack;
     std::optional<uint8_t> order;
+    bool working=false;
+    std::optional<uint8_t> domain;
 };
 struct BaseVisibility {bool body=false,name=false;};
 struct Base {
@@ -30,6 +33,7 @@ struct Snapshot {
     int32_t width=0,height=0,viewer=0;
     uint8_t observers=0,revealed_by=0;
     std::vector<uint8_t> explored_by;
+    std::vector<Occupancy> occupancy;
     std::map<uint64_t,Unit> units;
     std::map<uint64_t,Base> bases;
     bool HasViewer() const noexcept {

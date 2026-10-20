@@ -1044,7 +1044,8 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			bool is_turn_active = m_turn_status == backend::turn::TS_TURN_ACTIVE || m_turn_status == backend::turn::TS_TURN_COMPLETE;
 			if ( m_is_turn_active != is_turn_active ) {
 				m_is_turn_active = is_turn_active;
-				if ( m_is_initialized ) {
+                if(m_um) {m_um->RefreshVisibility();}
+				if ( m_is_initialized && m_um ) {
 					if ( m_is_turn_active ) {
 						/*const auto* previously_selected_unit = m_selected_unit;
 -                                               m_selected_unit = nullptr;
@@ -1157,6 +1158,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
             const auto* snapshot=request->data.actor_visibility.snapshot;
             m_actor_visibility=snapshot ? std::make_unique<actor_visibility::Snapshot>(*snapshot):nullptr;
             if(m_bm) {m_bm->RefreshVisibility();}
+            if(m_um) {m_um->RefreshVisibility();}
             if(m_widgets.TilePreview) {m_widgets.TilePreview->Refresh();}
             break;
         }

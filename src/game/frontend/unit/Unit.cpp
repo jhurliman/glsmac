@@ -165,6 +165,7 @@ void Unit::SetActiveOnTile() {
 }
 
 void Unit::Show() {
+    if(!m_um->IsBodyAdmitted(this)) {Hide();return;}
 	if ( !m_render.is_rendered ) {
 		const auto& c = m_render.coords;
 
@@ -208,7 +209,7 @@ const bool Unit::IsBadgeVisible() const {
 }
 
 void Unit::ShowBadge() {
-	if(!m_render.is_rendered || (m_render.badge.blink && !m_badge_defs->IsSelectionBlinkVisible())) {HideBadge();return;}
+	if(!m_render.is_rendered || !m_um->IsBodyAdmitted(this) || (m_render.badge.blink && !m_badge_defs->IsSelectionBlinkVisible())) {HideBadge();return;}
 	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, GetRenderedBadgeCoords(false) );
 	m_render.badge.healthbar.def->instanced_sprite->actor->SetInstance( m_render.badge.healthbar.instance_id, GetRenderedBadgeCoords(true) );
 }
@@ -219,6 +220,7 @@ void Unit::HideBadge() {
 }
 
 void Unit::ShowFakeBadge( const uint8_t offset ) {
+    if(!m_um->IsStackBadgeAdmitted(this)) {HideFakeBadge();return;}
 	if ( !m_render.fake_badge.instance_id || m_fake_badge_offset != offset ) {
 		if ( m_render.fake_badge.instance_id ) {
 			m_slot_badges->HideFakeBadge( m_render.fake_badge.instance_id );

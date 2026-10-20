@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "Unit.h"
+#include "game/frontend/base/BaseManager.h"
 #include "UnitDef.h"
 #include "SlotBadges.h"
 #include "game/backend/unit/Def.h"
@@ -45,8 +46,49 @@ UnitManager::~UnitManager() {
 	DELETE( m_badge_defs );
 }
 
+const actor_visibility::UnitPlan* UnitManager::GetTilePresentation(const tile::Tile& tile) const {
+    if(m_game->IsNativeTerrainInspector()) {return nullptr;}
+    if(const auto* snapshot=m_game->GetActorVisibility();snapshot && snapshot->available) {
+        const auto selected=m_selected_unit ? std::optional<uint64_t>(m_selected_unit->GetId()):std::nullopt;
+        const bool active=m_game->IsTurnActive();
+        if(m_visibility_snapshot!=snapshot) {
+            m_visibility_members.clear();m_visibility_plans.clear();
+            for(const auto& row:snapshot->units) {m_visibility_members[row.second.tile].push_back(row.first);}
+            m_visibility_snapshot=snapshot;
+        }
+        if(m_visibility_selected!=selected || m_visibility_active!=active) {
+            m_visibility_plans.clear();m_visibility_selected=selected;m_visibility_active=active;
+        }
+        const auto& c=tile.GetCoords();if(c.x>INT32_MAX || c.y>INT32_MAX) {return &m_hidden_plan;}
+        const std::array<int32_t,2> key{{int32_t(c.x),int32_t(c.y)}};
+        const auto cached=m_visibility_plans.find(key);if(cached!=m_visibility_plans.end()) {return &cached->second;}
+        const auto members=m_visibility_members.find(key);
+        auto plan=members==m_visibility_members.end() ? actor_visibility::UnitPlan{}
+            : actor_visibility::OrdinaryUnits(*snapshot,key[0],key[1],selected,active,active,&members->second);
+        return &m_visibility_plans.emplace(key,std::move(plan)).first->second;
+    }
+    if(m_game->m_bm && m_game->m_bm->UsesSmacPopulation()) {return &m_hidden_plan;}
+    return nullptr;
+}
+bool UnitManager::IsBodyAdmitted(const Unit* unit) const {
+    if(!unit || !unit->GetTile()) {return false;}
+    const auto plan=GetTilePresentation(*unit->GetTile());return !plan || plan->body==unit->GetId();
+}
+bool UnitManager::IsStackBadgeAdmitted(const Unit* unit) const {
+    if(!unit || !unit->GetTile()) {return false;}
+    const auto plan=GetTilePresentation(*unit->GetTile());
+    return !plan || (plan->body && *plan->body!=unit->GetId() && unit->GetTile()->GetUnits().count(*plan->body)
+        && std::find(plan->stack.begin(),plan->stack.end(),unit->GetId())!=plan->stack.end());
+}
+void UnitManager::RefreshVisibility() {
+    m_visibility_snapshot=nullptr;m_visibility_members.clear();m_visibility_plans.clear();
+    std::map<std::pair<size_t,size_t>,tile::Tile*> tiles;
+    for(const auto& row:m_units) {auto* tile=row.second->GetTile();if(tile) {const auto& c=tile->GetCoords();tiles.emplace(std::make_pair(c.y,c.x),tile);}}
+    for(const auto& row:tiles) {row.second->Render();}
+}
+
 bool UnitManager::IsSelectionBlinkAdmitted(const Unit* unit) const {
-    return unit && unit==m_selected_unit && unit->IsOwned() && unit->IsActive() && !unit->IsMoving() && m_game->IsTurnActive();
+    return unit && unit==m_selected_unit && unit->IsOwned() && unit->IsActive() && !unit->IsMoving() && m_game->IsTurnActive() && IsBodyAdmitted(unit);
 }
 
 void UnitManager::Iterate() {

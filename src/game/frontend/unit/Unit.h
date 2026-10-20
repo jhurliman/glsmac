@@ -69,6 +69,7 @@ public:
 	~Unit();
 
 	const size_t GetId() const;
+    UnitManager* GetManager() const {return m_um;}
 	const bool IsOwned() const;
 	bool IsHeld() const {return m_held;}
 	bool IsConventional() const { return m_conventional; }

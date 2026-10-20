@@ -6,6 +6,13 @@ Its terrain/region/profile/name buffers and RNG are verified in the port.
 The live caller still needs the authority and startup integration below;
 pre-startup terrain must not be presented as a completed playable world.
 
+The [complete generated startup composition](native-generated-startup.md) now
+matches original seed1 through setup return: all seven founding/resource/Scout
+sequences, controller pairing and balancing Pods/markers, all complete gameplay
+buffers and8,339 ordered RNG draws. This closes the detached record-state
+composition for that fixture. Ordinary live publication and persistence below
+remain required; a generated terrain result alone is still insufficient.
+
 ## Current coupling found in the live code
 
 | Boundary | Current implementation | Required change |
@@ -100,6 +107,11 @@ must be separated at its callers.
    personality priorities and preserves its conditional specialist write, with
    complete human/AI score and store controls. Cumulative founding and controller
    integration remain separate from these declared-input controls.
+   [Complete generated startup](native-generated-startup.md) now composes all
+   seven factions and the controller through setup return, matching nine original
+   whole-buffer boundaries and every startup CRT draw. This supersedes the
+   earlier first-faction-only composition notes for the declared seed1 profile.
+   Broader startup choices and live registry/UI publication remain open.
    [Canonical Unit initialization and stack placement](native-startup-units.md)
    now match original complete-record/pool controls; Base founding, complete
    factory visibility and seven-faction starting-package composition remain

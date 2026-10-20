@@ -28,8 +28,9 @@ struct Refinement {size_t index;Coordinate point;int32_t score,previous;};
 struct Result {std::optional<Coordinate> center,site;SmacGameplayRandomState random;size_t attempts=0,rating_reads=0;};
 using Observe=std::function<void(const Attempt&)>;
 using ObserveRefinement=std::function<void(const Refinement&)>;
+using ObserveDraw=std::function<void(uint32_t,uint32_t,uint32_t,uint16_t)>; // caller,before,after,value
 // Turn-zero ordinary search and final refinement. Never reseeds, changes input
 // RNG, manufactures a cached rating or chooses a fixed candidate coordinate.
 Result Select(const Input& input,const SmacGameplayRandomState& initial,const Query& query,const Rating& rating,
-    const Observe& observe={},const ObserveRefinement& refinement={},const std::function<bool()>& cancelled={});
+    const Observe& observe={},const ObserveRefinement& refinement={},const std::function<bool()>& cancelled={},const ObserveDraw& draws={});
 }

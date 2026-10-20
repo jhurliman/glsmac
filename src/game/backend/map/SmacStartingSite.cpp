@@ -20,7 +20,10 @@ int32_t Distance(Geometry g,Coordinate a,Coordinate b) {
     if(g.wrap) {dx=std::min(dx,g.width-dx);}
     return std::max(dx,dy)-(std::abs(dx-dy)+2)/4;
 }
-int32_t Draw(SmacGameplayRandomState& random,int32_t span) {return span>1 ? random.NextCrtRaw15()%span:0;}
+int32_t Draw(SmacGameplayRandomState& random,int32_t span,uint32_t caller,const ObserveDraw& observer) {
+    if(span<=1) {return 0;}const auto before=random.Crt();const auto value=random.NextCrtRaw15();
+    if(observer) {observer(caller,before,random.Crt(),value);}return value%span;
+}
 int32_t Margin(int32_t dimension,int32_t n) {return static_cast<int32_t>(std::clamp<int64_t>((int64_t(1024)-n)*dimension/8192,0,9999));}
 int32_t Count(uint8_t mask) {int32_t result=0;while(mask) {result+=mask&1;mask>>=1;}return result;}
 }
@@ -37,7 +40,7 @@ const char* OutcomeName(Outcome value) {
     }throw std::invalid_argument("Unknown startup site outcome");
 }
 Result Select(const Input& input,const SmacGameplayRandomState& initial,const Query& supplied,const Rating& rating,
-    const Observe& observe,const ObserveRefinement& refinement,const std::function<bool()>& cancelled) {
+    const Observe& observe,const ObserveRefinement& refinement,const std::function<bool()>& cancelled,const ObserveDraw& draws) {
     const auto g=input.geometry;
     Require(g.width>=2 && g.width<=512 && !(g.width&1) && g.height>=2 && g.height<=256
         && input.scale>0 && input.scale<=512 && input.ocean>=0 && input.ocean<=2
@@ -61,7 +64,7 @@ Result Select(const Input& input,const SmacGameplayRandomState& initial,const Qu
         if(cancelled && cancelled()) {throw std::runtime_error("Startup site search cancelled");}
         Require(n<INT32_MAX,"Startup search exceeds signed counter domain");
         const auto mx=g.wrap ? 0:Margin(g.width,n),my=Margin(g.height,n);
-        const auto raw_x=mx+Draw(result.random,g.width-2*mx),y=my+Draw(result.random,g.height-2*my);
+        const auto raw_x=mx+Draw(result.random,g.width-2*mx,0x5c90ac,draws),y=my+Draw(result.random,g.height-2*my,0x5c9106,draws);
         const Coordinate p{{(raw_x&~1)+(y&1),y}};const auto tile=query(p);region=tile.region;
         const auto bucket=smac_restart::LandmarkBucket(g,p,[&](auto square){return query(square).landmark_detail;});
         int32_t good=0;

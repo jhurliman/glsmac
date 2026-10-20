@@ -15,7 +15,7 @@ int32_t Distance(Geometry g,Coordinate a,Coordinate b) {
     return std::max(dx,dy)-(std::abs(dx-dy)+2)/4;
 }
 }
-Result Prepare(const Input& input,const SmacGameplayRandomState& initial,const Query& supplied,const Site& site) {
+Result Prepare(const Input& input,const SmacGameplayRandomState& initial,const Query& supplied,const Site& site,const ObserveDraw& draws) {
     const auto g=input.geometry;
     Require(g.width>=2 && g.width<=512 && !(g.width&1) && g.height>=2 && g.height<=256
         && input.difficulty>=0 && input.difficulty<=5 && bool(supplied) && bool(site),"Unsupported startup balancing inputs");
@@ -61,7 +61,8 @@ Result Prepare(const Input& input,const SmacGameplayRandomState& initial,const Q
     }
     for(int32_t f=1;f<=7;++f) {const auto* u=anchors[f];if(!u) {continue;}
         // This draw occurs even when the deficit is zero or a Pod grant suffices.
-        const auto orientation=result.random.NextCrtRaw15()&15;int32_t credit=0;
+        const auto before_draw=result.random.Crt();const auto value=result.random.NextCrtRaw15();
+        if(draws) {draws(before_draw,result.random.Crt(),value);}const auto orientation=value&15;int32_t credit=0;
         Require(input.configured_unit_roles[f].size()<=8,"Too many configured startup UNIT bonuses");
         for(const auto role:input.configured_unit_roles[f]) {credit+=role==8 ? 3:1;}
         auto deficit=maximum-*scores[f]-credit;result.deficits.push_back({f,maximum,credit,deficit,scores});

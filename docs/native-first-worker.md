@@ -125,3 +125,12 @@ composition controls; other objects are normal and leak detection is disabled.
 This closes the opening personality input and its conditional store, not a full
 AI governor or the cumulative seven-faction controller. Later Base relocation,
 foreign Units outside the radius and full startup remain integration work.
+
+The later [complete generated startup](native-generated-startup.md) now closes
+those cumulative first-Base contexts for the seed1 standard fixture: all seven
+owners, actual selected Base indices and earlier foreign Scouts, with721 exact
+worker stores,476 queries and140 scores across the seven calls. The complete
+accounting composition uses its selected Base for all stages and rebases only
+worker Base offsets; scratch addresses remain global. Broader governors,
+populations, overlapping foreign objects and ordinary live publication remain
+outside that comparison.

@@ -10,7 +10,7 @@ int32_t Signed32(const uint8_t* p) {const auto v=uint32_t(p[0])|(uint32_t(p[1])<
     return v<=INT32_MAX?int32_t(v):int32_t(int64_t(v)-4294967296LL);}
 }
 smac_start::Result SelectGeneratedStartingSite(State& s,Geometry g,const Regions& regions,
-    const StartingContext& context,const StartingCacheObserver& stores,const smac_start::Observe& observe,const std::function<bool()>& cancelled) {
+    const StartingContext& context,const StartingCacheObserver& stores,const smac_start::Observe& observe,const std::function<bool()>& cancelled,const smac_start::ObserveDraw& draws) {
     if(s.stage!=Stage::Prestartup || s.generation_flags[0] || s.generation_flags[1] || s.topology<0 || s.topology>1
         || g.width<16 || g.width>512 || (g.width&1) || g.height<8 || g.height>256
         || s.records.size()!=size_t(g.width/2)*size_t(g.height)) {throw std::invalid_argument("Generated startup requires completed native terrain");}
@@ -32,6 +32,6 @@ smac_start::Result SelectGeneratedStartingSite(State& s,Geometry g,const Regions
         const auto before=r[2];r[2]=uint8_t((r[2]&15)|((value&15)<<4));
         if(stores) {stores({uint32_t(at*44+2),before,r[2]});}return value;
     };
-    auto result=smac_start::Select(input,s.random,query,rating,observe,{},cancelled);s.random=result.random;return result;
+    auto result=smac_start::Select(input,s.random,query,rating,observe,{},cancelled,draws);s.random=result.random;return result;
 }
 }

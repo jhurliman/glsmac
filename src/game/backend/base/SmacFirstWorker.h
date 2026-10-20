@@ -29,8 +29,8 @@ struct SmacFirstBaseOptions {
     SmacFirstWorkerOptions worker;SmacOpeningCitizenInputs citizens;
     int32_t global_difficulty,sea_level,sea_rise_rule,native_life,flat_labs;uint32_t secondary_rules;
 };
-// Compose the complete resource calculation for the fresh first human HQ,
-// before the Base caller's dirty OR2. Exactly one Base and no Units; projects,
+// Compose the complete resource calculation for a fresh first owned HQ,
+// before the Base caller's dirty OR2. One owned Base and no owned Units; projects,
 // events and broader campaign contexts are outside this opening profile.
 int32_t CalculateSmacFirstBase(const std::vector<std::array<uint8_t,44>>& tiles,std::vector<SmacStartupBaseRecord>& bases,
     std::array<faction::SmacStartupFaction,8>& actors,const std::vector<unit::OriginalUnitBytes>& units,

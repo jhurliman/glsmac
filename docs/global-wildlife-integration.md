@@ -13,11 +13,11 @@ occupancy and sight effects must be visible to subsequent queries. A failure
 requires discarding the whole transaction; this policy does not provide rollback
 for an arbitrary hook. Publication and script notifications belong after commit.
 
-This is not activated in the live round controller. The current ecology birth
-publisher rejects positive-owner co-location, whereas the original fungal sea
-shortcut admits a mixed Scout/Isle stack. That publisher must gain faithful mixed
-stack storage/publication before this path is connected. Global maintenance and
-wildlife upkeep/command phases also remain separate integration work.
+This is not activated in the live round controller. The shared birth publisher
+now stages mixed Scout/Isle stacks with complete retained links, or binds an
+unambiguous legacy singleton. Ambiguous legacy stack order and occupied Base
+placement remain guarded. Global maintenance and wildlife upkeep/command phases
+also remain separate integration work.
 
 Validation currently covers four asset-free native test groups: no-effect gates,
 capacity/order/Locust sequence and entry-only count gating, exact exhausted search
@@ -66,8 +66,33 @@ prepared paths, check discard isolation, then roundtrip all surviving Unit bytes
 through the manager codec. These are explicit retained-state fixtures, not a
 claim that the original constructor has already produced that stack in GLSMAC.
 
-Still required before live mixed birth activation: insertion/promotion across
-both kinds; movement out of/into a retained stack; conventional creation and
-restart placement; mixed Base-center cleanup; original co-located observation
-writes; and a genuine factory/whole-world restore comparison with the captured
-Scout/Isle discriminator. Existing mixed-placement guards remain in force.
+The factory now inserts/promotes across both kinds and exposes staged knowledge
+to subsequent producer decisions. A controlled integration test reproduces the
+captured Isle -> Worm -> Scout ordering, co-located observation and exploration
+writes, and retained positive affiliation, translated from owner2/source indices
+13/14/15 to fixture owner1/indices0/1/2. Conventional body fields remain unchanged
+apart from their new binding. Discard/producer failure publishes nothing; full
+world restore retains the complete resulting stack and sight authorities. This
+is a component comparison, not byte-exact original conventional Unit equivalence.
+
+Ordinary movement maintains retained links. After separately supplying ordinary
+nonfungus geometry, the integration test removes native members, moves the Scout,
+joins a friendly legacy singleton, prepares/discards another conventional birth,
+then commits that birth with a simultaneous casualty and checks reindexing.
+Stat/owner/home updates cannot overwrite a separately published stack binding.
+Conventional births on a known stack share the same insertion preparation;
+unpublished insertion changes are projected into combined removal transactions.
+
+Still required before global activation: authenticated initial/restart stack
+bindings for new worlds; an explicit policy for ambiguous legacy stacks; mixed
+Base-center cleanup; occupied Base factory admission; same-tile enemy departure
+and remote fungus-with-Bases continuations; and the actual wildlife upkeep/AI
+phases. Those existing admission guards remain. Global policy never adds a
+filter to conceal a reachable original result.
+
+Validation for the mixed-stack change: 106 affected conventional/native/movement
+groups pass normally and with eight changed/affected translation units under
+ASan/UBSan (other objects normal, leak detection disabled, UBSan halts on error).
+Five production files pass targeted analysis; the two insertion consumers were
+reanalyzed after their final edits. The final whole-knowledge restore assertion
+also passes normally and under the focused sanitizer binary.

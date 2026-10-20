@@ -158,8 +158,15 @@ const std::string& Unit::GetMoraleString() const {
 	return m_def->m_moraleset->m_morale_values.at( GetPresentation().morale ).m_name;
 }
 
+std::optional<ConventionalUnitState::Stack> Unit::SourceStack() const {
+    if(IsNative()) {const auto& n=Native();return ConventionalUnitState::Stack{int16_t(n.id),n.stack_next,n.stack_previous};}
+    if(IsConventional()) {return Conventional().stack;}return std::nullopt;
+}
+
 void Unit::CommitConventionalMove( const ConventionalUnitState& state, map::tile::Tile* tile ) noexcept {
+    const auto stack=Conventional().stack;
 	std::get< ConventionalUnitState >( m_state ) = state;
+    std::get<ConventionalUnitState>(m_state).stack=stack;
 	m_tile = tile;
 }
 

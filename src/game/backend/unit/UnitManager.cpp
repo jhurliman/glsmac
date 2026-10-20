@@ -232,6 +232,7 @@ struct UnitManager::PreparedConventionalUnit::Data {
 	std::optional< map::SmacWorkerKnowledge > sight;
 	std::pair< SmacMovementHistory*, size_t > history;
 	std::vector< std::pair<Unit*,ConventionalUnitState> > homes;
+    StackChanges stacks;
 	Unit* published = nullptr;
 	size_t id = 0;
 	bool notified = false;
@@ -296,6 +297,7 @@ Unit* UnitManager::PreparedConventionalUnit::Commit() noexcept {
 	auto& data = *m_data;
 	static_assert( std::is_nothrow_copy_assignable_v<ConventionalUnitState> );
 	for ( const auto& home : data.homes ) { std::get<ConventionalUnitState>( home.first->m_state ) = home.second; }
+    CommitStackChanges(data.stacks);
 	data.published = data.candidate.release();
     data.manager->AdjustDesignCount(*data.published,1);
 	data.manager->m_units.swap( data.units ); data.manager->m_unit_updates.swap( data.updates ); data.tile->units.swap( data.occupants );
@@ -496,6 +498,16 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
             data->conventional_stacks.emplace_back(unit,*unit->Conventional().stack);
         }
     }
+    if(creation) {for(const auto& change:creation->stacks) {
+        if(change.first->IsNative()) {
+            const auto found=std::find_if(data->native_survivors.begin(),data->native_survivors.end(),[&](const auto& row){return row.first==change.first;});
+            if(found==data->native_survivors.end()) {THROW("Prepared insertion lost its native source row");}
+            found->second.id=change.second.id;found->second.stack_next=change.second.next;found->second.stack_previous=change.second.previous;
+        } else {
+            const auto found=std::find_if(data->conventional_stacks.begin(),data->conventional_stacks.end(),[&](const auto& row){return row.first==change.first;});
+            if(found==data->conventional_stacks.end()) {data->conventional_stacks.emplace_back(change.first,change.second);}else {found->second=change.second;}
+        }
+    }}
     for(const auto id:ids) {
         const auto found=data->units.find(id);
         if(found==data->units.end() || !found->second || (!found->second->IsConventional() && !(allow_native && found->second->IsNative()))
@@ -910,6 +922,8 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareConventionalUnit( GSE_
 	data->manager = this; data->tile = tile; data->id = id;
 	data->sight = m_game->PrepareConventionalSight( id, state.owner_simulation_id, tile, nullptr );
 	data->candidate.reset( new Unit( Unit::Unplaced{}, this, id, def, owner, state ) );
+    data->stacks=PrepareConventionalStackMove(data->candidate.get(),tile);
+    for(const auto& row:data->stacks) {if(row.first==data->candidate.get()) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}}
 	data->history = PreparePlacementHistory( *data->candidate, tile );
 	data->units = m_units; data->updates = m_unit_updates; data->occupants = tile->units;
 	data->order = m_unit_order; data->order.push_back( id );
@@ -1063,7 +1077,7 @@ void UnitManager::UpdateConventionalUnit( GSE_CALLABLE, Unit* unit, const Conven
 	unit->RequireConventionalReady();
 	const auto& prior = unit->Conventional();
 	if ( state.design_id != prior.design_id || state.owner_simulation_id != prior.owner_simulation_id || state.home != prior.home || state.home_base_id != prior.home_base_id
-		|| state.render_morale_mode != prior.render_morale_mode ) { THROW( "Conventional update cannot replace identity or presentation policy" ); }
+		|| state.render_morale_mode != prior.render_morale_mode || !(state.stack==prior.stack) ) { THROW( "Conventional update cannot replace identity or presentation policy" ); }
 	QueryConventionalUnit( state, ResolveConventional( state, unit->m_owner ), state.render_morale_mode );
 	unit->m_state = state;
 	RefreshUnit( GSE_CALL, unit );

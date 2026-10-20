@@ -47,6 +47,50 @@ smac_edge::Tile EdgeTile( const map::tile::Tile& tile, const base::Base* admitte
 }
 }
 
+UnitManager::StackChanges UnitManager::PrepareConventionalStackMove(Unit* actor,map::tile::Tile* destination) const {
+    using Stack=ConventionalUnitState::Stack;
+    if(actor->GetTile()==destination) {return {};}
+    // An unplaced prepared conventional factory appends one source-pool row;
+    // a registered actor retains its existing row during directional movement.
+    const bool appended=GetUnit(actor->m_id)!=actor;
+    if(appended && (actor->GetTile() || actor->SourceStack())) {throw std::runtime_error("New conventional stack member must be unplaced and unbound");}
+    bool needed=actor->SourceStack().has_value();
+    for(const auto& row:destination->units) {needed=needed || row.second->SourceStack().has_value();}
+    if(!needed) {return {};}
+    std::vector<Unit*> dense;for(const auto id:m_unit_order) {dense.push_back(m_units.at(id));}ValidateNativeIndexBindings(dense);
+    std::map<Unit*,Stack> changes;
+    const auto read=[&](Unit* unit)->Stack {
+        const auto found=changes.find(unit);if(found!=changes.end()) {return found->second;}
+        if(const auto known=unit->SourceStack()) {return *known;}
+        if(appended && unit==actor) {if(dense.size()>=2048) {throw std::runtime_error("Conventional source-pool is full");}return {int16_t(dense.size()),-1,-1};}
+        const auto position=std::find(dense.begin(),dense.end(),unit);
+        if(position==dense.end() || dense.size()>2048) {throw std::runtime_error("Stack movement lost its dense identity");}
+        return {int16_t(position-dense.begin()),-1,-1};
+    };
+    const auto linked=[&](int16_t id)->Unit* {if(id<0 || size_t(id)>=dense.size()) {throw std::runtime_error("Stack movement has an invalid neighbor");}return dense[id];};
+    auto moved=read(actor);
+    if(actor->SourceStack()) {
+        if(moved.previous>=0) {auto* previous=linked(moved.previous);auto state=read(previous);state.next=moved.next;changes[previous]=state;}
+        if(moved.next>=0) {auto* next=linked(moved.next);auto state=read(next);state.previous=moved.previous;changes[next]=state;}
+    }
+    Unit* head=nullptr;
+    for(const auto& row:destination->units) {
+        auto* resident=row.second;
+        if(!resident->SourceStack() && destination->units.size()!=1) {throw std::runtime_error("Destination legacy stack has unknown order");}
+        if(read(resident).previous<0) {if(head) {throw std::runtime_error("Destination stack has multiple heads");}head=resident;}
+    }
+    moved.previous=-1;moved.next=-1;
+    if(head) {auto state=read(head);moved.next=state.id;state.previous=moved.id;changes[head]=state;}
+    changes[actor]=moved;
+    return {changes.begin(),changes.end()};
+}
+void UnitManager::CommitStackChanges(const StackChanges& changes) noexcept {
+    for(const auto& row:changes) {
+        if(row.first->IsNative()) {auto& n=std::get<SmacNativeUnitRecord>(row.first->m_state);n.id=row.second.id;n.stack_next=row.second.next;n.stack_previous=row.second.previous;}
+        else {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
+    }
+}
+
 UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const {
 	if ( !unit || GetUnit( unit->m_id ) != unit || !unit->IsConventional() ) {
 		throw std::runtime_error( "Conventional movement requires a registered conventional unit" );
@@ -234,7 +278,8 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	QueryConventionalUnit( changed, context, stored.render_morale_mode );
 	auto sight = result.outcome == smac_move::Outcome::Moved
 		? m_game->PrepareConventionalSight(unit->m_id,stored.owner_simulation_id,destination,source) : std::nullopt;
-	return { unit, source, destination, changed, std::move( result ), nearest_distance, update_nearest, std::move(sight) };
+	auto stacks=result.outcome==smac_move::Outcome::Moved ? PrepareConventionalStackMove(unit,destination):StackChanges{};
+	return { unit, source, destination, changed, std::move( result ), nearest_distance, update_nearest, std::move(sight),std::move(stacks) };
 }
 
 void UnitManager::ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const {
@@ -278,6 +323,7 @@ void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Til
 	static_assert( std::is_nothrow_copy_assignable_v< ConventionalUnitState > );
 	static_assert( std::is_nothrow_copy_assignable_v< SmacGameplayRandomState > );
 	unit->CommitConventionalMove( prepared.state, moved ? destination : prepared.source );
+    CommitStackChanges(prepared.stacks);
 	m_game->m_simulation->value.gameplay_random = prepared.result->random;
 	m_game->CommitConventionalSight(prepared.sight);
 	pending.ops = static_cast< unit_update_op_t >( pending.ops | UUO_REFRESH );

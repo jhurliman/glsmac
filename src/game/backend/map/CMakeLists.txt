@@ -10,6 +10,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacGenerationNoise.cpp
 	${PWD}/SmacGenerationRegions.cpp
 	${PWD}/SmacPretemperatureGeneration.cpp
+	${PWD}/SmacInitialClimateGeneration.cpp
 	${PWD}/SmacGlobalSpread.cpp
 	${PWD}/MapGlobalSpread.cpp
 	${PWD}/SmacGlobalWildlife.cpp

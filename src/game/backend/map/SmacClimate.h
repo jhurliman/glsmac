@@ -38,6 +38,9 @@ struct Streams {
     // Optional bounded-control tracing; production callers can omit allocation.
     std::vector<uint32_t>* seed_requests=nullptr;
     std::vector<uint16_t>* crt_values=nullptr;
+    // Synchronous observation only; callbacks must not mutate/reenter streams.
+    std::function<void(uint32_t,uint32_t)> on_seed;
+    std::function<void(uint32_t,uint32_t,int32_t,int32_t,int32_t)> on_shared;
     void Seed(uint32_t seed);
     int32_t Shared(int32_t low,int32_t high);
     uint16_t Crt();
@@ -56,7 +59,7 @@ void AssignSurfaceClass(World& world,int32_t x,int32_t y,int32_t category,Stream
 void ShapeHeight(World& world,int32_t x,int32_t y,int32_t category,Streams& random,const Context& context);
 void RecalculateAltitudes(World& world,Streams& random,const Context& context);
 void EcologyVolcano(World& world,int32_t x,int32_t y,Streams& random,const Context& context);
-void Temperature(World& world,const Rules& rules,Streams& random);
+void Temperature(World& world,const Rules& rules,Streams& random,const std::function<void(int32_t)>& row_complete={});
 void Rivers(World& world,Streams& random);
 void Rainfall(World& world,const Rules& rules);
 // First four passes only. Caller must still stage regions/coasts/territory,

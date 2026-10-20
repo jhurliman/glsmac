@@ -75,9 +75,10 @@ Fixtures retain numeric observations only; purchased assets remain outside Git.
 
 ## Remaining live integration
 
-This completes the native producer up to temperature. Temperature, river-source
-placement, initial fungus, landmarks, later climate/routing passes, final
-preparation and faction startup must still compose to the verified full-world
+This completes the native producer up to temperature. The
+[initial climate continuation](native-initial-climate-generation.md) now connects
+temperature, river-source placement and initial fungus. Landmarks, later
+climate/routing passes, final preparation and faction startup must still compose to the verified full-world
 state before this can replace live procedural generation. Current generated
 gameplay rendering is unchanged. The [generated terrain comparison](generated-terrain-appearance.md)
 verifies the destination rendering path, not completion of the live generator.

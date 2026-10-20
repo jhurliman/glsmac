@@ -53,6 +53,55 @@ public:
         Grow(seed,3,size);
         if(t) {++t->pumps;if(t->checkpoint) {t->checkpoint();}}
     }
+    void Hill(int32_t base,int32_t modifier,int32_t category) {
+        if(category<0 || category>7 || s.categories[1]<0 || s.categories[1]>2) {
+            throw std::invalid_argument("Hill category/ocean is outside measured domain");
+        }
+        for(int attempts=2;attempts<=102;attempts+=2) {
+            const auto xs=g.width-(wrap?0:8),ys=g.height-8;
+            Coordinate point{{(xs>1?Draw(CrtUse::HillX)%xs:0)+(wrap?0:4),
+                (ys>1?Draw(CrtUse::HillY)%ys:0)+4}};
+            point[0]=(point[0]&~1)+(point[1]&1);
+            // The 51st pair is consumed but never inspected.
+            if(attempts>100) {return;}
+            bool admitted=true;
+            for(size_t j=0;j<9;++j) {
+                const auto n=Normalize({{point[0]+smac_shaping::OFFSETS[j][0],point[1]+smac_shaping::OFFSETS[j][1]}});
+                if(n && Band(*n)<category-1) {admitted=false;break;}
+            }
+            if(!admitted) {continue;}
+            auto extra=Checked(int64_t(2-s.categories[1])*modifier);
+            if(category!=4) {extra/=4;}
+            if(s.categories[1]>=2) {base/=2;}
+            Grow(point,category,Checked(int64_t(base)+extra));Pump();return;
+        }
+    }
+    void Polar() {
+        if(g.height&1) {throw std::invalid_argument("Polar seeding requires an even-height native plane");}
+        const auto contour=uint8_t(s.working_land_table[3]);
+        for(int32_t x=0;x<g.width;x+=2) {Write(Index({{x,0}}),1,contour);Write(Index({{x+1,g.height-1}}),1,contour);}
+        const std::array<int32_t,4> rows{{0,1,g.height-1,g.height-2}};
+        const std::array<CrtUse,4> uses{{CrtUse::PolarNorth,CrtUse::PolarNorthInner,CrtUse::PolarSouth,CrtUse::PolarSouthInner}};
+        for(int32_t i=0;i<g.width/16;++i) {for(size_t j=0;j<4;++j) {
+            const auto column=Draw(uses[j])%(g.width/2);
+            Write(Index({{2*column+(rows[j]&1),rows[j]}}),1,contour);
+        }}
+    }
+    void Reconstruct() {
+        for(int32_t y=0;y<g.height;++y) {
+            for(int32_t x=y&1;x<g.width;x+=2) {
+                const auto index=Index({{x,y}});int32_t category=0;
+                const auto contour=int64_t(s.records[index][1])-s.reset_words[0];
+                for(int32_t c=6;c>=0;--c) {if(contour>=s.working_land_table[c]) {category=c;break;}}
+                Write(index,0,uint8_t((s.records[index][0]&31)|(category<<5)));s.dirty_flags|=4;
+            }
+            Pump();
+        }
+        for(int32_t category=6;category>=2;--category) {for(int32_t y=0;y<g.height;++y) {
+            for(int32_t x=y&1;x<g.width;x+=2) {const Coordinate point{{x,y}};if(Band(point)==category) {Shape(point,category);}}
+            Pump();
+        }}
+    }
     void Grow(Coordinate seed,int32_t category,int32_t target) {
         RequirePoint(seed,category);
         if(t && t->on_walk) {t->on_walk(seed,category,target);}
@@ -102,6 +151,7 @@ public:
         }
     }
 private:
+    void Pump() {if(t) {++t->pumps;if(t->checkpoint) {t->checkpoint();}}}
     bool Inside(Coordinate p) const {return p[0]>=0 && p[0]<g.width && p[1]>=0 && p[1]<g.height;}
     std::optional<Coordinate> Normalize(Coordinate p) const {
         if(wrap) {if(p[0]<0) {p[0]+=g.width;}else if(p[0]>=g.width) {p[0]-=g.width;}}
@@ -170,4 +220,7 @@ private:
 void SeedContinent(State& s,Geometry g,const ContinentRules& r,int32_t ordinal,ContinentTrace* t) {Worker(s,g,r,t).Seed(ordinal);}
 void GrowContinent(State& s,Geometry g,const ContinentRules& r,Coordinate p,int32_t category,int32_t target,ContinentTrace* t) {Worker(s,g,r,t).Grow(p,category,target);}
 void PaintContinent(State& s,Geometry g,const ContinentRules& r,Coordinate p,int32_t category,ContinentTrace* t) {Worker(s,g,r,t).Paint(p,category);}
+void SeedHill(State& s,Geometry g,const ContinentRules& r,int32_t base,int32_t modifier,int32_t category,ContinentTrace* t) {Worker(s,g,r,t).Hill(base,modifier,category);}
+void SeedPolarContours(State& s,Geometry g,const ContinentRules& r,ContinentTrace* t) {Worker(s,g,r,t).Polar();}
+void ReconstructAltitudes(State& s,Geometry g,const ContinentRules& r,ContinentTrace* t) {Worker(s,g,r,t).Reconstruct();}
 }

@@ -1373,18 +1373,22 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
         case OP_GET_NATIVE_TERRAIN: {
-            // Explicit local inspector, never a network disclosure endpoint.
+            // Owned local presentation inputs, never a network disclosure endpoint.
             response.result=R_SUCCESS;
-            if(m_game_state==GS_RUNNING && m_map && m_state && !m_state->GetConnection()
-                && m_state->m_settings.global.GetRulesetId()=="smac") {
+            if(m_game_state==GS_RUNNING && m_map && m_state && m_player && m_slot && !m_state->GetConnection()
+                && m_player->GetRole()==Player::PR_SINGLE && m_state->m_settings.global.GetRulesetId()=="smac") {
                 auto snapshot=m_map->CopyNativeTerrain(request.data.native_terrain.include_geometry);
                 std::map<size_t,uint8_t> base_visibility;
                 if(snapshot && m_simulation) {
+                    const auto& local=RequireSimulationParticipant(m_player);
+                    if(local.slot!=static_cast<int32_t>(m_slot->GetIndex())) {throw std::runtime_error("Native terrain local participant mismatch");}
+                    snapshot->viewer=local.simulation_id;
+                    const auto& rules=m_state->m_settings.global.GetSmacCampaignRules();
+                    if(rules) {snapshot->initial_survey=(rules->primary&0x0100u)!=0;}
                     for(const auto& participant:m_simulation->value.roster) {
                         if(participant.simulation_id<=0 || participant.simulation_id>7) {continue;}
                         const auto owner=static_cast<size_t>(participant.simulation_id);
                         if(const auto* faction=m_state->GetFM()->Get(participant.faction_id)) {snapshot->faction_files[owner]=faction->m_bases_render.file;}
-                        if(participant.slot==static_cast<int32_t>(m_slot_num)) {snapshot->viewer=participant.simulation_id;}
                     }
                     const auto viewer=m_simulation->value.hostility.owners.find(snapshot->viewer);
                     if(viewer!=m_simulation->value.hostility.owners.end()) {

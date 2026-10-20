@@ -17,6 +17,7 @@ struct Tile {
     bool resource_ready=false;
     bool admitted_base=false;
     bool developed_ready=false,selected_known=false,center_known=false,base_present=false;
+    uint8_t explored_by=0; // persistent saved terrain exploration, not current sight
     uint8_t cached_affiliation=15;
     int64_t nutrients=0;
     uint32_t landmarks=0;
@@ -29,6 +30,17 @@ struct World {
     static constexpr int WIDTH=80,HEIGHT=80;
     bool horizontal_wrap=true,retained_geometry=false;
     int viewer=0;
+    bool exploration_ready=false;
+    uint8_t observers_present=0,revealed_by=0;
+    std::optional<bool> initial_survey;
+    enum class Knowledge {Unknown,Survey,Known};
+    std::optional<Knowledge> KnowledgeAt(size_t index) const {
+        if(!exploration_ready || viewer<1 || viewer>7 || !(observers_present&(1u<<viewer))) {return {};}
+        const auto bit=static_cast<uint8_t>(1u<<viewer);
+        if((tiles.at(index).explored_by|revealed_by)&bit) {return Knowledge::Known;}
+        if(!initial_survey) {return {};}
+        return *initial_survey?Knowledge::Survey:Knowledge::Unknown;
+    }
     int32_t resource_pattern=0;
     bool automatic_land_resources=false;
     std::array<uint32_t,8> relations{};

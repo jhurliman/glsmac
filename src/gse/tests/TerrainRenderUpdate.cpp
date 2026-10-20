@@ -456,17 +456,25 @@ public:
             const auto updated=local.CopyNativeTerrain();
             if(!updated->tiles[40*40+20].ordinary || updated->tiles[40*40+20].items!=0x6c || !before.ordinary || before.owner!=-1) return false;
             map::SmacWorkerKnowledge::Data data{};data.width=80;data.height=80;data.ordinary_local_mode=true;data.tiles.resize(3200);data.observers[3]=map::SmacWorkerKnowledge::Observer{};
-            data.tiles[40*40+20].claimant=3;
+            data.tiles[40*40+20].claimant=3;data.tiles[40*40+20].explored_by=8;data.all_map_revealed=4;
             local.m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);local.m_worker_knowledge_ready=true;
             claims=local.CopyNativeTerrain();
+            if(!claims->exploration_ready || claims->observers_present!=8 || claims->revealed_by!=4 ||
+                claims->tiles[40*40+20].explored_by!=8 || claims->initial_survey || claims->KnowledgeAt(0)) return false;
+            claims->viewer=3;claims->initial_survey=false;
+            if(claims->KnowledgeAt(40*40+20)!=::game::native_terrain::World::Knowledge::Known ||
+                claims->KnowledgeAt(0)!=::game::native_terrain::World::Knowledge::Unknown) return false;
             if(claims->tiles[40*40+20].owner!=3 || claims->tiles[40*40+20].region!=local.m_territory_topology->Regions()[40*40+20]) return false;
             data.tiles[40*40+20].claimant=0;local.m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);
             if(local.CopyNativeTerrain()->tiles[40*40+20].owner!=0 || claims->tiles[40*40+20].owner!=3) return false;
             local.m_worker_knowledge_ready=false;
-            if(local.CopyNativeTerrain()->tiles[40*40+20].owner!=-1) return false;
+            const auto unavailable=local.CopyNativeTerrain();
+            if(unavailable->tiles[40*40+20].owner!=-1 || unavailable->exploration_ready || unavailable->revealed_by ||
+                unavailable->observers_present || unavailable->tiles[40*40+20].explored_by) return false;
         }
         return retained->tiles[40*40+20].items==0x200020 && retained->tiles[40*40+20].ordinary
-            && claims && claims->tiles[40*40+20].owner==3;
+            && claims && claims->tiles[40*40+20].owner==3 && claims->tiles[40*40+20].explored_by==8
+            && claims->KnowledgeAt(40*40+20)==::game::native_terrain::World::Knowledge::Known;
     }
     bool CheckProjectionProvenance() {
         game::backend::response_map_data_t response{};

@@ -1,11 +1,13 @@
 #include "InstancedSpriteManager.h"
 #include "game/NativeZoom.h"
+#include "game/frontend/NativeActorMarker.h"
 
 #include "InstancedSprite.h"
 #include "ScoutSpriteCache.h"
 #include "game/backend/unit/CvrScoutRender.h"
 #include "engine/Engine.h"
 #include <memory>
+#include <cstring>
 #include "scene/Scene.h"
 #include "scene/actor/Instanced.h"
 #include "scene/actor/Sprite.h"
@@ -62,6 +64,23 @@ InstancedSprite* InstancedSpriteManager::GetPortWorkerMarkerSprite( const std::s
 	catch ( ... ) { m_scene->RemoveActor( actor ); m_instanced_sprites.erase( inserted ); throw; }
 	actor_owner.release();
 	return &inserted->second;
+}
+
+InstancedSprite* InstancedSpriteManager::GetNativeActorMarker(const std::string& name,bool base,int zoom,uint32_t fill,uint32_t border) {
+    const auto rect=native_actor::Marker(base,zoom);const int q=::game::native_zoom::Unit(zoom);
+    const int width=rect[2]-rect[0],height=rect[3]-rect[1];
+    const auto key="NativeActorMarker:"+name+":"+std::to_string(base)+":"+std::to_string(zoom)+":"+std::to_string(fill)+":"+std::to_string(border);
+    const auto found=m_instanced_sprites.find("PixelText:"+key);if(found!=m_instanced_sprites.end()) {return &found->second;}
+    auto pixels=std::make_shared<types::texture::Texture>("Native low-zoom actor",width,height);
+    // Copy display RGBA exactly: the legacy packed Color decoder divides by
+    //256, which would darken the palette and make even this opaque frame translucent.
+    for(int y=0;y<height;++y) {for(int x=0;x<width;++x) {
+        const uint32_t color=(x==0 || y==0 || x==width-1 || y==height-1)?border:fill;
+        std::memcpy(pixels->GetBitmap()+4*(size_t(y)*size_t(width)+size_t(x)),&color,sizeof(color));
+    }}
+    pixels->FullUpdate();
+    auto* result=GetPixelTextSprite(key,std::move(pixels),{rect[0]-4*q+width/2.0f,rect[1]-4*q+height/2.0f});
+    result->actor->SetZIndex(s_zlevel_map.at(base?ZL_BASES:ZL_UNITS));return result;
 }
 
 InstancedSprite* InstancedSpriteManager::GetScoutSprite( const std::string& name, const backend::unit::CvrScoutRender& descriptor, bool native_projection ) {

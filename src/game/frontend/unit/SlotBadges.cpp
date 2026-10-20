@@ -1,3 +1,4 @@
+#include "game/frontend/NativeActorMarker.h"
 #include "SlotBadges.h"
 
 #include "BadgeDefs.h"
@@ -102,6 +103,19 @@ sprite::Sprite* SlotBadges::GetNativeMapBadge(backend::unit::morale_t level,bool
     return &found->second;
 }
 
+sprite::Sprite* SlotBadges::GetLowZoomMarker(int zoom) {
+    if(m_faction && (m_native_palette_slot<1 || m_native_palette_slot>7)) {return nullptr;}
+    auto found=m_low_zoom_markers.find(zoom);
+    if(found==m_low_zoom_markers.end()) {
+        const auto palette=g_engine->GetTextureLoader()->GetSmacGraphPalette();if(!palette) {return nullptr;}
+        const auto fill=palette->colors[palette->normal[m_faction?m_native_palette_slot:0]];
+        const auto border=palette->colors[m_faction?native_actor::MarkerBorderIndex(m_faction->m_id):0];
+        auto* marker=m_ism->GetNativeActorMarker(m_badges_key,false,zoom,
+            types::Color::FromRGB(fill[0],fill[1],fill[2]).GetRGBA(),types::Color::FromRGB(border[0],border[1],border[2]).GetRGBA());
+        found=m_low_zoom_markers.emplace(zoom,sprite::Sprite{marker,1}).first;
+    }return &found->second;
+}
+
 sprite::Sprite* SlotBadges::GetStackMarker(backend::unit::morale_t level,bool spent) {
     if(m_faction && (m_native_palette_slot<1 || m_native_palette_slot>7)) {return nullptr;}
     const uint32_t key=uint32_t(level)*2+(m_faction && spent ? 1u:0u);
@@ -130,6 +144,7 @@ sprite::Sprite* SlotBadges::GetStackMarker(backend::unit::morale_t level,bool sp
 }
 
 SlotBadges::~SlotBadges() {
+    for(const auto& row:m_low_zoom_markers) {m_ism->RemoveInstancedSpriteByKey(row.second.instanced_sprite->key);}
     for(const auto& item:m_stack_markers) {m_ism->RemoveInstancedSpriteByKey(item.second.instanced_sprite->key);}
     for(const auto& item:m_native_map_badges) {m_ism->RemoveInstancedSpriteByKey(item.second.instanced_sprite->key);}
     for(const auto& item:m_order_sprites) {m_ism->RemoveInstancedSpriteByKey(item.second.instanced_sprite->key);}

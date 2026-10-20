@@ -1,0 +1,367 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "handoff_manifest_sha256": "d7e35fc2ad5b53961c73e7b85a7066fc55b9042fffaab08f078308392df0d2f2",
+  "source_cases_sha256": "0d98220fae94b83bab3b305da4a93a7338ed66221ba0c75143d935a6e88e1b23",
+  "scope": "Ordinary caller rectangles; bitmap/font leaves were sinks. No full original framebuffer claim.",
+  "cases": [
+    {
+      "kind": "unit",
+      "zoom": -14,
+      "extra": null,
+      "q": 1,
+      "marker": [
+        104,
+        100,
+        108,
+        104
+      ]
+    },
+    {
+      "kind": "base",
+      "zoom": -14,
+      "extra": {
+        "population": 9
+      },
+      "q": 1,
+      "marker": [
+        103,
+        98,
+        109,
+        104
+      ]
+    },
+    {
+      "kind": "base",
+      "zoom": -14,
+      "extra": {
+        "population": 10
+      },
+      "q": 1,
+      "marker": [
+        103,
+        98,
+        109,
+        104
+      ]
+    },
+    {
+      "kind": "unit",
+      "zoom": -11,
+      "extra": null,
+      "q": 4,
+      "marker": [
+        110,
+        96,
+        121,
+        107
+      ]
+    },
+    {
+      "kind": "base",
+      "zoom": -11,
+      "extra": {
+        "population": 9
+      },
+      "q": 4,
+      "marker": [
+        109,
+        93,
+        122,
+        106
+      ]
+    },
+    {
+      "kind": "base",
+      "zoom": -11,
+      "extra": {
+        "population": 10
+      },
+      "q": 4,
+      "marker": [
+        109,
+        93,
+        122,
+        106
+      ]
+    },
+    {
+      "kind": "unit",
+      "zoom": -10,
+      "extra": null,
+      "q": 4,
+      "marker": [
+        112,
+        98,
+        125,
+        110
+      ]
+    },
+    {
+      "kind": "base",
+      "zoom": -10,
+      "extra": {
+        "population": 9
+      },
+      "q": 4,
+      "marker": [
+        110,
+        94,
+        127,
+        110
+      ]
+    },
+    {
+      "kind": "base",
+      "zoom": -10,
+      "extra": {
+        "population": 10
+      },
+      "q": 4,
+      "marker": [
+        110,
+        94,
+        127,
+        110
+      ]
+    },
+    {
+      "kind": "unit",
+      "zoom": -9,
+      "extra": null,
+      "q": 5,
+      "marker": [
+        114,
+        96,
+        129,
+        111
+      ]
+    },
+    {
+      "kind": "base",
+      "zoom": -9,
+      "extra": {
+        "population": 9
+      },
+      "q": 5,
+      "marker": [
+        112,
+        92,
+        131,
+        111
+      ]
+    },
+    {
+      "kind": "base",
+      "zoom": -9,
+      "extra": {
+        "population": 10
+      },
+      "q": 5,
+      "marker": [
+        112,
+        92,
+        131,
+        111
+      ]
+    }
+  ],
+  "literal_supplement_manifest_sha256": "882e83e9c0d26dc7cebceb47e3c8ce6afc23083baf8355f8debfe75f62712dd0",
+  "literal_cases": [
+    {
+      "filename": "SPARTANS",
+      "owner": 5,
+      "supplied_primary": 173,
+      "events": [
+        {
+          "kind": "border",
+          "colors": [
+            44,
+            44
+          ]
+        },
+        {
+          "kind": "fill",
+          "color": 173
+        }
+      ]
+    },
+    {
+      "filename": "spartans",
+      "owner": 5,
+      "supplied_primary": 173,
+      "events": [
+        {
+          "kind": "border",
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "fill",
+          "color": 173
+        }
+      ]
+    },
+    {
+      "filename": "Spartans",
+      "owner": 5,
+      "supplied_primary": 173,
+      "events": [
+        {
+          "kind": "border",
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "fill",
+          "color": 173
+        }
+      ]
+    },
+    {
+      "filename": "SPARTANSX",
+      "owner": 5,
+      "supplied_primary": 173,
+      "events": [
+        {
+          "kind": "border",
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "fill",
+          "color": 173
+        }
+      ]
+    },
+    {
+      "filename": "SPARTAN",
+      "owner": 5,
+      "supplied_primary": 173,
+      "events": [
+        {
+          "kind": "border",
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "fill",
+          "color": 173
+        }
+      ]
+    },
+    {
+      "filename": "GAIANS",
+      "owner": 5,
+      "supplied_primary": 173,
+      "events": [
+        {
+          "kind": "border",
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "fill",
+          "color": 173
+        }
+      ]
+    },
+    {
+      "filename": "GAIA",
+      "owner": 5,
+      "supplied_primary": 173,
+      "events": [
+        {
+          "kind": "border",
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "fill",
+          "color": 173
+        }
+      ]
+    },
+    {
+      "filename": "UNIV",
+      "owner": 5,
+      "supplied_primary": 173,
+      "events": [
+        {
+          "kind": "border",
+          "colors": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "fill",
+          "color": 173
+        }
+      ]
+    }
+  ],
+  "identifier_producer": {
+    "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+    "scope": "Actual59de8c..59df10 FACTIONS producer, supplied installed seven token pairs via parser service; then actual59d1d0..59d24a faction-file/section argument prefix on discriminating supplied fields. No full setup/asset loading.",
+    "alpha_sha256": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4",
+    "field_offsets": {
+      "file": "record+4 (95a4cc+owner*59c)",
+      "section": "record+1c (95a4e4+owner*59c)"
+    },
+    "records": [
+      {
+        "owner": 1,
+        "file": "GAIANS",
+        "section": "GAIANS"
+      },
+      {
+        "owner": 2,
+        "file": "HIVE",
+        "section": "HIVE"
+      },
+      {
+        "owner": 3,
+        "file": "UNIV",
+        "section": "UNIV"
+      },
+      {
+        "owner": 4,
+        "file": "MORGAN",
+        "section": "MORGAN"
+      },
+      {
+        "owner": 5,
+        "file": "SPARTANS",
+        "section": "SPARTANS"
+      },
+      {
+        "owner": 6,
+        "file": "BELIEVE",
+        "section": "BELIEVE"
+      },
+      {
+        "owner": 7,
+        "file": "PEACE",
+        "section": "PEACE"
+      }
+    ],
+    "parser_calls": [
+      {
+        "file": "DIFFERENT_FILE",
+        "section": "SPARTANS"
+      }
+    ]
+  }
+}

@@ -30,6 +30,7 @@
 #include "util/FS.h"
 #include "loader/texture/TextureLoader.h"
 #include "SmacBaseNameRaster.h"
+#include "game/NativeZoom.h"
 
 namespace game {
 namespace frontend {
@@ -57,6 +58,14 @@ actor_visibility::BaseVisibility BaseManager::GetBaseVisibility(size_t id) const
 }
 void BaseManager::RefreshVisibility() {
     for(const auto& row:m_bases) {row.second->Show();}
+}
+
+void BaseManager::SetNativeActorZoom(int zoom) {
+    ::game::native_zoom::Unit(zoom);
+    if(zoom==m_native_actor_zoom || !UsesNativeMapProjection()) {return;}
+    for(const auto& row:m_bases) {row.second->PrepareNativeView(zoom);}
+    m_native_actor_zoom=zoom;
+    for(const auto& row:m_bases) {row.second->RefreshNativeView();}
 }
 
 BaseManager::~BaseManager() {

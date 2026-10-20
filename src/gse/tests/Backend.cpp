@@ -1,3 +1,4 @@
+#include "game/frontend/NativeActorMarker.h"
 #include "game/NativeZoom.h"
 #include "Backend.h"
 #include "game/ActorVisibilitySnapshot.h"
@@ -2286,6 +2287,26 @@ public:
                             }
                         }
 
+                        if(height==0 && initialized) {
+                            um->m_units.emplace(98,&overlay);util::FinallyGuard remove_marker_unit([&]{um->m_units.erase(98);});
+                            auto* card_before=overlay.m_def->GetCardSprite(false);
+                            for(const int zoom:{-14,-11,-10,-9,0}) {
+                                auto* previous=overlay.m_render.body->instanced_sprite;
+                                um->SetNativeBodyZoom(zoom);
+                                auto* body=overlay.m_render.body->instanced_sprite;
+                                GT_ASSERT(overlay.m_render.is_rendered && (previous==body || previous->actor->GetInstanceMatrices().empty()),
+                                    "Low-zoom Unit left its old body instance");
+                                GT_ASSERT(overlay.IsBadgeVisible()==(zoom==0),"Low-zoom marker retained health/order/flag overlays");
+                                if(zoom< -8) {
+                                    const auto rect=game::frontend::native_actor::Marker(false,zoom);
+                                    const auto* sprite=body->actor->GetSpriteActor();
+                                    GT_ASSERT((sprite->GetRenderFlags() & scene::actor::Actor::RF_PIXEL_SPRITE) &&
+                                        sprite->GetDimensions()==types::Vec2<float>(rect[2]-rect[0],rect[3]-rect[1]),
+                                        "Unit marker did not replace model artwork with source-sized pixels");
+                                }
+                                GT_ASSERT(overlay.m_def->GetCardSprite(false)==card_before,"Low zoom replaced console model art");
+                            }
+                        }
                         const auto project=[](const auto& transform,const types::Vec3& c) {const auto& m=transform.m;return types::Vec2<float>{
                             (m[0][0]*c.x+m[0][1]*c.y+m[0][2]*c.z+m[0][3]+1)*512,
                             (1-m[1][0]*c.x-m[1][1]*c.y-m[1][2]*c.z-m[1][3])*384};};
@@ -3257,6 +3278,37 @@ public:
                     std::abs(bottom_right.x-596)<0.001f && std::abs(bottom_right.y-(295-height))<0.001f,
                     "Actual Base sprite rectangle differs from original loaded metadata: "+top_left.ToString()+".."+bottom_right.ToString());
                 {
+                    {
+                        // Settle the population update before comparing camera-only resource identity.
+                        // Tile::SetBase may already have shown the initial population0 constructor view.
+                        base.Hide();base.Show();
+                        // Explicit palette inputs isolate view refresh from stock-identity discovery.
+                        auto* markers=manager.GetSlotBadges(3);const bool old_marker_policy=markers->m_smac_population;
+                        const auto old_primary=markers->m_primary;const auto palette_before=manager.m_smac_population_palette;
+                        const bool loaded_before=manager.m_smac_population_palette_loaded;
+                        markers->m_smac_population=true;markers->m_primary=255;
+                        manager.m_smac_population_palette.fill(types::Color::FromRGB(0,0,0));
+                        manager.m_smac_population_palette[255]=types::Color::FromRGB(255,255,255);manager.m_smac_population_palette_loaded=true;
+                        manager.m_bases.emplace(100,&base);
+                        util::FinallyGuard detach_marker_base([&]{manager.m_bases.erase(100);markers->m_smac_population=old_marker_policy;
+                            markers->m_primary=old_primary;manager.m_smac_population_palette=palette_before;manager.m_smac_population_palette_loaded=loaded_before;});
+                        const auto* card_mesh=base.GetRenderData().base.mesh;
+                        for(const int zoom:{-14,-11,-10,-9,0}) {
+                            auto* previous=base.GetSprite()->instanced_sprite;manager.SetNativeActorZoom(zoom);
+                            auto* body=base.GetSprite()->instanced_sprite;
+                            GT_ASSERT(base.m_render.is_rendered && (previous==body || previous->actor->GetInstanceMatrices().empty()),
+                                "Base view refresh left stale artwork or lost admitted marker");
+                            GT_ASSERT(base.m_name_rendered==(zoom> -11) &&
+                                base.m_render.badge.def->instanced_sprite->actor->HasInstance(base.m_render.badge.instance_id)==(zoom==0),
+                                "Base marker kept population badge or used Unit/name cutoff interchangeably");
+                            GT_ASSERT(base.GetRenderData().base.mesh==card_mesh,"Base marker replaced independent console artwork");
+                            if(zoom< -8) {
+                                const auto rect=game::frontend::native_actor::Marker(true,zoom);
+                                const auto* sprite=body->actor->GetSpriteActor();
+                                GT_ASSERT(sprite->GetDimensions()==types::Vec2<float>(rect[2]-rect[0],rect[3]-rect[1]),"Base marker has wrong dimensions");
+                            }
+                        }
+                    }
                     base.SetNativeBody(::game::smac_base_body::Selection{2,1});
                     auto* perimeter=original_faction->GetBaseSprite(false,2,1,true)->instanced_sprite;
                     GT_ASSERT(base.GetSprite()->instanced_sprite==perimeter,"Main-map body ignored authenticated defense/size");

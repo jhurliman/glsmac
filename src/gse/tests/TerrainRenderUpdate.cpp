@@ -1,3 +1,10 @@
+#include "scene/Scene.h"
+#include "scene/actor/Instanced.h"
+#include "scene/actor/Sprite.h"
+#include "game/frontend/sprite/InstancedSpriteManager.h"
+#include <fstream>
+#include <filesystem>
+#include "game/frontend/NativeActorMarker.h"
 #include "TerrainRenderUpdate.h"
 #include "game/backend/map/SmacLandmarkGeometry.h"
 #include "types/texture/SmacIndexedSprite.h"
@@ -516,6 +523,68 @@ public:
 };
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC native low zoom markers preserve12 original caller rectangles and name cutoffs",GT(){
+        namespace actor=game::frontend::native_actor;
+        struct Case {bool base;int zoom;std::array<int,4> expected;};
+        const Case cases[]={
+        {false,-14,{{104,100,108,104}}},
+        {true,-14,{{103,98,109,104}}},
+        {true,-14,{{103,98,109,104}}},
+        {false,-11,{{110,96,121,107}}},
+        {true,-11,{{109,93,122,106}}},
+        {true,-11,{{109,93,122,106}}},
+        {false,-10,{{112,98,125,110}}},
+        {true,-10,{{110,94,127,110}}},
+        {true,-10,{{110,94,127,110}}},
+        {false,-9,{{114,96,129,111}}},
+        {true,-9,{{112,92,131,111}}},
+        {true,-9,{{112,92,131,111}}},
+        };
+        scene::Scene scene("Native marker caller fixture",scene::SCENE_TYPE_WORLD);
+        game::frontend::sprite::InstancedSpriteManager sprites(&scene);
+        for(const auto& c:cases) {
+            const int q=game::native_zoom::Unit(c.zoom);auto actual=actor::Marker(c.base,c.zoom);
+            actual[0]+=100;actual[2]+=100;actual[1]+=100-2*q;actual[3]+=100-2*q;
+            GT_ASSERT(actual==c.expected,"Native marker differs from original caller rectangle");
+            auto* marker=sprites.GetNativeActorMarker("Original caller control",c.base,c.zoom,
+                types::Color::FromRGB(255,255,255).GetRGBA(),types::Color::FromRGB(0,0,0).GetRGBA());
+            const auto* pixels=marker->texture_owner.get();const int width=c.expected[2]-c.expected[0],height=c.expected[3]-c.expected[1];
+            const auto* sprite=marker->actor->GetSpriteActor();const auto offset=sprite->GetDstOffsets();
+            GT_ASSERT(pixels && pixels->GetWidth()==size_t(width) && pixels->GetHeight()==size_t(height) &&
+                offset==types::Vec2<float>((c.expected[0]+c.expected[2])/2.0f-(100+4*q),
+                    (c.expected[1]+c.expected[3])/2.0f-(100+2*q)),
+                "Production marker canvas/anchor differs from original rectangle");
+            for(int y=0;y<height;++y) {for(int x=0;x<width;++x) {
+                const auto expected=types::Color::FromRGB(x==0 || y==0 || x==width-1 || y==height-1?0:255,
+                    x==0 || y==0 || x==width-1 || y==height-1?0:255,x==0 || y==0 || x==width-1 || y==height-1?0:255).GetRGBA();
+                GT_ASSERT(pixels->GetPixel(x,y)==expected,"Native marker border/owner fill differs from captured rectangle commands");
+            }}
+            if(const auto* capture=std::getenv("GLSMAC_MARKER_CAPTURE")) {
+                std::ofstream image(std::filesystem::path(capture)/((c.base?"base":"unit")+std::to_string(c.zoom)+".ppm"),std::ios::binary);
+                image<<"P6\n"<<width<<' '<<height<<"\n255\n";
+                const auto* rgba=pixels->GetBitmap();for(int i=0;i<width*height;++i) {image.write(reinterpret_cast<const char*>(rgba+4*i),3);}
+                if(!image) {throw std::runtime_error("Cannot write optional native marker capture");}
+            }
+
+        }
+        const struct {const char* identifier;uint8_t border;} literal_cases[]={
+            {"SPARTANS",44},
+            {"spartans",0},
+            {"Spartans",0},
+            {"SPARTANSX",0},
+            {"SPARTAN",0},
+            {"GAIANS",0},
+            {"GAIA",0},
+            {"UNIV",0},
+        };
+        for(const auto& c:literal_cases) {
+            GT_ASSERT(actor::MarkerBorderIndex(c.identifier)==c.border,
+                "Marker border differs from original faction-section literal controls");
+        }
+        GT_ASSERT(actor::UsesMarker(-9) && !actor::UsesMarker(-8) && !actor::ShowsName(-11) && actor::ShowsName(-10),
+            "Native marker/name cutoffs were merged or shifted");GT_OK();
+    });
+
     task->AddTest("SMAC global flora input uses live terrain and actual observer memory without publication",GT(){
         TerrainRenderFixture fixture;GT_ASSERT(fixture.CheckGlobalFloraInput(),"Global flora input used stale terrain, invented observer memory or published state");GT_OK();
     });

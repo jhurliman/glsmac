@@ -1,3 +1,4 @@
+#include "game/frontend/NativeActorMarker.h"
 #include "Base.h"
 #include "game/ActorVisibilitySnapshot.h"
 #include <stdexcept>
@@ -55,7 +56,7 @@ Base::Base(
 	, m_is_guarded( !m_tile->GetUnits().empty() )
 	, m_slot_badges( m_bm->GetSlotBadges( slot->GetIndex() ) )
 	, m_owner_slot( slot->GetIndex() ) {
-	UpdateMeshTex( m_render_data.base, GetSprite()->instanced_sprite );
+	UpdateMeshTex( m_render_data.base, GetSpriteFor(m_faction,false)->instanced_sprite );
 	m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_render.badge.pops_count, m_is_guarded );
 	UpdateMeshTex( m_render_data.badge, m_render.badge.def->instanced_sprite );
 	m_tile->SetBase( this );
@@ -88,7 +89,7 @@ void Base::SetIdentity( Slot* owner, faction::Faction* faction, std::string name
 	auto* badge=badges->GetBaseBadgeSprite(GetPopulation(),m_is_guarded);
 	meshtex_t next_base{},next_badge{};
 	const auto destroy_mesh=[](const types::mesh::Render* mesh) {if(mesh) {DELETE(mesh);}};
-	UpdateMeshTex(next_base,GetSpriteFor(faction)->instanced_sprite);
+	UpdateMeshTex(next_base,GetSpriteFor(faction,false)->instanced_sprite);
 	std::unique_ptr<const types::mesh::Render,decltype(destroy_mesh)> base_mesh(next_base.mesh,destroy_mesh);
 	UpdateMeshTex(next_badge,badge->instanced_sprite);
 	std::unique_ptr<const types::mesh::Render,decltype(destroy_mesh)> badge_mesh(next_badge.mesh,destroy_mesh);
@@ -120,7 +121,10 @@ sprite::Sprite* Base::GetSprite() const {
 	return GetSpriteFor(m_faction);
 }
 
-sprite::Sprite* Base::GetSpriteFor( faction::Faction* faction ) const {
+sprite::Sprite* Base::GetSpriteFor( faction::Faction* faction, bool markers ) const {
+    if(markers && m_bm->UsesNativeMapProjection() && m_bm->GetNativeActorZoom()< -8) {
+        if(auto* marker=m_slot_badges->GetLowZoomMarker(m_bm->GetNativeActorZoom())) {return marker;}
+    }
     if(m_native_body && m_bm->UsesNativeMapProjection()) {
         auto* source=m_native_body_faction?m_native_body_faction:faction;
         return source->GetBaseSprite(m_native_body->row>=3,uint8_t(m_native_body->column),uint8_t(m_native_body->row%3),true);
@@ -142,7 +146,13 @@ void Base::SetNativeBody(std::optional<::game::smac_base_body::Selection> select
     if(source==m_native_body_faction && bool(selection)==bool(m_native_body) && (!selection || (selection->column==m_native_body->column && selection->row==m_native_body->row))) {return;}
     const bool shown=m_render.is_rendered || m_name_rendered;Hide();m_native_body=selection;m_native_body_faction=source;
     // Instance IDs belong to the selected sprite actor, not the Base globally.
-    m_render.instance_id=0;UpdateMeshTex(m_render_data.base,GetSprite()->instanced_sprite);
+    m_render.instance_id=0;UpdateMeshTex(m_render_data.base,GetSpriteFor(m_faction,false)->instanced_sprite);
+    if(shown) {Show();}
+}
+
+void Base::PrepareNativeView(int zoom) const {if(zoom< -8) {m_slot_badges->GetLowZoomMarker(zoom);}}
+void Base::RefreshNativeView() {
+    const bool shown=m_render.is_rendered || m_name_rendered;Hide();m_render.instance_id=0;
     if(shown) {Show();}
 }
 
@@ -154,7 +164,7 @@ void Base::Show() {
 
 		if ( m_render.badge.pops_count != GetPopulation() ) {
 			m_render.badge.pops_count = GetPopulation();
-			UpdateMeshTex( m_render_data.base, GetSprite()->instanced_sprite );
+			UpdateMeshTex( m_render_data.base, GetSpriteFor(m_faction,false)->instanced_sprite );
 			m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_render.badge.pops_count, m_is_guarded );
 			UpdateMeshTex( m_render_data.badge, m_render.badge.def->instanced_sprite );
 		}
@@ -182,6 +192,7 @@ void Base::Show() {
 }
 
 void Base::ShowName() {
+    if(m_bm->UsesNativeMapProjection() && !native_actor::ShowsName(m_bm->GetNativeActorZoom())) {HideName();return;}
     if(m_name_rendered) {return;}
     if(m_bm->m_smac_population) {
         const auto& anchor=m_tile->GetRenderData().name_anchor;
@@ -241,6 +252,7 @@ void Base::SetRenderCoords( const types::Vec3& coords ) {
 }
 
 void Base::ShowBadge() {
+    if(m_bm->UsesNativeMapProjection() && m_bm->GetNativeActorZoom()< -8 && m_slot_badges->GetLowZoomMarker(m_bm->GetNativeActorZoom())) {HideBadge();return;}
 	if ( !m_render.badge.instance_id ) {
 		m_render.badge.instance_id = m_render.badge.def->next_instance_id++;
 	}

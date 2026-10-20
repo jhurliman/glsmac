@@ -26,6 +26,11 @@ public:
     // Entity registries/settings are authenticated by the owning world boundary.
     static SmacTerrainAuthority GeneratedRetained(Metadata metadata,const std::string& records);
     bool operator==(const SmacTerrainAuthority& other) const;
+    SmacTerrainAuthority WithGlobalSpread(const smac_spread::Input&,const smac_spread::Result&,bool live_projection=false) const;
+    SmacTerrainAuthority WithStartingBalance(const smac_balance::Result&) const;
+    SmacTerrainAuthority WithBloomTerrain(const base::SmacBloomTerrainPlan&) const;
+    smac_climate::World ExportClimateTerrain() const;
+    SmacTerrainAuthority WithClimateTerrain(const smac_climate::World&,int32_t sea_offset,int32_t climate_extra) const;
     Origin SourceOrigin() const {return m_origin;}
     const Metadata& Info() const {return m_metadata;}
     const Cell& At(uint32_t x,uint32_t y) const;

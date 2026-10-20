@@ -13,7 +13,9 @@ primary rule flags and the complete 44-byte records. Metadata is mandatory;
 missing or unresolved categories are not silently filled. Generated dimensions
 are even, width 16..512 and height 8..256. Records preserve contours, opaque
 fields, Base/Unit presence, exploration and remembered improvements. Known
-climate/rockiness/region fields retain their supported native domains.
+climate/rockiness/region fields retain their supported native domains. The later
+[shared publication layer](shared-terrain-publication.md) distinguishes raw
+temperature 0..7/moisture 0..3 from normalized selected climate settings 0..2.
 
 The decoder bounds dimensions and integer fields before reading/allocating the
 raw plane, requires its exact byte count, rejects contradictory automatic-resource
@@ -57,6 +59,8 @@ This adds terrain-policy persistence, not a new playable save format by itself.
 Regions, gameplay RNG, faction/Base/Unit state and settings retain their own
 authorities. The complete-world boundary must bind their geometry, selected
 options and provenance before publication. Current campaign/world guards and
-installed-only climate/flora/bloom mutation callers still need that migration.
+climate/flora/bloom callers that still fetch the installed source need that migration.
+The policy and common-owner mutation kernels now support both source types as
+documented in the shared publication layer.
 Ordinary generated games are not switched by this change, and no new rendered
 gameplay result is claimed.

@@ -1,5 +1,8 @@
 #include "SmacTerrainAuthority.h"
 #include "SmacContinentGeneration.h"
+#include "SmacRetainedTerrain.h"
+#include "SmacClimate.h"
+#include "SmacGlobalSpread.h"
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
@@ -41,11 +44,37 @@ SmacTerrainAuthority SmacTerrainAuthority::GeneratedRetained(Metadata meta,const
     result.m_generated.resize(records.size()/44);
     for(size_t i=0;i<result.m_generated.size();++i) {auto& record=result.m_generated[i].bytes;
         std::copy_n(reinterpret_cast<const uint8_t*>(records.data())+44*i,44,record.begin());
-        if((record[0]&7)>2 || ((record[0]>>3)&3)>2 || (record[5]>>6)>2 || record[3]>=128) {
+        if((record[5]>>6)>2 || record[3]>=128) {
             throw std::invalid_argument("Retained generated terrain contains unsupported climate or region fields");
         }
     }
     return result;
+}
+SmacTerrainAuthority SmacTerrainAuthority::WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan,bool live) const {
+    if(before.geometry.wrap!=m_metadata.horizontal_wrap) {throw std::invalid_argument("Spread topology differs from terrain source");}
+    if(m_installed) {return Installed(live?m_installed->WithLiveGlobalSpread(before,plan):m_installed->WithGlobalSpread(before,plan));}
+    SmacTerrainAuthority result;result.m_origin=m_origin;result.m_metadata=m_metadata;const smac_site::Geometry g{int32_t(m_metadata.width),int32_t(m_metadata.height),m_metadata.horizontal_wrap};
+    result.m_generated=live?retained_terrain::WithLiveGlobalSpread(m_generated,g,before,plan):retained_terrain::WithGlobalSpread(m_generated,g,before,plan);
+    (void)result.ExportClimateTerrain();return result;
+}
+SmacTerrainAuthority SmacTerrainAuthority::WithStartingBalance(const smac_balance::Result& plan) const {
+    if(m_installed) {return Installed(m_installed->WithStartingBalance(plan));}
+    SmacTerrainAuthority result;result.m_origin=m_origin;result.m_metadata=m_metadata;result.m_generated=retained_terrain::WithStartingBalance(m_generated,{int32_t(m_metadata.width),int32_t(m_metadata.height),m_metadata.horizontal_wrap},plan);return result;
+}
+SmacTerrainAuthority SmacTerrainAuthority::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const {
+    if(m_installed) {return Installed(m_installed->WithBloomTerrain(plan));}
+    SmacTerrainAuthority result;result.m_origin=m_origin;result.m_metadata=m_metadata;result.m_generated=retained_terrain::WithBloomTerrain(m_generated,{int32_t(m_metadata.width),int32_t(m_metadata.height),m_metadata.horizontal_wrap},plan);
+    (void)result.ExportClimateTerrain();return result;
+}
+smac_climate::World SmacTerrainAuthority::ExportClimateTerrain() const {
+    if(m_installed) {return m_installed->ExportClimateTerrain(m_metadata.horizontal_wrap);}
+    return retained_terrain::ExportClimateTerrain(m_generated,{int32_t(m_metadata.width),int32_t(m_metadata.height),m_metadata.horizontal_wrap});
+}
+SmacTerrainAuthority SmacTerrainAuthority::WithClimateTerrain(const smac_climate::World& world,int32_t sea_offset,int32_t climate_extra) const {
+    if(world.horizontal_wrap!=m_metadata.horizontal_wrap) {throw std::invalid_argument("Climate topology differs from terrain source");}
+    if(m_installed) {return Installed(m_installed->WithClimateTerrain(world,sea_offset,climate_extra));}
+    SmacTerrainAuthority result;result.m_origin=m_origin;result.m_metadata=m_metadata;result.m_generated=retained_terrain::WithClimateTerrain(m_generated,{int32_t(m_metadata.width),int32_t(m_metadata.height),m_metadata.horizontal_wrap},world);
+    result.m_metadata.sea_offset=sea_offset;result.m_metadata.climate_extra=climate_extra;return result;
 }
 bool SmacTerrainAuthority::operator==(const SmacTerrainAuthority& other) const {
     const auto& a=m_metadata;const auto& b=other.m_metadata;

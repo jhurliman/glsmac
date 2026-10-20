@@ -1,4 +1,5 @@
 #include "SmacPlanetMap.h"
+#include "SmacRetainedTerrain.h"
 #include "SmacClimate.h"
 #include "SmacStartingBalance.h"
 #include "SmacGlobalSpread.h"
@@ -46,142 +47,24 @@ std::string SmacPlanetMap::Encode() const {
 }
 
 SmacPlanetMap SmacPlanetMap::WithLiveGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const {
-    if(before.geometry.width!=int32_t(WIDTH) || before.geometry.height!=int32_t(HEIGHT)
-        || before.tiles.size()!=TILE_COUNT || m_tiles.size()!=TILE_COUNT) {
-        throw std::invalid_argument("Live flora projection requires the bound standard Planet plane");
-    }
-    std::array<uint8_t,RECORD_BYTES> masks{};masks[0]=0x18;masks[4]=0xff;masks[5]=0xc0;
-    for(size_t k=0;k<4;++k) {
-        masks[8+k]=uint8_t(smac_spread::LIVE_MATERIAL_MASK>>(8*k));
-        for(size_t owner=1;owner<=7;++owner) {masks[12+4*owner+k]=masks[8+k];}
-    }
-    auto projected=*this;
-    for(size_t i=0;i<TILE_COUNT;++i) {
-        auto& tile=projected.m_tiles[i];const auto& current=before.tiles[i];
-        for(size_t k=0;k<RECORD_BYTES;++k) {
-            if((tile.bytes[k]^current.bytes[k])&uint8_t(~masks[k])) {
-                throw std::invalid_argument("Live flora projection changed unowned retained terrain authority");
-            }
-            tile.bytes[k]=current.bytes[k];
-        }
-    }
-    return projected.WithGlobalSpread(before,plan);
+    SmacPlanetMap result;result.m_header=m_header;result.m_trailer=m_trailer;result.m_tiles=retained_terrain::WithLiveGlobalSpread(m_tiles,{int32_t(WIDTH),int32_t(HEIGHT),before.geometry.wrap},before,plan);return result;
 }
-
 SmacPlanetMap SmacPlanetMap::WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const {
-    if(before.geometry.width!=int32_t(WIDTH) || before.geometry.height!=int32_t(HEIGHT)
-        || before.tiles.size()!=TILE_COUNT || plan.tiles.size()!=TILE_COUNT || m_tiles.size()!=TILE_COUNT) {
-        throw std::invalid_argument("Global spread publication requires the bound standard Planet terrain");
-    }
-    for(size_t i=0;i<TILE_COUNT;++i) {
-        if(before.tiles[i].bytes!=m_tiles[i].bytes) {throw std::invalid_argument("Stale global spread terrain input");}
-    }
-    const auto valid=[](const auto& p) {return p[0]>=0 && p[0]<int32_t(WIDTH) && p[1]>=0 && p[1]<int32_t(HEIGHT) && !((p[0]^p[1])&1);};
-    const auto put=[](Tile& tile,size_t offset,uint32_t value) {for(size_t i=0;i<4;++i) {tile.bytes[offset+i]=uint8_t(value>>(8*i));}};
-    auto result=*this;int32_t previous=-1;
-    for(const auto& change:plan.changes) {
-        if(change.iteration<=previous || size_t(change.iteration)>=plan.samples.size() || !valid(change.source) || !valid(change.target)
-            || plan.samples[change.iteration]!=change.source) {throw std::invalid_argument("Invalid global spread journal order or coordinates");}
-        previous=change.iteration;
-        const auto& source=result.At(change.source[0],change.source[1]);
-        auto& target=result.m_tiles[size_t(change.target[1])*(WIDTH/2)+change.target[0]/2];
-        const uint32_t feature=(source.Climate()>>5)<3 ? 0x8000u:0x200000u;
-        if(change.feature!=feature || !(source.Items()&feature) || (target.Items()&feature)
-            || change.source==change.target || target.bytes!=change.before.bytes) {
-            throw std::invalid_argument("Stale global spread source or target journal");
-        }
-        auto expected=target;put(expected,8,(target.Items()|feature)&~0x20u);
-        for(size_t owner=1;owner<=7;++owner) {
-            if(!(before.observer_status[owner]&0x200u) && !(source.bytes[4]&(1u<<owner))) {continue;}
-            const auto offset=12+4*owner;
-            if(Read32(source.bytes.data()+offset)&feature) {put(expected,offset,(Read32(target.bytes.data()+offset)|feature)&~0x20u);}
-        }
-        if(expected.bytes!=change.after.bytes) {throw std::invalid_argument("Global spread journal changed unrelated terrain authority");}
-        target=expected;
-    }
-    for(size_t i=0;i<TILE_COUNT;++i) {
-        if(result.m_tiles[i].bytes!=plan.tiles[i].bytes) {throw std::invalid_argument("Global spread terrain differs from its ordered journal");}
-    }
-    return result;
+    SmacPlanetMap result;result.m_header=m_header;result.m_trailer=m_trailer;result.m_tiles=retained_terrain::WithGlobalSpread(m_tiles,{int32_t(WIDTH),int32_t(HEIGHT),before.geometry.wrap},before,plan);return result;
 }
-
 SmacPlanetMap SmacPlanetMap::WithStartingBalance(const smac_balance::Result& plan) const {
-    if(m_tiles.size()!=TILE_COUNT) {throw std::logic_error("Incomplete startup terrain source");}
-    auto result=*this;
-    for(const auto& w:plan.writes) {
-        const auto x=w.point[0],y=w.point[1];
-        if(x<0 || x>=int32_t(WIDTH) || y<0 || y>=int32_t(HEIGHT) || ((x^y)&1)
-            || (w.mask!=0x04000000u && w.mask!=0x08000000u) || w.after!=(w.before|w.mask)) {
-            throw std::invalid_argument("Invalid startup compensation terrain write");
-        }
-        auto& tile=result.m_tiles.at(size_t(y)*(WIDTH/2)+x/2);
-        if(tile.Items()!=w.before) {throw std::invalid_argument("Stale startup compensation terrain authority");}
-        for(size_t k=0;k<4;++k) {tile.bytes[8+k]=uint8_t(w.after>>(8*k));}
-    }
-    return result;
+    SmacPlanetMap result;result.m_header=m_header;result.m_trailer=m_trailer;result.m_tiles=retained_terrain::WithStartingBalance(m_tiles,{int32_t(WIDTH),int32_t(HEIGHT),true},plan);return result;
 }
-
 SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const {
-    if (m_tiles.size() != TILE_COUNT) { throw std::logic_error("Standard Planet container is incomplete"); }
-    auto result = *this;
-    std::set<std::array<int32_t,2>> visited;
-    constexpr uint32_t event_items = 0x00288070u; // fungus plus five removable improvements
-    const auto write32 = [](uint8_t* bytes, uint32_t value) {
-        for (size_t byte = 0; byte < 4; ++byte) { bytes[byte] = static_cast<uint8_t>(value >> (8 * byte)); }
-    };
-    for (const auto& delta : plan.Changes()) {
-        const auto x = delta.coordinate[0], y = delta.coordinate[1];
-        if (x < 0 || y < 0 || x >= static_cast<int32_t>(WIDTH) || y >= static_cast<int32_t>(HEIGHT)
-            || ((x ^ y) & 1) || !visited.insert(delta.coordinate).second) {
-            throw std::invalid_argument("Invalid or duplicate Planet bloom coordinate");
-        }
-        const auto& before = delta.before;
-        const auto& after = delta.after;
-        auto& tile = result.m_tiles.at(size_t(y) * (WIDTH / 2) + size_t(x) / 2);
-        if ((tile.Climate() >> 5) != before.altitude_class || (tile.bytes[5] >> 6) != before.rockiness
-            || tile.Landmarks() != before.landmarks) {
-            throw std::invalid_argument("Planet bloom terrain authority is stale");
-        }
-        tile.bytes[0] = static_cast<uint8_t>((tile.bytes[0] & 0x1f) | (after.altitude_class << 5));
-        tile.bytes[5] = static_cast<uint8_t>((tile.bytes[5] & 0x3f) | (after.rockiness << 6));
-        // Source items are an import projection, not the live Base/Unit registry
-        // or current Former state. Copy only the event-owned terrain bits.
-        write32(tile.bytes.data() + 8, (tile.Items() & ~event_items) | (after.items & event_items));
-        write32(tile.bytes.data() + 12, after.landmarks);
-    }
-    return result;
+    SmacPlanetMap result;result.m_header=m_header;result.m_trailer=m_trailer;result.m_tiles=retained_terrain::WithBloomTerrain(m_tiles,{int32_t(WIDTH),int32_t(HEIGHT),true},plan);return result;
 }
-
-smac_climate::World SmacPlanetMap::ExportClimateTerrain(bool horizontal_wrap) const {
-    if(m_tiles.size()!=TILE_COUNT) {throw std::logic_error("Standard Planet container is incomplete");}
-    smac_climate::World world{static_cast<int32_t>(WIDTH),static_cast<int32_t>(HEIGHT),horizontal_wrap,{}};
-    world.tiles.reserve(TILE_COUNT);
-    for(const auto& record:m_tiles) {
-        const auto& raw=record.bytes;
-        smac_climate::Tile tile{raw[0]>>5,raw[0]&7,(raw[0]>>3)&3,raw[1],raw[6],record.Items(),record.Landmarks(),record.CachedOccupant(),raw[5]>>6,{}};
-        for(size_t owner=0;owner<7;++owner) {tile.remembered_items[owner]=Read32(raw.data()+16+4*owner);}
-        world.tiles.push_back(tile);
-    }
-    world.Validate();return world;
+smac_climate::World SmacPlanetMap::ExportClimateTerrain(bool wrap) const {
+    return retained_terrain::ExportClimateTerrain(m_tiles,{int32_t(WIDTH),int32_t(HEIGHT),wrap});
 }
 SmacPlanetMap SmacPlanetMap::WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const {
-    if(m_tiles.size()!=TILE_COUNT) {throw std::logic_error("Standard Planet container is incomplete");}
-    world.Validate();
-    if(world.width!=static_cast<int32_t>(WIDTH) || world.height!=static_cast<int32_t>(HEIGHT)) {throw std::invalid_argument("Climate plane differs from installed Planet geometry");}
-    auto result=*this;
-    const auto write=[](uint8_t* raw,uint32_t value) {for(size_t i=0;i<4;++i) {raw[i]=static_cast<uint8_t>(value>>(8*i));}};
-    write(result.m_header.data()+0x0c,static_cast<uint32_t>(sea_level_offset));
-    write(result.m_header.data()+0x10,static_cast<uint32_t>(climate_extra));
-    for(size_t i=0;i<TILE_COUNT;++i) {
-        const auto& tile=world.tiles[i];auto& raw=result.m_tiles[i].bytes;
-        raw[0]=static_cast<uint8_t>((tile.elevation<<5)|(tile.moisture<<3)|tile.temperature);
-        raw[1]=static_cast<uint8_t>(tile.contour);raw[6]=static_cast<uint8_t>(tile.aux);
-        raw[2]=static_cast<uint8_t>((raw[2]&0xf0u)|tile.cached_occupant);
-        raw[5]=static_cast<uint8_t>((raw[5]&0x3fu)|(tile.rockiness<<6));
-        write(raw.data()+8,tile.items);write(raw.data()+12,tile.landmarks);
-        for(size_t owner=0;owner<7;++owner) {write(raw.data()+16+4*owner,tile.remembered_items[owner]);}
-    }
-    return result;
+    SmacPlanetMap result;result.m_header=m_header;result.m_trailer=m_trailer;result.m_tiles=retained_terrain::WithClimateTerrain(m_tiles,{int32_t(WIDTH),int32_t(HEIGHT),world.horizontal_wrap},world);
+    const auto put=[&](size_t off,uint32_t v){for(unsigned k=0;k<4;++k) {result.m_header[off+k]=uint8_t(v>>(8*k));}};
+    put(0x0c,uint32_t(sea_level_offset));put(0x10,uint32_t(climate_extra));return result;
 }
 
 SmacPlanetMap SmacPlanetMap::Decode(const std::string& bytes) {

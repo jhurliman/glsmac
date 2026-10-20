@@ -1,0 +1,315 @@
+{
+  "scope": "Seven actual full factory returns, two followed by full deletion returns. No ecological producer is called; direct factory admission differs from spawn candidate selection.",
+  "cases": [
+    {
+      "variant": "Worm_at_Hive",
+      "input": {
+        "design": 8,
+        "owner": 0,
+        "position": [
+          34,
+          36
+        ],
+        "delete": false
+      },
+      "before_stack": [
+        8,
+        1
+      ],
+      "born_stack": [
+        13,
+        8,
+        1
+      ],
+      "after_stack": [
+        13,
+        8,
+        1
+      ],
+      "stored_observer_mask": 4,
+      "Base_bytes_unchanged": true,
+      "draws": 0,
+      "return_pc": "0x30000000"
+    },
+    {
+      "variant": "Isle_at_Hive",
+      "input": {
+        "design": 9,
+        "owner": 0,
+        "position": [
+          34,
+          36
+        ],
+        "delete": false
+      },
+      "before_stack": [
+        8,
+        1
+      ],
+      "born_stack": [
+        13,
+        8,
+        1
+      ],
+      "after_stack": [
+        13,
+        8,
+        1
+      ],
+      "stored_observer_mask": 4,
+      "Base_bytes_unchanged": true,
+      "draws": 0,
+      "return_pc": "0x30000000"
+    },
+    {
+      "variant": "Worm_at_human_Base",
+      "input": {
+        "design": 8,
+        "owner": 0,
+        "position": [
+          17,
+          61
+        ],
+        "delete": false
+      },
+      "before_stack": [
+        7,
+        0
+      ],
+      "born_stack": [
+        13,
+        7,
+        0
+      ],
+      "after_stack": [
+        13,
+        7,
+        0
+      ],
+      "stored_observer_mask": 2,
+      "Base_bytes_unchanged": true,
+      "draws": 0,
+      "return_pc": "0x30000000"
+    },
+    {
+      "variant": "own_Scout_at_Hive",
+      "input": {
+        "design": 2,
+        "owner": 2,
+        "position": [
+          34,
+          36
+        ],
+        "delete": false
+      },
+      "before_stack": [
+        8,
+        1
+      ],
+      "born_stack": [
+        13,
+        8,
+        1
+      ],
+      "after_stack": [
+        13,
+        8,
+        1
+      ],
+      "stored_observer_mask": 0,
+      "Base_bytes_unchanged": true,
+      "draws": 0,
+      "return_pc": "0x30000000"
+    },
+    {
+      "variant": "foreign_Scout_at_Hive",
+      "input": {
+        "design": 2,
+        "owner": 3,
+        "position": [
+          34,
+          36
+        ],
+        "delete": false
+      },
+      "before_stack": [
+        8,
+        1
+      ],
+      "born_stack": [
+        13,
+        8,
+        1
+      ],
+      "after_stack": [
+        13,
+        8,
+        1
+      ],
+      "stored_observer_mask": 4,
+      "Base_bytes_unchanged": true,
+      "draws": 0,
+      "return_pc": "0x30000000"
+    },
+    {
+      "variant": "Worm_delete_at_Hive",
+      "input": {
+        "design": 8,
+        "owner": 0,
+        "position": [
+          34,
+          36
+        ],
+        "delete": true
+      },
+      "before_stack": [
+        8,
+        1
+      ],
+      "born_stack": [
+        13,
+        8,
+        1
+      ],
+      "after_stack": [
+        8,
+        1
+      ],
+      "stored_observer_mask": 4,
+      "Base_bytes_unchanged": true,
+      "draws": 0,
+      "return_pc": "0x30000000"
+    },
+    {
+      "variant": "existing_Scout_delete_after_Worm",
+      "input": {
+        "design": 8,
+        "owner": 0,
+        "position": [
+          34,
+          36
+        ],
+        "delete": 1
+      },
+      "before_stack": [
+        8,
+        1
+      ],
+      "born_stack": [
+        13,
+        8,
+        1
+      ],
+      "after_stack": [
+        12,
+        7
+      ],
+      "stored_observer_mask": 4,
+      "Base_bytes_unchanged": true,
+      "draws": 0,
+      "return_pc": "0x30000000"
+    }
+  ],
+  "fresh_world_stacks": [
+    {
+      "owner": 1,
+      "position": [
+        17,
+        61
+      ],
+      "linked_order": [
+        7,
+        0
+      ],
+      "evidence": "Retained actual fresh-world frame plus startup source; no new startup run"
+    },
+    {
+      "owner": 2,
+      "position": [
+        34,
+        36
+      ],
+      "linked_order": [
+        8,
+        1
+      ],
+      "evidence": "Retained actual fresh-world frame plus startup source; no new startup run"
+    },
+    {
+      "owner": 3,
+      "position": [
+        24,
+        38
+      ],
+      "linked_order": [
+        9,
+        2
+      ],
+      "evidence": "Retained actual fresh-world frame plus startup source; no new startup run"
+    },
+    {
+      "owner": 4,
+      "position": [
+        59,
+        23
+      ],
+      "linked_order": [
+        3
+      ],
+      "evidence": "Retained actual fresh-world frame plus startup source; no new startup run"
+    },
+    {
+      "owner": 5,
+      "position": [
+        29,
+        25
+      ],
+      "linked_order": [
+        10,
+        4
+      ],
+      "evidence": "Retained actual fresh-world frame plus startup source; no new startup run"
+    },
+    {
+      "owner": 6,
+      "position": [
+        4,
+        64
+      ],
+      "linked_order": [
+        11,
+        5
+      ],
+      "evidence": "Retained actual fresh-world frame plus startup source; no new startup run"
+    },
+    {
+      "owner": 7,
+      "position": [
+        15,
+        71
+      ],
+      "linked_order": [
+        12,
+        6
+      ],
+      "evidence": "Retained actual fresh-world frame plus startup source; no new startup run"
+    }
+  ],
+  "reused_restart": {
+    "creation": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "linked_order": [
+      4,
+      5,
+      2,
+      3
+    ],
+    "source_sha256": "89a86e82657731386145c5211ab17b9e1c71d2347e400928dd3d51f8329d5a80",
+    "formula": "[C3] + reverse(C4..Cn) + [C1,C2]",
+    "scope": "Admitted nonzero-turn package, empty initial square, successful allocations, no intervening mutations"
+  }
+}

@@ -1,0 +1,662 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "private_receipt_sha256": "755c0dfc3cc0b14b98db6f298b76af29102a5371fe326c563d8d7ff686759424",
+  "scope": "Actual5abe40 Scout movement requests, separate solo/post-birth/post-native-phase worlds. Direction0 succeeds in all three; no blanket source-hostility rejection.",
+  "phase_states": {
+    "positive_Scout_before_global_birth": {
+      "Unit_count": 14,
+      "source_occupants": [
+        {
+          "id": 13,
+          "design": 2,
+          "owner": 2,
+          "position": [
+            47,
+            67
+          ],
+          "triad": 0,
+          "role": 3,
+          "weapon_offense": 1,
+          "state": 0,
+          "flags": 0,
+          "order": 0,
+          "damage": 0,
+          "work": 0,
+          "tag": 0,
+          "spent": 0,
+          "facing": 2,
+          "home": -1,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "source_stack": [
+        13
+      ],
+      "source_affiliation": 2,
+      "CRT": 1,
+      "shared": 1
+    },
+    "mixed_stack_after_global_before_native_phase": {
+      "Unit_count": 16,
+      "source_occupants": [
+        {
+          "id": 13,
+          "design": 2,
+          "owner": 2,
+          "position": [
+            47,
+            67
+          ],
+          "triad": 0,
+          "role": 3,
+          "weapon_offense": 1,
+          "state": 0,
+          "flags": 0,
+          "order": 0,
+          "damage": 0,
+          "work": 0,
+          "tag": 0,
+          "spent": 0,
+          "facing": 2,
+          "home": -1,
+          "next": -1,
+          "previous": 15
+        },
+        {
+          "id": 14,
+          "design": 9,
+          "owner": 0,
+          "position": [
+            47,
+            67
+          ],
+          "triad": 1,
+          "role": 7,
+          "weapon_offense": -1,
+          "state": 0,
+          "flags": 0,
+          "order": 0,
+          "damage": 0,
+          "work": 0,
+          "tag": 0,
+          "spent": 0,
+          "facing": 2,
+          "home": -1,
+          "next": 15,
+          "previous": -1
+        },
+        {
+          "id": 15,
+          "design": 8,
+          "owner": 0,
+          "position": [
+            47,
+            67
+          ],
+          "triad": 0,
+          "role": 1,
+          "weapon_offense": -1,
+          "state": 0,
+          "flags": 0,
+          "order": 1,
+          "damage": 0,
+          "work": 0,
+          "tag": 0,
+          "spent": 0,
+          "facing": 2,
+          "home": -1,
+          "next": 13,
+          "previous": 14
+        }
+      ],
+      "source_stack": [
+        14,
+        15,
+        13
+      ],
+      "source_affiliation": 2,
+      "CRT": 433661943,
+      "shared": 1
+    },
+    "after_complete_native_phase_before_owner1_upkeep": {
+      "Unit_count": 14,
+      "source_occupants": [
+        {
+          "id": 13,
+          "design": 2,
+          "owner": 2,
+          "position": [
+            47,
+            67
+          ],
+          "triad": 0,
+          "role": 3,
+          "weapon_offense": 1,
+          "state": 4,
+          "flags": 0,
+          "order": 0,
+          "damage": 5,
+          "work": 0,
+          "tag": 0,
+          "spent": 0,
+          "facing": 2,
+          "home": -1,
+          "next": -1,
+          "previous": -1
+        }
+      ],
+      "source_stack": [
+        13
+      ],
+      "source_affiliation": 2,
+      "CRT": 2543226160,
+      "shared": 1
+    }
+  },
+  "cases": [
+    {
+      "phase": "positive_Scout_before_global_birth",
+      "request": [
+        13,
+        0,
+        3
+      ],
+      "native_return": 1,
+      "position_before": [
+        47,
+        67
+      ],
+      "position_after": [
+        48,
+        66
+      ],
+      "spent_before": 0,
+      "spent_after": 3,
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          48,
+          66
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 65540,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 0,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Unit_count_before": 14,
+      "Unit_count_after": 14,
+      "encounter_birth": false,
+      "source_stack_after": [],
+      "source_affiliation_after": 2,
+      "CRT_before": 1,
+      "CRT_after": 1,
+      "CRT_draws": 0,
+      "shared_before": 1,
+      "shared_after": 1,
+      "shared_draws": [],
+      "headless_redraw_count": 0
+    },
+    {
+      "phase": "positive_Scout_before_global_birth",
+      "request": [
+        13,
+        1,
+        3
+      ],
+      "native_return": 1,
+      "position_before": [
+        47,
+        67
+      ],
+      "position_after": [
+        47,
+        67
+      ],
+      "spent_before": 0,
+      "spent_after": 3,
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 32772,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Unit_count_before": 14,
+      "Unit_count_after": 14,
+      "encounter_birth": false,
+      "source_stack_after": [
+        13
+      ],
+      "source_affiliation_after": 2,
+      "CRT_before": 1,
+      "CRT_after": 2745024,
+      "CRT_draws": 1,
+      "shared_before": 1,
+      "shared_after": 1,
+      "shared_draws": [],
+      "headless_redraw_count": 0
+    },
+    {
+      "phase": "positive_Scout_before_global_birth",
+      "request": [
+        13,
+        3,
+        3
+      ],
+      "native_return": 1,
+      "position_before": [
+        47,
+        67
+      ],
+      "position_after": [
+        47,
+        67
+      ],
+      "spent_before": 0,
+      "spent_after": 3,
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 32772,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Unit_count_before": 14,
+      "Unit_count_after": 14,
+      "encounter_birth": false,
+      "source_stack_after": [
+        13
+      ],
+      "source_affiliation_after": 2,
+      "CRT_before": 1,
+      "CRT_after": 3357800067,
+      "CRT_draws": 2,
+      "shared_before": 1,
+      "shared_after": 1,
+      "shared_draws": [],
+      "headless_redraw_count": 0
+    },
+    {
+      "phase": "mixed_stack_after_global_before_native_phase",
+      "request": [
+        13,
+        0,
+        3
+      ],
+      "native_return": 1,
+      "position_before": [
+        47,
+        67
+      ],
+      "position_after": [
+        48,
+        66
+      ],
+      "spent_before": 0,
+      "spent_after": 3,
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          48,
+          66
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 65540,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 0,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Unit_count_before": 16,
+      "Unit_count_after": 16,
+      "encounter_birth": false,
+      "source_stack_after": [
+        14,
+        15
+      ],
+      "source_affiliation_after": 2,
+      "CRT_before": 433661943,
+      "CRT_after": 433661943,
+      "CRT_draws": 0,
+      "shared_before": 1,
+      "shared_after": 1,
+      "shared_draws": [],
+      "headless_redraw_count": 0
+    },
+    {
+      "phase": "mixed_stack_after_global_before_native_phase",
+      "request": [
+        13,
+        1,
+        3
+      ],
+      "native_return": 1,
+      "position_before": [
+        47,
+        67
+      ],
+      "position_after": [
+        47,
+        67
+      ],
+      "spent_before": 0,
+      "spent_after": 3,
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 32772,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": 15
+      },
+      "Unit_count_before": 16,
+      "Unit_count_after": 16,
+      "encounter_birth": false,
+      "source_stack_after": [
+        14,
+        15,
+        13
+      ],
+      "source_affiliation_after": 2,
+      "CRT_before": 433661943,
+      "CRT_after": 3642606302,
+      "CRT_draws": 1,
+      "shared_before": 1,
+      "shared_after": 1,
+      "shared_draws": [],
+      "headless_redraw_count": 0
+    },
+    {
+      "phase": "mixed_stack_after_global_before_native_phase",
+      "request": [
+        13,
+        3,
+        3
+      ],
+      "native_return": 0,
+      "position_before": [
+        47,
+        67
+      ],
+      "position_after": [
+        47,
+        67
+      ],
+      "spent_before": 0,
+      "spent_after": 0,
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 4,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": 15
+      },
+      "Unit_count_before": 16,
+      "Unit_count_after": 17,
+      "encounter_birth": true,
+      "source_stack_after": [
+        14,
+        15,
+        13
+      ],
+      "source_affiliation_after": 2,
+      "CRT_before": 433661943,
+      "CRT_after": 3642606302,
+      "CRT_draws": 1,
+      "shared_before": 1,
+      "shared_after": 1,
+      "shared_draws": [],
+      "headless_redraw_count": 0
+    },
+    {
+      "phase": "after_complete_native_phase_before_owner1_upkeep",
+      "request": [
+        13,
+        0,
+        3
+      ],
+      "native_return": 1,
+      "position_before": [
+        47,
+        67
+      ],
+      "position_after": [
+        48,
+        66
+      ],
+      "spent_before": 0,
+      "spent_after": 3,
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          48,
+          66
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 65540,
+        "flags": 0,
+        "order": 0,
+        "damage": 5,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 0,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Unit_count_before": 14,
+      "Unit_count_after": 14,
+      "encounter_birth": false,
+      "source_stack_after": [],
+      "source_affiliation_after": 2,
+      "CRT_before": 2543226160,
+      "CRT_after": 2543226160,
+      "CRT_draws": 0,
+      "shared_before": 1,
+      "shared_after": 1,
+      "shared_draws": [],
+      "headless_redraw_count": 0
+    },
+    {
+      "phase": "after_complete_native_phase_before_owner1_upkeep",
+      "request": [
+        13,
+        1,
+        3
+      ],
+      "native_return": 1,
+      "position_before": [
+        47,
+        67
+      ],
+      "position_after": [
+        47,
+        67
+      ],
+      "spent_before": 0,
+      "spent_after": 3,
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 32772,
+        "flags": 0,
+        "order": 0,
+        "damage": 5,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Unit_count_before": 14,
+      "Unit_count_after": 14,
+      "encounter_birth": false,
+      "source_stack_after": [
+        13
+      ],
+      "source_affiliation_after": 2,
+      "CRT_before": 2543226160,
+      "CRT_after": 3732125491,
+      "CRT_draws": 1,
+      "shared_before": 1,
+      "shared_after": 1,
+      "shared_draws": [],
+      "headless_redraw_count": 0
+    },
+    {
+      "phase": "after_complete_native_phase_before_owner1_upkeep",
+      "request": [
+        13,
+        3,
+        3
+      ],
+      "native_return": 1,
+      "position_before": [
+        47,
+        67
+      ],
+      "position_after": [
+        47,
+        69
+      ],
+      "spent_before": 0,
+      "spent_after": 9,
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          69
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 65540,
+        "flags": 0,
+        "order": 0,
+        "damage": 5,
+        "work": 0,
+        "tag": 0,
+        "spent": 9,
+        "facing": 3,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Unit_count_before": 14,
+      "Unit_count_after": 14,
+      "encounter_birth": false,
+      "source_stack_after": [],
+      "source_affiliation_after": 2,
+      "CRT_before": 2543226160,
+      "CRT_after": 1192101162,
+      "CRT_draws": 2,
+      "shared_before": 1,
+      "shared_after": 1,
+      "shared_draws": [],
+      "headless_redraw_count": 0
+    }
+  ]
+}

@@ -15,6 +15,7 @@
 #include "game/backend/map/Consts.h"
 #include "game/backend/map/SmacTerrainGeometry.h"
 #include "game/backend/map/SmacPlanetMap.h"
+#include "game/backend/map/SmacGlobalSpread.h"
 #include "game/backend/map/module/Finalize.h"
 #include "game/backend/map/module/Sprites.h"
 #include "fixtures/SmacTerrainHeights.h"
@@ -184,6 +185,58 @@ public:
         const auto& b=world.GetTerrainUpdatePayload(*appearance);
         return b.added.size()==1 && b.added.front().coords==wanted;
     }
+    bool CheckGlobalFloraInput() {
+        map::Map local(nullptr,80,80);using Planet=map::SmacPlanetMap;
+        std::string wire(Planet::FILE_BYTES,'\0');wire.replace(0,11,"TERRANMAP\0\x1a",11);
+        wire[11]=5;wire[15]=80;wire[19]=80;wire[15+0xa30]=4;
+        const auto address=[](int x,int y) {return Planet::PREFIX_BYTES+Planet::HEADER_BYTES+(size_t(y)*40+x/2)*44;};
+        for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
+            const auto at=address(x,y);wire[at]=96;wire[at+1]=87;wire[at+5]=23;
+            wire[at+8]=char(0x20);wire[at+11]=char(0x10); // stale fungus and opaque resource bit
+            auto* t=local.GetTile(x,y);t->moisture=1;t->rockiness=1;t->features=0;t->terraforming=0;
+        }}
+        local.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+        local.m_territory_topology=map::GlsmacTerritoryTopology::Build(80,80,true,std::vector<bool>(3200,false));
+        map::SmacWorkerKnowledge::Data data{};data.width=80;data.height=80;
+        data.horizontal_wrap=true;data.ordinary_local_mode=true;data.tiles.resize(3200,{0,std::nullopt});
+        data.observers[1]=map::SmacWorkerKnowledge::Observer{false,{},uint8_t(0)};
+        data.remembered[1].resize(3200);
+        const size_t source=67*40+41/2,target=66*40+42/2;
+        data.tiles[source].explored_by=2;
+        data.remembered[1][source]=map::SmacWorkerKnowledge::Improvements{0,tile::TERRAFORMING_FOREST,false,false};
+        local.m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);local.m_worker_knowledge_ready=true;
+        local.GetTile(41,67)->terraforming=tile::TERRAFORMING_FOREST;
+        local.GetTile(42,66)->features=tile::FEATURE_XENOFUNGUS;
+        local.GetTile(42,66)->moisture=2;local.GetTile(42,66)->rockiness=2;
+        const auto saved=local.m_worker_knowledge->Serialize();const auto input=local.CopyGlobalSpreadInput(1,{});
+        if(input.tiles[source].Items()!=0x10200000u || input.tiles[target].Items()!=0x10000020u
+            || input.tiles[target].Climate()!=104 || input.tiles[target].bytes[5]!=(64|23)
+            || input.tiles[source].bytes[4]!=2 || input.tiles[source].bytes[18]!=32) return false;
+        // Exact original CRT seed123 samples this forest. Give every other
+        // neighbor rocky terrain so the current target is the unique winner.
+        for(const auto& d:std::array<std::array<int,2>,7>{{{{2,0}},{{1,1}},{{0,2}},{{-1,1}},{{-2,0}},{{-1,-1}},{{0,-2}}}}) {
+            local.GetTile(41+d[0],67+d[1])->rockiness=3;
+        }
+        const auto current=local.CopyGlobalSpreadInput(1,{});
+        const auto plan=map::smac_spread::Prepare(current,game::backend::SmacGameplayRandomState(123,1));
+        if(plan.changes.empty() || plan.changes.front().target!=map::smac_spread::Coordinate({42,66})
+            || !(plan.tiles[target].Items()&0x200000u) || (plan.tiles[target].Items()&0x20u)
+            || plan.tiles[target].bytes[18]!=32) return false;
+        // Detached inputs/results never repaint tiles or replace retained authority.
+        if(local.m_resource_policy->OriginalPlanet()->Encode()!=wire || local.m_worker_knowledge->Serialize()!=saved
+            || local.GetTile(42,66)->features!=tile::FEATURE_XENOFUNGUS) return false;
+        data.remembered[1][source].reset();local.m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);
+        bool refused=false;try {(void)local.CopyGlobalSpreadInput(1,{});}catch(const std::runtime_error&) {refused=true;}
+        if(!refused) return false;
+        data.tiles[source].explored_by=0;local.m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);
+        (void)local.CopyGlobalSpreadInput(1,{}); // unobserved unavailable memory is not consulted
+        std::array<uint32_t,8> status{};status[1]=0x200;refused=false;
+        try {(void)local.CopyGlobalSpreadInput(1,status);}catch(const std::runtime_error&) {refused=true;}
+        if(!refused) return false;
+        local.m_worker_knowledge_ready=false;refused=false;
+        try {(void)local.CopyGlobalSpreadInput(1,{});}catch(const std::runtime_error&) {refused=true;}
+        return refused;
+    }
     bool CheckNativeTerrainSnapshot() {
         std::unique_ptr<::game::native_terrain::World> retained,claims;
         {
@@ -335,6 +388,9 @@ public:
 };
 
 void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC global flora input uses live terrain and actual observer memory without publication",GT(){
+        TerrainRenderFixture fixture;GT_ASSERT(fixture.CheckGlobalFloraInput(),"Global flora input used stale terrain, invented observer memory or published state");GT_OK();
+    });
     task->AddTest("SMAC native terrain snapshots current items and outlives its backend map",GT(){
         TerrainRenderFixture fixture;
         GT_ASSERT(fixture.CheckNativeTerrainSnapshot(),"Native terrain snapshot borrowed, went stale or admitted unsupported map");GT_OK();

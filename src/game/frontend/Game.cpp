@@ -1852,7 +1852,7 @@ void Game::Initialize(
 		{
 			0.0f,
 			-0.25f,
-			m_native_inspector?0.125f:0.1f
+			m_map_data.native_projection?0.125f:0.1f
 		}
 	);
 

@@ -67,6 +67,9 @@ must be separated at its callers.
    the first-faction Unit/map projection through the initial Scout at `5c9fb5`,
    including the caller's home reset. This does not substitute for full Base
    resources, automatic designs, other factory profiles or controller equality.
+   [Nutrient accounting and opening support](native-base-nutrient-accounting.md)
+   now match complete raw-record/store controls. Their upstream worker/intake
+   inputs and the remaining resource/citizen stages still need composition.
    [Canonical Unit initialization and stack placement](native-startup-units.md)
    now match original complete-record/pool controls; Base founding, complete
    factory visibility and seven-faction starting-package composition remain

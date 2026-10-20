@@ -1,4 +1,5 @@
 #include "Base.h"
+#include "SmacNutrientStorage.h"
 
 #include "BaseManager.h"
 #include "FacilityDef.h"
@@ -38,8 +39,7 @@ SmacBaseResourceCalculation FinishSmacResourceIntake( const std::array<int64_t,3
     n.intake=Checked(raw_intake[0]); n.demand=Checked(nutrient_demand);
     n.surplus=Checked(int64_t(n.intake)-n.demand);
     n.stored_before=n.normalized_stored=stored_nutrients;
-    if(n.surplus<0 && n.stored_before==0) {n.normalized_stored=-1;}
-    else if(n.surplus>=0 && n.stored_before<0) {n.normalized_stored=0;}
+    n.normalized_stored=NormalizeSmacNutrientStorage(n.surplus,n.stored_before);
     auto& m=result.minerals; m.multiplier_steps=mineral_multiplier_steps;
     // Add half-bonuses, multiply once, then signed division toward zero.
     m.intake=Checked(int64_t(Checked(raw_intake[1]))*(int64_t(2)+mineral_multiplier_steps))/2;

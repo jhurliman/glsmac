@@ -1,4 +1,5 @@
 SET( SRC ${SRC}
+    ${PWD}/SmacBaseAccounting.cpp
     ${PWD}/SmacStartupBase.cpp
 
 	${PWD}/RenderInfo.cpp

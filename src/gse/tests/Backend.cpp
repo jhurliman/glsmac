@@ -25,6 +25,7 @@
 #include "game/frontend/base/Base.h"
 #include "game/frontend/base/BaseManager.h"
 #include "game/frontend/base/SlotBadges.h"
+#include "game/frontend/unit/SlotBadges.h"
 #include "game/frontend/widget/BasePreview.h"
 #include "game/frontend/text/InstancedTextManager.h"
 #include "game/frontend/text/InstancedText.h"
@@ -2328,6 +2329,27 @@ public:
                     native->SetMovement(1);
                 }
             }
+            // Reordering releases only this Unit's previous stack instance.
+            unit->ShowFakeBadge(0);
+            auto* fake_actor=ism->GetRepaintedInstancedSprite("UnitBadges_"+std::to_string(owner_slot)+"_FAKE",
+                um->m_badge_defs->GetFakeBadgeSprite(),{})->actor;
+            const auto first_fake=unit->m_render.fake_badge.instance_id;
+            const auto unrelated_fake=um->m_slot_badges.at(owner_slot)->ShowFakeBadge({},7);
+            GT_ASSERT(first_fake && fake_actor->HasInstance(first_fake),"Actual Unit stack badge did not publish its instance");
+            unit->ShowFakeBadge(1);const auto replacement_fake=unit->m_render.fake_badge.instance_id;
+            GT_ASSERT(replacement_fake!=first_fake && !fake_actor->HasInstance(first_fake) &&
+                fake_actor->HasInstance(replacement_fake) && fake_actor->HasInstance(unrelated_fake),
+                "Stack reorder leaked its old instance or removed another Unit's badge");
+            unit->ShowFakeBadge(1);
+            GT_ASSERT(unit->m_render.fake_badge.instance_id==replacement_fake,"Unchanged stack offset recreated its badge");
+            unit->Hide();
+            GT_ASSERT(!unit->m_render.fake_badge.instance_id && !fake_actor->HasInstance(replacement_fake) &&
+                fake_actor->HasInstance(unrelated_fake),"Hiding the model left a stack badge or removed another occupant");
+            unit->ShowFakeBadge(2);const auto hidden_fake=unit->m_render.fake_badge.instance_id;
+            unit->Hide();unit->Hide();
+            GT_ASSERT(!fake_actor->HasInstance(hidden_fake) && fake_actor->HasInstance(unrelated_fake),
+                "Already hidden model retained its separate stack badge");
+            um->m_slot_badges.at(owner_slot)->HideFakeBadge(unrelated_fake);
             // Actual Game::RenderTile -> Tile::Render -> Hide/Show path
             // must read the retained shared phase even for the first render.
             using Blink=game::frontend::unit::SelectionBlink;

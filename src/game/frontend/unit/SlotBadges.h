@@ -45,6 +45,8 @@ public:
 
 	const size_t ShowFakeBadge( const types::Vec3& coords, const uint8_t offset );
 	void HideFakeBadge( const size_t instance_id );
+    // A Boolean is not an instance identity; reject accidental !id at compile time.
+    void HideFakeBadge(bool) = delete;
 
 private:
 

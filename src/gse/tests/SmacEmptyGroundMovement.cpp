@@ -1,6 +1,8 @@
 #include "SmacEmptyGroundMovement.h"
 
 #include "game/backend/unit/SmacEmptyGroundMovement.h"
+#include "game/backend/unit/SmacSelectedMovement.h"
+#include <yaml-cpp/yaml.h>
 #include "fixtures/SmacEmptyGroundMovement.h"
 #include "task/gsetests/GSETests.h"
 
@@ -41,6 +43,50 @@ template< typename F > bool Rejects( F f ) {
 }
 
 void AddSmacEmptyGroundMovementTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC selected movement lottery matches original remote continuation stages",GT(){
+        const auto data=YAML::LoadFile("docs/behavior/remote-fungus-continuation-cases.json");
+        size_t stages=0,births=0,draws=0,capacity_failures=0;
+        for(const auto& row:data["cases"]) {
+            const auto input=row["numeric"],expected=row["prediction"];
+            if(expected["action"].as<std::string>()=="encounter_birth") {++births;continue;}
+            Random random(input["shared"].as<uint32_t>(),input["CRT"].as<uint32_t>());
+            const auto journal=expected["draws"];std::optional<move::Draw> draw;
+            for(const auto& item:journal) {
+                if(item["reason"].as<std::string>()=="native_encounter") {
+                    GT_ASSERT(random.Crt()==item["before"].as<uint32_t>() && random.NextCrtRaw15()==item["raw"].as<uint16_t>()
+                        && random.Crt()==item["after"].as<uint32_t>(),"Original encounter prefix recurrence differs");
+                } else {
+                    draw=move::Draw{item["before"].as<uint32_t>(),item["after"].as<uint32_t>(),item["raw"].as<uint16_t>(),item["value"].as<int32_t>()};
+                }
+            }
+            const auto stream=input["CRT_movement"].as<bool>()?move::LotteryStream::CrtModulo:move::LotteryStream::SharedLow16;
+            const auto state=row["Scout_before"]["state"].as<uint32_t>();
+            const auto actual=move::ResolveSelectedGroundStep({ID,input["spent"].as<int32_t>(),bool(state&0x8000)},3,
+                input["allowance"].as<int32_t>(),input["edge_cost"].as<int32_t>(),bool(row["destination_cell"]["flags"].as<uint32_t>()&0x20),random,stream);
+            GT_ASSERT(actual.unit.spent==expected["spent"].as<int32_t>()
+                && actual.original_wrapper_return==expected["native_return"].as<int32_t>()
+                && (actual.outcome==move::Outcome::Moved)==(expected["action"].as<std::string>()=="relocate")
+                && actual.random.Crt()==expected["crt"].as<uint32_t>() && actual.random.Shared()==expected["shared"].as<uint32_t>()
+                && actual.draw.has_value()==draw.has_value(),"Original selected movement stage differs");
+            if(draw) {
+                GT_ASSERT(actual.draw->state_before==draw->state_before && actual.draw->state_after==draw->state_after
+                    && actual.draw->raw==draw->raw && actual.draw->scaled==draw->scaled,"Selected movement draw differs");++draws;
+            }
+            for(const auto& action:expected["actions"]) {if(action.as<std::string>()=="factory_failed_continue_without_rollback") {++capacity_failures;}}
+            ++stages;
+        }
+        GT_ASSERT(stages==10 && births==2 && draws==6 && capacity_failures==1,"Original movement-stage coverage changed");
+        for(const auto stream:{move::LotteryStream::SharedLow16,move::LotteryStream::CrtModulo}) {
+            const Random random(7,11);
+            const auto zero=move::ResolveSelectedGroundStep({ID,0,false},3,3,0,true,random,stream);
+            const auto exhausted=move::ResolveSelectedGroundStep({ID,3,true},3,3,9,true,random,stream);
+            GT_ASSERT(!zero.draw && zero.outcome==move::Outcome::Moved && zero.random==random
+                && !exhausted.draw && exhausted.outcome==move::Outcome::Exhausted && exhausted.random==random,"Stream selection invented suppressed draws");
+        }
+        GT_ASSERT(Rejects([]{move::ResolveSelectedGroundStep({ID,0,false},3,3,0,false,Random(1,1),static_cast<move::LotteryStream>(99));}),"Invalid stream accepted");
+        GT_OK();
+    });
+
 	task->AddTest( "SMAC empty ground movement matches retained ground admission captures", GT() {
 		for ( const auto& c : fixture::ADMISSION ) { const auto error = CheckCase( c ); GT_ASSERT( error.empty(), "" + error ); }
 		GT_OK();

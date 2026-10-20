@@ -112,7 +112,7 @@ and resolver inputs, not a new full menu-to-first-command receipt.
 
 The query is read-only: no map writes, RNG calls or cache mutation in the new
 controls. Repeated calls use current saved inputs. The earlier
-cache lifetime (reference receipt `territory-cache-refill-and-radius-repair.md`) still applies:
+[cache lifetime](territory-cache-refill-and-radius-repair.md) still applies:
 correcting the signal does not justify clearing every cached site rating at
 an arbitrary read-only query. Existing nonzero ratings may intentionally outlive
 changed inputs until a measured invalidation/refill boundary.

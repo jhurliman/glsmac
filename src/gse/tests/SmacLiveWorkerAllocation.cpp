@@ -4696,9 +4696,20 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT(Rejects([&]{um->PrepareFactionUnits(GSE_CALL,base->m_owner,site,invalid,claims,pending);})
                     && fixture.Snapshot()==before && Unit::GetNextId()==next && fixture.Updates().empty(),"late replacement rejection partially removed or created Units");
                 size_t removed=0,spawned=0;bool committed=false;
+                const auto linked=[&] {
+                    constexpr std::array<size_t,4> traversal{{2,3,0,1}};
+                    for(size_t position=0;position<traversal.size();++position) {
+                        const auto i=traversal[position];const auto* unit=um->GetUnit(first+i);
+                        const ConventionalUnitState::Stack expected{int16_t(1+i),
+                            position+1<traversal.size() ? int16_t(1+traversal[position+1]) : int16_t(-1),
+                            position ? int16_t(1+traversal[position-1]) : int16_t(-1)};
+                        if(!unit || !(unit->SourceStack()==expected) || unit->Conventional().facing!=2) {throw std::runtime_error("Restart producer lost original traversal, dense row or fresh facing");}
+                    }
+                };
                 const auto complete=[&] {
                     if(!committed || um->GetUnits().size()!=5 || um->GetUnit(91) || um->GetUnit(92) || um->GetUnit(93)!=foreign
                         || site->units.size()!=4 || Unit::GetNextId()!=first+4) {throw std::runtime_error("callback observed a partial replacement roster");}
+                    linked();
                 };
                 um->On(GSE_CALL,"unit_despawn",NATIVE_CALL(&){complete();++removed;return VALUE(value::Undefined);}));
                 um->On(GSE_CALL,"unit_spawn",NATIVE_CALL(&){complete();++spawned;return VALUE(value::Undefined);}));
@@ -4709,7 +4720,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 std::vector<size_t> order{93};
                 for(size_t i=0;i<specs.size();++i) {
                     order.push_back(first+i);const auto* unit=um->GetUnit(first+i);
-                    GT_ASSERT(unit && unit->Conventional()==specs[i].second && unit->GetTile()==site,"replacement lost factory order or fresh unhomed state");
+                    GT_ASSERT(unit,"Restart factory lost its created identity");
+                    auto expected=specs[i].second;expected.stack=unit->SourceStack();expected.facing=2;
+                    GT_ASSERT(unit && unit->Conventional()==expected && unit->GetTile()==site,"replacement lost factory order or fresh unhomed state");
                 }
                 GT_ASSERT(um->GetUnitRecordOrder()==order && Unit::Serialize(foreign).ToString()==foreign_bytes
                     && fixture.GameplayRandom()==pair && game->GetRandom()->GetStateString()==random,"replacement changed foreign Unit, order or random state");

@@ -2,6 +2,9 @@
 
 #include "types/Font.h"
 #include "util/FS.h"
+#include "util/FinallyGuard.h"
+#include "util/SHA256.h"
+#include "SmacFontLayout.h"
 #include <cstdlib>
 
 namespace loader {
@@ -9,7 +12,7 @@ namespace font {
 
 FontLoader::~FontLoader() {
 	for ( auto& it : m_fonts ) {
-		DELETE( it.second );
+		DELETE( it.second.font );
 	}
 	for ( const auto& f : m_builtin_fonts ) {
 		DELETE( f.second );
@@ -23,14 +26,11 @@ types::Font* FontLoader::LoadFont( const resource::resource_t res, const unsigne
 	if ( it == m_fonts.end() ) {
 		std::vector< unsigned char > data = {};
 		util::FS::ReadFile( data, GetPath( res ) );
-		it = m_fonts.insert(
-			{
-				key,
-				LoadFontImpl( GetFilename( res ), data, size )
-			}
-		).first;
+        auto* loaded=LoadFontImpl(GetFilename(res),data,size);
+        util::FinallyGuard cleanup([&]{if(loaded) {DELETE(loaded);}});
+        it=m_fonts.emplace(key,CachedFont{loaded,{}}).first;loaded=nullptr;
 	}
-	return it->second;
+	return it->second.font;
 }
 
 types::Font* FontLoader::LoadCustomFont( const std::string& name, const unsigned char size, RasterMode mode ) {
@@ -61,14 +61,22 @@ types::Font* FontLoader::LoadCustomFont( const std::string& name, const unsigned
 		}
 		if ( path.empty() ) { path = GetCustomFilename( name ); }
 		util::FS::ReadFile( data, path );
-		it = m_fonts.insert(
-			{
-				key,
-				LoadFontImpl( path, data, size, mode )
-			}
-		).first;
+        auto* loaded=LoadFontImpl(path,data,size,mode);
+        util::FinallyGuard cleanup([&]{if(loaded) {DELETE(loaded);}});
+        std::optional<NativeLayout> layout;
+        if(mode==RasterMode::MONOCHROME) {
+            const auto bytes=data.empty()?std::string_view{}:std::string_view(reinterpret_cast<const char*>(data.data()),data.size());
+            layout=smac::Layout(util::SHA256(bytes),size);
+        }
+        it=m_fonts.emplace(key,CachedFont{loaded,layout}).first;loaded=nullptr;
 	}
-	return it->second;
+	return it->second.font;
+}
+
+std::optional<NativeLayout> FontLoader::GetSmacLayout(const types::Font* font) const {
+    if(!font) {return {};}
+    for(const auto& entry:m_fonts) {if(entry.second.font==font) {return entry.second.layout;}}
+    return {};
 }
 
 types::Font* FontLoader::GetBuiltinFont( const unsigned char size ) {

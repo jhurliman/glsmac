@@ -8,6 +8,8 @@
 #include "game/frontend/faction/Faction.h"
 #include "game/backend/map/Consts.h"
 #include "scene/actor/Instanced.h"
+#include "scene/actor/Sprite.h"
+#include "loader/font/FontLoader.h"
 #include "types/texture/Texture.h"
 #include "SmacPopulationBadge.h"
 #include "engine/Engine.h"
@@ -90,12 +92,19 @@ sprite::Sprite* SlotBadges::GetLowZoomMarker(int zoom) {
     }return &found->second;
 }
 
-sprite::Sprite* SlotBadges::GetBaseBadgeSprite( const size_t population, const bool is_guarded ) {
-	auto it = m_per_population_sprites.find( population );
+SlotBadges::PopulationKey SlotBadges::Key(size_t population,std::optional<int> zoom) const {
+    if(!m_smac_population || !m_bm->UsesSmacPopulation() || !m_bm->UsesNativeMapProjection()) {return {population,-100};}
+    const int view=zoom.value_or(m_bm->GetNativeActorZoom());::game::native_zoom::Unit(view);
+    return {population,view< -8?0:view};
+}
+
+sprite::Sprite* SlotBadges::GetBaseBadgeSprite( const size_t population, const bool is_guarded, std::optional<int> zoom ) {
+    const auto key=Key(population,zoom);
+	auto it = m_per_population_sprites.find( key );
 	if ( it == m_per_population_sprites.end() ) {
 		it = m_per_population_sprites.insert(
 			{
-				population,
+				key,
 				{
 					nullptr,
 					nullptr
@@ -110,7 +119,7 @@ sprite::Sprite* SlotBadges::GetBaseBadgeSprite( const size_t population, const b
 		NEW( *sprite_ptr, sprite::Sprite, {
 			GetBadgeSprite(
 				population,
-				is_guarded
+				is_guarded,key.second
 			),
 			1
 		} );
@@ -118,7 +127,8 @@ sprite::Sprite* SlotBadges::GetBaseBadgeSprite( const size_t population, const b
 	return *sprite_ptr;
 }
 
-sprite::InstancedSprite* SlotBadges::GetBadgeSprite( const size_t population, const bool is_guarded ) {
+sprite::InstancedSprite* SlotBadges::GetBadgeSprite( const size_t population, const bool is_guarded, int zoom ) {
+    const PopulationKey key{population,zoom};
 
 	auto it1 = m_badge_sprites.find( is_guarded );
 	if ( it1 == m_badge_sprites.end() ) {
@@ -129,26 +139,33 @@ sprite::InstancedSprite* SlotBadges::GetBadgeSprite( const size_t population, co
 			}
 		).first;
 	}
-	auto it2 = it1->second.find( population );
+	auto it2 = it1->second.find( key );
 	if ( it2 == it1->second.end() ) {
 		if(m_smac_population && population<=127) {
 			const auto& palette=m_bm->GetSmacPopulationPalette();
 			const bool spartan=m_faction->m_id=="SPARTANS";
-			auto texture=MakeSmacPopulationBadge(population,*m_bm->GetSmacPopulationFont(),
+            const int view=zoom==-100?0:zoom;
+            const auto* font=m_bm->GetSmacPopulationFont(view);
+            const auto metrics=g_engine->GetFontLoader()->GetSmacLayout(font);
+            const int layout_height=metrics?metrics->logical_height:(view==0?12:std::max(1,font->m_symbols['8'].top));
+            const auto template_width=metrics?std::optional<size_t>(population<10?metrics->width_8:metrics->width_88):std::nullopt;
+            auto texture=MakeSmacPopulationBadge(population,*font,
 				is_guarded ? SmacPopulationDisplayColor(palette,m_primary):types::Color::FromRGBA(0,0,0,0),
 				SmacPopulationDisplayColor(palette,is_guarded ? (spartan ? 44:0):m_population_text),
-				SmacPopulationDisplayColor(palette,is_guarded && spartan ? m_secondary:0));
+				SmacPopulationDisplayColor(palette,is_guarded && spartan ? m_secondary:0),layout_height,template_width);
 			const auto width=static_cast<uint32_t>(texture->GetWidth());
 			const auto height=static_cast<uint32_t>(texture->GetHeight());
             const bool native=m_bm->UsesNativeMapProjection();
+            const int q=::game::native_zoom::Unit(view);
             // Entity inverts mesh Y. A top pivot uses zero source Y so the
             // first source row stays at the declared dispatcher anchor.
 			auto* sprite=m_ism->GetInstancedSprite("SmacPopulation_"+std::to_string(m_slot_index)+"_"+
-				std::to_string(population)+(is_guarded ? "_filled":"_outline")+(native?"_native":""),texture.get(),{0,0},
-				{width,height},{width,native?0u:height},{native?width/96.0f:backend::map::s_consts.tile.scale.x*0.25f*width/23,
-				native?height/48.0f:backend::map::s_consts.tile.scale.y*backend::map::s_consts.sprite.y_scale*0.5f*height/30},
-				ZL_TERRAIN_TEXT,0.008f);
-			try {it2=it1->second.emplace(population,badge_sprite_t{texture.get(),sprite}).first;}
+				std::to_string(population)+(is_guarded ? "_filled":"_outline")+(native?"_native":"")+"_z"+std::to_string(zoom),texture.get(),{0,0},
+				{width,height},{width,native?0u:height},{native?width/float(8*q):backend::map::s_consts.tile.scale.x*0.25f*width/23,
+				native?height/float(4*q):backend::map::s_consts.tile.scale.y*backend::map::s_consts.sprite.y_scale*0.5f*height/30},
+				native?ZL_BASES:ZL_TERRAIN_TEXT,0.008f);
+            if(native) {sprite->actor->GetSpriteActor()->SetRenderFlags(scene::actor::Actor::RF_IGNORE_LIGHTING);}
+			try {it2=it1->second.emplace(key,badge_sprite_t{texture.get(),sprite}).first;}
 			catch(...) {m_ism->RemoveInstancedSpriteByKey(sprite->key);throw;}
 			texture.release();
 			return it2->second.sprite;
@@ -194,7 +211,7 @@ sprite::InstancedSprite* SlotBadges::GetBadgeSprite( const size_t population, co
 
 		it2 = it1->second.insert(
 			{
-				population,
+				key,
 				{
 					texture,
 					m_ism->GetInstancedSprite(

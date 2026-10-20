@@ -1,3 +1,11 @@
+#include "loader/font/FreeType.h"
+#include <fstream>
+#include <filesystem>
+#include <iterator>
+#include <memory>
+#include "util/SHA256.h"
+#include "loader/font/SmacFontLayout.h"
+#include "game/frontend/NativeActorMarker.h"
 #include "graphics/opengl/OpenGL.h"
 #include "scene/actor/Actor.h"
 #include "graphics/opengl/shader_program/Orthographic.h"
@@ -65,6 +73,93 @@ bool StepMatches( const fixture::Step& e, const model::Survivor& s, const model:
 }
 
 void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC native font identity gates measured layout without filename fallback",GT(){
+        GT_ASSERT(util::SHA256("")=="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" &&
+            util::SHA256("abc")=="ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" &&
+            util::SHA256("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq")=="248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
+            "Font identity digest failed published empty/short/multiblock controls");
+        const std::string regular="b3658eadae55e682b5f69eb64c439c1ecc8f196c0bb8d4756d145d13bc86476a";
+        const std::string bold="e8f4e3baf6cc35fed6fcce3a540e8b39e8f6cda1d22a28f2ec8f526fef7a43f5";
+        const auto r7=loader::font::smac::Layout(regular,7),b19=loader::font::smac::Layout(bold,19);
+        GT_ASSERT(r7 && r7->logical_height==6 && b19 && b19->logical_height==15 && b19->width_8==11 && b19->width_88==22,
+            "Native GDI layout was replaced by hinted bitmap or rounded-descent estimates");
+        GT_ASSERT(loader::font::smac::Layout(bold,16)->logical_height==12 &&
+            loader::font::smac::Layout(bold,25)->logical_height==19 && loader::font::smac::Layout(bold,33)->logical_height==26 &&
+            !loader::font::smac::Layout(bold,0) && !loader::font::smac::Layout(bold,81) && !loader::font::smac::Layout("arialbd.ttf",19),
+            "Unknown font/size gained an invented native metric profile");GT_OK();
+    });
+    task->AddTest("SMAC population installed font pixels retain native zoom geometry",GT(){
+        const auto* root=std::getenv("GLSMAC_TEST_ARIAL_PROFILE_ROOT");if(!root) {GT_OK();}
+        const auto path=std::filesystem::path(root)/"arialbd.ttf";std::ifstream input(path,std::ios::binary);
+        if(!input) {throw std::runtime_error("Configured native Arial Bold is unreadable");}
+        const std::vector<unsigned char> bytes{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
+        const auto digest=util::SHA256(std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));
+        class Raster final:public loader::font::FreeType {
+        public:types::Font* Decode(const std::string& file,const std::vector<unsigned char>& data,unsigned char size) {
+            return LoadFontImpl(file,data,size,loader::font::RasterMode::MONOCHROME);
+        }} raster;
+        raster.Start();util::FinallyGuard stop([&]{raster.Stop();});
+        const auto black=types::Color::FromRGB(0,0,0),white=types::Color::FromRGB(255,255,255);
+        for(const int zoom:{-8,-6,-1,0,3,4,8,16}) {
+            const int size=game::frontend::native_actor::PopulationFontSize(zoom);
+            const auto metrics=loader::font::smac::Layout(digest,unsigned(size));
+            GT_ASSERT(metrics,"Configured Arial Bold is outside measured native layout profile");
+            std::unique_ptr<types::Font> font(raster.Decode(path.string(),bytes,static_cast<unsigned char>(size)));
+            for(const size_t population:{9u,10u}) {
+                const int width=population<10?metrics->width_8:metrics->width_88;
+                const auto badge=game::frontend::base::MakeSmacPopulationBadge(population,*font,white,black,black,metrics->logical_height,size_t(width));
+                GT_ASSERT(badge->GetWidth()==size_t(width+5) && badge->GetHeight()==size_t(metrics->logical_height+4),
+                    "Actual font raster overflowed its original population frame");
+                if(const auto* capture=std::getenv("GLSMAC_POPULATION_CAPTURE")) {
+                    std::ofstream image(std::filesystem::path(capture)/(std::to_string(population)+"_z"+std::to_string(zoom)+".ppm"),std::ios::binary);
+                    image<<"P6\n"<<badge->GetWidth()<<' '<<badge->GetHeight()<<"\n255\n";
+                    const auto* rgba=badge->GetBitmap();for(size_t i=0;i<badge->GetWidth()*badge->GetHeight();++i) {image.write(reinterpret_cast<const char*>(rgba+4*i),3);}
+                    if(!image) {throw std::runtime_error("Cannot write optional native population capture");}
+                }
+            }
+        }GT_OK();
+    });
+    task->AddTest("SMAC population zoom preserves22 native caller boxes fonts and baselines",GT(){
+        struct Case {int zoom,population,font,height,width,box_width,box_height,baseline;};
+        const Case cases[]={
+            {-8,9,8,6,4,9,10,8},
+            {-8,10,8,6,8,13,10,8},
+            {-7,9,9,7,5,10,11,9},
+            {-7,10,9,7,10,15,11,9},
+            {-6,9,11,8,6,11,12,10},
+            {-6,10,11,8,12,17,12,10},
+            {-4,9,12,9,7,12,13,11},
+            {-4,10,12,9,14,19,13,11},
+            {-3,9,13,10,7,12,14,12},
+            {-3,10,13,10,14,19,14,12},
+            {-1,9,15,11,8,13,15,13},
+            {-1,10,15,11,16,21,15,13},
+            {0,9,16,12,9,14,16,14},
+            {0,10,16,12,18,23,16,14},
+            {3,9,19,15,11,16,19,17},
+            {3,10,19,15,22,27,19,17},
+            {4,9,20,15,11,16,19,17},
+            {4,10,20,15,22,27,19,17},
+            {8,9,25,19,14,19,23,21},
+            {8,10,25,19,28,33,23,21},
+            {16,9,33,26,18,23,30,28},
+            {16,10,33,26,36,41,30,28},
+        };
+        for(const auto& c:cases) {
+            GT_ASSERT(game::frontend::native_actor::PopulationFontSize(c.zoom)==c.font,"Population font size lost native10-to11 exception");
+            types::Font font("Native population caller fixture");
+            for(const char digit:std::string("0123456789")) {
+                auto& glyph=font.m_symbols[static_cast<unsigned char>(digit)];
+                glyph={c.width/(c.population<10?1:2),0,1,1,0,0,static_cast<unsigned char*>(malloc(1))};
+                if(!glyph.data) {throw std::bad_alloc();}glyph.data[0]=255;
+            }
+            const auto black=types::Color::FromRGB(0,0,0),white=types::Color::FromRGB(255,255,255);
+            const auto badge=game::frontend::base::MakeSmacPopulationBadge(c.population,font,black,white,black,c.height,size_t(c.width));
+            GT_ASSERT(badge->GetWidth()==size_t(c.box_width) && badge->GetHeight()==size_t(c.box_height) &&
+                badge->GetPixel(3,c.baseline)==white.GetRGBA(),"Native population box/baseline differs from original caller");
+        }GT_OK();
+    });
+
     task->AddTest("SMAC order glyph retains native center baseline and neighboring badge pixels",GT(){
         GT_ASSERT(game::SmacOrderForegroundIndex("SPARTANS")==44 && game::SmacOrderForegroundIndex("UNIV")==0
             && game::SmacOrderForegroundIndex("spartans")==0,"Order foreground used faction slot or a case-folded filename");

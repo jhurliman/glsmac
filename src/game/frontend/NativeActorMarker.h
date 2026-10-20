@@ -5,6 +5,7 @@
 #include <string_view>
 namespace game::frontend::native_actor {
 inline uint8_t MarkerBorderIndex(std::string_view identifier) {return identifier=="SPARTANS"?44:0;}
+inline int PopulationFontSize(int zoom) {game::native_zoom::Unit(zoom);const int size=(50*(zoom+16)/16)/3;return size==10?11:size;}
 inline bool UsesMarker(int zoom) {game::native_zoom::Unit(zoom);return zoom< -8;}
 inline bool ShowsName(int zoom) {game::native_zoom::Unit(zoom);return zoom> -11;}
 // Ordinary actor flags only: the forced/expanded marker modes are separate.

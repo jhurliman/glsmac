@@ -64,8 +64,9 @@ correctness analysis. A focused three-TU ASan/UBSan build passes the same groups
 with other objects uninstrumented and leak detection disabled. No platform matrix
 was repeated.
 
-Next: compose the actual search and quality/cache adapter over generated raw
-terrain, then feed its selected point into site preparation. Base founding,
+The [generated first-site composition](native-generated-first-site.md) now
+connects search and quality/cache over generated raw terrain and passes its
+derived point into site preparation. Base founding,
 technology/design grants, complete Unit factory visibility, controller ordering
 and full seven-faction state remain required by the
 [generated-world integration plan](native-generated-world-integration.md).

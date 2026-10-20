@@ -3,6 +3,7 @@ SUBDIR( module )
 SUBDIR( tile )
 
 SET( SRC ${SRC}
+    ${PWD}/SmacGeneratedStartingSite.cpp
 
 	${PWD}/SmacClimate.cpp
 	${PWD}/SmacGenerationBootstrap.cpp

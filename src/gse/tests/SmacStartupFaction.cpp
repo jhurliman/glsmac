@@ -3,11 +3,79 @@
 #include "fixtures/SmacFactionPrefix.h"
 #include "fixtures/SmacSitePreparation.h"
 #include "game/backend/map/SmacCompleteTerrainGeneration.h"
+#include "game/backend/map/SmacGeneratedStartingSite.h"
+#include "fixtures/SmacGeneratedFirstSite.h"
+#include "game/backend/faction/SmacStartupTechnology.h"
+#include "game/backend/faction/SmacTechnologyQuery.h"
+#include "fixtures/SmacStartupTechnology.h"
+#include "fixtures/SmacFactionStartupSource.h"
+#include "loader/txt/FactionTXTLoader.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 
 namespace gse::tests {
 void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC startup named technology grants match one hundred three original complete records",GT(){
+        using namespace game::backend::faction;
+        const auto bytes=[](const auto& a) {return std::string(reinterpret_cast<const char*>(a.data()),a.size());};
+        for(const auto& c:fixtures::startup_technology::Grants()) {
+            SmacStartupFaction state;SmacStartupTechnologyOwnership owned;
+            for(size_t i=0;i<state.record.size();++i) {state.record[i]=uint8_t(i*37+19);}
+            for(size_t i=0;i<owned.size();++i) {owned[i]=uint8_t(i*11+17);}
+            for(unsigned k=0;k<4;++k) {state.record[0x95d574-0x95d1a8+k]=uint8_t(uint32_t(c.target)>>(8*k));}
+            GT_ASSERT(util::SHA256(bytes(state.record))==c.input_record && util::SHA256(bytes(owned))==c.input_ownership,"Technology input recipe differs");
+            GrantSmacStartupNamedTechnology(state,owned,c.faction,c.technology,c.source);
+            GT_ASSERT(util::SHA256(bytes(state.record))==c.record && util::SHA256(bytes(owned))==c.ownership,
+                "Original complete named technology grant differs");
+        }
+        return {};
+    });
+    task->AddTest("SMAC technology ownership query matches one hundred eighty original sentinel and definition controls",GT(){
+        for(const auto& c:fixtures::startup_technology::Queries()) {
+            GT_ASSERT(game::backend::faction::QuerySmacTechnology(c.faction,c.technology,c.ownership,c.parents)==c.value,
+                "Original effective ownership query differs");
+        }
+        return {};
+    });
+    task->AddTest("SMAC generated startup derives first site exploration and named grant from zero storage",GT(){
+        using namespace game::backend::faction;namespace generation=game::backend::map::smac_generation;
+        namespace expected=fixtures::generated_first_site;
+        generation::State terrain{std::vector<generation::Record>(3200),{{2,1,1,1,1,1,1}},game::backend::SmacGameplayRandomState(1,1)};
+        generation::Regions regions;regions.summary_width=16;regions.summary_height=16;regions.summary_initial=0;
+        generation::GenerateTerrain(terrain,{80,80},generation::DEFAULT_WORLD_RULES,regions,{100,110});
+        SmacStartupFaction state;SmacFactionPrefixOptions options{1,3,2,255,0x1a0e,0,false,10,{-1,0,0,0,1,0},"Template"," "};
+        InitializeSmacFactionPrefix(state,options,terrain.random);
+        std::vector<generation::StartingCacheStore> stores;std::vector<uint32_t> pairs;
+        const auto selected=generation::SelectGeneratedStartingSite(terrain,{80,80},regions,{3,true,false},
+            [&](const auto& s){stores.push_back(s);},[&](const auto& a){pairs.push_back(a.crt);});
+        GT_ASSERT(selected.site && (*selected.site)[0]==25 && (*selected.site)[1]==35 && selected.attempts==558 && stores.size()==37
+            && selected.random.Crt()==789993329 && terrain.random==selected.random,"Original generated site search differs");
+        GT_ASSERT(pairs.size()==expected::PAIR_CRT.size(),"Generated candidate count differs");
+        for(size_t i=0;i<pairs.size();++i) {GT_ASSERT(pairs[i]==expected::PAIR_CRT[i],"Generated candidate pair RNG differs");}
+        for(size_t i=0;i<stores.size();++i) {const auto& a=stores[i];const auto& b=expected::STORES[i];
+            GT_ASSERT(a.offset==b.offset && a.before==b.before && a.after==b.after,"Original generated rating cache write differs");}
+        const auto planeBytes=[&]() {std::string result;for(const auto& r:terrain.records) {result.append(reinterpret_cast<const char*>(r.data()),r.size());}return result;};
+        const auto factionBytes=[&]() {return std::string(reinterpret_cast<const char*>(state.record.data()),state.record.size());};
+        GT_ASSERT(util::SHA256(planeBytes())==expected::SEARCH_TILES_SHA256 && util::SHA256(factionBytes())==expected::SEARCH_RECORD_SHA256,
+            "Complete original first-site plane/faction differs");
+        const auto region=terrain.records[size_t((*selected.site)[1])*40+(*selected.site)[0]/2][3];
+        size_t draws=0,writes=0;
+        PrepareSmacStartingSite(state,terrain.records,{{80,80,true},*selected.site,1,regions.Area(region),3,0x1a0e},terrain.random,
+            [&](const auto&){++draws;},[&](const auto&){++writes;});
+        GT_ASSERT(util::SHA256(planeBytes())==expected::PREPARED_TILES_SHA256 && util::SHA256(factionBytes())==expected::PREPARED_RECORD_SHA256
+            && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110 && draws==3 && writes==42,
+            "Original generated first site strategy/exploration differs");
+        namespace source=smac_faction_startup_fixture;
+        const auto technologies=source::Technologies();
+        const auto profiles=loader::txt::FactionTXTLoader::ParseStartupRules(source::Alpha(),source::Source,technologies);
+        const auto* gaia=profiles.Find("GAIANS");GT_ASSERT(gaia,"Missing source Gaia startup profile");
+        SmacStartupTechnologyOwnership ownership{};GrantSmacStartupNamedTechnologies(state,ownership,1,*gaia);
+        const std::string ownership_bytes(reinterpret_cast<const char*>(ownership.data()),ownership.size());
+        GT_ASSERT(util::SHA256(factionBytes())==fixtures::startup_technology::GENERATED_RECORD
+            && util::SHA256(ownership_bytes)==fixtures::startup_technology::GENERATED_OWNERSHIP
+            && util::SHA256(planeBytes())==expected::PREPARED_TILES_SHA256 && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
+            "Generated first named grant differs from original complete faction/tile/ownership boundary");return {};
+    });
     task->AddTest("SMAC startup site strategy and exploration match eighty one original complete records and stores",GT(){
         using namespace game::backend::faction;
         const auto bytes=[](const auto& a) {return std::string(reinterpret_cast<const char*>(a.data()),a.size());};

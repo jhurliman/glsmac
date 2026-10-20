@@ -1,4 +1,5 @@
 SET( SRC ${SRC}
+    ${PWD}/SmacStartupTechnology.cpp
     ${PWD}/SmacStartupFaction.cpp
 
 	${PWD}/SmacTechnologyState.cpp

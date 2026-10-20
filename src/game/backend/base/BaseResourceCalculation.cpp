@@ -1,5 +1,6 @@
 #include "Base.h"
 #include "SmacNutrientStorage.h"
+#include "SmacMineralArithmetic.h"
 
 #include "BaseManager.h"
 #include "FacilityDef.h"
@@ -42,9 +43,9 @@ SmacBaseResourceCalculation FinishSmacResourceIntake( const std::array<int64_t,3
     n.normalized_stored=NormalizeSmacNutrientStorage(n.surplus,n.stored_before);
     auto& m=result.minerals; m.multiplier_steps=mineral_multiplier_steps;
     // Add half-bonuses, multiply once, then signed division toward zero.
-    m.intake=Checked(int64_t(Checked(raw_intake[1]))*(int64_t(2)+mineral_multiplier_steps))/2;
-    m.demand=mineral_support;
-    m.pre_orbital_surplus=m.surplus=Checked(int64_t(m.intake)-m.demand);
+    const auto amounts=CalculateSmacMineralAmounts(Checked(raw_intake[1]),mineral_support,mineral_multiplier_steps,[](int64_t v){return Checked(v);});
+    m.intake=amounts.intake;m.demand=amounts.demand;
+    m.pre_orbital_surplus=m.surplus=amounts.surplus;
     return result;
 }
 

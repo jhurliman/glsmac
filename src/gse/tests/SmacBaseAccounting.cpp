@@ -1,5 +1,6 @@
 #include "SmacBaseAccounting.h"
 #include "fixtures/SmacBaseAccounting.h"
+#include "fixtures/SmacMineralAccounting.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 #include <algorithm>
@@ -14,6 +15,28 @@ void Append(std::string& s,uint32_t v,unsigned size) {for(unsigned k=0;k<size;++
 void Trace(std::string& s,const game::backend::base::SmacBaseAccountingStore& v) {Append(s,uint8_t(v.space),1);Append(s,v.offset,4);Append(s,v.size,1);Append(s,v.value,4);Append(s,v.caller,4);}
 }
 void AddSmacBaseAccountingTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC complete mineral accounting matches two hundred twelve original ecology project and store controls",GT(){
+        using namespace game::backend;using namespace game::backend::base;size_t total=0;
+        for(const auto& c:fixtures::mineral_accounting::Cases()) {
+            std::vector<SmacStartupBaseRecord> bases(7);std::array<faction::SmacStartupFaction,8> actors;
+            for(size_t b=0;b<7;++b) {for(size_t i=0;i<304;++i) {bases[b][i]=uint8_t((b*304+i)*23+5);}bases[b][4]=uint8_t(c.owner);std::fill_n(bases[b].begin()+0x8c,5,0);}
+            for(size_t f=0;f<8;++f) {for(size_t i=0;i<8380;++i) {actors[f].record[i]=uint8_t((f*8380+i)*11+7);}}
+            auto& selected=bases[c.inputs.selected_base];selected[6]=uint8_t(c.population);
+            Word(selected,0xc0,uint32_t(c.intake));Word(selected,0x48,uint32_t(c.terraforming));Word(selected,0x50,uint32_t(c.target));Word(selected,0xd0,uint32_t(-12345));
+            Word(selected,0xf0,0x13572468);Word(selected,0xe0,123456);Word(selected,0x94,uint32_t(-76543));
+            for(const auto id:c.facilities) {bases[c.inputs.facility_base][0x8c+id/8]|=uint8_t(1u<<(id&7));}
+            for(const auto id:c.other_facilities) {bases[(c.inputs.facility_base+1)%2][0x8c+id/8]|=uint8_t(1u<<(id&7));}
+            const std::array<size_t,7> addresses{{0x95d608,0x95d9b0,0x95d380,0x95d1b0,0x95d410,0x95d504,0x95d510}};
+            const std::array<int32_t,7> values{{c.history,c.satellites,c.atrocities,c.stored_difficulty,c.planet,c.technology_score,c.future}};
+            for(size_t i=0;i<7;++i) {Word(actors[c.owner].record,addresses[i]-0x95d1a8,uint32_t(values[i]));}
+            for(const auto& host:c.hosts) {bases[host[0]][4]=uint8_t(host[1]);}
+            GT_ASSERT(util::SHA256(PoolBytes(bases))==c.input_bases && util::SHA256(ActorBytes(actors))==c.input_actors,"Original mineral input recipe differs");
+            std::string trace;size_t count=0;AccountSmacBaseMinerals(bases,actors,c.inputs,[&](const auto& s){Trace(trace,s);++count;});
+            GT_ASSERT(util::SHA256(PoolBytes(bases))==c.bases && util::SHA256(ActorBytes(actors))==c.actors
+                && count==c.count && util::SHA256(trace)==c.stores,"Original complete mineral output or journal differs");total+=count;
+        }
+        GT_ASSERT(total==2761,"Original mineral coverage changed");return {};
+    });
     task->AddTest("SMAC complete nutrient accounting matches one hundred ninety two original record and store controls",GT(){
         using namespace game::backend;using namespace game::backend::base;size_t total=0;
         for(const auto& c:fixtures::base_accounting::Nutrients()) {

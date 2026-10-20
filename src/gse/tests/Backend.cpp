@@ -6294,7 +6294,7 @@ public:
             // Owned tile presentation input; controller consumes these exact IDs.
             auto& render=const_cast<game::frontend::tile::Tile::render_data_t&>(tiles.GetTile(40,40)->GetRenderData());
             render.terrain_instances={{11,solar->key,"SolarLand"},{12,monolith->key,"Monolith"}};
-            std::array<bool,3200> covered{};covered[40*40+20]=true;
+            std::vector<bool> covered(3200,false);covered[40*40+20]=true;
             monolith->actor->SetInstance(14,{7,8,9});
             frontend.m_native_legacy_instances.emplace(14,std::make_pair(monolith->key,types::Vec3(7,8,9)));
             render.terrain_instances.push_back({14,monolith->key,"Uranium"});

@@ -20,19 +20,22 @@ namespace material=smac_land_material;
 namespace terrain=backend::map::smac_terrain;
 using World=::game::native_terrain::World;
 const ::game::native_terrain::Tile* At(const World& world,int x,int y) {
-    if(y<0 || y>=80 || (x-y)%2) {return nullptr;}
-    if(world.horizontal_wrap) {x=(x%80+80)%80;}
-    if(x<0 || x>=80) {return nullptr;}
-    return &world.tiles[static_cast<size_t>(y)*40+static_cast<size_t>(x)/2];
+    if(y<0 || y>=world.height || (x-y)%2) {return nullptr;}
+    if(world.horizontal_wrap) {x=(x%world.width+world.width)%world.width;}
+    if(x<0 || x>=world.width) {return nullptr;}
+    return &world.tiles[static_cast<size_t>(y)*size_t(world.width/2)+static_cast<size_t>(x)/2];
 }
 }
 std::vector<Placement> View(int x,int y,bool wrap) {
     return SelectView(Layout(x,y,0,wrap));
 }
 
-static Frame RenderImpl(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags,uint8_t initial_index,const std::vector<ViewGeometry::Terrain>* prepared,const Frame* previous=nullptr,Point scroll={{0,0}},raster::Clip clip={{0,0,1024,511}},bool opaque_background=false) {
+static Frame RenderImpl(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags,uint8_t initial_index,const std::vector<ViewGeometry::Terrain>* prepared,const Frame* previous=nullptr,Point scroll={{0,0}},raster::Clip clip={{0,0,1024,511}},bool opaque_background=false,Point dimensions={{1024,511}},int unit=12) {
+    if(!world.ValidDimensions() || dimensions[0]<=0 || dimensions[1]<=0 || dimensions[0]>32767 || dimensions[1]>32767) {throw std::invalid_argument("Invalid native bitmap dimensions");}
+    const int width=dimensions[0],height=dimensions[1];
+    const size_t pixels=size_t(width)*size_t(height);
     raster::AtlasCrops crops(source.loaded);
-    if(offset[0]<-4096 || offset[0]>4096 || offset[1]<-4096 || offset[1]>4096 || placements.size()>3200) {
+    if(offset[0]<-4096 || offset[0]>4096 || offset[1]<-4096 || offset[1]>4096 || placements.size()>world.tiles.size()) {
         throw std::invalid_argument("Unsupported native terrain view offset or size");
     }
     const terrain::BandAt bands=[&](int x,int y)->std::optional<uint8_t> {
@@ -55,7 +58,8 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
     // from explored memory. Owner relations still use the actual local viewer.
     const smac_territory_boundary::Context boundary_context{world.viewer,world.relations};
     const auto crop=[&](const material::Crop& rect) {return crops.Get(rect);};
-    Frame frame;
+    Frame frame;frame.dimensions=dimensions;frame.world={{world.width,world.height}};
+    frame.developed_tiles.assign(world.tiles.size(),false);frame.landmark_tiles.assign(world.tiles.size(),false);frame.resource_tiles.assign(world.tiles.size(),false);
     std::map<material::Crop,smac_developed_overlay::Sprite> sprites;
     std::vector<raster::Command> commands;commands.reserve(placements.size()*14);
     const auto append_marker=[&](const std::optional<material::Crop>& pick,const Point& anchor,bool shadow=false) {
@@ -130,8 +134,8 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
     for(const auto& placement:placements) {
         const auto* submission=prepared?&prepared->at(placement_index):nullptr;++placement_index;
         const auto x=placement.tile[0],y=placement.tile[1];
-        if(x<0 || x>=80 || y<0 || y>=80 || ((x^y)&1) ||
-            placement.record_offset!=static_cast<uint32_t>(44*(40*y+x/2)) ||
+        if(x<0 || x>=world.width || y<0 || y>=world.height || ((x^y)&1) ||
+            placement.record_offset!=static_cast<uint32_t>(44u*static_cast<uint32_t>((world.width/2)*y+x/2)) ||
             placement.flat_center[0]<-4096 || placement.flat_center[0]>4096 ||
             placement.flat_center[1]<-4096 || placement.flat_center[1]>4096) {throw std::invalid_argument("Invalid native terrain placement");}
         const auto& tile=*At(world,x,y);
@@ -156,7 +160,7 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             }
         };
         if(tile.band<3) {
-            frame.landmark_tiles[static_cast<size_t>(y)*40+x/2]=!source.ter1.pixels.empty();
+            frame.landmark_tiles[static_cast<size_t>(y)*size_t(world.width/2)+x/2]=!source.ter1.pixels.empty();
             const std::array<Point,5> points{{{{fx,fy}},{{fx-48,fy}},{{fx,fy-24}},{{fx+48,fy}},{{fx,fy+24}}}};
             append_water(x,y,points,survey);
             if(survey) {++frame.tiles;continue;}
@@ -164,8 +168,8 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             const Point anchor{{fx-48,fy-24}};
             append_developed(tile,anchor,true);append_resources(anchor,false);append_developed(tile,anchor,false);
             append_marker(smac_landmark_art::Nexus(tile.landmarks,display_flags),anchor);append_resources(anchor,true);
-            frame.resource_tiles[static_cast<size_t>(y)*40+x/2]=tile.resource_ready && !source.ter1.pixels.empty();
-            frame.developed_tiles[static_cast<size_t>(y)*40+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
+            frame.resource_tiles[static_cast<size_t>(y)*size_t(world.width/2)+x/2]=tile.resource_ready && !source.ter1.pixels.empty();
+            frame.developed_tiles[static_cast<size_t>(y)*size_t(world.width/2)+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
             ++frame.tiles;continue;
         }
         // Owned backend geometry already authenticates the exact height and
@@ -181,7 +185,7 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
         }
         const auto light=submission?std::optional<std::array<int,5>>{submission->lighting}:tile.lighting?tile.lighting:terrain::OrdinaryLighting(x,y,bands);if(!light) {continue;}
         const auto heights=submission?submission->heights:tile.heights?*tile.heights:terrain::OrdinaryHeights(x,y,bands);
-        frame.landmark_tiles[static_cast<size_t>(y)*40+x/2]=!source.ter1.pixels.empty();
+        frame.landmark_tiles[static_cast<size_t>(y)*size_t(world.width/2)+x/2]=!source.ter1.pixels.empty();
         const std::array<Point,5> points{{{{fx,fy-heights[0]}},{{fx-48,fy-heights[1]}},
             {{fx,fy-24-heights[2]}},{{fx+48,fy-heights[3]}},{{fx,fy+24-heights[4]}}}};
         const auto seed=static_cast<uint16_t>(base+placement.record_offset);
@@ -224,21 +228,21 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             :Point{{fx-48,fy-24-terrain::LandmarkGeometry::FloorQuarter(heights[1]+heights[2]+heights[3]+heights[4])}};
         append_resources(anchor,false);append_developed(tile,anchor,false);
         append_marker(smac_landmark_art::Nexus(tile.landmarks,display_flags),anchor);append_resources(anchor,true);
-        frame.resource_tiles[static_cast<size_t>(y)*40+x/2]=tile.resource_ready && !source.ter1.pixels.empty();
-        frame.developed_tiles[static_cast<size_t>(y)*40+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
+        frame.resource_tiles[static_cast<size_t>(y)*size_t(world.width/2)+x/2]=tile.resource_ready && !source.ter1.pixels.empty();
+        frame.developed_tiles[static_cast<size_t>(y)*size_t(world.width/2)+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
         ++frame.tiles;
     }
-    raster::Bitmap background{1024,511,std::vector<uint8_t>(1024*511,opaque_background?(previous?0:65):initial_index)};
-    std::vector<uint8_t> retained_coverage(1024*511,0);
+    raster::Bitmap background{width,height,std::vector<uint8_t>(pixels,opaque_background?(previous?0:65):initial_index)};
+    std::vector<uint8_t> retained_coverage(pixels,0);
     if(previous) {
-        if(previous->opaque_background!=opaque_background || previous->indexed.size()!=1024*511 || previous->coverage.size()!=1024*511 || scroll[1]!=0 ||
-            (scroll[0]!=-96 && scroll[0]!=96)) {throw std::invalid_argument("Invalid native horizontal bitmap history");}
-        for(int y=0;y<511;++y) {for(int x=0;x<1024;++x) {
-            const int sx=x-scroll[0];if(sx<0 || sx>=1024) {continue;}
-            const size_t dest=size_t(y)*1024+x,src=size_t(y)*1024+sx;
+        if(previous->opaque_background!=opaque_background || previous->dimensions!=dimensions || previous->world!=frame.world || previous->indexed.size()!=pixels || previous->coverage.size()!=pixels || previous->developed_tiles.size()!=world.tiles.size() || previous->landmark_tiles.size()!=world.tiles.size() || previous->resource_tiles.size()!=world.tiles.size() || scroll[1]!=0 ||
+            (scroll[0]!=-8*unit && scroll[0]!=8*unit)) {throw std::invalid_argument("Invalid native horizontal bitmap history");}
+        for(int y=0;y<height;++y) {for(int x=0;x<width;++x) {
+            const int sx=x-scroll[0];if(sx<0 || sx>=width) {continue;}
+            const size_t dest=size_t(y)*size_t(width)+x,src=size_t(y)*size_t(width)+sx;
             background.pixels[dest]=previous->indexed[src];retained_coverage[dest]=previous->coverage[src];
         }}
-        for(size_t i=0;i<3200;++i) {
+        for(size_t i=0;i<world.tiles.size();++i) {
             frame.developed_tiles[i]=frame.developed_tiles[i] || previous->developed_tiles[i];
             frame.landmark_tiles[i]=frame.landmark_tiles[i] || previous->landmark_tiles[i];
             frame.resource_tiles[i]=frame.resource_tiles[i] || previous->resource_tiles[i];
@@ -258,12 +262,12 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
     return RenderImpl(world,source,placements,base,offset,flags,initial_index,nullptr);
 }
 Frame RenderPrepared(const World& world,const Source& source,const ViewGeometry::Plan& plan,uint16_t base,uint32_t flags,uint8_t initial_index,const Frame* previous) {
-    if(plan.world!=Point{{80,80}} || plan.viewport!=Point{{1024,511}} || plan.unit!=12) {
-        throw std::invalid_argument("Native material renderer requires Planet zoom-zero geometry");
+    if(plan.world!=Point{{world.width,world.height}} || (plan.unit!=12 && std::any_of(plan.terrain.begin(),plan.terrain.end(),[](const auto& tile){return !tile.unknown;}))) {
+        throw std::invalid_argument("Native material renderer requires zoom-zero known terrain geometry");
     }
     if(bool(plan.regions)!=bool(previous)) {throw std::invalid_argument("Native dirty plan requires matching retained bitmap history");}
     std::vector<Placement> placements;placements.reserve(plan.terrain.size());
     for(const auto& tile:plan.terrain) {placements.push_back(tile.placement);}
-    return RenderImpl(world,source,placements,base,{{0,0}},flags,initial_index,&plan.terrain,previous,plan.scroll,plan.clip,plan.opaque_background);
+    return RenderImpl(world,source,placements,base,{{0,0}},flags,initial_index,&plan.terrain,previous,plan.scroll,plan.clip,plan.opaque_background,plan.viewport,plan.unit);
 }
 }

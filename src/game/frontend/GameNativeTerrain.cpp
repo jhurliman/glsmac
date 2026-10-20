@@ -48,7 +48,7 @@ std::shared_ptr<types::texture::Texture> Game::GetNativeTilePreview(int x,int y)
     std::copy(frame->rgba.begin(),frame->rgba.end(),texture->GetBitmap());
     m_native_preview_texture=std::move(texture);return m_native_preview_texture;
 }
-void Game::UpdateNativeTerrainSpriteVisibility(const std::array<bool,3200>* covered,const std::array<bool,3200>* landmarks,const std::array<bool,3200>* resources) {
+void Game::UpdateNativeTerrainSpriteVisibility(const std::vector<bool>* covered,const std::vector<bool>* landmarks,const std::vector<bool>* resources) {
     std::unordered_set<size_t> hidden;
     if((covered || landmarks || resources) && m_tm && m_map_data.width==80 && m_map_data.height==80) {
         for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {

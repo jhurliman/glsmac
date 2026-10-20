@@ -833,6 +833,33 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_OK();
     });
 
+    task->AddTest("SMAC dimensioned bitmap keeps flat zoomed unknown terrain opaque across pan",GT(){
+        namespace native=game::frontend::native_terrain;
+        game::native_terrain::World world(64,32);world.horizontal_wrap=false;
+        for(auto& tile:world.tiles) {tile.band=4;}
+        native::ViewGeometry geometry(world);const native::ViewGeometry::Knowledge known(1024,false);
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,9)};
+        const auto first=geometry.Prepare(native::Layout(16,16,8,false,{{64,32}},{{800,403}}),8,25,false,true,{},&known);
+        const auto frame=native::RenderPrepared(world,source,first,0);
+        const auto pan=geometry.Prepare(native::Layout(18,16,8,false,{{64,32}},{{800,403}}),8,25,true,true,{},&known);
+        const auto moved=native::RenderPrepared(world,source,pan,0,0x10421,0,&frame);
+        GT_ASSERT(moved.dimensions==native::Point({{800,403}}) && moved.indexed.size()==800*403 && moved.developed_tiles.size()==1024,
+            "Generic frame retained Planet bitmap or cell dimensions");
+        for(size_t i=0;i<moved.coverage.size();++i) {GT_ASSERT(moved.coverage[i] && moved.rgba[4*i+3]==255,"Unknown pan leaked backing");}
+        auto wrong=frame;wrong.dimensions={{403,800}};
+        bool rejected=false;try {(void)native::RenderPrepared(world,source,pan,0,0x10421,0,&wrong);}
+        catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Equal-area differently pitched bitmap history admitted");GT_OK();
+    });
+    task->AddTest("SMAC indexed diagonal entry preserves original bottom-touch store",GT(){
+        namespace raster=game::frontend::smac_terrain_raster;
+        const raster::Bitmap bitmap{1024,511,std::vector<uint8_t>(1024*511,65)};
+        raster::Command line;line.shader=raster::Shader::IndexedLine;line.line={{120,511,60,541}};line.line_color=194;
+        const auto frame=raster::DrawBatch(bitmap,{line},{{0,0,1024,511}},true);
+        GT_ASSERT(frame.writes==1 && frame.bitmap.pixels[510*1024+122]==194 && frame.coverage[510*1024+122],
+            "Native unconditional clipped first store was discarded at original endpoint");GT_OK();
+    });
+
     task->AddTest("SMAC native camera centers small flat worlds and dimensions unknown traversal",GT(){
         namespace native=game::frontend::native_terrain;
         const auto view=native::Layout(0,0,3,false,{{16,12}},{{1024,511}});

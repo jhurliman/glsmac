@@ -1,0 +1,1544 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "map_base_low16": 48992,
+  "scope": "Memory-backed logical palettes and quiet message/timer services.",
+  "schedules": [
+    {
+      "input": {
+        "id": "planet_partial_zminus1_first"
+      },
+      "profile": {
+        "id": "planet_partial_zminus1",
+        "zoom": -1,
+        "knowledge": "21"
+      },
+      "geometry": {
+        "unit": 11,
+        "diamond": [
+          88,
+          44
+        ],
+        "half": [
+          44,
+          22
+        ],
+        "first": [
+          11,
+          25
+        ],
+        "span": [
+          12,
+          13,
+          13,
+          13
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "relief": 25,
+        "height_step": 23,
+        "spacing": [
+          11,
+          3
+        ]
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": -1,
+        "first": [
+          11,
+          25
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": -1,
+        "first": [
+          11,
+          25
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "query_counts": {
+        "projector": 676,
+        "height": 5324,
+        "shade": 168
+      },
+      "query_sha256": "8d76801f8c6b25e8240337b7021e24e1bd39872ffe3e5a6e6d602a0985a8ace6",
+      "semantic_cache_sha256": "748ed992e8703a3ca85df770477b29033bd4717c6de7fe92e854bce4f6a14097",
+      "unknown_lines": 1268,
+      "frame_sha256": "72e8baab7b2a500d23273e2ea4cb0a37c9fe2dac5ef9c45896f5d311325d621f",
+      "pixel_ops": [
+        {
+          "kind": "clear",
+          "entry": "0x5ee070",
+          "caller": "0x47652a",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 0,
+          "store_count": 523264,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "color": 65,
+          "window_flags": 0,
+          "store_sha256": "f5021b717a71d119971aad83a4bd9153ec128b21902c9bc012b926671d52335b"
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "planet_partial_zminus1_east",
+        "pan": [
+          24,
+          38
+        ]
+      },
+      "profile": {
+        "id": "planet_partial_zminus1",
+        "zoom": -1,
+        "knowledge": "21"
+      },
+      "geometry": {
+        "unit": 11,
+        "diamond": [
+          88,
+          44
+        ],
+        "half": [
+          44,
+          22
+        ],
+        "first": [
+          13,
+          25
+        ],
+        "span": [
+          12,
+          13,
+          13,
+          13
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "relief": 25,
+        "height_step": 23,
+        "spacing": [
+          11,
+          3
+        ]
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": -1,
+        "first": [
+          11,
+          25
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": -1,
+        "first": [
+          13,
+          25
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "query_counts": {
+        "projector": 165,
+        "height": 1096
+      },
+      "query_sha256": "ab837800867d04516849b82e786cc5bd18a851cb8467205230f9db6859e13dfe",
+      "semantic_cache_sha256": "66216b06fbdcf16fb37f8f5545892f14d1cdfce3c5f0ad88b4a3b74ed7bdaa1f",
+      "unknown_lines": 272,
+      "frame_sha256": "82e1040b49eae3248c10aa5726f483931c678262967a358d7ac1a3cc79d69be0",
+      "pixel_ops": [
+        {
+          "kind": "scroll",
+          "entry": "0x5f8d00",
+          "caller": "0x477190",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 0,
+          "store_count": 478296,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "args": [
+            9566532,
+            88,
+            0,
+            0,
+            0,
+            1024,
+            511
+          ],
+          "destination": "0x91f944",
+          "store_sha256": "d5d63b0af63970466a11ffdaa509b8898890d07acb4a5a984b52ba9084bb570c"
+        },
+        {
+          "kind": "fill",
+          "entry": "0x5ee260",
+          "caller": "0x47732b",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 478296,
+          "store_count": 44968,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "args": [
+            936,
+            0,
+            88,
+            511,
+            0
+          ],
+          "store_sha256": "be8829874812b710056a67c31b6cc86ce44324aed46ee8de34191bef87303445"
+        },
+        {
+          "kind": "fill",
+          "entry": "0x5ee260",
+          "caller": "0x4773a6",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 523264,
+          "store_count": 0,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "args": [
+            0,
+            0,
+            1024,
+            0,
+            0
+          ],
+          "store_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "planet_partial_zminus1_back",
+        "pan": [
+          22,
+          38
+        ]
+      },
+      "profile": {
+        "id": "planet_partial_zminus1",
+        "zoom": -1,
+        "knowledge": "21"
+      },
+      "geometry": {
+        "unit": 11,
+        "diamond": [
+          88,
+          44
+        ],
+        "half": [
+          44,
+          22
+        ],
+        "first": [
+          11,
+          25
+        ],
+        "span": [
+          12,
+          13,
+          13,
+          13
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "relief": 25,
+        "height_step": 23,
+        "spacing": [
+          11,
+          3
+        ]
+      },
+      "before": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": -1,
+        "first": [
+          13,
+          25
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": -1,
+        "first": [
+          11,
+          25
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "query_counts": {
+        "projector": 137,
+        "height": 872
+      },
+      "query_sha256": "e36247c715b66abc131b1f062f9559bfbbac52491e3de0f94a7c98764c65f12d",
+      "semantic_cache_sha256": "66216b06fbdcf16fb37f8f5545892f14d1cdfce3c5f0ad88b4a3b74ed7bdaa1f",
+      "unknown_lines": 216,
+      "frame_sha256": "290a8830b91149cde3b14e0c6e26aff65d3d86f0686beafafa289c9e4b2df42d",
+      "pixel_ops": [
+        {
+          "kind": "scroll",
+          "entry": "0x5f8d00",
+          "caller": "0x477190",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 0,
+          "store_count": 478296,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "args": [
+            9566532,
+            0,
+            0,
+            88,
+            0,
+            1024,
+            511
+          ],
+          "destination": "0x91f944",
+          "store_sha256": "6fb8b6f52317d917a39cb91dbfedb18317e40fa3ded8ad491aae431fa5d024b0"
+        },
+        {
+          "kind": "fill",
+          "entry": "0x5ee260",
+          "caller": "0x47732b",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 478296,
+          "store_count": 44968,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "args": [
+            0,
+            0,
+            88,
+            511,
+            0
+          ],
+          "store_sha256": "afd44dad6c01c7ea55eb342a2a3f7cf28e99f0338c885e4ac15dad99c5adce19"
+        },
+        {
+          "kind": "fill",
+          "entry": "0x5ee260",
+          "caller": "0x4773a6",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 523264,
+          "store_count": 0,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "args": [
+            0,
+            0,
+            1024,
+            0,
+            0
+          ],
+          "store_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "planet_unknown_z3_first"
+      },
+      "profile": {
+        "id": "planet_unknown_z3",
+        "zoom": 3,
+        "knowledge": "none",
+        "grid": 256
+      },
+      "geometry": {
+        "unit": 15,
+        "diamond": [
+          120,
+          60
+        ],
+        "half": [
+          60,
+          30
+        ],
+        "first": [
+          12,
+          28
+        ],
+        "span": [
+          9,
+          10,
+          10,
+          10
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "relief": 25,
+        "height_step": 29,
+        "spacing": [
+          14,
+          4
+        ]
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 3,
+        "first": [
+          12,
+          28
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 3,
+        "first": [
+          12,
+          28
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "query_counts": {
+        "projector": 400,
+        "height": 3200
+      },
+      "query_sha256": "ee896a55b5cee57de4a882e6e4b5d0f1443f523fb66e13edf155a47f2e47aea3",
+      "semantic_cache_sha256": "0ac7b341e93cad5f8ef55edab742b97d40f9c14304f185c6dc8591f53af4bd06",
+      "unknown_lines": 800,
+      "frame_sha256": "8854af5efb7e0a981b5ec3b660b63a630f3961c3d74b3d7126ef1e4c8f69ed17",
+      "pixel_ops": [
+        {
+          "kind": "clear",
+          "entry": "0x5ee070",
+          "caller": "0x47652a",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 0,
+          "store_count": 523264,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "color": 65,
+          "window_flags": 0,
+          "store_sha256": "f5021b717a71d119971aad83a4bd9153ec128b21902c9bc012b926671d52335b"
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "planet_unknown_z3_east",
+        "pan": [
+          24,
+          38
+        ]
+      },
+      "profile": {
+        "id": "planet_unknown_z3",
+        "zoom": 3,
+        "knowledge": "none",
+        "grid": 256
+      },
+      "geometry": {
+        "unit": 15,
+        "diamond": [
+          120,
+          60
+        ],
+        "half": [
+          60,
+          30
+        ],
+        "first": [
+          14,
+          28
+        ],
+        "span": [
+          9,
+          10,
+          10,
+          10
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "relief": 25,
+        "height_step": 29,
+        "spacing": [
+          14,
+          4
+        ]
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 3,
+        "first": [
+          12,
+          28
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 3,
+        "first": [
+          14,
+          28
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "query_counts": {
+        "projector": 129,
+        "height": 856
+      },
+      "query_sha256": "7178f1f494201a4a3e83ec60656560a98991e40ec3e76223860a28c5eea3f7e0",
+      "semantic_cache_sha256": "8ed5f2d4b371f578ff3745b6956abf075a0f5b8a075e8302826f2a3b70147fee",
+      "unknown_lines": 212,
+      "frame_sha256": "04d5aeaaaa4cc642486362b8ec617745fac48e3684107fe5b6d7f46d5b5a8717",
+      "pixel_ops": [
+        {
+          "kind": "scroll",
+          "entry": "0x5f8d00",
+          "caller": "0x477190",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 0,
+          "store_count": 461944,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "args": [
+            9566532,
+            120,
+            0,
+            0,
+            0,
+            1024,
+            511
+          ],
+          "destination": "0x91f944",
+          "store_sha256": "ccf1a50e8269fe0f828d1963252467b63002c04ba63c6dcefb5d89556ed8519b"
+        },
+        {
+          "kind": "fill",
+          "entry": "0x5ee260",
+          "caller": "0x47732b",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 461944,
+          "store_count": 61320,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "args": [
+            904,
+            0,
+            120,
+            511,
+            0
+          ],
+          "store_sha256": "87a51b4b59dcb8bb3c243fd84c77f54ff62f7ff2e0d2f341756a612f4f06e9df"
+        },
+        {
+          "kind": "fill",
+          "entry": "0x5ee260",
+          "caller": "0x4773a6",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 523264,
+          "store_count": 0,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "args": [
+            0,
+            0,
+            1024,
+            0,
+            0
+          ],
+          "store_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "planet_unknown_z3_back",
+        "pan": [
+          22,
+          38
+        ]
+      },
+      "profile": {
+        "id": "planet_unknown_z3",
+        "zoom": 3,
+        "knowledge": "none",
+        "grid": 256
+      },
+      "geometry": {
+        "unit": 15,
+        "diamond": [
+          120,
+          60
+        ],
+        "half": [
+          60,
+          30
+        ],
+        "first": [
+          12,
+          28
+        ],
+        "span": [
+          9,
+          10,
+          10,
+          10
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "relief": 25,
+        "height_step": 29,
+        "spacing": [
+          14,
+          4
+        ]
+      },
+      "before": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 3,
+        "first": [
+          14,
+          28
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 3,
+        "first": [
+          12,
+          28
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "query_counts": {
+        "projector": 107,
+        "height": 680
+      },
+      "query_sha256": "fa7860e72090a2fe023414094940520aa38a6220b3c449db4491b5ae36bd1fa2",
+      "semantic_cache_sha256": "8ed5f2d4b371f578ff3745b6956abf075a0f5b8a075e8302826f2a3b70147fee",
+      "unknown_lines": 168,
+      "frame_sha256": "6c410773c0c83336896ab95a33702035fb84e92f6052d772a910a0c307d99c7e",
+      "pixel_ops": [
+        {
+          "kind": "scroll",
+          "entry": "0x5f8d00",
+          "caller": "0x477190",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 0,
+          "store_count": 461944,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "args": [
+            9566532,
+            0,
+            0,
+            120,
+            0,
+            1024,
+            511
+          ],
+          "destination": "0x91f944",
+          "store_sha256": "8be71fa06d6d87ef2f17ff31f332b03798352bd3be77f1cb861288bf61ab6fb8"
+        },
+        {
+          "kind": "fill",
+          "entry": "0x5ee260",
+          "caller": "0x47732b",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 461944,
+          "store_count": 61320,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "args": [
+            0,
+            0,
+            120,
+            511,
+            0
+          ],
+          "store_sha256": "a82ab1c84ec5a7943d2bb8acafa264bf19000639c1f19d35f2d529d9d72a21e8"
+        },
+        {
+          "kind": "fill",
+          "entry": "0x5ee260",
+          "caller": "0x4773a6",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 523264,
+          "store_count": 0,
+          "clip": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "args": [
+            0,
+            0,
+            1024,
+            0,
+            0
+          ],
+          "store_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "flat64_unknown_z8_800x403_first"
+      },
+      "profile": {
+        "id": "flat64_unknown_z8_800x403",
+        "zoom": 8,
+        "knowledge": "none",
+        "map_size": [
+          64,
+          32
+        ],
+        "viewport": [
+          800,
+          403
+        ],
+        "camera": [
+          16,
+          16
+        ],
+        "flat": true,
+        "grid": 256
+      },
+      "geometry": {
+        "unit": 19,
+        "diamond": [
+          152,
+          76
+        ],
+        "half": [
+          76,
+          38
+        ],
+        "first": [
+          10,
+          10
+        ],
+        "span": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "relief": 25,
+        "height_step": 37,
+        "spacing": [
+          18,
+          6
+        ]
+      },
+      "before": {
+        "camera": [
+          16,
+          16
+        ],
+        "zoom": 8,
+        "first": [
+          10,
+          10
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          16,
+          16
+        ],
+        "zoom": 8,
+        "first": [
+          10,
+          10
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "query_counts": {
+        "projector": 156,
+        "height": 1248
+      },
+      "query_sha256": "ccb8a6b39a67cae8da2ceffc5c270473177dcc82b61e40e8a2c501bea68c8d44",
+      "semantic_cache_sha256": "cf889e94b650197f09fd0f3a1067ec6cd46aa501896053918ad0c935c02c6417",
+      "unknown_lines": 312,
+      "frame_sha256": "bdb1c3f45b830e7a61e098e83f4c59b5dc6c8fae54daeea28f3b229c9d8ecd38",
+      "pixel_ops": [
+        {
+          "kind": "clear",
+          "entry": "0x5ee070",
+          "caller": "0x47652a",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 0,
+          "store_count": 322400,
+          "clip": [
+            0,
+            0,
+            800,
+            403
+          ],
+          "color": 65,
+          "window_flags": 0,
+          "store_sha256": "ad4a6bde304cc0ec3d5c11e131b2508a66887d1524083e41d91e24a10305a652"
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "flat64_unknown_z8_800x403_east",
+        "pan": [
+          18,
+          16
+        ]
+      },
+      "profile": {
+        "id": "flat64_unknown_z8_800x403",
+        "zoom": 8,
+        "knowledge": "none",
+        "map_size": [
+          64,
+          32
+        ],
+        "viewport": [
+          800,
+          403
+        ],
+        "camera": [
+          16,
+          16
+        ],
+        "flat": true,
+        "grid": 256
+      },
+      "geometry": {
+        "unit": 19,
+        "diamond": [
+          152,
+          76
+        ],
+        "half": [
+          76,
+          38
+        ],
+        "first": [
+          12,
+          10
+        ],
+        "span": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "relief": 25,
+        "height_step": 37,
+        "spacing": [
+          18,
+          6
+        ]
+      },
+      "before": {
+        "camera": [
+          16,
+          16
+        ],
+        "zoom": 8,
+        "first": [
+          10,
+          10
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          18,
+          16
+        ],
+        "zoom": 8,
+        "first": [
+          12,
+          10
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "query_counts": {
+        "projector": 79,
+        "height": 520
+      },
+      "query_sha256": "f18c08c675a4f6017cfa807a7ccdb1dcdf732561c2485d16739b61a97971e86a",
+      "semantic_cache_sha256": "5fa91ddb85d26504622e70cd869dcfb9b2755e406d0af84463ad28a314e6d6c9",
+      "unknown_lines": 128,
+      "frame_sha256": "f9e9ed6179340b22ddeacdf0cdaa801d968d8f43efb80ac2949f76dbac99934f",
+      "pixel_ops": [
+        {
+          "kind": "scroll",
+          "entry": "0x5f8d00",
+          "caller": "0x477190",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 0,
+          "store_count": 261144,
+          "clip": [
+            0,
+            0,
+            800,
+            403
+          ],
+          "args": [
+            9566532,
+            152,
+            0,
+            0,
+            0,
+            800,
+            403
+          ],
+          "destination": "0x91f944",
+          "store_sha256": "e5474e26a80068cec05775f8b58fbd24c8783ee34f7463e27697d24f59c3fa18"
+        },
+        {
+          "kind": "fill",
+          "entry": "0x5ee260",
+          "caller": "0x47732b",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 261144,
+          "store_count": 61256,
+          "clip": [
+            0,
+            0,
+            800,
+            403
+          ],
+          "args": [
+            648,
+            0,
+            152,
+            403,
+            0
+          ],
+          "store_sha256": "96c5c7d30f9d0e87a6f02009c3b7b471f4dec97edcb6fd375d6dbb856a84dd3f"
+        },
+        {
+          "kind": "fill",
+          "entry": "0x5ee260",
+          "caller": "0x4773a6",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 322400,
+          "store_count": 0,
+          "clip": [
+            0,
+            0,
+            800,
+            403
+          ],
+          "args": [
+            0,
+            0,
+            800,
+            0,
+            0
+          ],
+          "store_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "flat64_unknown_z8_800x403_back",
+        "pan": [
+          16,
+          16
+        ]
+      },
+      "profile": {
+        "id": "flat64_unknown_z8_800x403",
+        "zoom": 8,
+        "knowledge": "none",
+        "map_size": [
+          64,
+          32
+        ],
+        "viewport": [
+          800,
+          403
+        ],
+        "camera": [
+          16,
+          16
+        ],
+        "flat": true,
+        "grid": 256
+      },
+      "geometry": {
+        "unit": 19,
+        "diamond": [
+          152,
+          76
+        ],
+        "half": [
+          76,
+          38
+        ],
+        "first": [
+          10,
+          10
+        ],
+        "span": [
+          6,
+          6,
+          6,
+          6
+        ],
+        "offset": [
+          0,
+          0
+        ],
+        "relief": 25,
+        "height_step": 37,
+        "spacing": [
+          18,
+          6
+        ]
+      },
+      "before": {
+        "camera": [
+          18,
+          16
+        ],
+        "zoom": 8,
+        "first": [
+          12,
+          10
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          16,
+          16
+        ],
+        "zoom": 8,
+        "first": [
+          10,
+          10
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "query_counts": {
+        "projector": 67,
+        "height": 424
+      },
+      "query_sha256": "083a3835271af2771f5ce121b83c6cb0adaea45575638897ebe62a4fe06a3125",
+      "semantic_cache_sha256": "5fa91ddb85d26504622e70cd869dcfb9b2755e406d0af84463ad28a314e6d6c9",
+      "unknown_lines": 104,
+      "frame_sha256": "35d4f9dc997c70a858b94ca2e7d559066a68683d79d57cdba7cceb95eca5828b",
+      "pixel_ops": [
+        {
+          "kind": "scroll",
+          "entry": "0x5f8d00",
+          "caller": "0x477190",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 0,
+          "store_count": 261144,
+          "clip": [
+            0,
+            0,
+            800,
+            403
+          ],
+          "args": [
+            9566532,
+            0,
+            0,
+            152,
+            0,
+            800,
+            403
+          ],
+          "destination": "0x91f944",
+          "store_sha256": "c7aca39ff05cba164d83bf4d45af22b357c6e42fea4d16a879f2f8e747066b7d"
+        },
+        {
+          "kind": "fill",
+          "entry": "0x5ee260",
+          "caller": "0x47732b",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 261144,
+          "store_count": 61256,
+          "clip": [
+            0,
+            0,
+            800,
+            403
+          ],
+          "args": [
+            0,
+            0,
+            152,
+            403,
+            0
+          ],
+          "store_sha256": "d677e7372c44dfafd2c592760edcb613e8d33a26dba89f489e9ae16c96539fc0"
+        },
+        {
+          "kind": "fill",
+          "entry": "0x5ee260",
+          "caller": "0x4773a6",
+          "tile": null,
+          "phase": "outside",
+          "first_store": 322400,
+          "store_count": 0,
+          "clip": [
+            0,
+            0,
+            800,
+            403
+          ],
+          "args": [
+            0,
+            0,
+            800,
+            0,
+            0
+          ],
+          "store_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ],
+  "pixels": [
+    {
+      "input": {
+        "id": "planet_unknown_z3_first"
+      },
+      "profile": {
+        "id": "planet_unknown_z3",
+        "zoom": 3,
+        "knowledge": "none",
+        "grid": 256
+      },
+      "frame_sha256": "8854af5efb7e0a981b5ec3b660b63a630f3961c3d74b3d7126ef1e4c8f69ed17",
+      "visible_frame_sha256": "8854af5efb7e0a981b5ec3b660b63a630f3961c3d74b3d7126ef1e4c8f69ed17",
+      "store_count": 558223,
+      "store_sha256": "a1962834ea93ccbc0ebd0098063ecf46f7368a109252fea12d3d10102e10a852",
+      "material_primitives": [],
+      "visible_histogram": {
+        "65": 504730,
+        "194": 18534
+      }
+    },
+    {
+      "input": {
+        "id": "planet_unknown_z3_east",
+        "pan": [
+          24,
+          38
+        ]
+      },
+      "profile": {
+        "id": "planet_unknown_z3",
+        "zoom": 3,
+        "knowledge": "none",
+        "grid": 256
+      },
+      "frame_sha256": "04d5aeaaaa4cc642486362b8ec617745fac48e3684107fe5b6d7f46d5b5a8717",
+      "visible_frame_sha256": "04d5aeaaaa4cc642486362b8ec617745fac48e3684107fe5b6d7f46d5b5a8717",
+      "store_count": 527397,
+      "store_sha256": "a049add29fdabfeabb471bc6edc05ed536d91dffd1cdc34bdd211f3506f962c2",
+      "material_primitives": [],
+      "visible_histogram": {
+        "65": 445734,
+        "194": 18215,
+        "0": 59315
+      }
+    },
+    {
+      "input": {
+        "id": "planet_unknown_z3_back",
+        "pan": [
+          22,
+          38
+        ]
+      },
+      "profile": {
+        "id": "planet_unknown_z3",
+        "zoom": 3,
+        "knowledge": "none",
+        "grid": 256
+      },
+      "frame_sha256": "6c410773c0c83336896ab95a33702035fb84e92f6052d772a910a0c307d99c7e",
+      "visible_frame_sha256": "6c410773c0c83336896ab95a33702035fb84e92f6052d772a910a0c307d99c7e",
+      "store_count": 527403,
+      "store_sha256": "03a2544f63157e3114dd8dd6a4f01a55867ca37c26320e40151a9d5fcc7c3abf",
+      "material_primitives": [],
+      "visible_histogram": {
+        "0": 59302,
+        "194": 18228,
+        "65": 445734
+      }
+    },
+    {
+      "input": {
+        "id": "flat64_unknown_z8_800x403_first"
+      },
+      "profile": {
+        "id": "flat64_unknown_z8_800x403",
+        "zoom": 8,
+        "knowledge": "none",
+        "map_size": [
+          64,
+          32
+        ],
+        "viewport": [
+          800,
+          403
+        ],
+        "camera": [
+          16,
+          16
+        ],
+        "flat": true,
+        "grid": 256
+      },
+      "frame_sha256": "bdb1c3f45b830e7a61e098e83f4c59b5dc6c8fae54daeea28f3b229c9d8ecd38",
+      "visible_frame_sha256": "bdb1c3f45b830e7a61e098e83f4c59b5dc6c8fae54daeea28f3b229c9d8ecd38",
+      "store_count": 339640,
+      "store_sha256": "f4a4f168ae8d15504c6e94f5b9d5f57b1121402ccfdd81562049df8bd0bfcb87",
+      "material_primitives": [],
+      "visible_histogram": {
+        "65": 314018,
+        "194": 8382
+      }
+    },
+    {
+      "input": {
+        "id": "flat64_unknown_z8_800x403_east",
+        "pan": [
+          18,
+          16
+        ]
+      },
+      "profile": {
+        "id": "flat64_unknown_z8_800x403",
+        "zoom": 8,
+        "knowledge": "none",
+        "map_size": [
+          64,
+          32
+        ],
+        "viewport": [
+          800,
+          403
+        ],
+        "camera": [
+          16,
+          16
+        ],
+        "flat": true,
+        "grid": 256
+      },
+      "frame_sha256": "f9e9ed6179340b22ddeacdf0cdaa801d968d8f43efb80ac2949f76dbac99934f",
+      "visible_frame_sha256": "f9e9ed6179340b22ddeacdf0cdaa801d968d8f43efb80ac2949f76dbac99934f",
+      "store_count": 325668,
+      "store_sha256": "39aabcb7db7d56c75cc38535a037e7fd79131b4424c4cca7faeb69627da6ab41",
+      "material_primitives": [],
+      "visible_histogram": {
+        "65": 254352,
+        "194": 8382,
+        "0": 59666
+      }
+    },
+    {
+      "input": {
+        "id": "flat64_unknown_z8_800x403_back",
+        "pan": [
+          16,
+          16
+        ]
+      },
+      "profile": {
+        "id": "flat64_unknown_z8_800x403",
+        "zoom": 8,
+        "knowledge": "none",
+        "map_size": [
+          64,
+          32
+        ],
+        "viewport": [
+          800,
+          403
+        ],
+        "camera": [
+          16,
+          16
+        ],
+        "flat": true,
+        "grid": 256
+      },
+      "frame_sha256": "35d4f9dc997c70a858b94ca2e7d559066a68683d79d57cdba7cceb95eca5828b",
+      "visible_frame_sha256": "35d4f9dc997c70a858b94ca2e7d559066a68683d79d57cdba7cceb95eca5828b",
+      "store_count": 325656,
+      "store_sha256": "0c3961bc31a99adeaf8ead992ffe47a8315730d21cd8a7214c0a725b36008d09",
+      "material_primitives": [],
+      "visible_histogram": {
+        "0": 59666,
+        "194": 8382,
+        "65": 254352
+      }
+    }
+  ],
+  "evidence_manifest_sha256": "47b8e09e8f6bffcef687c176b9fe17a00aac7015fae073d1bc271ef9673afea1",
+  "supplied21_offsets": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      -1
+    ],
+    [
+      2,
+      0
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      0,
+      2
+    ],
+    [
+      -1,
+      1
+    ],
+    [
+      -2,
+      0
+    ],
+    [
+      -1,
+      -1
+    ],
+    [
+      0,
+      -2
+    ],
+    [
+      2,
+      -2
+    ],
+    [
+      2,
+      2
+    ],
+    [
+      -2,
+      2
+    ],
+    [
+      -2,
+      -2
+    ],
+    [
+      1,
+      -3
+    ],
+    [
+      3,
+      -1
+    ],
+    [
+      3,
+      1
+    ],
+    [
+      1,
+      3
+    ],
+    [
+      -1,
+      3
+    ],
+    [
+      -3,
+      1
+    ],
+    [
+      -3,
+      -1
+    ],
+    [
+      -1,
+      -3
+    ]
+  ],
+  "line_bottom_touch": {
+    "line": [
+      120,
+      511,
+      60,
+      541
+    ],
+    "clip": [
+      0,
+      0,
+      1024,
+      511
+    ],
+    "writes": [
+      [
+        122,
+        510
+      ]
+    ]
+  }
+}

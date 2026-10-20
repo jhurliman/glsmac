@@ -70,7 +70,7 @@ an arbitrarily long invisible prefix. All 709 prior native line controls and
 
 Known terrain fans now use the original zoom geometry; see
 [native zoom materials](native-zoom-materials.md). Retained improvement/resource
-sprite resampling at nonzero zoom remains explicitly unsupported. The normal-game
+sprite resampling is also implemented; see [native sprite scaling](native-sprite-scaling.md). The normal-game
 saved-exploration bridge, generic backend terrain authority, and general camera
 integration remain unfinished. These renderer results do not claim that the
 ordinary playtest's revealed terrain is fixed.

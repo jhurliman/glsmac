@@ -64,13 +64,12 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
     std::vector<raster::Command> commands;commands.reserve(placements.size()*14);
     const auto append_marker=[&](const std::optional<material::Crop>& pick,const Point& anchor,bool shadow=false) {
         if(!pick || source.ter1.pixels.empty()) {return;}
-        if(zoom!=0) {throw std::invalid_argument("Native retained sprite zoom scaling awaits source contract");}
         auto found=sprites.find(*pick);
         if(found==sprites.end()) {found=sprites.emplace(*pick,smac_developed_overlay::Decode(source.ter1,*pick)).first;}
         const auto& sprite=found->second;if(sprite.bitmap.pixels.empty()) {return;}
         raster::Command command;command.texture=&sprite.bitmap;command.shader=shadow?raster::Shader::SpriteShadow:raster::Shader::Sprite;
         command.shadow_lookup=&source.shadow_lookup;
-        command.sprite_origin={anchor[0]+sprite.offset[0],anchor[1]+sprite.offset[1]};commands.push_back(command);
+        command.sprite_origin=anchor;command.sprite_offset=sprite.offset;command.sprite_scale={{zoom+16,16}};commands.push_back(command);
     };
     const auto append_quads=[&](int x,int y,const std::array<Point,5>& points,const std::array<int,5>& light) {
         const auto& tile=*At(world,x,y);
@@ -125,9 +124,8 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             auto found=sprites.find(pick.crop);
             if(found==sprites.end()) {found=sprites.emplace(pick.crop,smac_developed_overlay::Decode(source.ter1,pick.crop)).first;}
             const auto& sprite=found->second;if(sprite.bitmap.pixels.empty()) {continue;}
-            if(zoom!=0) {throw std::invalid_argument("Native retained sprite zoom scaling awaits source contract");}
             raster::Command command;command.texture=&sprite.bitmap;
-            command.sprite_origin={anchor[0]+sprite.offset[0],anchor[1]+sprite.offset[1]};
+            command.sprite_origin=anchor;command.sprite_offset=sprite.offset;command.sprite_scale={{zoom+16,16}};
             command.shader=pick.shadow?raster::Shader::SpriteShadow:raster::Shader::Sprite;
             command.shadow_lookup=&source.shadow_lookup;commands.push_back(command);
         }

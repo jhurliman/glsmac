@@ -56,12 +56,9 @@ python3 tools/reference/verify_native_zoom_material.py \
   --sanitize
 ```
 
-Retained improvement/resource sprite resampling at nonzero zoom remains
-explicitly unsupported. Those actual sprite submissions reject instead of
-silently using zoom0 art. The preceding blanket rejection of all nonzero known
-terrain is removed, allowing the measured material-only scenes above. Native
-sprite scale uses (zoom+16)/16 independently of the quantized terrain unit; the
-reverse-engineering thread is closing its exact skip/repeat and shadow rules.
+Retained improvement/resource sprites now use the original nonzero-zoom
+sampling, origin and shadow rules; see [native sprite scaling](native-sprite-scaling.md).
+The material and retained-art paths use their distinct quantized/exact ratios.
 
 The normal-game exploration bridge and camera/unit integration remain open.
 This change does not disable zoom controls, reveal hidden terrain on zoom, or

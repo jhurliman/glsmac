@@ -1,5 +1,7 @@
 #include "TerrainRenderUpdate.h"
 #include "game/backend/map/SmacLandmarkGeometry.h"
+#include "types/texture/SmacIndexedSprite.h"
+#include "fixtures/SmacIndexedSpriteScaleCases.inc"
 #include "game/frontend/NativeTerrainRenderer.h"
 #include "game/frontend/NativeTerrainSession.h"
 #include "fixtures/NativeTerrainView.h"
@@ -831,6 +833,50 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         const auto empty=raster::Draw(initial,texture,{triangle},{12,0,12,32});
         GT_ASSERT(empty.writes==0 && empty.bitmap.pixels==unchanged && initial.pixels==unchanged,"Empty clip or failure mutated caller pixels");
         GT_OK();
+    });
+
+    task->AddTest("SMAC indexed sprite batch binds repeated shadows and opaque solid masks",GT(){
+        namespace raster=game::frontend::smac_terrain_raster;
+        const raster::Bitmap backdrop{2,2,{1,2,3,4}},zero{1,1,{0}},mask{2,2,{0,9,23,7}};
+        std::array<uint8_t,256> shadow{};for(size_t i=0;i<256;++i) {shadow[i]=uint8_t(i+10);}
+        raster::Command command;command.texture=&zero;command.shader=raster::Shader::SpriteShadow;
+        command.shadow_lookup=&shadow;command.sprite_scale={{2,1}};
+        const auto repeated=raster::DrawBatch(backdrop,{command},{{0,0,2,2}},true);
+        GT_ASSERT(repeated.bitmap.pixels==std::vector<uint8_t>({11,11,11,11}) && repeated.writes==4,
+            "Enlarged sprite shadow sampled each destination independently");
+        command.texture=&mask;command.shader=raster::Shader::SpriteSolid;command.sprite_scale={{1,1}};command.sprite_solid=9;
+        const auto solid=raster::DrawBatch(backdrop,{command},{{0,0,2,2}},true);
+        GT_ASSERT(solid.bitmap.pixels==std::vector<uint8_t>({9,2,9,9}) && solid.coverage==std::vector<uint8_t>({1,0,1,1}),
+            "Solid output key index became transparent or source key overwrote backing");
+        command.shader=raster::Shader::Sprite;command.sprite_key=0;
+        const auto keyed=raster::DrawBatch(backdrop,{command},{{0,0,2,2}},true);
+        GT_ASSERT(keyed.bitmap.pixels==std::vector<uint8_t>({1,9,23,7}) && keyed.coverage==std::vector<uint8_t>({0,1,1,1}),
+            "Sprite batch ignored the source key or suppressed literal output9");
+        GT_ASSERT(backdrop.pixels==std::vector<uint8_t>({1,2,3,4}),"Sprite batch mutated caller backing");GT_OK();
+    });
+
+    task->AddTest("SMAC indexed sprite scale matches105 native controls and19114 ordered stores",GT(){
+        namespace native=types::texture::smac_indexed_sprite;
+        const auto hash_byte=[](uint64_t& hash,uint8_t b) {hash=(hash^b)*1099511628211ULL;};
+        std::array<uint8_t,256> shadow{};for(size_t i=0;i<256;++i) {shadow[i]=uint8_t(17+13*i);}
+        uint64_t total=0;
+        for(const auto& c:INDEXED_SPRITE_SCALE_CASES) {
+            std::vector<uint8_t> source,frame(80*56);
+            const auto hex=[](char ch){return ch<='9'?ch-'0':ch-'a'+10;};
+            for(const char* p=c.source;*p;p+=2) {source.push_back(uint8_t(hex(p[0])*16+hex(p[1])));}
+            for(int y=0;y<56;++y) {for(int x=0;x<80;++x) {frame[size_t(y)*80+x]=uint8_t(x<72?(23+x+3*y)%256:253);}}
+            const native::Source sprite{source,c.width,c.height,c.pitch,c.offset,9};
+            const auto plan=native::Prepare(sprite,c.anchor,{{c.n,c.d}},c.clip);
+            uint64_t stores=14695981039346656037ULL;
+            const auto stats=native::Paint(sprite,plan,[&](int x,int y){return frame.at(size_t(y)*80+x);},[&](int x,int y,uint8_t value) {
+                const auto offset=uint32_t(y*80+x);frame.at(offset)=value;
+                for(unsigned byte=0;byte<4;++byte) {hash_byte(stores,uint8_t(offset>>(8*byte)));}hash_byte(stores,value);
+            },c.mode==1?&shadow:nullptr,c.mode==2?std::optional<uint8_t>{248}:std::nullopt);
+            uint64_t pixels=14695981039346656037ULL;for(const auto value:frame) {hash_byte(pixels,value);}
+            GT_ASSERT(stats.writes==c.stores && stores==c.store_hash && pixels==c.frame_hash,"Native sprite case: " + std::string(c.name));
+            total+=stats.writes;
+        }
+        GT_ASSERT(total==19114,"Original sprite store total changed");GT_OK();
     });
 
     task->AddTest("SMAC zoomed known terrain separates diamond size from original relief",GT(){

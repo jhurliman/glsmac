@@ -13,7 +13,7 @@ uint32_t Word(const std::vector<uint8_t>& bytes,size_t offset) {
     return uint32_t(bytes.at(offset))|(uint32_t(bytes.at(offset+1))<<8)|(uint32_t(bytes.at(offset+2))<<16)|(uint32_t(bytes.at(offset+3))<<24);
 }
 int main(int argc,char** argv) {
-    if(argc!=3) {return 1;}const std::string dir=argv[1];std::ifstream input(dir+"/input.txt");
+    if(argc!=3 && argc!=4) {return 1;}const std::string dir=argv[1];std::ifstream input(dir+"/input.txt");
     int tw,th,sw,sh,rw,rh,seed,automatic,initial,observer0_alias,viewer;
     if(!(input>>tw>>th>>sw>>sh>>rw>>rh>>seed>>automatic>>initial>>observer0_alias>>viewer) || seed<0 || seed>65535 || initial<0 || initial>255) {return 1;}
     int partial=0;if(input>>partial) {if(partial<0 || partial>3 || (partial && viewer!=3)) {return 1;}}
@@ -33,13 +33,15 @@ int main(int argc,char** argv) {
         if(partial) {tile.selected_items=Word(bytes,p+24);known[i]=(bytes[p+4]&8)!=0;}
         tile.ordinary=tile.material_admitted=tile.resource_ready=tile.developed_ready=tile.selected_known=true;
     }
-    const int zoom=std::stoi(argv[2]);
-    if(zoom!=-1 && zoom!=1 && zoom!=3 && zoom!=8) {throw std::invalid_argument("Unmeasured diagnostic zoom profile");}
-    if(zoom>0) {
+    const int zoom=std::stoi(argv[2]);const bool retained=argc==4;
+    const auto items=retained?uint32_t(std::stoul(argv[3])):0u;
+    if(retained) {auto& tile=world.tiles[40*38+11];tile.items=tile.selected_items=tile.resource_items=items;}
+    if(zoom!=-1 && zoom!=1 && zoom!=3 && zoom!=8 && !(retained && (zoom==0 || zoom==4))) {throw std::invalid_argument("Unmeasured diagnostic zoom profile");}
+    if(retained || zoom>0) {
         using Geometry=game::backend::map::smac_terrain::LandmarkGeometry;
         std::vector<Geometry::Cell> cells;for(const auto& t:world.tiles) {cells.push_back({t.band,t.landmarks});}
         Geometry geometry(80,80,true,std::move(cells),false,true);geometry.Configure(zoom,25);
-        const native::Point tile=zoom==1?native::Point{{22,38}}:zoom==3?native::Point{{21,35}}:native::Point{{19,39}};
+        const native::Point tile=retained?native::Point{{22,38}}:zoom==1?native::Point{{22,38}}:zoom==3?native::Point{{21,35}}:native::Point{{19,39}};
         native::ViewGeometry::Terrain terrain;terrain.placement.tile=tile;
         terrain.placement.record_offset=44u*uint32_t(40*tile[1]+tile[0]/2);
         int sum=0;for(unsigned v=4;v>0;--v) {sum+=geometry.Height(tile[0],tile[1],v).value();}
@@ -47,9 +49,10 @@ int main(int argc,char** argv) {
         native::ViewGeometry::Plan plan;plan.zoom=zoom;plan.unit=native::Layout(22,38,zoom,true).unit;plan.opaque_background=false;
         terrain.projector={{100,100}};terrain.flat_center={{100+4*plan.unit,100+2*plan.unit+Geometry::FloorQuarter(sum)}};terrain.placement.flat_center=terrain.flat_center;
         plan.terrain.push_back(terrain);
-        if(zoom==3) {plan.clip={{113,87,190,157}};}else if(zoom==8) {plan.clip={{117,97,200,177}};}
+        if(retained && (zoom==4 || zoom==8)) {plan.clip={{113,87,190,157}};}
+        else if(!retained && zoom==3) {plan.clip={{113,87,190,157}};}else if(!retained && zoom==8) {plan.clip={{117,97,200,177}};}
         const auto frame=native::RenderPrepared(world,source,plan,uint16_t(seed),0x60010ee3u,73);
-        std::ofstream output(dir+"/tile-z"+std::to_string(zoom)+".indexed",std::ios::binary);output.write(reinterpret_cast<const char*>(frame.indexed.data()),frame.indexed.size());
+        std::ofstream output(dir+(retained?"/retained-z":"/tile-z")+std::to_string(zoom)+(retained?"-items"+std::to_string(items):"")+".indexed",std::ios::binary);output.write(reinterpret_cast<const char*>(frame.indexed.data()),frame.indexed.size());
         std::cout<<"tile "<<zoom<<" stores "<<frame.writes<<" heights";for(const auto h:terrain.heights) {std::cout<<' '<<h;}std::cout<<'\n';return 0;
     }
     native::ViewGeometry geometry(world);std::optional<native::Frame> previous;

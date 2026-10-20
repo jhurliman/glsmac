@@ -10,6 +10,8 @@
 #include "fixtures/SmacPretemperatureGeneration.h"
 #include "game/backend/map/SmacInitialClimateGeneration.h"
 #include "fixtures/SmacInitialClimateGeneration.h"
+#include "game/backend/map/SmacFinalGeneration.h"
+#include "fixtures/SmacFinalGeneration.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 #include <string>
@@ -73,6 +75,50 @@ struct ClimateObservation {
 };
 }
 void AddSmacContinentGenerationTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC final generation passes match original contours wet counts and features",GT(){
+        uint64_t stores=0,draws=0,pumps=0;
+        for(const auto& c:fixtures::final_generation::Cases()) {
+            const generation::Geometry g{c.width,c.height};
+            generation::State s{std::vector<generation::Record>(size_t(g.width/2)*size_t(g.height)),{{2,1,1,1,1,1,1}},
+                game::backend::SmacGameplayRandomState(1234567,7)};
+            generation::Regions regions;PrepareRegionInput(s,g,regions,c.profile,c.areas);
+            s.topology=c.flat?1:0;s.resource_pattern=c.pattern;s.reset_words[0]=c.sea_offset;s.dirty_flags=16;
+            s.working_land_table={{0,15,32,45,60,75,80,100,100,100,100}};
+            for(auto& record:s.records) {
+                record[3]=uint8_t(c.region);
+                for(unsigned k=0;k<4;++k) {record[8+k]=uint8_t(c.items>>(8*k));record[12+k]=uint8_t(c.marks>>(8*k));}
+            }
+            for(const auto& p:c.patches) {s.records.at(size_t(p.y)*size_t(g.width/2)+size_t(p.x/2)).at(p.field)=p.value;}
+            for(const auto& p:c.region_cells) {s.records.at(size_t(p[1])*size_t(g.width/2)+size_t(p[0]/2))[3]=uint8_t(p[2]);}
+            for(const auto& p:c.area_values) {for(unsigned k=0;k<4;++k) {regions.records.at(size_t(p[0])*28+k)=uint8_t(uint32_t(p[1])>>(8*k));}}
+            GT_ASSERT(util::SHA256(Bytes(s))==c.input_hash && util::SHA256(RegionBytes(regions))==c.input_regions_hash,
+                "Original final-pass input differs: "+std::string(c.id));
+            ClimateObservation observed;
+            if(c.kind==0) {generation::NormalizeContours(s,g,&observed.trace);}
+            else if(c.kind==1) {generation::ClimatePostpass(s,g,regions,&observed.trace);}
+            else {generation::FinalFeatures(s,g,&observed.trace);}
+            GT_ASSERT(util::SHA256(Bytes(s))==c.output_hash && util::SHA256(RegionBytes(regions))==c.output_regions_hash
+                && s.random.Crt()==c.crt && s.random.Shared()==c.shared && s.dirty_flags==c.dirty && s.working_land_table==c.thresholds,
+                "Original final-pass output differs: "+std::string(c.id));
+            GT_ASSERT(util::SHA256(observed.stores)==c.store_hash && util::SHA256(observed.rng)==c.rng_hash
+                && observed.trace.stores==c.stores && observed.trace.crt_draws==c.draws && observed.trace.shared_events==0
+                && observed.trace.pumps==c.pumps && observed.checkpoints==c.pumps,"Original ordered final-pass trace differs: "+std::string(c.id));
+            const std::string id=c.id;
+            if(id.rfind("postpass_area",0)==0) {
+                const uint32_t expected=id=="postpass_area80_40"?0x40004000u:id=="postpass_area80_39"?0x40000000u
+                    :(id=="postpass_area79_40" || id=="postpass_area40_40")?0x4000u:0u;
+                const auto& center=s.records.at(size_t(12)*size_t(g.width/2)+8);
+                const auto items=uint32_t(center[8])|(uint32_t(center[9])<<8)|(uint32_t(center[10])<<16)|(uint32_t(center[11])<<24);
+                GT_ASSERT((items&0x40004000u)==expected,"Region-area control did not exercise its intended boundary");
+            }
+            if(id=="features_positive_jungle_all_land") {
+                size_t nutrient=0;for(const auto& record:s.records) {nutrient+=(record[10]&1)!=0;}
+                GT_ASSERT(observed.trace.crt_draws==384 && nutrient>0 && nutrient<s.records.size(),"Jungle feature control missed a parity outcome");
+            }
+            stores+=observed.trace.stores;draws+=observed.trace.crt_draws;pumps+=observed.trace.pumps;
+        }
+        GT_ASSERT(stores==16590 && draws==384 && pumps==408,"Final-pass original coverage changed");GT_OK();
+    });
     task->AddTest("SMAC initial climate matches original temperature sources fungus and actual setup",GT(){
         uint64_t stores=0,draws=0,shared=0;
         for(const auto& c:fixtures::initial_climate::Cases()) {

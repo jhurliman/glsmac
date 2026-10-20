@@ -43,6 +43,18 @@ Surface::Surface( DOM_ARGS_T )
 	Actor( m_actor );
 	g->AddActor( m_actor );
 
+    Method(GSE_CALL,"smacfactionportrait",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(1);N_GETVALUE(filename,0,String);
+        // Same +10 modulo256 PCX rebasing, active common palette and raw255
+        // (loaded index9) key as the original software indexed importer.
+        const auto* atlas=g_engine->GetTextureLoader()->LoadCustomTexture(filename,types::texture::TF_SMAC_SOFTWARE_TERRAIN);
+        if(atlas->GetWidth()!=1024 || atlas->GetHeight()!=768) {GSE_ERROR(gse::EC.LOADER_ERROR,"Faction portrait requires the original1024x768 sheet");}
+        CreateTexture();m_background.texture->Resize(131,157);
+        m_background.texture->AddFrom(atlas,types::texture::AM_DEFAULT,304,457,434,613);
+        m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);
+        m_geometry->AsRectangle()->SetStretched();
+        return VALUE(gse::value::Undefined);
+    }));
 	Method( GSE_CALL, "playmovie", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 ); N_GETVALUE( path, 0, String );
 		StopMovie();

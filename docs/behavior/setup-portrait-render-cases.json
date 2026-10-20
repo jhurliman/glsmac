@@ -1,0 +1,469 @@
+{
+  "contract": "RE-SMAC-SETUP-PORTRAIT-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "evidence_kind": "static source and independently decoded installed asset indices; no original UI execution",
+  "checked_instruction_literals": 17,
+  "palette_authority": "already active common PALETTE.PCX, not faction embedded palette",
+  "loader_arguments": [
+    "filename",
+    0,
+    10,
+    236
+  ],
+  "loaded_index_vectors": [
+    [
+      0,
+      10
+    ],
+    [
+      235,
+      245
+    ],
+    [
+      236,
+      246
+    ],
+    [
+      245,
+      255
+    ],
+    [
+      246,
+      0
+    ],
+    [
+      254,
+      8
+    ],
+    [
+      255,
+      9
+    ]
+  ],
+  "transparent_loaded_index": 9,
+  "gamma100_channel_rule": "min(channel,235)",
+  "extra_scanline_overlay": false,
+  "unscaled_copy": "each non-key index unchanged, every row",
+  "rgba_hash_encoding": "131*157 row-major uint8 RGBA; transparent=0,0,0,0; opaque RGB=min(common source entry channel,235), alpha255; derived expectation, not original framebuffer",
+  "profiles": [
+    {
+      "file": "GAIANS.pcx",
+      "sha256": "a2d4214c3857c130586a249adf8c48c27d877f3da8321f5d53155ca5836d0891",
+      "atlas_rect": [
+        304,
+        457,
+        131,
+        157
+      ],
+      "trim_left": 0,
+      "trim_top": 0,
+      "trimmed_width": 131,
+      "trimmed_height": 157,
+      "transparent_coordinates": [
+        [
+          0,
+          0
+        ],
+        [
+          130,
+          0
+        ],
+        [
+          0,
+          156
+        ],
+        [
+          130,
+          156
+        ]
+      ],
+      "common_gamma100_rgba_sha256": "922ab8cee847a71b12edbc69bb82023bc777e88a0453b547435b248591f71864",
+      "own_vs_common_differing_common_indices": [
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        208
+      ],
+      "used_differing_common_index_counts": {
+        "130": 1,
+        "131": 1,
+        "132": 4,
+        "133": 10,
+        "134": 7,
+        "135": 14,
+        "136": 113,
+        "137": 532,
+        "138": 2073
+      }
+    },
+    {
+      "file": "HIVE.pcx",
+      "sha256": "33e6ea743186906a57aefc44a74a479f7964a6c8e0baec6857540c6d34861440",
+      "atlas_rect": [
+        304,
+        457,
+        131,
+        157
+      ],
+      "trim_left": 0,
+      "trim_top": 0,
+      "trimmed_width": 131,
+      "trimmed_height": 157,
+      "transparent_coordinates": [
+        [
+          0,
+          0
+        ],
+        [
+          130,
+          0
+        ],
+        [
+          0,
+          156
+        ],
+        [
+          130,
+          156
+        ]
+      ],
+      "common_gamma100_rgba_sha256": "2a8b59ccfea618e4fc85c4421cf93cb56ac3015af9a75e92b0ddc81cde6ed1ec",
+      "own_vs_common_differing_common_indices": [
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138
+      ],
+      "used_differing_common_index_counts": {
+        "128": 2,
+        "129": 1,
+        "130": 1,
+        "131": 22,
+        "132": 36,
+        "133": 47,
+        "134": 8,
+        "135": 11,
+        "136": 241,
+        "137": 268,
+        "138": 321
+      }
+    },
+    {
+      "file": "UNIV.pcx",
+      "sha256": "84ccbaa954808a6fe14dc6f3f41850fbb37350f1af34359a21b8820ecf3019a5",
+      "atlas_rect": [
+        304,
+        457,
+        131,
+        157
+      ],
+      "trim_left": 0,
+      "trim_top": 0,
+      "trimmed_width": 131,
+      "trimmed_height": 157,
+      "transparent_coordinates": [
+        [
+          0,
+          0
+        ],
+        [
+          130,
+          0
+        ],
+        [
+          0,
+          156
+        ],
+        [
+          130,
+          156
+        ]
+      ],
+      "common_gamma100_rgba_sha256": "90c9270373c8c4cfffb3f8ffba9c5c148fbc2ccf4f65411ed89bfb257838d358",
+      "own_vs_common_differing_common_indices": [
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        208
+      ],
+      "used_differing_common_index_counts": {
+        "128": 4,
+        "129": 3,
+        "130": 1,
+        "131": 17,
+        "132": 26,
+        "133": 64,
+        "134": 50,
+        "135": 109,
+        "136": 517,
+        "137": 483,
+        "138": 562
+      }
+    },
+    {
+      "file": "MORGAN.pcx",
+      "sha256": "d9eb422a7326e8b042bc7e22b5071c9170e18e4d846751a82df07e9746ae6f5a",
+      "atlas_rect": [
+        304,
+        457,
+        131,
+        157
+      ],
+      "trim_left": 0,
+      "trim_top": 0,
+      "trimmed_width": 131,
+      "trimmed_height": 157,
+      "transparent_coordinates": [
+        [
+          0,
+          0
+        ],
+        [
+          130,
+          0
+        ],
+        [
+          0,
+          156
+        ],
+        [
+          130,
+          156
+        ]
+      ],
+      "common_gamma100_rgba_sha256": "ee9dea9295579c384d6bf2214a4bedd3dc8e27727238c3f4e837fe9387e8c544",
+      "own_vs_common_differing_common_indices": [
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        208
+      ],
+      "used_differing_common_index_counts": {
+        "129": 1,
+        "130": 6,
+        "131": 47,
+        "132": 22,
+        "133": 82,
+        "134": 61,
+        "135": 80,
+        "136": 64,
+        "137": 88,
+        "138": 131
+      }
+    },
+    {
+      "file": "SPARTANS.pcx",
+      "sha256": "03223f0985c5c485ede3489f71fabfe437e2011471305572cfbd57b115b0e5a5",
+      "atlas_rect": [
+        304,
+        457,
+        131,
+        157
+      ],
+      "trim_left": 0,
+      "trim_top": 0,
+      "trimmed_width": 131,
+      "trimmed_height": 157,
+      "transparent_coordinates": [
+        [
+          0,
+          0
+        ],
+        [
+          130,
+          0
+        ],
+        [
+          0,
+          156
+        ],
+        [
+          130,
+          156
+        ]
+      ],
+      "common_gamma100_rgba_sha256": "20b14d521e3ace089069e245e8d818b8d6aa9070500d000fd6e07acd00c90e47",
+      "own_vs_common_differing_common_indices": [
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        208
+      ],
+      "used_differing_common_index_counts": {
+        "128": 73,
+        "129": 177,
+        "130": 229,
+        "131": 398,
+        "132": 481,
+        "133": 468,
+        "134": 621,
+        "135": 965,
+        "136": 1024,
+        "137": 959,
+        "138": 2149
+      }
+    },
+    {
+      "file": "BELIEVE.pcx",
+      "sha256": "5c1cdb7b0c79f0f8756b7a8483cd9f97c424142b5e68ccae2a11ad80c975aab0",
+      "atlas_rect": [
+        304,
+        457,
+        131,
+        157
+      ],
+      "trim_left": 0,
+      "trim_top": 0,
+      "trimmed_width": 131,
+      "trimmed_height": 157,
+      "transparent_coordinates": [
+        [
+          0,
+          0
+        ],
+        [
+          130,
+          0
+        ],
+        [
+          0,
+          156
+        ],
+        [
+          130,
+          156
+        ]
+      ],
+      "common_gamma100_rgba_sha256": "d54bfaf557d42b0db4411e2fc886a8852890a92f31391a6f600ad93a6b30fff8",
+      "own_vs_common_differing_common_indices": [
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        208
+      ],
+      "used_differing_common_index_counts": {
+        "131": 1,
+        "132": 6,
+        "133": 4,
+        "134": 7,
+        "135": 11,
+        "136": 36,
+        "137": 6,
+        "138": 15
+      }
+    },
+    {
+      "file": "PEACE.pcx",
+      "sha256": "0b8ce79edd9ea0d87bddbd6d241e6adbaaf746eb0e9a9f86ac99f7cfa061e772",
+      "atlas_rect": [
+        304,
+        457,
+        131,
+        157
+      ],
+      "trim_left": 0,
+      "trim_top": 0,
+      "trimmed_width": 131,
+      "trimmed_height": 157,
+      "transparent_coordinates": [
+        [
+          0,
+          0
+        ],
+        [
+          130,
+          0
+        ],
+        [
+          0,
+          156
+        ],
+        [
+          130,
+          156
+        ]
+      ],
+      "common_gamma100_rgba_sha256": "1b8ff27bf86935ff9c2f5c0db4023a16fc176f8b760f9071c8c46707166a3837",
+      "own_vs_common_differing_common_indices": [
+        128,
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        208
+      ],
+      "used_differing_common_index_counts": {
+        "128": 3,
+        "129": 14,
+        "130": 13,
+        "131": 19,
+        "132": 30,
+        "133": 7,
+        "134": 8,
+        "135": 22,
+        "136": 75,
+        "137": 104,
+        "138": 161
+      }
+    }
+  ],
+  "unverified": [
+    "whole rendered UI",
+    "physical device palette realization",
+    "scaled pixel parity and clipping",
+    "fallback/custom faction portraits"
+  ]
+}

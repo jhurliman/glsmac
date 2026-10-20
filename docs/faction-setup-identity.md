@@ -59,9 +59,11 @@ normally through the title menu (exit0, no tracked GL leaks).
 
 ## Remaining fidelity work
 
-This is functional setup wiring, not dialog pixel parity. Portrait/quotation
-and detail previews, descriptors, OTHER/file selection, original positioning,
-fonts and complete button artwork remain open. Gender is retained and shown;
+This is functional setup wiring, not dialog pixel parity. Live portrait,
+quotation/detail previews and descriptors now have a separate
+[implementation and evidence](faction-selection-preview.md). OTHER/file
+selection, original positioning, fonts and complete button artwork remain
+open. Gender is retained and shown;
 editing remains deferred because the original static binding is unverified.
 The form currently offers an explicit Customize button instead of claiming the
 source Change Gender secondary action is reproduced.

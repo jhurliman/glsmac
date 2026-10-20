@@ -1,4 +1,5 @@
 #include "BaseManager.h"
+#include "game/ActorVisibilitySnapshot.h"
 
 #include <algorithm>
 
@@ -44,6 +45,18 @@ BaseManager::BaseManager( Game* game, bool smac_population )
 		: g_engine->GetFontLoader()->LoadFont(::resource::TTF_ARIALN,48),smac_population ) )
 	, m_badge_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( ::resource::TTF_ARIALNB, 48 ) ) )
 	, m_smac_population( smac_population ) {
+}
+
+actor_visibility::BaseVisibility BaseManager::GetBaseVisibility(size_t id) const {
+    if(m_game->IsNativeTerrainInspector()) {return {true,true};}
+    const auto* snapshot=m_game->GetActorVisibility();
+    if(snapshot && snapshot->available) {return snapshot->BaseDisclosure(id);}
+    // Legacy synthetic views have no original-game disclosure authority.
+    // An ordinary SMAC view must wait for its owned snapshot.
+    return m_smac_population ? actor_visibility::BaseVisibility{} : actor_visibility::BaseVisibility{true,true};
+}
+void BaseManager::RefreshVisibility() {
+    for(const auto& row:m_bases) {row.second->Show();}
 }
 
 BaseManager::~BaseManager() {

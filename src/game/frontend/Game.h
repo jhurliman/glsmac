@@ -194,6 +194,7 @@ CLASS( Game, common::Module )
     bool UsesNativeMapProjection() const {return m_map_data.native_projection;}
     std::shared_ptr<types::texture::Texture> GetNativeTilePreview(int x,int y);
     bool AllowsNativeTileInspection(int x,int y) const;
+    bool IsNativeTerrainInspector() const {return m_native_inspector;}
     const actor_visibility::Snapshot* GetActorVisibility() const {return m_world_retired ? nullptr:m_actor_visibility.get();}
 	text::InstancedTextManager* GetITM() const;
 

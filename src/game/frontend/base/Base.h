@@ -24,6 +24,8 @@ class Render;
 }
 }
 
+namespace gse::tests {class BackendFixture;}
+
 namespace game {
 namespace frontend {
 
@@ -105,6 +107,7 @@ protected:
 	void SetRenderCoords( const types::Vec3& coords ) override;
 
 private:
+    friend class gse::tests::BackendFixture;
     std::optional<::game::smac_base_body::Selection> m_native_body;
 
 	BaseManager* m_bm = nullptr;
@@ -131,6 +134,7 @@ private:
 		} badge;
 	} m_render;
 
+    bool m_name_rendered=false;
 	bool m_is_guarded = false;
 
 	bool m_is_owned = false;
@@ -142,6 +146,9 @@ private:
 
 	void ShowBadge();
 	void HideBadge();
+    void HideBody();
+    void ShowName();
+    void HideName();
 
 	void UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite );
 	sprite::Sprite* GetSpriteFor( faction::Faction* faction ) const;

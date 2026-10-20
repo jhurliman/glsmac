@@ -2939,6 +2939,66 @@ public:
 				&& manager.GetBaseAfter(friendly)==friendly,"navigation inferred owner from visual faction");
 			manager.UpdateBaseIdentity(captured,6,second.GetFaction(),"Recaptured");
 			GT_ASSERT(red_actor->HasInstance(2) && red_actor->HasInstance(3) && blue_actor->HasInstance(1) && !blue_actor->HasInstance(3),"repeated ownership/style changes reused stale actor instance IDs");
+            {
+                auto previous=std::move(frontend.m_actor_visibility);auto* prior_manager=frontend.m_bm;
+                const bool prior_smac=manager.m_smac_population;
+                util::FinallyGuard restore_visibility([&]{
+                    manager.m_smac_population=prior_smac;frontend.m_native_inspector=false;
+                    frontend.m_actor_visibility=std::move(previous);friendly->SetNativeBody(std::nullopt);friendly->SetRenderCoords({0,0,0});
+                    manager.RefreshVisibility();frontend.m_bm=prior_manager;
+                });
+                frontend.m_bm=&manager;
+                game::actor_visibility::Snapshot knowledge;
+                knowledge.available=true;knowledge.width=80;knowledge.height=80;knowledge.viewer=1;knowledge.observers=2;
+                knowledge.explored_by.assign(3200,0);
+                knowledge.bases.emplace(9,game::actor_visibility::Base{{2,2},2,uint8_t(2)});
+                knowledge.bases.emplace(10,game::actor_visibility::Base{{4,2},1,{}});
+                knowledge.bases.emplace(11,game::actor_visibility::Base{{6,2},2,{}});
+                const auto publish=[&]{
+                    game::FrontendRequest request(game::FrontendRequest::FR_ACTOR_VISIBILITY);
+                    NEW(request.data.actor_visibility.snapshot,game::actor_visibility::Snapshot,knowledge);
+                    frontend.ProcessRequest(&request);
+                };
+                const auto check=[&](game::frontend::base::Base* base,bool body,bool name) {
+                    const auto& render=base->m_render;
+                    const bool actual_body=render.sprite && render.sprite->instanced_sprite->actor->HasInstance(render.instance_id);
+                    const bool actual_badge=render.badge.def->instanced_sprite->actor->HasInstance(render.badge.instance_id);
+                    return actual_body==body && actual_badge==body && render.name_sprite->IsVisible()==name
+                        && render.is_rendered==body && base->m_name_rendered==name;
+                };
+                publish();
+                GT_ASSERT(check(captured,false,true) && check(friendly,false,true) && check(enemy,false,false),
+                    "Unknown Base disclosure did not separate actual names from body/population instances");
+                friendly->Hide();GT_ASSERT(check(friendly,false,false),"Hide leaked a name whose body was already hidden");
+                friendly->Show();
+                manager.UpdateBaseIdentity(friendly,0,first.GetFaction(),"Renamed in fog");
+                friendly->SetRenderCoords({1,2,3});
+                friendly->SetNativeBody(::game::smac_base_body::Selection{1,0});
+                GT_ASSERT(check(friendly,false,true) && friendly->GetName()=="Renamed in fog",
+                    "Name-only Base identity/body/projection refresh lost its label or exposed artwork");
+                knowledge.revealed_by=4;publish();
+                GT_ASSERT(check(captured,false,true) && check(friendly,false,true) && check(enemy,false,false),
+                    "Foreign faction reveal admitted Base bodies");
+                knowledge.revealed_by=2;publish();
+                GT_ASSERT(check(captured,true,true) && check(friendly,true,true) && check(enemy,false,false),
+                    "Local reveal waived foreign discovery or omitted disclosed bodies");
+                knowledge.revealed_by=0;knowledge.explored_by.assign(3200,2);publish();
+                GT_ASSERT(check(captured,true,true) && check(friendly,true,true) && check(enemy,false,false),
+                    "Explored Base disclosure lost independent stored discovery");
+                knowledge.bases.at(11).known_by=2;publish();
+                GT_ASSERT(check(enemy,true,true),"New Base discovery failed to repaint body, badge and name");
+                knowledge.explored_by.assign(3200,0);publish();
+                GT_ASSERT(check(enemy,false,true),"Losing terrain admission retained body pixels or erased disclosed primary name");
+                knowledge.bases.erase(10);publish();
+                GT_ASSERT(check(friendly,false,false),"Missing snapshot roster row retained stale Base instances");
+                manager.m_smac_population=true;
+                game::FrontendRequest unavailable(game::FrontendRequest::FR_ACTOR_VISIBILITY);
+                frontend.ProcessRequest(&unavailable);
+                GT_ASSERT(check(captured,false,false) && check(enemy,false,false),"Unavailable ordinary SMAC authority became a reveal fallback");
+                manager.m_smac_population=false;frontend.m_native_inspector=true;publish();
+                GT_ASSERT(check(captured,true,true) && check(friendly,true,true) && check(enemy,true,true),
+                    "Explicit revealed inspector lost its intentional Base presentation");
+            }
             // Source-loaded University size0 rectangle: four original height contexts.
             game::backend::faction::Faction original("ORIGINAL_GRID","Original grid");
             original.m_bases_render={"synthetic-base-grid",1,1,100,75,50,37,1,1,1};

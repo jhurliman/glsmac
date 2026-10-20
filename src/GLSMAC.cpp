@@ -766,12 +766,12 @@ void GLSMAC::LoadCampaign(GSE_CALLABLE,const std::string& path) {
         auto* backend=g_engine->GetGame();
         backend->BindLocalCampaignState(candidate);
         m_campaign_previous_state=m_state;m_state=candidate;
-        try { StartGame(GSE_CALL,saved.world); }
+        try { StartGame(GSE_CALL,saved.world,saved.cursor); }
         catch(...) { m_reset_needed=true; throw; }
     } catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
 }
 
-void GLSMAC::StartGame( GSE_CALLABLE, std::optional<std::string> campaign_world ) {
+void GLSMAC::StartGame( GSE_CALLABLE, std::optional<std::string> campaign_world, std::optional<game::ui_view::Cursor> campaign_cursor ) {
 	if ( m_state->m_connection && m_state->m_connection->IsClient()
 		&& !m_state->m_connection->AsClient()->HasGlobalSettings() ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Waiting for the host's gameplay settings" );
@@ -804,7 +804,7 @@ void GLSMAC::StartGame( GSE_CALLABLE, std::optional<std::string> campaign_world 
 			);
 		}, [this] () {
             if(m_campaign_previous_state) {m_reset_needed=true;}
-		}, std::move(campaign_world)
+		}, std::move(campaign_world),campaign_cursor
 	);
 
 	S_Game( GSE_CALL );

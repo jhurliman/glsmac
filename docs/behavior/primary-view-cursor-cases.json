@@ -1,0 +1,418 @@
+{
+  "manifest_sha256": "8493892b549aa1b8f705d05119c5c70fb143017a1a998f22b670a5aa4a6ea4ec",
+  "scope": "Complete original SAV read then bounded ordinary primary reopen; later Unit-controller focus is separate. Production tests cover reopen cursor and six primary fields, not the original binary SAV format or the complete outer controller.",
+  "cases": [
+    {
+      "input": {
+        "id": "zero_units_two_bases"
+      },
+      "loaded_cursor": [
+        22,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        22,
+        38
+      ],
+      "loaded_selected": -1,
+      "base_count": 2,
+      "unit_count": 0
+    },
+    {
+      "input": {
+        "id": "zero_units_no_bases",
+        "bases": []
+      },
+      "loaded_cursor": [
+        22,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        22,
+        38
+      ],
+      "loaded_selected": -1,
+      "base_count": 0,
+      "unit_count": 0
+    },
+    {
+      "input": {
+        "id": "two_ready",
+        "units": [
+          {},
+          {}
+        ]
+      },
+      "loaded_cursor": [
+        22,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        22,
+        38
+      ],
+      "loaded_selected": -1,
+      "base_count": 2,
+      "unit_count": 2
+    },
+    {
+      "input": {
+        "id": "two_ready_selected1",
+        "units": [
+          {},
+          {}
+        ],
+        "selected": 1
+      },
+      "loaded_cursor": [
+        22,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        22,
+        38
+      ],
+      "loaded_selected": 1,
+      "base_count": 2,
+      "unit_count": 2
+    },
+    {
+      "input": {
+        "id": "two_ready_distant",
+        "units": [
+          {
+            "tile": [
+              60,
+              60
+            ]
+          },
+          {
+            "tile": [
+              50,
+              50
+            ]
+          }
+        ]
+      },
+      "loaded_cursor": [
+        22,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        22,
+        38
+      ],
+      "loaded_selected": -1,
+      "base_count": 2,
+      "unit_count": 2
+    },
+    {
+      "input": {
+        "id": "two_exhausted",
+        "units": [
+          {
+            "spent": 3
+          },
+          {
+            "spent": 3
+          }
+        ]
+      },
+      "loaded_cursor": [
+        22,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        22,
+        38
+      ],
+      "loaded_selected": -1,
+      "base_count": 2,
+      "unit_count": 2
+    },
+    {
+      "input": {
+        "id": "two_sentry",
+        "units": [
+          {
+            "order": 1
+          },
+          {
+            "order": 2
+          }
+        ]
+      },
+      "loaded_cursor": [
+        22,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        22,
+        38
+      ],
+      "loaded_selected": -1,
+      "base_count": 2,
+      "unit_count": 2
+    },
+    {
+      "input": {
+        "id": "foreign_units_only",
+        "units": [
+          {
+            "owner": 4
+          },
+          {
+            "owner": 4
+          }
+        ]
+      },
+      "loaded_cursor": [
+        22,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        22,
+        38
+      ],
+      "loaded_selected": -1,
+      "base_count": 2,
+      "unit_count": 2
+    },
+    {
+      "input": {
+        "id": "zero_units_invalid_cursor",
+        "cursor": [
+          -1,
+          38
+        ]
+      },
+      "loaded_cursor": [
+        -1,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        40,
+        40
+      ],
+      "loaded_selected": -1,
+      "base_count": 2,
+      "unit_count": 0
+    },
+    {
+      "input": {
+        "id": "two_ready_invalid_cursor",
+        "cursor": [
+          80,
+          38
+        ],
+        "units": [
+          {},
+          {}
+        ]
+      },
+      "loaded_cursor": [
+        80,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        40,
+        40
+      ],
+      "loaded_selected": -1,
+      "base_count": 2,
+      "unit_count": 2
+    },
+    {
+      "input": {
+        "id": "zero_units_parity_cursor",
+        "cursor": [
+          23,
+          38
+        ]
+      },
+      "loaded_cursor": [
+        23,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        23,
+        38
+      ],
+      "loaded_selected": -1,
+      "base_count": 2,
+      "unit_count": 0
+    },
+    {
+      "input": {
+        "id": "no_control_zero_units",
+        "control": 0
+      },
+      "loaded_cursor": [
+        22,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        22,
+        38
+      ],
+      "loaded_selected": -1,
+      "base_count": 2,
+      "unit_count": 0
+    },
+    {
+      "input": {
+        "id": "two_exhausted_selected1",
+        "units": [
+          {
+            "spent": 3
+          },
+          {
+            "spent": 3
+          }
+        ],
+        "selected": 1
+      },
+      "loaded_cursor": [
+        22,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        22,
+        38
+      ],
+      "loaded_selected": 1,
+      "base_count": 2,
+      "unit_count": 2
+    },
+    {
+      "input": {
+        "id": "two_sentry_selected1",
+        "units": [
+          {
+            "order": 1
+          },
+          {
+            "order": 2
+          }
+        ],
+        "selected": 1
+      },
+      "loaded_cursor": [
+        22,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        22,
+        38
+      ],
+      "loaded_selected": 1,
+      "base_count": 2,
+      "unit_count": 2
+    },
+    {
+      "input": {
+        "id": "cursor_already_on_unit",
+        "cursor": [
+          20,
+          40
+        ],
+        "units": [
+          {},
+          {}
+        ]
+      },
+      "loaded_cursor": [
+        20,
+        40
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        20,
+        40
+      ],
+      "loaded_selected": -1,
+      "base_count": 2,
+      "unit_count": 2
+    },
+    {
+      "input": {
+        "id": "negative_saved_zoom",
+        "zoom": -14
+      },
+      "loaded_cursor": [
+        22,
+        38
+      ],
+      "reopened_view": [
+        0,
+        1,
+        1610682083,
+        0,
+        22,
+        38
+      ],
+      "loaded_selected": -1,
+      "base_count": 2,
+      "unit_count": 0
+    }
+  ]
+}

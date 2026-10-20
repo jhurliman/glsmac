@@ -2,6 +2,8 @@
 #include <cstddef>
 #include <string>
 #include "RosterRecords.h"
+#include "game/PrimaryViewState.h"
+#include <optional>
 
 namespace game::backend::campaign {
 // GLSMAC-native campaign file. The existing settings and world codecs stay authoritative.
@@ -10,6 +12,7 @@ struct Record {
     roster::RosterRecord roster;
     size_t local_slot;
     std::string world;
+    std::optional<ui_view::Cursor> cursor;
 };
 inline constexpr size_t MAX_BYTES = 128 * 1024 * 1024;
 std::string Encode(const Record& record);

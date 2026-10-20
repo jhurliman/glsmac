@@ -1,4 +1,5 @@
 #pragma once
+#include "game/PrimaryViewState.h"
 
 // top level game object
 // passed to scripts and everywhere, contains global state
@@ -120,7 +121,7 @@ private:
 	game::backend::faction::Faction* GetEditableSinglePlayerFaction(const std::string& id) const;
 	void SetSinglePlayerLeader(const std::string& id, const std::string& name);
 	void RestoreSinglePlayerIdentity(const std::string& id, game::backend::faction::DisplayIdentity identity);
-	void StartGame( GSE_CALLABLE, std::optional<std::string> campaign_world = {} );
+	void StartGame( GSE_CALLABLE, std::optional<std::string> campaign_world = {}, std::optional<game::ui_view::Cursor> campaign_cursor = {} );
 	void LoadCampaign(GSE_CALLABLE,const std::string& path);
 	game::backend::State* m_campaign_previous_state = nullptr;
 	void CompleteCampaignLoad() { if(!m_reset_needed) {m_campaign_previous_state = nullptr;} }

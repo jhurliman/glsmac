@@ -78,8 +78,9 @@ namespace frontend {
 
 const Game::consts_t Game::s_consts = {};
 
-Game::Game( GLSMAC* glsmac, backend::State* state, ui::UI* const ui, const std::function< void() > on_start, const std::function< void() > on_cancel, std::optional<std::string> campaign_world )
+Game::Game( GLSMAC* glsmac, backend::State* state, ui::UI* const ui, const std::function< void() > on_start, const std::function< void() > on_cancel, std::optional<std::string> campaign_world, std::optional<ui_view::Cursor> campaign_cursor )
 	: m_campaign_world(std::move(campaign_world))
+    , m_campaign_cursor(campaign_cursor),m_ui_cursor(campaign_cursor)
 	, m_glsmac( glsmac )
 	, m_state( state )
 	, m_ui( ui )
@@ -1911,6 +1912,7 @@ void Game::Initialize(
 	m_is_resize_handler_set = true;
 
 	ResetMapState();
+    RestoreCampaignCursor();
 
 	m_is_initialized = true;
 
@@ -2599,6 +2601,11 @@ const bool Game::IsTurnActive() const {
 
 const size_t Game::GetMySlotIndex() const {
 	return m_slot_index;
+}
+
+void Game::SetUiCursor(ui_view::Cursor cursor) {
+    m_ui_cursor=cursor;
+    if(m_game && m_world_ticket && !m_world_retired) {m_game->UpdateUiCursor(m_world_ticket,cursor);}
 }
 
 void Game::SetSelectedTile( tile::Tile* tile ) {

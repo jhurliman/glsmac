@@ -28,6 +28,25 @@
 #include <cmath>
 
 namespace game::frontend {
+void Game::RestoreCampaignCursor() {
+    if(!m_campaign_cursor) {return;}
+    const auto camera=ui_view::ReopenCamera(*m_campaign_cursor,
+        {{int32_t(m_map_data.width),int32_t(m_map_data.height)}});
+    const auto cursor=*m_campaign_cursor;
+    if(m_tm && cursor[0]>=0 && cursor[1]>=0 && size_t(cursor[0])<m_map_data.width && size_t(cursor[1])<m_map_data.height
+        && !((cursor[0]^cursor[1])&1)) {
+        m_tile_at_query_purpose=backend::TQP_TILE_SELECT;
+        SelectTileOrUnit(m_tm->GetTile(size_t(cursor[0]),size_t(cursor[1])));
+    }
+    SetUiCursor(cursor);m_campaign_cursor.reset();
+    if(m_native_context) {
+        m_native_context->Reopen(cursor,{{int32_t(m_map_data.width),int32_t(m_map_data.height)}});
+        if(m_native_inspector) {m_native_context->flags=0x10621;}
+        m_native_camera_from_legacy=false;m_native_frame_dirty=true;
+    }else if(m_tm && !((camera[0]^camera[1])&1)) {
+        ScrollToTile(m_tm->GetTile(size_t(camera[0]),size_t(camera[1])),true);
+    }
+}
 bool Game::AllowsNativeTileInspection(int x,int y) const {
     if(m_native_inspector) {return true;}
     if(m_actor_visibility) {return !m_world_retired && m_actor_visibility->Known(x,y);}

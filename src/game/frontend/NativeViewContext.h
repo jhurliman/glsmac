@@ -2,6 +2,7 @@
 #include "NativeTerrainView.h"
 #include "SmacKnownGrid.h"
 #include "game/NativeTerrainWorld.h"
+#include "game/PrimaryViewState.h"
 
 namespace game::frontend::native_terrain {
 // UI-owned current primary view. Receiving a world/worker snapshot must not
@@ -16,6 +17,10 @@ struct ViewContext {
     smac_known_grid::Preferences preferences{0xbbe1ddb6u,0x003a7168u};
     int relief=25;
     static constexpr int SurveyLight=2;
+    void Reopen(ui_view::Cursor cursor,ui_view::Cursor world) {
+        index=0;active=1;flags=0x60010ee3u;zoom=0;
+        const auto restored=ui_view::ReopenCamera(cursor,world);camera={{restored[0],restored[1]}};
+    }
     void ToggleFlattenedTerrain() {
         preferences.more^=0x10000u;
         relief=(preferences.more&0x10000u)?8:25;

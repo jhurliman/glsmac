@@ -101,6 +101,10 @@ Tile* TileManager::GetSelectedTile() const {
 
 void TileManager::SelectTile( Tile* tile ) {
 	m_selected_tile = tile;
+    if(tile) {
+        const auto& cursor=tile->GetCoords();
+        if(cursor.x<=INT32_MAX && cursor.y<=INT32_MAX) {m_game->SetUiCursor({{int32_t(cursor.x),int32_t(cursor.y)}});}
+    }
 }
 
 void TileManager::DeselectTile() {

@@ -1,4 +1,5 @@
 #include "fixtures/NativeZoomPolicy.h"
+#include "fixtures/PrimaryViewCursor.h"
 #include "game/frontend/NativeZoomPolicy.h"
 #include "input/Event.h"
 #include "types/mesh/Rectangle.h"
@@ -4099,9 +4100,11 @@ public:
                 completed_error=static_cast<value::String*>(result.at("error"))->value;
                 return VALUE(value::Undefined);
             }));
+            frontend->SetUiCursor({{22,38}});
             auto* apply=NATIVE_CALL(&){
                 m_game.GetRandom()->GetUInt(0,100); // first half of an actual extracted callback
                 request_id=static_cast<value::Int*>(save_call->Run(GSE_CALL,{VALUE(value::String,,path)}))->value;
+                frontend->SetUiCursor({{24,40}});m_game.UpdateUiCursor(ticket+1,{{66,66}});
                 queued_only=!std::filesystem::exists(path);
                 bool duplicate_rejected=false;try{m_game.QueueCampaignSave(session,path);}catch(const std::runtime_error&){duplicate_rejected=true;}
                 queued_only=queued_only && duplicate_rejected;
@@ -4121,6 +4124,8 @@ public:
         GT_ASSERT(queued_only && blocked,"save inspected the world inside the extracted event or bypassed owner handoff");
         ProcessAccumulations();
         GT_ASSERT(!m_game.OwnerBlocksNative() && campaign::Read(path).world==expected,"save captured partial event state or failed to release owner exclusion");
+        GT_ASSERT((campaign::Read(path).cursor==game::ui_view::Cursor{{22,38}} && m_game.m_active_admission->ui_cursor==game::ui_view::Cursor{{24,40}}),
+            "Queued save borrowed later UI cursor or accepted stale-world cursor delivery");
         const auto notify=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{
             frontend->PollCampaignSave();frontend->PollCampaignSave();
             GT_ASSERT(completions==1 && completion_on_owner && completed_error.empty()
@@ -6449,6 +6454,27 @@ public:
             data.occupancy.reset();const auto unknown=inspect();
             GT_ASSERT(!unknown->tiles[40*40+20].developed_ready && unknown->tiles[40*40+20].selected_known,"Legacy missing occupancy invented non-center nutrient context");
             GT_ASSERT(target.nutrients==4 && target.selected_items==0x88040,"Owned snapshot borrowed later tile/knowledge state");GT_OK();
+        });
+    }
+    std::string CheckCampaignCursorReopen() {
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+            util::FinallyGuard close_ui([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
+            for(const auto& control:fixtures::primary_cursor::Cases) {
+                game::frontend::Game frontend(m_glsmac.get(),m_state,ui,{},{},{},control.cursor);
+                frontend.m_map_data.width=80;frontend.m_map_data.height=80;
+                frontend.m_native_context=std::make_unique<game::frontend::native_terrain::ViewContext>();
+                auto& context=*frontend.m_native_context;
+                context.index=7;context.active=0;context.flags=0x12345678;context.zoom=8;context.camera={{70,20}};
+                frontend.RestoreCampaignCursor();
+                const std::array<int,6> actual{{context.index,context.active,int(context.flags),context.zoom,context.camera[0],context.camera[1]}};
+                GT_ASSERT(actual==control.view && frontend.GetUiCursor()==std::optional<game::ui_view::Cursor>{control.cursor},
+                    "Actual frontend reopen replaced cursor with view camera or roster fallback: "+std::string(control.id));
+                GT_ASSERT(!frontend.m_campaign_cursor && !frontend.m_native_camera_from_legacy && frontend.m_native_frame_dirty,
+                    "Loaded cursor was not consumed once or allowed legacy camera adoption to overwrite it");
+                context.camera={{12,12}};frontend.RestoreCampaignCursor();
+                GT_ASSERT((context.camera==std::array<int,2>{{12,12}}),"Consumed campaign cursor replayed after later camera change");
+            }GT_OK();
         });
     }
     std::string CheckNativeZoomInput() {
@@ -8982,6 +9008,9 @@ public:
 };
 
 static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
+    task->AddTest("Campaign actual frontend reopens from saved cursor independently of selected Units",GT(){
+        BackendFixture fixture;return fixture.CheckCampaignCursorReopen();
+    });
     task->AddTest("world admission native zoom queues original keys and one-world actor policy",GT(){
         BackendFixture fixture;return fixture.CheckNativeZoomInput();
     });

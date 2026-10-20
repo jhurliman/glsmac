@@ -201,12 +201,13 @@ void Game::RequireConventionalSightWorld() const {
 std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const unit::Unit& actor, const map::tile::Tile* destination ) const {
 	const auto* source = actor.GetTile();
 	const auto owner = actor.Conventional().owner_simulation_id;
-	bool foreign = false;
+	bool foreign = false, source_foreign = false;
 	for ( const auto* endpoint : {source,destination} ) {
 		for ( const auto* neighbour : endpoint->neighbours ) {
 			for ( const auto& entry : neighbour->units ) {
 				if (!entry.second || (!entry.second->IsConventional() && !entry.second->IsNative())) {throw std::runtime_error("ZOC requires canonical foreign units");}
 				foreign |= entry.second->SimulationOwner() != owner;
+                source_foreign |= endpoint==source && entry.second->SimulationOwner()!=owner;
 			}
 		}
 	}
@@ -218,6 +219,11 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const un
 	auto data = m_map->m_worker_knowledge->CopyData();
 	if ( !data.observers[owner] || !data.observers[owner]->pact_with ) { throw std::runtime_error("Directed Pact state is unavailable for ZOC"); }
 	const auto pacts = *data.observers[owner]->pact_with;
+    // Retain authenticated foreign sight/relations admission above. The
+    // original skips destination ZOC if no foreign source neighbor exists;
+    // native occupants left on the source are not its adjacent influence.
+    if(!source_foreign) {return {};}
+
 	const auto ordinary = [this](const map::tile::Tile* tile) {
 		if ( tile->is_water_tile || tile->rockiness != map::tile::ROCKINESS_FLAT || tile->features
 			|| (tile->terraforming & ~map::tile::TERRAFORMING_ROAD) || tile->coord.x<2 || tile->coord.x+2>=m_map->GetWidth()

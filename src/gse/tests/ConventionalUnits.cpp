@@ -1029,12 +1029,11 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
 		// Former terrain/equal-infrastructure/owned-proximity rejections are
 		// superseded by the complete ordinary movement receipt above.
-		for ( const int scenario : { 0, 1, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 } ) {
+		for ( const int scenario : { 1, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 } ) {
 			ConventionalUnitFixture fixture; fixture.ConfigureMovementCampaign();
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); auto* manager = game->GetUM(); const auto world = PopulateRemoteGround( GSE_CALL, fixture, remote_ground_fixture::CASES[ 0 ] );
 				auto* unit = world.local; auto* source = unit->GetTile(); auto* destination = game->GetMap()->GetTile( 17, 17 ); size_t caller = 0;
-				if ( scenario == 0 ) { source->features = FEATURE_XENOFUNGUS; }
 				if ( scenario == 1 ) { destination->features = FEATURE_XENOFUNGUS; }
 				if ( scenario == 14 ) { world.remote[ 0 ]->SetTile( GSE_CALL, source ); }
 				if ( scenario == 15 ) { world.remote[ 0 ]->SetTile( GSE_CALL, destination ); }

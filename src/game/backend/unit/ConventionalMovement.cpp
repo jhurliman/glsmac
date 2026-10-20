@@ -200,7 +200,11 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 		if ( stats.quantum != 3 || ( !infantry && !selected_rover ) ) {
 			throw std::runtime_error( "Movement with Bases requires admitted Infantry or selected Spartan Rover with quantum3" );
 		}
-		if ( !( ( source->features | destination->features ) & map::tile::FEATURE_XENOFUNGUS ) ) {
+		// Source fungus does not enter the encounter or movement lottery.
+        // A clear destination uses ordinary Base admission at any distance.
+        // A fungus-covered Base center still requires its distinct admission.
+        if ( !((source->features | destination->features) & map::tile::FEATURE_XENOFUNGUS)
+            || (!source->base && !(destination->features & map::tile::FEATURE_XENOFUNGUS)) ) {
 			for ( const auto& entry : bases ) {
 				const auto* base = entry.second;
 				const auto* center = base ? base->GetTile() : nullptr;

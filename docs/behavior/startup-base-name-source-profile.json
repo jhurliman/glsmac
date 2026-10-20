@@ -1,0 +1,42 @@
+{
+  "manifest_sha256": "c657f65ef23c9161fd8e291e3e9df9f9eab1aa4f35fee311e4b92f06b4ff3a83",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "factions": [
+    {
+      "owner": 1,
+      "file": "GAIANS",
+      "sha256": "6c25fe3492f83a9ac3a8da7c7e2ddc0a62134c46e244f8872e1e9067b2564cf2"
+    },
+    {
+      "owner": 2,
+      "file": "HIVE",
+      "sha256": "7b00d22b632aba0c61c4f85520278743ec170086f6970a2275159a9ec5cbfbba"
+    },
+    {
+      "owner": 3,
+      "file": "UNIV",
+      "sha256": "c24b19d31e33343c8c4b1890b555dd071e2e2933f76fa747d9d41a32cfc8692d"
+    },
+    {
+      "owner": 4,
+      "file": "MORGAN",
+      "sha256": "35342313a8112db4692bcba87d63311aaaa6379ed866f0e3817b6fc15eb2c9ea"
+    },
+    {
+      "owner": 5,
+      "file": "SPARTANS",
+      "sha256": "0b3c264cb177682dbe71cd30b074e5c142b032256993d375106d8efdbae4b361"
+    },
+    {
+      "owner": 6,
+      "file": "BELIEVE",
+      "sha256": "fa788143fc33cb05fe4f0584cbaa191d9efaa555b960cafc9f3c6aaf6c51e483"
+    },
+    {
+      "owner": 7,
+      "file": "PEACE",
+      "sha256": "59ab1affd288805da2aff9583e7aa94e3ca999f50c1056157e88d8548d3430a9"
+    }
+  ],
+  "generic_sha256": "06d3f0ee53c0b7e7e5c375474415c469d7daa9df096a57bbda4cc2a0bb88a01c"
+}

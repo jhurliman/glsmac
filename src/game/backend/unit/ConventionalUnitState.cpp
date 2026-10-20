@@ -32,7 +32,7 @@ bool ConventionalUnitState::operator==( const ConventionalUnitState& other ) con
 		&& failed_move == other.failed_move && home == other.home && home_base_id == other.home_base_id && render_morale_mode == other.render_morale_mode
 		&& work_order == other.work_order && work_progress == other.work_progress
         && order == other.order && order_countdown == other.order_countdown
-		&& facing==other.facing && stack==other.stack && retained_state_word==other.retained_state_word && accounting_markers==other.accounting_markers;
+		&& native_flags==other.native_flags && facing==other.facing && stack==other.stack && retained_state_word==other.retained_state_word && accounting_markers==other.accounting_markers;
 }
 
 uint8_t ConventionalUnitState::AccountingMarkers(uint32_t word) noexcept {
@@ -69,8 +69,9 @@ void ConventionalUnitState::Validate() const {
 	}
 }
 
-void ConventionalUnitState::Serialize( types::Buffer& buffer, bool include_state_history, bool include_orders, bool include_stack, bool include_facing ) const {
+void ConventionalUnitState::Serialize( types::Buffer& buffer, bool include_state_history, bool include_orders, bool include_stack, bool include_facing, bool include_native_flags ) const {
 	Validate();
+    if(!include_native_flags && native_flags) {throw std::runtime_error("Cannot discard retained native flags in legacy unit codec");}
     if(!include_facing && facing) {throw std::runtime_error("Cannot discard retained facing in legacy unit codec");}
     if(!include_stack && stack) {throw std::runtime_error("Cannot discard retained stack binding in legacy unit codec");}
     if(!include_orders && HasOrderState()) {throw std::runtime_error("Cannot discard retained orders in legacy unit codec");}
@@ -87,9 +88,10 @@ void ConventionalUnitState::Serialize( types::Buffer& buffer, bool include_state
     if(include_orders) {buffer.WriteInt(static_cast<int32_t>(order));buffer.WriteInt(order_countdown);}
     if(include_stack) {buffer.WriteBool(stack.has_value());if(stack) {buffer.WriteInt(stack->id);buffer.WriteInt(stack->next);buffer.WriteInt(stack->previous);}}
     if(include_facing) {buffer.WriteBool(facing.has_value());if(facing) {buffer.WriteInt(*facing);}}
+    if(include_native_flags) {buffer.WriteBool(native_flags.has_value());if(native_flags) {buffer.WriteInt(*native_flags);}}
 }
 
-ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer, bool include_state_history, bool include_orders, bool include_stack, bool include_facing ) {
+ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer, bool include_state_history, bool include_orders, bool include_stack, bool include_facing, bool include_native_flags ) {
 	const auto design = Integer( buffer, 0, 511 ), owner = Integer( buffer, 1, 7 );
 	const auto morale = Integer( buffer, 0, 255 ), damage = Integer( buffer, 0, 255 ), spent = Integer( buffer, 0, 255 );
 	const bool failed = buffer.ReadBool();
@@ -113,6 +115,7 @@ ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer,
     }
     if(include_stack && buffer.ReadBool()) {result.stack=Stack{int16_t(Integer(buffer,0,2047)),int16_t(Integer(buffer,-1,2047)),int16_t(Integer(buffer,-1,2047))};}
     if(include_facing && buffer.ReadBool()) {result.facing=static_cast<uint8_t>(Integer(buffer,0,255));}
+    if(include_native_flags && buffer.ReadBool()) {result.native_flags=static_cast<uint16_t>(Integer(buffer,0,UINT16_MAX));}
 	result.Validate(); return result;
 }
 

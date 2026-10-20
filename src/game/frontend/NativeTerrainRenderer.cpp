@@ -258,6 +258,9 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
     return RenderImpl(world,source,placements,base,offset,flags,initial_index,nullptr);
 }
 Frame RenderPrepared(const World& world,const Source& source,const ViewGeometry::Plan& plan,uint16_t base,uint32_t flags,uint8_t initial_index,const Frame* previous) {
+    if(plan.world!=Point{{80,80}} || plan.viewport!=Point{{1024,511}} || plan.unit!=12) {
+        throw std::invalid_argument("Native material renderer requires Planet zoom-zero geometry");
+    }
     if(bool(plan.regions)!=bool(previous)) {throw std::invalid_argument("Native dirty plan requires matching retained bitmap history");}
     std::vector<Placement> placements;placements.reserve(plan.terrain.size());
     for(const auto& tile:plan.terrain) {placements.push_back(tile.placement);}

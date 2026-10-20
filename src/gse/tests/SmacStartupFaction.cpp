@@ -3,11 +3,42 @@
 #include "fixtures/SmacFactionPrefix.h"
 #include "fixtures/SmacSitePreparation.h"
 #include "game/backend/map/SmacCompleteTerrainGeneration.h"
+#include "game/backend/map/SmacGeneratedStartingSite.h"
+#include "fixtures/SmacGeneratedFirstSite.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 
 namespace gse::tests {
 void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC generated startup derives original first site cache and exploration from zero storage",GT(){
+        using namespace game::backend::faction;namespace generation=game::backend::map::smac_generation;
+        namespace expected=fixtures::generated_first_site;
+        generation::State terrain{std::vector<generation::Record>(3200),{{2,1,1,1,1,1,1}},game::backend::SmacGameplayRandomState(1,1)};
+        generation::Regions regions;regions.summary_width=16;regions.summary_height=16;regions.summary_initial=0;
+        generation::GenerateTerrain(terrain,{80,80},generation::DEFAULT_WORLD_RULES,regions,{100,110});
+        SmacStartupFaction state;SmacFactionPrefixOptions options{1,3,2,255,0x1a0e,0,false,10,{-1,0,0,0,1,0},"Template"," "};
+        InitializeSmacFactionPrefix(state,options,terrain.random);
+        std::vector<generation::StartingCacheStore> stores;std::vector<uint32_t> pairs;
+        const auto selected=generation::SelectGeneratedStartingSite(terrain,{80,80},regions,{3,true,false},
+            [&](const auto& s){stores.push_back(s);},[&](const auto& a){pairs.push_back(a.crt);});
+        GT_ASSERT(selected.site && (*selected.site)[0]==25 && (*selected.site)[1]==35 && selected.attempts==558 && stores.size()==37
+            && selected.random.Crt()==789993329 && terrain.random==selected.random,"Original generated site search differs");
+        GT_ASSERT(pairs.size()==expected::PAIR_CRT.size(),"Generated candidate count differs");
+        for(size_t i=0;i<pairs.size();++i) {GT_ASSERT(pairs[i]==expected::PAIR_CRT[i],"Generated candidate pair RNG differs");}
+        for(size_t i=0;i<stores.size();++i) {const auto& a=stores[i];const auto& b=expected::STORES[i];
+            GT_ASSERT(a.offset==b.offset && a.before==b.before && a.after==b.after,"Original generated rating cache write differs");}
+        const auto planeBytes=[&]() {std::string result;for(const auto& r:terrain.records) {result.append(reinterpret_cast<const char*>(r.data()),r.size());}return result;};
+        const auto factionBytes=[&]() {return std::string(reinterpret_cast<const char*>(state.record.data()),state.record.size());};
+        GT_ASSERT(util::SHA256(planeBytes())==expected::SEARCH_TILES_SHA256 && util::SHA256(factionBytes())==expected::SEARCH_RECORD_SHA256,
+            "Complete original first-site plane/faction differs");
+        const auto region=terrain.records[size_t((*selected.site)[1])*40+(*selected.site)[0]/2][3];
+        size_t draws=0,writes=0;
+        PrepareSmacStartingSite(state,terrain.records,{{80,80,true},*selected.site,1,regions.Area(region),3,0x1a0e},terrain.random,
+            [&](const auto&){++draws;},[&](const auto&){++writes;});
+        GT_ASSERT(util::SHA256(planeBytes())==expected::PREPARED_TILES_SHA256 && util::SHA256(factionBytes())==expected::PREPARED_RECORD_SHA256
+            && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110 && draws==3 && writes==42,
+            "Original generated first site strategy/exploration differs");return {};
+    });
     task->AddTest("SMAC startup site strategy and exploration match eighty one original complete records and stores",GT(){
         using namespace game::backend::faction;
         const auto bytes=[](const auto& a) {return std::string(reinterpret_cast<const char*>(a.data()),a.size());};

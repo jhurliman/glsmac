@@ -133,3 +133,28 @@ General candidate scoring, traversal, transport handling and movement continuati
 still require the original policy. The first-round baseline alone cannot admit
 arbitrary spawned-wildlife campaigns. The connected reference also executes no
 positive-owner upkeep body; that remains covered by the separate owner contracts.
+
+## Live flora input adapter
+
+`Map::CopyGlobalSpreadInput` now supplies the forest/kelp kernel from current
+physical improvements, moisture and rockiness plus actual exploration and
+observer memory. It retains unrelated source bytes. Missing memory is rejected
+when the observer is explored or omniscient; unobserved unavailable memory is
+never replaced with the current improvements. Preparation consumes no RNG and
+publishes no map, policy, knowledge, or presentation changes.
+
+This input is scoped to the flora kernel's consumed fields. Unrelated retained
+occupancy/site/region words are not current wildlife authority. It cannot be
+published through the immutable imported-policy journal as though that source
+were the live map. Atomic physical/remembered flora publication and the broader
+fauna input plane remain owning-transaction work before controller activation.
+
+A focused integration control changes the actual map after its retained source,
+executes the real forest-spread kernel, checks remembered propagation, and checks
+that preparation leaves all live authorities unchanged. It also exercises
+missing explored/omniscient memory and pending-restore rejection. Six affected
+groups pass normally; the same groups pass with the new adapter, spread kernel
+and fixture translation units instrumented with ASan/UBSan (other objects normal,
+leak detection disabled). Targeted production analysis reports zero diagnostics.
+The optional original nine-checkpoint group executes its native evidence in the
+sanitizer run; the initial normal run has no private receipt environment.

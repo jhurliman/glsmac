@@ -157,6 +157,8 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 
 	const size_t GetWidth() const;
     std::unique_ptr<::game::native_terrain::World> CopyNativeTerrain(bool include_geometry=true) const;
+    // Detached flora inputs only; retained unrelated words are not live wildlife authority.
+    smac_spread::Input CopyGlobalSpreadInput(int32_t turn,const std::array<uint32_t,8>& observer_status) const;
     smac_terrain::LandmarkGeometry* GetNativeGeometry() const;
 	const size_t GetHeight() const;
 

@@ -96,3 +96,40 @@ ASan/UBSan (other objects normal, leak detection disabled, UBSan halts on error)
 Five production files pass targeted analysis; the two insertion consumers were
 reanalyzed after their final edits. The final whole-knowledge restore assertion
 also passes normally and under the focused sanitizer binary.
+
+## Connected controller reference
+
+The [connected original-game transition](behavior/global-wildlife-owner-transition.md)
+and its [four boundary controls](behavior/global-wildlife-owner-transition-cases.json)
+now cover global generation through the first positive-owner upkeep entry. The
+frozen 20-file evidence manifest is SHA256
+`003ba9d7c15b7861a0c8018691a7daeadf5ad561342ca67001e87e896c1ba437`.
+All manifest hashes and the independent non-stack-write/boundary checker pass.
+This is source evidence, not an activated GLSMAC controller or a played AI match.
+
+The implementation order is global flora/fauna, resource-event maintenance,
+conditional territory/region/goal refill, native owner upkeep/planning, native
+commands, then positive-owner upkeep. Even an empty wildlife roster performs
+retained planning work. A landlocked newborn Isle is deleted during planning;
+the last Worm is compacted into its source index before command dispatch. Never
+reuse a pre-upkeep roster or advance the cursor by treating these phases as empty.
+Native command scoring uses CRT draws; movement has separately observed shared
+RNG calls. Keep those streams and constructor effects in execution order.
+
+Before calling the existing global kernels, compose a detached current native
+map plane. The immutable imported Planet container is not the live plane:
+terraforming, fungus, exploration, remembered improvements, occupancy, regions
+and claims have independent current owners. `Map::CopyNativeTerrain` is a render
+snapshot, not a complete packed gameplay record. Preserve opaque retained bytes;
+replace only fields with authenticated live authority. Unknown observer memory
+must not become current improvements, and cached affiliation must not be rebuilt
+by recounting current occupants. Publish flora changes to both physical terrain
+and remembered knowledge in the same transaction before fauna queries. Factory
+sight and occupancy writes must feed subsequent samples. Keep failure/discard
+isolation through the final publication and defer script notifications.
+
+The four command outcomes are integration controls, not a native AI algorithm.
+General candidate scoring, traversal, transport handling and movement continuation
+still require the original policy. The first-round baseline alone cannot admit
+arbitrary spawned-wildlife campaigns. The connected reference also executes no
+positive-owner upkeep body; that remains covered by the separate owner contracts.

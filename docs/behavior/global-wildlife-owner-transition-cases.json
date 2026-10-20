@@ -1,0 +1,2678 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "private_receipt_sha256": "3735ee7ffcdfc6e733ebfb66e754ea5d51f61ba11adf45983e18debecbc915b8",
+  "scope": "Four connected original global537790-to-first-positive-upkeep executions. Native journals and boundaries verified; not an independent translation of full wildlife AI.",
+  "cases": [
+    {
+      "variant": "baseline",
+      "preparation": [],
+      "turn": 1,
+      "stored_year": 2101,
+      "CRT_draws": 208,
+      "shared_draws": [],
+      "boundaries": [
+        {
+          "stage": "global_producer_return",
+          "owner": 0,
+          "pc": "0x53a820",
+          "CRT": 1551285371,
+          "shared": 1,
+          "Unit_count": 13,
+          "native_Units": [],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 208,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "helper5348f0_entry",
+          "owner": 0,
+          "pc": "0x5348f0",
+          "CRT": 1551285371,
+          "shared": 1,
+          "Unit_count": 13,
+          "native_Units": [],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 208,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "helper5348f0_return",
+          "owner": 0,
+          "pc": "0x53a827",
+          "CRT": 1551285371,
+          "shared": 1,
+          "Unit_count": 13,
+          "native_Units": [],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 215,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "upkeep_entry",
+          "owner": 0,
+          "pc": "0x53bb60",
+          "CRT": 1551285371,
+          "shared": 1,
+          "Unit_count": 13,
+          "native_Units": [],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 24512,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "upkeep_return",
+          "owner": 0,
+          "pc": "0x53caf2",
+          "CRT": 1551285371,
+          "shared": 1,
+          "Unit_count": 13,
+          "native_Units": [],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 26971,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "command_entry",
+          "owner": 0,
+          "pc": "0x58f6b0",
+          "CRT": 1551285371,
+          "shared": 1,
+          "Unit_count": 13,
+          "native_Units": [],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 26973,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "command_return",
+          "owner": 0,
+          "pc": "0x53cb67",
+          "CRT": 1551285371,
+          "shared": 1,
+          "Unit_count": 13,
+          "native_Units": [],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 26974,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "upkeep_entry",
+          "owner": 1,
+          "pc": "0x53bb60",
+          "CRT": 1551285371,
+          "shared": 1,
+          "Unit_count": 13,
+          "native_Units": [],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 26977,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        }
+      ],
+      "actions": [],
+      "native_upkeep_faction0_DWORD_deltas": [
+        {
+          "address": "0x95d4d0",
+          "before": 0,
+          "after": 7
+        },
+        {
+          "address": "0x95d9bc",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9c8",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9cc",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9d0",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9d4",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95d9d8",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95e210",
+          "before": 0,
+          "after": 8388608
+        },
+        {
+          "address": "0x95e538",
+          "before": 0,
+          "after": 2097152
+        },
+        {
+          "address": "0x95e53c",
+          "before": 0,
+          "after": 2097184
+        },
+        {
+          "address": "0x95eb20",
+          "before": 0,
+          "after": 134744064
+        },
+        {
+          "address": "0x95eb24",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb28",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb2c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb30",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb34",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb38",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb3c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb40",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb44",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb48",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb4c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb50",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb54",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb58",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb5c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb60",
+          "before": 0,
+          "after": 117901064
+        },
+        {
+          "address": "0x95eb64",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb68",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb6c",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb70",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb74",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb78",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb7c",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb80",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb84",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb88",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb8c",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb90",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb94",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb98",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb9c",
+          "before": 0,
+          "after": 134678279
+        }
+      ],
+      "nonstack_write_count": 26977,
+      "write_counts_by_phase": {
+        "global": 208,
+        "helper5348f0_entry": 7,
+        "helper5348f0_return": 24297,
+        "upkeep_entry": 2459,
+        "upkeep_return": 2,
+        "command_entry": 1,
+        "command_return": 3
+      },
+      "headless_redraw_count": 0,
+      "schedule_omissions": {
+        "0x615c40": 9,
+        "0x615cd0": 1
+      }
+    },
+    {
+      "variant": "fungus_candidate",
+      "preparation": [
+        {
+          "CRT_seed": 112,
+          "first_land_candidate": [
+            29,
+            35
+          ],
+          "input": "fungus and site suppression"
+        }
+      ],
+      "turn": 1,
+      "stored_year": 2101,
+      "CRT_draws": 216,
+      "shared_draws": [],
+      "boundaries": [
+        {
+          "stage": "global_producer_return",
+          "owner": 0,
+          "pc": "0x53a820",
+          "CRT": 4267423168,
+          "shared": 1,
+          "Unit_count": 14,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                29,
+                35
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 264,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "helper5348f0_entry",
+          "owner": 0,
+          "pc": "0x5348f0",
+          "CRT": 4267423168,
+          "shared": 1,
+          "Unit_count": 14,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                29,
+                35
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 264,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "helper5348f0_return",
+          "owner": 0,
+          "pc": "0x53a827",
+          "CRT": 4267423168,
+          "shared": 1,
+          "Unit_count": 14,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                29,
+                35
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 271,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "upkeep_entry",
+          "owner": 0,
+          "pc": "0x53bb60",
+          "CRT": 4267423168,
+          "shared": 1,
+          "Unit_count": 14,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                29,
+                35
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 24566,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "upkeep_return",
+          "owner": 0,
+          "pc": "0x53caf2",
+          "CRT": 4267423168,
+          "shared": 1,
+          "Unit_count": 14,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                29,
+                35
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 27036,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "command_entry",
+          "owner": 0,
+          "pc": "0x58f6b0",
+          "CRT": 4267423168,
+          "shared": 1,
+          "Unit_count": 14,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                29,
+                35
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 27038,
+          "CRT_draw_index": 208,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "command_return",
+          "owner": 0,
+          "pc": "0x53cb67",
+          "CRT": 4163030152,
+          "shared": 1,
+          "Unit_count": 14,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                30,
+                36
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 65540,
+              "order": 0,
+              "morale": 1,
+              "work": 1,
+              "spent": 3,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 30638,
+          "CRT_draw_index": 216,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "upkeep_entry",
+          "owner": 1,
+          "pc": "0x53bb60",
+          "CRT": 4163030152,
+          "shared": 1,
+          "Unit_count": 14,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                30,
+                36
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 65540,
+              "order": 0,
+              "morale": 1,
+              "work": 1,
+              "spent": 3,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 30641,
+          "CRT_draw_index": 216,
+          "shared_draw_index": 0
+        }
+      ],
+      "actions": [
+        {
+          "pc": "0x57ce60",
+          "caller": "0x580e00",
+          "phase": "command_entry",
+          "args": [
+            13,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x5abe40",
+          "caller": "0x4e114e",
+          "phase": "command_entry",
+          "args": [
+            13,
+            2,
+            3
+          ]
+        }
+      ],
+      "native_upkeep_faction0_DWORD_deltas": [
+        {
+          "address": "0x95d4d0",
+          "before": 0,
+          "after": 7
+        },
+        {
+          "address": "0x95d9bc",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9c8",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9cc",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9d0",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9d4",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95d9d8",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95e204",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95e208",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95e210",
+          "before": 0,
+          "after": 8388608
+        },
+        {
+          "address": "0x95e23c",
+          "before": 0,
+          "after": 65536
+        },
+        {
+          "address": "0x95e43c",
+          "before": 0,
+          "after": 131072
+        },
+        {
+          "address": "0x95e538",
+          "before": 0,
+          "after": 2097152
+        },
+        {
+          "address": "0x95e53c",
+          "before": 0,
+          "after": 2097184
+        },
+        {
+          "address": "0x95eb20",
+          "before": 0,
+          "after": 134744064
+        },
+        {
+          "address": "0x95eb24",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb28",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb2c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb30",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb34",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb38",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb3c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb40",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb44",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb48",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb4c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb50",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb54",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb58",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb5c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb60",
+          "before": 0,
+          "after": 117901064
+        },
+        {
+          "address": "0x95eb64",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb68",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb6c",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb70",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb74",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb78",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb7c",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb80",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb84",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb88",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb8c",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb90",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb94",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb98",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb9c",
+          "before": 0,
+          "after": 134678279
+        }
+      ],
+      "nonstack_write_count": 30641,
+      "write_counts_by_phase": {
+        "global": 264,
+        "helper5348f0_entry": 7,
+        "helper5348f0_return": 24295,
+        "upkeep_entry": 2470,
+        "upkeep_return": 2,
+        "command_entry": 3600,
+        "command_return": 3
+      },
+      "headless_redraw_count": 1,
+      "schedule_omissions": {
+        "0x615c40": 11,
+        "0x615cd0": 1
+      }
+    },
+    {
+      "variant": "sea8",
+      "preparation": [],
+      "turn": 8,
+      "stored_year": 2101,
+      "CRT_draws": 222,
+      "shared_draws": [
+        {
+          "caller": "0x5aefd7",
+          "phase": "command_entry",
+          "before": 1,
+          "result": 1,
+          "after": 1015568748
+        }
+      ],
+      "boundaries": [
+        {
+          "stage": "global_producer_return",
+          "owner": 0,
+          "pc": "0x53a820",
+          "CRT": 4056086993,
+          "shared": 1,
+          "Unit_count": 16,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                58,
+                66
+              ],
+              "design": 9,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": 14,
+              "previous": -1
+            },
+            {
+              "id": 14,
+              "position": [
+                58,
+                66
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 1,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": 13
+            },
+            {
+              "id": 15,
+              "position": [
+                23,
+                33
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 380,
+          "CRT_draw_index": 198,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "helper5348f0_entry",
+          "owner": 0,
+          "pc": "0x5348f0",
+          "CRT": 4056086993,
+          "shared": 1,
+          "Unit_count": 16,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                58,
+                66
+              ],
+              "design": 9,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": 14,
+              "previous": -1
+            },
+            {
+              "id": 14,
+              "position": [
+                58,
+                66
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 1,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": 13
+            },
+            {
+              "id": 15,
+              "position": [
+                23,
+                33
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 380,
+          "CRT_draw_index": 198,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "helper5348f0_return",
+          "owner": 0,
+          "pc": "0x53a827",
+          "CRT": 4056086993,
+          "shared": 1,
+          "Unit_count": 16,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                58,
+                66
+              ],
+              "design": 9,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": 14,
+              "previous": -1
+            },
+            {
+              "id": 14,
+              "position": [
+                58,
+                66
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 1,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": 13
+            },
+            {
+              "id": 15,
+              "position": [
+                23,
+                33
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 387,
+          "CRT_draw_index": 198,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "upkeep_entry",
+          "owner": 0,
+          "pc": "0x53bb60",
+          "CRT": 4056086993,
+          "shared": 1,
+          "Unit_count": 16,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                58,
+                66
+              ],
+              "design": 9,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": 14,
+              "previous": -1
+            },
+            {
+              "id": 14,
+              "position": [
+                58,
+                66
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 1,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": 13
+            },
+            {
+              "id": 15,
+              "position": [
+                23,
+                33
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 389,
+          "CRT_draw_index": 198,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "upkeep_return",
+          "owner": 0,
+          "pc": "0x53caf2",
+          "CRT": 4056086993,
+          "shared": 1,
+          "Unit_count": 16,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                58,
+                66
+              ],
+              "design": 9,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": 14,
+              "previous": -1
+            },
+            {
+              "id": 14,
+              "position": [
+                58,
+                66
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 1,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": 13
+            },
+            {
+              "id": 15,
+              "position": [
+                23,
+                33
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 2875,
+          "CRT_draw_index": 198,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "command_entry",
+          "owner": 0,
+          "pc": "0x58f6b0",
+          "CRT": 4056086993,
+          "shared": 1,
+          "Unit_count": 16,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                58,
+                66
+              ],
+              "design": 9,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": 14,
+              "previous": -1
+            },
+            {
+              "id": 14,
+              "position": [
+                58,
+                66
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 1,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": 13
+            },
+            {
+              "id": 15,
+              "position": [
+                23,
+                33
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 2877,
+          "CRT_draw_index": 198,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "command_return",
+          "owner": 0,
+          "pc": "0x53cb67",
+          "CRT": 3123336201,
+          "shared": 1015568748,
+          "Unit_count": 16,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                58,
+                66
+              ],
+              "design": 9,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 1,
+              "spent": 12,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": 14,
+              "previous": -1
+            },
+            {
+              "id": 14,
+              "position": [
+                58,
+                66
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 1,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": 13
+            },
+            {
+              "id": 15,
+              "position": [
+                26,
+                34
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 98308,
+              "order": 0,
+              "morale": 1,
+              "work": 3,
+              "spent": 3,
+              "facing": 1,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 13623,
+          "CRT_draw_index": 222,
+          "shared_draw_index": 1
+        },
+        {
+          "stage": "upkeep_entry",
+          "owner": 1,
+          "pc": "0x53bb60",
+          "CRT": 3123336201,
+          "shared": 1015568748,
+          "Unit_count": 16,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                58,
+                66
+              ],
+              "design": 9,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 1,
+              "spent": 12,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": 14,
+              "previous": -1
+            },
+            {
+              "id": 14,
+              "position": [
+                58,
+                66
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 1,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": 13
+            },
+            {
+              "id": 15,
+              "position": [
+                26,
+                34
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 98308,
+              "order": 0,
+              "morale": 1,
+              "work": 3,
+              "spent": 3,
+              "facing": 1,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 13626,
+          "CRT_draw_index": 222,
+          "shared_draw_index": 1
+        }
+      ],
+      "actions": [
+        {
+          "pc": "0x57ce60",
+          "caller": "0x580e00",
+          "phase": "command_entry",
+          "args": [
+            13,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x5d9c80",
+          "caller": "0x58f61e",
+          "phase": "command_entry",
+          "args": [
+            13,
+            16,
+            10048606
+          ]
+        },
+        {
+          "pc": "0x57ce60",
+          "caller": "0x580e00",
+          "phase": "command_entry",
+          "args": [
+            15,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x5abe40",
+          "caller": "0x4e114e",
+          "phase": "command_entry",
+          "args": [
+            15,
+            2,
+            3
+          ]
+        },
+        {
+          "pc": "0x57ce60",
+          "caller": "0x580e00",
+          "phase": "command_entry",
+          "args": [
+            15,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x5abe40",
+          "caller": "0x4e114e",
+          "phase": "command_entry",
+          "args": [
+            15,
+            1,
+            3
+          ]
+        },
+        {
+          "pc": "0x57ce60",
+          "caller": "0x580e00",
+          "phase": "command_entry",
+          "args": [
+            15,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x5abe40",
+          "caller": "0x4e114e",
+          "phase": "command_entry",
+          "args": [
+            15,
+            1,
+            3
+          ]
+        },
+        {
+          "pc": "0x5d9c80",
+          "caller": "0x5af2d2",
+          "phase": "command_entry",
+          "args": [
+            15,
+            0,
+            0
+          ]
+        }
+      ],
+      "native_upkeep_faction0_DWORD_deltas": [
+        {
+          "address": "0x95d4d0",
+          "before": 0,
+          "after": 6
+        },
+        {
+          "address": "0x95d9bc",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9c8",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9cc",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9d0",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9d4",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95d9d8",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95e204",
+          "before": 0,
+          "after": 6
+        },
+        {
+          "address": "0x95e208",
+          "before": 0,
+          "after": 6
+        },
+        {
+          "address": "0x95e210",
+          "before": 0,
+          "after": 8390657
+        },
+        {
+          "address": "0x95e23c",
+          "before": 0,
+          "after": 65536
+        },
+        {
+          "address": "0x95e43c",
+          "before": 0,
+          "after": 131072
+        },
+        {
+          "address": "0x95e4a0",
+          "before": 0,
+          "after": 262144
+        },
+        {
+          "address": "0x95e538",
+          "before": 0,
+          "after": 2097152
+        },
+        {
+          "address": "0x95e53c",
+          "before": 0,
+          "after": 2097184
+        },
+        {
+          "address": "0x95eb20",
+          "before": 0,
+          "after": 134744064
+        },
+        {
+          "address": "0x95eb24",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb28",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb2c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb30",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb34",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb38",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb3c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb40",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb44",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb48",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb4c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb50",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb54",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb58",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb5c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb60",
+          "before": 0,
+          "after": 117901064
+        },
+        {
+          "address": "0x95eb64",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb68",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb6c",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb70",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb74",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb78",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb7c",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb80",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb84",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb88",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb8c",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb90",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb94",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb98",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb9c",
+          "before": 0,
+          "after": 134678279
+        }
+      ],
+      "nonstack_write_count": 13626,
+      "write_counts_by_phase": {
+        "global": 380,
+        "helper5348f0_entry": 7,
+        "helper5348f0_return": 2,
+        "upkeep_entry": 2486,
+        "upkeep_return": 2,
+        "command_entry": 10746,
+        "command_return": 3
+      },
+      "headless_redraw_count": 3,
+      "schedule_omissions": {
+        "0x615c40": 17,
+        "0x615cd0": 1
+      }
+    },
+    {
+      "variant": "sea8_land_fungus",
+      "preparation": [
+        {
+          "CRT_seed": 1,
+          "first_sea_candidate": [
+            47,
+            67
+          ],
+          "input": "land fungus"
+        }
+      ],
+      "turn": 8,
+      "stored_year": 2101,
+      "CRT_draws": 218,
+      "shared_draws": [
+        {
+          "caller": "0x5aefd7",
+          "phase": "command_entry",
+          "before": 1,
+          "result": 2,
+          "after": 1015568748
+        }
+      ],
+      "boundaries": [
+        {
+          "stage": "global_producer_return",
+          "owner": 0,
+          "pc": "0x53a820",
+          "CRT": 433661943,
+          "shared": 1,
+          "Unit_count": 15,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                47,
+                67
+              ],
+              "design": 9,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": 14,
+              "previous": -1
+            },
+            {
+              "id": 14,
+              "position": [
+                47,
+                67
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 1,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": 13
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 324,
+          "CRT_draw_index": 198,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "helper5348f0_entry",
+          "owner": 0,
+          "pc": "0x5348f0",
+          "CRT": 433661943,
+          "shared": 1,
+          "Unit_count": 15,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                47,
+                67
+              ],
+              "design": 9,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": 14,
+              "previous": -1
+            },
+            {
+              "id": 14,
+              "position": [
+                47,
+                67
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 1,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": 13
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 324,
+          "CRT_draw_index": 198,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "helper5348f0_return",
+          "owner": 0,
+          "pc": "0x53a827",
+          "CRT": 433661943,
+          "shared": 1,
+          "Unit_count": 15,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                47,
+                67
+              ],
+              "design": 9,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": 14,
+              "previous": -1
+            },
+            {
+              "id": 14,
+              "position": [
+                47,
+                67
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 1,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": 13
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 331,
+          "CRT_draw_index": 198,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "upkeep_entry",
+          "owner": 0,
+          "pc": "0x53bb60",
+          "CRT": 433661943,
+          "shared": 1,
+          "Unit_count": 15,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                47,
+                67
+              ],
+              "design": 9,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": 14,
+              "previous": -1
+            },
+            {
+              "id": 14,
+              "position": [
+                47,
+                67
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 1,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": 13
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 333,
+          "CRT_draw_index": 198,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "upkeep_return",
+          "owner": 0,
+          "pc": "0x53caf2",
+          "CRT": 433661943,
+          "shared": 1,
+          "Unit_count": 14,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                47,
+                67
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 2829,
+          "CRT_draw_index": 198,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "command_entry",
+          "owner": 0,
+          "pc": "0x58f6b0",
+          "CRT": 433661943,
+          "shared": 1,
+          "Unit_count": 14,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                47,
+                67
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 0,
+              "order": 0,
+              "morale": 1,
+              "work": 0,
+              "spent": 0,
+              "facing": 2,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 2831,
+          "CRT_draw_index": 198,
+          "shared_draw_index": 0
+        },
+        {
+          "stage": "command_return",
+          "owner": 0,
+          "pc": "0x53cb67",
+          "CRT": 1342558267,
+          "shared": 1015568748,
+          "Unit_count": 14,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                47,
+                71
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 98308,
+              "order": 0,
+              "morale": 1,
+              "work": 3,
+              "spent": 3,
+              "facing": 3,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 13485,
+          "CRT_draw_index": 218,
+          "shared_draw_index": 1
+        },
+        {
+          "stage": "upkeep_entry",
+          "owner": 1,
+          "pc": "0x53bb60",
+          "CRT": 1342558267,
+          "shared": 1015568748,
+          "Unit_count": 14,
+          "native_Units": [
+            {
+              "id": 13,
+              "position": [
+                47,
+                71
+              ],
+              "design": 8,
+              "owner": 0,
+              "state": 98308,
+              "order": 0,
+              "morale": 1,
+              "work": 3,
+              "spent": 3,
+              "facing": 3,
+              "iteration": 0,
+              "status": 0,
+              "home": -1,
+              "next": -1,
+              "previous": -1
+            }
+          ],
+          "native_reference_coordinates": [
+            -1,
+            -1
+          ],
+          "write_index": 13488,
+          "CRT_draw_index": 218,
+          "shared_draw_index": 1
+        }
+      ],
+      "actions": [
+        {
+          "pc": "0x5d89f0",
+          "caller": "0x57834a",
+          "phase": "upkeep_entry",
+          "args": [
+            13,
+            0,
+            1
+          ]
+        },
+        {
+          "pc": "0x57ce60",
+          "caller": "0x580e00",
+          "phase": "command_entry",
+          "args": [
+            13,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x5abe40",
+          "caller": "0x4e114e",
+          "phase": "command_entry",
+          "args": [
+            13,
+            3,
+            3
+          ]
+        },
+        {
+          "pc": "0x57ce60",
+          "caller": "0x580e00",
+          "phase": "command_entry",
+          "args": [
+            13,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x5abe40",
+          "caller": "0x4e114e",
+          "phase": "command_entry",
+          "args": [
+            13,
+            3,
+            3
+          ]
+        },
+        {
+          "pc": "0x57ce60",
+          "caller": "0x580e00",
+          "phase": "command_entry",
+          "args": [
+            13,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x5abe40",
+          "caller": "0x4e114e",
+          "phase": "command_entry",
+          "args": [
+            13,
+            4,
+            3
+          ]
+        },
+        {
+          "pc": "0x5d9c80",
+          "caller": "0x5af2d2",
+          "phase": "command_entry",
+          "args": [
+            13,
+            0,
+            0
+          ]
+        }
+      ],
+      "native_upkeep_faction0_DWORD_deltas": [
+        {
+          "address": "0x95d4d0",
+          "before": 0,
+          "after": 6
+        },
+        {
+          "address": "0x95d9bc",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9c8",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9cc",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9d0",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95d9d4",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95d9d8",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95da04",
+          "before": 257,
+          "after": 1
+        },
+        {
+          "address": "0x95e1fc",
+          "before": 2,
+          "after": 0
+        },
+        {
+          "address": "0x95e204",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95e208",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95e210",
+          "before": 0,
+          "after": 8388608
+        },
+        {
+          "address": "0x95e23c",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "address": "0x95e43c",
+          "before": 0,
+          "after": 2
+        },
+        {
+          "address": "0x95e538",
+          "before": 0,
+          "after": 2097152
+        },
+        {
+          "address": "0x95e53c",
+          "before": 0,
+          "after": 2097184
+        },
+        {
+          "address": "0x95eb20",
+          "before": 0,
+          "after": 134744064
+        },
+        {
+          "address": "0x95eb24",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb28",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb2c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb30",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb34",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb38",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb3c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb40",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb44",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb48",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb4c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb50",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb54",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb58",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb5c",
+          "before": 0,
+          "after": 134744072
+        },
+        {
+          "address": "0x95eb60",
+          "before": 0,
+          "after": 117901064
+        },
+        {
+          "address": "0x95eb64",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb68",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb6c",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb70",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb74",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb78",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb7c",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb80",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb84",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb88",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb8c",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb90",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb94",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb98",
+          "before": 0,
+          "after": 117901063
+        },
+        {
+          "address": "0x95eb9c",
+          "before": 0,
+          "after": 134678279
+        }
+      ],
+      "nonstack_write_count": 13488,
+      "write_counts_by_phase": {
+        "global": 324,
+        "helper5348f0_entry": 7,
+        "helper5348f0_return": 2,
+        "upkeep_entry": 2496,
+        "upkeep_return": 2,
+        "command_entry": 10654,
+        "command_return": 3
+      },
+      "headless_redraw_count": 3,
+      "schedule_omissions": {
+        "0x615c40": 15,
+        "0x615cd0": 1
+      }
+    }
+  ],
+  "unaccepted_attempt": "V1 spawned controls stopped at absent-view5b2dbf. V2 admits the existing5b2db9->5b2dd1 presentation boundary; gameplay paths execute."
+}

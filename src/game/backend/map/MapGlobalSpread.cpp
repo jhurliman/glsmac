@@ -1,5 +1,7 @@
 #include "Map.h"
 #include "SmacGlobalSpread.h"
+#include "SmacLandmarkGeometry.h"
+#include "util/FinallyGuard.h"
 #include "SmacNativeTerrainItems.h"
 #include "tile/Tile.h"
 #include <stdexcept>
@@ -73,6 +75,7 @@ Map::PreparedGlobalSpread::PreparedGlobalSpread()=default;
 Map::PreparedGlobalSpread::~PreparedGlobalSpread()=default;
 std::unique_ptr<Map::PreparedGlobalSpread> Map::PrepareGlobalSpread(int32_t turn,
     const std::array<uint32_t,8>& status,const SmacGameplayRandomState& random) {
+    if(m_global_spread_query_active) {throw std::invalid_argument("Cannot recursively prepare global flora");}
     auto before=CopyGlobalSpreadInput(turn,status);
     const auto plan=smac_spread::Prepare(before,random);
     auto policy=m_resource_policy->WithLiveGlobalSpread(before,plan);
@@ -113,8 +116,8 @@ const TerrainRenderUpdate* Map::GetGlobalSpreadTerrainPayload(const PreparedGlob
     if(!prepared.data || prepared.data->owner!=this) {throw std::invalid_argument("Foreign global flora transaction");}
     return prepared.data->render?&GetTerrainUpdatePayload(*prepared.data->render):nullptr;
 }
-void Map::CommitGlobalSpread(PreparedGlobalSpread& prepared) {
-    if(!prepared.data || prepared.data->owner!=this || prepared.data->committed) {throw std::invalid_argument("Invalid global flora transaction");}
+void Map::ValidateGlobalSpread(const PreparedGlobalSpread& prepared) const {
+    if(!prepared.data || prepared.data->owner!=this || prepared.data->committed || m_global_spread_query_active) {throw std::invalid_argument("Invalid global flora transaction");}
     auto& data=*prepared.data;
     if(!m_resource_policy || !m_worker_knowledge || !(*m_resource_policy==data.original_policy)
         || !(*m_worker_knowledge==data.original_knowledge)) {throw std::runtime_error("Stale global flora policy or knowledge");}
@@ -127,6 +130,9 @@ void Map::CommitGlobalSpread(PreparedGlobalSpread& prepared) {
             throw std::runtime_error("Stale global flora physical appearance");
         }
     }
+}
+void Map::CommitGlobalSpread(PreparedGlobalSpread& prepared) {
+    ValidateGlobalSpread(prepared);auto& data=*prepared.data;
     // All allocations, stale checks and render preparation finish above.
     for(const auto& [tile,next]:data.appearance) {
         auto* live=GetTile(tile->coord.x,tile->coord.y);live->features=next.features;live->terraforming=next.terraforming;
@@ -136,5 +142,34 @@ void Map::CommitGlobalSpread(PreparedGlobalSpread& prepared) {
     *m_resource_policy=std::move(data.policy);*m_worker_knowledge=std::move(data.knowledge);
     if(data.render) {CommitOrdinaryTerrainUpdate(*data.render);}
     data.committed=true;
+}
+void Map::QueryGlobalSpread(const PreparedGlobalSpread& prepared,const std::function<void()>& query) {
+    ValidateGlobalSpread(prepared);if(!query) {throw std::invalid_argument("Global flora query requires a consumer");}
+    auto& data=*prepared.data;
+    auto policy=std::optional<GlsmacResourceMapPolicy>{data.policy};
+    auto knowledge=std::optional<SmacWorkerKnowledge>{data.knowledge};
+    std::unique_ptr<smac_terrain::LandmarkGeometry> geometry;
+    std::shared_ptr<const SmacPlanetMap> geometry_source;
+    const bool wrap=m_native_geometry_wrap,ready=m_worker_knowledge_ready;
+    bool applied=false;
+    static_assert(noexcept(m_resource_policy.swap(policy)) && noexcept(m_worker_knowledge.swap(knowledge)));
+    // Allocate the restoring closure before the first owning/cache mutation.
+    util::FinallyGuard restore([&]{
+        if(!applied) {return;}
+        for(const auto& [tile,old]:data.original_appearance) {
+            auto* live=GetTile(tile->coord.x,tile->coord.y);
+            live->features=old.features;live->terraforming=old.terraforming;live->rockiness=old.rockiness;
+        }
+        m_resource_policy.swap(policy);m_worker_knowledge.swap(knowledge);m_worker_knowledge_ready=ready;
+        m_native_geometry=std::move(geometry);m_native_geometry_source=std::move(geometry_source);m_native_geometry_wrap=wrap;
+        m_global_spread_query_active=false;
+    });
+    applied=true;m_global_spread_query_active=true;
+    geometry=std::move(m_native_geometry);geometry_source=std::move(m_native_geometry_source);
+    m_resource_policy.swap(policy);m_worker_knowledge.swap(knowledge);
+    for(const auto& [tile,next]:data.appearance) {
+        auto* live=GetTile(tile->coord.x,tile->coord.y);live->features=next.features;live->terraforming=next.terraforming;
+    }
+    query();
 }
 }

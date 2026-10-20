@@ -193,3 +193,30 @@ knowledge codec round trips. The Map fixture is headless; it verifies an absent
 render payload, not new graphics output. Three production files pass targeted
 analysis, with the owning transaction reanalyzed after implementation. Full
 round activation and combined flora/fauna rollback remain integration work.
+
+## Reversible flora query view
+
+`Map::QueryGlobalSpread` validates the prepared Map inputs, exposes detached
+copies of its candidate policy/knowledge and the staged physical growth to a
+synchronous C++ consumer, then restores the original values. A consumer can
+prepare another detached subsystem while seeing flora effects. It must not run
+scripts, yield, publish live state, or retain borrowed view references. Owned
+results may escape. This is not rollback for arbitrary consumer mutations.
+
+The restore guard is allocated before any ownership change. Policy/knowledge
+swaps are compile-time nonthrowing; normal and exceptional exits restore affected
+physical fields, readiness, and the original native geometry/cache ownership.
+A Map-wide query guard rejects recursive flora prepare/query/commit, including
+publication through a different prepared object. Queries and commits share the
+same stale-input validation. Render atlas updates and notifications are untouched.
+
+The integration test observes actual staged physical/packed/known-memory fields,
+warms candidate height geometry, injects a consumer exception, then verifies the
+original values and cache identities. It also checks a successful query, known
+versus unavailable memory, cross-object publication rejection, and later commit.
+Seven affected groups pass normally and under three-TU focused ASan/UBSan (Map
+producer, native geometry consumer and fixture; other objects normal, leak
+detection disabled), including the optional nine original checkpoints with the
+receipt supplied. Both production consumers pass targeted analysis. Combined
+native-birth/global-policy execution and the round controller remain work; this
+query view does not claim those effects have run in GLSMAC.

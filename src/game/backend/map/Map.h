@@ -5,6 +5,7 @@ namespace game::native_terrain {struct World;}
 #include <unordered_map>
 #include <vector>
 #include <memory>
+#include <functional>
 #include <map>
 #include "TerrainRenderUpdate.h"
 
@@ -176,6 +177,9 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
     const SmacGameplayRandomState& GetGlobalSpreadRandom(const PreparedGlobalSpread& prepared) const;
     const TerrainRenderUpdate* GetGlobalSpreadTerrainPayload(const PreparedGlobalSpread& prepared) const;
     void CommitGlobalSpread(PreparedGlobalSpread& prepared);
+    // Read/prepare detached consumers only: no scripts, yields or live commits.
+    // Restores Map flora fields and geometry caches on normal/exceptional exit.
+    void QueryGlobalSpread(const PreparedGlobalSpread& prepared,const std::function<void()>& query);
 
     smac_terrain::LandmarkGeometry* GetNativeGeometry() const;
 	const size_t GetHeight() const;
@@ -211,6 +215,7 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 private:
+    void ValidateGlobalSpread(const PreparedGlobalSpread& prepared) const;
 	GlsmacTerritoryTopology PrepareSiteRatings(const GlsmacTerritoryTopology& topology,
 		const std::vector<smac_site::Coordinate>& bases,size_t turn,std::optional<smac_site::Coordinate> point) const;
 	friend class gse::tests::BackendFixture;
@@ -272,6 +277,7 @@ private:
 	std::optional< GlsmacTerritoryTopology > m_territory_topology;
 	std::unique_ptr< smac_territory::RegionalLandWorkspace > m_regional_path_workspace;
 	bool m_worker_knowledge_ready = false;
+    bool m_global_spread_query_active=false;
 	tile::Tiles* m_tiles = nullptr;
 	tile::Tile* m_selected_tile = nullptr;
 	MapState* m_map_state = nullptr;

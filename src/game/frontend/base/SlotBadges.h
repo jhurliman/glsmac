@@ -2,6 +2,8 @@
 
 #include <cstddef>
 #include <unordered_map>
+#include <map>
+#include <optional>
 #include "game/frontend/sprite/Sprite.h"
 
 #include "types/texture/Types.h"
@@ -47,7 +49,7 @@ public:
 	~SlotBadges();
 
     sprite::Sprite* GetLowZoomMarker(int zoom);
-	sprite::Sprite* GetBaseBadgeSprite( const size_t population, const bool is_guarded );
+	sprite::Sprite* GetBaseBadgeSprite( const size_t population, const bool is_guarded, std::optional<int> zoom={} );
 
 private:
     friend class gse::tests::BackendFixture;
@@ -65,7 +67,8 @@ private:
 		sprite::Sprite* unguarded;
 		sprite::Sprite* guarded;
 	};
-	std::unordered_map< size_t, slot_sprites_t > m_per_population_sprites = {};
+    using PopulationKey=std::pair<size_t,int>;
+	std::map< PopulationKey, slot_sprites_t > m_per_population_sprites = {};
 
 	static const struct consts_t {
 		const types::Vec2< float > scale = {
@@ -82,10 +85,11 @@ private:
 		types::texture::Texture* texture;
 		sprite::InstancedSprite* sprite;
 	};
-	typedef std::unordered_map< size_t, badge_sprite_t > badge_spritemap_t; // population, sprite
+	typedef std::map< PopulationKey, badge_sprite_t > badge_spritemap_t; // population, sprite
 	typedef std::unordered_map< bool, badge_spritemap_t > badge_spritemaps_t; // is_guarded, spritemap
 	badge_spritemaps_t m_badge_sprites = {};
-	sprite::InstancedSprite* GetBadgeSprite( const size_t population, const bool is_guarded );
+	sprite::InstancedSprite* GetBadgeSprite( const size_t population, const bool is_guarded, int zoom );
+    PopulationKey Key(size_t population,std::optional<int> zoom) const;
 
 };
 

@@ -150,9 +150,16 @@ void Base::SetNativeBody(std::optional<::game::smac_base_body::Selection> select
     if(shown) {Show();}
 }
 
-void Base::PrepareNativeView(int zoom) const {if(zoom< -8) {m_slot_badges->GetLowZoomMarker(zoom);}}
+void Base::PrepareNativeView(int zoom) const {
+    if(zoom< -8) {m_slot_badges->GetLowZoomMarker(zoom);}
+    else if(m_bm->UsesSmacPopulation()) {m_slot_badges->GetBaseBadgeSprite(GetPopulation(),m_is_guarded,zoom);}
+}
 void Base::RefreshNativeView() {
     const bool shown=m_render.is_rendered || m_name_rendered;Hide();m_render.instance_id=0;
+    if(m_bm->UsesSmacPopulation() && m_bm->GetNativeActorZoom()>= -8) {
+        auto* badge=m_slot_badges->GetBaseBadgeSprite(GetPopulation(),m_is_guarded);
+        if(badge!=m_render.badge.def) {m_render.badge.def=badge;m_render.badge.instance_id=0;UpdateMeshTex(m_render_data.badge,badge->instanced_sprite);}
+    }
     if(shown) {Show();}
 }
 

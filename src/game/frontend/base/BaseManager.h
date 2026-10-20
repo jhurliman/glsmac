@@ -101,7 +101,7 @@ private:
 private:
 	friend class SlotBadges;
 	text::InstancedFont* GetBadgeFont() const;
-	const types::Font* GetSmacPopulationFont();
+	const types::Font* GetSmacPopulationFont(int zoom=0);
 	const std::array<types::Color,256>& GetSmacPopulationPalette();
 	text::InstancedText* CreateNameLabel(const faction::Faction* faction,const std::string& name);
 

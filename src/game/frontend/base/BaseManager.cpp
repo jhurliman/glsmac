@@ -31,6 +31,7 @@
 #include "loader/texture/TextureLoader.h"
 #include "SmacBaseNameRaster.h"
 #include "game/NativeZoom.h"
+#include "game/frontend/NativeActorMarker.h"
 
 namespace game {
 namespace frontend {
@@ -313,7 +314,8 @@ text::InstancedText* BaseManager::CreateNameLabel(const faction::Faction* factio
 	return m_game->GetITM()->CreateInstancedText(name,m_name_font,text,shadow);
 }
 
-const types::Font* BaseManager::GetSmacPopulationFont() {
+const types::Font* BaseManager::GetSmacPopulationFont(int zoom) {
+    if(zoom!=0) {return g_engine->GetFontLoader()->LoadCustomFont("arialbd.ttf",static_cast<unsigned char>(native_actor::PopulationFontSize(zoom)),loader::font::RasterMode::MONOCHROME);}
 	if (!m_smac_population_font) {
 		m_smac_population_font = g_engine->GetFontLoader()->LoadCustomFont("arialbd.ttf",16,loader::font::RasterMode::MONOCHROME);
 	}

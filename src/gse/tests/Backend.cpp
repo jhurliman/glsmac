@@ -3082,6 +3082,23 @@ public:
             && bold==fonts.LoadCustomFont("arial.ttf",12,loader::font::RasterMode::MONOCHROME_BOLD),
             "Synthetic-bold and ordinary mono modes alias their cached font");
 		GT_ASSERT(fonts.loaded==legacy,"regular font ignored installed legacy Arial before system/narrow fallback");
+        GT_ASSERT(!fonts.GetSmacLayout(mono),"Filename-only substitute inherited captured Arial layout");
+        if(const auto* root=std::getenv("GLSMAC_TEST_ARIAL_PROFILE_ROOT")) {
+            resources.m_custom_resource_paths["arial.ttf"]=std::string(root)+"/arial.ttf";
+            resources.m_custom_resource_paths["arialbd.ttf"]=std::string(root)+"/arialbd.ttf";
+            Fonts measured;
+            auto* regular=measured.LoadCustomFont("arial.ttf",7,loader::font::RasterMode::MONOCHROME);
+            auto* bold=measured.LoadCustomFont("arialbd.ttf",19,loader::font::RasterMode::MONOCHROME);
+            const auto r=measured.GetSmacLayout(regular),b=measured.GetSmacLayout(bold);
+            GT_ASSERT(r && r->logical_height==6 && b && b->logical_height==15 && b->width_8==11 &&
+                measured.LoadCustomFont("arial.ttf",7,loader::font::RasterMode::MONOCHROME)==regular,
+                "Actual font-byte registration or cache identity lost native metrics");
+            auto* synthetic=measured.LoadCustomFont("arialbd.ttf",19,loader::font::RasterMode::MONOCHROME_BOLD);
+            auto* outside=measured.LoadCustomFont("arialbd.ttf",81,loader::font::RasterMode::MONOCHROME);
+            GT_ASSERT(!measured.GetSmacLayout(synthetic) && !measured.GetSmacLayout(outside) && measured.GetSmacLayout(bold)->logical_height==15,
+                "Unsupported style/size contaminated a valid native profile");
+        }
+
 		GT_OK();
 	}
 
@@ -3306,6 +3323,57 @@ public:
                                 const auto rect=game::frontend::native_actor::Marker(true,zoom);
                                 const auto* sprite=body->actor->GetSpriteActor();
                                 GT_ASSERT(sprite->GetDimensions()==types::Vec2<float>(rect[2]-rect[0],rect[3]-rect[1]),"Base marker has wrong dimensions");
+                            }
+                        }
+                    }
+                    if(height==0) {
+                        auto* badge_policy=manager.GetSlotBadges(3);
+                        const bool old_inspector=frontend.m_native_inspector;frontend.m_native_inspector=true;
+                        const bool old_population=manager.m_smac_population,old_policy=badge_policy->m_smac_population;
+                        const bool loaded=manager.m_smac_population_palette_loaded;const auto old_palette=manager.m_smac_population_palette;
+                        auto* old_badge=base.m_render.badge.def;
+                        resources.m_custom_resource_paths["arialbd.ttf"]=std::getenv("GLSMAC_TEST_ARIAL_PROFILE_ROOT")?
+                            std::string(std::getenv("GLSMAC_TEST_ARIAL_PROFILE_ROOT"))+"/arialbd.ttf":"resource/font/terminus/TerminusTTF-4.49.3-minified.ttf";
+                        manager.m_smac_population=true;badge_policy->m_smac_population=true;
+                        manager.m_smac_population_palette.fill(types::Color::FromRGB(0,0,0));manager.m_smac_population_palette_loaded=true;
+                        manager.m_bases.emplace(100,&base);
+                        util::FinallyGuard restore_population([&]{
+                            frontend.m_native_inspector=old_inspector;
+                            manager.m_bases.erase(100);manager.m_smac_population=old_population;badge_policy->m_smac_population=old_policy;
+                            manager.m_smac_population_palette=old_palette;manager.m_smac_population_palette_loaded=loaded;
+                            base.Hide();base.m_render.badge.def=old_badge;base.m_render.badge.instance_id=0;
+                            base.UpdateMeshTex(base.m_render_data.badge,old_badge->instanced_sprite);base.Show();
+                        });
+                        game::frontend::sprite::Sprite* at3=nullptr;
+                        const auto* card=base.GetRenderData().base.mesh;
+                        for(const int zoom:{3,4,8,16,0}) {
+                            auto* prior=base.m_render.badge.def;const auto prior_id=base.m_render.badge.instance_id;manager.SetNativeActorZoom(zoom);
+                            auto* next=base.m_render.badge.def;auto* sprite=next->instanced_sprite;
+                            const int q=game::native_zoom::Unit(zoom);
+                            GT_ASSERT(sprite->actor->HasInstance(base.m_render.badge.instance_id) &&
+                                (prior==next || !prior->instanced_sprite->actor->HasInstance(prior_id)),
+                                "Population view switch retained prior badge or lost visible counter");
+                            camera.SetScale(game::frontend::map_projection::CameraScale(0.125f*q/12,true));
+                            auto quad=sprite->actor->GetSpriteActor()->GenerateMesh();types::Vec3 a,z;
+                            quad->GetVertexCoord(0,&a);quad->GetVertexCoord(2,&z);
+                            const auto transform=camera.GetMatrix()*sprite->actor->GetInstanceMatrices().front();
+                            const auto screen=[&](const types::Vec3& c) {const auto& m=transform.m;return types::Vec2<float>{
+                                (m[0][0]*c.x+m[0][1]*c.y+m[0][2]*c.z+m[0][3]+1)*512,
+                                (1-m[1][0]*c.x-m[1][1]*c.y-m[1][2]*c.z-m[1][3])*384};};
+                            const auto aa=screen(a),zz=screen(z);
+                            GT_ASSERT(std::abs(zz.x-aa.x-sprite->wh.x)<0.002f && std::abs(zz.y-aa.y-sprite->wh.y)<0.002f,
+                                "Actual native camera stretched population pixels");
+                            GT_ASSERT(sprite->actor->GetZIndex()>base.GetSprite()->instanced_sprite->actor->GetZIndex() &&
+                                sprite->actor->GetZIndex()<game::frontend::s_zlevel_map.at(game::frontend::ZL_UNITS),
+                                "Native population was not ordered after its Base and before Units");
+                            const auto dimensions=sprite->actor->GetSpriteActor()->GetDimensions();
+                            GT_ASSERT(std::abs(dimensions.x*8*q-sprite->wh.x)<0.001f && std::abs(dimensions.y*4*q-sprite->wh.y)<0.001f &&
+                                base.GetRenderData().base.mesh==card,"Population pixel dimensions used art ratio or replaced console body");
+                            if(zoom==3) {at3=next;}if(zoom==4) {GT_ASSERT(next!=at3,"Same q merged different native font requests");}
+                            if(zoom!=0 && std::getenv("GLSMAC_TEST_ARIAL_PROFILE_ROOT")) {
+                                const auto* font=manager.GetSmacPopulationFont(zoom);const auto metrics=fonts.GetSmacLayout(font);
+                                GT_ASSERT(metrics && sprite->wh.x==uint32_t(metrics->width_8+5) && sprite->wh.y==uint32_t(metrics->logical_height+4),
+                                    "Actual population caller discarded measured font metadata");
                             }
                         }
                     }

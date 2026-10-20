@@ -12,7 +12,8 @@ terrain exploration, remembered improvements, unit disclosure and base discovery
   Survey selection into an owned80x80 local snapshot. The request authenticates
   the actual local single-player participant. `World::KnowledgeAt` distinguishes
   unknown, survey and known terrain, retaining unavailable authority separately.
-  These inputs do not yet drive ordinary main-map rendering or console admission;
+  These inputs do not yet drive ordinary main-map rendering; console admission
+  now has its [live saved-knowledge reader](console-unexplored-admission.md);
   editor translation and object disclosure still need their separate callers.
 - `NativeViewGeometry::Prepare` without a knowledge input schedules land height/shade
   queries. Unknown terrain bypasses that material pass in the original; the

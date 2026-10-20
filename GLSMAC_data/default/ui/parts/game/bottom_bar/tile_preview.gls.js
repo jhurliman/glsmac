@@ -64,6 +64,13 @@ return {
 	},
 
 	set_image: () => {
+        if (!this.known) {
+            if (#is_defined(this.preview)) {
+                this.preview.remove();
+                this.preview = #undefined;
+            }
+            return;
+        }
 		const tile = this.tile;
 		if (!#is_defined(this.preview)) {
 			this.preview = this.frame.widget({
@@ -102,7 +109,9 @@ return {
 		this.lines = this.frame.area({left: 0, right: 0, top: 0, bottom: 0});
 		this.row = 0;
 
-		if (this.show_resources) {
+        if (!this.known) {
+            this.line('Unexplored');
+        } else if (this.show_resources) {
 
 			const resources = tile.get_resources();
 			this.line('Nutrients: ' + #to_string(resources.NUTRIENTS));
@@ -170,6 +179,7 @@ return {
 	init: (p) => {
 
 		this.show_resources = false;
+        this.known = true;
 
 		p.ui.class('tile-preview-line').set({
 			color: 'rgb(116,156,56)',
@@ -191,6 +201,7 @@ return {
 
 		p.map.on('tile_preview', (e) => {
 			this.tile = e.tile;
+            this.known = #is_defined(e.known) ? e.known : true;
 			this.set_image();
 			this.set_lines();
 		});

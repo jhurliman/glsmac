@@ -61,6 +61,9 @@ void TilePreview::Update( ui::dom::Widget* const widget, const void* const data 
 	const auto* tile = (const tile::Tile*)data;
     if(!tile) {m_coordinates.erase(widget);return;}
     m_coordinates[widget]=tile->GetCoords();
+    // Unknown native selections must remain empty, including during the brief
+    // interval before the script receives the refreshed knowledge event.
+    if(!m_game->AllowsNativeTileInspection(tile->GetCoords().x,tile->GetCoords().y)) {return;}
     if(const auto texture=m_game->GetNativeTilePreview(tile->GetCoords().x,tile->GetCoords().y)) {
         widget->RetainTexture(texture);AddMeshAndTexture(widget,0,nullptr,texture.get());return;
     }

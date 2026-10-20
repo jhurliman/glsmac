@@ -23,6 +23,7 @@
 #include "game/backend/base/Base.h"
 #include "game/backend/map/Map.h"
 #include "gse/value/Int.h"
+#include "gse/value/Bool.h"
 #include "loader/cvr/CvrActorMaterial.h"
 #include "resource/ResourceManager.h"
 #include "util/FS.h"
@@ -233,7 +234,8 @@ void BaseManager::SelectBase( Base* base ) {
         auto* current=game->GetBM()->GetBase(id);
         if(!current || !game->GetMap()) {return;}
         auto* tile=current->GetTile();
-        state->TriggerObject(game->GetMap(),"tile_preview",ARGS_F(tile){{"tile",tile->Wrap(GSE_CALL)}};});
+        const bool known=game->AllowsLocalTileInspection(tile->coord.x,tile->coord.y);
+        state->TriggerObject(game->GetMap(),"tile_preview",ARGS_F(tile,known){{"tile",tile->Wrap(GSE_CALL)},{"known",VALUE(gse::value::Bool,,known)}};});
         if(!state->IsGameSessionActive(session)) {return;}
         current=game->GetBM()->GetBase(id);if(!current) {return;}
         state->TriggerObject(game->GetMap(),"base_preview",ARGS_F(current){{"base",current->Wrap(GSE_CALL)}};});

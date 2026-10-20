@@ -35,3 +35,29 @@ worktree. No platform matrix was repeated for script/layout changes.
 ![Actual SMAC map choice with blue artwork](https://raw.githubusercontent.com/jhurliman/glsmac/302ceb399bee594f22d49507d02b5e3c9ceaf0d0/smac-setup-blue-20261020/map-choice.png)
 
 ![Actual headed SMAC size menu after alignment correction](https://raw.githubusercontent.com/jhurliman/glsmac/302ceb399bee594f22d49507d02b5e3c9ceaf0d0/smac-setup-blue-20261020/planet-size.png)
+
+## Authored landmark geometry correction
+
+The ordinary backend geometry cache omitted the bounded negative-detail
+compatibility path already enabled by the native view renderer. Consequently,
+authored Planet landmarks could fall back to legacy fans beside native fans.
+The backend now enables the same measured mapping tables; unsupported negative
+rows still remain unavailable. It does not flatten elevations or mask cracks.
+
+A real load of the same Gaia2101 campaign (SHA256
+`f5baf09e4002d22ef467140f57c8dc2d37e807773b2a30607076263d5c4910c3`)
+at the same default camera removes the reproduced large black gap. In logical
+ROI[72,210,415,330],3994 of4000 previously black pixels become terrain; six
+black pixels remain. This is a specific repaired scene, not proof of all seam
+or whole-map pixel parity. Before is the exact1024x768 crop from the canonical
+1280x960 capture; after is a native1024x768 framebuffer capture. Neither image
+has terrain edits. Normal load and Quit completed, exit0, no tracked GL leaks.
+
+Validation:32 affected TerrainRenderUpdate groups, including exact negative
+Pholus display/picking heights45/30/50/30/50; changed production analysis0
+findings. The existing original Planet geometry verifier passes under
+ASan/UBSan:6400 projectors,32000 heights,32000 shades,508 primary triangles.
+
+![Before: mixed geometry leaves a black gap](https://raw.githubusercontent.com/jhurliman/glsmac/9b59770386c30f1a11bc2ebec619bb63b94bb0ab/native-landmark-geometry/before-logical.png)
+
+![After: same campaign and camera with authored geometry](https://raw.githubusercontent.com/jhurliman/glsmac/9b59770386c30f1a11bc2ebec619bb63b94bb0ab/native-landmark-geometry/gameplay.png)

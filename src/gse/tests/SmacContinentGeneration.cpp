@@ -4,6 +4,8 @@
 #include "game/backend/map/SmacGenerationNoise.h"
 #include "fixtures/SmacGenerationNoise.h"
 #include "fixtures/SmacHillAltitude.h"
+#include "fixtures/SmacGenerationRegions.h"
+#include "game/backend/map/SmacGenerationRegions.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 #include <string>
@@ -27,6 +29,50 @@ uint32_t Caller(generation::CrtUse use) {
 }
 }
 void AddSmacContinentGenerationTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC generation regions match original history capacity adjacency and summary",GT(){
+        uint64_t tiles=0,regions=0,pumps=0;
+        for(const auto& c:fixtures::generation_regions::Cases()) {
+            generation::State state{std::vector<generation::Record>(size_t(c.width/2)*size_t(c.height)),{{2,1,1,1,1,1,1}},
+                game::backend::SmacGameplayRandomState(1234567,1)};
+            const std::array<int,8> thresholds{{0,15,32,45,60,75,80,100}};
+            const std::string profile=c.profile,areas=c.areas,fresh=c.fresh;
+            state.topology=c.flat?1:0;state.dirty_flags=16;
+            for(int y=0;y<c.height;++y) {for(int x=y&1;x<c.width;x+=2) {
+                const auto i=size_t(y)*size_t(c.width/2)+size_t(x/2);auto& record=state.records[i];
+                const int band=profile=="mosaic"?((3*x+5*y)/2)%7:profile=="coast"?(y<c.height/2?1:3)
+                    :profile=="islands"?(x%8==0 && y%4==0?3:1):profile=="lakes"?(x%8==0 && y%4==0?1:3):profile[0]-'0';
+                record[0]=uint8_t(band*32+((i*7)&31));record[1]=uint8_t(thresholds[band]+(x+y)%(thresholds[band+1]-thresholds[band]));
+                record[2]=163;record[3]=99;record[5]=17;record[6]=uint8_t(i*13);record[7]=uint8_t(i*11);
+                const uint32_t marks=(fresh=="all" || (fresh=="sparse" && i%4==0))?0x12000080:0x12000000;
+                for(unsigned k=0;k<4;++k) {record[12+k]=uint8_t(marks>>(8*k));}
+            }}
+            generation::Regions storage;storage.secondary_flags=0x4100;
+            storage.summary_width=(c.width+4)/5;storage.summary_height=(c.height+4)/5;
+            storage.summary.assign(size_t((storage.summary_width+1)/2)*size_t(storage.summary_height),165);
+            for(size_t i=0;i<storage.records.size();++i) {storage.records[i]=uint8_t(i*7+13);}
+            for(size_t i=0;i<128;++i) {
+                const auto area=uint32_t(areas=="high"?1000:areas=="stale"?5+(i*3)%29:0);
+                for(unsigned k=0;k<4;++k) {storage.records[i*28+k]=uint8_t(area>>(8*k));}
+            }
+            const auto region_bytes=[&]{return std::string(reinterpret_cast<const char*>(storage.records.data()),storage.records.size());};
+            GT_ASSERT(util::SHA256(Bytes(state))==c.input_hash && util::SHA256(region_bytes())==c.input_regions_hash,"Original region fixture inputs differ");
+            std::string tile_trace,region_trace;uint64_t checkpoints=0;generation::RegionTrace trace;
+            trace.on_tile_store=[&](uint32_t off,unsigned size,uint32_t value){Word(tile_trace,off);Word(tile_trace,size,1);Word(tile_trace,value);};
+            trace.on_region_store=[&](uint32_t off,unsigned size,uint32_t value){Word(region_trace,off);Word(region_trace,size,1);Word(region_trace,value);};
+            trace.checkpoint=[&]{++checkpoints;};
+            for(int i=0;i<c.repeat;++i) {generation::RebuildRegions(state,{c.width,c.height},storage,&trace);}
+            const std::string summary(reinterpret_cast<const char*>(storage.summary.data()),storage.summary.size());
+            GT_ASSERT(util::SHA256(Bytes(state))==c.output_hash && util::SHA256(region_bytes())==c.output_regions_hash
+                && util::SHA256(summary)==c.summary_hash && storage.secondary_flags==c.secondary,
+                "Original full region/summary result differs: "+std::string(c.id));
+            GT_ASSERT(util::SHA256(tile_trace)==c.tile_hash && util::SHA256(region_trace)==c.region_hash
+                && trace.tile_stores==c.tiles && trace.region_stores==c.regions && trace.pumps==c.pumps && checkpoints==c.pumps,
+                "Original ordered region writes differ: "+std::string(c.id));
+            GT_ASSERT(state.dirty_flags==16 && state.random.Crt()==1 && state.random.Shared()==1234567,"Region rebuild changed unrelated state");
+            tiles+=trace.tile_stores;regions+=trace.region_stores;pumps+=trace.pumps;
+        }
+        GT_ASSERT(tiles==67424 && regions==49794 && pumps==1458,"Original region coverage changed");GT_OK();
+    });
     task->AddTest("SMAC hill polar and altitude stages match original ordered boundaries",GT(){
         uint64_t stores=0,draws=0;
         for(const auto& control:fixtures::hill_altitude::Cases()) {

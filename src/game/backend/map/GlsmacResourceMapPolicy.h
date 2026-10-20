@@ -33,6 +33,7 @@ public:
     GlsmacResourceMapPolicy WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const;
     GlsmacResourceMapPolicy WithStartingBalance(const smac_balance::Result& plan) const;
     GlsmacResourceMapPolicy WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const;
+    GlsmacResourceMapPolicy WithLiveGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const;
     GlsmacResourceMapPolicy WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const;
 	resource::smac::AltitudeBand Altitude( const tile::Tile& tile ) const;
 	std::array<bool,3> LandmarkBonuses( const tile::Tile& tile ) const;

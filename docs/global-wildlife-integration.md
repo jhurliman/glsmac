@@ -144,10 +144,10 @@ never replaced with the current improvements. Preparation consumes no RNG and
 publishes no map, policy, knowledge, or presentation changes.
 
 This input is scoped to the flora kernel's consumed fields. Unrelated retained
-occupancy/site/region words are not current wildlife authority. It cannot be
-published through the immutable imported-policy journal as though that source
-were the live map. Atomic physical/remembered flora publication and the broader
-fauna input plane remain owning-transaction work before controller activation.
+occupancy/site/region words are not current wildlife authority. The prepared Map
+transaction now uses a separately constrained live projection before the strict
+flora journal; it never treats the import as the live map. Composition with
+fauna, maintenance and native AI still precedes controller activation.
 
 A focused integration control changes the actual map after its retained source,
 executes the real forest-spread kernel, checks remembered propagation, and checks
@@ -158,3 +158,38 @@ and fixture translation units instrumented with ASan/UBSan (other objects normal
 leak detection disabled). Targeted production analysis reports zero diagnostics.
 The optional original nine-checkpoint group executes its native evidence in the
 sanitizer run; the initial normal run has no private receipt environment.
+
+## Prepared Map flora publication
+
+`Map::PrepareGlobalSpread` stages physical fungus/forest/kelp changes, existing
+full observer memories, the packed retained source and an optional batch render
+payload. Discard and preparation failure leave every live authority unchanged.
+Commit rejects changed policy, knowledge, consumed terrain or affected physical
+appearance before any publication, then moves the policy/knowledge and writes
+the physical fields. Compile-time checks require those final owning assignments
+to be nonthrowing. A prepared transaction belongs to one Map and cannot commit
+twice. The caller retains the round/RNG/faction-status ticket, stays synchronous
+without scripts/yields, and queues render notifications after commit.
+
+`WithLiveGlobalSpread` permits only projected rain, rockiness, exploration and
+mapped current/remembered material bits. Every other retained bit must match;
+the existing strict ordered journal then validates the final plane. Visibility
+and current improvements use the existing retained-world V2 policy codec, with
+no new wire format. This remains a flora source, not complete current occupancy,
+region, territory or native AI authority.
+
+Unexplored native improvement words are not necessarily zero. A flora write can
+change their partial history without establishing a complete higher-level port
+memory. Preserve that packed result, update existing full memory records, and
+leave unavailable records unavailable. The integration control proves both the
+unknown-target case and a known-target case whose remembered Road survives
+fungus removal and forest growth.
+
+Seven affected groups pass normally and under five-TU focused ASan/UBSan (other
+objects normal, leak detection disabled), including the original nine-checkpoint
+receipt when supplied to the sanitizer run. Tests exercise actual Map prepare,
+discard, stale rejection, commit, repeat rejection, immutable policy and worker
+knowledge codec round trips. The Map fixture is headless; it verifies an absent
+render payload, not new graphics output. Three production files pass targeted
+analysis, with the owning transaction reanalyzed after implementation. Full
+round activation and combined flora/fauna rollback remain integration work.

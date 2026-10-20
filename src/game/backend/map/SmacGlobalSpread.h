@@ -5,6 +5,9 @@
 
 namespace game::backend::map::smac_spread {
 using smac_site::Geometry;using smac_site::Coordinate;
+// Material bits whose current/remembered values are owned by the live adapter.
+inline constexpr uint32_t LIVE_MATERIAL_MASK=4u|8u|0x10u|0x20u|0x40u|0x80u|0x800u|0x2000u|
+    0x8000u|0x40000u|0x80000u|0x200000u|0x400000u|0x800000u|0x1000000u|0x80000000u;
 struct Input {
     Geometry geometry;
     int32_t tile_count,turn;

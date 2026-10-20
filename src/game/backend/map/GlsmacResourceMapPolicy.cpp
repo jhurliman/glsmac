@@ -50,6 +50,13 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithGlobalSpread(const smac_spr
     auto result=*this;result.m_planet=std::make_shared<const SmacPlanetMap>(m_planet->WithGlobalSpread(before,plan));return result;
 }
 
+GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithLiveGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const {
+    if(!m_planet || !before.geometry.wrap) {throw std::runtime_error("Live flora publication requires installed wrapped Planet authority");}
+    // Visibility/current terrain are legal in the existing retained-world V2
+    // codec; the stricter new-import V1 codec deliberately rejects them.
+    return RetainedClimatePlanetV2(m_planet->WithLiveGlobalSpread(before,plan),m_automatic_land_resources);
+}
+
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithStartingBalance(const smac_balance::Result& plan) const {
     if(!m_planet) {throw std::runtime_error("Compensation markers require original terrain item authority");}
     auto result=*this;result.m_planet=std::make_shared<const SmacPlanetMap>(m_planet->WithStartingBalance(plan));return result;

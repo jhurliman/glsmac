@@ -45,6 +45,7 @@ namespace backend {
 
 class Game;
 class Random;
+class SmacGameplayRandomState;
 
 namespace settings {
 class MapSettings;
@@ -159,6 +160,23 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
     std::unique_ptr<::game::native_terrain::World> CopyNativeTerrain(bool include_geometry=true) const;
     // Detached flora inputs only; retained unrelated words are not live wildlife authority.
     smac_spread::Input CopyGlobalSpreadInput(int32_t turn,const std::array<uint32_t,8>& observer_status) const;
+    class PreparedGlobalSpread {
+    public:
+        ~PreparedGlobalSpread();
+    private:
+        friend class Map;
+        struct Data;
+        PreparedGlobalSpread();
+        std::unique_ptr<Data> data;
+    };
+    // Synchronous owning transaction; caller retains the round/RNG ticket and
+    // queues a copy of the optional render payload after successful commit.
+    std::unique_ptr<PreparedGlobalSpread> PrepareGlobalSpread(int32_t turn,
+        const std::array<uint32_t,8>& observer_status,const SmacGameplayRandomState& random);
+    const SmacGameplayRandomState& GetGlobalSpreadRandom(const PreparedGlobalSpread& prepared) const;
+    const TerrainRenderUpdate* GetGlobalSpreadTerrainPayload(const PreparedGlobalSpread& prepared) const;
+    void CommitGlobalSpread(PreparedGlobalSpread& prepared);
+
     smac_terrain::LandmarkGeometry* GetNativeGeometry() const;
 	const size_t GetHeight() const;
 

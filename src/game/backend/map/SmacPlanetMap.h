@@ -45,6 +45,9 @@ public:
     SmacPlanetMap WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const;
     SmacPlanetMap WithStartingBalance(const smac_balance::Result& plan) const;
     SmacPlanetMap WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const;
+    // Caller authenticates current live fields. Preserve every unowned retained
+    // bit, then apply the same strict ordered flora journal to that projection.
+    SmacPlanetMap WithLiveGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const;
     int32_t ResourcePattern() const;
     int32_t WorldSizeCategory() const;
     int32_t OceanCoverageCategory() const;

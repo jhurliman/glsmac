@@ -35,6 +35,44 @@ bool Rejects(const std::string& wire) {
 }
 }
 void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Planet live flora publication preserves unowned bits and saves current observer memory",GT(){
+        namespace spread=game::backend::map::smac_spread;using Policy=game::backend::map::GlsmacResourceMapPolicy;
+        auto wire=Synthetic();Put(wire,15+0xa30,4);
+        const auto address=[](int x,int y) {return Planet::PREFIX_BYTES+Planet::HEADER_BYTES+(size_t(y)*40+x/2)*44;};
+        for(size_t i=0;i<Planet::TILE_COUNT;++i) {wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*44]=96;}
+        Put(wire,address(41,67)+8,0x200000);Put(wire,address(41,67)+16,0x200000);
+        Put(wire,address(78,78)+8,0x10000000);Put(wire,address(78,78)+16,0x10000000);
+        const auto source=Planet::Decode(wire);const auto policy=Policy::InstalledPlanetV1(source,true);
+        spread::Input before{{80,80,true},3200,1,{},{}};
+        for(uint32_t y=0;y<80;++y) {for(uint32_t x=y&1;x<80;x+=2) {before.tiles.push_back(source.At(x,y));}}
+        const size_t source_index=67*40+41/2,target_index=66*40+42/2,changed=78*40+78/2;
+        before.tiles[source_index].bytes[4]=2; // genuine current observer gate, absent in retained import
+        auto put=[](Planet::Tile& tile,size_t offset,uint32_t value) {for(size_t k=0;k<4;++k) {tile.bytes[offset+k]=uint8_t(value>>(8*k));}};
+        put(before.tiles[target_index],8,0x24); // current Former/material state differs from retained source
+        before.tiles[changed].bytes[0]=104;before.tiles[changed].bytes[5]=64;
+        put(before.tiles[changed],8,0x10000004);put(before.tiles[changed],16,0x10008000);
+        const auto plan=spread::Prepare(before,game::backend::SmacGameplayRandomState(123,1));
+        GT_ASSERT(!plan.changes.empty() && plan.changes.front().target==spread::Coordinate({42,66}),"Live projection did not execute the spread producer");
+        const auto updated=policy.WithLiveGlobalSpread(before,plan);
+        GT_ASSERT(updated.OriginalPlanet()->Header()==source.Header() && updated.OriginalPlanet()->Trailer()==source.Trailer()
+            && policy.OriginalPlanet()->Encode()==wire && updated.AutomaticLandResources(),"Live publication changed source/header/trailer/policy");
+        for(uint32_t y=0;y<80;++y) {for(uint32_t x=y&1;x<80;x+=2) {
+            GT_ASSERT(updated.OriginalPlanet()->At(x,y).bytes==plan.tiles[size_t(y)*40+x/2].bytes,"Live publication differs from exact final projected plane");
+        }}
+        GT_ASSERT(updated.OriginalPlanet()->At(42,66).bytes[18]==32 && !(updated.OriginalPlanet()->At(42,66).Items()&0x20u)
+            && updated.OriginalPlanet()->At(78,78).Items()==0x10000004u,"Live flora lost observer propagation or unrelated material bits");
+        GT_ASSERT(Policy::Deserialize(updated.Serialize().ToString())==updated,"Current visibility/improvements failed retained-world codec");
+        auto bad=before;bad.tiles.back().bytes[6]^=1;bool rejected=false;
+        try {(void)policy.WithLiveGlobalSpread(bad,plan);}catch(const std::exception&) {rejected=true;}
+        GT_ASSERT(rejected,"Live projection changed unowned terrain bytes");
+        bad=before;bad.tiles.back().bytes[8]^=1;rejected=false;
+        try {(void)policy.WithLiveGlobalSpread(bad,plan);}catch(const std::exception&) {rejected=true;}
+        GT_ASSERT(rejected,"Flora projection claimed live Base/Unit occupancy");
+        auto broken=plan;broken.changes.back().after.bytes[6]^=1;rejected=false;
+        try {(void)policy.WithLiveGlobalSpread(before,broken);}catch(const std::exception&) {rejected=true;}
+        GT_ASSERT(rejected && policy.OriginalPlanet()->Encode()==wire,"Late flora journal failure partly published retained state");GT_OK();
+    });
+
     task->AddTest("SMAC Planet global spread publication preserves opaque bytes and rejects stale or altered journals",GT(){
         namespace spread=game::backend::map::smac_spread;using Policy=game::backend::map::GlsmacResourceMapPolicy;
         auto wire=Synthetic();Put(wire,15+0xa30,4);

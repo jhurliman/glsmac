@@ -1,4 +1,4 @@
-#include "game/frontend/NativeTerrainRenderer.h"
+#include "game/frontend/NativeTerrainSession.h"
 #include "game/frontend/SmacWaterCoast.h"
 #include <fstream>
 #include <iostream>
@@ -40,19 +40,26 @@ int main(int argc,char** argv) {
         if(std::string(argv[4])!="unknown" || partial!=1) {return 1;}
         std::fill(known.begin(),known.end(),false);
     }
-    native::ViewGeometry geometry(world);std::optional<native::Frame> previous;
+    world.exploration_ready=true;world.observers_present=uint8_t(1u<<viewer);
+    world.initial_survey=partial>=2;
+    for(size_t i=0;i<known.size();++i) {world.tiles[i].explored_by=known[i]?uint8_t(1u<<viewer):0;}
+    native::Session session(world);native::ViewContext context;
+    context.flags=flags;context.preferences={preference,0};
     constexpr int cameras[4][2]={{22,38},{22,38},{24,38},{22,38}};
     for(int i=0;i<4;++i) {
         std::ofstream queries(dir+"/frame-"+std::to_string(i)+".queries");
-        const bool pan=i>=2;const auto plan=geometry.Prepare(native::Layout(cameras[i][0],cameras[i][1],0,true),0,25,pan,true,
-            [&](const native::ViewGeometry::Query& query) {
+        context.camera={{cameras[i][0],cameras[i][1]}};
+        const auto prepared=session.Prepare(world,context,partial?native::Session::Observation::Observer:
+            native::Session::Observation::RevealedInspector,[&](const native::ViewGeometry::Query& query) {
                 queries<<int(query.kind)<<' '<<query.tile[0]<<' '<<query.tile[1]<<' '<<query.vertex<<' '<<query.result[0]<<' '<<query.result[1]<<'\n';
-            },partial?&known:nullptr,partial>=2?std::optional<int>{2}:std::nullopt);
-        const auto cache=geometry.CacheBytes();std::ofstream cache_file(dir+"/frame-"+std::to_string(i)+".cache",std::ios::binary);
+            });
+        if(!prepared) {throw std::runtime_error("Owned view preparation unavailable");}
+        const auto& plan=*prepared;
+        const auto cache=session.geometry.CacheBytes();std::ofstream cache_file(dir+"/frame-"+std::to_string(i)+".cache",std::ios::binary);
         cache_file.write(reinterpret_cast<const char*>(cache.data()),cache.size());
-        auto frame=native::RenderPrepared(world,source,plan,uint16_t(seed),flags,uint8_t(initial),plan.regions?&*previous:nullptr,{preference,0});
+        auto frame=native::RenderPrepared(world,source,plan,uint16_t(seed),flags,uint8_t(initial),plan.regions?&*session.frame:nullptr,context.preferences);
         std::ofstream output(dir+"/frame-"+std::to_string(i)+".bin",std::ios::binary);
         output.write(reinterpret_cast<const char*>(frame.indexed.data()),frame.indexed.size());
-        std::cout<<i<<' '<<frame.tiles<<' '<<frame.attempts<<' '<<frame.writes<<'\n';previous=std::move(frame);
+        std::cout<<i<<' '<<frame.tiles<<' '<<frame.attempts<<' '<<frame.writes<<'\n';session.Commit(std::move(frame),context.Layout(world));
     }
 }

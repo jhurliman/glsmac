@@ -28,7 +28,7 @@ namespace game::native_terrain {struct World;}
 #include "ui/Types.h"
 
 namespace scene::actor {class Sound;class Mesh;}
-namespace game::frontend::native_terrain {struct Source;struct Session;}
+namespace game::frontend::native_terrain {struct Source;struct Session;struct ViewContext;}
 
 // TODO: remove those
 #include "game/backend/map/tile/TileState.h"
@@ -308,6 +308,7 @@ private:
     std::optional<std::array<int,2>> m_native_preview_tile;
     std::shared_ptr<types::texture::Texture> m_native_preview_texture;
     std::shared_ptr<native_terrain::Session> m_native_view;
+    std::unique_ptr<native_terrain::ViewContext> m_native_context;
     scene::actor::Mesh* m_native_actor=nullptr;
     types::texture::Texture* m_native_texture=nullptr;
 

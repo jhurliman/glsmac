@@ -85,7 +85,7 @@ void Game::ClearNativeTerrain() {
     UpdateNativeTerrainSpriteVisibility(nullptr);m_native_legacy_instances.clear();
     if(m_native_actor) {m_world_scene->RemoveActor(m_native_actor);DELETE(m_native_actor);m_native_actor=nullptr;}
     if(m_native_texture) {DELETE(m_native_texture);m_native_texture=nullptr;}
-    m_native_world.reset();m_native_source.reset();
+    m_native_world.reset();m_native_source.reset();m_native_context.reset();
     m_native_preview_tile.reset();m_native_preview_texture.reset();
     m_native_inspector=m_native_snapshot_dirty=m_native_frame_dirty=false;
 }
@@ -101,7 +101,7 @@ void Game::UpdateNativeTerrain() {
                 m_native_world.reset(response.data.native_terrain);
                 if(m_native_view) {
                     if(!m_native_world || !m_native_view->Matches(*m_native_world)) {RestoreNativeTerrainProjection();}
-                    else {m_native_view->frame.reset();m_native_view->layout.reset();}
+                    else {m_native_view->InvalidateAppearance();}
                 }
                 response.data.native_terrain=nullptr;m_native_frame_dirty=true;
                 // Cache input identity includes this complete owned snapshot,
@@ -118,7 +118,7 @@ void Game::UpdateNativeTerrain() {
         m_mt_ids.native_terrain=m_game->MT_GetNativeTerrain(m_world_ticket,m_native_inspector);
     }
     if(!m_native_inspector) {return;}
-    const bool admitted=m_native_world && m_viewport.window_width==1024 && m_viewport.window_height==768
+    const bool admitted=m_native_world && m_native_context && m_viewport.window_width==1024 && m_viewport.window_height==768
         && std::abs(m_camera_position.z-0.125f)<0.000001f;
     if(!admitted) {RestoreNativeTerrainProjection();if(m_native_actor) {m_native_actor->Hide();}UpdateNativeTerrainSpriteVisibility(nullptr);return;}
     if(!m_native_frame_dirty) {return;}
@@ -136,7 +136,8 @@ void Game::UpdateNativeTerrain() {
     int first_x=2*static_cast<int>(std::lround((-px/48-parity)/2))+parity;
     if(!m_native_world->horizontal_wrap) {first_x=std::clamp(first_x,-4,62);}
     int camera_x=(first_x+11)%80;if(camera_x<0) {camera_x+=80;}
-    const auto layout=native_terrain::Layout(camera_x,first_y+12,0,m_native_world->horizontal_wrap);
+    m_native_context->camera={{camera_x,first_y+12}};
+    const auto layout=m_native_context->Layout(*m_native_world);
     if(!m_native_world->horizontal_wrap) {first_x=layout.first[0];}
     auto placements=native_terrain::SelectView(layout);
     // Align the actual camera, including GPU units and Bases, with the native
@@ -153,18 +154,20 @@ void Game::UpdateNativeTerrain() {
     native_terrain::Frame frame;
     if(native_terrain::Session::Admits(*m_native_world)) {
         if(!m_native_view) {m_native_view=std::make_shared<native_terrain::Session>(*m_native_world);}
-        const bool incremental=m_native_view->frame && m_native_view->layout &&
-            bool(native_terrain::HorizontalPan(*m_native_view->layout,layout));
-        const auto plan=m_native_view->geometry.Prepare(layout,0,25,incremental);
+        const auto prepared=m_native_view->Prepare(*m_native_world,*m_native_context,
+            native_terrain::Session::Observation::RevealedInspector);
+        if(!prepared) {RestoreNativeTerrainProjection();if(m_native_actor) {m_native_actor->Hide();}return;}
+        const auto& plan=*prepared;
         frame=native_terrain::RenderPrepared(*m_native_world,*m_native_source,plan,
-            g_engine->GetConfig()->GetNativeTerrainBaseLow16(),0x10621,0,plan.regions?&*m_native_view->frame:nullptr);
+            g_engine->GetConfig()->GetNativeTerrainBaseLow16(),m_native_context->flags,0,
+            plan.regions?&*m_native_view->frame:nullptr,m_native_context->preferences);
         // The object pass already performed its own projector query. Reuse
         // that result for bodies, badges and names without touching caches.
         for(const auto& object:plan.objects) {
             const int height=(object.tile[1]-layout.first[1]-1)*24-object.projector[1];
             m_tm->GetTile(object.tile[0],object.tile[1])->SetNativeProjectorHeight(height);
         }
-        m_native_view->frame=frame;m_native_view->layout=layout;
+        m_native_view->Commit(frame,layout);
     } else {
         RestoreNativeTerrainProjection();
         frame=native_terrain::Render(*m_native_world,*m_native_source,placements,g_engine->GetConfig()->GetNativeTerrainBaseLow16(),{{0,0}},0x10621);

@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "game/ActorVisibilitySnapshot.h"
 #include "game/NativeTerrainWorld.h"
+#include "NativeViewContext.h"
 #include "gse/value/Bool.h"
 #include "game/backend/LocalMoveCommand.h"
 #include "game/backend/map/TerrainRenderUpdate.h"
@@ -1388,6 +1389,13 @@ void Game::Initialize(
     m_map_data.native_projection=native_projection;
     m_native_inspector=native_projection && g_engine->GetConfig()->HasLaunchFlag(config::Config::LF_NATIVE_TERRAIN_INSPECTOR);
     m_native_snapshot_dirty=native_projection;
+    if(native_projection) {
+        m_native_context=std::make_unique<native_terrain::ViewContext>();
+        m_native_context->camera={{int(map_size.x/2),int(map_size.y/2)}};
+        m_native_context->camera[0]^=(m_native_context->camera[0]^m_native_context->camera[1])&1;
+        if(m_native_inspector) {m_native_context->flags=0x10621;m_native_context->preferences={};}
+    }
+
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
 	UpdateCameraAngle();
 

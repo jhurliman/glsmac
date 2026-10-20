@@ -605,6 +605,7 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 void Tile::ApplyNativeProjectorHeight() {
     m_render_data.coords=m_canonical_coords;m_render_data.name_anchor=m_canonical_name_anchor;
     if(m_native_projector_height) {
+        m_render_data.coords.x+=m_native_projector_wrap_x*backend::map::s_consts.tile.scale.x*0.5f;
         m_render_data.coords.z=backend::map::s_consts.tile.scale.z+*m_native_projector_height*(backend::map::s_consts.tile.scale.y/float(4*::game::native_zoom::Unit(m_native_projector_zoom)));
         m_render_data.name_anchor=m_render_data.coords;
     }
@@ -613,10 +614,10 @@ void Tile::UpdateObjectPositions() {
     for(const auto& entry:m_units) {if(!entry.second->IsMoving()) {entry.second->UpdateFromTile();}}
     if(m_base) {m_base->UpdateFromTile();}
 }
-void Tile::SetNativeProjectorHeight(std::optional<int> height,int zoom) {
+void Tile::SetNativeProjectorHeight(std::optional<int> height,int zoom,int wrap_x) {
     ::game::native_zoom::Unit(zoom);
-    if(height==m_native_projector_height && zoom==m_native_projector_zoom) {return;}
-    m_native_projector_height=height;m_native_projector_zoom=zoom;ApplyNativeProjectorHeight();UpdateObjectPositions();
+    if(height==m_native_projector_height && zoom==m_native_projector_zoom && wrap_x==m_native_projector_wrap_x) {return;}
+    m_native_projector_height=height;m_native_projector_zoom=zoom;m_native_projector_wrap_x=wrap_x;ApplyNativeProjectorHeight();UpdateObjectPositions();
 }
 
 }

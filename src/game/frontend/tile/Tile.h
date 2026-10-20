@@ -90,13 +90,15 @@ public:
 
 	void Update( const backend::map::tile::Tile& tile, const backend::map::tile::TileState& ts );
 
-    void SetNativeProjectorHeight(std::optional<int> height,int zoom=0);
+    const types::Vec3& GetCanonicalCoords() const {return m_canonical_coords;}
+    std::optional<int> GetNativeProjectorHeight() const {return m_native_projector_height;}
+    void SetNativeProjectorHeight(std::optional<int> height,int zoom=0,int wrap_x=0);
 
 private:
     void ApplyNativeProjectorHeight();
     void UpdateObjectPositions();
     std::optional<int> m_native_projector_height;
-    int m_native_projector_zoom=0;
+    int m_native_projector_zoom=0,m_native_projector_wrap_x=0;
     types::Vec3 m_canonical_coords{};
     std::optional<types::Vec3> m_canonical_name_anchor;
 

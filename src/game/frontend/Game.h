@@ -1,5 +1,6 @@
 #pragma once
 #include <deque>
+namespace input {class Event;}
 #include <array>
 namespace game::native_terrain {struct World;}
 #include <memory>
@@ -195,6 +196,7 @@ CLASS( Game, common::Module )
     std::shared_ptr<types::texture::Texture> GetNativeTilePreview(int x,int y);
     bool AllowsNativeTileInspection(int x,int y) const;
     bool IsNativeTerrainInspector() const {return m_native_inspector;}
+    bool IsNativeObjectTile(const types::Vec2<size_t>& tile) const;
     const actor_visibility::Snapshot* GetActorVisibility() const {return m_world_retired ? nullptr:m_actor_visibility.get();}
 	text::InstancedTextManager* GetITM() const;
 
@@ -297,9 +299,10 @@ private:
 	void Deinitialize();
     void UpdateNativeTerrain();
     bool TryNativeTileAt(size_t screen_x,size_t screen_inverse_y);
+    bool HandleNativeZoom(const input::Event& event);
     void ClearNativeTerrain();
     void RestoreNativeTerrainProjection();
-    void UpdateNativeTerrainSpriteVisibility(const std::vector<bool>* covered,const std::vector<bool>* landmarks=nullptr,const std::vector<bool>* resources=nullptr);
+    void UpdateNativeTerrainSpriteVisibility(const std::vector<bool>* covered,const std::vector<bool>* landmarks=nullptr,const std::vector<bool>* resources=nullptr,bool complete=false);
     std::unordered_map<size_t,std::pair<std::string,types::Vec3>> m_native_legacy_instances;
     std::unordered_set<size_t> m_native_hidden_instances;
     bool m_native_inspector=false,m_native_snapshot_dirty=false,m_native_frame_dirty=false;
@@ -310,6 +313,8 @@ private:
     std::shared_ptr<types::texture::Texture> m_native_preview_texture;
     std::shared_ptr<native_terrain::Session> m_native_view;
     std::unique_ptr<native_terrain::ViewContext> m_native_context;
+    bool m_native_camera_from_legacy=true;
+    std::optional<std::vector<bool>> m_native_object_tiles;
     scene::actor::Mesh* m_native_actor=nullptr;
     types::texture::Texture* m_native_texture=nullptr;
 

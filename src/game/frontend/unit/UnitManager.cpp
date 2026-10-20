@@ -33,6 +33,11 @@ UnitManager::UnitManager( Game* game )
 	NEW( m_badge_defs, BadgeDefs, m_ism );
 }
 
+void UnitManager::PrepareNativeBodyZoom(int zoom) {
+    ::game::native_zoom::Unit(zoom);
+    for(const auto& row:m_units) {row.second->PrepareNativeBody(zoom);}
+}
+
 void UnitManager::SetNativeBodyZoom(int zoom) {
     ::game::native_zoom::Unit(zoom); // validate before changing live state
     if(zoom==m_native_body_zoom || !m_game->UsesNativeMapProjection()) {return;}
@@ -60,7 +65,7 @@ UnitManager::~UnitManager() {
 }
 
 const actor_visibility::UnitPlan* UnitManager::GetTilePresentation(const tile::Tile& tile) const {
-    if(m_game->IsNativeTerrainInspector()) {return nullptr;}
+    if(m_game->IsNativeTerrainInspector()) {return m_game->IsNativeObjectTile(tile.GetCoords())?nullptr:&m_hidden_plan;}
     if(const auto* snapshot=m_game->GetActorVisibility();snapshot && snapshot->available) {
         const auto selected=m_selected_unit ? std::optional<uint64_t>(m_selected_unit->GetId()):std::nullopt;
         const bool active=m_game->IsTurnActive();

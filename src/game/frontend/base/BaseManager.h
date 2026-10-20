@@ -65,6 +65,7 @@ CLASS( BaseManager, common::Class )
 	base::Base* GetBaseById( const size_t id ) const;
     bool UsesNativeMapProjection() const;
     int GetNativeActorZoom() const {return m_native_actor_zoom;}
+    void PrepareNativeActorZoom(int zoom);
     void SetNativeActorZoom(int zoom);
     bool UsesSmacPopulation() const {return m_smac_population;}
     actor_visibility::BaseVisibility GetBaseVisibility(size_t id) const;

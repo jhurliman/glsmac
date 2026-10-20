@@ -24,12 +24,12 @@ struct Session {
             if(cells[i].first!=world.tiles[i].band || cells[i].second!=world.tiles[i].landmarks) {return false;}
         }return true;
     }
-    enum class Observation {Observer,RevealedInspector};
+    enum class Observation {Observer,RevealedInspector,RevealedCanvas};
     void InvalidateAppearance() {frame.reset();layout.reset();pending_observer_.reset();}
     std::optional<ViewGeometry::Plan> Prepare(const ::game::native_terrain::World& world,
         const ViewContext& context,Observation observation=Observation::Observer,const ViewGeometry::Observer& observer={}) {
         if(!context.active || !Matches(world)) {InvalidateAppearance();return {};}
-        const bool inspection=observation==Observation::RevealedInspector;
+        const bool inspection=observation!=Observation::Observer;
         ViewGeometry::Knowledge known;
         std::optional<int> survey;
         if(!inspection) {
@@ -41,13 +41,14 @@ struct Session {
                 if(*value==::game::native_terrain::World::Knowledge::Survey) {survey=ViewContext::SurveyLight;}
             }
         }
+        if(observation==Observation::RevealedCanvas) {known.assign(world.tiles.size(),true);}
         const auto next=context.Layout(world);
         const int viewer=inspection?-1:world.viewer;
         const bool incremental=!pending_observer_ && frame && layout && observer_==viewer &&
             frame->display_flags==context.flags && frame->grid_preferences==context.preferences &&
             bool(HorizontalPan(*layout,next));
         auto result=geometry.Prepare(next,context.zoom,context.relief,incremental,true,observer,
-            inspection?nullptr:&known,survey);
+            observation==Observation::RevealedInspector?nullptr:&known,survey);
         pending_observer_=viewer;pending_relief_=context.relief;return result;
     }
     // Publish bitmap/layout and observer identity together only after rendering

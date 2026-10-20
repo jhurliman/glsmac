@@ -11,6 +11,8 @@
 #include "fixtures/SmacIndexedSpriteScaleCases.inc"
 #include "game/frontend/NativeTerrainRenderer.h"
 #include "game/frontend/NativeTerrainSession.h"
+#include "game/frontend/NativeZoomPolicy.h"
+#include "fixtures/NativeZoomPolicy.h"
 #include "fixtures/SmacKnownGrid.h"
 #include "fixtures/NativeTerrainView.h"
 #include "fixtures/SmacUnknownOutline.h"
@@ -211,6 +213,10 @@ public:
                 types::Vec3(center.x,center.y,2.0f-19.0f/(4*view[1]))) &&
                 shown.GetRenderData().selection_coords.center==center;
         }
+        shown.SetNativeProjectorHeight(-19,4,80);
+        zoomed=zoomed && close_coord(shown.GetRenderData().coords,types::Vec3(center.x+40,center.y,2.0f-19.0f/60)) && shown.GetCanonicalCoords()==center;
+        shown.SetNativeProjectorHeight(-19,4,-80);
+        zoomed=zoomed && close_coord(shown.GetRenderData().coords,types::Vec3(center.x-40,center.y,2.0f-19.0f/60));
         shown.SetNativeProjectorHeight(-19);
         // Backend refresh replaces canonical metadata, but does not destroy
         // the active view-owned projector. Clearing restores the latest input.
@@ -977,6 +983,41 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(rejected,"Same-footprint different-zoom bitmap history admitted");GT_OK();
     });
 
+    task->AddTest("SMAC native zoom policy matches250 original command camera and repaint controls",GT(){
+        namespace native=game::frontend::native_terrain;
+        game::native_terrain::World world;for(auto& tile:world.tiles) {tile.band=4;}
+        for(const auto& c:fixtures::native_zoom::Cases) {
+            native::ZoomViews views{};
+            for(int i=0;i<c.count;++i) {views[i]={true,i==0?false:c.auxiliary,c.before[i].zoom,c.before[i].camera};}
+            const auto result=native::ApplyZoom(views,static_cast<native::ZoomCommand>(c.command),c.target,
+                [&](unsigned i,const native::ZoomView& view)->std::optional<native::Point> {
+                    native::ViewGeometry geometry(world);
+                    const auto hit=geometry.Pick(native::Layout(view.camera[0],view.camera[1],view.zoom,true),view.zoom,25,c.mouse[i]);
+                    return hit.code==0?hit.written:std::nullopt;
+                },c.overview?std::optional<native::Point>(c.overview_tile):std::nullopt,[&](native::Point){return c.allowed;});
+            for(int i=0;i<c.count;++i) {
+                GT_ASSERT(result.views[i].zoom==c.after[i].zoom && result.views[i].camera==c.after[i].camera,
+                    "Native zoom/camera policy differs: "+std::string(c.id));
+            }
+            unsigned mask=0,previous=0;for(const unsigned i:result.repaints) {
+                GT_ASSERT(!mask || i>previous,"Native repaint pointer order changed");previous=i;mask|=1u<<i;
+            }
+            GT_ASSERT(mask==c.repaints,"Native repaint membership differs: "+std::string(c.id));
+        }GT_OK();
+    });
+    task->AddTest("SMAC native live canvas is opaque and does not require observer authority",GT(){
+        namespace native=game::frontend::native_terrain;
+        game::native_terrain::World world;world.retained_geometry=true;for(auto& cell:world.tiles) {cell.band=3;}
+        native::Session session(world);native::ViewContext context;context.camera={{22,38}};context.zoom=-14;context.preferences={};
+        const auto plan=session.Prepare(world,context,native::Session::Observation::RevealedCanvas);
+        GT_ASSERT(plan && plan->opaque_background,"Live revealed canvas exposed legacy map around centered world");
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,77)};
+        const auto frame=native::RenderPrepared(world,source,*plan,0,context.flags,0,nullptr,context.preferences);
+        GT_ASSERT(frame.indexed[0]==65,"Live canvas lost original black backing");
+        for(size_t i=3;i<frame.rgba.size();i+=4) {GT_ASSERT(frame.rgba[i]==255,"Live canvas retained transparent margins");}
+        GT_ASSERT(!session.Prepare(world,context),"Revealed canvas policy leaked into ordinary observer mode");GT_OK();
+    });
+
     task->AddTest("SMAC terrain picker uses committed relief before pending UI changes",GT(){
         namespace native=game::frontend::native_terrain;
         game::native_terrain::World world;world.retained_geometry=true;
@@ -1361,6 +1402,40 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
     task->AddTest("SMAC native camera provenance survives all ocean tiles without land metadata",GT(){
         TerrainRenderFixture f;GT_ASSERT(f.CheckProjectionProvenance(),"Projection inferred provenance from current land or retained stale mode");
         GT_OK();
+    });
+    task->AddTest("SMAC native live camera preserves wrapped object roots at every zoom boundary",GT(){
+        return WithWidgetGraphics([]()->std::string {
+            namespace native=game::frontend::native_terrain;
+            for(const int zoom:{-14,0,3,4,16}) {for(const int center:{0,22,79}) {
+                const int q=game::native_zoom::Unit(zoom);
+                const auto layout=native::Layout(center,center,zoom,true);
+                scene::Camera camera(scene::Camera::CT_ORTHOGRAPHIC);
+                camera.SetCustomAspectRatio(768.0f/1024);
+                camera.SetAngle({-float(M_PI)*0.5f,float(M_PI)*0.75f,0});
+                camera.SetScale(game::frontend::map_projection::CameraScale(q/96.0f,true));
+                const float ratio=768.0f/(768-256+32),scale=q/96.0f;
+                types::Vec2<float> position{0,0};
+                const auto apply=[&]() {camera.SetPosition({(0.5f+position.x)/0.75f,
+                    (0.5f+position.y)/ratio+scale,(0.5f+position.y)/ratio+scale});};
+                const auto project=[&](types::Vec3 c) {
+                    c.y=-c.y;const auto& m=camera.GetMatrix().m;
+                    return types::Vec2<float>{(m[0][0]*c.x+m[0][1]*c.y+m[0][2]*c.z+m[0][3]+1)*512,
+                        (1-(m[1][0]*c.x+m[1][1]*c.y+m[1][2]*c.z+m[1][3]))*384};
+                };
+                apply();const auto origin=project({0,0,2});
+                position.x-=(origin.x-(layout.offset[0]-layout.first[0]*4*q))/1024;
+                position.y-=(origin.y-(layout.offset[1]-layout.first[1]*2*q))*ratio/768;apply();
+                for(const auto& placement:native::SelectView(layout)) {
+                    const int x=placement.tile[0],y=placement.tile[1];
+                    const int wrap=(placement.flat_center[0]-layout.offset[0])/(4*q)-(x-layout.first[0]);
+                    const int height=(x*3+y*7)%77-25;
+                    const auto pixel=project({(x+wrap)*0.5f,y*0.5f,2+height/(4.0f*q)});
+                    GT_ASSERT(std::abs(pixel.x-placement.flat_center[0])<0.002f &&
+                        std::abs(pixel.y-(placement.flat_center[1]-height))<0.002f,
+                        "Actor root differs from native canvas at zoom "+std::to_string(zoom)+" tile "+std::to_string(x)+","+std::to_string(y));
+                }
+            }}GT_OK();
+        });
     });
     task->AddTest("SMAC ordinary terrain actual camera projects native96x48 diamonds and pixel heights",GT(){
         return WithWidgetGraphics([]()->std::string {

@@ -3,6 +3,7 @@
 #include "game/ActorVisibilitySnapshot.h"
 #include "game/NativeTerrainWorld.h"
 #include "NativeViewContext.h"
+#include "NativeTerrainSession.h"
 #include "gse/value/Bool.h"
 #include "game/backend/LocalMoveCommand.h"
 #include "game/backend/map/TerrainRenderUpdate.h"
@@ -645,8 +646,10 @@ void Game::UpdateViewport() {
 
 void Game::UpdateCameraPosition() {
     m_native_frame_dirty=true;
+    if(m_native_inspector) {m_native_camera_from_legacy=true;}
 
 	// prevent vertical scrolling outside viewport
+    if(!m_native_inspector) {
 	if ( m_camera_position.y < m_camera_range.min.y ) {
 		m_camera_position.y = m_camera_range.min.y;
 	}
@@ -656,6 +659,8 @@ void Game::UpdateCameraPosition() {
 			m_camera_position.y = ( m_camera_range.min.y + m_camera_range.max.y ) / 2;
 		}
 	}
+
+    }
 
 	if ( !m_scroller.IsRunning() ) {
 		FixCameraX();
@@ -695,6 +700,13 @@ void Game::UpdateCameraAngle() {
 }
 
 void Game::UpdateCameraRange() {
+    if(m_native_inspector && m_native_context) {
+        m_camera_range.min.z=1.0f/96;m_camera_range.max.z=25.0f/96;
+        m_camera_range.max.x=m_map_data.width*m_camera_position.z*m_viewport.window_aspect_ratio*0.25f;
+        m_camera_range.min.x=-m_camera_range.max.x;
+        UpdateCameraScale();ApplyCameraPosition();return;
+    }
+
 	m_camera_range.min.z = map_projection::FitHeight(m_map_data.native_projection) / ( m_map_data.height + 1 ) / m_viewport.ratio.y;
 	m_camera_range.max.z = 0.22f; // TODO: fix camera z and allow to zoom in more
 	if ( m_camera_position.z < m_camera_range.min.z ) {
@@ -716,6 +728,10 @@ void Game::UpdateCameraRange() {
 }
 
 void Game::UpdateMapInstances() {
+    if(m_native_inspector && m_native_view && m_native_view->frame) {
+        m_world_scene->SetWorldInstancePositions({{0,0,0}});return;
+    }
+
 	// needed for horizontal scrolling
 	std::vector< types::Vec3 > instances;
 
@@ -1535,6 +1551,8 @@ void Game::Initialize(
 
 			switch ( event.type ) {
 				case input::EV_KEY_DOWN: {
+                    if(HandleNativeZoom(event)) {return true;}
+                    if(m_native_inspector) {break;}
 					if ( event.data.key.key == 'z' ) {
 						m_map_control.key_zooming = 1;
 						return true;

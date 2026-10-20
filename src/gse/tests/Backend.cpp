@@ -1,3 +1,6 @@
+#include "fixtures/NativeZoomPolicy.h"
+#include "game/frontend/NativeZoomPolicy.h"
+#include "input/Event.h"
 #include "types/mesh/Rectangle.h"
 #include "game/frontend/NativeActorMarker.h"
 #include "game/NativeZoom.h"
@@ -6436,6 +6439,44 @@ public:
             GT_ASSERT(target.nutrients==4 && target.selected_items==0x88040,"Owned snapshot borrowed later tile/knowledge state");GT_OK();
         });
     }
+    std::string CheckNativeZoomInput() {
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            namespace native=game::frontend::native_terrain;
+            auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+            util::FinallyGuard close_ui([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
+            game::frontend::Game frontend(m_glsmac.get(),m_state,ui,{},{});frontend.m_world_retired=false;frontend.m_native_inspector=true;
+            game::native_terrain::World world;world.retained_geometry=true;for(auto& tile:world.tiles) {tile.band=3;}
+            frontend.m_native_view=std::make_shared<native::Session>(world);frontend.m_native_context=std::make_unique<native::ViewContext>();
+            auto& context=*frontend.m_native_context;context.camera={{22,38}};context.preferences={};
+            native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,77)};
+            const auto plan=frontend.m_native_view->Prepare(world,context,native::Session::Observation::RevealedCanvas);
+            frontend.m_native_view->Commit(native::RenderPrepared(world,source,*plan,0,context.flags,0,nullptr,context.preferences),context.Layout(world));
+            for(const auto& c:fixtures::native_zoom::Keys) {
+                context.zoom=0;frontend.m_native_frame_dirty=false;frontend.m_native_camera_from_legacy=true;
+                input::Event event;event.SetType(input::EV_KEY_DOWN);
+                event.data.key.modifiers=(c.encoded&0x20000)?input::KM_CTRL:(c.encoded=='Z' || c.encoded=='X')?input::KM_SHIFT:input::KM_NONE;
+                event.data.key.key=(c.encoded&0x20000)?0:char(c.encoded);
+                event.data.key.code=(c.encoded&0xff)=='z' || (c.encoded&0xff)=='Z'?input::K_Z:input::K_X;
+                GT_ASSERT(frontend.HandleNativeZoom(event),"Original native zoom key not handled");
+                GT_ASSERT(context.zoom==native::CommandZoom(0,static_cast<native::ZoomCommand>(c.command)) && context.camera==native::Point({{22,38}}),"Native key moved camera or chose wrong zoom");
+                GT_ASSERT(frontend.m_native_frame_dirty && !frontend.m_native_camera_from_legacy && frontend.m_native_view->frame->zoom==0,
+                    "Native key skipped repaint or changed committed picking state before publication");
+            }
+            for(const auto& c:fixtures::native_zoom::Wheels) {
+                context.zoom=c.zoom;const auto position=frontend.m_camera_position;
+                frontend.SmoothScroll(types::Vec2<float>{300,180},float(c.delta));
+                GT_ASSERT(context.zoom==c.zoom && frontend.m_camera_position==position,"Original ordinary wheel changed native view");
+            }
+            scene::Scene scene("Native single world",scene::SCENE_TYPE_WORLD);frontend.m_world_scene=&scene;
+            scene.SetWorldInstancePositions({{-40,0,0},{0,0,0},{40,0,0}});frontend.UpdateMapInstances();
+            GT_ASSERT(scene.GetWorldInstancePositions().size()==1,"Native canvas repeated actors around small world");
+            frontend.m_native_object_tiles=std::vector<bool>(3200,false);
+            GT_ASSERT(!frontend.IsNativeObjectTile({22,38}),"Unselected native object tile admitted");
+            frontend.m_native_object_tiles->at(38*40+11)=true;
+            GT_ASSERT(frontend.IsNativeObjectTile({22,38}) && !frontend.IsNativeObjectTile({23,38}) && !frontend.IsNativeObjectTile({80,38}),"Native object selection lost topology/bounds");
+            frontend.m_native_object_tiles.reset();frontend.m_native_view.reset();frontend.m_world_scene=nullptr;GT_OK();
+        });
+    }
     std::string CheckNativeTerrainPicking() {
         return WithScriptValues([&](GSE_CALLABLE)->std::string {
             namespace native=game::frontend::native_terrain;
@@ -6527,6 +6568,14 @@ public:
             monolith->actor->SetInstance(14,{7,8,9});
             frontend.m_native_legacy_instances.emplace(14,std::make_pair(monolith->key,types::Vec3(7,8,9)));
             render.terrain_instances.push_back({14,monolith->key,"Uranium"});
+            frontend.m_actors.terrain=solar->actor;
+            util::FinallyGuard detach_terrain([&]{frontend.m_actors.terrain=nullptr;});
+            frontend.UpdateNativeTerrainSpriteVisibility(nullptr,nullptr,nullptr,true);
+            GT_ASSERT(!solar->actor->IsVisible(),"Native canvas retained the legacy terrain mesh");
+            GT_ASSERT(!solar->actor->HasInstance(11) && !monolith->actor->HasInstance(12) && !monolith->actor->HasInstance(14),"Complete native canvas retained legacy props");
+            frontend.UpdateNativeTerrainSpriteVisibility(nullptr);
+            GT_ASSERT(solar->actor->IsVisible(),"Legacy terrain mesh did not restore");
+            GT_ASSERT(solar->actor->HasInstance(11) && monolith->actor->HasInstance(12) && monolith->actor->HasInstance(14),"Legacy props did not restore after native canvas");
             frontend.UpdateNativeTerrainSpriteVisibility(nullptr,&covered);
             GT_ASSERT(!monolith->actor->HasInstance(14) && solar->actor->HasInstance(11) && monolith->actor->HasInstance(12),
                 "Landmark replacement consumed an improvement or Monolith");
@@ -8897,6 +8946,9 @@ public:
 };
 
 static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
+    task->AddTest("world admission native zoom queues original keys and one-world actor policy",GT(){
+        BackendFixture fixture;return fixture.CheckNativeZoomInput();
+    });
     task->AddTest("world admission native terrain picking uses committed frame and cancellation",GT(){
         BackendFixture fixture;return fixture.CheckNativeTerrainPicking();
     });

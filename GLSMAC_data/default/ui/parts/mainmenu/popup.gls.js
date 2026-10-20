@@ -76,6 +76,7 @@ return (m) => {
 					return false;
 				}
 				if (e.code == 'ESCAPE') {
+					if (#is_defined(data.on_cancel)) { return data.on_cancel(); }
 					this.back();
 					return true;
 				}

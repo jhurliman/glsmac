@@ -117,6 +117,9 @@ private:
 	void RandomizeSettings( GSE_CALLABLE );
 
 	void AddSinglePlayerSlot( const std::optional< std::string >& faction_id, const game::backend::faction::DisplayIdentity* setup = nullptr );
+	game::backend::faction::Faction* GetEditableSinglePlayerFaction(const std::string& id) const;
+	void SetSinglePlayerLeader(const std::string& id, const std::string& name);
+	void RestoreSinglePlayerIdentity(const std::string& id, game::backend::faction::DisplayIdentity identity);
 	void StartGame( GSE_CALLABLE, std::optional<std::string> campaign_world = {} );
 	void LoadCampaign(GSE_CALLABLE,const std::string& path);
 	game::backend::State* m_campaign_previous_state = nullptr;

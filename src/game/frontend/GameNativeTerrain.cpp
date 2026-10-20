@@ -81,6 +81,7 @@ void Game::RestoreNativeTerrainProjection() {
     m_native_view.reset();
 }
 void Game::ClearNativeTerrain() {
+    m_native_tile_at_response.reset();
     RestoreNativeTerrainProjection();
     UpdateNativeTerrainSpriteVisibility(nullptr);m_native_legacy_instances.clear();
     if(m_native_actor) {m_world_scene->RemoveActor(m_native_actor);DELETE(m_native_actor);m_native_actor=nullptr;}
@@ -88,6 +89,18 @@ void Game::ClearNativeTerrain() {
     m_native_world.reset();m_native_source.reset();m_native_context.reset();
     m_native_preview_tile.reset();m_native_preview_texture.reset();
     m_native_inspector=m_native_snapshot_dirty=m_native_frame_dirty=false;
+}
+bool Game::TryNativeTileAt(size_t screen_x,size_t screen_inverse_y) {
+    if(!m_native_actor || !m_native_actor->IsVisible() || !m_native_view) {return false;}
+    // A displayed native frame owns its picking. A miss/unavailable native
+    // result must not fall through to the different legacy GPU geometry.
+    m_native_tile_at_response=tile_at_result_t{};
+    if(m_world_retired) {return true;}
+    if(screen_x>INT32_MAX || screen_inverse_y>m_viewport.window_height) {return true;}
+    const auto picked=m_native_view->Pick({{int(screen_x),int(m_viewport.window_height-screen_inverse_y)}});
+    if(picked && picked->code==0 && picked->written) {
+        m_native_tile_at_response=tile_at_result_t{true,{size_t((*picked->written)[0]),size_t((*picked->written)[1])}};
+    }return true;
 }
 void Game::UpdateNativeTerrain() {
     if(!m_map_data.native_projection || m_world_retired) {return;}

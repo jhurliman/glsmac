@@ -28,4 +28,18 @@ using SmacOpeningSupportScratch=std::array<int32_t,12>;
 void PrepareSmacOpeningSupport(const std::vector<SmacStartupBaseRecord>& bases,int32_t selected_base,
     const std::vector<unit::OriginalUnitBytes>& units,SmacOpeningSupportScratch& scratch,
     const SmacBaseAccountingObserver& observer={});
+struct SmacMineralProjectHosts {int32_t singularity=-1,bulk=-1,pholus=-1,elevator=-1,voice=-1;};
+struct SmacMineralAccountingInputs {
+    int32_t selected_base,facility_base,incoming,outgoing,support;
+    uint8_t human_mask;
+    int32_t global_difficulty,sea_level,sea_rise_rule,native_life;
+    uint32_t primary_rules,secondary_rules;
+    SmacMineralProjectHosts projects;
+};
+// Complete 0x4ff1e0 with the original literal DWORD arithmetic.
+// Upstream allocation owns raw intake/terraforming; stock and faction records
+// are preserved. Production/ecology algorithms share the existing checked
+// callers' core, with explicit original wrapping at raw-record boundaries.
+void AccountSmacBaseMinerals(std::vector<SmacStartupBaseRecord>& bases,const std::array<faction::SmacStartupFaction,8>& actors,
+    const SmacMineralAccountingInputs& inputs,const SmacBaseAccountingObserver& observer={});
 }

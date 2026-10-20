@@ -70,6 +70,10 @@ must be separated at its callers.
    [Nutrient accounting and opening support](native-base-nutrient-accounting.md)
    now match complete raw-record/store controls. Their upstream worker/intake
    inputs and the remaining resource/citizen stages still need composition.
+   [Mineral accounting and ecology stores](native-base-mineral-accounting.md)
+   now match complete raw-record and ordered-store controls, sharing the live
+   arithmetic core. Worker intake, energy/citizens and controller composition
+   remain required before publishing a generated game.
    [Canonical Unit initialization and stack placement](native-startup-units.md)
    now match original complete-record/pool controls; Base founding, complete
    factory visibility and seven-faction starting-package composition remain

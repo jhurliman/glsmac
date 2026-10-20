@@ -81,6 +81,22 @@ build; SDL is uninstrumented and leak detection is disabled. The retained pair
 passes in both runs, covering the probe's existing mode. No engine/platform
 matrix was repeated for this diagnostic addition.
 
+## Live visual acceptance targets
+
+The reported Mac differences remain explicit live acceptance work: terrain
+contrast/saturation, coastline shape, the black gridded unexplored overlay and
+relief height. Compare identical authoritative geography, camera, zoom, relief
+option, viewer knowledge and logical viewport before changing drawing parameters.
+The controlled frame matches above cover these terrain features; they do not
+establish that the legacy generated-game path or Mac framebuffer matches.
+
+At live integration, retain separate native-size terrain and complete application
+captures. Require the original unknown footprint and grid, matching coast masks,
+matching normal and flattened relief, and palette/RGB equality for the controlled
+terrain pass. Investigate presentation scaling and platform color differences
+separately when the CPU buffers match. Do not mask a state mismatch with tint,
+coast smoothing or arbitrary height adjustments.
+
 ## Remaining gameplay work
 
 The [native pretemperature pipeline](native-pretemperature-generation.md) now

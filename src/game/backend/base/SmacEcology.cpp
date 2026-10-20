@@ -1,4 +1,6 @@
 #include "SmacEcology.h"
+#include "SmacEcologyOriginal.h"
+#include "game/backend/SmacOriginalArithmetic.h"
 #include "SmacEcologyNativeSpawn.h"
 #include <algorithm>
 #include <stdexcept>
@@ -40,39 +42,45 @@ SmacTerraformingEcology CalculateSmacTerraformingEcology(const SmacWorkerRadiusM
     return {total,FloorEighth(total)};
 }
 
-SmacEcologyBurden CalculateSmacEcologyBurden(const SmacEcologyBurdenInput& in) {
-    if(in.history<0) {throw std::invalid_argument("Ecology requires nonnegative clean-mineral history");}
+static SmacEcologyBurden EcologyBurden(const SmacEcologyBurdenInput& in,bool original) {
+    const auto narrow=[&](int64_t value){return original?SmacWrap32(value):Checked(value);};
+    if(!original && in.history<0) {throw std::invalid_argument("Ecology requires nonnegative clean-mineral history");}
     const auto scaled=FloorEighth(in.raw_terraforming_points);
-    auto residual=scaled;auto clean=Checked(int64_t(16)+in.history);
-    if(residual>0) {const auto used=std::min(residual,clean);residual-=used;clean-=used;}
+    auto residual=scaled;auto clean=narrow(int64_t(16)+in.history);
+    if(residual>0) {const auto used=std::min(residual,clean);residual=narrow(int64_t(residual)-used);clean=narrow(int64_t(clean)-used);}
     const int32_t divisor=1+(in.nanoreplicator || in.singularity_inductor)+in.centauri_preserve+in.temple_of_planet+in.pholus_mutagen;
     const auto satellites=std::max(0,std::min(in.mining_satellites,in.population));
-    const auto mineral_term=Checked(int64_t(in.processed_minerals)-satellites-clean)/divisor;
-    return {scaled,residual,clean,divisor,satellites,Checked(int64_t(residual)+mineral_term)};
+    const auto mineral_term=narrow(int64_t(in.processed_minerals)-satellites-clean)/divisor;
+    return {scaled,residual,clean,divisor,satellites,narrow(int64_t(residual)+mineral_term)};
 }
 
-SmacEcologyDamage CalculateSmacEcologyDamage(const SmacEcologyBurden& burden,const SmacEcologyScalingInput& in) {
-    if(burden.divisor<1 || burden.divisor>5 || in.human_difficulty<0 || in.human_difficulty>5
-        || in.global_difficulty<0 || in.global_difficulty>5 || in.native_life<0 || in.native_life>2 || in.major_atrocities<0) {
+static SmacEcologyDamage EcologyDamage(const SmacEcologyBurden& burden,const SmacEcologyScalingInput& in,bool original) {
+    const auto narrow=[&](int64_t value){return original?SmacWrap32(value):Checked(value);};
+    if(burden.divisor<1 || burden.divisor>5 || (!original && (in.human_difficulty<0 || in.human_difficulty>5
+        || in.global_difficulty<0 || in.global_difficulty>5 || in.native_life<0 || in.native_life>2 || in.major_atrocities<0))) {
         throw std::invalid_argument("Ecology scaling exceeds the measured input domain");
     }
     auto after_human=burden.burden;
     if(in.human) {
         const auto denominator=std::clamp(in.sea_level_offset,0,100)/std::clamp(in.sea_level_rises_rule,1,100)+burden.divisor;
-        after_human=Checked(int64_t(after_human)+Checked(int64_t(5)*in.major_atrocities)/denominator);
+        after_human=narrow(int64_t(after_human)+narrow(int64_t(5)*in.major_atrocities)/denominator);
     }
     auto doubled=std::max(0,after_human);
-    if(in.voice_of_planet_exists && in.transcendence_victory) {doubled=Checked(int64_t(doubled)*2);}
-    if(in.perihelion) {doubled=Checked(int64_t(doubled)*2);}
-    const auto difficulty=in.human ? (in.human_difficulty==0 ? 2 : in.human_difficulty<4 ? 3 : 5) : std::clamp(6-in.global_difficulty,1,3);
-    auto product=Checked(int64_t(in.technology_score)-in.future_technology_counter);
-    product=Checked(int64_t(product)*(3-std::clamp(in.planet,-3,2)));
-    product=Checked(int64_t(product)*(in.native_life+1));
-    product=Checked(int64_t(product)*doubled);
-    product=Checked(int64_t(product)*difficulty);
+    if(in.voice_of_planet_exists && in.transcendence_victory) {doubled=narrow(int64_t(doubled)*2);}
+    if(in.perihelion) {doubled=narrow(int64_t(doubled)*2);}
+    const auto difficulty=in.human ? (in.human_difficulty==0 ? 2 : in.human_difficulty<4 ? 3 : 5) : std::clamp(narrow(int64_t(6)-in.global_difficulty),1,3);
+    auto product=narrow(int64_t(in.technology_score)-in.future_technology_counter);
+    product=narrow(int64_t(product)*(3-std::clamp(in.planet,-3,2)));
+    product=narrow(int64_t(product)*narrow(int64_t(in.native_life)+1));
+    product=narrow(int64_t(product)*doubled);
+    product=narrow(int64_t(product)*difficulty);
     const auto sixth=product/6;
-    return {after_human,doubled,difficulty,sixth,Checked(int64_t(sixth)+50)/100};
+    return {after_human,doubled,difficulty,sixth,narrow(int64_t(sixth)+50)/100};
 }
+SmacEcologyBurden CalculateSmacEcologyBurden(const SmacEcologyBurdenInput& in) {return EcologyBurden(in,false);}
+SmacEcologyBurden CalculateOriginalSmacEcologyBurden(const SmacEcologyBurdenInput& in) {return EcologyBurden(in,true);}
+SmacEcologyDamage CalculateSmacEcologyDamage(const SmacEcologyBurden& burden,const SmacEcologyScalingInput& in) {return EcologyDamage(burden,in,false);}
+SmacEcologyDamage CalculateOriginalSmacEcologyDamage(const SmacEcologyBurden& burden,const SmacEcologyScalingInput& in) {return EcologyDamage(burden,in,true);}
 
 int32_t SmacEcologyResearchContribution(int32_t damage,int32_t current_planet) {
     return Checked(int64_t(4)*damage)/static_cast<int32_t>(std::clamp(int64_t(4)-current_planet,int64_t(1),int64_t(99)));

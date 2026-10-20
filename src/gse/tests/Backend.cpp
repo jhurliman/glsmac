@@ -4892,6 +4892,16 @@ public:
 				require( m_game.GetTurnId() == 0 && m_game.GetUM()->GetUnit( unit->m_id ) == unit && unit->GetTile()->units.at( unit->m_id ) == unit
 					&& unit->IsConventionalPending() && raw.stored_morale == 1 && raw.damage == 0 && raw.spent == 0 && !raw.failed_move
 					&& raw.home == ConventionalUnitState::Home::None, "Early raw identity/state was delayed or fabricated" );
+                require(raw.stack.has_value() && raw.stack->id==int16_t(m_game.GetUM()->GetUnits().size()-1) && raw.stack->previous==-1,"Fresh producer omitted its authenticated dense head");
+                size_t members=0;auto* cursor=unit;int16_t previous=-1;
+                while(cursor) {
+                    const auto binding=cursor->SourceStack();require(binding.has_value() && binding->previous==previous,"Fresh producer published nonreciprocal links");
+                    ++members;previous=binding->id;
+                    if(binding->next<0) {break;}
+                    cursor=nullptr;for(const auto& row:m_game.GetUM()->GetUnits()) {if(row.second->SourceStack() && row.second->SourceStack()->id==binding->next) {cursor=row.second;break;}}
+                    require(cursor && members<=m_game.GetUM()->GetUnits().size(),"Fresh producer lost a link or formed a cycle");
+                }
+                require(members==unit->GetTile()->units.size(),"Fresh stack omitted physical co-occupants");
 				const auto* early_social=m_game.m_simulation->value.social.Find(raw.owner_simulation_id);
                 require(early_social->phase==faction::SmacFactionSocialState::Phase::Early && early_social->current==faction::SmacSocialRatings{}
                     && early_social->retained==faction::SmacSocialRatings{} && early_social->third==faction::SmacSocialRatings{},"Fresh startup lost known zero snapshots or refreshed current state");

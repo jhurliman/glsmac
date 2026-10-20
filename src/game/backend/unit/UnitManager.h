@@ -260,7 +260,7 @@ private:
 	void ValidateConventionalCreation( size_t id, const Def* def, const slot::Slot* owner, const map::tile::Tile* tile,
 		const ConventionalUnitState& state, const ConventionalUnitResolver& resolver, bool early_startup = false, bool defer_home = false ) const;
     using StackChanges=std::vector<std::pair<Unit*,ConventionalUnitState::Stack>>;
-    StackChanges PrepareConventionalStackMove(Unit* unit,map::tile::Tile* destination) const;
+    StackChanges PrepareConventionalStackMove(Unit* unit,map::tile::Tile* destination,bool authenticate_new=false) const;
     static void CommitStackChanges(const StackChanges& changes) noexcept;
     struct PreparedConventionalEncounter {
         PreparedNativeBirths birth;

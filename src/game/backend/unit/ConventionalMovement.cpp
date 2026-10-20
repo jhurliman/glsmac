@@ -51,14 +51,14 @@ smac_edge::Tile EdgeTile( const map::tile::Tile& tile, const base::Base* admitte
 }
 }
 
-UnitManager::StackChanges UnitManager::PrepareConventionalStackMove(Unit* actor,map::tile::Tile* destination) const {
+UnitManager::StackChanges UnitManager::PrepareConventionalStackMove(Unit* actor,map::tile::Tile* destination,bool authenticate_new) const {
     using Stack=ConventionalUnitState::Stack;
     if(actor->GetTile()==destination) {return {};}
     // An unplaced prepared conventional factory appends one source-pool row;
     // a registered actor retains its existing row during directional movement.
     const bool appended=GetUnit(actor->m_id)!=actor;
     if(appended && (actor->GetTile() || actor->SourceStack())) {throw std::runtime_error("New conventional stack member must be unplaced and unbound");}
-    bool needed=actor->SourceStack().has_value();
+    bool needed=actor->SourceStack().has_value() || (appended && authenticate_new);
     for(const auto& row:destination->units) {needed=needed || row.second->SourceStack().has_value();}
     if(!needed) {return {};}
     std::vector<Unit*> dense;for(const auto id:m_unit_order) {dense.push_back(m_units.at(id));}ValidateNativeIndexBindings(dense);

@@ -1014,14 +1014,15 @@ Unit* UnitManager::SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::
 	};
 	const auto id = Unit::GetNextId();
 	ValidateConventionalCreation( id, def, owner, tile, state, resolver, true );
-	if ( GetMap()->GetSmacWorkerKnowledge() ) {
+	{ // The claimed fresh producer authenticates source order before hooks.
 		// Only this exact claimed startup API can stage a raw pending Unit. The
 		// generic prepared path continues to require complete derived readiness.
 		auto data = std::make_unique< PreparedConventionalUnit::Data >();
 		data->manager=this; data->tile=tile; data->id=id;
-		data->sight=m_game->PrepareConventionalSight(id,state.owner_simulation_id,tile,nullptr,true);
+		if(GetMap()->GetSmacWorkerKnowledge()) {data->sight=m_game->PrepareConventionalSight(id,state.owner_simulation_id,tile,nullptr,true);}
 		data->candidate.reset(new Unit(Unit::Unplaced{},this,id,def,owner,state));
 		data->candidate->m_early_startup=true;
+        data->stacks=PrepareConventionalStackMove(data->candidate.get(),tile,true);
 		data->history=PreparePlacementHistory(*data->candidate,tile);
 		data->units=m_units; data->updates=m_unit_updates; data->occupants=tile->units;
 		data->order=m_unit_order; data->order.push_back(id);
@@ -1029,9 +1030,6 @@ Unit* UnitManager::SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::
 			||!data->updates.emplace(id,unit_update_t{UUO_SPAWN,data->candidate.get()}).second){THROW("Starting unit identity publication conflicts");}
 		PreparedConventionalUnit prepared(std::move(data)); auto* unit=prepared.Commit(); prepared.Notify(GSE_CALL); return unit;
 	}
-	auto* unit = new Unit( GSE_CALL, this, id, def, owner, tile, state, true );
-	SpawnUnit( GSE_CALL, unit );
-	return unit;
 }
 
 bool UnitManager::HasPendingConventionalUnits() const {

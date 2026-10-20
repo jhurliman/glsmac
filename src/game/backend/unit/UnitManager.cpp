@@ -808,6 +808,16 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnitsForQuery(slot:
         || replacements.size()>uint64_t(INT64_MAX)-first || replacements.size()>SIZE_MAX-first)) {
         THROW("Faction disposition has no available Unit identity range");
     }
+    // The nonzero-turn initializer demotes C2, then promotes C3 after
+    // all remaining factories: C3,Cn,...,C4,C1,C2. Pool rows remain in
+    // creation order; links describe traversal, never sorted public IDs.
+    std::vector<size_t> stack_order;
+    if(!replacements.empty()) {
+        if(replacements.size()<4 || data->order.size()+replacements.size()>2048) {THROW("Restart package needs its complete bounded source pool");}
+        stack_order.push_back(2);
+        for(size_t i=replacements.size();i>3;--i) {stack_order.push_back(i-1);}
+        stack_order.push_back(0);stack_order.push_back(1);
+    }
     data->candidates.reserve(replacements.size());data->published.resize(replacements.size(),nullptr);
     uint8_t visibility=0;
     if(!replacements.empty()) {
@@ -834,15 +844,22 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnitsForQuery(slot:
         if(created==explored.units.end()) {THROW("Restart factory sight lacks its new identity");}
         visibility=created->visible_to;
         data->occupants.try_emplace(destination,destination->units);
+        if(!data->occupants.at(destination).empty()) {THROW("Restart initializer requires its originally empty destination");}
     }
     const ConventionalUnitResolver resolver=[this](const auto& state,const auto* slot){return ResolveConventional(state,slot);};
     for(size_t i=0;i<replacements.size();++i) {
-        const auto& spec=replacements[i];const auto& state=spec.second;const auto id=static_cast<size_t>(first+i);
+        const auto& spec=replacements[i];auto state=spec.second;const auto id=static_cast<size_t>(first+i);
         if(state.owner_simulation_id!=simulation_id || state.home!=ConventionalUnitState::Home::None || state.home_base_id
             || state.stored_morale!=1 || state.damage || state.spent || state.failed_move
-            || state.work_order!=ConventionalUnitState::WorkOrder::None || state.work_progress) {
+            || state.work_order!=ConventionalUnitState::WorkOrder::None || state.work_progress || state.stack) {
             THROW("Restart factory requires fresh owned unhomed Unit state");
         }
+        const auto position=std::find(stack_order.begin(),stack_order.end(),i)-stack_order.begin();
+        const auto dense_base=removal.order.size();
+        state.stack=ConventionalUnitState::Stack{int16_t(dense_base+i),
+            position+1<stack_order.size() ? int16_t(dense_base+stack_order[position+1]) : int16_t(-1),
+            position ? int16_t(dense_base+stack_order[position-1]) : int16_t(-1)};
+        state.facing=2; // actual fresh factory byte, independent of render selection
         ValidateConventionalCreation(id,spec.first,owner,destination,state,resolver);
         auto candidate=std::unique_ptr<Unit>(new Unit(Unit::Unplaced{},this,id,spec.first,owner,state));
         if(!i) {data->history=PreparePlacementHistory(*candidate,destination);}

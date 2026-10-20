@@ -355,13 +355,22 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 								}
 								data->tracked_center=std::array<int32_t,2>{{x,y}};
 							}
-							// On the initially empty restart square, factories prepend;
-							// the initializer demotes C2 then finally promotes C3:
-							// C3,Cn,...,C4,C1,C2. Keep returned creation identities.
-							std::vector<size_t> creation,stack;
-							for(const auto id:um->GetUnitRecordOrder()) {const auto* unit=um->GetUnit(id);if(unit->m_owner==previous_owner && unit->GetTile()==center) {creation.push_back(id);}}
-							if(creation.size()!=plan.units.size() || creation.size()<4) {THROW("Restart tracking requires its fresh completed package");}
-							stack.push_back(creation[2]);for(size_t i=creation.size();i>3;--i) {stack.push_back(creation[i-1]);}stack.push_back(creation[0]);stack.push_back(creation[1]);
+                            // Read the producer's actual source links; the tracking
+                            // continuation must not fabricate a separate stack order.
+                            std::map<int16_t,const unit::Unit*> bound;const unit::Unit* head=nullptr;
+                            for(const auto& row:center->units) {
+                                const auto* member=row.second;const auto binding=member->SourceStack();
+                                if(member->m_owner!=previous_owner || !binding || !bound.emplace(binding->id,member).second) {THROW("Restart tracking requires unique owned source rows");}
+                                if(binding->previous<0) {if(head) {THROW("Restart tracking found multiple heads");}head=member;}
+                            }
+                            std::vector<size_t> stack;int16_t previous=-1;
+                            while(head) {
+                                const auto binding=*head->SourceStack();
+                                if(binding.previous!=previous || stack.size()>=bound.size()) {THROW("Restart tracking found invalid reciprocal links");}
+                                stack.push_back(head->m_id);previous=binding.id;
+                                head=binding.next<0 ? nullptr : bound.at(binding.next);
+                            }
+                            if(stack.size()!=plan.units.size() || stack.size()!=bound.size()) {THROW("Restart tracking requires its complete linked package");}
 							bool pod=false;for(const auto id:stack) {
 								auto& observation=*std::find_if(knowledge.units.begin(),knowledge.units.end(),[&](const auto& value){return value.id==id;});observation.visible_to=0;
 								const auto* unit=um->GetUnit(id);

@@ -58,5 +58,21 @@ The actual default-world startup controls check links in spawn hooks, normal
 movement and full save/reload, including the Thinker compensation Pod. The
 synthetic three-participant controls additionally cover queued/immediate Start,
 cancellation, reset and throwing hooks. This establishes producer-owned links;
-it does not infer ambiguous legacy save order. The separately documented
-nonzero-turn restart promotion order still needs its live producer wiring.
+it does not infer ambiguous legacy save order. The nonzero-turn restart producer now publishes the separate promotion order
+described below.
+
+
+### Nonzero-turn restart producer source links
+
+The owning replacement transaction now publishes dense source IDs after removal
+compaction, reciprocal links in `C3,Cn,...,C4,C1,C2` traversal, and the original
+fresh facing byte2. Unit record order remains creation order. The initializer
+requires the originally empty restart destination and the complete four-to-eight
+unit package; arbitrary supplied stack bindings are not factory inputs.
+
+The capture tracking continuation traverses those same published query-view
+links instead of reconstructing a second stack order. Replacement callbacks
+verify every link with and without the transient completed Colony Pod. Actual
+capture, loss/refusal, restart, founding and save/Start controls exercise the
+shared producer and its existing atomic preparation/rollback boundaries. Legacy
+unbound surviving records remain unguessed and preserve their prior bytes.

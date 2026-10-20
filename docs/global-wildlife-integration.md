@@ -242,6 +242,14 @@ The source mode-zero continuation is independently frozen and checked. This
 does not activate the global wildlife/AI cursor, Supply Pod pickups, special
 abilities/projects, or loaded nonnegative native assignment tails.
 
-Next integration gates remain authenticated fresh/restart source stacks, one
-combined live flora/fauna transaction, and activation of the recorded faction
-cursor with canonical native/positive command execution.
+Fresh and nonzero-turn restart producers now publish authenticated dense source
+links. Restart capture tracking reads those links rather than reconstructing a
+parallel order. Queued/immediate startup, compensation Pods, full replacement
+callbacks, capture/loss/founding and save/Start continuations validate the owning
+publication; ambiguous legacy saved stacks remain unguessed.
+
+Next integration gates are one combined live flora/fauna transaction and
+activation of the recorded faction cursor with canonical native/positive
+command execution. Connected original coverage must include actual flora growth
+and a later wildlife read overlapping an earlier full constructor/sight mutation;
+the existing four connected returns do not cover either case.

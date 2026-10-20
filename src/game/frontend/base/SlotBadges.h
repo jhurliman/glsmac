@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <unordered_map>
+#include "game/frontend/sprite/Sprite.h"
 
 #include "types/texture/Types.h"
 
@@ -44,6 +46,7 @@ public:
 	);
 	~SlotBadges();
 
+    sprite::Sprite* GetLowZoomMarker(int zoom);
 	sprite::Sprite* GetBaseBadgeSprite( const size_t population, const bool is_guarded );
 
 private:
@@ -53,6 +56,7 @@ private:
 	sprite::InstancedSpriteManager* const m_ism;
 	const size_t m_slot_index = 0;
 	const faction::Faction* m_faction = nullptr;
+    std::unordered_map<int,sprite::Sprite> m_low_zoom_markers;
 	bool m_smac_population = false;
 	uint8_t m_primary = 0, m_secondary = 0, m_population_text = 0;
 

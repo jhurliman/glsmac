@@ -119,6 +119,7 @@ const size_t Unit::GetSelectionWeight() const {
 }
 
 sprite::Sprite* Unit::GetSprite() const {
+    if(UsesLowZoomMarker()) {return m_slot_badges->GetLowZoomMarker(m_um->GetNativeBodyZoom());}
 	return m_def->GetSprite( m_morale, m_facing, m_um->GetNativeBodyZoom() );
 }
 
@@ -211,6 +212,7 @@ const bool Unit::IsBadgeVisible() const {
 }
 
 void Unit::ShowBadge() {
+    if(UsesLowZoomMarker()) {HideBadge();return;}
 	if(!m_render.is_rendered || !m_um->IsBodyAdmitted(this) || (m_render.badge.blink && !m_badge_defs->IsSelectionBlinkVisible())) {HideBadge();return;}
 	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, GetRenderedBadgeCoords(false) );
 	m_render.badge.healthbar.def->instanced_sprite->actor->SetInstance( m_render.badge.healthbar.instance_id, GetRenderedBadgeCoords(true) );
@@ -332,6 +334,7 @@ void Unit::Refresh() {
 }
 
 void Unit::PrepareNativeBody(int zoom) const {
+    if(zoom< -8 && m_def->UsesNativeMapPlacement() && m_slot_badges->GetLowZoomMarker(zoom)) {return;}
     m_def->GetSprite(m_morale,m_facing,zoom);
 }
 void Unit::RefreshNativeBody() {
@@ -443,6 +446,10 @@ std::shared_ptr<types::texture::Texture> Unit::GetCardOverlay() const {
 
 const Unit::render_data_t& Unit::GetRenderData() const {
 	return m_render_data;
+}
+
+bool Unit::UsesLowZoomMarker() const {
+    return m_um->GetNativeBodyZoom()< -8 && m_def->UsesNativeMapPlacement() && m_slot_badges->GetLowZoomMarker(m_um->GetNativeBodyZoom());
 }
 
 bool Unit::UsesNativeMapOverlay() const {

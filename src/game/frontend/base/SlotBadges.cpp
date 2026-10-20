@@ -1,3 +1,4 @@
+#include "game/frontend/NativeActorMarker.h"
 #include "SlotBadges.h"
 
 #include "BaseManager.h"
@@ -60,6 +61,7 @@ SlotBadges::SlotBadges(
 }
 
 SlotBadges::~SlotBadges() {
+    for(const auto& row:m_low_zoom_markers) {m_ism->RemoveInstancedSpriteByKey(row.second.instanced_sprite->key);}
 	for ( const auto& it : m_per_population_sprites ) {
 		if ( it.second.unguarded ) {
 			DELETE( it.second.unguarded );
@@ -74,6 +76,18 @@ SlotBadges::~SlotBadges() {
 			DELETE( it.second.texture );
 		}
 	}
+}
+
+sprite::Sprite* SlotBadges::GetLowZoomMarker(int zoom) {
+    if(!m_smac_population) {return nullptr;}
+    auto found=m_low_zoom_markers.find(zoom);
+    if(found==m_low_zoom_markers.end()) {
+        const auto& palette=m_bm->GetSmacPopulationPalette();
+        auto* marker=m_ism->GetNativeActorMarker("Base_"+std::to_string(m_slot_index),true,zoom,
+            SmacPopulationDisplayColor(palette,m_primary).GetRGBA(),
+            SmacPopulationDisplayColor(palette,native_actor::MarkerBorderIndex(m_faction->m_id)).GetRGBA());
+        found=m_low_zoom_markers.emplace(zoom,sprite::Sprite{marker,1}).first;
+    }return &found->second;
 }
 
 sprite::Sprite* SlotBadges::GetBaseBadgeSprite( const size_t population, const bool is_guarded ) {

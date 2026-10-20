@@ -145,6 +145,7 @@ protected:
 
 private:
 
+    bool UsesLowZoomMarker() const;
 	UnitManager* m_um = nullptr;
 
 	BadgeDefs* const m_badge_defs;

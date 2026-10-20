@@ -108,6 +108,7 @@ protected:
 
 private:
     friend class gse::tests::BackendFixture;
+    friend class BaseManager;
     std::optional<::game::smac_base_body::Selection> m_native_body;
 
 	BaseManager* m_bm = nullptr;
@@ -151,7 +152,9 @@ private:
     void HideName();
 
 	void UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite );
-	sprite::Sprite* GetSpriteFor( faction::Faction* faction ) const;
+	sprite::Sprite* GetSpriteFor( faction::Faction* faction, bool markers=true ) const;
+    void PrepareNativeView(int zoom) const;
+    void RefreshNativeView();
 };
 
 }

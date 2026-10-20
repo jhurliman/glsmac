@@ -570,7 +570,7 @@ private:
 	bool m_map_knowledge_dirty = false;
 	void PublishMapKnowledgeUpdate( GSE_CALLABLE );
 
-	enum class StartupStage { Complete, InitializeConfigure, PrepareBindings, ConfigureEvents, RestoreCampaign, AcquireMap, AwaitDownload, InitializeMap, Start, Failure, Ingress };
+	enum class StartupStage { Complete, InitializeConfigure, PrepareBindings, ConfigureEvents, RestoreCampaign, AcquireMap, AwaitDownload, InitializeMap, Start, Failure, Ingress, AwaitFirstBase };
 	struct WorldAdmission {
 		enum Kind { INITIALIZATION, CONTROLLER_RESET };
 		WorldAdmission( world_ticket_t ticket, Kind kind, State* state, State::game_session_t binding, world_ticket_t previous = 0, std::optional< std::string > map_path = {}, std::optional<std::string> campaign_world = {} )
@@ -589,6 +589,7 @@ private:
 		// debug-dump and downloaded map paths never infer fresh placement history.
 		bool generated_map = false;
 		bool installed_planet = false;
+        bool resume_first_turn = false;
 		StartupStage stage = StartupStage::Complete;
 		connection::Connection* connection = nullptr;
 		size_t slot = 0;
@@ -636,6 +637,15 @@ private:
 	bool HasInitializationFailure() const;
 	bool PublishInitializationFailure();
 	bool AdvanceInitialization();
+    struct FirstBaseRequest {int64_t id;world_ticket_t world;size_t base;};
+    std::optional<FirstBaseRequest> m_first_base_request;
+    int64_t m_next_first_base_request=0; // never reused on reset
+    bool BeginFirstBaseIntroduction(GSE_CALLABLE);
+    bool CanBeginFirstBaseIntroduction() const;
+    void QueueFirstBaseName(const State::game_session_t& session,int64_t id,const std::string& name);
+    void CompleteFirstBaseIntroduction(GSE_CALLABLE,int64_t id,const std::string& name);
+    gse::Value* GetPendingFirstBaseName(GSE_CALLABLE) const;
+    void NotifyFirstBaseName(GSE_CALLABLE);
 	void PublishOwnerTransition( const std::shared_ptr< WorldAdmission >& admission, StartupStage stage );
 	void RunOwnerTransition( GSE_CALLABLE, const std::shared_ptr< OwnerTransition >& transition );
 	void FinishOwnerTransition( const std::shared_ptr< OwnerTransition >& transition );

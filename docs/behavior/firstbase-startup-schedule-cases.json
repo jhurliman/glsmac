@@ -1,0 +1,38 @@
+{
+  "contract": "RE-SMAC-FIRSTBASE-SCHEDULE-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "evidence_kind": "static caller/intro/load boundary",
+  "new_original_execution_controls": 0,
+  "entry_guards": {
+    "turn": 0,
+    "resume_cursor": 0,
+    "focused_faction_in_human_mask": true,
+    "mode_944624": 0
+  },
+  "ordered_calls": [
+    "0x53bedc introduction",
+    "0x5c622c FIRSTBASE modal",
+    "0x5c6256 duplicate normalization",
+    "0x5c66cc intro return",
+    "0x53bf41 global advance",
+    "0x53caed faction upkeep",
+    "0x53b951 owned Base upkeep",
+    "0x53baf4 conditional turn-one numeric TECH",
+    "0x53cb4a human command entry"
+  ],
+  "load_resume_store": "0x5c0946: resume=focused faction",
+  "independent_serialized_intro_flag_established": false,
+  "unconditional_research_question": false,
+  "console": {
+    "constructor": "0x4660d0",
+    "width800": "console.pcx",
+    "other_width": "console2.pcx",
+    "native1024_origin": [
+      0,
+      511
+    ],
+    "height": 257
+  },
+  "generic_modal_frame_atlas_established": false,
+  "checked_instruction_literals": 20
+}

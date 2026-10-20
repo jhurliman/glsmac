@@ -4,6 +4,7 @@ return (m) => {
 		'menu',
 		'popup',
 		'bottom_bar',
+		'first_base',
 		'research',
 		'colony',
 		'outcome',

@@ -26,6 +26,7 @@ SET( SRC ${SRC}
 	${PWD}/CampaignFile.cpp
 	${PWD}/GameCampaign.cpp
 	${PWD}/Game.cpp
+	${PWD}/GameIntroduction.cpp
 	${PWD}/GameSimulation.cpp
 	${PWD}/GameProduction.cpp
 	${PWD}/GamePopulation.cpp

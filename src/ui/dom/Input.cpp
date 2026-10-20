@@ -8,6 +8,8 @@
 #include "util/String.h"
 #include "ui/UI.h"
 #include "gse/value/Int.h"
+#include "gse/value/Undefined.h"
+#include "gse/callable/Native.h"
 #include <limits>
 #include <algorithm>
 
@@ -49,6 +51,12 @@ Input::Input( DOM_ARGS )
         });
 	ForwardProperty( GSE_CALL, "color", m_text );
 	ForwardProperty( GSE_CALL, "font", m_text );
+    Method(GSE_CALL,"focus",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(0);
+        if(!m_ui || !m_is_visible) {GSE_ERROR(gse::EC.UI_ERROR,"Cannot focus an inactive input");}
+        m_ui->Focus(this);
+        return VALUE(gse::value::Undefined);
+    }));
 
 	Events(
 		{

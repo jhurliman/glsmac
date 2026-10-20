@@ -3592,9 +3592,11 @@ public:
                 const auto saved_camera=frontend->m_camera_position;
                 const auto saved_view=frontend->m_viewport;
                 const auto saved_turn=frontend->m_turn_id;
+                const auto saved_cursor=frontend->m_ui_cursor;
                 util::FinallyGuard restore_focus([&] {
                     controller->m_selection_visit.reset();frontend->m_map_data=saved_map;
                     frontend->m_camera_position=saved_camera;frontend->m_viewport=saved_view;frontend->m_turn_id=saved_turn;
+                    frontend->m_ui_cursor=saved_cursor;
                 });
                 frontend->m_turn_id=m_game.GetTurnId();
                 frontend->m_map_data.width=80;frontend->m_map_data.height=80;
@@ -3611,9 +3613,16 @@ public:
                         GT_ASSERT(controller->QueueAutomaticSelection(),"Actual controller rejected a valid panned view");
                         const auto request=controller->m_selection_visit;
                         GT_ASSERT(request && request->ready.load() && request->selected.has_value() &&
-                            request->focus==types::Vec2<size_t>(39,sign<0?59:19),
+                            request->focus==game::ui_view::Cursor({{39,sign<0?59:19}}),
                             "Automatic unit focus used a different map projection coefficient");
                     }
+                }
+                for(const auto cursor:{game::ui_view::Cursor{{80,38}},game::ui_view::Cursor{{-1,38}}}) {
+                    frontend->SetUiCursor(cursor);controller->m_selection_visit.reset();
+                    GT_ASSERT(controller->QueueAutomaticSelection(),"Actual controller rejected a signed saved cursor");
+                    const auto request=controller->m_selection_visit;
+                    GT_ASSERT(request && request->ready.load() && request->focus==cursor,
+                        "Actual controller substituted camera origin for signed out-of-bounds UI cursor");
                 }
             }
 			controller->m_selected_unit=controller->GetUnitById(actor->m_id);
@@ -3725,6 +3734,45 @@ public:
 			"retained controller sequence did not complete the Farm" );
 		GT_OK();
 	}
+
+    std::string CheckRawCursorSelection() {
+        ::ui::UI* ui=nullptr;std::unique_ptr<game::frontend::Game> frontend;
+        scene::Scene controller_scene("Raw cursor selection fixture",scene::SCENE_TYPE_WORLD);
+        game::frontend::sprite::InstancedSpriteManager sprites(&controller_scene);
+        std::unique_ptr<game::frontend::unit::UnitManager> controller;
+        util::FinallyGuard cleanup([&]{
+            controller.reset();
+            if(frontend) {frontend->m_is_initialized=false;frontend->m_ism=nullptr;frontend.reset();}
+            if(ui) {WithScriptValues([&](GSE_CALLABLE)->std::string{ui->GetRoot()->Container::Destroy(GSE_CALL);GT_OK();});}
+        });
+        const auto initial=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{
+            ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+            frontend=std::make_unique<game::frontend::Game>(m_glsmac.get(),m_state,ui,std::function<void()>{},std::function<void()>{});
+            frontend->m_is_initialized=true;frontend->m_is_turn_active=true;frontend->m_turn_id=m_game.GetTurnId();
+            frontend->m_state=nullptr;frontend->m_game=&m_game;frontend->m_ism=&sprites;
+            controller=std::make_unique<game::frontend::unit::UnitManager>(frontend.get());
+            controller->QueueAutomaticSelectionFromCursor({{80,38}});
+            auto request=controller->m_selection_visit;
+            GT_ASSERT(request && request->ready.load() && request->focus==game::ui_view::Cursor({{80,38}})
+                && request->selected==72,"Queued selector normalized raw invalid cursor to camera midpoint");
+            controller->QueueAutomaticSelectionFromCursor({{80,38}});
+            GT_ASSERT(controller->m_selection_visit==request,"Unchanged raw cursor queued another selector visit");
+            controller->QueueAutomaticSelectionFromCursor({{40,40}});
+            GT_ASSERT(controller->m_selection_visit!=request && controller->m_selection_visit->selected==73,
+                "Fallback camera control did not distinguish the original raw-cursor selection");GT_OK();
+        });
+        if(!initial.empty()){return initial;}
+        std::thread queued([&]{controller->QueueAutomaticSelectionFromCursor({{80,38}});});queued.join();
+        auto request=controller->m_selection_visit;
+        GT_ASSERT(!request->ready.load(),"Cross-thread cursor request ran without its owner checkpoint");
+        frontend->SetUiCursor({{40,40}});ProcessAccumulations();
+        GT_ASSERT(request->ready.load() && request->selected==72,
+            "Later UI cursor mutation rewrote the queued value origin");
+        std::thread retired([&]{controller->QueueAutomaticSelectionFromCursor({{-1,38}});});retired.join();
+        request=controller->m_selection_visit;controller->m_selection_visit.reset();
+        const std::weak_ptr<game::frontend::unit::UnitManager::SelectionVisit> weak=request;request.reset();
+        ProcessAccumulations();GT_ASSERT(weak.expired(),"Retired cursor request retained its frontend visit");GT_OK();
+    }
 
 	std::string CheckSelectedWorkController( game::backend::unit::Unit* actor ) {
 		::ui::UI* ui = nullptr;
@@ -7765,6 +7813,7 @@ std::string ConventionalUnitFixture::CheckCampaignRestore(const std::string& pat
     std::string* decoded_random,bool advance) {return fixture->CheckCampaignRestore(path,world,decoded_random,advance);}
 std::string ConventionalUnitFixture::WithControllerViewport( const std::function<std::string()>& check ) { return BackendFixture::WithControllerViewport( check ); }
 std::string ConventionalUnitFixture::CheckUnitCommandCompletion( game::backend::unit::Unit* actor, game::backend::unit::Unit* helper ) { return fixture->CheckUnitCommandCompletion( actor, helper ); }
+std::string ConventionalUnitFixture::CheckRawCursorSelection() {return fixture->CheckRawCursorSelection();}
 std::string ConventionalUnitFixture::CheckSelectedWorkController( game::backend::unit::Unit* actor ) { return fixture->CheckSelectedWorkController( actor ); }
 std::string ConventionalUnitFixture::CheckRetainedWorkSelection( GSE_CALLABLE, game::backend::unit::Unit* actor, game::backend::unit::Unit* scout ) { return fixture->CheckRetainedWorkSelection( GSE_CALL, actor, scout ); }
 void ConventionalUnitFixture::RetainedMorale( int32_t retained, int32_t current ) { fixture->ConventionalRetainedMorale( retained, current ); }

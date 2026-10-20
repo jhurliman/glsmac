@@ -10,6 +10,7 @@
 
 #include "game/backend/unit/Types.h"
 #include "game/UnitVisibility.h"
+#include "game/PrimaryViewState.h"
 
 #include "types/Vec2.h"
 #include "types/Vec3.h"
@@ -132,7 +133,7 @@ private:
 	struct SelectionVisit {
 		size_t turn_id;
 		std::optional<size_t> current;
-		types::Vec2<size_t> focus;
+		ui_view::Cursor focus;
 		std::optional<size_t> selected;
 		std::atomic<bool> ready{false};
 	};
@@ -141,6 +142,7 @@ private:
 	bool QueueAutomaticSelection();
 	void ReceiveAutomaticSelection();
 	void QueueAutomaticSelectionAt( types::Vec2<size_t> focus );
+    void QueueAutomaticSelectionFromCursor(ui_view::Cursor focus);
 
 	void AddSelectable( Unit* unit );
 	void RemoveSelectable( Unit* unit );

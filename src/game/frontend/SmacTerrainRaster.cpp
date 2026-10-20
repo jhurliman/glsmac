@@ -1,5 +1,6 @@
 #include "SmacTerrainRaster.h"
 #include "types/texture/SmacIndexedLine.h"
+#include "types/texture/SmacIndexedSprite.h"
 
 #include <algorithm>
 #include <limits>
@@ -149,7 +150,7 @@ Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,cons
         if(command.alternate_rows && command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded &&
             command.shader!=Shader::WaterDepth16 && command.shader!=Shader::CoastMapped) {Invalid();}
         if(command.shader==Shader::IndexedLine) {continue;}
-        if(!command.texture || (command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded && command.shader!=Shader::KeyedUnlit && command.shader!=Shader::WaterDepth16 && command.shader!=Shader::CoastMapped && command.shader!=Shader::OwnerClut && command.shader!=Shader::Sprite && command.shader!=Shader::SpriteShadow)) {Invalid();}
+        if(!command.texture || (command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded && command.shader!=Shader::KeyedUnlit && command.shader!=Shader::WaterDepth16 && command.shader!=Shader::CoastMapped && command.shader!=Shader::OwnerClut && command.shader!=Shader::Sprite && command.shader!=Shader::SpriteShadow && command.shader!=Shader::SpriteSolid)) {Invalid();}
         ValidateBitmap(*command.texture);
         if(command.shader==Shader::OwnerClut && (!command.owner_clut || std::any_of(command.owner_mapping.begin(),command.owner_mapping.end(),[](auto selector){return selector>8;}))) {Invalid();}
         if(command.shader==Shader::CoastMapped) {
@@ -157,7 +158,7 @@ Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,cons
             ValidateBitmap(*command.mask);
             if(command.mask->width!=command.texture->width || command.mask->height!=command.texture->height) {Invalid();}
         }
-        if(command.shader==Shader::Sprite || command.shader==Shader::SpriteShadow) {
+        if(command.shader==Shader::Sprite || command.shader==Shader::SpriteShadow || command.shader==Shader::SpriteSolid) {
             for(auto coordinate:command.sprite_origin) {if(coordinate < -32768 || coordinate > 32767) {Invalid();}}
             if(command.shader==Shader::SpriteShadow && !command.shadow_lookup) {Invalid();}
         }else if(command.polygon.count!=3 && command.polygon.count!=4) {Invalid();}
@@ -178,17 +179,17 @@ Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,cons
             continue;
         }
         const auto& texture=*command.texture;
-        if(command.shader==Shader::Sprite || command.shader==Shader::SpriteShadow) {
-            const auto visible=Intersection(Intersection(command.clip,bounded),{{command.sprite_origin[0],command.sprite_origin[1],
-                Signed32(int64_t(command.sprite_origin[0])+texture.width),Signed32(int64_t(command.sprite_origin[1])+texture.height)}});
-            for(int y=visible[1];y<visible[3];++y) {for(int x=visible[0];x<visible[2];++x) {
-                const auto src=static_cast<size_t>(y-command.sprite_origin[1])*static_cast<size_t>(texture.width)+static_cast<size_t>(x-command.sprite_origin[0]);
-                const auto dst=static_cast<size_t>(y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x);
-                const auto ink=texture.pixels[src];++result.attempts;
-                if(ink==9) {continue;}
-                result.bitmap.pixels[dst]=command.shader==Shader::SpriteShadow && ink==0?(*command.shadow_lookup)[result.bitmap.pixels[dst]]:ink;
-                ++result.writes;if(track_coverage) {result.coverage[dst]=1;}
-            }}
+        if(command.shader==Shader::Sprite || command.shader==Shader::SpriteShadow || command.shader==Shader::SpriteSolid) {
+            namespace native=types::texture::smac_indexed_sprite;
+            const native::Source sprite{texture.pixels,texture.width,texture.height,texture.width,command.sprite_offset,command.sprite_key};
+            const auto plan=native::Prepare(sprite,command.sprite_origin,command.sprite_scale,Intersection(command.clip,bounded));
+            const auto stats=native::Paint(sprite,plan,[&](int x,int y) {return result.bitmap.pixels[size_t(y)*size_t(initial.width)+size_t(x)];},
+                [&](int x,int y,uint8_t value) {
+                    const auto dst=size_t(y)*size_t(initial.width)+size_t(x);result.bitmap.pixels[dst]=value;
+                    ++result.writes;if(track_coverage) {result.coverage[dst]=1;}
+                },command.shader==Shader::SpriteShadow?command.shadow_lookup:nullptr,
+                command.shader==Shader::SpriteSolid?std::optional<uint8_t>{command.sprite_solid}:std::nullopt);
+            result.attempts+=stats.attempts;
             continue;
         }
         const bool shaded=command.shader!=Shader::KeyedUnlit;

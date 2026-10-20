@@ -1,0 +1,187 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Seven full known native46fd00 tile renders with retained improvement/resource/shadow/pod/monolith sprites at nonzero zoom; real geometry/art and producer helpers, supplied bitmap backing and known item contexts.",
+  "asset_hashes": {
+    "maps/planet.MP": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+    "TEXTURE.PCX": "3dfa56f9eaa2a13af4fac199a0ac9ff3bf59effed17871a24f15b1b553b7c0ab",
+    "TER1.PCX": "82ef33e48f40d00a60e08fbcc403b1ecd9b340bd065830e2658ba3bacbf5b327",
+    "RAINFALL.PCX": "03b87d7873f5a9419d8c4ddd6c5a8bd333fe81a6b3ce4730056f129dcb94d364",
+    "PALETTE.PCX": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "alpha.txt": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4"
+  },
+  "map_base_low16": 48992,
+  "totals": {
+    "tiles": 7,
+    "native_ordered_stores": 102833,
+    "material_primitives": 49,
+    "material_stores": 28948,
+    "retained_sprite_calls": 69,
+    "retained_sprite_stores": 73885,
+    "shadow_calls": 20,
+    "backing_pixels": 3662848
+  },
+  "cases": [
+    {
+      "input": {
+        "id": "land_retained_z-1",
+        "tile": [
+          22,
+          38
+        ],
+        "clip": [
+          0,
+          0,
+          1024,
+          511
+        ],
+        "items": 2714545232
+      },
+      "profile": {
+        "id": "land_retained_z-1",
+        "zoom": -1,
+        "knowledge": "21"
+      },
+      "frame_sha256": "1759d98c291d17409c279c86bc716d79b83bf2928e275a151fdeeb4559d527de",
+      "store_count": 11245
+    },
+    {
+      "input": {
+        "id": "land_retained_z0",
+        "tile": [
+          22,
+          38
+        ],
+        "clip": [
+          0,
+          0,
+          1024,
+          511
+        ],
+        "items": 2714545232
+      },
+      "profile": {
+        "id": "land_retained_z0",
+        "zoom": 0,
+        "knowledge": "21"
+      },
+      "frame_sha256": "ff3709a9a901a526ae47cf8a0f85ba0f157d9c5c8f38e9479fe010b9b0d66f9e",
+      "store_count": 13065
+    },
+    {
+      "input": {
+        "id": "land_retained_z1",
+        "tile": [
+          22,
+          38
+        ],
+        "clip": [
+          0,
+          0,
+          1024,
+          511
+        ],
+        "items": 2714545232
+      },
+      "profile": {
+        "id": "land_retained_z1",
+        "zoom": 1,
+        "knowledge": "21"
+      },
+      "frame_sha256": "499900211eae864ed83f3ffc4dc725fd25eba406d6d9848b612dc4fadb0c45e8",
+      "store_count": 14863
+    },
+    {
+      "input": {
+        "id": "land_retained_z3",
+        "tile": [
+          22,
+          38
+        ],
+        "clip": [
+          0,
+          0,
+          1024,
+          511
+        ],
+        "items": 2714545232
+      },
+      "profile": {
+        "id": "land_retained_z3",
+        "zoom": 3,
+        "knowledge": "21"
+      },
+      "frame_sha256": "1b120386ac0104d370c42b3a97ce6ac660bd6cb85134888282f5244b0c1b9891",
+      "store_count": 18829
+    },
+    {
+      "input": {
+        "id": "land_retained_z4",
+        "tile": [
+          22,
+          38
+        ],
+        "clip": [
+          113,
+          87,
+          190,
+          157
+        ],
+        "items": 2714545232
+      },
+      "profile": {
+        "id": "land_retained_z4",
+        "zoom": 4,
+        "knowledge": "21"
+      },
+      "frame_sha256": "a3fec5ee69fd2adf7b9d45485812782e7f9ce8833c893372b5518da521670bfb",
+      "store_count": 18326
+    },
+    {
+      "input": {
+        "id": "land_retained_z8",
+        "tile": [
+          22,
+          38
+        ],
+        "clip": [
+          113,
+          87,
+          190,
+          157
+        ],
+        "items": 2714545232
+      },
+      "profile": {
+        "id": "land_retained_z8",
+        "zoom": 8,
+        "knowledge": "21"
+      },
+      "frame_sha256": "c11d9140ff089a6fe00c5b9572662585f52785652420e5dea40202119ede7d43",
+      "store_count": 18758
+    },
+    {
+      "input": {
+        "id": "pod_sensor_resource_z3",
+        "tile": [
+          22,
+          38
+        ],
+        "clip": [
+          0,
+          0,
+          1024,
+          511
+        ],
+        "items": 2415920128
+      },
+      "profile": {
+        "id": "pod_sensor_resource_z3",
+        "zoom": 3,
+        "knowledge": "21"
+      },
+      "frame_sha256": "c2794d5cf4bd98c4ad8749f5b0f35ab0f3c1495b1769504d2f7cf941f7e0ba03",
+      "store_count": 7747
+    }
+  ],
+  "evidence_manifest_sha256": "f674cb59801d950f3b34714275876f11a9344cfea2468e4043fb8cb17dcb215c"
+}

@@ -49,11 +49,12 @@ Tile* World::At(int32_t x,int32_t y) {
     return &tiles.at(size_t(y)*(width/2)+x/2);
 }
 const Tile* World::At(int32_t x,int32_t y) const {return const_cast<World*>(this)->At(x,y);}
-void Streams::Seed(uint32_t seed) {state.ExchangeShared(seed);if(seed_requests) {seed_requests->push_back(seed);}}
+void Streams::Seed(uint32_t seed) {const auto before=state.ExchangeShared(seed);if(seed_requests) {seed_requests->push_back(seed);}if(on_seed) {on_seed(before,seed);}}
 int32_t Streams::Shared(int32_t low,int32_t high) {
     if(low>high) {std::swap(low,high);}const auto span=int64_t(high)-low;
-    const auto raw=state.NextSharedLow16();++shared_draws;
-    return Checked(int64_t(low)+(int64_t(raw)*span>>16));
+    const auto before=state.Shared();const auto raw=state.NextSharedLow16();++shared_draws;
+    const auto value=Checked(int64_t(low)+(int64_t(raw)*span>>16));
+    if(on_shared) {on_shared(before,state.Shared(),low,high,value);}return value;
 }
 uint16_t Streams::Crt() {++crt_draws;const auto value=state.NextCrtRaw15();if(crt_values) {crt_values->push_back(value);}return value;}
 int32_t ClassifyContour(int32_t contour,int32_t offset) {
@@ -124,10 +125,10 @@ void EcologyVolcano(World& world,int32_t x,int32_t y,Streams& random,const Conte
     }
     world.mount_planet=Coordinate{x,y};
 }
-void Temperature(World& world,const Rules& rules,Streams& random) {
+void Temperature(World& world,const Rules& rules,Streams& random,const std::function<void(int32_t)>& row_complete) {
     world.Validate();ValidateRules(world,rules);const auto h=world.height,jitter=h/rules.jitter_divisor,category=rules.temperature;
     random.Seed(rules.pattern+17u);
-    Scan(world,[&](int32_t x,int32_t y,Tile& tile) {
+    const auto process=[&](int32_t x,int32_t y,Tile& tile) {
         const auto lm=tile.landmarks;if((lm&0x80000001u)==1u && (lm&0xff000000u)<0x15000000u) {return;}
         const auto r1=random.Shared(0,2*jitter),r2=random.Shared(0,category+1);
         const auto latitude=Checked(int64_t(std::abs(h/2-r1-y+jitter))-(category-1)*(h/rules.latitude_divisor)
@@ -141,7 +142,11 @@ void Temperature(World& world,const Rules& rules,Streams& random) {
             else if(alt>4 && r2==0) {--value;}
         }
         tile.temperature=std::clamp(value-1,0,2);
-    });
+    };
+    for(int32_t y=0;y<world.height;++y) {
+        for(int32_t x=y&1;x<world.width;x+=2) {process(x,y,*world.At(x,y));}
+        if(row_complete) {row_complete(y);}
+    }
 }
 void Rivers(World& world,Streams& random) {
     world.Validate();for(auto& t:world.tiles) {t.items&=~0x280u;}

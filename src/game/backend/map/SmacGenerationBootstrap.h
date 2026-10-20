@@ -9,7 +9,7 @@ namespace game::backend::map::smac_generation {
 using Record=std::array<uint8_t,44>;
 using Categories=std::array<int32_t,7>;
 struct Rules {int32_t land_base,land_modifier,islands;};
-enum class Stage {Allocated,ContinentLoop,Pretemperature};
+enum class Stage {Allocated,ContinentLoop,Pretemperature,Prelandmarks};
 enum class Entry {First,Retry};
 struct Draw {
     enum class Kind {Crt,Shared};

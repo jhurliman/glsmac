@@ -8,6 +8,8 @@
 #include "game/backend/map/SmacGenerationRegions.h"
 #include "game/backend/map/SmacPretemperatureGeneration.h"
 #include "fixtures/SmacPretemperatureGeneration.h"
+#include "game/backend/map/SmacInitialClimateGeneration.h"
+#include "fixtures/SmacInitialClimateGeneration.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 #include <string>
@@ -51,8 +53,68 @@ void PrepareRegionInput(generation::State& state,generation::Geometry g,generati
 }
 std::string RegionBytes(const generation::Regions& r) {return std::string(reinterpret_cast<const char*>(r.records.data()),r.records.size());}
 std::string SummaryBytes(const generation::Regions& r) {return std::string(r.summary.begin(),r.summary.end());}
+struct ClimateObservation {
+    generation::InitialClimateTrace trace;
+    std::string stores,rng,shared;
+    uint64_t checkpoints=0;
+    ClimateObservation() {
+        trace.on_store=[this](uint32_t off,unsigned size,uint32_t value){Word(stores,off);Word(stores,size,1);Word(stores,value);};
+        trace.on_crt=[this](uint32_t before,uint32_t after,uint16_t value){Word(rng,before);Word(rng,after);Word(rng,value,2);};
+        trace.on_shared=[this](bool seed,uint32_t before,uint32_t after,int32_t low,int32_t high,int32_t value){
+            Word(shared,seed?1:0,1);Word(shared,before);Word(shared,after);Word(shared,uint32_t(low));Word(shared,uint32_t(high));Word(shared,uint32_t(value));
+        };
+        trace.checkpoint=[this]{++checkpoints;};
+    }
+    bool Matches(const generation::State& s,const fixtures::initial_climate::Result& r) const {
+        return trace.stores==r.stores && trace.crt_draws==r.draws && trace.shared_events==r.shared
+            && util::SHA256(Bytes(s))==r.output_hash && util::SHA256(stores)==r.store_hash && util::SHA256(rng)==r.rng_hash
+            && util::SHA256(shared)==r.shared_hash && s.random.Crt()==r.crt && s.random.Shared()==r.shared_state;
+    }
+};
 }
 void AddSmacContinentGenerationTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC initial climate matches original temperature sources fungus and actual setup",GT(){
+        uint64_t stores=0,draws=0,shared=0;
+        for(const auto& c:fixtures::initial_climate::Cases()) {
+            const generation::Geometry g{c.width,c.height};
+            generation::State s{std::vector<generation::Record>(size_t(g.width/2)*size_t(g.height)),{{2,c.ocean,1,1,c.temperature,c.rainfall,c.life}},
+                game::backend::SmacGameplayRandomState(1234567,c.crt)};
+            generation::Regions unused;PrepareRegionInput(s,g,unused,c.profile,"zero");
+            s.topology=c.flat?1:0;s.resource_pattern=11446;s.reset_words[1]=c.extra;
+            for(auto& record:s.records) {
+                record[5]=uint8_t(17+(c.rockiness<<6));
+                for(unsigned k=0;k<4;++k) {record[8+k]=uint8_t(c.items>>(8*k));}
+            }
+            for(const auto& p:c.patches) {s.records.at(size_t(p.y)*size_t(g.width/2)+size_t(p.x/2)).at(p.field)=p.value;}
+            GT_ASSERT(util::SHA256(Bytes(s))==c.input_hash,"Original initial climate input differs: "+std::string(c.id));
+            ClimateObservation observed;
+            if(c.kind==0) {generation::InitialTemperature(s,g,generation::DEFAULT_WORLD_RULES,&observed.trace);}
+            else if(c.kind==1) {generation::SeedRiverSources(s,g,generation::DEFAULT_WORLD_RULES,&observed.trace);}
+            else {generation::InitialFungus(s,g,generation::DEFAULT_WORLD_RULES,0x288050,&observed.trace);}
+            GT_ASSERT(observed.Matches(s,c.result) && observed.trace.pumps==c.result.pumps && observed.checkpoints==c.result.pumps,
+                "Original initial climate trace/output differs: "+std::string(c.id));
+            stores+=observed.trace.stores;draws+=observed.trace.crt_draws;shared+=observed.trace.shared_events;
+        }
+        GT_ASSERT(stores==15029 && draws==10584 && shared==5469,"Initial climate control coverage changed");
+        generation::State s{std::vector<generation::Record>(3200),{{2,1,1,1,1,1,1}},game::backend::SmacGameplayRandomState(1,1)};
+        generation::Regions r;r.summary_width=16;r.summary_height=16;r.summary_initial=0;
+        generation::GeneratePretemperature(s,{80,80},generation::DEFAULT_WORLD_RULES,r);
+        ClimateObservation observed;const auto boundaries=fixtures::initial_climate::Boundaries();const auto hashes=fixtures::initial_climate::BoundaryHashes();
+        for(size_t i=0;i<3;++i) {
+            if(i==0) {generation::InitialTemperature(s,{80,80},generation::DEFAULT_WORLD_RULES,&observed.trace);}
+            else if(i==1) {generation::SeedRiverSources(s,{80,80},generation::DEFAULT_WORLD_RULES,&observed.trace);}
+            else {generation::InitialFungus(s,{80,80},generation::DEFAULT_WORLD_RULES,0x288050,&observed.trace);}
+            const std::array<uint32_t,5> actual{{s.random.Crt(),s.random.Shared(),uint32_t(observed.trace.stores),uint32_t(observed.trace.crt_draws),uint32_t(observed.trace.shared_events)}};
+            GT_ASSERT(actual==boundaries[i] && util::SHA256(Bytes(s))==hashes[i],"Actual original initial climate return differs");
+        }
+        GT_ASSERT(observed.Matches(s,fixtures::initial_climate::Full()) && observed.checkpoints==160,"Actual original initial climate complete trace differs");
+        generation::State composed{std::vector<generation::Record>(3200),{{2,1,1,1,1,1,1}},game::backend::SmacGameplayRandomState(1,1)};
+        generation::Regions regions;regions.summary_width=16;regions.summary_height=16;regions.summary_initial=0;
+        generation::GeneratePretemperature(composed,{80,80},generation::DEFAULT_WORLD_RULES,regions);
+        generation::GenerateInitialClimate(composed,{80,80},generation::DEFAULT_WORLD_RULES);
+        GT_ASSERT(Bytes(composed)==Bytes(s) && composed.random==s.random && composed.stage==generation::Stage::Prelandmarks,
+            "Initial climate controller did not reach the original landmark boundary");GT_OK();
+    });
     task->AddTest("SMAC contour morph matches original two passes stores RNG and region history",GT(){
         uint64_t tiles=0,regions=0,draws=0;
         for(const auto& c:fixtures::pretemperature::Morphs()) {

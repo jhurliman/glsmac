@@ -16,6 +16,10 @@ struct ViewContext {
     smac_known_grid::Preferences preferences{0xbbe1ddb6u,0x003a7168u};
     int relief=25;
     static constexpr int SurveyLight=2;
+    void ToggleFlattenedTerrain() {
+        preferences.more^=0x10000u;
+        relief=(preferences.more&0x10000u)?8:25;
+    }
     ViewLayout Layout(const ::game::native_terrain::World& world) const {
         return native_terrain::Layout(camera[0],camera[1],zoom,world.horizontal_wrap,
             {{world.width,world.height}});

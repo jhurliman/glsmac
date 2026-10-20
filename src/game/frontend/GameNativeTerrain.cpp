@@ -125,6 +125,10 @@ bool Game::HandleNativeZoom(const input::Event& event) {
     if(event.type!=input::EV_KEY_DOWN || (event.data.key.modifiers&input::KM_ALT)) {return false;}
     using Command=native_terrain::ZoomCommand;std::optional<Command> command;
     const auto& key=event.data.key;
+    if(key.modifiers==(input::KM_CTRL|input::KM_SHIFT) && key.code==input::K_X) {
+        m_scroller.Stop();m_native_context->ToggleFlattenedTerrain();
+        m_native_camera_from_legacy=false;m_native_frame_dirty=true;return true;
+    }
     if(key.modifiers==input::KM_CTRL) {
         if(key.code==input::K_Z) {command=Command::Maximum;}
         else if(key.code==input::K_X) {command=Command::Minimum;}

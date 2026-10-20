@@ -1,0 +1,56 @@
+{
+  "scope": "One hidden Linux software OpenGL Morgan2105 campaign run. Native1024x511 RGBA upload versus top1024x511 RGB back-buffer readback after settling. Actor exclusion was declared from prior observed actor bounds before comparing. Not an original-game or whole-screen comparison. Audio and allocation-debug tracking disabled.",
+  "campaign_sha256": "aed85217e7684412e0de762d4ccf23df5892f20fc0355a8b2fa15ea55580ae92",
+  "cases": [
+    {
+      "actor_exclusion": [
+        428,
+        220,
+        540,
+        322
+      ],
+      "total_different_pixels": 3688,
+      "all_mismatch_bounds": [
+        432,
+        234,
+        530,
+        312
+      ],
+      "outside_different_pixels": 0,
+      "outside_mismatch_bounds": null,
+      "outside_colored_pixels": 38818,
+      "outside_distinct_rgb": 132,
+      "uploaded_alpha_values": [
+        255
+      ],
+      "cpu_sha256": "e2776a7e03e2bd8784bc028280280c2253e0b768849bb99541219ab778d000fb",
+      "gpu_sha256": "fe54380872d6646a7f1e73ef14a51fbd9db72908cc72556b5fd2815f278db5e8",
+      "id": "normal"
+    },
+    {
+      "actor_exclusion": [
+        428,
+        220,
+        540,
+        322
+      ],
+      "total_different_pixels": 3689,
+      "all_mismatch_bounds": [
+        432,
+        238,
+        530,
+        316
+      ],
+      "outside_different_pixels": 0,
+      "outside_mismatch_bounds": null,
+      "outside_colored_pixels": 37654,
+      "outside_distinct_rgb": 132,
+      "uploaded_alpha_values": [
+        255
+      ],
+      "cpu_sha256": "8d096634ce407a61c0f94d4c21fcf280ee9523eaf30a3ef2b87f7401e34f7f09",
+      "gpu_sha256": "8b89fdd26489bb3bb3d6542e60f5b57b5b780e904d59741e4c0c1b90b11b4df4",
+      "id": "flattened"
+    }
+  ]
+}

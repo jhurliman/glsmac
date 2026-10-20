@@ -6406,6 +6406,17 @@ public:
                 GT_ASSERT(frontend.m_native_frame_dirty && !frontend.m_native_camera_from_legacy && frontend.m_native_view->frame->zoom==0,
                     "Native key skipped repaint or changed committed picking state before publication");
             }
+            context.zoom=3;context.preferences={0xabcdef01u,0x003a7168u};
+            const auto preferences=context.preferences;const auto camera=context.camera;
+            input::Event flattened;flattened.SetType(input::EV_KEY_DOWN);flattened.data.key.code=input::K_X;
+            flattened.data.key.key='X';flattened.data.key.modifiers=input::KM_CTRL|input::KM_SHIFT;
+            GT_ASSERT(frontend.HandleNativeZoom(flattened) && context.relief==8 && context.preferences.more==(preferences.more^0x10000u)
+                && context.preferences.primary==preferences.primary && context.camera==camera && context.zoom==3,
+                "Original flattened-terrain shortcut changed unrelated preferences, camera or zoom");
+            GT_ASSERT(frontend.m_native_frame_dirty && !frontend.m_native_camera_from_legacy && frontend.m_native_view->frame->zoom==0,
+                "Flattening changed committed picking before repaint or failed to request redraw");
+            GT_ASSERT(frontend.HandleNativeZoom(flattened) && context.relief==25 && context.preferences==preferences,
+                "Original normal-terrain toggle did not restore its complete preference words");
             for(const auto& c:fixtures::native_zoom::Wheels) {
                 context.zoom=c.zoom;const auto position=frontend.m_camera_position;
                 frontend.SmoothScroll(types::Vec2<float>{300,180},float(c.delta));

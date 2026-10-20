@@ -1,0 +1,288 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "asset_sha256": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+  "asset_hashes": {
+    "TEXTURE.PCX": "3dfa56f9eaa2a13af4fac199a0ac9ff3bf59effed17871a24f15b1b553b7c0ab",
+    "TER1.PCX": "82ef33e48f40d00a60e08fbcc403b1ecd9b340bd065830e2658ba3bacbf5b327",
+    "RAINFALL.PCX": "03b87d7873f5a9419d8c4ddd6c5a8bd333fe81a6b3ce4730056f129dcb94d364",
+    "PALETTE.PCX": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "alpha.txt": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4"
+  },
+  "scope": "Two full native original1024x511 terrain-only main painter controls, fresh native cache/backing and same retained Planet records each. Viewer3 revealed, flags10621, zoom0 camera22,38; only active More Preferences10000 differs. No command/raster/pixel outputs supplied. Generic memory/file/window services as prior frozen viewport. Exact native palette and derived unscaled RGB; no physical screenshot or GPU/OS presentation claim.",
+  "map_base": 1082507104,
+  "map_base_low16": 48992,
+  "size": [
+    1024,
+    511
+  ],
+  "pitch": 1024,
+  "initial_world_sha256": "cc969df9c4f014e4643fe6a66a5e63bb90d412889e773785e78df774c980b209",
+  "palette_entries_sha256": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6",
+  "palette_rgb_sha256": "13c35381385725ae2858ad34c26ed918d5e62a493a0363b21126ec20e5c22e8c",
+  "receipt": {
+    "filename": "terrain-appearance-original-x86-20261020.json.z",
+    "sha256": "9111cc137c6599f7109ad4e1f33e6a56a48d3f292b37ea42c31a37f077789c43",
+    "compressed_sha256": "11d4f93927f8893253b803eaeee049b2693827c8f0a38b34595b577e650fa64f"
+  },
+  "frames": [
+    {
+      "id": "normal_relief",
+      "view": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "context_before": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          -1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "818722b3285e55c3946220aeea1a2d0fdcde17e7527d8f3325471d4fa4665add",
+        "clock_deliveries": 0
+      },
+      "context_after": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 0,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          -1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "818722b3285e55c3946220aeea1a2d0fdcde17e7527d8f3325471d4fa4665add",
+        "clock_deliveries": 0
+      },
+      "view_flags": 67105,
+      "preferences": 0,
+      "lighting_before": 2,
+      "lighting_after": null,
+      "lighting_writes": null,
+      "indexed_sha256": "6f0767ae1eb7cc6c3d4658e9bcfd6ab0166295b32f3a31973f219859d4b65cd0",
+      "rgb_sha256": "a8dddc69f5cd36d6a07d9746c3f939478760d8840d93321f77c1b23bb111a88e",
+      "store_sha256": "6349a3ca9ec72c9b608652c89912e0b6416fb4285a649a94442ed4dd6bcb3198",
+      "store_count": 1236125,
+      "regions": [
+        {
+          "id": "whole",
+          "rect": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "indexed_sha256": "6f0767ae1eb7cc6c3d4658e9bcfd6ab0166295b32f3a31973f219859d4b65cd0",
+          "rgb_sha256": "a8dddc69f5cd36d6a07d9746c3f939478760d8840d93321f77c1b23bb111a88e",
+          "pixels": 523264,
+          "used_palette_indices": 172
+        },
+        {
+          "id": "west_coast",
+          "rect": [
+            64,
+            64,
+            448,
+            480
+          ],
+          "indexed_sha256": "3a0ac40b842d9adf1c25609276a1224d6939c31b8ecab464e678c5ff58b7a508",
+          "rgb_sha256": "fcc3751c44387ccaed9005a259e99d54916ef9b0c7b91d533c299da36e5fba77",
+          "pixels": 159744,
+          "used_palette_indices": 162
+        },
+        {
+          "id": "east_ridge",
+          "rect": [
+            512,
+            32,
+            992,
+            448
+          ],
+          "indexed_sha256": "35099a38cee7ec9c7286d669daeba6c407e18473f7b361368dde838ae14b974a",
+          "rgb_sha256": "c9073ef0e87878a13a9f4220e69262baca0892b9855a8515ebbd4d8cbc476d9e",
+          "pixels": 199680,
+          "used_palette_indices": 125
+        }
+      ]
+    },
+    {
+      "id": "low_relief",
+      "view": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 8,
+        "incremental": 0
+      },
+      "context_before": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 65536,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          -1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 639,
+        "tile_data_sha256": "818722b3285e55c3946220aeea1a2d0fdcde17e7527d8f3325471d4fa4665add",
+        "clock_deliveries": 0
+      },
+      "context_after": {
+        "display_faction": 3,
+        "faction_status": 512,
+        "resource_pattern": 27067,
+        "rules": 0,
+        "preferences": 65536,
+        "editor_flags": 0,
+        "scale_override": [
+          0,
+          -1
+        ],
+        "site_coefficients": [
+          11,
+          61
+        ],
+        "fpu_control_word": 895,
+        "tile_data_sha256": "818722b3285e55c3946220aeea1a2d0fdcde17e7527d8f3325471d4fa4665add",
+        "clock_deliveries": 0
+      },
+      "view_flags": 67105,
+      "preferences": 0,
+      "lighting_before": 2,
+      "lighting_after": 2,
+      "lighting_writes": [],
+      "indexed_sha256": "5cb023b22cba44ebf2f25aef3b0176d8156fdede30b0871c52898e5081aa299c",
+      "rgb_sha256": "571170cebb72fa7b01295e52ca39f27a3cb3fd31cb91b1da600a0378f1b385bc",
+      "store_sha256": "5b24cad307e99f07e3f9c05ae8a323d1d22fb6d32aed8c10d0176dd62ae32178",
+      "store_count": 1233230,
+      "regions": [
+        {
+          "id": "whole",
+          "rect": [
+            0,
+            0,
+            1024,
+            511
+          ],
+          "indexed_sha256": "5cb023b22cba44ebf2f25aef3b0176d8156fdede30b0871c52898e5081aa299c",
+          "rgb_sha256": "571170cebb72fa7b01295e52ca39f27a3cb3fd31cb91b1da600a0378f1b385bc",
+          "pixels": 523264,
+          "used_palette_indices": 172
+        },
+        {
+          "id": "west_coast",
+          "rect": [
+            64,
+            64,
+            448,
+            480
+          ],
+          "indexed_sha256": "46106794e460894454e1123cb52069ac88429a6a427768a4e8fa2fd7bbdcddf1",
+          "rgb_sha256": "c8559d67add8ecd9c5a308f9b0e01e7a547f42e802b30fbe2fdc682d55a0b5fe",
+          "pixels": 159744,
+          "used_palette_indices": 162
+        },
+        {
+          "id": "east_ridge",
+          "rect": [
+            512,
+            32,
+            992,
+            448
+          ],
+          "indexed_sha256": "593b28dd48243f22adedf47f78f2ac871139cd2cf614c8872745fe16570b4530",
+          "rgb_sha256": "796730a06336d021b9256d4577f20b4f34d5fecaa9843c6747150df556cf3e68",
+          "pixels": 199680,
+          "used_palette_indices": 125
+        }
+      ]
+    }
+  ],
+  "normal_low_different_indexed_pixels": 253670,
+  "identical_draw_source_properties": {
+    "roots": 2039,
+    "raster_roots": 2038,
+    "fields": [
+      "kind",
+      "entry",
+      "caller",
+      "tile",
+      "phase",
+      "bank",
+      "values",
+      "uv",
+      "flags",
+      "key",
+      "shader_limits",
+      "threshold",
+      "mask_bank",
+      "mask_mapping"
+    ],
+    "vertex_x_equal": true,
+    "changed_vertex_calls": {
+      "0x63dcc0": 610,
+      "0x63d6b0": 398,
+      "0x63e880": 83,
+      "0x63e2e0": 76,
+      "0x636990": 24
+    }
+  },
+  "on_disk_settings": {
+    "scope": "Read-only snapshot; not proof of current running window state.",
+    "values": {
+      "Prefs Format": "12",
+      "Preferences": "10111011111000011101110110110110",
+      "More Preferences": "1110100111000101101000"
+    },
+    "more_preferences_hex": "003a7168",
+    "low_relief": false
+  },
+  "menu": {
+    "file_sha256": "29e02c37ae104c7f861810f147e0be7a39d0c70b1a1e3f83ac800fdb68fffc38",
+    "line": "Toggle flattened terrain|Ctrl+Shift+X"
+  },
+  "palette_profile": {
+    "gamma_correction": 100,
+    "gamma": 1.0,
+    "source": "PALETTE.PCX common colors through original native initialization/gamma pipeline, active256 PALETTEENTRY state.",
+    "rgb_encoding": "256 packed RGB8 entries, not BGR; no ICC/gamma transformation after lookup.",
+    "display_scope": "Original software buffer before GPU/window/OS/monitor presentation."
+  },
+  "manifest_sha256": "d65a81759e49e6b1dd057c3aa49fda4d5aff19acfb3d5864cb41d8ab05f96d46"
+}

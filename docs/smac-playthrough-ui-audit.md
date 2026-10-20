@@ -5,6 +5,13 @@ presentation. A believable map or a successful launch is not screen fidelity.
 The original screenshots supplied in this thread define the target; their
 remote-desktop/Retina scaling must be normalized before image comparisons.
 
+The [terrain appearance acceptance](native-terrain-appearance.md) now compares
+normal/flattened original buffers with production output: both indexed and RGB
+pixels match exactly for the declared scene, including coast/ridge regions. A
+bounded Linux GPU readback also matches outside actor bounds. Ctrl+Shift+X now
+toggles the original relief option in the current view. These results do not
+diagnose the earlier screenshots or close other map/display/profile settings.
+
 | Area | Current evidence and cause | Required acceptance |
 | --- | --- | --- |
 | Logical resolution and console | The Mac launch used1280x960. The viewport preserves4:3 but exposes the full physical dimensions; the console remains257px,26.8% of960 instead of33.5% of768. | Render the complete scene at1024x768 logical pixels, with511px map and257px console. Present with nearest integer scaling and bars; translate input through physical/drawable/Retina coordinates. Match original default zoom before comparing visible tile counts. |

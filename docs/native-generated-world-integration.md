@@ -58,6 +58,10 @@ must be separated at its callers.
    [Named technology acquisition](native-startup-technology.md) now extends that
    first-faction composition through its parsed initial award. Base construction,
    automatic designs, full Unit factory and controller stages still follow it.
+   [Capability refresh](native-startup-capability.md) now matches complete
+   original faction buffers and ordered stores; the generated first faction
+   composes through the capability boundary. Custom design construction and
+   caller marking/selection are still required.
    [Base seed and radius preparation](native-startup-base.md) now match complete
    original controls and the generated first-Base/tile projection.
    [Territory/cache rebuilding](native-startup-territory.md) now extends that

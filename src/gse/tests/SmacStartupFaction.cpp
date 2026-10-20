@@ -5,6 +5,8 @@
 #include "game/backend/map/SmacCompleteTerrainGeneration.h"
 #include "game/backend/map/SmacGeneratedStartingSite.h"
 #include "fixtures/SmacGeneratedFirstSite.h"
+#include "game/backend/faction/SmacStartupCapability.h"
+#include "fixtures/SmacStartupCapability.h"
 #include "game/backend/faction/SmacStartupTechnology.h"
 #include "game/backend/faction/SmacTechnologyQuery.h"
 #include "fixtures/SmacStartupTechnology.h"
@@ -91,6 +93,12 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
             GT_ASSERT(ref.kind!=Kind::UNKNOWN,"Missing owned technology prerequisite input");
             catalog.prerequisites[i][j]=ref.kind==Kind::NONE?-1:ref.kind==Kind::DISABLED?-2:*ref.technology_id;
         }}
+        std::array<SmacStartupFaction,8> capability_actors{};capability_actors[1]=state;
+        RefreshSmacStartupCapabilities(capability_actors,ownership,catalog.prerequisites,fixtures::capability::StockCatalog(),{1,0x1a0e,0,3,2,-1,-1});
+        state=capability_actors[1];
+        GT_ASSERT(util::SHA256(factionBytes())==fixtures::capability::GENERATED_RECORD
+            && util::SHA256(planeBytes())==expected::PREPARED_TILES_SHA256 && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
+            "Original generated complete first faction differs after capability refresh");
         for(const auto& bonus:gaia->Records()) {if(bonus.kind==game::backend::settings::SmacFactionStartupBonus::Kind::FACILITY) {catalog.facility_bonuses.push_back(bonus.parameter);}}
         SmacStartupBaseRecord base{};
         const auto seeded=SeedSmacStartupBase(base,terrain.records,state,{{80,80,true},*selected.site,1,0,3,2,2,10,0,false,false,false,false,"Gaia's Landing"},catalog);

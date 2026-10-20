@@ -51,7 +51,12 @@ public:
         result.world=world_;result.viewport=view.viewport;result.unit=view.unit;result.zoom=zoom;
         result.clip={{0,0,view.viewport[0],view.viewport[1]}};
         if(!paint) {return result;}
-        if(incremental && previous_ && zoom==zoom_ && relief==relief_) {
+        // A dirty pan can retain interior pixels only under the same observer
+        // knowledge and survey presentation. Own the mask: callers may mutate
+        // their vector in place or release it immediately after this call.
+        const bool same_knowledge=bool(known)==bool(known_) && (!known || *known==*known_);
+        if(incremental && previous_ && zoom==zoom_ && relief==relief_ &&
+            same_knowledge && survey_light==survey_light_) {
             result.regions=HorizontalPan(*previous_,view);
             if(!result.regions) {throw std::invalid_argument("Unmeasured incremental native view");}
             result.scroll={{(previous_->first[0]-view.first[0])*4*view.unit,0}};
@@ -96,6 +101,11 @@ public:
             const auto p=Projector(view,placement.tile,observer);
             result.objects.push_back({placement.tile,p,{{p[0],p[1]-2*view.unit}}});
         }
+        // Allocate before publishing history, so a failed mask copy leaves the
+        // previous successful presentation identity intact.
+        std::optional<Knowledge> next_known;
+        if(known) {next_known=*known;}
+        known_=std::move(next_known);survey_light_=survey_light;
         previous_=view;zoom_=zoom;relief_=relief;return result;
     }
     std::vector<uint8_t> CacheBytes() const {return geometry_.CacheBytes();}
@@ -145,6 +155,8 @@ private:
     Geometry geometry_;
     Point world_;bool wrap_;
     std::optional<ViewLayout> previous_;
+    std::optional<Knowledge> known_;
+    std::optional<int> survey_light_;
     int zoom_=0,relief_=25;
 };
 }

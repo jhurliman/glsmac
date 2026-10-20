@@ -31,6 +31,7 @@ namespace game::native_terrain {struct World;}
 #include "map/GlsmacTerritoryTopology.h"
 #include "faction/SmacSimulationState.h"
 #include "unit/ConventionalUnitState.h"
+#include "unit/PreparedConventionalSight.h"
 #include "base/ProductionState.h"
 #include "base/SmacBaseEnergy.h"
 #include "base/SmacColonyContinuation.h"
@@ -754,9 +755,10 @@ private:
 	void ValidateSmacWorkerKnowledge( const map::SmacWorkerKnowledge& knowledge ) const;
 	void CompleteSmacWorkerKnowledgeRestore();
 	void RequireConventionalSightWorld() const;
-	std::optional< map::SmacWorkerKnowledge > PrepareConventionalZoc( const unit::Unit& unit, const map::tile::Tile* destination ) const;
-	std::optional< map::SmacWorkerKnowledge > PrepareConventionalSight( uint64_t id, int32_t owner, const map::tile::Tile* destination, const map::tile::Tile* source, bool startup = false ) const;
+	unit::PreparedConventionalSight PrepareConventionalZoc( const unit::Unit& unit, const map::tile::Tile* destination ) const;
+	unit::PreparedConventionalSight PrepareConventionalSight( uint64_t id, int32_t owner, const map::tile::Tile* destination, const map::tile::Tile* source, bool startup = false ) const;
 	void CommitConventionalSight( std::optional< map::SmacWorkerKnowledge >& prepared ) noexcept;
+    void CommitConventionalSight(unit::PreparedConventionalSight& prepared) noexcept;
 	base::ProductionItem SelectSmacFoundingProduction( const slot::Slot* owner, const map::tile::Tile* tile ) const;
 	faction::SmacEconomyState PrepareSmacNonzeroInitialization( int32_t owner ) const;
 	std::optional<faction::SmacRegionalStrategyRow> PrepareCanonicalRegionalStrategy(int32_t owner,const faction::SmacSimulationState& candidate);

@@ -243,7 +243,7 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 				data.observers[1]->pact_with=c.pact?4:0;data.observers[2]->pact_with=2; // opposite direction must not exempt actor
 				data.observers[1]->relations[2].foreign_unit_exemption=c.pact||c.treaty;
 				data.units.push_back({71,4,false});
-				for(int i=0;i<c.enemies;++i){Spawn(GSE_CALL,game,72+i,1,2,c.ex[i],c.ey[i]);const bool unseen=c.newly_revealed&(1u<<i);data.units.push_back({uint64_t(72+i),uint8_t(unseen?0:2),false});if(unseen){data.tiles[c.ey[i]*64+c.ex[i]/2].explored_by=4;}}
+				for(int i=0;i<c.enemies;++i){auto* enemy=Spawn(GSE_CALL,game,72+i,1,2,c.ex[i],c.ey[i]);auto flagged=enemy->Conventional();flagged.native_flags=0xffff;game->GetUM()->UpdateConventionalUnit(GSE_CALL,enemy,flagged);const bool unseen=c.newly_revealed&(1u<<i);data.units.push_back({uint64_t(72+i),uint8_t(unseen?0:2),false});if(unseen){data.tiles[c.ey[i]*64+c.ex[i]/2].explored_by=4;}}
 				if(c.claim>=0){data.tiles[c.sy*64+c.sx/2].claimant=c.claim;data.tiles[c.dy*64+c.dx/2].claimant=c.claim;}
 				if(std::string(c.name)=="both_endpoints"){
 					auto unknown=data;unknown.observers[1]->pact_with.reset();game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(unknown));
@@ -280,7 +280,8 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
                     GT_ASSERT(fixture.Snapshot()==committed && fixture.GameplayRandom()==pair,"knowledge notification/query mutated authority");
                 }
 				GT_ASSERT(actor->GetTile()==(c.moved?target:source) && actor->Conventional().spent==(c.moved?3:0) && fixture.GameplayRandom()==pair,"original ZOC outcome/spending/RNG differs");
-				for(int i=0;i<c.enemies;++i){GT_ASSERT(after.units[i+1].visible_to==2,"actual refusal/sight did not reveal foreign unit");}
+				for(int i=0;i<c.enemies;++i){GT_ASSERT(after.units[i+1].visible_to==2,"actual refusal/sight did not reveal foreign unit");if(!c.moved) {GT_ASSERT(game->GetUM()->GetUnit(72+i)->Conventional().native_flags==((c.newly_revealed&(1u<<i)) ? 0xfbbf:0xffff),
+                    "ZOC refusal flags did not follow its actual new disclosure events");}}
 				GT_ASSERT(after.observers==data.observers,"movement changed directed diplomatic state");
 				if(!c.moved){
 					GT_ASSERT(Unit::Serialize(actor).ToString()==bytes && after.units[0].visible_to==4,"ZOC refusal entered normal mover clear/spending");
@@ -344,7 +345,22 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT(actual.remembered[2][15*64+17/2]->unit_present && actual.remembered[2][16*64+16/2]->base_present, "factory memory omitted post-placement Unit or actual Base");
 				// A second, adjacent observer updates both masks without changing the
 				// already saved diplomatic worker predicate.
+                auto flagged=foreign->Conventional();flagged.native_flags=relation==2 ? std::optional<uint16_t>{}:std::optional<uint16_t>{0xffff};
+                game->GetUM()->UpdateConventionalUnit(GSE_CALL,foreign,flagged);
+                const auto saved_foreign=Unit::Serialize(foreign).ToString();
+                const auto saved_knowledge=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();
+                {
+                    auto pending=game->GetUM()->PrepareConventionalUnit(GSE_CALL,72,game->GetUM()->GetUnitDef("knowledge-scout"),
+                        &game->GetState()->m_slots->GetSlot(0),game->GetMap()->GetTile(18,16),
+                        {2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+                    GT_ASSERT(Unit::Serialize(foreign).ToString()==saved_foreign && game->GetMap()->GetSmacWorkerKnowledge()->Serialize()==saved_knowledge,
+                        "Sight preparation mutated live disclosure flags or knowledge");
+                }
+                GT_ASSERT(Unit::Serialize(foreign).ToString()==saved_foreign && game->GetUM()->GetUnits().size()==1,
+                    "Discarded sight transaction changed visibility authority");
 				auto* local=Spawn(GSE_CALL,game,72,0,1,18,16);
+                GT_ASSERT(foreign->Conventional().native_flags==(relation==2 ? std::optional<uint16_t>{}:std::optional<uint16_t>{0xfbbf}),
+                    "Repeated admitted disclosure failed to clear only the pair or invented legacy flags");
 				const auto seen=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
 				GT_ASSERT(seen.units[0].visible_to==2 && seen.units[1].visible_to==4 && local->GetTile()->units.at(72)==local && foreign->GetTile()->units.at(71)==foreign,
 					"factory did not publish mutual adjacent visibility with identity");
@@ -359,7 +375,7 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 			auto* game=source.Game(); Definitions(game);
 			for(size_t y=0;y<64;++y) {for(size_t x=y&1;x<128;x+=2) {auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners){*corner=100;}tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->Update();}}
 			auto* local=Spawn(GSE_CALL,game,71,0,1,32,16); Spawn(GSE_CALL,game,72,1,2,48,16);
-			auto partial=local->Conventional(); partial.spent=2; game->GetUM()->UpdateConventionalUnit(GSE_CALL,local,partial);
+			auto partial=local->Conventional();partial.native_flags=0xffff; partial.spent=2; game->GetUM()->UpdateConventionalUnit(GSE_CALL,local,partial);
 			source.GameplayRandom({0,123});
 			Knowledge::Data data{128,64,true,true,0,{},{},{}};data.tiles.resize(4096,{6,std::nullopt});data.observers[1]=Knowledge::Observer{};data.observers[2]=Knowledge::Observer{};
 			// Retained supplied history: neither stationary flag is reconstructed
@@ -380,6 +396,7 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 			Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"event",{VALUE(value::String,,"move_unit"),args});source.DrainEvents();
 			const auto actual=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
 			GT_ASSERT(local->GetTile()==destination && local->Conventional().spent==3 && actual.units[0].visible_to==0 && actual.units[1].visible_to==2, "actual movement globally rebuilt visibility or omitted mover clear");
+            GT_ASSERT(local->Conventional().native_flags==0xffff,"Stored positive mask without a new disclosure cleared flags");
 			GT_ASSERT(actual.remembered[1][16*64+30/2]->unit_present && !actual.remembered[1][16*64+32/2]->unit_present && actual.remembered[1][0]==data.remembered[1][0], "movement memory missed membership timing or refreshed unrelated old memory");
             GT_ASSERT((actual.occupancy && actual.occupancy->At({32,16})==map::SmacOccupancyCache::Cell{1,0} && actual.occupancy->At({30,16})==map::SmacOccupancyCache::Cell{1,2} && actual.occupancy->At({0,0})==map::SmacOccupancyCache::Cell{7,0}),"Actual move lost cached affiliation history or membership");
 			GT_ASSERT(source.GameplayRandom()==random, "ordinary full move consumed a sight RNG draw");
@@ -390,7 +407,8 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 		ConventionalUnitFixture destination;destination.ConfigureMovementCampaign(false);
 		return destination.Run([&](GSE_CALLABLE)->std::string {
 			destination.RestoreThroughStart(GSE_CALL,snapshot,[](GSE_CALLABLE){});
-			GT_ASSERT(destination.Game()->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge && destination.Game()->GetUM()->GetUnit(71)->GetTile()->coord.x==30, "restore replayed sight or lost remembered state");GT_OK();
+			GT_ASSERT(destination.Game()->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge && destination.Game()->GetUM()->GetUnit(71)->GetTile()->coord.x==30, "restore replayed sight or lost remembered state");
+            GT_ASSERT(destination.Game()->GetUM()->GetUnit(71)->Conventional().native_flags==0xffff,"Restore replayed disclosure or lost flags");GT_OK();
 		});
 	} );
 	task->AddTest( "SMAC live ordinary sight rejects unsupported detection before publication", GT() {

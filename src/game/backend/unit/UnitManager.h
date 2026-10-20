@@ -6,6 +6,7 @@
 
 #include "Types.h"
 #include "ConventionalUnitState.h"
+#include "PreparedConventionalSight.h"
 #include "SmacNativeUnitRecord.h"
 #include "SmacEmptyGroundMovement.h"
 #include "SmacScoutCombat.h"
@@ -259,6 +260,7 @@ private:
 	friend class game::backend::Game;
 	void Deserialize( GSE_CALLABLE, types::Buffer& buf, const ConventionalUnitResolver& resolver, bool defer_home = false );
 	void SyncNativeObservationMasks(const map::SmacWorkerKnowledge& knowledge) noexcept;
+    void CommitUnitDisclosures(const std::vector<uint64_t>& ids) noexcept;
 	void ValidateNativeCreation(size_t id,const Def* def,const map::tile::Tile* tile,const SmacNativeUnitRecord& state) const;
     void ValidateNativeIndexBindings(const std::vector<Unit*>& ordered) const;
     // Detached native preparation for command validation, without scripts,
@@ -296,7 +298,7 @@ private:
 		std::optional< smac_move::Result > result;
 		std::optional< int32_t > nearest_distance;
 		bool update_nearest = false;
-		std::optional< map::SmacWorkerKnowledge > sight;
+		PreparedConventionalSight sight;
         StackChanges stacks;
         std::optional<PreparedConventionalEncounter> encounter;
 	};

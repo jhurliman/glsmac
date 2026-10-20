@@ -198,7 +198,7 @@ void Game::RequireConventionalSightWorld() const {
 	}
 }
 
-std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const unit::Unit& actor, const map::tile::Tile* destination ) const {
+unit::PreparedConventionalSight Game::PrepareConventionalZoc( const unit::Unit& actor, const map::tile::Tile* destination ) const {
 	const auto* source = actor.GetTile();
 	const auto owner = actor.Conventional().owner_simulation_id;
 	bool foreign = false, source_foreign = false;
@@ -216,6 +216,7 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const un
 		throw std::runtime_error("Foreign ZOC for noncombat movement is not established");
 	}
 	if ( !m_map->m_worker_knowledge || !m_map->m_worker_knowledge_ready ) { throw std::runtime_error("Foreign ZOC requires authenticated saved knowledge and directed Pact state"); }
+	unit::PreparedConventionalSight prepared;
 	auto data = m_map->m_worker_knowledge->CopyData();
 	if ( !data.observers[owner] || !data.observers[owner]->pact_with ) { throw std::runtime_error("Directed Pact state is unavailable for ZOC"); }
 	const auto pacts = *data.observers[owner]->pact_with;
@@ -270,15 +271,17 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const un
 		const auto bit = uint8_t(1u<<owner);
 		if ( observation.visible_to & bit ) { continue; }
 		observation.visible_to |= bit;
+        prepared.disclosed_to_humans.push_back(entry.first);
 		const auto index = static_cast<size_t>(neighbour->coord.y)*(data.width/2)+neighbour->coord.x/2;
 		data.tiles[index].explored_by |= bit;
 		auto& remembered = data.remembered[owner]; if ( remembered.empty() ) { remembered.resize(data.tiles.size()); }
 		remembered[index] = map::SmacWorkerKnowledge::Improvements{neighbour->features,neighbour->terraforming,neighbour->base!=nullptr,true};
 	} }
-	return map::SmacWorkerKnowledge::Create(data);
+	prepared.knowledge=map::SmacWorkerKnowledge::Create(data);
+    return prepared;
 }
 
-std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64_t id, int32_t owner,
+unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int32_t owner,
 	const map::tile::Tile* destination, const map::tile::Tile* source, bool startup ) const {
 	if ( !m_map || !m_map->m_worker_knowledge ) { return {}; }
 	if ( startup ) {
@@ -289,6 +292,7 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64
 			if ( prior.observers[observer] ) { (void)ProjectSmacWorkerKnowledge(*m_map->m_worker_knowledge,observer,nullptr,true); }
 		}
 	} else { RequireConventionalSightWorld(); }
+	unit::PreparedConventionalSight prepared;
 	auto data = m_map->m_worker_knowledge->CopyData();
 	if ( owner < 1 || owner > 7 || !data.observers[owner] || !destination || destination->tiles != m_map->GetTilesPtr()
 		|| destination->coord.x >= m_map->GetWidth() || destination->coord.y >= m_map->GetHeight()
@@ -376,6 +380,7 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64
                 moving.visible_to |= 1u; // Faction0 is independent of controller slot0.
                 auto& observation=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==entry.first;});
                 observation.visible_to |= static_cast<uint8_t>(1u<<owner);
+                prepared.disclosed_to_humans.push_back(entry.first);
             }
             continue;
         }
@@ -385,8 +390,10 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64
 		if(adjacent(destination,tile) || destination==tile) {
 			ordinary(tile); if(tile->units.size()!=1 || destination==tile) {throw std::runtime_error("Foreign sight stacks are not admitted");}
 			moving.visible_to |= uint8_t(1u<<faction);
+            prepared.disclosed_to_humans.push_back(id);
 			auto& observation=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==entry.first;});
 			observation.visible_to |= uint8_t(1u<<owner);
+            prepared.disclosed_to_humans.push_back(entry.first);
 		}
 	}
 	for ( const auto& entry:m_bm->GetBases() ) {
@@ -395,13 +402,15 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64
 		if(base->GetTile()==destination) {throw std::runtime_error("Foreign Base entry is not admitted");}
 		const auto* center=base->GetTile();
 		if(center->coord.x<2 || center->coord.x+2>=m_map->GetWidth() || center->coord.y<2 || center->coord.y+2>=m_map->GetHeight()) {ordinary(center);}
-		if(adjacent(destination,center)) {ordinary(center); moving.visible_to |= uint8_t(1u<<faction);}
+		if(adjacent(destination,center)) {ordinary(center); moving.visible_to |= uint8_t(1u<<faction);
+            prepared.disclosed_to_humans.push_back(id);}
 	}
     if(data.occupancy) {
         if(source) {data.occupancy->RemoveUnit({static_cast<int32_t>(source->coord.x),static_cast<int32_t>(source->coord.y)},source->units.size()==1 && source->units.count(id));}
         data.occupancy->PlaceUnit({static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y)},owner,destination->units.empty());
     }
-	return map::SmacWorkerKnowledge::Create(data);
+	prepared.knowledge=map::SmacWorkerKnowledge::Create(data);
+    return prepared;
 }
 
 void Game::CommitConventionalSight( std::optional< map::SmacWorkerKnowledge >& prepared ) noexcept {
@@ -410,6 +419,12 @@ void Game::CommitConventionalSight( std::optional< map::SmacWorkerKnowledge >& p
         m_um->SyncNativeObservationMasks(*m_map->m_worker_knowledge);
         m_map_knowledge_dirty = true;
     }
+}
+
+void Game::CommitConventionalSight(unit::PreparedConventionalSight& prepared) noexcept {
+    if(!prepared.knowledge) {return;}
+    CommitConventionalSight(prepared.knowledge);
+    m_um->CommitUnitDisclosures(prepared.disclosed_to_humans);
 }
 
 void Game::PublishMapKnowledgeUpdate( GSE_CALLABLE ) {

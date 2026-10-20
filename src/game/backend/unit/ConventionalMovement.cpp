@@ -262,7 +262,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 			admitted_hq = hq;
 		}
 	}
-	if ( auto refusal=m_game->PrepareConventionalZoc(*unit,destination) ) {
+	if ( auto refusal=m_game->PrepareConventionalZoc(*unit,destination); refusal.knowledge ) {
 		return {unit,source,destination,stored,std::nullopt,std::nullopt,false,std::move(refusal)};
 	}
     auto random=simulation.gameplay_random;
@@ -363,7 +363,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	changed.spent = static_cast< uint8_t >( result.unit.spent ); changed.failed_move = result.unit.prior_failure_marker;
 	QueryConventionalUnit( changed, context, stored.render_morale_mode );
 	auto sight = result.outcome == smac_move::Outcome::Moved
-		? m_game->PrepareConventionalSight(unit->m_id,stored.owner_simulation_id,destination,source) : std::nullopt;
+		? m_game->PrepareConventionalSight(unit->m_id,stored.owner_simulation_id,destination,source) : PreparedConventionalSight{};
 	auto stacks=result.outcome==smac_move::Outcome::Moved ? PrepareConventionalStackMove(unit,destination):StackChanges{};
 	return { unit, source, destination, changed, std::move( result ), nearest_distance, update_nearest, std::move(sight),std::move(stacks) };
 }

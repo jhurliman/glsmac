@@ -44,6 +44,7 @@ struct BaseManager::PreparedSmacCapture::Data {
 	SmacBaseAllocationState allocation{};
 	std::optional<SmacBaseUpkeepCache> cache;
 	std::optional<map::SmacWorkerKnowledge> knowledge;
+    std::vector<uint64_t> disclosed_to_humans;
 	std::optional<map::GlsmacTerritoryTopology> topology;
 	std::vector<std::pair<unit::Unit*,unit::ConventionalUnitState>> units;
 	std::vector<Base*> refresh;
@@ -298,16 +299,17 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	};
 	const auto prepare=[&] {
 		auto sight=m_game->PrepareConventionalSight(actor->m_id,new_owner,destination,source);
-        if(sight) {auto view=sight->CopyData();if(view.occupancy) {
+        data->disclosed_to_humans=sight.disclosed_to_humans;
+        if(sight.knowledge) {auto view=sight.knowledge->CopyData();if(view.occupancy) {
             // Sight reads the projected post-move registry. Its ordinary move
             // cache predicates expect pre-move membership, so stage capture's
             // source departure and destination arrival explicitly here.
             view.occupancy->RemoveUnit({static_cast<int32_t>(source->coord.x),static_cast<int32_t>(source->coord.y)},source->units.empty());
             view.occupancy->PlaceUnit({static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y)},new_owner,false);
             view.occupancy->SetAffiliation({static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y)},new_owner);
-            sight=map::SmacWorkerKnowledge::Create(view);
+            sight.knowledge=map::SmacWorkerKnowledge::Create(view);
         }}
-        m_game->CommitBaseTerritory(sight);
+        m_game->CommitBaseTerritory(sight.knowledge);
 		std::optional<map::GlsmacTerritoryTopology> topology;
 		auto territory=m_game->PrepareBaseTerritory(nullptr,nullptr,false,&topology);m_game->CommitBaseTerritory(territory,topology);
 		if(leaving) {
@@ -422,6 +424,7 @@ void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 	um->CommitPlacementHistory(placement);
 	if(data.faction_units) {data.faction_units->Commit();}else{um->m_unit_updates.swap(updates);}
 	m_game->CommitBaseTerritory(data.knowledge,data.topology);
+    um->CommitUnitDisclosures(data.disclosed_to_humans);
 	auto& simulation=m_game->m_simulation->value;
 	simulation.hostility.owners.swap(data.history.owners);simulation.gameplay_random=data.random;
 	data.actor_economy.design_counts=simulation.economy.at(data.new_owner).design_counts;

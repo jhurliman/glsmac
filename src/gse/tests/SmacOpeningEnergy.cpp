@@ -1,5 +1,6 @@
 #include "SmacOpeningEnergy.h"
 #include "fixtures/SmacOpeningEnergy.h"
+#include "fixtures/SmacRelocatedOpeningEnergy.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 #include <algorithm>
@@ -15,7 +16,9 @@ void Append(std::string& s,uint32_t v,unsigned size) {for(unsigned k=0;k<size;++
 void AddSmacOpeningEnergyTests(task::gsetests::GSETests* task) {
     task->AddTest("SMAC opening energy and citizens match complete original records scratch and ordered stores",GT(){
         using namespace game::backend::base;size_t citizens=0,energy=0;
-        for(const auto& c:fixtures::opening_energy::Cases()) {
+        auto cases=fixtures::opening_energy::Cases();const auto relocated=fixtures::opening_energy::RelocatedCases();
+        cases.insert(cases.end(),relocated.begin(),relocated.end());
+        for(const auto& c:cases) {
             std::vector<SmacStartupBaseRecord> bases(3);std::array<game::backend::faction::SmacStartupFaction,8> actors;
             for(size_t b=0;b<3;++b) {for(size_t i=0;i<304;++i) {bases[b][i]=uint8_t((304*b+i)*7+5);}}
             for(size_t f=0;f<8;++f) {for(size_t i=0;i<8380;++i) {actors[f].record[i]=uint8_t((f*8380+i)*13+7);}}
@@ -34,9 +37,30 @@ void AddSmacOpeningEnergyTests(task::gsetests::GSETests* task) {
                 const std::array<int32_t,10> values{{c.intake,0x13572468,12345,-23456,34567,-45678,56789,c.target,c.previous_target,c.mineral_surplus}};
                 for(size_t i=0;i<10;++i) {Word(base,offsets[i],uint32_t(values[i]));}
             }
+            if(c.inputs.citizens.selected_base) {
+                const auto selected=bases[0];bases.resize(7);
+                for(size_t i=0;i<bases.size();++i) {
+                    for(size_t j=0;j<304;++j) {bases[i][j]=uint8_t((304*i+j)*7+5);}
+                    bases[i][4]=uint8_t(c.owner%7+1);Word(bases[i],0,uint32_t(2+2*i),2);Word(bases[i],2,uint32_t(2+2*i),2);
+                    std::fill_n(bases[i].begin()+0x8c,5,0);
+                }
+                bases.at(c.inputs.citizens.selected_base)=selected;
+            }
             GT_ASSERT(util::SHA256(Bases(bases))==c.input_bases && util::SHA256(Actors(actors))==c.input_actors,"Opening energy/citizen input recipe differs");
             const auto before=actors;std::string trace;size_t count=0;
             const SmacBaseAccountingObserver observer=[&](const auto& s){Append(trace,uint8_t(s.space),1);Append(trace,s.offset,4);Append(trace,s.size,1);Append(trace,s.value,4);Append(trace,s.caller,4);++count;};
+            if(c.inputs.citizens.selected_base==6 && c.owner==7 && c.population==7 && c.facilities.size()==3) {
+                const auto untouched=bases;const auto untouched_scratch=scratch;
+                for(const auto index:{-1,7,INT32_MAX}) {
+                    auto invalid=c.inputs;invalid.citizens.selected_base=index;
+                    bool rejected=false;
+                    try {AccountSmacOpeningEnergy(bases,actors,scratch,invalid,observer);}catch(const std::invalid_argument&) {rejected=true;}
+                    GT_ASSERT(rejected && bases==untouched && scratch==untouched_scratch && count==0,"Invalid Base context must reject before any write");
+                    rejected=false;
+                    try {CalculateSmacOpeningCitizens(bases,actors,scratch,invalid.citizens,observer);}catch(const std::invalid_argument&) {rejected=true;}
+                    GT_ASSERT(rejected && bases==untouched && scratch==untouched_scratch && count==0,"Invalid citizen context must reject before any write");
+                }
+            }
             if(c.energy) {AccountSmacOpeningEnergy(bases,actors,scratch,c.inputs,observer);energy+=count;}
             else {CalculateSmacOpeningCitizens(bases,actors,scratch,c.inputs.citizens,observer);citizens+=count;}
             std::string scratch_bytes;for(const auto v:scratch) {Append(scratch_bytes,uint32_t(v),4);}
@@ -44,7 +68,7 @@ void AddSmacOpeningEnergyTests(task::gsetests::GSETests* task) {
                 && count==c.count && util::SHA256(trace)==c.trace,"Original complete opening energy/citizen output or store order differs");
             for(size_t f=0;f<8;++f) {GT_ASSERT(actors[f].scratch==before[f].scratch,"Energy/citizens touched startup scratch");}
         }
-        GT_ASSERT(citizens==4510 && energy==18849,"Opening energy/citizens coverage changed");return {};
+        GT_ASSERT(citizens==4510 && energy==18849+5208,"Opening energy/citizens coverage changed");return {};
     });
 }
 }

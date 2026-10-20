@@ -5779,7 +5779,7 @@ public:
             GT_ASSERT(m_game.GetBM()->GetBases().size()==1,"Native Base admission needs its real founding record");
             auto* base=m_game.GetBM()->GetBases().begin()->second;auto* tile=base->GetTile();
             const auto inspect=[&]()->bool {
-                const auto ticket=FixtureWorldTicket(),id=m_game.MT_GetNativeTerrain(ticket);ProcessRequests();auto response=m_game.MT_GetResponse(id);
+                const auto ticket=FixtureWorldTicket();const auto id=m_game.MT_GetNativeTerrain(ticket);ProcessRequests();auto response=m_game.MT_GetResponse(id);
                 util::FinallyGuard destroy([&]{m_game.MT_DestroyResponse(response);});
                 if(response.result!=R_SUCCESS || !response.data.native_terrain) {throw std::runtime_error("Native Base snapshot unavailable");}
                 return response.data.native_terrain->tiles[tile->coord.y*40+tile->coord.x/2].admitted_base;
@@ -5930,7 +5930,7 @@ public:
             knowledge.remembered[viewer][40*40+20]=map::SmacWorkerKnowledge::Improvements{0,map::tile::TERRAFORMING_ROAD|map::tile::TERRAFORMING_MAG_TUBE,false,false};
             m_game.m_map->GetTile(42,40)->terraforming=map::tile::TERRAFORMING_ROAD; // Live-only is not remembered.
             m_game.m_map->m_worker_knowledge=map::SmacWorkerKnowledge::Create(knowledge);m_game.m_map->m_worker_knowledge_ready=true;
-            const auto ticket=FixtureWorldTicket(),request=m_game.MT_GetNativeTerrain(ticket);ProcessRequests();
+            const auto ticket=FixtureWorldTicket();const auto request=m_game.MT_GetNativeTerrain(ticket);ProcessRequests();
             const auto response=m_game.MT_GetResponse(request);
             util::FinallyGuard destroy([&]{m_game.MT_DestroyResponse(response);});
             GT_ASSERT(response.result==R_SUCCESS && response.world_ticket==ticket && response.data.native_terrain,"Actual native metadata request did not return an owned world");

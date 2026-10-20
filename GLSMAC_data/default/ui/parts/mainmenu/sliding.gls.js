@@ -57,6 +57,8 @@ return (m) => {
 	let current_entries = [];
 	let menublock_animation = null;
 	let native_title = false;
+	let native_rows = 7;
+	let heading_label = null;
 	let native_art = null;
 	let title_labels = [];
 	let title_frame = 0;
@@ -73,7 +75,7 @@ return (m) => {
 
 	const set_title_frame = (frame) => {
 		title_frame = frame;
-		native_art.background = 'openitem.flc:smacmenu(openinga.pcx,' + #to_string(frame) + ',7,' + #to_string(m.ui.get_width()) + ',' + #to_string(m.ui.get_height()) + '):stretch()';
+		native_art.background = 'openitem.flc:smacmenu(openinga.pcx,' + #to_string(frame) + ',' + #to_string(native_rows) + ',' + #to_string(m.ui.get_width()) + ',' + #to_string(m.ui.get_height()) + '):stretch()';
 	};
 
 	m.ui.on('resize', (wh) => {
@@ -84,6 +86,7 @@ return (m) => {
 		if (menublock_animation == null) {
 			if (native_title) {
 				for (label of title_labels) { label.hide(); }
+				if (heading_label != null) { heading_label.hide(); }
 				let frame = 6;
 				set_title_frame(frame);
 				frame++;
@@ -119,12 +122,13 @@ return (m) => {
 			current_menublock.remove();
 			current_menublock = null;
 			native_art = null;
+			heading_label = null;
 			title_labels = [];
 			active_entry_index = null;
 		}
 	};
 
-	const create_item = (text, bottom) => {
+	const create_item = (text, bottom, heading) => {
 		if (native_title) {
 			const button = current_menublock.button({
 				align: 'bottom left', left: 15, bottom: bottom,
@@ -138,7 +142,8 @@ return (m) => {
 			label.left = 12 + (277 - dimensions.width) / 2;
 			// The original draws labels only after all six opening steps.
 			label.hide();
-			title_labels:+label;
+			if (heading) { heading_label = label; }
+			else { title_labels:+label; }
 			return button;
 		}
 		const itemobj = current_menublock.panel({
@@ -188,6 +193,8 @@ return (m) => {
 
 			remove_active_menublock();
 			native_title = #is_defined(data.native_title) && data.native_title;
+			native_rows = native_title ? 7 : #sizeof(data.entries);
+			native_title = native_title || (#is_defined(data.native_menu) && data.native_menu);
 
 			current_menublock = m.root.area({
 				class: 'menublock-items',
@@ -195,11 +202,11 @@ return (m) => {
 
 			if (native_title) {
 				current_menublock.bottom = 0;
-				current_menublock.height = 525;
+				current_menublock.height = native_rows * 75 + (#is_defined(data.title) ? 100 : 0);
 				title_frame = 0;
 				native_art = current_menublock.surface({
-					left: 0, top: 0, width: 354, height: 525,
-					background: 'openitem.flc:smacmenu(openinga.pcx,0,7,' + #to_string(m.ui.get_width()) + ',' + #to_string(m.ui.get_height()) + '):stretch()',
+					align: 'bottom left', left: 0, bottom: 0, width: 354, height: native_rows * 75,
+					background: 'openitem.flc:smacmenu(openinga.pcx,0,' + #to_string(native_rows) + ',' + #to_string(m.ui.get_width()) + ',' + #to_string(m.ui.get_height()) + '):stretch()',
 				});
 			}
 
@@ -243,12 +250,13 @@ return (m) => {
 			const pitch = native_title ? 75 : 70;
 			let bottom = (#sizeof(data.entries) - 1) * pitch;
 			if (#is_defined(data.title)) {
-				create_item(data.title, bottom + 140).addclass('menublock-item-active');
+				const heading = create_item(data.title, native_title ? native_rows * 75 : bottom + 140, true);
+				if (!native_title) { heading.addclass('menublock-item-active'); }
 			}
 			current_entries = [];
 			let index = 0;
 			for (entry of data.entries) {
-				const itembody = create_item(entry[0], bottom);
+				const itembody = create_item(entry[0], bottom, false);
 				const cb = entry[1];
 				const current_entry = {
 					obj: itembody,
@@ -288,6 +296,7 @@ return (m) => {
 				menublock_animation = current_menublock.timer(10, () => {
 					if (frame < 6) { set_title_frame(frame); frame++; return true; }
 					for (label of title_labels) { label.show(); }
+					if (heading_label != null) { heading_label.show(); }
 					menublock_animation = null;
 					return false;
 				});

@@ -16,7 +16,7 @@ return (i, on_selected) => {
 			entries :+[labels[idx], () => { i.settings.global.set_world_size(category); next(); }];
 		}
 		entries :+['Custom Size', () => { #include('select_custom_mapsize')(i, next); }];
-		i.sliding.show({title: 'Select size of planet', entries: entries});
+		i.sliding.show({native_menu: true, title: 'Select size of planet', entries: entries});
 		return;
 	}
 	i.sliding.show({

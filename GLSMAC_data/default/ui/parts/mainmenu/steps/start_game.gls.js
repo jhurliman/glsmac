@@ -1,5 +1,6 @@
 return (i) => {
 	i.sliding.show({
+		native_menu: i.glsmac.game.get_ruleset() == 'smac',
 		entries: [
 			['Make Random Map', () => {
 				i.settings.global.map.type = 'random';

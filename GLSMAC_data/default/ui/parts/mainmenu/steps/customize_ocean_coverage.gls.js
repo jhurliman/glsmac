@@ -1,5 +1,6 @@
 return (i) => {
 	i.sliding.show({
+		native_menu: i.glsmac.game.get_ruleset() == 'smac',
 		title: 'Select ocean coverage',
 		entries: [
 			['30-50% of surface', () => {

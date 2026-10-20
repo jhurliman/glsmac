@@ -8,6 +8,7 @@ return (i) => {
 		}];
 	}
 	i.sliding.show({
+		native_menu: i.glsmac.game.get_ruleset() == 'smac',
 		title: 'Pick a difficulty level',
 		entries: entries
 	});

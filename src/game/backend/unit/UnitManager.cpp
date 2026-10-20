@@ -229,7 +229,7 @@ struct UnitManager::PreparedConventionalUnit::Data {
 	std::map< size_t, Unit* > units, occupants;
 	std::vector< size_t > order;
 	std::unordered_map< size_t, unit_update_t > updates;
-	std::optional< map::SmacWorkerKnowledge > sight;
+	PreparedConventionalSight sight;
 	std::pair< SmacMovementHistory*, size_t > history;
 	std::vector< std::pair<Unit*,ConventionalUnitState> > homes;
     StackChanges stacks;
@@ -257,7 +257,7 @@ void UnitManager::PreparedConventionalUnit::PrepareBaseAbandonment( const base::
     if ( newborn.m_owner!=abandoned.m_owner || replacement.m_owner!=abandoned.m_owner
         || data.tile!=abandoned.GetTile() || state.home_base_id!=abandoned.m_id
         || game->ResolveConventionalUnit(state,newborn.m_owner).package!=ConventionalUnitContext::Package::Colony
-        || !data.sight ) { THROW( "Abandonment requires the actual Colony factory and territory" ); }
+        || !data.sight.knowledge ) { THROW( "Abandonment requires the actual Colony factory and territory" ); }
     state.home=ConventionalUnitState::Home::None;
     state.home_base_id.reset();
     (void)game->ResolveConventionalUnit(state,newborn.m_owner);
@@ -278,7 +278,7 @@ void UnitManager::PreparedConventionalUnit::PrepareBaseAbandonment( const base::
         if ( update.ops&UUO_DESPAWN ) { THROW( "Rehomed Unit has a pending removal" ); }
         update.ops=static_cast<unit_update_op_t>(update.ops|UUO_REFRESH);
     }
-    auto knowledge=data.sight->CopyData();
+    auto knowledge=data.sight.knowledge->CopyData();
     if(knowledge.occupancy) {knowledge.occupancy->RemoveBase({static_cast<int32_t>(abandoned.GetTile()->coord.x),static_cast<int32_t>(abandoned.GetTile()->coord.y)});}
     const auto claims=territory.CopyData();
     if ( knowledge.width!=claims.width || knowledge.height!=claims.height
@@ -289,7 +289,7 @@ void UnitManager::PreparedConventionalUnit::PrepareBaseAbandonment( const base::
     }),knowledge.bases.end());
     // Preserve the factory's visibility, exploration, remembered terrain and
     // new Unit observation. The territory producer changes claims only.
-    data.sight=map::SmacWorkerKnowledge::Create(knowledge);
+    data.sight.knowledge=map::SmacWorkerKnowledge::Create(knowledge);
     std::get<ConventionalUnitState>(newborn.m_state)=state;
 }
 Unit* UnitManager::PreparedConventionalUnit::Commit() noexcept {
@@ -485,7 +485,7 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
     auto data=std::make_unique<PreparedConventionalRemoval::Data>(); data->manager=this;
     data->units=creation ? creation->units : m_units; data->order=creation ? creation->order : m_unit_order;
     data->updates=creation ? creation->updates : m_unit_updates;
-    data->knowledge=creation && creation->sight ? creation->sight : m_game->GetMap()->GetSmacWorkerKnowledge();
+    data->knowledge=creation && creation->sight.knowledge ? creation->sight.knowledge : m_game->GetMap()->GetSmacWorkerKnowledge();
     auto knowledge=data->knowledge ? std::optional<map::SmacWorkerKnowledge::Data>(data->knowledge->CopyData()) : std::nullopt;
     data->removed.reserve(ids.size()); data->retired.resize(ids.size()); data->removed_ids=ids;
     if(allow_native) {std::vector<Unit*> dense;dense.reserve(data->order.size());for(const auto id:data->order) {dense.push_back(data->units.at(id));}ValidateNativeIndexBindings(dense);}
@@ -738,6 +738,7 @@ struct UnitManager::PreparedFactionUnits::Data {
     std::map<map::tile::Tile*,std::map<size_t,Unit*>> occupants;
     std::optional<map::SmacWorkerKnowledge> knowledge;
     std::pair<SmacMovementHistory*,size_t> history{nullptr,0};
+    std::vector<uint64_t> disclosed_to_humans;
     bool committed=false,notified=false;
 };
 UnitManager::PreparedFactionUnits::PreparedFactionUnits(std::unique_ptr<Data> data):m_data(std::move(data)) {}
@@ -823,8 +824,9 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnitsForQuery(slot:
     if(!replacements.empty()) {
         const auto actual=m_game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
         const auto sight=m_game->PrepareConventionalSight(first,simulation_id,destination,nullptr);
-        if(!sight) {THROW("Restart site has no admitted sight producer");}
-        const auto explored=sight->CopyData();
+        if(!sight.knowledge) {THROW("Restart site has no admitted sight producer");}
+        data->disclosed_to_humans=sight.disclosed_to_humans;
+        const auto explored=sight.knowledge->CopyData();
         auto& remembered=knowledge.remembered[simulation_id];
         if(remembered.empty()) {remembered.resize(knowledge.tiles.size());}
         for(size_t i=0;i<knowledge.tiles.size();++i) {
@@ -916,7 +918,8 @@ void UnitManager::PreparedFactionUnits::Commit() noexcept {
     for(auto& tile:d.occupants) {tile.first->units.swap(tile.second);}
     for(size_t i=0;i<d.candidates.size();++i) {d.published[i]=d.candidates[i].release();d.published[i]->CommitInitialPlacement(d.destination);}
     if(d.history.first) {d.history.first->MarkPlaced(d.history.second);}
-    d.manager->m_game->CommitConventionalSight(d.knowledge);d.committed=true;
+    d.manager->m_game->CommitConventionalSight(d.knowledge);
+    d.manager->CommitUnitDisclosures(d.disclosed_to_humans);d.committed=true;
 }
 void UnitManager::PreparedFactionUnits::Notify(GSE_CALLABLE) {
     if(!m_data || !m_data->committed || m_data->notified) {THROW("Faction Unit notifications are not pending");}

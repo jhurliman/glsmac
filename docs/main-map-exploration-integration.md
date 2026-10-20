@@ -94,8 +94,9 @@ Do not wire all scene actors to one terrain-known Boolean:
   records now retain an optional native word in Unit10. Fresh factories set
   zero, while older port saves retain absence and native imports must preserve
   their original word. The [initializer/event controls](behavior/conventional-unit-flags16-authority.md)
-  also require explicit disclosure and duration-expiry mutations; those event
-  consumers and frontend transport remain open.
+  also require separate event mutations. [Disclosure effects](unit-disclosure-effects.md)
+  now commit with admitted sight transactions; duration expiry, frontend
+  transport and the ordinary actor consumers remain open.
 - Admit the lookup/head Unit before native stack promotion; filtering and sorting
   all members independently changes the mixed-owner control. Use retained source
   links/status/domain and the actual selection/control/pending context.

@@ -98,6 +98,18 @@ void UnitManager::SyncNativeObservationMasks(const map::SmacWorkerKnowledge& kno
     }
 }
 
+void UnitManager::CommitUnitDisclosures(const std::vector<uint64_t>& ids) noexcept {
+    for(const auto id:ids) {
+        const auto found=m_units.find(id);if(found==m_units.end()) {continue;}
+        auto* unit=found->second;
+        if(unit->IsNative()) {std::get<SmacNativeUnitRecord>(unit->m_state).flags&=0xfbbfu;}
+        else if(unit->IsConventional()) {
+            auto& flags=std::get<ConventionalUnitState>(unit->m_state).native_flags;
+            if(flags) {*flags&=0xfbbfu;} // unknown old words remain unknown
+        }
+    }
+}
+
 void UnitManager::ValidateNativeCreation(size_t id,const Def* def,const map::tile::Tile* tile,const SmacNativeUnitRecord& record) const {
     record.Validate();
     const auto design=NativeDesign(*m_game,record.design);
@@ -168,6 +180,7 @@ struct UnitManager::PreparedNativeBirths::Data {
     PreparedOccupants occupants;
     std::map<Unit*,SmacNativeUnitRecord> records;
     std::map<Unit*,ConventionalUnitState::Stack> conventional_stacks;
+    std::map<Unit*,std::optional<uint16_t>> conventional_flags;
     std::optional<map::SmacWorkerKnowledge> knowledge;
     std::optional<faction::SmacNativeFactoryState> factory;
     bool committed=false,notified=false;
@@ -186,6 +199,8 @@ const Unit& UnitManager::PreparedNativeBirths::Candidate(size_t index) const {
 void UnitManager::PreparedNativeBirths::Query(const std::function<void()>& query) const {
     if(!m_data || m_data->committed) {throw std::runtime_error("Native birth query is not pending");}
     auto previous=m_data->records;
+    auto previous_flags=m_data->conventional_flags;
+    for(auto& row:previous_flags) {row.second=row.first->Conventional().native_flags;}
     std::map<Unit*,std::optional<ConventionalUnitState::Stack>> previous_stacks;
     for(const auto& row:m_data->conventional_stacks) {previous_stacks.emplace(row.first,row.first->Conventional().stack);}
     auto factory=m_data->factory;
@@ -193,10 +208,12 @@ void UnitManager::PreparedNativeBirths::Query(const std::function<void()>& query
     util::FinallyGuard restore([&]{
         m_data->manager->m_game->m_simulation->value.native_factory.swap(factory);
         for(const auto& row:previous) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+        for(const auto& row:previous_flags) {std::get<ConventionalUnitState>(row.first->m_state).native_flags=row.second;}
         for(const auto& row:previous_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     });
     m_data->manager->m_game->m_simulation->value.native_factory.swap(factory);
     for(const auto& row:m_data->records) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+    for(const auto& row:m_data->conventional_flags) {std::get<ConventionalUnitState>(row.first->m_state).native_flags=row.second;}
     for(const auto& row:m_data->conventional_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     m_data->manager->QueryPreparedUnits(m_data->units,m_data->order,m_data->occupants,m_data->knowledge,{},query);
 }
@@ -206,6 +223,7 @@ void UnitManager::PreparedNativeBirths::Commit() noexcept {
     static_assert(std::is_nothrow_swappable_v<decltype(d.units)> && std::is_nothrow_swappable_v<decltype(d.order)>
         && std::is_nothrow_swappable_v<decltype(d.updates)> && std::is_nothrow_swappable_v<decltype(d.factory)>);
     for(const auto& row:d.records) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+    for(const auto& row:d.conventional_flags) {std::get<ConventionalUnitState>(row.first->m_state).native_flags=row.second;}
     for(const auto& row:d.conventional_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     d.manager->m_units.swap(d.units);d.manager->m_unit_order.swap(d.order);d.manager->m_unit_updates.swap(d.updates);
     for(auto& row:d.occupants) {row.first->units.swap(row.second);}
@@ -286,6 +304,10 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirthsQuery(int32_t 
         for(const auto& row:occupants(tile)) {
             auto* unit=row.second;auto& sight=observation(row.first);sight.visible_to|=static_cast<uint8_t>(1u<<observer);
             if(unit->IsNative()) {auto& value=record(unit);value.observation_mask=sight.visible_to;if(observer>0) {value.flags&=0xfbbfu;}}
+            else if(unit->IsConventional() && observer>0) {
+                auto& flags=d->conventional_flags.try_emplace(unit,unit->Conventional().native_flags).first->second;
+                if(flags) {*flags&=0xfbbfu;}
+            }
         }
     };
     NativeBirthFactory factory;

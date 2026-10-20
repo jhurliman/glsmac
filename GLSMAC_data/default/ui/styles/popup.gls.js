@@ -9,7 +9,8 @@ return (ui) => {
 	ui.class('window').extend('popup').set({
 		header_border: 'rgb(73, 108, 61),1',
 		header_height: 23,
-		header_font: 'arialnb.ttf:19',
+		header_font: 'arialbd.ttf:14:mono',
+        header_transform: 'uppercase',
 		header_color: 'rgb(109, 126, 178)',
 		header_background: 'interface.pcx:crop(86,  314, 109, 337)',
 	});
@@ -40,7 +41,7 @@ return (ui) => {
 	});
 
 	ui.class('popup-header-text').set({
-		font: 'arialnb.ttf:19',
+		font: 'arialbd.ttf:14:mono',
 		color: 'rgb(109, 126, 178)',
 		align: 'top center',
 		top: 2,
@@ -81,7 +82,7 @@ return (ui) => {
 
 	ui.class('popup-text').set({
 		color: 'rgb(109, 126, 178)',
-		font: 'arialnb.ttf:18',
+		font: 'arialn.ttf:16:mono-bold',
 	});
 
 	ui.class('popup-panel-text').extend('popup-text').set({
@@ -106,14 +107,14 @@ return (ui) => {
 	ui.class('popup-button').extend('popup-button-base').set({
 		width: 230,
 		height: 21,
-		font: 'arialnb.ttf:18',
+		font: 'arialn.ttf:16:mono-bold',
 		transform: 'uppercase',
 		sound: 'ok.wav',
 		volume: 0.5,
 	});
 	ui.class('popup-list-button').extend('popup-button-base').set({
 		height: 19,
-		font: 'arialnb.ttf:17',
+		font: 'arialn.ttf:16:mono-bold',
 		_selected: {
 			color: 'rgb(13, 23, 36)',
 			background: 'interface.pcx:crop(68,  170, 134, 187)',
@@ -152,7 +153,7 @@ return (ui) => {
 		color: 'rgb(159, 196, 198)',
 		border: 'rgb(60, 82, 106),2',
 		height: 23,
-		font: 'arialnb.ttf:18',
+		font: 'arialn.ttf:16:mono-bold',
 	});
 
 	ui.class('popup-list').set({

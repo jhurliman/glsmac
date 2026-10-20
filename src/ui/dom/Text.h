@@ -36,6 +36,7 @@ private:
 	std::string m_fontname = "";
 	uint16_t m_fontsize = 0;
 	bool m_monochrome = false;
+    bool m_synthetic_bold = false;
 
 	transform_t m_transform = T_NONE;
 

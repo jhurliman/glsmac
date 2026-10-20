@@ -59,3 +59,7 @@ loaded-slot selector. The source's preview position/width parameters inform
 the current layout but are not proof of exact final native placement. SMAX
 preview code uses the same catalog path; only the seven SMAC portraits were
 captured and compared in this pass.
+
+The [stock dialog font raster](dialog-font-raster.md) now uses the original
+regular-resource bold synthesis and separate caption binding. Frame/layout, row
+alignment, colors, OTHER and the four measured body glyph differences remain.

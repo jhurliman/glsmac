@@ -88,8 +88,8 @@ Text::Text( DOM_ARGS )
 		GSE_CALL, "font", gse::VT_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto parts = util::String::Split( ( (gse::value::String*)v )->value, ':' );
-			if ( parts.size() != 2 && ( parts.size() != 3 || parts.at( 2 ) != "mono" ) ) {
-				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>[:mono]' ), got: " + v->ToString() );
+			if ( parts.size() != 2 && ( parts.size() != 3 || ( parts.at( 2 ) != "mono" && parts.at( 2 ) != "mono-bold" ) ) ) {
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>[:mono|mono-bold]' ), got: " + v->ToString() );
 			}
 			const auto sz = strtoul( parts.at( 1 ).c_str(), nullptr, 10 );
 			if ( !sz || sz > 255 ) {
@@ -98,12 +98,14 @@ Text::Text( DOM_ARGS )
 			m_fontname = parts.at( 0 );
 			m_fontsize = sz;
 			m_monochrome = parts.size() == 3;
+            m_synthetic_bold = m_monochrome && parts.at( 2 ) == "mono-bold";
 			UpdateFont();
 		},
 		[ this ]( GSE_CALLABLE ) {
 			m_fontname = "";
 			m_fontsize = 0;
 			m_monochrome = false;
+            m_synthetic_bold = false;
 			UpdateFont();
 		}
 	);
@@ -155,7 +157,7 @@ void Text::UpdateFont() {
 			font = g_engine->GetFontLoader()->GetBuiltinFont( m_fontsize );
 		}
 		else {
-			font = g_engine->GetFontLoader()->LoadCustomFont( m_fontname, m_fontsize, m_monochrome ? loader::font::RasterMode::MONOCHROME : loader::font::RasterMode::GRAYSCALE );
+			font = g_engine->GetFontLoader()->LoadCustomFont( m_fontname, m_fontsize, m_synthetic_bold ? loader::font::RasterMode::MONOCHROME_BOLD : m_monochrome ? loader::font::RasterMode::MONOCHROME : loader::font::RasterMode::GRAYSCALE );
 		}
 	}
 	m_actor->SetFont( font );

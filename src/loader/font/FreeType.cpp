@@ -3,6 +3,7 @@
 #include "types/Font.h"
 #include "util/FinallyGuard.h"
 #include <cstddef>
+#include FT_SYNTHESIS_H
 
 namespace loader {
 namespace font {
@@ -20,7 +21,7 @@ void FreeType::Stop() {
 
 types::Font* FreeType::LoadFontImpl( const std::string& name, const std::vector< unsigned char >& data, const unsigned char size, RasterMode mode ) {
 
-	const auto font_key = name + ":" + std::to_string( size ) + ( mode == RasterMode::MONOCHROME ? ":mono" : "" );
+	const auto font_key = name + ":" + std::to_string( size ) + ( mode == RasterMode::MONOCHROME_BOLD ? ":mono-bold" : mode == RasterMode::MONOCHROME ? ":mono" : "" );
 
 	int res = 0;
 
@@ -46,10 +47,15 @@ types::Font* FreeType::LoadFontImpl( const std::string& name, const std::vector<
 	int sz;
 
 	for ( int i = 32 ; i < 128 ; i++ ) { // only ascii for now
-		res = FT_Load_Char( ftface, i, FT_LOAD_RENDER | ( mode == RasterMode::MONOCHROME ? FT_LOAD_TARGET_MONO : FT_LOAD_TARGET_NORMAL ) );
+		res = FT_Load_Char( ftface, i, FT_LOAD_RENDER | ( mode != RasterMode::GRAYSCALE ? FT_LOAD_TARGET_MONO : FT_LOAD_TARGET_NORMAL ) );
 		if ( res ) {
 			THROW( "Font \"" + name + "\" bitmap loading failed: " + std::to_string( res ) );
 		}
+
+        // The original registers regular Arial Narrow and requests bold from
+        // GDI. Embolden the hinted mono bitmap, not the outline or a different
+        // bundled face; the distinction changes both ink and text advances.
+        if ( mode == RasterMode::MONOCHROME_BOLD ) { FT_GlyphSlot_Embolden( g ); }
 
 		bitmap = &font->m_symbols[ i ];
 

@@ -2841,7 +2841,11 @@ public:
 		auto* previous=g_engine->m_resource_manager;
 		{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;}
 		util::FinallyGuard restore([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=previous;});
-		fonts.LoadCustomFont("arial.ttf",12,loader::font::RasterMode::MONOCHROME);
+		auto* mono=fonts.LoadCustomFont("arial.ttf",12,loader::font::RasterMode::MONOCHROME);
+        auto* bold=fonts.LoadCustomFont("arial.ttf",12,loader::font::RasterMode::MONOCHROME_BOLD);
+        GT_ASSERT(mono!=bold && mono==fonts.LoadCustomFont("arial.ttf",12,loader::font::RasterMode::MONOCHROME)
+            && bold==fonts.LoadCustomFont("arial.ttf",12,loader::font::RasterMode::MONOCHROME_BOLD),
+            "Synthetic-bold and ordinary mono modes alias their cached font");
 		GT_ASSERT(fonts.loaded==legacy,"regular font ignored installed legacy Arial before system/narrow fallback");
 		GT_OK();
 	}

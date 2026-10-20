@@ -34,7 +34,7 @@ types::Font* FontLoader::LoadFont( const resource::resource_t res, const unsigne
 }
 
 types::Font* FontLoader::LoadCustomFont( const std::string& name, const unsigned char size, RasterMode mode ) {
-	const auto key = name + ":" + std::to_string( size ) + ( mode == RasterMode::MONOCHROME ? ":mono" : "" );
+	const auto key = name + ":" + std::to_string( size ) + ( mode == RasterMode::MONOCHROME_BOLD ? ":mono-bold" : mode == RasterMode::MONOCHROME ? ":mono" : "" );
 	auto it = m_fonts.find( key );
 	if ( it == m_fonts.end() ) {
 		std::vector< unsigned char > data = {};

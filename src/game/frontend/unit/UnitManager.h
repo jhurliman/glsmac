@@ -50,6 +50,7 @@ CLASS( UnitManager, common::Class )
 
 	void Iterate();
     int GetNativeBodyZoom() const {return m_native_body_zoom;}
+    void PrepareNativeBodyZoom(int zoom);
     void SetNativeBodyZoom(int zoom);
     int GetStackChassisOffset(const Unit* unit) const;
     bool IsSelectionBlinkAdmitted(const Unit* unit) const;

@@ -53,7 +53,8 @@ must be separated at its callers.
    start sites, fabricated reveal radius or wholesale map reveal.
    [Faction prefix and initial exploration](native-startup-faction.md) now match
    complete original record/store/RNG controls; terrain generation composes with
-   the first prefix. The generated search/cache adapter and subsequent Base,
+   the first prefix. The [generated search/cache adapter](native-generated-first-site.md)
+   now derives the original first site and initial exploration; subsequent Base,
    technology/design, Unit factory and controller stages still need composition.
 5. **Persist one consistent world.** Introduce a versioned generated-authority
    payload and validate its origin/options at every save, load and network

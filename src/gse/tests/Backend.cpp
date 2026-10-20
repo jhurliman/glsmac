@@ -2538,6 +2538,12 @@ public:
             GT_ASSERT(!unit->IsBadgeVisible(),"hidden selected model regained orphaned overlays");
             frontend.RenderTile(&tile,unit.get());
             GT_ASSERT(unit->IsBadgeVisible(),"re-shown selected model lost retained visible phase");
+            frontend.m_native_object_tiles=std::vector<bool>(3200,false);
+            frontend.RenderTile(&tile,unit.get());
+            GT_ASSERT(!unit->m_render.is_rendered && !unit->IsBadgeVisible(),"Ordinary native object window left an off-view Unit or overlays visible");
+            frontend.m_native_object_tiles->at(2*40+1)=true;frontend.RenderTile(&tile,unit.get());
+            GT_ASSERT(unit->m_render.is_rendered && unit->IsBadgeVisible(),"Returning to the native object window did not restore eligible Unit drawing");
+            frontend.m_native_object_tiles.reset();
             unit->StopBadgeBlink(true);
             unit->Hide();unit->Show();
             GT_ASSERT(unit->IsBadgeVisible(),"direct restoration of a hidden model lost its ordinary overlays");
@@ -3186,6 +3192,12 @@ public:
                 publish();
                 GT_ASSERT(check(captured,false,true) && check(friendly,false,true) && check(enemy,false,false),
                     "Unknown Base disclosure did not separate actual names from body/population instances");
+                frontend.m_native_object_tiles=std::vector<bool>(3200,false);manager.RefreshVisibility();
+                GT_ASSERT(check(captured,false,false) && check(friendly,false,false) && check(enemy,false,false),
+                    "Ordinary native object window left off-view Base names or artwork visible");
+                frontend.m_native_object_tiles->at(2*40+2)=true;manager.RefreshVisibility();
+                GT_ASSERT(check(friendly,false,true) && check(captured,false,false),"Object window replaced independent name/body disclosure");
+                frontend.m_native_object_tiles.reset();manager.RefreshVisibility();
                 friendly->Hide();GT_ASSERT(check(friendly,false,false),"Hide leaked a name whose body was already hidden");
                 friendly->Show();
                 manager.UpdateBaseIdentity(friendly,0,first.GetFaction(),"Renamed in fog");
@@ -6376,7 +6388,7 @@ public:
             namespace native=game::frontend::native_terrain;
             auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
             util::FinallyGuard close_ui([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
-            game::frontend::Game frontend(m_glsmac.get(),m_state,ui,{},{});frontend.m_world_retired=false;frontend.m_native_inspector=true;
+            game::frontend::Game frontend(m_glsmac.get(),m_state,ui,{},{});frontend.m_world_retired=false;frontend.m_map_data.native_projection=true;
             game::native_terrain::World world;world.retained_geometry=true;for(auto& tile:world.tiles) {tile.band=3;}
             frontend.m_native_view=std::make_shared<native::Session>(world);frontend.m_native_context=std::make_unique<native::ViewContext>();
             auto& context=*frontend.m_native_context;context.camera={{22,38}};context.preferences={};
@@ -6406,7 +6418,20 @@ public:
             GT_ASSERT(!frontend.IsNativeObjectTile({22,38}),"Unselected native object tile admitted");
             frontend.m_native_object_tiles->at(38*40+11)=true;
             GT_ASSERT(frontend.IsNativeObjectTile({22,38}) && !frontend.IsNativeObjectTile({23,38}) && !frontend.IsNativeObjectTile({80,38}),"Native object selection lost topology/bounds");
-            frontend.m_native_object_tiles.reset();frontend.m_native_view.reset();frontend.m_world_scene=nullptr;GT_OK();
+            frontend.m_viewport.window_height=768;
+            frontend.PresentNativeCanvas(nullptr);
+            GT_ASSERT(frontend.m_native_canvas_blank && !frontend.m_native_view && !frontend.IsNativeObjectTile({22,38}),
+                "Missing ordinary authority retained the old frame or visible actors");
+            const auto* pixels=frontend.m_native_texture->GetBitmap();
+            for(size_t i=0;i<1024*511;++i) {
+                GT_ASSERT(pixels[4*i]==0 && pixels[4*i+1]==0 && pixels[4*i+2]==0 && pixels[4*i+3]==255,
+                    "Unavailable ordinary canvas was not opaque black");
+            }
+            frontend.GetTileAtScreenCoords(game::backend::TQP_TILE_SELECT,500,768-275);
+            GT_ASSERT(frontend.IsTileAtRequestPending() && !frontend.m_tile_at_request_id && !frontend.GetTileAtScreenCoordsResult().is_set,
+                "Unavailable ordinary canvas fell through to legacy terrain picking");
+            frontend.PresentNativeCanvas(nullptr); // Stable missing authority does not republish every frame.
+            frontend.ClearNativeTerrain();frontend.m_world_scene=nullptr;GT_OK();
         });
     }
     std::string CheckNativeTerrainPicking() {

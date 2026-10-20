@@ -1,5 +1,12 @@
 # Main-map exploration integration
 
+Current connection: [ordinary native exploration](ordinary-native-exploration.md)
+now drives normal SMAC gameplay for the retained wrapped80x80 Planet profile,
+including opaque unknown/grid presentation, independent actor disclosure,
+committed picking, movement reveal and saved exploration reload. The remaining
+map/profile/view-persistence requirements below still apply. Earlier validation
+sections describe the staged producer work before that live connection.
+
 This work is open. The release target is ordinary SMAC/SMAX gameplay across
 supported map sizes and cameras, not a revealed Planet inspector. The frozen
 [original contract](behavior/main-map-exploration-and-startup-zoom.md) separates

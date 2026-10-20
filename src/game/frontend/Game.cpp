@@ -646,10 +646,10 @@ void Game::UpdateViewport() {
 
 void Game::UpdateCameraPosition() {
     m_native_frame_dirty=true;
-    if(m_native_inspector) {m_native_camera_from_legacy=true;}
+    if(m_map_data.native_projection) {m_native_camera_from_legacy=true;}
 
 	// prevent vertical scrolling outside viewport
-    if(!m_native_inspector) {
+    if(!m_map_data.native_projection) {
 	if ( m_camera_position.y < m_camera_range.min.y ) {
 		m_camera_position.y = m_camera_range.min.y;
 	}
@@ -700,7 +700,7 @@ void Game::UpdateCameraAngle() {
 }
 
 void Game::UpdateCameraRange() {
-    if(m_native_inspector && m_native_context) {
+    if(m_map_data.native_projection && m_native_context) {
         m_camera_range.min.z=1.0f/96;m_camera_range.max.z=25.0f/96;
         m_camera_range.max.x=m_map_data.width*m_camera_position.z*m_viewport.window_aspect_ratio*0.25f;
         m_camera_range.min.x=-m_camera_range.max.x;
@@ -728,7 +728,7 @@ void Game::UpdateCameraRange() {
 }
 
 void Game::UpdateMapInstances() {
-    if(m_native_inspector && m_native_view && m_native_view->frame) {
+    if(m_map_data.native_projection) {
         m_world_scene->SetWorldInstancePositions({{0,0,0}});return;
     }
 
@@ -1027,15 +1027,16 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			const auto& update = *request->data.update_terrain.update;
 			for ( const auto& [key, actor] : update.actors ) GetTerrainInstancedSprite( actor );
 			update.ApplyTexture( *m_textures.terrain );
-            if(m_native_inspector) {m_native_frame_dirty=true;}
+            if(m_map_data.native_projection) {m_native_frame_dirty=true;}
 			for ( const auto& [id, key] : update.removed ) {
                 m_native_legacy_instances.erase(id);m_native_hidden_instances.erase(id);
 				auto* actor = m_ism->GetInstancedSpriteByKey( key )->actor;
 				if ( actor->HasInstance( id ) ) actor->RemoveInstance( id );
 			}
 			for ( const auto& instance : update.added ) {
-                if(m_native_inspector) {m_native_legacy_instances[instance.id]={instance.actor,instance.coords};}
+                if(m_map_data.native_projection) {m_native_legacy_instances[instance.id]={instance.actor,instance.coords};}
 				m_ism->GetInstancedSpriteByKey( instance.actor )->actor->SetInstance( instance.id, instance.coords );
+                if(m_map_data.native_projection) {m_ism->GetInstancedSpriteByKey(instance.actor)->actor->RemoveInstance(instance.id);}
             }
 			break;
 		}
@@ -1174,6 +1175,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
         case FrontendRequest::FR_ACTOR_VISIBILITY: {
             const auto* snapshot=request->data.actor_visibility.snapshot;
             m_actor_visibility=snapshot ? std::make_unique<actor_visibility::Snapshot>(*snapshot):nullptr;
+            m_native_snapshot_dirty=true;
             if(m_bm) {m_bm->RefreshVisibility();}
             if(m_um) {m_um->RefreshVisibility();}
             if(m_widgets.TilePreview) {m_widgets.TilePreview->Refresh();}
@@ -1407,6 +1409,7 @@ void Game::Initialize(
     m_native_snapshot_dirty=native_projection;
     if(native_projection) {
         m_native_context=std::make_unique<native_terrain::ViewContext>();
+        m_native_object_tiles=std::vector<bool>(3200,false);
         m_native_context->camera={{int(map_size.x/2),int(map_size.y/2)}};
         m_native_context->camera[0]^=(m_native_context->camera[0]^m_native_context->camera[1])&1;
         if(m_native_inspector) {m_native_context->flags=0x10621;m_native_context->preferences={};}
@@ -1471,6 +1474,7 @@ void Game::Initialize(
 	NEW( m_actors.terrain, scene::actor::Instanced, terrain_actor );
 	m_actors.terrain->AddInstance( {} ); // default instance
 	m_world_scene->AddActor( m_actors.terrain );
+    if(native_projection) {m_actors.terrain->Hide();}
 
 	Log( "Sprites count: " + std::to_string( sprite_actors.size() ) );
 	Log( "Sprites instances: " + std::to_string( sprite_instances.size() ) );
@@ -1482,7 +1486,7 @@ void Game::Initialize(
 		ASSERT( actor, "sprite actor not found" );
 		ASSERT( !actor->HasInstance( instance.first ), "actor instance already exists" );
 		actor->SetInstance( instance.first, instance.second.second );
-        if(m_native_inspector) {m_native_legacy_instances.emplace(instance.first,instance.second);}
+        if(native_projection) {m_native_legacy_instances.emplace(instance.first,instance.second);actor->RemoveInstance(instance.first);}
 	}
 
 	// process tiles
@@ -1551,8 +1555,7 @@ void Game::Initialize(
 
 			switch ( event.type ) {
 				case input::EV_KEY_DOWN: {
-                    if(HandleNativeZoom(event)) {return true;}
-                    if(m_native_inspector) {break;}
+                    if(m_map_data.native_projection) {break;}
 					if ( event.data.key.key == 'z' ) {
 						m_map_control.key_zooming = 1;
 						return true;
@@ -1662,6 +1665,7 @@ void Game::Initialize(
 
 			switch ( event.type ) {
 				case input::EV_KEY_DOWN: {
+                    if(HandleNativeZoom(event)) {return true;}
                     if(event.data.key.code==input::K_H && (event.data.key.modifiers==input::KM_NONE || event.data.key.modifiers==input::KM_SHIFT)) {
                         const auto* selected=m_um->GetSelectedUnit();
                         if(selected) {
@@ -2376,7 +2380,7 @@ void Game::SmoothScroll( const float scroll_value ) {
 
 void Game::SmoothScroll( const types::Vec2< float > position, const float scroll_value ) {
 
-	if(m_native_inspector) {return;}
+	if(m_map_data.native_projection) {return;}
 	float speed = Game::s_consts.map_scroll.smooth_scrolling.zoom_speed * m_camera_position.z;
 
 	float new_z = m_camera_position.z + scroll_value * speed;

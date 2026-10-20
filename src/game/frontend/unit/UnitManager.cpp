@@ -65,7 +65,8 @@ UnitManager::~UnitManager() {
 }
 
 const actor_visibility::UnitPlan* UnitManager::GetTilePresentation(const tile::Tile& tile) const {
-    if(m_game->IsNativeTerrainInspector()) {return m_game->IsNativeObjectTile(tile.GetCoords())?nullptr:&m_hidden_plan;}
+    if(!m_game->IsNativeObjectTile(tile.GetCoords())) {return &m_hidden_plan;}
+    if(m_game->IsNativeTerrainInspector()) {return nullptr;}
     if(const auto* snapshot=m_game->GetActorVisibility();snapshot && snapshot->available) {
         const auto selected=m_selected_unit ? std::optional<uint64_t>(m_selected_unit->GetId()):std::nullopt;
         const bool active=m_game->IsTurnActive();

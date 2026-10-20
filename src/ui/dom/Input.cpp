@@ -7,6 +7,9 @@
 #include "input/Event.h"
 #include "util/String.h"
 #include "ui/UI.h"
+#include "gse/value/Int.h"
+#include <limits>
+#include <algorithm>
 
 namespace ui {
 namespace dom {
@@ -35,6 +38,15 @@ Input::Input( DOM_ARGS )
 		}
 	);
 
+    Property(GSE_CALL,"max_bytes",gse::VT_INT,VALUE(gse::value::Int,,0),PF_NONE,
+        [this](GSE_CALLABLE,gse::Value* const v) {
+            const auto limit=static_cast<gse::value::Int*>(v)->value;
+            if(limit<0 || static_cast<uint64_t>(limit)>std::numeric_limits<size_t>::max()) {
+                GSE_ERROR(gse::EC.UI_ERROR,"Input max_bytes must be a nonnegative byte count");
+            }
+            m_max_bytes=static_cast<size_t>(limit);
+            SetValue(GSE_CALL,m_value);
+        });
 	ForwardProperty( GSE_CALL, "color", m_text );
 	ForwardProperty( GSE_CALL, "font", m_text );
 
@@ -166,10 +178,16 @@ void Input::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_p
 }
 
 void Input::SetValue( GSE_CALLABLE, const std::string& value ) {
-	if ( value != m_value ) {
-		m_value = value;
+    // Original narrow edit controls trim defaults before the first user edit.
+    // Keep the unrestricted path unchanged for unrelated inputs.
+    const auto accepted=m_max_bytes ? value.substr(0,std::min(m_max_bytes,value.find('\0'))) : value;
+    const bool changed=accepted!=m_value;
+    // A repeated overlong assignment still needs its public property repaired,
+    // even when clamping leaves the actual control text unchanged.
+    UpdateProperty("value",VALUE(gse::value::String,,accepted));
+	if ( changed ) {
+		m_value = accepted;
 		UpdateText();
-		UpdateProperty( "value", VALUE( gse::value::String, , value ) );
 		input::Event e;
 		e.SetType( input::EV_CHANGE );
 		e.data.value.change_select.text = new std::string( m_value );

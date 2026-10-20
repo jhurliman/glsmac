@@ -27,12 +27,14 @@ return (i, faction) => {
                     ['Noun:', draft.setup.noun], ['Adjective:', draft.setup.adjective],
                     ['Title:', draft.leader_title], ['Description:', draft.setup.description],
                 ];
+                const limits = [23, 39, 23, 23, 23, 23];
                 let top = 12;
+                let index = 0;
                 for (row of rows) {
                     body.text({class: 'popup-text', left: 12, top: top, text: row[0]});
-                    const field = body.input({class: 'popup-input', left: 140, right: 12, top: top, value: '' + row[1]});
+                    const field = body.input({class: 'popup-input', left: 140, right: 12, top: top, max_bytes: limits[index], value: '' + row[1]});
                     field.on('input', accept);
-                    fields :+field; top += 30;
+                    fields :+field; top += 30; index++;
                 }
                 body.text({class: 'popup-text', left: 12, top: top, text: 'Gender: ' + (draft.setup.female ? 'Female' : 'Male')});
                 status = body.text({class: 'popup-text', left: 12, right: 12, top: top + 30, text: ''});
@@ -82,7 +84,7 @@ return (i, faction) => {
         title: 'ENTER YOUR NAME', width: 600, height: 150,
         generator: (body) => {
             body.text({class: 'popup-text', left: 12, top: 12, text: 'Name (' + (draft.setup.female ? 'Female' : 'Male') + '):'});
-            input = body.input({class: 'popup-input', left: 140, right: 12, top: 12, value: draft.leader_name});
+            input = body.input({class: 'popup-input', left: 140, right: 12, top: 12, max_bytes: 23, value: draft.leader_name});
             input.on('input', accept);
             status = body.text({class: 'popup-text', left: 12, right: 12, top: 48, text: ''});
         },

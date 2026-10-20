@@ -30,6 +30,7 @@ private:
 	bool m_is_focused = false;
 
 	std::string m_value = "";
+	size_t m_max_bytes = 0; // zero preserves the unrestricted legacy control
 
 	Text* m_text;
 

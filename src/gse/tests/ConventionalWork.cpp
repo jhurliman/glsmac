@@ -211,7 +211,8 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
             GT_ASSERT(Rejects([&]{um->PrepareHumanOrder(actor,Command::Skip,0);}) && fixture.Snapshot()==held,"Skip acted on held unit");
             const auto actions=um->QueryConventionalCommands(actor).actions;
             GT_ASSERT(actions==std::vector<int32_t>{7},"Held unit lacks sole Activate command");
-            types::Buffer old;auto plain=actor->Conventional();plain.order=ConventionalUnitState::Order::None;plain.order_countdown=0;plain.Serialize(old,false,false);
+            types::Buffer old;auto plain=actor->Conventional();plain.facing.reset();plain.stack.reset(); // fields absent from the authored Unit4 migration control
+            plain.order=ConventionalUnitState::Order::None;plain.order_countdown=0;plain.Serialize(old,false,false);
             const auto migrated=ConventionalUnitState::Deserialize(old,false,false);
             GT_ASSERT(migrated==plain && old.lenr==old.lenw,"Unit4 migration invented an order");GT_OK();
         });

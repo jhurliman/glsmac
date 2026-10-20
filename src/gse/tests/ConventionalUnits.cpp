@@ -1114,6 +1114,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		ConventionalUnitFixture source, destination; source.Configure( true, 3, false, true ); destination.Configure( true, 3, false, true );
 		const auto next = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ] { Unit::SetNextId( next ); } );
 		ConventionalUnitState record{ 128, 2, 1, 0, 1, true, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
+        record.facing=2; // this control creates a fresh native factory record
 		std::string bytes;
 		const auto setup = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto* game = source.Game(); auto* manager = game->GetUM(); Define( manager, true );
@@ -1166,7 +1167,8 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( fixture.Snapshot() == before, "rejected selected Rover changed paired RNG or saved world" );
 			// A genuine retained Spartan source is global identity. A different
 			// current controller may keep128; its own fabricated192 is still rejected.
-			const ConventionalUnitState retained{128,3,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
+			ConventionalUnitState retained{128,3,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
+            retained.facing=2;
 			auto* unit=Spawn(GSE_CALL,fixture,retained,next,6,"EXPLICIT_ROVER");
 			GT_ASSERT(unit->Conventional()==retained && unit->m_owner==&game->GetState()->m_slots->GetSlot(6) && hooks==1,
 				"retained Spartan128 was rebound to the recipient's invalid local192 or rejected");GT_OK();

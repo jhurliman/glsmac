@@ -81,8 +81,10 @@ Production serialization ordering was not changed in this slice.
 
 The [signed cursor selector connection](signed-selection-cursor.md) now preserves
 raw invalid origins through the queued selection path. Later original controller
-behavior remains separate: persisted selected Unit identity, retaining
-exhausted/Sentry selections and the interior recenter margin need implementation.
+behavior remains separate: persisted selected Unit identity and retaining
+exhausted/Sentry selections need implementation. The
+[native automatic camera margin](automatic-unit-focus.md) now follows the captured
+interior/seam/high-terrain decision for new automatic selections.
 The original 32-slot
 cursor history, nine-view ledger and profile preferences are not serialized here.
 Odd-parity cursors cannot select a physical tile in the legacy renderer; broader

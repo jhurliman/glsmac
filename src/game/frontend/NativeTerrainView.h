@@ -20,6 +20,19 @@ struct ViewLayout {
     Point world{{80,80}},viewport{{1024,511}},offset{{0,0}};
 };
 using ViewRegions=std::array<std::array<int,4>,2>;
+// Original 0x524f40 tests the three-coordinate interior before 0x477a40 recenters.
+// Altitude band is independent of contour elevation and flattened relief.
+inline bool NeedsUnitRecenter(const ViewLayout& view,Point tile,int band) {
+    const auto left=view.first[0]+3,right=view.first[0]+view.span[0]+view.span[2]-3;
+    const auto top=view.first[1]+3,bottom=view.first[1]+view.span[1]+view.span[3]-3;
+    if(band>3 && tile[1]-band+3<top) {return true;}
+    if(tile[1]<top || tile[1]>=bottom) {return true;}
+    if(view.horizontal_wrap) {
+        if(tile[0]<left) {tile[0]+=view.world[0];}
+        if(tile[0]>=right) {tile[0]-=view.world[0];}
+    }
+    return tile[0]<left || tile[0]>=right;
+}
 // Logical viewport and world dimensions are retained with the layout so that
 // geometry, selection, and incremental damage use the same coordinate system.
 inline ViewLayout Layout(int x,int y,int zoom,bool wrap,

@@ -1,0 +1,831 @@
+{
+  "manifest_sha256": "9a2293d05887cae5477f042d8319ea8fcf5eaf6d283ac8c22c98239c517ce9d1",
+  "scope": "Original524f40 focus prefix through52519d, real geometry and477a40 camera writes. Valid Unit positions, zoom0, viewport1024x511. Not complete GUI controller.",
+  "cases": [
+    {
+      "input": {
+        "id": "margin_0",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            12,
+            30
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": true,
+      "camera_after": [
+        12,
+        30
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_1",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            13,
+            29
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        22,
+        38
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_2",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            14,
+            30
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        22,
+        38
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_3",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            29,
+            31
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        22,
+        38
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_4",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            30,
+            30
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": true,
+      "camera_after": [
+        30,
+        30
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_5",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            31,
+            31
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": true,
+      "camera_after": [
+        31,
+        31
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_6",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            14,
+            28
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": true,
+      "camera_after": [
+        14,
+        28
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_7",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            14,
+            46
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        22,
+        38
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_8",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            13,
+            47
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": true,
+      "camera_after": [
+        13,
+        47
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_9",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            14,
+            48
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": true,
+      "camera_after": [
+        14,
+        48
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_10",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            14,
+            30
+          ]
+        ],
+        "band": 4
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        22,
+        38
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_11",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            14,
+            30
+          ]
+        ],
+        "band": 5
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": true,
+      "camera_after": [
+        14,
+        30
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_12",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            14,
+            32
+          ]
+        ],
+        "band": 7
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": true,
+      "camera_after": [
+        14,
+        32
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_13",
+        "kind": "margin",
+        "camera": [
+          22,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            13,
+            33
+          ]
+        ],
+        "band": 7
+      },
+      "first": [
+        10,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        22,
+        38
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_14",
+        "kind": "margin",
+        "camera": [
+          0,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            70,
+            30
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        68,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": true,
+      "camera_after": [
+        70,
+        30
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_15",
+        "kind": "margin",
+        "camera": [
+          0,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            71,
+            29
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        68,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        0,
+        38
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_16",
+        "kind": "margin",
+        "camera": [
+          0,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            0,
+            30
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        68,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        0,
+        38
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_17",
+        "kind": "margin",
+        "camera": [
+          0,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            7,
+            31
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        68,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        0,
+        38
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_18",
+        "kind": "margin",
+        "camera": [
+          0,
+          38
+        ],
+        "flat": false,
+        "positions": [
+          [
+            8,
+            30
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        68,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": true,
+      "camera_after": [
+        8,
+        30
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_19",
+        "kind": "margin",
+        "camera": [
+          0,
+          38
+        ],
+        "flat": true,
+        "positions": [
+          [
+            0,
+            30
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        -4,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        0,
+        38
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_20",
+        "kind": "margin",
+        "camera": [
+          0,
+          38
+        ],
+        "flat": true,
+        "positions": [
+          [
+            15,
+            29
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        -4,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        0,
+        38
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_21",
+        "kind": "margin",
+        "camera": [
+          0,
+          38
+        ],
+        "flat": true,
+        "positions": [
+          [
+            16,
+            30
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        -4,
+        26
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": true,
+      "camera_after": [
+        16,
+        30
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_22",
+        "kind": "margin",
+        "camera": [
+          22,
+          0
+        ],
+        "flat": false,
+        "positions": [
+          [
+            14,
+            0
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        -2
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": true,
+      "camera_after": [
+        14,
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_23",
+        "kind": "margin",
+        "camera": [
+          22,
+          0
+        ],
+        "flat": false,
+        "positions": [
+          [
+            13,
+            1
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        -2
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        22,
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "margin_24",
+        "kind": "margin",
+        "camera": [
+          22,
+          0
+        ],
+        "flat": false,
+        "positions": [
+          [
+            14,
+            2
+          ]
+        ],
+        "band": 3
+      },
+      "first": [
+        10,
+        -2
+      ],
+      "span": [
+        11,
+        12,
+        12,
+        12
+      ],
+      "recenter": false,
+      "camera_after": [
+        22,
+        0
+      ]
+    }
+  ]
+}

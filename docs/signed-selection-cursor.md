@@ -53,6 +53,7 @@ current selection. Existing wrap, reference-Unit, tie/order and work-controller
 regressions remain green. The backend TU was reanalyzed after the metric change;
 all nine groups pass the final focused4-TU ASan/UBSan run.
 
-Selected Unit persistence and the automatic recenter margin/high-terrain top-edge
-rule remain separate implementation work. The captured recenter controls are
-not counted as implemented by these selector tests.
+Selected Unit persistence remains separate implementation work. The
+[automatic native camera policy](automatic-unit-focus.md) now implements the
+captured recenter margin/high-terrain top-edge controls in its own frontend test;
+these selector tests do not count that coverage twice.

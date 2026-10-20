@@ -237,7 +237,9 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalZoc( const un
 				throw std::runtime_error("Foreign noncombat ZOC influence is not established");
 			}
 			ordinary(neighbour);
-			if ( neighbour->units.size()!=1 ) { throw std::runtime_error("Foreign ZOC mixed or multiple stacks are not admitted"); }
+			// Source links were authenticated by the movement caller. A mixed
+			// source is legal departure, not an unknown adjacent stack.
+			if ( neighbour->units.size()!=1 && neighbour!=source ) { throw std::runtime_error("Foreign ZOC mixed or multiple stacks are not admitted"); }
 		}
 	} }
 	const auto controlled = [&](const map::tile::Tile* endpoint) {
@@ -361,7 +363,9 @@ std::optional< map::SmacWorkerKnowledge > Game::PrepareConventionalSight( uint64
             };
             if(destination!=tile && !destination->IsAdjactentTo(tile)) {continue;}
             interior(destination);interior(tile);
-            if(destination==tile || tile->units.size()!=1) {throw std::runtime_error("Native detection requires distinct singleton placement");}
+            // A departing actor still occupies its authenticated source during
+            // preparation. Detect each remaining native there independently.
+            if(destination==tile || (tile->units.size()!=1 && tile!=source)) {throw std::runtime_error("Native detection requires distinct singleton or authenticated departure source");}
             if(adjacent(destination,tile)) {
                 moving.visible_to |= 1u; // Faction0 is independent of controller slot0.
                 auto& observation=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==entry.first;});

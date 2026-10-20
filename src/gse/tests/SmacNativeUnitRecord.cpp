@@ -119,7 +119,7 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
             types::Buffer scout;scout.WriteInt(4);scout.WriteInt(1);scout.WriteInt(71);scout.WriteString("birth-human");scout.WriteInt(0);scout.WriteInt(40);scout.WriteInt(40);
             ConventionalUnitState human{2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};human.Serialize(scout,false,false);
             loaded.WriteString(scout.ToString());loaded.WriteInt(72);manager->Clear();manager->Deserialize(GSE_CALL,loaded);
-            Knowledge::Data data{80,80,true,true,0,{},{},{}};data.observers[1]=Knowledge::Observer{};data.tiles.resize(3200,{0,std::nullopt});
+            Knowledge::Data data{80,80,true,true,0,{},{},{}};data.observers[1]=Knowledge::Observer{};data.observers[1]->pact_with=0;data.tiles.resize(3200,{0,std::nullopt});
             Knowledge::BaseObservation base{901,2,{}};base.population[1]=1;data.bases.push_back(base);ExploreNine(data,16,16,2);data.tiles[40*40+20].explored_by=2;
             data.units={{71,0,false}};data.occupancy=map::SmacOccupancyCache::Blank(80,80,true);data.occupancy->FoundBase({16,16},1);data.occupancy->PlaceUnit({40,40},1,true);
             game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
@@ -149,16 +149,33 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
             restored.Restore(GSE_CALL,saved,true);auto* game=restored.Game();auto* manager=game->GetUM();auto* scout=manager->GetUnit(71);
             GT_ASSERT((scout->Conventional().stack==Stack{0,-1,2}),"Full world restore lost Scout source links");
             GT_ASSERT(game->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge_wire,"Full world restore changed mixed birth sight/occupancy authority");
-            // Enemy departure remains separately guarded. Remove native members
-            // through the actual environmental transaction, then exercise normal
-            // movement of the retained conventional source binding.
+            // Ordinary geometry isolates source occupancy. Remote fungal
+            // movement with Bases still needs its independent continuation.
+            auto* source=scout->GetTile();source->features&=~map::tile::FEATURE_XENOFUNGUS;source->Update();
+            auto* destination=game->GetMap()->GetTile(42,40);
+            const auto before_move=restored.Snapshot();const auto random=restored.GameplayRandom();
+            manager->ValidateConventionalMove(scout,destination,0);
+            GT_ASSERT(restored.Snapshot()==before_move,"Mixed departure validation changed live state");
+            manager->MoveConventionalUnit(GSE_CALL,scout,destination,0);
+            GT_ASSERT((scout->GetTile()==destination && scout->Conventional().stack==Stack{0,-1,-1}
+                && scout->Conventional().spent==3 && restored.GameplayRandom()==random),"Mixed departure lost singleton, budget or RNG");
+            GT_ASSERT(source->units.size()==2 && destination->units.size()==1
+                && manager->GetUnit(72)->GetTile()==source && manager->GetUnit(73)->GetTile()==source
+                && manager->GetUnit(72)->Native().stack_previous==-1 && manager->GetUnit(72)->Native().stack_next==2
+                && manager->GetUnit(73)->Native().stack_previous==1 && manager->GetUnit(73)->Native().stack_next==-1,
+                "Scout departure moved natives or broke their source chain");
+            const auto& sight=*game->GetMap()->GetSmacWorkerKnowledge();
+            const auto after_sight=sight.CopyData();
+            const auto visible=[&](uint64_t id) {return std::find_if(after_sight.units.begin(),after_sight.units.end(),[&](const auto& row){return row.id==id;})->visible_to;};
+            GT_ASSERT(visible(71)==1 && visible(72)==2 && visible(73)==2
+                && after_sight.occupancy->At({40,40}).affiliation==1
+                && after_sight.occupancy->At({42,40}).affiliation==1,
+                "Mixed departure lost native detection or recomputed source affiliation");
+            manager->ResetConventionalSpent(GSE_CALL,scout);
+            const auto departed=restored.Snapshot();
+            GT_ASSERT(Rejects([&]{manager->ValidateConventionalMove(scout,source,0);}) && restored.Snapshot()==departed,
+                "Mixed departure relaxed hostile destination admission");
             auto casualties=manager->PrepareWorldUnitRemoval(GSE_CALL,{72,73});casualties.Commit();casualties.Notify(GSE_CALL);
-            // Independent ordinary-movement geometry after the complete fungal
-            // birth/restore check. Remote fungus-with-Bases is still guarded;
-            // this does not claim that missing departure continuation.
-            scout->GetTile()->features&=~map::tile::FEATURE_XENOFUNGUS;scout->GetTile()->Update();
-            auto* destination=game->GetMap()->GetTile(42,40);manager->MoveConventionalUnit(GSE_CALL,scout,destination,0);
-            GT_ASSERT((scout->GetTile()==destination && scout->Conventional().stack==Stack{0,-1,-1}),"Ordinary departure lost its retained singleton binding");
             auto* target=game->GetMap()->GetTile(43,39);const auto buddy_id=Unit::GetNextId();
             ConventionalUnitState human{2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
             auto* buddy=manager->SpawnConventionalUnit(GSE_CALL,buddy_id,manager->GetUnitDef("birth-human"),scout->m_owner,target,human);

@@ -152,13 +152,28 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	}
 	const auto membership = source->units.find( unit->m_id );
 	if ( membership == source->units.end() || membership->second != unit ) { throw std::runtime_error( "Conventional movement requires exact source membership" ); }
+	// Original Scouts may depart from a source shared with hostile natives.
+	// Authenticate mixed links; destination and terrain admission stay separate.
+	bool native_source = false;
 	for ( const auto& entry : source->units ) {
 		const auto* other = entry.second;
-		if ( !other || GetUnit( entry.first ) != other || other->m_id != entry.first || other->GetTile() != source
-			|| !other->IsConventional() || other->m_owner != unit->m_owner || other->Conventional().owner_simulation_id != stored.owner_simulation_id ) {
-			throw std::runtime_error( "Conventional departure requires a canonical same-owner stack" );
+		if ( !other || GetUnit( entry.first ) != other || other->m_id != entry.first || other->GetTile() != source ) {
+			throw std::runtime_error( "Conventional departure requires canonical source membership" );
 		}
-		other->QueryStats( other->Conventional().render_morale_mode );
+		if ( other->IsNative() ) {
+			if ( !unit->SourceStack() ) { throw std::runtime_error( "Mixed native departure requires authenticated source links" ); }
+			QueryNativeUnit( other->Native() ); native_source = true;
+		} else {
+			if ( !other->IsConventional() || other->m_owner != unit->m_owner || other->Conventional().owner_simulation_id != stored.owner_simulation_id ) {
+				throw std::runtime_error( "Conventional departure requires an admitted source member" );
+			}
+			other->QueryStats( other->Conventional().render_morale_mode );
+		}
+	}
+	if ( native_source ) {
+		std::vector<Unit*> dense;
+		for ( const auto id : m_unit_order ) { dense.push_back( m_units.at( id ) ); }
+		ValidateNativeIndexBindings( dense );
 	}
 	const auto design = m_game->ResolveConventionalDesign( stored, *m_game->m_simulation );
 	const auto& catalog = state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;

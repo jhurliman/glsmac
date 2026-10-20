@@ -38,6 +38,12 @@
 #include "game/backend/unit/ColonyMarkerRender.h"
 #include "game/backend/unit/SmacNativeUnitRecord.h"
 #include "task/gsetests/GSETests.h"
+#include "game/backend/WorldSnapshotRules.h"
+#include "game/backend/WorldSnapshotRandom.h"
+#include "game/backend/WorldSnapshotTurn.h"
+#include "game/backend/WorldSnapshotWorkerKnowledge.h"
+#include "game/backend/WorldSnapshotTerritory.h"
+#include <map>
 #include <limits>
 #include <stdexcept>
 #include <vector>
@@ -76,6 +82,34 @@ std::string NativeComponentSource(const std::string& filename) {
 
 }
 
+// The world body and all runtime records remain byte-exact. Only named
+// definition registries use unordered-map iteration in the production codec.
+std::string CanonicalEncounterSnapshot(game::backend::Game* game,const std::string& bytes) {
+    using namespace game::backend;
+    types::Buffer world(bytes);world_snapshot::ValidateHeader(world,game->GetState()->m_settings.global);
+    (void)world_snapshot::ReadRandomState(world);(void)world_snapshot::ReadTurnState(world,game->GetState()->m_slots->GetSlots());
+    if(world.ReadBool()) {(void)world.ReadString();}
+    (void)map::GlsmacResourceMapPolicy::ReadOptional(world,true);(void)world_snapshot::ReadWorkerKnowledge(world,true);
+    (void)world_snapshot::ReadTerritoryTopology(world,true);(void)world.ReadString();(void)world.ReadString();
+    types::Buffer result;result.WriteString(bytes.substr(0,world.lenr));
+    const auto named=[](types::Buffer& input,types::Buffer& output) {
+        const auto count=input.ReadInt();if(count<0 || count>1024) {throw std::runtime_error("Invalid definition count in snapshot comparison");}
+        std::map<std::string,std::string> rows;
+        for(int64_t i=0;i<count;++i) {const auto key=input.ReadString(),value=input.ReadString();
+            if(!rows.emplace(key,value).second) {throw std::runtime_error("Duplicate definition in snapshot comparison");}}
+        output.WriteInt(count);for(const auto& row:rows) {output.WriteString(row.first);output.WriteString(row.second);}
+    };
+    types::Buffer units(world.ReadString()),unit_definitions;unit_definitions.WriteString(units.ReadString());
+    named(units,unit_definitions);named(units,unit_definitions);
+    result.WriteString(unit_definitions.ToString());result.WriteString(units.ToString().substr(units.lenr));
+    types::Buffer bases(world.ReadString()),base_definitions;base_definitions.WriteString(bases.ReadString());named(bases,base_definitions);
+    const auto count=bases.ReadInt();if(count<0 || count>1024) {throw std::runtime_error("Invalid facility count in snapshot comparison");}
+    std::vector<std::string> facilities;for(int64_t i=0;i<count;++i) {facilities.push_back(bases.ReadString());}
+    std::sort(facilities.begin(),facilities.end());base_definitions.WriteInt(count);for(const auto& wire:facilities) {base_definitions.WriteString(wire);}
+    result.WriteString(base_definitions.ToString());result.WriteString(bases.ToString().substr(bases.lenr));result.WriteString(bytes.substr(world.lenr));
+    return result.ToString();
+}
+
 void BirthDefinitions(game::backend::Game* game) {
     using namespace game::backend::unit;auto* manager=game->GetUM();
     MoraleSet::morale_values_t names;for(int n=0;n<7;++n) {names.emplace_back("level"+std::to_string(n));}
@@ -90,14 +124,15 @@ void BirthDefinitions(game::backend::Game* game) {
         tile->features=0;tile->terraforming=0;tile->rockiness=game::backend::map::tile::ROCKINESS_FLAT;tile->Update();
     }}
 }
-game::backend::base::Base* BirthBase(GSE_CALLABLE, game::backend::Game* game) {
+game::backend::base::Base* BirthBase(GSE_CALLABLE, game::backend::Game* game,int32_t population=1) {
     using namespace game::backend;auto* bm=game->GetBM();base::Base::SmacAllocationRoles roles;roles.worker="birth-worker";
     bm->DefinePop(new base::PopDef(roles.worker,"Worker",{},{},base::PopDef::PF_TILE_WORKER));
     for(uint8_t n=0;n<7;++n) {roles.specialists[n]="birth-specialist"+std::to_string(n);bm->DefinePop(new base::PopDef(roles.specialists[n],"Specialist",{},{},base::PopDef::PF_NONE,n));}
     auto* owner=&game->GetState()->m_slots->GetSlot(0);base::Base::pops_t pops;
     pops.emplace(1,base::Pop(nullptr,1,bm->GetPopDef(roles.worker),0,game->GetMap()->GetTile(17,15)));
-    auto* result=new base::Base(game,901,owner,owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(16,16),"Sight Base",{},pops,2,0,{},base::SmacBaseResourceContext{1,false,0,0,0,false});
-    bm->SpawnBase(GSE_CALL,result);result->PublishSmacAllocation(GSE_CALL,{3,{{},0}},roles);return result;
+    if(population==2) {pops.emplace(2,base::Pop(nullptr,2,bm->GetPopDef(roles.specialists[0]),0));}
+    auto* result=new base::Base(game,901,owner,owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(16,16),"Sight Base",{},pops,population+1,0,{},base::SmacBaseResourceContext{1,false,0,0,0,false});
+    bm->SpawnBase(GSE_CALL,result);result->PublishSmacAllocation(GSE_CALL,{3,{{},population-1}},roles);return result;
 }
 void ExploreNine(game::backend::map::SmacWorkerKnowledge::Data& data,int32_t x,int32_t y,uint8_t bit) {
     for(int dy=-2;dy<=2;++dy) {for(int dx=-2;dx<=2;++dx) {
@@ -197,6 +232,90 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
             GT_ASSERT((scout->Conventional().stack==Stack{0,-1,1} && third->Conventional().stack==Stack{1,0,-1}),"Combined conventional creation/casualty lost source links");
             types::Buffer roundtrip;manager->Serialize(roundtrip);GT_OK();
         });GT_ASSERT(restore_error.empty(),"Mixed factory restore/departure: "+restore_error);
+        }GT_OK();
+    });
+
+    task->AddTest("SMAC live remote fungus encounters publish birth or continue movement and restore",GT(){
+        using namespace game::backend;using namespace game::backend::unit;using Knowledge=map::SmacWorkerKnowledge;
+        for(int scenario=0;scenario<13;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);
+            fixture.RetainedPlanet(0,0); // nonexempt conventional profile, independent of faction label
+            fixture.ResourceState([&](auto& state){state.ecology_world=faction::SmacEcologyWorld{scenario==6?0:1,1,0};
+                state.movement_history=SmacMovementHistory::NewGeneratedWorld(80,80);state.movement_history->RetainNearest(77);});
+            std::string saved,phase="setup";SmacGameplayRandomState restored_random(0,0);
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* manager=game->GetUM();BirthDefinitions(game);BirthBase(GSE_CALL,game,scenario==11?2:1);
+                auto& settings=game->GetState()->m_settings.global;settings.SelectSmacCampaignRules(false);
+                if(scenario==4) {const_cast<settings::SmacCampaignRules&>(*settings.GetSmacCampaignRules()).primary|=0x00200000u;}
+                auto* source=game->GetMap()->GetTile(scenario==11?16:40,scenario==11?16:40);auto* destination=game->GetMap()->GetTile(scenario==11?18:42,scenario==11?16:40);
+                destination->features=map::tile::FEATURE_XENOFUNGUS;destination->Update();
+                const bool full=scenario==3;const size_t count=full?2048:1;
+                types::Buffer definitions;manager->Serialize(definitions);types::Buffer loaded;loaded.WriteString(definitions.ReadString());
+                for(int group=0;group<2;++group) {const auto n=definitions.ReadInt();loaded.WriteInt(n);for(int64_t i=0;i<n;++i) {loaded.WriteString(definitions.ReadString());loaded.WriteString(definitions.ReadString());}}
+                GT_ASSERT(definitions.ReadInt()==0,"Encounter fixture already contains Units");loaded.WriteInt(count);
+                Knowledge::Data data{80,80,true,true,0,{},{},{}};data.observers[1]=Knowledge::Observer{};data.observers[1]->pact_with=0;
+                data.tiles.resize(3200,{0,std::nullopt});Knowledge::BaseObservation base{901,2,{}};base.population[1]=scenario==11?2:1;data.bases.push_back(base);ExploreNine(data,16,16,2);
+                data.occupancy=map::SmacOccupancyCache::Blank(80,80,true);data.occupancy->FoundBase({16,16},1);
+                int position=0;
+                for(size_t n=0;n<count;++n) {
+                    auto* tile=source;
+                    if(n) {do {const int y=position/40,x=2*(position%40)+(y&1);++position;tile=game->GetMap()->GetTile(x,y);} while(tile==source || tile==destination || tile->base);}
+                    types::Buffer unit;unit.WriteInt(8);unit.WriteInt(1);unit.WriteInt(71+n);unit.WriteString("birth-human");unit.WriteInt(0);unit.WriteInt(tile->coord.x);unit.WriteInt(tile->coord.y);
+                    ConventionalUnitState state{2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};state.stack=ConventionalUnitState::Stack{static_cast<int16_t>(n),-1,-1};state.Serialize(unit,true,true,true);loaded.WriteString(unit.ToString());
+                    data.units.push_back({71+n,0,false});data.occupancy->PlaceUnit({static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y)},1,true);
+                }
+                loaded.WriteInt(71+count);manager->Clear();manager->Deserialize(GSE_CALL,loaded);auto* scout=manager->GetUnit(71);
+                if(scenario==5 || scenario==6) {scout->SetTile(GSE_CALL,destination);scout->SetTile(GSE_CALL,source);}
+                if(scenario==7) {game->GetMap()->GetTile(43,39)->terraforming=map::tile::TERRAFORMING_SENSOR;}
+                if(scenario==8) {destination->terraforming=map::tile::TERRAFORMING_ROAD;}
+                if(scenario==9) {game->GetMap()->GetTile(46,40)->terraforming=map::tile::TERRAFORMING_SENSOR;}
+                if(scenario==10) {for(const auto point:{std::array<int,2>{{43,39}},{{44,40}},{{43,41}}}) {
+                    game->GetMap()->GetTile(point[0],point[1])->terraforming=map::tile::TERRAFORMING_SENSOR;}}
+
+                if(scenario==12) {destination->is_water_tile=true;}
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                const uint32_t crt=scenario==12 || scenario==0 || scenario==3 || scenario==4 || scenario==10?19:scenario==5 || scenario==8 || scenario==9?26:scenario==6?21:scenario==7?22:1;
+                const SmacGameplayRandomState initial(scenario==1?0:33,crt);fixture.GameplayRandom(initial);
+                const auto before=fixture.Snapshot();const auto next=Unit::GetNextId();const auto body=scout->Conventional();
+                if(scenario==12) {
+                    GT_ASSERT(Rejects([&]{manager->ValidateConventionalMove(scout,destination,0);})
+                        && Rejects([&]{manager->MoveConventionalUnit(GSE_CALL,scout,destination,0);})
+                        && fixture.Snapshot()==before && fixture.GameplayRandom()==initial && Unit::GetNextId()==next,
+                        "Land-to-water request created a native encounter or consumed state");GT_OK();
+                }
+                phase="validation";manager->ValidateConventionalMove(scout,destination,0);
+                GT_ASSERT(fixture.Snapshot()==before && Unit::GetNextId()==next,"Encounter validation published body, RNG, history or knowledge");
+                phase="movement";
+                if(scenario==0 || scenario==3) {fixture.MoveEvent(GSE_CALL,scout,destination,0);}
+                else {manager->MoveConventionalUnit(GSE_CALL,scout,destination,0);}
+                auto expected=initial;if(scenario!=4 && scenario!=11) {expected.NextCrtRaw15();}
+                if(scenario==0) {
+                    GT_ASSERT(manager->GetUnits().size()==2 && scout->GetTile()==source && scout->Conventional()==body
+                        && manager->GetUnit(next)->IsNative() && manager->GetUnit(next)->GetTile()==destination
+                        && manager->GetUnit(next)->Native().design==8 && manager->GetUnit(next)->Native().stack_previous==-1,
+                        "Successful encounter moved or spent the Scout, or omitted the native birth");
+                } else {
+                    expected.NextSharedLow16();
+                    GT_ASSERT(manager->GetUnits().size()==count && !manager->GetUnit(next)
+                        && scout->GetTile()==(scenario==1?source:destination)
+                        && scout->Conventional().spent==(scenario==1?3:9) && scout->Conventional().failed_move==(scenario==1),
+                        "Miss, suppression, protection or capacity failure did not continue through shared movement");
+                }
+                GT_ASSERT(fixture.GameplayRandom()==expected,"Encounter/ordinary movement stream order differs");
+                const auto history=fixture.MovementHistory();
+                GT_ASSERT(history && history->NearestDistance()==(scenario==4?77:scenario==11?1:25)
+                    && history->WasPlaced(destination->coord.x,destination->coord.y)==(scenario!=1),"Encounter retained nearest or destination placement history differs");
+                saved=fixture.Snapshot();restored_random=expected;GT_OK();
+            });GT_ASSERT(error.empty(),"Live fungus scenario "+std::to_string(scenario)+" "+phase+": "+error);
+            if(scenario==12) {continue;}
+            ConventionalUnitFixture resumed;resumed.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);
+            const auto reload=resumed.Run([&](GSE_CALLABLE)->std::string {
+                auto& settings=resumed.Game()->GetState()->m_settings.global;settings.SelectSmacCampaignRules(false);
+                if(scenario==4) {const_cast<settings::SmacCampaignRules&>(*settings.GetSmacCampaignRules()).primary|=0x00200000u;}
+                resumed.Restore(GSE_CALL,saved,true);
+                GT_ASSERT(CanonicalEncounterSnapshot(resumed.Game(),resumed.Snapshot())==CanonicalEncounterSnapshot(resumed.Game(),saved)
+                    && resumed.GameplayRandom()==restored_random,"Encounter full world restore changed result authority");GT_OK();
+            });GT_ASSERT(reload.empty(),"Live fungus reload "+std::to_string(scenario)+": "+reload);
         }GT_OK();
     });
 

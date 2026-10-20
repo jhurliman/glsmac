@@ -240,6 +240,10 @@ private:
 	void SyncNativeObservationMasks(const map::SmacWorkerKnowledge& knowledge) noexcept;
 	void ValidateNativeCreation(size_t id,const Def* def,const map::tile::Tile* tile,const SmacNativeUnitRecord& state) const;
     void ValidateNativeIndexBindings(const std::vector<Unit*>& ordered) const;
+    // Detached native preparation for command validation, without scripts,
+    // publication, allocator IDs or a required GSE call frame.
+    PreparedNativeBirths PrepareNativeBirthsQuery(int32_t width,int32_t height,bool horizontal_wrap,
+        const std::function<void(const NativeBirthFactory&)>& produce) const;
 	ConventionalUnitContext ResolveConventional( const ConventionalUnitState& state, const slot::Slot* owner ) const;
 	struct PreparedConventionalAttack {
 		Unit* survivor;
@@ -258,6 +262,10 @@ private:
     using StackChanges=std::vector<std::pair<Unit*,ConventionalUnitState::Stack>>;
     StackChanges PrepareConventionalStackMove(Unit* unit,map::tile::Tile* destination) const;
     static void CommitStackChanges(const StackChanges& changes) noexcept;
+    struct PreparedConventionalEncounter {
+        PreparedNativeBirths birth;
+        SmacGameplayRandomState random;
+    };
 	struct PreparedConventionalMove {
 		Unit* unit;
 		map::tile::Tile* source;
@@ -269,6 +277,7 @@ private:
 		bool update_nearest = false;
 		std::optional< map::SmacWorkerKnowledge > sight;
         StackChanges stacks;
+        std::optional<PreparedConventionalEncounter> encounter;
 	};
 	PreparedConventionalMove PrepareConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
 	struct PreparedConventionalWork {

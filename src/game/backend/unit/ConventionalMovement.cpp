@@ -4,6 +4,7 @@
 #include "Unit.h"
 #include "SmacGroundEdgeCost.h"
 #include "SmacSelectedMovement.h"
+#include "game/backend/resource/SmacSiteSignal.h"
 #include "SmacScoutKeyboardAdmission.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
@@ -11,6 +12,7 @@
 #include "game/backend/slot/Slot.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/SmacPlanetMap.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/Base.h"
@@ -204,8 +206,11 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 		// Source fungus does not enter the encounter or movement lottery.
         // A clear destination uses ordinary Base admission at any distance.
         // A fungus-covered Base center still requires its distinct admission.
+        const bool encounter_context=simulation.movement_history && simulation.ecology_world
+            && state->m_settings.global.GetSmacCampaignRules() && map->GetResourcePolicy()
+            && !(source->base && (source->features&map::tile::FEATURE_XENOFUNGUS));
         if ( !((source->features | destination->features) & map::tile::FEATURE_XENOFUNGUS)
-            || (!source->base && !(destination->features & map::tile::FEATURE_XENOFUNGUS)) ) {
+            || (!source->base && !(destination->features & map::tile::FEATURE_XENOFUNGUS)) || encounter_context ) {
 			for ( const auto& entry : bases ) {
 				const auto* base = entry.second;
 				const auto* center = base ? base->GetTile() : nullptr;
@@ -221,7 +226,10 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 				if ( center == destination ) { admitted_destination_base = base; }
 			}
 		} else if ( !source->base && !destination->base ) {
-			throw std::runtime_error( "Fungus movement with Bases requires an admitted endpoint HQ" );
+            // Remote ordinary Infantry can reach the separate encounter stage.
+            if(design.chassis!=0 || design.plan!=3 || design.abilities || context.presentation!=ConventionalUnitContext::Presentation::Scout) {
+                throw std::runtime_error("Remote fungus requires the admitted conventional Scout profile");
+            }
 		} else {
 			// Select by endpoint identity, not global count or first record. Locate
 			// the borrowed pointer in the canonical manager before dereferencing it.
@@ -257,33 +265,88 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	if ( auto refusal=m_game->PrepareConventionalZoc(*unit,destination) ) {
 		return {unit,source,destination,stored,std::nullopt,std::nullopt,false,std::move(refusal)};
 	}
-	// Without an endpoint HQ the original nearest-base result may retain prior state,
-	// and destination fungus can enter the unsupported native-life/CRT encounter path.
-	if ( !admitted_hq && ( destination->features & map::tile::FEATURE_XENOFUNGUS ) ) {
-		throw std::runtime_error( "Conventional destination fungus requires admitted nearest-base context" );
-	}
-	std::optional< int32_t > nearest_distance;
-	const bool update_nearest = simulation.movement_history && ( destination->features & map::tile::FEATURE_XENOFUNGUS );
-	if ( update_nearest ) {
-		const auto& history = *simulation.movement_history;
-		history.ValidateDimensions( map->GetWidth(), map->GetHeight() );
-		if ( bases.size() > map->GetWidth() * map->GetHeight() / 2 ) { throw std::runtime_error( "Too many canonical nearest-base records" ); }
-		std::vector< SmacMovementHistory::BasePosition > positions;
-		positions.reserve( bases.size() );
-		for ( const auto& entry : bases ) {
-			const auto* base = entry.second;
-			const auto* center = base ? base->GetTile() : nullptr;
-			if ( !base || base->m_id != entry.first || base->GetGame() != m_game || !canonical( center ) || center->base != base ) {
-				throw std::runtime_error( "Nearest-base history requires canonical registered Base centers" );
-			}
-			positions.push_back( { entry.first, static_cast< int32_t >( center->coord.x ), static_cast< int32_t >( center->coord.y ) } );
-		}
-		nearest_distance = SmacMovementHistory::NearestAnyBase( destination->coord.x, destination->coord.y,
-			static_cast< int32_t >( map->GetWidth() ), true, positions, history.NearestDistance() ).distance;
-		// This is only the existing endpoint-HQ bypass. Distant encounter entry
-		// remains unavailable; no CRT roll or native insertion is activated.
-		if ( !nearest_distance || *nearest_distance > 1 ) { throw std::runtime_error( "Admitted HQ does not establish the fungus encounter bypass" ); }
-	}
+    auto random=simulation.gameplay_random;
+    std::optional<int32_t> nearest_distance;
+    bool update_nearest=false;
+    const bool fungus=(destination->features&map::tile::FEATURE_XENOFUNGUS)!=0;
+    if(fungus && !admitted_hq && (source->is_water_tile || destination->is_water_tile
+        || (design.chassis!=0 && design.chassis!=1) || static_cast<int32_t>(catalog.chassis.chassis.at(design.chassis).triad)!=0
+        || weapon.offense<=0 || static_cast<int32_t>(weapon.mode)!=0 || design.plan<0 || design.plan>3 || design.abilities)) {
+        throw std::runtime_error("Fungus encounters require the admitted ordinary land combat profile");
+    }
+    if(fungus && (!admitted_hq || simulation.movement_history)) {
+        if(!simulation.movement_history) {throw std::runtime_error("Fungus nearest-base encounter requires retained placement history");}
+        const auto& history=*simulation.movement_history;
+        history.ValidateDimensions(map->GetWidth(),map->GetHeight());
+        const auto& rules=state->m_settings.global.GetSmacCampaignRules();
+        // The existing endpoint-HQ contract predates saved campaign options.
+        // Its distance bypass remains valid without inventing those options.
+        if(!admitted_hq && !rules) {throw std::runtime_error("Remote encounter admission requires saved primary rules");}
+        const bool enabled=!rules || !(rules->primary&0x00200000u);
+        bool site=false;
+        if(!admitted_hq) {
+            const auto& policy=map->GetResourcePolicy();
+            if(!policy) {throw std::runtime_error("Fungus encounter requires admitted resource/map semantics");}
+            if(const auto* original=policy->OriginalPlanet()) {
+                auto flags=original->At(destination->coord.x,destination->coord.y).Items();
+                flags&=~0x00102000u;
+                if(history.WasPlaced(destination->coord.x,destination->coord.y)) {flags|=0x100000u;}
+                if(destination->features&map::tile::FEATURE_MONOLITH) {flags|=0x2000u;}
+                site=resource::smac::ResolveSiteSignal({static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y),
+                    policy->Altitude(*destination),flags,rules->AutomaticLandResources(),original->ResourcePattern(),11,61})!=0;
+            } else {site=policy->SiteSignal(*destination)!=0;}
+        }
+        if(enabled && !site && !(destination->terraforming&map::tile::TERRAFORMING_MAG_TUBE)) {
+            std::vector<SmacMovementHistory::BasePosition> positions;
+            for(const auto& entry:bases) {
+                const auto* base=entry.second;const auto* center=base?base->GetTile():nullptr;
+                if(!base || base->m_id!=entry.first || base->GetGame()!=m_game || !canonical(center) || center->base!=base) {
+                    throw std::runtime_error("Encounter nearest-Base query requires canonical centers");
+                }
+                positions.push_back({entry.first,static_cast<int32_t>(center->coord.x),static_cast<int32_t>(center->coord.y)});
+            }
+            nearest_distance=SmacMovementHistory::NearestAnyBase(destination->coord.x,destination->coord.y,
+                static_cast<int32_t>(map->GetWidth()),true,positions,history.NearestDistance()).distance;
+            if(!nearest_distance) {throw std::runtime_error("No-Base encounter requires retained nearest distance");}
+            update_nearest=true;
+            if(*nearest_distance>1) {
+                if(!simulation.ecology_world) {throw std::runtime_error("Encounter life category is unavailable");}
+                const auto life=simulation.ecology_world->native_life;simulation.ecology_world->Validate();
+                int32_t threshold=std::min(*nearest_distance,32)+10*life;
+                if(history.WasPlaced(destination->coord.x,destination->coord.y)) {threshold/=2;if(life==0) {threshold/=2;}}
+                if(destination->terraforming&map::tile::TERRAFORMING_ROAD) {threshold/=2;}
+                static constexpr std::array<std::array<int32_t,2>,25> protection{{
+                    {{0,0}},{{1,-1}},{{2,0}},{{1,1}},{{0,2}},{{-1,1}},{{-2,0}},{{-1,-1}},{{0,-2}},
+                    {{2,-2}},{{2,2}},{{-2,2}},{{-2,-2}},{{1,-3}},{{3,-1}},{{3,1}},{{1,3}},{{-1,3}},{{-3,1}},{{-3,-1}},{{-1,-3}},{{4,0}},{{-4,0}},{{0,4}},{{0,-4}}
+                }};
+                std::optional<map::SmacWorkerKnowledge::Data> protection_knowledge;
+                for(size_t i=0;i<protection.size();++i) {
+                    auto x=int64_t(destination->coord.x)+protection[i][0];const auto y=int64_t(destination->coord.y)+protection[i][1];
+                    x=(x+map->GetWidth())%map->GetWidth();if(y<0 || y>=int64_t(map->GetHeight())) {continue;}
+                    const auto* tile=map->GetTile(x,y);bool protected_base=false;
+                    if(tile->base) {
+                        const auto& knowledge=map->GetSmacWorkerKnowledge();
+                        if(!knowledge) {throw std::runtime_error("Base encounter protection requires retained affiliation");}
+                        if(!protection_knowledge) {protection_knowledge=knowledge->CopyData();}
+                        if(!protection_knowledge->occupancy) {throw std::runtime_error("Base encounter protection requires retained affiliation");}
+                        protected_base=protection_knowledge->occupancy->At({static_cast<int32_t>(x),static_cast<int32_t>(y)}).affiliation<8;
+                    }
+                    if((tile->terraforming&map::tile::TERRAFORMING_SENSOR) || protected_base) {threshold/=(i<9?4:2);}
+                }
+                if(random.NextCrtRaw15()%100<threshold) {
+                    auto birth=PrepareNativeBirthsQuery(map->GetWidth(),map->GetHeight(),true,[&](const auto& factory) {
+                        factory.create(8,{static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y)},{});
+                    });
+                    if(birth.Size()) {
+                        return {unit,source,destination,stored,std::nullopt,nearest_distance,update_nearest,{}, {},
+                            PreparedConventionalEncounter{std::move(birth),random}};
+                    }
+                    // A full factory retains the CRT draw and falls through to
+                    // ordinary allowance/cost/selected movement lottery.
+                }
+            }
+        }
+    }
 	const auto edge_source = EdgeTile( *source, admitted_hq ? admitted_hq : admitted_source_base );
 	const auto edge_destination = EdgeTile( *destination, admitted_hq ? admitted_hq : admitted_destination_base );
 	const smac_edge::Query query{
@@ -293,7 +356,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 		static_cast< int32_t >( map->GetWidth() ), static_cast< int32_t >( map->GetHeight() ), true, edge_source, edge_destination };
 	const auto cost = smac_edge::QueryGroundEdgeCost( query );
 	auto result = smac_move::ResolveSelectedGroundStep( { unit->m_id, stored.spent, stored.failed_move }, stats.quantum, stats.full_allowance,
-		cost, ( edge_destination.features & smac_edge::Fungus ) != 0, simulation.gameplay_random,
+		cost, ( edge_destination.features & smac_edge::Fungus ) != 0, random,
         smac_move::LotteryStream::SharedLow16 );
 	auto changed = stored;
     if(result.outcome==smac_move::Outcome::Moved) {changed.facing=SmacFacingForStep(*source,*destination);}
@@ -318,6 +381,15 @@ void UnitManager::MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Til
 	if(HasForeignOccupant(unit,destination)) {ApplyConventionalAttack(GSE_CALL,PrepareConventionalAttack(unit,destination,caller));return;}
 	if(ForeignBase(unit,destination,*m_game->GetBM())) {m_game->GetBM()->ApplySmacCapture(GSE_CALL,m_game->GetBM()->PrepareSmacCapture(unit,destination,caller));return;}
 	auto prepared = PrepareConventionalMove( unit, destination, caller );
+    if(prepared.encounter) {
+        const auto placement=PreparePlacementHistory(*unit,destination);
+        // All allocation and validation completed in detached preparation.
+        auto& encounter=*prepared.encounter;encounter.birth.Commit();
+        if(prepared.update_nearest) {m_game->m_simulation->value.movement_history->RetainNearest(prepared.nearest_distance);}
+        if(placement.first) {placement.first->MarkPlaced(placement.second);}
+        m_game->m_simulation->value.gameplay_random=encounter.random;
+        encounter.birth.Notify(GSE_CALL);return;
+    }
 	if ( !prepared.result ) {
 		m_game->CommitConventionalSight(prepared.sight); return;
 	}

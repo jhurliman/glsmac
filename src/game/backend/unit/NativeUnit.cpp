@@ -224,8 +224,15 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareEcologyNativeBirths(GSE_CA
 UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirths(GSE_CALLABLE,int32_t width,int32_t height,bool horizontal_wrap,
     const std::function<void(const NativeBirthFactory&)>& produce) {
     m_game->RequireSmacGameplayActive();m_game->CheckRW(GSE_CALL);
-    if(!m_game->IsRunning() || gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating()
-        || !m_unprocessed_units.empty() || !m_game->m_simulation || !m_game->m_simulation->value.native_factory) {
+    if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating()) {
+        throw std::runtime_error("Native publication requires its owning GSE accumulation");
+    }
+    return PrepareNativeBirthsQuery(width,height,horizontal_wrap,produce);
+}
+UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirthsQuery(int32_t width,int32_t height,bool horizontal_wrap,
+    const std::function<void(const NativeBirthFactory&)>& produce) const {
+    m_game->RequireSmacGameplayActive();
+    if(!m_game->IsRunning() || !m_unprocessed_units.empty() || !m_game->m_simulation || !m_game->m_simulation->value.native_factory) {
         throw std::runtime_error("Native birth preparation requires its owning running world and retained factory");
     }
     m_game->RequireConventionalSightWorld();
@@ -240,7 +247,7 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirths(GSE_CALLABLE,
     std::vector<Unit*> live;live.reserve(m_unit_order.size());
     for(const auto id:m_unit_order) {auto* unit=GetUnit(id);if(!unit) {throw std::runtime_error("Native birth has a stale dense identity");}live.push_back(unit);}
     ValidateNativeIndexBindings(live);
-    auto d=std::make_unique<PreparedNativeBirths::Data>();d->manager=this;d->factory=m_game->m_simulation->value.native_factory;
+    auto d=std::make_unique<PreparedNativeBirths::Data>();d->manager=const_cast<UnitManager*>(this);d->factory=m_game->m_simulation->value.native_factory;
     d->units=m_units;d->order=m_unit_order;d->updates=m_unit_updates;
     const auto index=[&](const map::tile::Tile* tile) {return size_t(tile->coord.y)*(knowledge.width/2)+tile->coord.x/2;};
     const auto distance=[&](const map::tile::Tile* a,const map::tile::Tile* b) {
@@ -314,7 +321,7 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirths(GSE_CALLABLE,
         }
         if(!stack.empty() && !head) {throw std::runtime_error("Native birth stack has no head");}
         if(head) {auto changed=stack_state(head);value.stack_next=changed.id;changed.previous=value.id;set_stack(head,changed);}
-        auto candidate=std::unique_ptr<Unit>(new Unit(Unit::Unplaced{},this,static_cast<size_t>(next),def,tile,value));
+        auto candidate=std::unique_ptr<Unit>(new Unit(Unit::Unplaced{},d->manager,static_cast<size_t>(next),def,tile,value));
         auto* born=candidate.get();
         if(!d->units.emplace(born->m_id,born).second || !stack.emplace(born->m_id,born).second
             || !d->updates.emplace(born->m_id,unit_update_t{UUO_SPAWN,born}).second) {throw std::runtime_error("Native birth publication identity conflicts");}

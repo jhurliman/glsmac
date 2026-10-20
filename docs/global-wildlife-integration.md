@@ -220,3 +220,28 @@ detection disabled), including the optional nine original checkpoints with the
 receipt supplied. Both production consumers pass targeted analysis. Combined
 native-birth/global-policy execution and the round controller remain work; this
 query view does not claim those effects have run in GLSMAC.
+
+## Live ordinary command encounters
+
+The conventional map-command caller now resolves empty-land fungus encounters
+using current saved rules, resolved sites, retained placement/nearest history,
+world life, terrain and cached Base affiliation. It draws encounter CRT before
+the shared command movement lottery. A successful detached native factory
+commits its body, sight, history and RNG without moving/spending the Scout. A
+capacity failure retains its draw and continues to ordinary movement. Complete
+campaign context admits nearby owned non-HQ Bases through nearest distance.
+Legacy endpoint-HQ admission remains available without inventing absent inputs.
+
+Read-only validation owns and discards C++ native candidates, without GSE frames
+or allocator-ID publication; the public producer retains its GSE accumulation
+guard. Commit precedes script notifications. Thirteen live controls include
+twelve valid paths with full restore, a land/water rejection, and actual GSE
+move_unit birth/capacity events. Only unordered definition table order is
+normalized for whole-world comparison; every runtime record remains byte-exact.
+The source mode-zero continuation is independently frozen and checked. This
+does not activate the global wildlife/AI cursor, Supply Pod pickups, special
+abilities/projects, or loaded nonnegative native assignment tails.
+
+Next integration gates remain authenticated fresh/restart source stacks, one
+combined live flora/fauna transaction, and activation of the recorded faction
+cursor with canonical native/positive command execution.

@@ -33,8 +33,8 @@ terrain masking remains a separate missing feature.
 
 ## Validation
 
-- 20 focused native startup, conventional-unit, research, reset and Rename groups
- pass; the new scenarios verify pre-upkeep ordering, deferred/duplicate results,
+- Initial20 focused native startup, conventional-unit, research, reset and Rename
+ groups pass; the expanded backend/resource/first-Base run passes335 groups; the new scenarios verify pre-upkeep ordering, deferred/duplicate results,
  stale-session retirement, unchanged RNG/entity counts and exact normalization.
 - Actual input-widget focus/keyboard test and FIRSTBASE GSE interaction script pass.
 - Targeted analysis: Game.cpp, GameIntroduction.cpp, GameCanonicalTurn.cpp,
@@ -42,7 +42,7 @@ terrain masking remains a separate missing feature.
  zero failed analyses/findings. The presentation change to GameIntroduction.cpp
  was rechecked.
 - Focused ASan/UBSan covers seven instrumented translation units (the four changed
- backend implementation files, Backend.cpp, Input.cpp and UIClass.cpp). All eight
+ backend implementation files, Backend.cpp, Input.cpp and UIClass.cpp). All20
  selected groups pass; other objects are normal, leak detection disabled and
  stack-use-after-return enabled. This is not a full sanitized engine matrix.
 - A real1024x768 hidden-SDL/OpenGL session typed `b` without clicking the input,
@@ -52,6 +52,14 @@ terrain masking remains a separate missing feature.
  Both sessions quit normally with exit0 and no tracked OpenGL resource leaks;
  allocation tracking was not enabled. The campaign SHA256 was
  `98bf8408d29ec6bea6eedbe14a58bb7dac34a947c07b8bee6878cf312d762606`.
+
+The wider CI run exposed older startup fixtures that did not answer the new
+modal and a cancelled-admission path entering the introduction gate. The gate
+now excludes cancelled admissions. The shared fixture answers through deferred
+ingress, asserts that result application is still turn zero with no upkeep,
+then performs the separate owner iteration that resumes first-turn work. This
+preserves the existing cancellation behavior and tests the new phase boundary.
+GameIntroduction.cpp was reanalyzed after the guard change with zero findings.
 
 The ten-file static original scheduling receipt was verified against manifest
 SHA256 `d56971856cf9d5e45cd65d8531d11159d7ffd6e6dc194176cc441a0b663e8428`.

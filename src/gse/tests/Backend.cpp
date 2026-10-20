@@ -5747,6 +5747,24 @@ public:
 			GT_ASSERT( entropy_calls == ( failure == 6 ? 1u : failure == 7 || failure == 4 ? 2u : 0u ) && m_game.GetRandom()->GetStateString() == before_rng,
 				"failed admission sampled entropy at the wrong boundary or changed JSF" ); GT_OK();
 		}
+        // The fresh local introduction now precedes the first advance. These
+        // resource/upkeep fixtures keep the generated name through the actual
+        // deferred ingress, rather than bypassing the new startup continuation.
+        if(m_game.m_first_base_request) {
+            GT_ASSERT(!cancellation && m_game.GetTurnId()==0 && social_turns==0
+                && !m_game.m_research_request && !m_game.m_canonical_continuation,
+                "First Base prompt did not precede first resource/research upkeep");
+            const auto request=*m_game.m_first_base_request;
+            auto* base=m_game.GetBM()->GetBase(request.base);
+            GT_ASSERT(base && base->m_owner==m_game.m_slot,"First Base prompt lost its existing owned Base");
+            m_game.QueueFirstBaseName(m_state->CaptureGameSession(),request.id,base->m_name);
+            GT_ASSERT(m_game.m_first_base_request && m_game.GetTurnId()==0,
+                "Fixture naming result bypassed deferred owner ingress");
+            m_game.Iterate();ProcessAccumulations();
+            GT_ASSERT(!m_game.m_first_base_request && m_game.GetTurnId()==0 && social_turns==0,
+                "First Base result phase performed upkeep instead of scheduling its continuation");
+            m_game.Iterate();ProcessAccumulations();
+        }
 		// Canonical Base upkeep can pause for the first real research target.
 		// Answer the offered request before expecting the final turn notification;
 		// never bypass the continuation by assigning technology state directly.

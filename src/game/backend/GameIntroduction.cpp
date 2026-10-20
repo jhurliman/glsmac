@@ -17,7 +17,8 @@ namespace game::backend {
 bool Game::CanBeginFirstBaseIntroduction() const {
     return m_simulation && m_state && !m_state->GetConnection() && m_player && m_slot
         && m_state->m_settings.local.game_mode==settings::LocalSettings::GM_SINGLEPLAYER
-        && m_active_admission && m_active_admission->kind==WorldAdmission::INITIALIZATION
+        && m_active_admission && !m_active_admission->cancelled
+        && m_active_admission->kind==WorldAdmission::INITIALIZATION
         && !m_active_admission->previous && !m_active_admission->map_path
         && !m_active_admission->campaign_world && m_current_turn.GetId()==0
         && m_simulation->value.IsHuman(RequireSimulationParticipant(m_player).simulation_id);

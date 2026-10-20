@@ -29,6 +29,14 @@ No original assets or binaries belong in this repository. The engine continues
 to load them from a user-supplied installation. See
 [reference validation](reference-validation.md) for provenance and evidence.
 
+## Active presentation follow-up
+
+The user's honey playthrough exposed startup/menu, logical-resolution, terrain
+seam and main-map visibility gaps. They are tracked with original asset sections
+and measurable acceptance gates in [the playthrough audit](smac-playthrough-ui-audit.md).
+The original interactive guided tour is explicitly excluded from the 1.0 release
+requirement at the user's request (2026-10-19). Help and Datalinks remain required.
+
 ## Next gameplay integration
 
 The [local faction controller plan](local-faction-controller.md) connects the
@@ -127,7 +135,7 @@ tasks in parallel. Milestone labels are planning labels, not promised dates.
 | M3 — Full SMAC simulation | All base-game technologies/prerequisites, components/design workshop, units, terrain/jobs, facilities/projects, economy/social engineering, drones/talents/specialists, ecology/native life, commerce/probe actions, transport/air/naval/orbital rules and world events | Inventory reconciled against the pinned SMAC reference; each rule family has normal/boundary/interaction cases; complete campaigns and long-run simulation |
 | M4 — Single-player and politics | Legal AI actions, expansion/economy/research/combat; diplomacy, treaties/pacts/vendettas, council, trading and negotiations; governors, former/unit automation; all SMAC victories and defeat paths | Seeded AI campaigns finish without stalls; no hidden-information cheating outside documented difficulty rules; original-behavior comparisons; conquest, diplomatic, economic, transcendence and time/score outcomes tested |
 | M5 — Alien Crossfire | Expansion factions including alien rules; added tech/components/abilities/facilities/projects; expansion terrain/native life and faction/victory interactions; Planetary Pack scenarios/content inventory | Separate SMAX campaigns and reference cases pass; SMAC mode remains unaffected; expansion data/content checklist reconciled |
-| M6 — Presentation and compatibility | Every functional screen/dialog and preference; keyboard/mouse behavior; readable/resizable UI; tutorials/help/datalinks; original movies, interludes, sound and music; accessibility and platform integration | Screen/interaction inventory reviewed against originals; no placeholder values; assets resolve on supported installations; audio/video/input tests across platforms |
+| M6 — Presentation and compatibility | Every functional screen/dialog and preference; keyboard/mouse behavior; readable/resizable UI; help/datalinks (guided tour excluded); original movies, interludes, sound and music; accessibility and platform integration | Screen/interaction inventory reviewed against originals; no placeholder values; assets resolve on supported installations; audio/video/input tests across platforms |
 | M7 — Golden 1.0.0 | Release candidates, packaging, upgrade/save migration, performance/memory/network soak, fresh-install testing, documentation and license/asset separation verification | All release gates below signed off against a specific commit and packaged binaries |
 
 AI work starts with a small legal deterministic opponent during M2, so

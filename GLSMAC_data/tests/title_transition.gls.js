@@ -85,3 +85,17 @@ frame(0); visible(false);
 for (let reopening = 0; reopening < 5; reopening++) { test.assert(timer.callback() == true); }
 test.assert(timer.callback() == false); visible(true);
 sliding.hide();
+
+// Setup menus use the same original blue compositor with their own row count.
+// A heading must not shift action-label selection or become a selectable row.
+labels = []; buttons = [];
+sliding.show({native_menu: true, title: 'Game rules', entries: entries});
+test.assert(art.height == 150 && art.bottom == 0 && art.align == 'bottom left');
+test.assert(art.background == 'openitem.flc:smacmenu(openinga.pcx,0,2,1024,768):stretch()');
+test.assert((labels[0]).color == 'rgb(104, 140, 196)' && (labels[1]).color == 'rgb(176, 212, 235)');
+visible(false);
+for (let setup = 0; setup < 5; setup++) { test.assert(timer.callback() == true); }
+test.assert(timer.callback() == false); visible(true);
+key('DOWN');
+test.assert((labels[2]).color == 'rgb(176, 212, 235)' && (labels[0]).color == 'rgb(104, 140, 196)');
+sliding.hide();

@@ -7,9 +7,13 @@ terrain exploration, remembered improvements, unit disclosure and base discovery
 
 ## Current caller gaps
 
-- `Map::CopyNativeTerrain` and `OP_GET_NATIVE_TERRAIN` copy live/remembered
-  improvements and base admission into an owned80x80 local snapshot. The
-  snapshot currently omits tile exploration, editor/reveal and survey policy.
+- `Map::CopyNativeTerrain` and `OP_GET_NATIVE_TERRAIN` now copy persistent saved
+  exploration, observer presence, faction reveal and the retained optional Unity
+  Survey selection into an owned80x80 local snapshot. The request authenticates
+  the actual local single-player participant. `World::KnowledgeAt` distinguishes
+  unknown, survey and known terrain, retaining unavailable authority separately.
+  These inputs do not yet drive ordinary main-map rendering or console admission;
+  editor translation and object disclosure still need their separate callers.
 - `NativeViewGeometry::Prepare` without a knowledge input schedules land height/shade
   queries. Unknown terrain bypasses that material pass in the original; the
   unknown outline's geometry/cache schedule now has an independently matched
@@ -52,3 +56,13 @@ independently derives the scheduled geometry and retained unknown frames. The
 production core matches those controls; ordinary-game caller integration is
 still required. Partial-known final pixels and known grid presentation retain
 their separate unclosed boundaries.
+
+## Owned exploration input validation
+
+Seven focused native groups pass, including the real backend request path, saved
+knowledge serialization/deserialization, later-state independence, unready knowledge,
+foreign reveal isolation and distinct survey admission. NULL-view reads leave
+geometry caches and gameplay RNG untouched. Five production translation units
+(changed units and known frontend consumers) pass correctness analysis. A focused
+five-TU ASan/UBSan run passes these groups; remaining objects are uninstrumented
+and leak detection is disabled. Ordinary-game fog remains an integration task.

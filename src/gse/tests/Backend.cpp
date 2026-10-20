@@ -5907,6 +5907,58 @@ public:
         });
     }
 
+    std::string CheckNativeExplorationSnapshot() {
+        using namespace game::backend;
+        using World=::game::native_terrain::World;
+        const auto initial=CheckNativeBoundaryMetadata();if(!initial.empty()) {return initial;}
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            const auto viewer=m_game.RequireSimulationParticipant(m_game.m_player).simulation_id;
+            const auto bit=static_cast<uint8_t>(1u<<viewer);
+            auto data=m_game.m_map->m_worker_knowledge->CopyData();
+            for(auto& cell:data.tiles) {cell.explored_by=0;}
+            data.tiles[40*40+20].explored_by=bit;
+            data.all_map_revealed=static_cast<uint8_t>(viewer==1?4:2); // another observer's reveal
+            const auto install=[&] {
+                const auto saved=map::SmacWorkerKnowledge::Create(data).Serialize();
+                m_game.m_map->m_worker_knowledge=map::SmacWorkerKnowledge::Deserialize(saved);
+            };
+            const auto inspect=[&] {
+                const auto id=m_game.MT_GetNativeTerrain(FixtureWorldTicket(),false);ProcessRequests();
+                auto response=m_game.MT_GetResponse(id);
+                util::FinallyGuard destroy([&]{m_game.MT_DestroyResponse(response);});
+                if(response.result!=R_SUCCESS || !response.data.native_terrain) {throw std::runtime_error("Exploration MT snapshot unavailable");}
+                auto result=std::unique_ptr<World>(response.data.native_terrain);response.data.native_terrain=nullptr;return result;
+            };
+            install();
+            m_game.m_map->m_native_geometry.reset();m_game.m_map->m_native_geometry_source.reset();
+            const auto wire=m_game.m_map->m_worker_knowledge->Serialize();
+            const auto random=m_game.m_simulation->value.gameplay_random;
+            const auto first=inspect();
+            const auto& rules=m_state->m_settings.global.GetSmacCampaignRules();
+            GT_ASSERT(rules && first->initial_survey==bool(rules->primary&0x100u),"Snapshot inferred or lost retained Unity Survey selection");
+            GT_ASSERT(first->viewer==viewer && first->exploration_ready && first->tiles[40*40+20].explored_by==bit,
+                "Snapshot lost authenticated local observer or persistent exploration after save/reload");
+            GT_ASSERT(first->KnowledgeAt(40*40+20)==World::Knowledge::Known &&
+                first->KnowledgeAt(0)==(*first->initial_survey?World::Knowledge::Survey:World::Knowledge::Unknown),
+                "Foreign reveal or absent improvement memory changed terrain knowledge");
+            GT_ASSERT(m_game.m_map->m_worker_knowledge->Serialize()==wire && m_game.m_simulation->value.gameplay_random==random
+                && !m_game.m_map->m_native_geometry,"Presentation query mutated saved knowledge, RNG or native geometry");
+            data.tiles[40*40+20].explored_by=0;data.all_map_revealed=bit;install();const auto revealed=inspect();
+            GT_ASSERT(revealed->KnowledgeAt(0)==World::Knowledge::Known && !revealed->tiles[0].explored_by,
+                "Faction reveal was discarded or converted into saved exploration");
+            m_game.m_map->m_worker_knowledge_ready=false;const auto unavailable=inspect();
+            GT_ASSERT(!unavailable->exploration_ready && !unavailable->KnowledgeAt(0),"Unready knowledge became revealed terrain");
+            GT_ASSERT(first->tiles[40*40+20].explored_by==bit && first->revealed_by!=bit && revealed->revealed_by==bit,
+                "Owned exploration snapshot borrowed subsequent knowledge state");
+            auto profile=*first;profile.initial_survey=true;
+            GT_ASSERT(profile.KnowledgeAt(0)==World::Knowledge::Survey,"Survey collapsed into ordinary exploration");
+            profile.initial_survey.reset();GT_ASSERT(!profile.KnowledgeAt(0),"Missing survey authority defaulted to known/unknown");
+            GT_ASSERT(profile.KnowledgeAt(40*40+20)==World::Knowledge::Known,"Missing survey selection hid already explored terrain");
+            profile.observers_present=0;GT_ASSERT(!profile.KnowledgeAt(40*40+20),"Missing observer admitted another faction's knowledge");
+            GT_OK();
+        });
+    }
+
     std::string CheckNativeDevelopedSnapshot() {
         using namespace game::backend;
         const auto initial=CheckNativeBoundaryMetadata();if(!initial.empty()) {return initial;}
@@ -8344,6 +8396,9 @@ public:
 };
 
 static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
+    task->AddTest("world admission native terrain owns saved exploration and distinct survey authority",GT(){
+        BackendFixture fixture;return fixture.CheckNativeExplorationSnapshot();
+    });
     task->AddTest("world admission native terrain binds remembered improvements to live base-less nutrients",GT(){
         BackendFixture fixture;return fixture.CheckNativeDevelopedSnapshot();
     });

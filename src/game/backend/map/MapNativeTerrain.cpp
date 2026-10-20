@@ -45,7 +45,12 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain(bool inclu
         return planet->At(x,y).Climate()>>5;
     };
     const auto knowledge=m_worker_knowledge && m_worker_knowledge_ready?std::optional<SmacWorkerKnowledge::Data>{m_worker_knowledge->CopyData()}:std::nullopt;
-    if(knowledge && knowledge->tiles.size()!=3200) {throw std::runtime_error("Native territory snapshot has invalid claim geometry");}
+    if(knowledge && (knowledge->width!=80 || knowledge->height!=80 || knowledge->tiles.size()!=3200 ||
+        knowledge->horizontal_wrap!=result->horizontal_wrap)) {throw std::runtime_error("Native terrain snapshot has invalid knowledge geometry");}
+    if(knowledge) {
+        result->exploration_ready=true;result->revealed_by=knowledge->all_map_revealed;
+        for(unsigned owner=1;owner<8;++owner) {if(knowledge->observers[owner]) {result->observers_present|=static_cast<uint8_t>(1u<<owner);}}
+    }
     for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
         const auto& original=planet->At(x,y);
         const auto* live=GetTile(x,y);
@@ -53,7 +58,7 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain(bool inclu
         output.band=original.Climate()>>5;
         const auto index=static_cast<size_t>(y)*40+x/2;
         output.region=m_territory_topology->Regions().at(index);
-        if(knowledge) {output.owner=static_cast<int8_t>(knowledge->tiles[index].claimant.value_or(-1));}
+        if(knowledge) {output.owner=static_cast<int8_t>(knowledge->tiles[index].claimant.value_or(-1));output.explored_by=knowledge->tiles[index].explored_by;}
         if(knowledge && knowledge->occupancy) {
             const auto& cell=knowledge->occupancy->At({x,y});
             output.center_known=true;output.base_present=bool(cell.presence&1u);output.cached_affiliation=cell.affiliation;

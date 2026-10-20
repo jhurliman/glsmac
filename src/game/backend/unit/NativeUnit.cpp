@@ -1,3 +1,6 @@
+#include "game/backend/map/SmacGlobalWildlife.h"
+#include "game/backend/SmacMovementHistory.h"
+#include "game/backend/resource/SmacSiteSignal.h"
 #include "UnitManager.h"
 #include "Unit.h"
 #include "StaticDef.h"
@@ -416,6 +419,90 @@ UnitManager::PreparedNativeBirths UnitManager::PrepareNativeBirthsQuery(int32_t 
     }
     d->knowledge=map::SmacWorkerKnowledge::Create(knowledge);
     return PreparedNativeBirths(std::move(d));
+}
+
+struct UnitManager::PreparedGlobalEcology::Data {
+    Data(UnitManager* manager,const SmacGameplayRandomState& random):owner(manager),before(random),result{random,0,{},{},{}} {}
+    UnitManager* owner;
+    std::unique_ptr<map::Map::PreparedGlobalSpread> flora;
+    std::optional<PreparedNativeBirths> births;
+    SmacGameplayRandomState before;
+    map::smac_wildlife::Result result;
+    bool committed=false,notified=false;
+};
+UnitManager::PreparedGlobalEcology::PreparedGlobalEcology(std::unique_ptr<Data> data):m_data(std::move(data)) {}
+UnitManager::PreparedGlobalEcology::~PreparedGlobalEcology()=default;
+UnitManager::PreparedGlobalEcology::PreparedGlobalEcology(PreparedGlobalEcology&&) noexcept=default;
+UnitManager::PreparedGlobalEcology& UnitManager::PreparedGlobalEcology::operator=(PreparedGlobalEcology&&) noexcept=default;
+const map::smac_wildlife::Result& UnitManager::PreparedGlobalEcology::Result() const {
+    if(!m_data) {throw std::runtime_error("Global ecology plan was moved");}return m_data->result;
+}
+const map::TerrainRenderUpdate* UnitManager::PreparedGlobalEcology::TerrainPayload() const {
+    if(!m_data) {throw std::runtime_error("Global ecology plan was moved");}
+    return m_data->owner->GetMap()->GetGlobalSpreadTerrainPayload(*m_data->flora);
+}
+void UnitManager::PreparedGlobalEcology::Commit() {
+    if(!m_data || m_data->committed) {throw std::runtime_error("Global ecology plan is not pending");}
+    auto& d=*m_data;auto& simulation=d.owner->m_game->m_simulation->value;
+    if(!(simulation.gameplay_random==d.before)) {throw std::runtime_error("Global ecology RNG changed before publication");}
+    // Flora's complete stale-input checks precede all publication. The owning
+    // factory commit and RNG assignment cannot throw after flora commits.
+    d.owner->GetMap()->CommitGlobalSpread(*d.flora);
+    d.births->Commit();simulation.gameplay_random=d.result.random;d.committed=true;
+}
+void UnitManager::PreparedGlobalEcology::Notify(GSE_CALLABLE) {
+    if(!m_data || !m_data->committed || m_data->notified) {throw std::runtime_error("Global ecology notification is not pending");}
+    m_data->owner->m_game->CheckRW(GSE_CALL);
+    if(gc_space!=m_data->owner->m_game->GetGCSpace()) {throw std::runtime_error("Global ecology notification requires owning accumulation");}
+    m_data->notified=true;m_data->births->Notify(GSE_CALL);
+}
+UnitManager::PreparedGlobalEcology UnitManager::PrepareGlobalEcology(GSE_CALLABLE,const map::smac_wildlife::Input& input) {
+    m_game->RequireSmacGameplayActive();m_game->CheckRW(GSE_CALL);
+    if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating() || !m_game->IsRunning() || !m_game->m_simulation) {
+        throw std::runtime_error("Global ecology needs its running owning accumulation");
+    }
+    const auto& simulation=m_game->m_simulation->value;auto* world=GetMap();
+    const auto& rules=m_game->GetState()->m_settings.global.GetSmacCampaignRules();
+    const auto& knowledge=world->GetSmacWorkerKnowledge();
+    if(!rules || !simulation.ecology_world || !simulation.movement_history || !knowledge
+        || input.turn!=m_game->GetTurnId() || input.life!=simulation.ecology_world->native_life
+        || input.rules!=rules->primary || input.secondary!=rules->secondary || input.unit_count!=m_units.size()
+        || input.geometry.width!=world->GetWidth() || input.geometry.height!=world->GetHeight()
+        || input.geometry.wrap!=knowledge->CopyData().horizontal_wrap) {
+        throw std::runtime_error("Global ecology supplied world inputs differ from live campaign authority");
+    }
+    simulation.movement_history->ValidateDimensions(world->GetWidth(),world->GetHeight());
+    const auto& bases=m_game->GetBM()->GetBases();
+    const auto& order=m_game->GetBM()->GetBaseRecordOrder();
+    if(input.bases.size()!=order.size()) {throw std::runtime_error("Global ecology Base extent differs from live source order");}
+    for(size_t i=0;i<order.size();++i) {
+        const auto* base=bases.at(order[i]);const auto* tile=base->GetTile();
+        if(input.bases[i].id!=i || input.bases[i].point!=std::array<int32_t,2>{{int32_t(tile->coord.x),int32_t(tile->coord.y)}}) {
+            throw std::runtime_error("Global ecology Base positions differ from live source order");
+        }
+    }
+    auto data=std::make_unique<PreparedGlobalEcology::Data>(this,simulation.gameplay_random);
+    data->flora=world->PrepareGlobalSpread(input.turn,input.observer_status,data->before);
+    world->QueryGlobalSpread(*data->flora,[&] {
+        data->births.emplace(PrepareNativeBirths(GSE_CALL,input.geometry.width,input.geometry.height,input.geometry.wrap,[&](const NativeBirthFactory& factory) {
+            map::smac_wildlife::Hooks hooks;
+            hooks.tile=[&](auto point) {return world->CopyGlobalWildlifeTile(point,factory.knowledge());};
+            hooks.site=[&](auto point) {
+                const auto& policy=*world->GetResourcePolicy();const auto* original=policy.OriginalPlanet();
+                const auto* tile=world->GetTile(point[0],point[1]);auto flags=original->At(point[0],point[1]).Items()&~0x00102000u;
+                if(simulation.movement_history->WasPlaced(point[0],point[1])) {flags|=0x100000u;}
+                if(tile->features&map::tile::FEATURE_MONOLITH) {flags|=0x2000u;}
+                return resource::smac::ResolveSiteSignal({point[0],point[1],policy.Altitude(*tile),flags,
+                    rules->AutomaticLandResources(),original->ResourcePattern(),11,61});
+            };
+            hooks.create=[&](int32_t design,auto point,SmacGameplayRandomState&) {return factory.create(design,point,{});};
+            hooks.capacity=factory.capacity;
+            hooks.sentry=[&](int32_t id,SmacGameplayRandomState&) {factory.sentry(id);};
+            hooks.promote_stack=[&](int32_t id,SmacGameplayRandomState&) {factory.promote_stack(id);};
+            data->result=map::smac_wildlife::Produce(input,world->GetGlobalSpreadRandom(*data->flora),hooks);
+        }));
+    });
+    return PreparedGlobalEcology(std::move(data));
 }
 
 }

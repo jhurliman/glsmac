@@ -14,6 +14,7 @@ namespace game::native_terrain {struct World;}
 
 #include "Types.h"
 #include "GlsmacResourceMapPolicy.h"
+#include "SmacPlanetMap.h"
 #include "SmacWorkerKnowledge.h"
 #include "GlsmacTerritoryTopology.h"
 #include "common/MTTypes.h"
@@ -161,6 +162,10 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
     std::unique_ptr<::game::native_terrain::World> CopyNativeTerrain(bool include_geometry=true) const;
     // Detached flora inputs only; retained unrelated words are not live wildlife authority.
     smac_spread::Input CopyGlobalSpreadInput(int32_t turn,const std::array<uint32_t,8>& observer_status) const;
+    // Only the fields consumed by wildlife are refreshed. The returned raw
+    // record is not a complete live 44-byte map authority. Knowledge may be
+    // the owning native factory's evolving detached view.
+    SmacPlanetMap::Tile CopyGlobalWildlifeTile(std::array<int32_t,2> point,const SmacWorkerKnowledge::Data& knowledge) const;
     class PreparedGlobalSpread {
     public:
         ~PreparedGlobalSpread();

@@ -43,8 +43,9 @@ rebuilds its owned texture only when frame calls, phase or logical size changes.
 
 ## Remaining fidelity work
 
-Faction descriptors still need independent right alignment and matching state
-colors. Portrait/quotation panel layout, button text/borders, edit selection
+Faction name/descriptor columns now use the measured alignment and baseline;
+see [the column follow-up](faction-row-columns.md). Portrait/quotation panel layout,
+button text/borders, edit selection
 background/caret behavior, source OTHER handling, and Change Gender followed by
 the original customization continuation are not yet exact. The existing Faction
 Details and Customize controls remain explicitly labeled as their current

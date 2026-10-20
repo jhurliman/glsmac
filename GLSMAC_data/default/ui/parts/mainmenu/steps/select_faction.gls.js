@@ -54,8 +54,9 @@ return (i) => {
 		if (has_preview && #is_defined(preview_data[id])) {
 			let row_style = {textalign: 'left', textleft: 6};
             if (original) { row_style = row_style + {left: 0, right: 0, top: row_index * 19,
-                height: 16, smac_frame_phase: [0, row_index * 19]}; }
-            items :+[id, name + ' (' + preview_data[id].descriptor + ')', row_style];
+                height: 16, textbaseline: 14, smac_frame_phase: [0, row_index * 19],
+                righttext: '(' + preview_data[id].descriptor + ')'}; }
+            items :+[id, original ? name : name + ' (' + preview_data[id].descriptor + ')', row_style];
 		} else { items :+[id, name]; }
         row_index++;
 	}

@@ -6,6 +6,11 @@
 #include "ui/dom/Root.h"
 #include "ui/dom/Object.h"
 #include "ui/dom/Input.h"
+#include "ui/geometry/Geometry.h"
+#include "scene/Scene.h"
+#include "scene/actor/Text.h"
+#include "scene/actor/Cache.h"
+#include <cmath>
 #include "input/Event.h"
 #include "gc/Space.h"
 #include "gse/GSE.h"
@@ -136,6 +141,60 @@ void AddUIClassTests(task::gsetests::GSETests* task) {
                     GT_OK();
                 }();
             });}catch(const std::exception& error){result=std::string("Input byte limit check threw: ")+error.what();}
+            return result;
+        });
+    });
+    task->AddTest("UI button secondary column follows live styles and releases its actor",GT(){
+        return WithWidgetGraphics([&]() -> std::string {
+            GSE runtime;std::string result;
+            auto* gc_space=runtime.GetGCSpace();
+            try {gc_space->Accumulate(&runtime,[&] {
+                auto* ctx=runtime.CreateGlobalContext();ExecutionPointer ep;const si_t si{};
+                auto* gui=new ::ui::UI(GSE_CALL);
+                util::FinallyGuard cleanup([&]{gui->GetRoot()->Container::Destroy(GSE_CALL);});
+                result=[&]() -> std::string {
+                    const auto object=[&](const value::object_properties_t& p) {return VALUE(value::Object,,GSE_CALL_NOGC,p);};
+                    auto* wrap=AsObject(gui->Wrap(GSE_CALL));auto* root=AsObject(wrap->value.at("root"));
+                    const auto count=[&] {size_t n=0;gui->GetRoot()->m_cache->GetScene()->WithActors([&](const auto& actors) {
+                        for(const auto* actor:actors) {if(actor->GetType()==scene::actor::Actor::TYPE_TEXT) {++n;}}
+                    });return n;};
+                    const auto find=[&](const std::string& text) {scene::actor::Text* found=nullptr;
+                        gui->GetRoot()->m_cache->GetScene()->WithActors([&](const auto& actors) {for(auto* actor:actors) {
+                            if(actor->GetType()==scene::actor::Actor::TYPE_TEXT) {auto* label=static_cast<scene::actor::Text*>(actor);
+                                if(label->GetText()==text) {found=label;}}
+                        }});return found;};
+                    const auto initial=count();
+                    Call(GSE_CALL,wrap,"class",{VALUE(value::String,,"column-test"),object({
+                        {"font",VALUE(value::String,,":16")},{"color",VALUE(value::String,,"rgb(255, 0, 0)")},
+                        {"_hover",object({{"color",VALUE(value::String,,"rgb(0, 0, 255)")}})},
+                        {"_selected",object({{"color",VALUE(value::String,,"rgb(0, 128, 0)")}})}
+                    })});
+                    auto* button=AsObject(Call(GSE_CALL,root,"button",{object({
+                        {"class",VALUE(value::String,,"column-test")},{"text",VALUE(value::String,,"Main")},
+                        {"width",VALUE(value::Int,,525)},{"height",VALUE(value::Int,,16)},{"textbaseline",VALUE(value::Int,,14)}
+                    })}));
+                    auto* node=::ui::dom::Object::Unwrap(button);
+                    GT_ASSERT(count()==initial+1,"ordinary button allocated an unused secondary actor");
+                    node->AddModifier(GSE_CALL,::ui::CM_HOVER);
+                    node->WrapSet("righttext",VALUE(value::String,,"Descriptor"),GSE_CALL);
+                    auto* primary=find("Main");auto* secondary=find("Descriptor");
+                    GT_ASSERT(primary && secondary && count()==initial+2,"secondary column was not created lazily");
+                    GT_ASSERT(primary->GetFont()==secondary->GetFont() && secondary->GetColor().GetRGBA()==types::Color::RGB(0,0,255),"late column font_equal="+std::to_string(primary->GetFont()==secondary->GetFont())+" primary_rgb="+std::to_string(primary->GetColor().GetRGBA())+" secondary_rgb="+std::to_string(secondary->GetColor().GetRGBA()));
+                    node->AddModifier(GSE_CALL,::ui::CM_SELECTED);
+                    GT_ASSERT(primary->GetColor().GetRGBA()==secondary->GetColor().GetRGBA() && secondary->GetColor().GetRGBA()==types::Color::RGB(0,128,0),"selected colors primary="+std::to_string(primary->GetColor().GetRGBA())+" secondary="+std::to_string(secondary->GetColor().GetRGBA()));
+                    node->RemoveModifier(GSE_CALL,::ui::CM_SELECTED);
+                    GT_ASSERT(secondary->GetColor().GetRGBA()==types::Color::RGB(0,0,255),"removing selection did not restore hover color");
+                    node->WrapSet("righttext",VALUE(value::String,,""),GSE_CALL);
+                    node->WrapSet("righttext",VALUE(value::String,,"Second"),GSE_CALL);
+                    GT_ASSERT(count()==initial+2 && find("Second")==secondary,"replacing secondary text allocated another actor");
+                    const auto& area=node->GetGeometry()->m_area;
+                    const float expected=gui->ClampX(std::round(area.right-3-secondary->GetWidth()));
+                    GT_ASSERT(std::abs(secondary->GetPosition().x-expected)<0.00001f,"secondary label did not preserve its three-pixel right inset");
+                    GT_ASSERT(std::abs(primary->GetPosition().y-gui->ClampY(std::round(area.top+14)))<0.00001f && primary->GetPosition().y==secondary->GetPosition().y,"columns did not share their parent-relative baseline");
+                    Call(GSE_CALL,button,"remove",{});
+                    GT_ASSERT(count()==initial,"removing the button retained its secondary actor");GT_OK();
+                }();
+            });}catch(const std::exception& error){result=std::string("Button secondary column threw: ")+error.what();}
             return result;
         });
     });

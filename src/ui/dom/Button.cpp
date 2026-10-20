@@ -5,6 +5,7 @@
 #include "ui/geometry/Geometry.h"
 #include "input/Event.h"
 #include "gse/value/Bool.h"
+#include "gse/value/String.h"
 
 namespace ui {
 namespace dom {
@@ -22,6 +23,12 @@ Button::Button( DOM_ARGS )
 	ForwardProperty( GSE_CALL, "textalign", "align", m_label );
 	ForwardProperty( GSE_CALL, "textleft", "left", m_label );
 	ForwardProperty( GSE_CALL, "texttop", "top", m_label );
+    ForwardProperty( GSE_CALL, "textbaseline", "baseline", m_label );
+
+    Property(GSE_CALL, "righttext", gse::VT_STRING, nullptr, PF_NONE,
+        [this](GSE_CALLABLE, gse::Value* const value) {
+            SetRightText(GSE_CALL, static_cast<gse::value::String*>(value)->value);
+        }, [this](GSE_CALLABLE) { SetRightText(GSE_CALL, ""); });
 
 	m_sound = new Sound( GSE_CALL, ui, this, {} );
 	Embed( m_sound );
@@ -76,6 +83,33 @@ Button::Button( DOM_ARGS )
 		}
 	);
 
+}
+
+void Button::SetRightText( GSE_CALLABLE, const std::string& text ) {
+    if (m_geometry->IsDestroying()) { return; }
+    if (!m_right_label && !text.empty()) {
+        // Allocate only for the rows that use a second column. Reuse it when
+        // text is cleared, so forwarded style targets remain valid until teardown.
+        const auto* current = static_cast<gse::value::Object*>(m_label->Wrap(GSE_CALL));
+        auto* label = new Text(GSE_CALL, m_ui, this, {});
+        label->GetGeometry()->SetAlign(geometry::Geometry::ALIGN_RIGHT);
+        label->GetGeometry()->SetRight(3);
+        AddChild(GSE_CALL, label, true, true);
+        m_right_label = label;
+        for (const auto* key : {"font", "color", "transform"}) {
+            ForwardProperty(GSE_CALL, key, label);
+            const auto found = current->value.find(key);
+            if (found != current->value.end() && found->second) {
+                // Seed the live value without turning a class style into a
+                // manual override that would suppress later row states.
+                OnPropertyChange(GSE_CALL, key, found->second);
+            }
+        }
+        ForwardProperty(GSE_CALL, "textbaseline", "baseline", label);
+        const auto baseline = current->value.find("baseline");
+        if (baseline != current->value.end() && baseline->second) { OnPropertyChange(GSE_CALL, "textbaseline", baseline->second); }
+    }
+    if (m_right_label) { m_right_label->SetText(text); }
 }
 
 const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {

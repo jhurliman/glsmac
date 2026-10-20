@@ -50,7 +50,8 @@ const i = {glsmac: glsmac, popup: popup, steps: {select_identity: (context, fact
 popup.show({title: 'Rules', width: 440, height: 200});
 choose_faction(i);
 test.assert(title == 'CHOOSE A FACTION' && portrait == 'morgan.pcx');
-test.assert((choices.items[0])[1] == 'Morgan Industries (Role MORGAN)');
+test.assert((choices.items[0])[1] == 'Morgan Industries');
+test.assert((choices.items[0])[2].righttext == '(Role MORGAN)');
 choices.value = 'MORGANITES';
 test.assert(choices.handlers.select({value: 'MORGANITES'}) == true);
 test.assert(portrait == 'morgan.pcx' && lines[0] == 'Quote morgan.txt' && lines[1] == 'Attribution');

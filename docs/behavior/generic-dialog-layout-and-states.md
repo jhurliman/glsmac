@@ -99,7 +99,7 @@ TEXT.PCX. Secondary color9 is converted to−1 by the theme loader. Independent
 PCX decoding checks the color indices against the executed theme tables.
 
 FACTION list width525; row i is `[0,19*i,525,19*i+16)` for i0..6. Native text
-origins are x6 and baseline `14+19*i`; the descriptor right edge is519. Both
+origins are x6 and baseline `14+19*i`; the descriptor right edge is522. Both
 columns use the same Narrow16 bold font. The `|` delimiter is suppressed, and
 the parenthesized descriptor is right-aligned. Row styles preserve the original
 atlas scanlines; their center texture is not a newly invented solid color.
@@ -151,3 +151,6 @@ host pointer or live game session is operated. Modal input and naturally reached
 view/console admission remain separate gates. For glyph fidelity use the separate
 `dialog-gdi-synthetic-glyphs.md` handoff; bundled bold fonts differ from stock GDI
 synthesis.
+
+The earlier prose value519 was incorrect; the original captured text coordinates
+already use522. See [the source and metric correction](faction-descriptor-right-alignment.md).

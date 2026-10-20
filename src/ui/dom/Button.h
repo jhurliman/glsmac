@@ -24,6 +24,8 @@ protected:
 
 private:
 	Text* m_label;
+    Text* m_right_label = nullptr;
+    void SetRightText( GSE_CALLABLE, const std::string& text );
 	Sound* m_sound;
 
 	input::mouse_button_t m_last_button = input::MB_NONE;

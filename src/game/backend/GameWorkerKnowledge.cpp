@@ -181,6 +181,7 @@ void Game::CompleteSmacWorkerKnowledgeRestore() {
         }
 		ValidateSmacWorkerKnowledge( *m_map->m_worker_knowledge );
 		m_map->m_worker_knowledge_ready = true;
+        m_actor_visibility_dirty=true; // a restored idle world still needs its first owned scene snapshot
 	}
 }
 
@@ -479,6 +480,7 @@ void Game::PublishActorVisibilityUpdate() {
                     const auto design=std::find_if(designs.begin(),designs.end(),[&](const auto& d){return d.source_id==unit->Native().design;});
                     if(design!=designs.end()) {chassis=design->chassis_id;}
                 } else if(!unit->IsConventionalPending()) {chassis=ResolveConventionalDesign(unit->Conventional(),*m_simulation).chassis;}
+                if(unit->IsConventional()) {row.chassis=chassis;} // native graphics overrides require their separate row authority
                 if(chassis && *chassis>=0 && size_t(*chassis)<predefined->catalog.chassis.chassis.size()) {
                     const auto domain=static_cast<int32_t>(predefined->catalog.chassis.chassis[*chassis].triad);
                     if(domain>=0 && domain<=2) {row.domain=static_cast<uint8_t>(domain);}

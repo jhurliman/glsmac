@@ -12,6 +12,8 @@
 #include "game/frontend/Game.h"
 #include "game/frontend/tile/TileManager.h"
 #include "BadgeDefs.h"
+#include "engine/Engine.h"
+#include "loader/texture/TextureLoader.h"
 #include "types/mesh/Rectangle.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
@@ -70,6 +72,12 @@ const actor_visibility::UnitPlan* UnitManager::GetTilePresentation(const tile::T
     if(m_game->m_bm && m_game->m_bm->UsesSmacPopulation()) {return &m_hidden_plan;}
     return nullptr;
 }
+int UnitManager::GetStackChassisOffset(const Unit* unit) const {
+    const auto* snapshot=m_game->GetActorVisibility();if(!snapshot || !unit) {return -1;}
+    const auto row=snapshot->units.find(unit->GetId());if(row==snapshot->units.end() || !row->second.chassis) {return -1;}
+    const auto cached=m_chassis_flag_offsets.find(*row->second.chassis);if(cached!=m_chassis_flag_offsets.end()) {return cached->second;}
+    return m_chassis_flag_offsets.emplace(*row->second.chassis,g_engine->GetTextureLoader()->GetSmacChassisFlagOffset(*row->second.chassis)).first->second;
+}
 bool UnitManager::IsBodyAdmitted(const Unit* unit) const {
     if(!unit || !unit->GetTile()) {return false;}
     const auto plan=GetTilePresentation(*unit->GetTile());return !plan || plan->body==unit->GetId();
@@ -77,8 +85,7 @@ bool UnitManager::IsBodyAdmitted(const Unit* unit) const {
 bool UnitManager::IsStackBadgeAdmitted(const Unit* unit) const {
     if(!unit || !unit->GetTile()) {return false;}
     const auto plan=GetTilePresentation(*unit->GetTile());
-    return !plan || (plan->body && *plan->body!=unit->GetId() && unit->GetTile()->GetUnits().count(*plan->body)
-        && std::find(plan->stack.begin(),plan->stack.end(),unit->GetId())!=plan->stack.end());
+    return !plan; // Ordinary stacks use one representative silhouette, never member badges.
 }
 void UnitManager::RefreshVisibility() {
     m_visibility_snapshot=nullptr;m_visibility_members.clear();m_visibility_plans.clear();
@@ -395,7 +402,8 @@ void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 		unit->SetActiveOnTile();
 
 		m_selected_unit = unit;
-		m_selected_unit->Show();
+        if(GetTilePresentation(*unit->GetTile())) {unit->GetTile()->Render();}
+        else {m_selected_unit->Show();}
 
 		m_game->SetSelectedTile( m_selected_unit->GetTile() );
 		m_game->RefreshSelectedTile( m_selected_unit );
@@ -430,6 +438,7 @@ void UnitManager::DeselectUnit() {
 	m_controller_selection.reset();
 	m_previously_deselected_unit = m_selected_unit;
 	if ( m_selected_unit ) {
+        auto* previous_tile=m_selected_unit->GetTile();
 		auto* most_important_unit = m_game->GetSelectedTileMostImportantUnit();
 		if ( !most_important_unit || m_selected_unit == most_important_unit ) {
 			m_selected_unit->StopBadgeBlink( true );
@@ -440,6 +449,7 @@ void UnitManager::DeselectUnit() {
 			most_important_unit->Show();
 		}
 		m_selected_unit = nullptr;
+        if(GetTilePresentation(*previous_tile)) {previous_tile->Render();}
 	}
 }
 

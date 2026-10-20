@@ -438,6 +438,7 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
                 const auto& authority=*packet->data.actor_visibility.snapshot;
                 GT_ASSERT(authority.available && authority.viewer==1 && authority.width==128 && authority.height==64
                     && authority.units.at(71).visible_to==2 && authority.units.at(72).visible_to==4
+                    && authority.units.at(71).chassis==0 && authority.units.at(72).chassis==0
                     && authority.units.at(71).flags==foreign->Conventional().native_flags && authority.units.at(71).stack.has_value()==foreign->SourceStack().has_value()
                     && authority.Known(18,16) && !authority.Known(-1,0) && !authority.Known(1,0),
                     "Actor authority lost authenticated viewer, generic geometry, stored disclosure or independent flags");
@@ -713,7 +714,18 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
 			} );
 			GT_ASSERT( starts == 1 && pending && query_blocked && spawn_blocked && base_blocked, "restored start escaped knowledge/producer readiness gate" );
 			GT_ASSERT( game->GetUM()->GetUnits().size() == 2 && game->GetBM()->GetBases().size() == 2
-				&& game->GetSmacWorkerAvailability( *game->GetBM()->GetBase( 901 ) ) == expected, "actual InitComplete did not publish knowledge after both manager drains" ); GT_OK();
+				&& game->GetSmacWorkerAvailability( *game->GetBM()->GetBase( 901 ) ) == expected, "actual InitComplete did not publish knowledge after both manager drains" );
+            (void)destination.Updates(); // ordinary spawn queues can drain before the frontend requests authority
+            const auto authority_before=destination.Snapshot();const auto random_before=destination.GameplayRandom();
+            destination.PublishMapKnowledge(GSE_CALL);
+            const auto& published=destination.QueuedFrontendRequests();
+            const auto actor=std::find_if(published.begin(),published.end(),[](const auto& r){return r.type==game::FrontendRequest::FR_ACTOR_VISIBILITY;});
+            GT_ASSERT(actor!=published.end() && actor->data.actor_visibility.snapshot && actor->data.actor_visibility.snapshot->HasViewer()
+                && actor->data.actor_visibility.snapshot->units.size()==2 && actor->data.actor_visibility.snapshot->bases.size()==2,
+                "Idle restored world omitted its first authenticated actor snapshot after initial queues drained");
+            GT_ASSERT(destination.Snapshot()==authority_before && destination.GameplayRandom()==random_before,"Initial restored presentation replayed authority or RNG");
+            const auto count=published.size();destination.PublishMapKnowledge(GSE_CALL);
+            GT_ASSERT(destination.QueuedFrontendRequests().size()==count,"Restored idle presentation repeated without changes");GT_OK();
 		} );
 	} );
 	task->AddTest( "SMAC live worker knowledge world prefix bounds before copying and map admission", []( GSE*, context::Context* ) -> std::string {

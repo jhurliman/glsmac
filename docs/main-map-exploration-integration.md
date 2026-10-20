@@ -99,7 +99,7 @@ Do not wire all scene actors to one terrain-known Boolean:
   delivers current disclosure and separate discovery to the frontend across map
   sizes. [Base disclosure drawing](base-disclosure-drawing.md) now separates live
   models/population badges from primary names. Duration expiry, remaining Base
-  view options remain open. [Ordinary Unit disclosure drawing](unit-disclosure-drawing.md) now wires the static lookup/head, representative and overlay gates; its special-view and stack-layout boundaries remain explicit.
+  view options remain open. [Ordinary Unit disclosure drawing](unit-disclosure-drawing.md) now wires the static lookup/head, representative and overlay gates; its [native stack marker and live caller integration](native-stack-marker.md) now close ordinary overlay count/lifetime; special-view boundaries remain explicit.
 - Admit the lookup/head Unit before native stack promotion; filtering and sorting
   all members independently changes the mixed-owner control. Use retained source
   links/status/domain and the actual selection/control/pending context.

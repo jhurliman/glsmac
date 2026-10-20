@@ -5,6 +5,9 @@
 #include "loader/texture/SmacPalette.h"
 #include "task/gsetests/GSETests.h"
 #include <memory>
+#include <filesystem>
+#include <cstdlib>
+#include <SDL_image.h>
 
 namespace gse::tests {
 void AddSmacCardOverlayTests(task::gsetests::GSETests* task) {
@@ -36,6 +39,24 @@ void AddSmacCardOverlayTests(task::gsetests::GSETests* task) {
         GT_ASSERT(copy.data.slot_define.slotdefs!=message.data.slot_define.slotdefs
             && copy.data.slot_define.slotdefs->at(0).native_palette_slot==3 && copy.data.slot_define.slotdefs->at(1).native_palette_slot==255,
             "Owned slot request copy lost explicit palette identity or absence");
+        GT_OK();
+    });
+    task->AddTest("SMAC chassis flag anchors decode nine original owned UNITS markers",GT(){
+        const auto* assets=std::getenv("GLSMAC_SCOUT_ASSETS");if(!assets || !*assets) {GT_OK();}
+        const auto path=std::filesystem::path(assets)/"units.pcx";
+        std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)> units(IMG_Load(path.string().c_str()),SDL_FreeSurface);
+        GT_ASSERT(units,"Cannot load owned indexed UNITS marker fixture");
+        const std::array<int,9> expected{{13,14,15,17,12,11,12,13,11}};
+        GT_ASSERT(loader::texture::ExtractSmacChassisFlagOffsets(units.get())==expected,"Original nine initialized chassis bytes differ from production art scanner");
+        // The actual producer traverses columns before rows and preserves zero
+        // when no marker overwrites a freshly initialized byte.
+        for(int y=0;y<units->h;++y) {std::fill_n(static_cast<uint8_t*>(units->pixels)+size_t(y)*units->pitch,units->w,uint8_t(0));}
+        static_cast<uint8_t*>(units->pixels)[units->pitch+918+2]=251;
+        static_cast<uint8_t*>(units->pixels)[2*units->pitch+918+51]=251;
+        auto actual=loader::texture::ExtractSmacChassisFlagOffsets(units.get());
+        GT_ASSERT(actual[0]==51 && actual[1]==0,"Art marker scan used first hit, wrong key rebasing or invented midpoint");
+        units->w=1000;actual=loader::texture::ExtractSmacChassisFlagOffsets(units.get());
+        for(auto value:actual) {GT_ASSERT(value==-1,"Incomplete art dimensions admitted marker reads");}
         GT_OK();
     });
     task->AddTest("SMAC card badge indexed UNITS recoloring and software display palette",GT(){

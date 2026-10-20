@@ -11,6 +11,18 @@ struct SmacUnitBadge {
     Indexed indexed{};
     std::array<uint8_t,Width*Height*4> rgba{};
 };
+inline std::array<int,9> ExtractSmacChassisFlagOffsets(const SDL_Surface* units) {
+    std::array<int,9> result;result.fill(-1);
+    if(!units || !units->format || units->format->BitsPerPixel!=8 || !units->pixels || units->pitch<units->w || units->w<1018 || units->h<=618) {return result;}
+    for(size_t i=0;i<result.size();++i) {
+        result[i]=0; // fresh native art table starts zero; last column hit wins
+        for(size_t x=918;x<1018;++x) {for(size_t y=1+77*i;y<=2+77*i;++y) {
+            const auto index=static_cast<uint8_t>(static_cast<const uint8_t*>(units->pixels)[y*units->pitch+x]+10);
+            if(index==5) {result[i]=int(x-918);}
+        }}
+    }
+    return result;
+}
 inline SmacUnitBadge::Indexed ExtractSmacUnitBadge(const SDL_Surface* units,int level,int variant) {
     if(!units || !units->format || units->format->BitsPerPixel!=8 || !units->pixels || units->pitch<units->w
         || level<0 || level>6 || variant<0 || variant>1) {throw std::invalid_argument("Invalid indexed Unit badge source");}

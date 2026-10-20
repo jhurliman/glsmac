@@ -80,6 +80,7 @@ InstancedSprite* InstancedSpriteManager::GetScoutSprite( const std::string& name
         offset={(target[0]-48)/96.0f,(48-target[1])/48.0f};
     }
 	NEWV( sprite, scene::actor::Sprite, name, size, texture.get(), { { 0, 0 }, { 1, 1 } }, offset );
+    if(native_projection) {sprite->SetRenderFlags(scene::actor::Actor::RF_IGNORE_LIGHTING);}
 	std::unique_ptr< scene::actor::Sprite, decltype( delete_sprite ) > sprite_owner( sprite, delete_sprite );
 	NEWV( actor, scene::actor::Instanced, sprite );
 	sprite_owner.release();

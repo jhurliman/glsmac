@@ -53,7 +53,7 @@ sprite::Sprite* BadgeDefs::GetNativeMapSprite(sprite::Sprite* source) {
             original->actor->GetSpriteActor()->GetTexture(),original->xy,original->wh,
             {original->xy.x+width,original->xy.y},{width/96.0f,height/48.0f},ZL_UNITS,0.005f);
         sprite->texture_owner=original->texture_owner;
-        sprite->actor->GetSpriteActor()->SetRenderFlags(original->actor->GetSpriteActor()->GetRenderFlags());
+        sprite->actor->GetSpriteActor()->SetRenderFlags(original->actor->GetSpriteActor()->GetRenderFlags() | scene::actor::Actor::RF_IGNORE_LIGHTING);
         try {found=m_native_map_sprites.emplace(original->key,sprite::Sprite{sprite,1}).first;}
         catch(...) {m_ism->RemoveInstancedSpriteByKey(sprite->key);throw;}
     }

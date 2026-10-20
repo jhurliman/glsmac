@@ -1,0 +1,518 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Complete native45f550 art initializer and initialized nine chassis x-anchor bytes; supplied memory Win32/FILE services, no field writer or pixel getter sinks.",
+  "asset_hashes": {
+    "palette.pcx": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "XI.PCX": "3106dbe0a7cad5e701d1678e9eaa268dde67628b8476a84e517b1f458ddc7494",
+    "XF.PCX": "2646e142878e6942a191e30fc4759a678a42360b191444de132d8ead19932af2",
+    "PALETTE.PCX": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "UNITS.PCX": "1da9f262b4a90c6d26378e1421cc7bcc9dc561491337c1d8c111793a82b8285d"
+  },
+  "source_guards": [
+    {
+      "address": "0x45f738",
+      "mnemonic": "push",
+      "operands": "0x6a8228"
+    },
+    {
+      "address": "0x45f742",
+      "mnemonic": "call",
+      "operands": "0x5f0be0"
+    },
+    {
+      "address": "0x45f971",
+      "mnemonic": "mov",
+      "operands": "dword ptr [esp + 0x10], 2"
+    },
+    {
+      "address": "0x45f979",
+      "mnemonic": "mov",
+      "operands": "dword ptr [esp + 0x18], 0x9b7146"
+    },
+    {
+      "address": "0x45f991",
+      "mnemonic": "dec",
+      "operands": "ecx"
+    },
+    {
+      "address": "0x45f9a2",
+      "mnemonic": "lea",
+      "operands": "edi, [ebx + 0x396]"
+    },
+    {
+      "address": "0x45f9b2",
+      "mnemonic": "call",
+      "operands": "0x5fb010"
+    },
+    {
+      "address": "0x45f9be",
+      "mnemonic": "call",
+      "operands": "0x5fb010"
+    },
+    {
+      "address": "0x45f9c3",
+      "mnemonic": "cmp",
+      "operands": "eax, 5"
+    },
+    {
+      "address": "0x45f9cc",
+      "mnemonic": "mov",
+      "operands": "byte ptr [edx], bl"
+    },
+    {
+      "address": "0x45f9d8",
+      "mnemonic": "inc",
+      "operands": "ebx"
+    },
+    {
+      "address": "0x45f9d9",
+      "mnemonic": "cmp",
+      "operands": "ebx, 0x64"
+    },
+    {
+      "address": "0x45fa1f",
+      "mnemonic": "add",
+      "operands": "eax, 0x90"
+    },
+    {
+      "address": "0x45fa24",
+      "mnemonic": "add",
+      "operands": "edi, 0x4d"
+    },
+    {
+      "address": "0x45fa2d",
+      "mnemonic": "cmp",
+      "operands": "eax, 0x9b7656"
+    },
+    {
+      "address": "0x570090",
+      "mnemonic": "mov",
+      "operands": "dl, byte ptr [ecx + ebx + 0x9b7146]"
+    },
+    {
+      "address": "0x57002e",
+      "mnemonic": "test",
+      "operands": "al, al"
+    },
+    {
+      "address": "0x570032",
+      "mnemonic": "movsx",
+      "operands": "esi, al"
+    },
+    {
+      "address": "0x570035",
+      "mnemonic": "add",
+      "operands": "esi, 9"
+    },
+    {
+      "address": "0x5702f6",
+      "mnemonic": "cmp",
+      "operands": "byte ptr [ecx + edx + 0x9b7146], 0x32"
+    },
+    {
+      "address": "0x5702fe",
+      "mnemonic": "jbe",
+      "operands": "0x570344"
+    },
+    {
+      "address": "0x57033c",
+      "mnemonic": "sub",
+      "operands": "ecx, eax"
+    },
+    {
+      "address": "0x5703a7",
+      "mnemonic": "add",
+      "operands": "dword ptr [esp + 0x48], eax"
+    }
+  ],
+  "source_functions": [
+    {
+      "start": "0x45f550",
+      "end": "0x45fab0",
+      "sha256": "dbefc259cfd5ec931f0878029d88479ec3a7140363e17284a90b971e6dbcc3f6"
+    },
+    {
+      "start": "0x56fd50",
+      "end": "0x570a90",
+      "sha256": "0f7d8130a653eb2833e1aee99d1cc0fde69e8c162501deeca6f973008afaba02"
+    }
+  ],
+  "rows": [
+    {
+      "chassis": 0,
+      "name": "Infantry",
+      "address": "0x9b7146",
+      "before": 0,
+      "initialized": 13,
+      "scan_x": [
+        918,
+        1018
+      ],
+      "scan_rows": [
+        1,
+        2
+      ],
+      "marker_hits": [
+        [
+          13,
+          2
+        ]
+      ],
+      "branch_greater_than50": false
+    },
+    {
+      "chassis": 1,
+      "name": "Speeder",
+      "address": "0x9b71d6",
+      "before": 0,
+      "initialized": 14,
+      "scan_x": [
+        918,
+        1018
+      ],
+      "scan_rows": [
+        78,
+        79
+      ],
+      "marker_hits": [
+        [
+          14,
+          79
+        ]
+      ],
+      "branch_greater_than50": false
+    },
+    {
+      "chassis": 2,
+      "name": "Hovertank",
+      "address": "0x9b7266",
+      "before": 0,
+      "initialized": 15,
+      "scan_x": [
+        918,
+        1018
+      ],
+      "scan_rows": [
+        155,
+        156
+      ],
+      "marker_hits": [
+        [
+          15,
+          156
+        ]
+      ],
+      "branch_greater_than50": false
+    },
+    {
+      "chassis": 3,
+      "name": "Foil",
+      "address": "0x9b72f6",
+      "before": 0,
+      "initialized": 17,
+      "scan_x": [
+        918,
+        1018
+      ],
+      "scan_rows": [
+        232,
+        233
+      ],
+      "marker_hits": [
+        [
+          17,
+          233
+        ]
+      ],
+      "branch_greater_than50": false
+    },
+    {
+      "chassis": 4,
+      "name": "Cruiser",
+      "address": "0x9b7386",
+      "before": 0,
+      "initialized": 12,
+      "scan_x": [
+        918,
+        1018
+      ],
+      "scan_rows": [
+        309,
+        310
+      ],
+      "marker_hits": [
+        [
+          12,
+          310
+        ]
+      ],
+      "branch_greater_than50": false
+    },
+    {
+      "chassis": 5,
+      "name": "Needlejet",
+      "address": "0x9b7416",
+      "before": 0,
+      "initialized": 11,
+      "scan_x": [
+        918,
+        1018
+      ],
+      "scan_rows": [
+        386,
+        387
+      ],
+      "marker_hits": [
+        [
+          11,
+          387
+        ]
+      ],
+      "branch_greater_than50": false
+    },
+    {
+      "chassis": 6,
+      "name": "Copter",
+      "address": "0x9b74a6",
+      "before": 0,
+      "initialized": 12,
+      "scan_x": [
+        918,
+        1018
+      ],
+      "scan_rows": [
+        463,
+        464
+      ],
+      "marker_hits": [
+        [
+          12,
+          464
+        ]
+      ],
+      "branch_greater_than50": false
+    },
+    {
+      "chassis": 7,
+      "name": "Gravship",
+      "address": "0x9b7536",
+      "before": 0,
+      "initialized": 13,
+      "scan_x": [
+        918,
+        1018
+      ],
+      "scan_rows": [
+        540,
+        541
+      ],
+      "marker_hits": [
+        [
+          13,
+          541
+        ]
+      ],
+      "branch_greater_than50": false
+    },
+    {
+      "chassis": 8,
+      "name": "Missile",
+      "address": "0x9b75c6",
+      "before": 0,
+      "initialized": 11,
+      "scan_x": [
+        918,
+        1018
+      ],
+      "scan_rows": [
+        617,
+        618
+      ],
+      "marker_hits": [
+        [
+          11,
+          618
+        ]
+      ],
+      "branch_greater_than50": false
+    }
+  ],
+  "native_writes": [
+    {
+      "pc": "0x45f9cc",
+      "address": "0x9b7146",
+      "size": 1,
+      "value": 13
+    },
+    {
+      "pc": "0x45f9cc",
+      "address": "0x9b71d6",
+      "size": 1,
+      "value": 14
+    },
+    {
+      "pc": "0x45f9cc",
+      "address": "0x9b7266",
+      "size": 1,
+      "value": 15
+    },
+    {
+      "pc": "0x45f9cc",
+      "address": "0x9b72f6",
+      "size": 1,
+      "value": 17
+    },
+    {
+      "pc": "0x45f9cc",
+      "address": "0x9b7386",
+      "size": 1,
+      "value": 12
+    },
+    {
+      "pc": "0x45f9cc",
+      "address": "0x9b7416",
+      "size": 1,
+      "value": 11
+    },
+    {
+      "pc": "0x45f9cc",
+      "address": "0x9b74a6",
+      "size": 1,
+      "value": 12
+    },
+    {
+      "pc": "0x45f9cc",
+      "address": "0x9b7536",
+      "size": 1,
+      "value": 13
+    },
+    {
+      "pc": "0x45f9cc",
+      "address": "0x9b75c6",
+      "size": 1,
+      "value": 11
+    }
+  ],
+  "render_controls": [
+    {
+      "input": {
+        "id": "infantry13_z0",
+        "stack": true,
+        "owner": 3,
+        "second_owner": 2,
+        "second_domain": 0,
+        "chassis": 0,
+        "anchor_byte": 13,
+        "zoom": 0
+      },
+      "marker": [
+        113,
+        76
+      ],
+      "primary": [
+        119,
+        76
+      ]
+    },
+    {
+      "input": {
+        "id": "speeder14_z0",
+        "stack": true,
+        "owner": 3,
+        "second_owner": 2,
+        "second_domain": 0,
+        "chassis": 1,
+        "anchor_byte": 14,
+        "zoom": 0
+      },
+      "marker": [
+        114,
+        76
+      ],
+      "primary": [
+        120,
+        76
+      ]
+    },
+    {
+      "input": {
+        "id": "infantry13_z8",
+        "stack": true,
+        "owner": 3,
+        "second_owner": 2,
+        "second_domain": 0,
+        "chassis": 0,
+        "anchor_byte": 13,
+        "zoom": 8
+      },
+      "marker": [
+        119,
+        76
+      ],
+      "primary": [
+        128,
+        76
+      ]
+    },
+    {
+      "input": {
+        "id": "speeder14_z8",
+        "stack": true,
+        "owner": 3,
+        "second_owner": 2,
+        "second_domain": 0,
+        "chassis": 1,
+        "anchor_byte": 14,
+        "zoom": 8
+      },
+      "marker": [
+        121,
+        76
+      ],
+      "primary": [
+        130,
+        76
+      ]
+    },
+    {
+      "input": {
+        "id": "boundary50",
+        "stack": true,
+        "owner": 3,
+        "second_owner": 2,
+        "second_domain": 0,
+        "chassis": 0,
+        "anchor_byte": 50,
+        "zoom": 0
+      },
+      "marker": [
+        150,
+        76
+      ],
+      "primary": [
+        156,
+        76
+      ]
+    },
+    {
+      "input": {
+        "id": "boundary51",
+        "stack": true,
+        "owner": 3,
+        "second_owner": 2,
+        "second_domain": 0,
+        "chassis": 0,
+        "anchor_byte": 51,
+        "zoom": 0
+      },
+      "marker": [
+        145,
+        76
+      ],
+      "primary": [
+        151,
+        76
+      ]
+    }
+  ]
+}

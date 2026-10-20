@@ -2052,14 +2052,16 @@ public:
 		public:
 			types::texture::Texture bitmap{ 512, 512 };
             int card_owner=-1,card_variant=-1;
+            bool patterned=false;
+            int GetSmacChassisFlagOffset(int c) override {const std::array<int,9> offsets{{13,14,15,17,12,11,12,13,11}};return c>=0 && c<9 ? offsets[size_t(c)]:-1;}
             std::shared_ptr<const loader::texture::SmacUnitBadge> GetSmacUnitBadge(int owner,int level,int variant) override {
                 if(owner!=3 || level<0 || level>6 || variant<0 || variant>1) {throw std::runtime_error("Card used wrong native badge bank");}
                 card_owner=owner;card_variant=variant;
                 auto result=std::make_shared<loader::texture::SmacUnitBadge>();
-                result->rgba.fill(255);return result;
+                result->rgba.fill(255);if(patterned) {result->rgba[3]=0;result->rgba[7]=0;result->rgba[8]=17;result->rgba[9]=33;result->rgba[10]=99;}return result;
             }
             std::shared_ptr<const loader::texture::SmacGraphPalette> GetSmacGraphPalette() override {
-                return std::make_shared<loader::texture::SmacGraphPalette>();
+                auto result=std::make_shared<loader::texture::SmacGraphPalette>();if(patterned) {result->alternate[3]=201;result->colors[201]={{123,45,67}};}return result;
             }
             types::texture::Texture* CreateSmacNativeBadgeTexture(int level,int variant) override {
                 if(level<0 || level>6 || variant!=0) {throw std::runtime_error("Wrong native badge bank");}
@@ -2234,13 +2236,14 @@ public:
                 frontend.m_map_data.native_projection=true;
                 util::FinallyGuard restore_projection([&]{frontend.m_map_data.native_projection=false;});
                 StaticDef native_source("NATIVE_WORLD_SCOUT",manager->GetMoraleSet("SCOUT_TEST"),"Native map Scout",MT_LAND,1,
-                    new CvrScoutRender(2,0,100,100,{1,1},{128,128},profile));
+                    new CvrScoutRender(2,0,100,100,{2.56f,2.73066667f},{128,128},profile));
                 um->DefineUnit(&native_source);
                 auto* native=um->m_unitdefs.at("NATIVE_WORLD_SCOUT")->GetSprite(0)->instanced_sprite;
+                GT_ASSERT(native->actor->GetSpriteActor()->GetRenderFlags() & scene::actor::Actor::RF_IGNORE_LIGHTING,"Baked native CVR model entered world gamma/contrast lighting");
                 game::frontend::unit::UnitDef legacy(ism.get(),&native_source);
                 auto* explicit_sprite=legacy.GetSprite(0)->instanced_sprite;
                 GT_ASSERT(native->actor!=explicit_sprite->actor && native->texture_owner==explicit_sprite->texture_owner &&
-                    explicit_sprite->actor->GetSpriteActor()->GetDimensions()==types::Vec2<float>(1,1),
+                    explicit_sprite->actor->GetSpriteActor()->GetDimensions()==types::Vec2<float>(2.56f,2.73066667f),
                     "Native placement altered legacy descriptor geometry or duplicated model pixels");
                 scene::Camera camera(scene::Camera::CT_ORTHOGRAPHIC);
                 camera.SetCustomAspectRatio(768.0f/1024);camera.SetAngle({-float(M_PI)*0.5f,float(M_PI)*0.75f,0});
@@ -2296,6 +2299,95 @@ public:
                                 " relative to helper "+anchor.ToString()+" instead of original canvas geometry");
                         }
                     }
+                }
+                {
+                    // Original native stock anchors, one representative silhouette,
+                    // and shared overlay suppression through actual actor instances.
+                    scene::Scene stack_scene("Independent stack overlay clock",scene::SCENE_TYPE_WORLD);
+                    auto stack_ism=std::make_unique<game::frontend::sprite::InstancedSpriteManager>(&stack_scene);
+                    auto stack_badges=std::make_unique<game::frontend::unit::BadgeDefs>(stack_ism.get());
+                    const std::array<int,9> anchors{{13,14,15,17,12,11,12,13,11}};
+                    for(size_t i=0;i<anchors.size();++i) {GT_ASSERT(g_engine->GetTextureLoader()->GetSmacChassisFlagOffset(int(i))==anchors[i],"Chassis service differs from native initialized values");}
+                    badges_loader->patterned=true;util::FinallyGuard restore_badge_mask([&]{badges_loader->patterned=false;});
+                    auto previous=std::move(frontend.m_actor_visibility);
+                    const auto previous_selectables=um->m_selectable_units;
+                    util::FinallyGuard restore_stack([&]{um->m_selected_unit=nullptr;um->m_selectable_units=previous_selectables;frontend.m_is_turn_active=false;frontend.m_actor_visibility=std::move(previous);um->RefreshVisibility();});
+                    game::frontend::tile::Tile stack_tile({2,2});
+                    game::frontend::Slot stack_slot(32,&faction);um->DefineSlotBadges(32,&faction,3);
+                    namespace av=game::actor_visibility;
+                    av::Snapshot s;s.available=true;s.width=80;s.height=80;s.viewer=1;s.observers=2;
+                    s.explored_by.assign(3200,2);s.occupancy.assign(3200,av::Occupancy{15,2});
+                    av::Unit head{{2,2},1,uint8_t(0),uint16_t(0),uint32_t(0),av::Stack{0,1,-1},uint8_t(0)};head.domain=0;head.chassis=rover?1:0;
+                    auto tail=head;tail.owner=2;tail.stack=av::Stack{1,-1,0};s.units={{98,head},{97,tail}};
+                    const auto publish=[&]{frontend.m_actor_visibility=std::make_unique<av::Snapshot>(s);um->RefreshVisibility();stack_tile.Render();};
+                    const types::Vec3 coords{0,0,2};
+                    game::frontend::unit::Unit representative(um.get(),stack_badges.get(),98,um->m_unitdefs.at("NATIVE_WORLD_SCOUT"),&stack_slot,&stack_tile,coords,true,1,0,"Rank",0.4f,true,true,1);
+                    game::frontend::unit::Unit hidden_tail(um.get(),stack_badges.get(),97,um->m_unitdefs.at("NATIVE_WORLD_SCOUT"),&stack_slot,&stack_tile,coords,false,1,0,"Tail",1,true,true,1);
+                    auto* previous_frontend_manager=frontend.m_um;frontend.m_um=um.get();
+                    auto* previous_frontend_backend=frontend.m_game;frontend.m_game=&fixture.m_game;
+                    util::FinallyGuard detach_stack_selection([&]{um->m_selected_unit=nullptr;tile_manager.DeselectTile();frontend.m_um=previous_frontend_manager;frontend.m_game=previous_frontend_backend;});
+                    representative.SetMaximumHitPoints(10);representative.SetOrderGlyph('H',44);representative.Refresh();
+                    publish();
+                    const auto marker_count=[&]{return representative.m_stack_marker.def ? representative.m_stack_marker.def->instanced_sprite->actor->GetInstanceMatrices().size():0;};
+                    GT_ASSERT(marker_count()==1 && !hidden_tail.m_stack_marker.id && !representative.m_render.fake_badge.instance_id && !hidden_tail.m_render.fake_badge.instance_id,"Two-unit native stack drew per-member badges or omitted marker");
+                    for(const auto* sprite:{representative.GetBadgeSprite(),representative.GetBadgeHealthbarSprite(),representative.m_stack_marker.def}) {
+                        GT_ASSERT(sprite->instanced_sprite->actor->GetSpriteActor()->GetRenderFlags() & scene::actor::Actor::RF_IGNORE_LIGHTING,"Indexed native overlay entered world gamma/contrast lighting");
+                    }
+                    const auto raw=g_engine->GetTextureLoader()->GetSmacUnitBadge(3,0,0);
+                    const auto palette=g_engine->GetTextureLoader()->GetSmacGraphPalette();
+                    const auto rgb=palette->colors[palette->alternate[3]];
+                    const auto* marker=representative.m_stack_marker.def->instanced_sprite->texture_owner.get();
+                    GT_ASSERT(raw && marker,"Stack lost owned raw silhouette pixels");
+                    for(size_t i=0;i<23*30;++i) {
+                        const auto expected=raw->rgba[4*i+3] ? types::Color::FromRGB(rgb[0],rgb[1],rgb[2]).GetRGBA():types::Color::FromRGBA(0,0,0,0).GetRGBA();
+                        GT_ASSERT(marker->GetPixel(i%23,i/23)==expected,"Stack silhouette included primary colors, health, glyph or wrong transparency");
+                    }
+                    const auto project=[](const auto& m,const types::Vec3& p){return types::Vec2<float>{(m[0][0]*p.x+m[0][1]*p.y+m[0][2]*p.z+m[0][3]+1)*512,(1-m[1][0]*p.x-m[1][1]*p.y-m[1][2]*p.z-m[1][3])*384};};
+                    const auto first_pixel=[&](const auto* sprite){auto mesh=sprite->actor->GetSpriteActor()->GenerateMesh();types::Vec3 a;mesh->GetVertexCoord(0,&a);return project((camera.GetMatrix()*sprite->actor->GetInstanceMatrices().front()).m,a);};
+                    const auto anchor=project(camera.GetMatrix().m,types::Vec3{-0.5f,1,2});
+                    const auto flag=first_pixel(representative.GetBadgeSprite()->instanced_sprite);
+                    const auto mark=first_pixel(representative.m_stack_marker.def->instanced_sprite);
+                    GT_ASSERT(std::abs(mark.x-anchor.x-(rover?14:13))<0.001f && std::abs(flag.x-mark.x-6)<0.001f && std::abs(flag.y-mark.y)<0.001f,"Stock native chassis anchor or stack six-pixel separation differs");
+                    for(const int offset:{50,51}) {
+                        // Supplied art-anchor service matches the native boundary
+                        // controls; inspect real projected sprite bounds.
+                        um->m_chassis_flag_offsets[rover?1:0]=offset;stack_tile.Render();
+                        const auto primary=first_pixel(representative.GetBadgeSprite()->instanced_sprite);
+                        const auto silhouette=first_pixel(representative.m_stack_marker.def->instanced_sprite);
+                        GT_ASSERT(std::abs(primary.x-anchor.x-offset-(offset<=50?6:0))<0.001f && std::abs(silhouette.x-anchor.x-offset+(offset>50?6:0))<0.001f,"Native fifty/fifty-one chassis anchor branch differs");
+                    }
+                    um->m_chassis_flag_offsets[rover?1:0]=rover?14:13;
+                    s.units.at(97).stack->next=2;
+                    for(int i=2;i<13;++i) {auto extra=tail;extra.stack=av::Stack{int16_t(i),int16_t(i==12?-1:i+1),int16_t(i-1)};s.units.emplace(200+i,extra);}
+                    publish();GT_ASSERT(marker_count()==1,"Thirteen-unit stack repeated silhouette per member");
+                    auto* active_marker=representative.m_stack_marker.def;const auto active_id=representative.m_stack_marker.id;
+                    representative.SetActionability(true,false,1);representative.Refresh();stack_tile.Render();
+                    GT_ASSERT(representative.m_stack_marker.def!=active_marker && !active_marker->instanced_sprite->actor->HasInstance(active_id) && marker_count()==1,"Spent variant retained the old marker actor or lost its replacement");
+                    representative.SetActionability(true,true,1);representative.Refresh();stack_tile.Render();
+                    GT_ASSERT(representative.m_stack_marker.def==active_marker && marker_count()==1,"Reactivated representative failed to reuse its raw marker bank");
+                    // Reproduce automatic production selection into a Base:
+                    // direct SelectUnit must establish the tile presentation too.
+                    frontend.m_is_turn_active=true;s.occupancy[2*40+1]={1,3};publish();
+                    GT_ASSERT(!representative.m_render.is_rendered && marker_count()==0,"Unselected garrison retained body or stack");
+                    um->SelectUnit(&representative,false);
+                    GT_ASSERT(representative.m_render.is_rendered && marker_count()==1,"Actual selection bypassed stack tile presentation");
+                    um->DeselectUnit();
+                    GT_ASSERT(!representative.m_render.is_rendered && marker_count()==0,"Actual deselection retained hidden garrison overlays");
+                    um->SelectUnit(&representative,false);s.occupancy[2*40+1]={15,2};publish();
+                    using Blink=game::frontend::unit::SelectionBlink;
+                    const auto epoch=Blink::Clock::time_point{}+std::chrono::seconds(10);
+                    stack_badges->AdvanceSelectionBlink(epoch,true);stack_badges->AdvanceSelectionBlink(epoch+Blink::HALF_PERIOD,true);
+                    um->m_selected_unit=&representative;frontend.m_is_turn_active=true;stack_tile.Render();
+                    GT_ASSERT(!representative.IsBadgeVisible() && marker_count()==0,"Blink-off left the extra silhouette visible");
+                    stack_badges->AdvanceSelectionBlink(epoch+Blink::HALF_PERIOD*2,true);representative.Iterate();
+                    GT_ASSERT(representative.IsBadgeVisible() && marker_count()==1,"Blink-on failed to restore shared stack overlay");
+                    um->m_selected_unit=nullptr;s.explored_by.assign(3200,0);publish();representative.ShowBadge();
+                    GT_ASSERT(!representative.m_render.is_rendered && marker_count()==0,"Unknown terrain restored stack silhouette");
+                    s.explored_by.assign(3200,2);s.units.clear();head.stack=av::Stack{0,-1,-1};s.units.emplace(98,head);publish();
+                    GT_ASSERT(marker_count()==0 && representative.IsBadgeVisible(),"Singleton retained stack silhouette or lost primary");
+                    const auto single=first_pixel(representative.GetBadgeSprite()->instanced_sprite);
+                    GT_ASSERT(std::abs(single.x-anchor.x-(rover?14:13))<0.001f,"Singleton retained shifted stack primary anchor");
+                    representative.Hide();representative.Hide();GT_ASSERT(marker_count()==0,"Repeated hide retained marker instance");
                 }
                 auto* card=um->m_unitdefs.at("NATIVE_WORLD_SCOUT")->GetCardSprite(false);
                 GT_ASSERT(card->actor->GetSpriteActor()->GetDimensions()==types::Vec2<float>(1,1),"Native map placement changed independent console-card geometry");

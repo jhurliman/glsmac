@@ -89,7 +89,9 @@ const bool UnitDef::IsArtillery() const {
 bool UnitDef::UsesNativeMapPlacement() const {
     if(!m_native_projection || !m_scout_render) {return false;}
     const auto& render=*m_scout_render;const auto& view=render.view;
-    return render.size==types::Vec2<float>(1,1) && render.center==types::Vec2<float>(128,128) && view.zoom==0 &&
+    // Native sprite placement derives its bounds from the returned CVR anchor;
+    // normal startup retains legacy world sizes in its descriptor.
+    return view.zoom==0 &&
         (view.scale_numerator<=0 || view.scale_numerator==view.scale_denominator);
 }
 

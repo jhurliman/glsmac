@@ -29,7 +29,7 @@ namespace game::native_terrain {struct World;}
 #include "ui/Types.h"
 
 namespace scene::actor {class Sound;class Mesh;}
-namespace game::frontend::native_terrain {struct Source;struct Session;struct ViewContext;}
+namespace game::frontend::native_terrain {struct Source;struct Session;struct ViewContext;struct Frame;}
 
 // TODO: remove those
 #include "game/backend/map/tile/TileState.h"
@@ -298,6 +298,7 @@ private:
 	);
 	void Deinitialize();
     void UpdateNativeTerrain();
+    void PresentNativeCanvas(const native_terrain::Frame* frame);
     bool TryNativeTileAt(size_t screen_x,size_t screen_inverse_y);
     bool HandleNativeZoom(const input::Event& event);
     void ClearNativeTerrain();
@@ -314,6 +315,7 @@ private:
     std::shared_ptr<native_terrain::Session> m_native_view;
     std::unique_ptr<native_terrain::ViewContext> m_native_context;
     bool m_native_camera_from_legacy=true;
+    bool m_native_canvas_blank=false;
     std::optional<std::vector<bool>> m_native_object_tiles;
     scene::actor::Mesh* m_native_actor=nullptr;
     types::texture::Texture* m_native_texture=nullptr;

@@ -50,11 +50,9 @@ BaseManager::BaseManager( Game* game, bool smac_population )
 }
 
 actor_visibility::BaseVisibility BaseManager::GetBaseVisibility(size_t id) const {
-    if(m_game->IsNativeTerrainInspector()) {
-        const auto found=m_bases.find(id);
-        if(found!=m_bases.end() && !m_game->IsNativeObjectTile(found->second->GetTile()->GetCoords())) {return {};}
-        return {true,true};
-    }
+    const auto found=m_bases.find(id);
+    if(found!=m_bases.end() && !m_game->IsNativeObjectTile(found->second->GetTile()->GetCoords())) {return {};}
+    if(m_game->IsNativeTerrainInspector()) {return {true,true};}
     const auto* snapshot=m_game->GetActorVisibility();
     if(snapshot && snapshot->available) {return snapshot->BaseDisclosure(id);}
     // Legacy synthetic views have no original-game disclosure authority.

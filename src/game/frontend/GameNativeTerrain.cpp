@@ -102,14 +102,14 @@ void Game::ClearNativeTerrain() {
     m_native_world.reset();m_native_source.reset();m_native_context.reset();
     m_native_preview_tile.reset();m_native_preview_texture.reset();
     m_native_inspector=m_native_snapshot_dirty=m_native_frame_dirty=false;
-    m_native_camera_from_legacy=true;
+    m_native_camera_from_legacy=true;m_native_canvas_blank=false;
 }
 bool Game::TryNativeTileAt(size_t screen_x,size_t screen_inverse_y) {
-    if(!m_native_actor || !m_native_actor->IsVisible() || !m_native_view) {return false;}
+    if(!m_native_actor || !m_native_actor->IsVisible()) {return false;}
     // A displayed native frame owns its picking. A miss/unavailable native
     // result must not fall through to the different legacy GPU geometry.
     m_native_tile_at_response=tile_at_result_t{};
-    if(m_world_retired) {return true;}
+    if(m_world_retired || !m_native_view) {return true;}
     if(screen_x>INT32_MAX || screen_inverse_y>m_viewport.window_height) {return true;}
     const auto picked=m_native_view->Pick({{int(screen_x),int(m_viewport.window_height-screen_inverse_y)}});
     if(picked && picked->code==0 && picked->written) {
@@ -121,7 +121,7 @@ bool Game::IsNativeObjectTile(const types::Vec2<size_t>& tile) const {
     return tile.x<80 && tile.y<80 && !((tile.x^tile.y)&1) && m_native_object_tiles->at(tile.y*40+tile.x/2);
 }
 bool Game::HandleNativeZoom(const input::Event& event) {
-    if(!m_native_inspector || m_world_retired || !m_native_context || !m_native_view || !m_native_view->frame) {return false;}
+    if(!m_map_data.native_projection || m_world_retired || !m_native_context || !m_native_view || !m_native_view->frame) {return false;}
     if(event.type!=input::EV_KEY_DOWN || (event.data.key.modifiers&input::KM_ALT)) {return false;}
     using Command=native_terrain::ZoomCommand;std::optional<Command> command;
     const auto& key=event.data.key;
@@ -170,10 +170,9 @@ void Game::UpdateNativeTerrain() {
         m_native_snapshot_dirty=false;
         m_mt_ids.native_terrain=m_game->MT_GetNativeTerrain(m_world_ticket,m_native_inspector);
     }
-    if(!m_native_inspector) {return;}
     const bool admitted=m_native_world && m_native_context && m_viewport.window_width==1024 && m_viewport.window_height==768
         && native_terrain::Session::Admits(*m_native_world);
-    if(!admitted) {RestoreNativeTerrainProjection();if(m_native_actor) {m_native_actor->Hide();}UpdateNativeTerrainSpriteVisibility(nullptr);return;}
+    if(!admitted) {PresentNativeCanvas(nullptr);return;}
     if(!m_native_frame_dirty) {return;}
     if(!m_native_source || m_native_source->faction_files!=m_native_world->faction_files) {m_native_source=g_engine->GetTextureLoader()->GetSmacTerrainSource(m_native_world->faction_files);}
     const auto origin=m_tm->GetTile(0,0)->GetCanonicalCoords().InvertY();
@@ -213,8 +212,8 @@ void Game::UpdateNativeTerrain() {
     if(native_terrain::Session::Admits(*m_native_world)) {
         if(!m_native_view) {m_native_view=std::make_shared<native_terrain::Session>(*m_native_world);}
         const auto prepared=m_native_view->Prepare(*m_native_world,*m_native_context,
-            native_terrain::Session::Observation::RevealedCanvas);
-        if(!prepared) {RestoreNativeTerrainProjection();if(m_native_actor) {m_native_actor->Hide();}return;}
+            m_native_inspector?native_terrain::Session::Observation::RevealedCanvas:native_terrain::Session::Observation::Observer);
+        if(!prepared) {PresentNativeCanvas(nullptr);return;}
         const auto& plan=*prepared;
         frame=native_terrain::RenderPrepared(*m_native_world,*m_native_source,plan,
             g_engine->GetConfig()->GetNativeTerrainBaseLow16(),m_native_context->flags,0,
@@ -235,7 +234,15 @@ void Game::UpdateNativeTerrain() {
         }
         m_native_object_tiles=std::move(objects);
         m_native_view->Commit(frame,layout);
-    } else {RestoreNativeTerrainProjection();if(m_native_actor) {m_native_actor->Hide();}return;}
+    } else {PresentNativeCanvas(nullptr);return;}
+    PresentNativeCanvas(&frame);
+    m_native_frame_dirty=false;
+}
+void Game::PresentNativeCanvas(const native_terrain::Frame* frame) {
+    if(!frame && m_native_canvas_blank) {return;}
+    if(!frame) {
+        RestoreNativeTerrainProjection();m_native_object_tiles=std::vector<bool>(3200,false);
+    }
     if(!m_native_texture) {
         NEW(m_native_texture,types::texture::Texture,"NativeTerrainViewport",1024,511);
         NEWV(quad,types::mesh::Rectangle,(types::Vec2<float>{-1,1}),(types::Vec2<float>{1,1-2*511.0f/768}),0.0f);
@@ -247,11 +254,16 @@ void Game::UpdateNativeTerrain() {
         m_native_actor->SetRenderFlags(scene::actor::Actor::RF_IGNORE_CAMERA|scene::actor::Actor::RF_IGNORE_LIGHTING|scene::actor::Actor::RF_IGNORE_DEPTH);
         m_native_actor->SetTexture(m_native_texture);m_world_scene->AddActor(m_native_actor);
     }
-    std::copy(frame.rgba.begin(),frame.rgba.end(),m_native_texture->GetBitmap());
+    if(frame) {std::copy(frame->rgba.begin(),frame->rgba.end(),m_native_texture->GetBitmap());}
+    else {
+        auto* bitmap=m_native_texture->GetBitmap();
+        std::fill(bitmap,bitmap+1024*511*4,0);
+        for(size_t i=0;i<1024*511;++i) {bitmap[4*i+3]=255;}
+    }
+    m_native_canvas_blank=frame==nullptr;
     m_native_texture->FullUpdate();m_native_actor->SetTexture(m_native_texture);m_native_actor->Show();
-    UpdateNativeTerrainSpriteVisibility(&frame.developed_tiles,&frame.landmark_tiles,&frame.resource_tiles,true);
+    UpdateNativeTerrainSpriteVisibility(nullptr,nullptr,nullptr,true);
     UpdateMapInstances();
     if(m_bm) {m_bm->RefreshVisibility();}if(m_um) {m_um->RefreshVisibility();}
-    m_native_frame_dirty=false;
 }
 }

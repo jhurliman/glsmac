@@ -66,8 +66,9 @@ must be separated at its callers.
    composes through the capability boundary.
    [Opening design construction and caller Scout selection](native-opening-designs.md)
    now match the stock named-grant controls and run in the Gaia composition.
-   Installed predefined catalog initialization, actual localized names and later
-   workshop branches remain required.
+   [Installed predefined records and localized early names](native-installed-designs.md)
+   now replace the basic-three and supplied-label assumptions, with production
+   costs read from initialized records. Later workshop branches remain required.
    [Base seed and radius preparation](native-startup-base.md) now match complete
    original controls and the generated first-Base/tile projection.
    [Territory/cache rebuilding](native-startup-territory.md) now extends that
@@ -91,9 +92,8 @@ must be separated at its callers.
    derive all304 original Base bytes from the independently generated Gaia world,
    including exact worker query/score/store journals and unchanged map/regions/RNG.
    [Automatic Base naming and cursor progression](native-base-naming.md) now
-   close the complete first Gaia faction comparison as well. Complete installed
-   design initialization, other Base contexts and all-seven controller
-   composition still need closing.
+   close the complete first Gaia faction comparison as well. Relocated
+   other Base contexts and all-seven controller composition still need closing.
    [Canonical Unit initialization and stack placement](native-startup-units.md)
    now match original complete-record/pool controls; Base founding, complete
    factory visibility and seven-faction starting-package composition remain

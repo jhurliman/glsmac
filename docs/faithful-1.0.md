@@ -31,6 +31,11 @@ to load them from a user-supplied installation. See
 
 ## Active presentation follow-up
 
+The [Design Workshop implementation plan](design-workshop.md) tracks the user's
+request for the complete functional, pixel-faithful unit customization screen.
+Its first acceptance slice includes editing, previewing, saving and producing
+a new design; the current Workshop entry remains a placeholder.
+
 The user's honey playthrough exposed startup/menu, logical-resolution, terrain
 seam and main-map visibility gaps. They are tracked with original asset sections
 and measurable acceptance gates in [the playthrough audit](smac-playthrough-ui-audit.md).

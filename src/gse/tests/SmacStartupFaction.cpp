@@ -20,6 +20,8 @@
 #include "fixtures/SmacStartupBase.h"
 #include "game/backend/map/SmacStartupTerritory.h"
 #include "fixtures/SmacStartupTerritory.h"
+#include "game/backend/unit/SmacPredefinedDesigns.h"
+#include "fixtures/SmacInstalledDesigns.h"
 #include "game/backend/unit/SmacOpeningDesigns.h"
 #include "game/backend/unit/SmacStartupGroundUnit.h"
 #include "game/backend/unit/SmacUnitInitialization.h"
@@ -90,7 +92,7 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
             && util::SHA256(planeBytes())==expected::PREPARED_TILES_SHA256 && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
             "Generated first named grant differs from original complete faction/tile/ownership boundary");
         using namespace game::backend::base;
-        SmacBaseSeedCatalog catalog{};catalog.ownership=ownership;catalog.design_costs={{3,2,1}};catalog.formers_prerequisite=6;
+        SmacBaseSeedCatalog catalog{};catalog.ownership=ownership;catalog.formers_prerequisite=6;
         catalog.free_facility_technologies.fill(-2); // stock loader disables all legacy Free-tech fields
         for(size_t i=0;i<89;++i) {for(size_t j=0;j<2;++j) {
             const auto ref=technologies.ResolveToken(technologies.technologies[i].prerequisites[j]);
@@ -100,18 +102,18 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
         }}
         std::array<SmacStartupFaction,8> capability_actors{};capability_actors[1]=state;
         game::backend::unit::SmacOriginalDesignPool opening_designs{};
-        // Declared basic caller pool; complete installed predefined catalog and
-        // automatic localized naming remain separate integration requirements.
-        for(size_t i=0;i<3;++i) {
-            auto& d=opening_designs[i];d[37]=uint8_t(i==0?8:i==1?9:0);d[39]=1;
-            d[41]=uint8_t(i==0?3:i==1?2:1);d[42]=uint8_t(i==0?8:i==1?9:3);d[48]=1;
-            d[50]=uint8_t(i==1?6:255);d[51]=uint8_t(i==1?0:255);
-        }
+        const auto components=fixtures::installed_designs::Components();
+        game::backend::unit::LoadSmacPredefinedDesigns(opening_designs,components,fixtures::installed_designs::Rows());
+        const auto design_hash=[&](){auto normalized=opening_designs;std::string bytes;
+            for(size_t i=0;i<14;++i) {std::fill_n(normalized[i].begin(),fixtures::installed_designs::NAME_LENGTHS[i]+1,0);}
+            for(const auto& r:normalized) {bytes.append(reinterpret_cast<const char*>(r.data()),r.size());}return util::SHA256(bytes);};
+        GT_ASSERT(design_hash()==fixtures::installed_designs::GENERATED_NORMALIZED,"Original generated installed catalog differs outside declared text payloads");
+        for(size_t i=0;i<3;++i) {catalog.design_costs[i]=opening_designs[i][41];}
         const auto original_designs=opening_designs;int32_t first_new_design=123;
-        game::backend::unit::GenerateSmacOpeningDesigns(capability_actors,opening_designs,ownership,catalog.prerequisites,
-            fixtures::capability::StockCatalog(),1,3,first_new_design,{});
+        game::backend::unit::GenerateSmacInstalledOpeningDesigns(capability_actors,opening_designs,ownership,catalog.prerequisites,
+            fixtures::capability::StockCatalog(),components,fixtures::installed_designs::Names(),1,3,first_new_design);
         const auto selected_scout=game::backend::unit::MarkAndSelectSmacStartingScout(opening_designs,1);
-        GT_ASSERT(selected_scout==2 && first_new_design==-1 && opening_designs==original_designs,
+        GT_ASSERT(selected_scout==2 && first_new_design==-1 && opening_designs==original_designs && design_hash()==fixtures::installed_designs::GENERATED_NORMALIZED,
             "Generated Gaia opening unexpectedly allocated or changed designs");
         state=capability_actors[1];
         GT_ASSERT(util::SHA256(factionBytes())==fixtures::capability::GENERATED_RECORD
@@ -163,7 +165,7 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
         base=first_bases[0];const auto& complete_actor=actors[1].record;
         const std::string complete_actor_bytes(reinterpret_cast<const char*>(complete_actor.data()),complete_actor.size());
         namespace first_base_expected=fixtures::first_worker;
-        GT_ASSERT(chosen_worker==2 && util::SHA256(baseBytes())==first_base_expected::GENERATED_BASE
+        GT_ASSERT(design_hash()==fixtures::installed_designs::GENERATED_NORMALIZED && chosen_worker==2 && util::SHA256(baseBytes())==first_base_expected::GENERATED_BASE
             && util::SHA256(planeBytes())==first_base_expected::GENERATED_TILES && util::SHA256(region_bytes)==first_base_expected::GENERATED_REGIONS
             && util::SHA256(complete_actor_bytes)==fixtures::base_naming::GENERATED_NAMED_FACTION
             && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,

@@ -29,6 +29,13 @@ catalog initialization remain integration work; no placeholder name is silently
 chosen by production. Numeric trace comparisons exclude text-copy stores but
 include final name bytes. Failed staged updates must not be published.
 
+The [installed design producer](native-installed-designs.md) now supersedes the
+supplied-name/basic-three admission for the stock early startup caller. It loads
+all fourteen records, shares the Fission component builder, supplies actual
+localized names and derives Base production costs from initialized records.
+The earlier controls below remain useful for poisoned unused custom fields and
+isolated constructor/selection behavior.
+
 ## Original evidence and validation
 
 Both frozen bundles were fully verified before numeric fixture import:

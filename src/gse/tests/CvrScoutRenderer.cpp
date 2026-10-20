@@ -146,6 +146,38 @@ std::string MakeScoutTestAssetWithGeometry( const std::vector< uint8_t >& geomet
 
 void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("CVR initialized console cards match six complete original body draws",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto read=[&](const char* name) {std::ifstream stream(std::filesystem::path(directory)/name,std::ios::binary);
+            if(!stream) {throw std::runtime_error("Missing owned initialized card asset");}
+            return std::string(std::istreambuf_iterator<char>(stream),{});};
+        const auto renderer=CvrScoutRenderer::LoadInitialized(read("VI.cvr"),read("Viptr00.cvr"),read("PALETTE.PCX"),read("SYSTEM.TXT"));
+        struct Control {bool roster;int facing;uint64_t indexed,depth,rgba;size_t pixels;};
+        // Derived from independently byte-compared original256-square surfaces;
+        // native flags0x48/0x400 reach the real initialized4d7860 body helper.
+        const Control controls[]={
+            {false,0,UINT64_C(0x581ad4a8bac302e5),UINT64_C(0xc1c2163a0219d5ca),UINT64_C(0x7858c92b0ff77e83),212},
+            {false,2,UINT64_C(0xd7a4f2b840d8fe86),UINT64_C(0x0bbf96a3082e4b55),UINT64_C(0xe2640801ebfaba80),244},
+            {false,5,UINT64_C(0x77a39e910f47de08),UINT64_C(0xb74ebccf97e65563),UINT64_C(0xff1fa4bd607e03e9),267},
+            {true,0,UINT64_C(0x8db6cb3ac719e6eb),UINT64_C(0x575fb50a86b15934),UINT64_C(0x313fde8b9f3d86c4),113},
+            {true,2,UINT64_C(0x571c74d2ffb01f59),UINT64_C(0x64167593b95341c0),UINT64_C(0x8e8eea79fd300965),126},
+            {true,5,UINT64_C(0xbf174e749ae8cb88),UINT64_C(0xa8ce127bf074309c),UINT64_C(0xdf206491c83a8c2d),136}
+        };
+        const auto digest=[](const auto& bytes) {uint64_t h=UINT64_C(14695981039346656037);
+            for(const auto byte:bytes) {h=(h^byte)*UINT64_C(1099511628211);}return h;};
+        for(const auto& c:controls) {
+            const auto image=renderer.Render({c.facing,c.roster?-8:-4,0,1,c.roster?std::array<int32_t,2>{156,197}:std::array<int32_t,2>{34,66}});
+            std::vector<uint8_t> depth;depth.reserve(image.indexed.depth.size()*2);
+            for(const auto value:image.indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
+            GT_ASSERT(digest(image.indexed.color)==c.indexed && digest(depth)==c.depth && digest(image.rgba)==c.rgba
+                && size_t(std::count_if(image.indexed.color.begin(),image.indexed.color.end(),[](uint8_t value){return value!=9;}))==c.pixels
+                && image.draw_count==65 && image.processed_records==47483
+                && image.target_anchor==(c.roster?std::array<int32_t,2>{181,222}:std::array<int32_t,2>{71,103}),
+                "Initialized original card differs: facing="+std::to_string(c.facing)+(c.roster?" roster":" selected"));
+        }
+        GT_OK();
+    });
+
     task->AddTest("CVR Scout shadow scene producer matches three native camera controls",GT(){
         const auto same=[](const auto& a,const auto& b) {for(size_t i=0;i<a.size();++i) {
             if(a[i]!=b[i] && ((a[i]&0x7fffffffU)!=0 || (b[i]&0x7fffffffU)!=0)) {return false;}}return true;};

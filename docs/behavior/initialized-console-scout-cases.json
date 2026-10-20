@@ -1,0 +1,517 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "light_bits": "1e94b83ed31a763e26b9663f",
+  "active_rgb_sha256": "d40184d13f25209e08bd29a4d627eae51ee52085078b044fb5009a4a14db76ef",
+  "cases": [
+    {
+      "name": "selected_f0_counter0",
+      "anchor": [
+        34,
+        66
+      ],
+      "zoom": -4,
+      "flags": 72,
+      "facing": 0,
+      "counter": 0,
+      "dispatch": [
+        [
+          1108825296,
+          0,
+          34,
+          66,
+          72,
+          -4,
+          0
+        ]
+      ],
+      "capture": {
+        "scale_arguments": [
+          0.05250000208616257,
+          0.06562500447034836
+        ],
+        "target_anchor": [
+          71,
+          103
+        ],
+        "view_matrix": [
+          -0.046409256756305695,
+          0.04639851674437523,
+          0.0,
+          -0.02322058565914631,
+          -0.02322595752775669,
+          -0.0568154938519001,
+          0.3060569167137146,
+          0.30612775683403015,
+          -0.2502298057079315
+        ],
+        "view_translation": [
+          128.5,
+          128.5,
+          37767.5
+        ],
+        "global_scales": [
+          0.06562500447034836,
+          0.5
+        ]
+      },
+      "indexed_sha256": "94698581e92ea4ef24bec3a387be3d74366e763573c9f0bc3685bc5f668a971e",
+      "depth_sha256": "698121ade1e67010e94cb8ef7c4647d688b557da1b02834d3d33e9e575047c19",
+      "rgba_sha256": "e256ea234f84b414f964b3885d046010706289043a04c71615e4d796aa21a629",
+      "opaque": 212,
+      "bbox": [
+        118,
+        102,
+        133,
+        135
+      ],
+      "frames": 59,
+      "kernels": 65,
+      "color_light": [
+        0.36050504446029663,
+        0.24033670127391815,
+        0.901262640953064
+      ],
+      "native_frame_indices": [
+        0
+      ],
+      "rng_before": [
+        1649677159,
+        100
+      ],
+      "rng_after": [
+        1649677159,
+        100
+      ],
+      "indexed_fnv1a64": "581ad4a8bac302e5",
+      "depth_fnv1a64": "c1c2163a0219d5ca",
+      "rgba_fnv1a64": "7858c92b0ff77e83"
+    },
+    {
+      "name": "selected_f2_counter0",
+      "anchor": [
+        34,
+        66
+      ],
+      "zoom": -4,
+      "flags": 72,
+      "facing": 2,
+      "counter": 0,
+      "dispatch": [
+        [
+          1108825296,
+          0,
+          34,
+          66,
+          72,
+          -4,
+          0
+        ]
+      ],
+      "capture": {
+        "scale_arguments": [
+          0.05250000208616257,
+          0.06562500447034836
+        ],
+        "target_anchor": [
+          71,
+          103
+        ],
+        "view_matrix": [
+          0.04639635607600212,
+          0.046411413699388504,
+          0.0,
+          -0.023227039724588394,
+          0.023219501599669456,
+          -0.0568154938519001,
+          0.30614200234413147,
+          -0.3060426712036133,
+          -0.2502298057079315
+        ],
+        "view_translation": [
+          128.5,
+          128.5,
+          37767.5
+        ],
+        "global_scales": [
+          0.06562500447034836,
+          0.5
+        ]
+      },
+      "indexed_sha256": "02612fd7ee344297c5bd69d1717bd655671b9d27ec2ff4abccfc3d1f8f2af00c",
+      "depth_sha256": "3c8cb822eb88ee8573e5ea4c183fd2d1ccdf9241eb7247f15ee369b4ea1e899a",
+      "rgba_sha256": "4f4fb35fca10cca93d6a6714aa5ab349bb5509520fd4589347542470366d1f9b",
+      "opaque": 244,
+      "bbox": [
+        117,
+        97,
+        135,
+        128
+      ],
+      "frames": 59,
+      "kernels": 65,
+      "color_light": [
+        0.36050504446029663,
+        0.24033670127391815,
+        0.901262640953064
+      ],
+      "native_frame_indices": [
+        0
+      ],
+      "rng_before": [
+        1649677159,
+        100
+      ],
+      "rng_after": [
+        1649677159,
+        100
+      ],
+      "indexed_fnv1a64": "d7a4f2b840d8fe86",
+      "depth_fnv1a64": "0bbf96a3082e4b55",
+      "rgba_fnv1a64": "e2640801ebfaba80"
+    },
+    {
+      "name": "selected_f5_counter0",
+      "anchor": [
+        34,
+        66
+      ],
+      "zoom": -4,
+      "flags": 72,
+      "facing": 5,
+      "counter": 0,
+      "dispatch": [
+        [
+          1108825296,
+          0,
+          34,
+          66,
+          72,
+          -4,
+          0
+        ]
+      ],
+      "capture": {
+        "scale_arguments": [
+          0.05250000208616257,
+          0.06562500447034836
+        ],
+        "target_anchor": [
+          71,
+          103
+        ],
+        "view_matrix": [
+          3.0403214168472914e-06,
+          -0.06562500447034836,
+          0.0,
+          0.032842665910720825,
+          1.521558033346082e-06,
+          -0.0568154938519001,
+          -0.4328799247741699,
+          -2.0054765627719462e-05,
+          -0.2502298057079315
+        ],
+        "view_translation": [
+          128.5,
+          128.5,
+          37767.5
+        ],
+        "global_scales": [
+          0.06562500447034836,
+          0.5
+        ]
+      },
+      "indexed_sha256": "cfcb7f342969dffdd7bbacb9b9f6d820e428353d7d9d98b351c9aca5bef132a2",
+      "depth_sha256": "f1b66ae29af6d55e557eaf13d00dfc027854183cd280866dad5ad619bebc9882",
+      "rgba_sha256": "6da620f9f4a4849b9e173b1b32cdc52bffda3c4144c58643a7d1ca729b01eb78",
+      "opaque": 267,
+      "bbox": [
+        121,
+        98,
+        143,
+        131
+      ],
+      "frames": 59,
+      "kernels": 65,
+      "color_light": [
+        0.36050504446029663,
+        0.24033670127391815,
+        0.901262640953064
+      ],
+      "native_frame_indices": [
+        0
+      ],
+      "rng_before": [
+        1649677159,
+        100
+      ],
+      "rng_after": [
+        1649677159,
+        100
+      ],
+      "indexed_fnv1a64": "77a39e910f47de08",
+      "depth_fnv1a64": "b74ebccf97e65563",
+      "rgba_fnv1a64": "ff1fa4bd607e03e9"
+    },
+    {
+      "name": "roster_f0_counter0",
+      "anchor": [
+        156,
+        197
+      ],
+      "zoom": -8,
+      "flags": 1024,
+      "facing": 0,
+      "counter": 0,
+      "dispatch": [
+        [
+          1108825296,
+          0,
+          156,
+          197,
+          1024,
+          -8,
+          0
+        ]
+      ],
+      "capture": {
+        "scale_arguments": [
+          0.03500000014901161,
+          0.04374999925494194
+        ],
+        "target_anchor": [
+          181,
+          222
+        ],
+        "view_matrix": [
+          -0.030939500778913498,
+          0.030932342633605003,
+          0.0,
+          -0.015480388887226582,
+          -0.015483970753848553,
+          -0.03787699341773987,
+          0.3060569167137146,
+          0.30612775683403015,
+          -0.2502298057079315
+        ],
+        "view_translation": [
+          128.5,
+          128.5,
+          37767.5
+        ],
+        "global_scales": [
+          0.04374999925494194,
+          0.5
+        ]
+      },
+      "indexed_sha256": "e9cd0b3fba47e960fef927d525f366c0d5d9db9c4df876447267dc31f54aa9f0",
+      "depth_sha256": "a465e34d7cdf13d5441bbb4eb90980049ca9e80e0c727af684d9fb925576ffe5",
+      "rgba_sha256": "e7e5a37422d8f1570fb17be5acb79e420b8f1e7cae96151227f912c3c23ba406",
+      "opaque": 113,
+      "bbox": [
+        121,
+        110,
+        132,
+        133
+      ],
+      "frames": 59,
+      "kernels": 65,
+      "color_light": [
+        0.36050504446029663,
+        0.24033670127391815,
+        0.901262640953064
+      ],
+      "native_frame_indices": [
+        0
+      ],
+      "rng_before": [
+        1649677159,
+        100
+      ],
+      "rng_after": [
+        1649677159,
+        100
+      ],
+      "indexed_fnv1a64": "8db6cb3ac719e6eb",
+      "depth_fnv1a64": "575fb50a86b15934",
+      "rgba_fnv1a64": "313fde8b9f3d86c4"
+    },
+    {
+      "name": "roster_f2_counter0",
+      "anchor": [
+        156,
+        197
+      ],
+      "zoom": -8,
+      "flags": 1024,
+      "facing": 2,
+      "counter": 0,
+      "dispatch": [
+        [
+          1108825296,
+          0,
+          156,
+          197,
+          1024,
+          -8,
+          0
+        ]
+      ],
+      "capture": {
+        "scale_arguments": [
+          0.03500000014901161,
+          0.04374999925494194
+        ],
+        "target_anchor": [
+          181,
+          222
+        ],
+        "view_matrix": [
+          0.0309309009462595,
+          0.030940940603613853,
+          0.0,
+          -0.015484691597521305,
+          0.01547966618090868,
+          -0.03787699341773987,
+          0.30614200234413147,
+          -0.3060426712036133,
+          -0.2502298057079315
+        ],
+        "view_translation": [
+          128.5,
+          128.5,
+          37767.5
+        ],
+        "global_scales": [
+          0.04374999925494194,
+          0.5
+        ]
+      },
+      "indexed_sha256": "c1ce8253384c6f9809ea051ad82ca2db943e1a10d58d369025687158f22815af",
+      "depth_sha256": "61e39de646d21d238b49100e0c71b4dec2eb0581d05a0c31b13f5d11dcaa1135",
+      "rgba_sha256": "4650a0ec298b3884092a4a43111fd59fd9ac116a9d2aa550fa40204a8105b9c5",
+      "opaque": 126,
+      "bbox": [
+        121,
+        107,
+        133,
+        129
+      ],
+      "frames": 59,
+      "kernels": 65,
+      "color_light": [
+        0.36050504446029663,
+        0.24033670127391815,
+        0.901262640953064
+      ],
+      "native_frame_indices": [
+        0
+      ],
+      "rng_before": [
+        1649677159,
+        100
+      ],
+      "rng_after": [
+        1649677159,
+        100
+      ],
+      "indexed_fnv1a64": "571c74d2ffb01f59",
+      "depth_fnv1a64": "64167593b95341c0",
+      "rgba_fnv1a64": "8e8eea79fd300965"
+    },
+    {
+      "name": "roster_f5_counter0",
+      "anchor": [
+        156,
+        197
+      ],
+      "zoom": -8,
+      "flags": 1024,
+      "facing": 5,
+      "counter": 0,
+      "dispatch": [
+        [
+          1108825296,
+          0,
+          156,
+          197,
+          1024,
+          -8,
+          0
+        ]
+      ],
+      "capture": {
+        "scale_arguments": [
+          0.03500000014901161,
+          0.04374999925494194
+        ],
+        "target_anchor": [
+          181,
+          222
+        ],
+        "view_matrix": [
+          2.0268807929824106e-06,
+          -0.04374999925494194,
+          0.0,
+          0.02189510688185692,
+          1.0143719464394962e-06,
+          -0.03787699341773987,
+          -0.4328799247741699,
+          -2.0054765627719462e-05,
+          -0.2502298057079315
+        ],
+        "view_translation": [
+          128.5,
+          128.5,
+          37767.5
+        ],
+        "global_scales": [
+          0.04374999925494194,
+          0.5
+        ]
+      },
+      "indexed_sha256": "e3d14c7192c5e57e0b40d8b7f7ddc7d8c5a0ce8117f6dee9139e8cd79f4002b1",
+      "depth_sha256": "96368df99ba4c94883f5ed2c495b9747562699e1695433c15c5a611af33235c1",
+      "rgba_sha256": "b964a0e36324befeedfa29924ea7d883d1cf5a6b194129496745e7a33e96ba81",
+      "opaque": 136,
+      "bbox": [
+        123,
+        108,
+        139,
+        130
+      ],
+      "frames": 59,
+      "kernels": 65,
+      "color_light": [
+        0.36050504446029663,
+        0.24033670127391815,
+        0.901262640953064
+      ],
+      "native_frame_indices": [
+        0
+      ],
+      "rng_before": [
+        1649677159,
+        100
+      ],
+      "rng_after": [
+        1649677159,
+        100
+      ],
+      "indexed_fnv1a64": "bf174e749ae8cb88",
+      "depth_fnv1a64": "a8ce127bf074309c",
+      "rgba_fnv1a64": "df206491c83a8c2d"
+    }
+  ],
+  "scope": "Initialized design2 Infantry; full real56fd50 dispatcher through4d7860; selected flags0x48/zoom-4 and roster flags0x400/zoom-8; actual SYSTEM color-light reader; counter0 only; stop at631613 before destination copy.",
+  "producer_sha256": {
+    "probe_initialized_console_cards_bounded.py": "9bdfe57e7714ed896b719da3a5a252a0ea8eb1d4a86bb58fa16b3eecf7d067fe",
+    "capture_initialized_console_cards_bounded.py": "78a189ef66d9cbf7578f72a1b6a6dbfb57f1395de5f8399e8ab82d47c48343cb"
+  },
+  "initialization_source": "Original constructors, palette prefixes,107 model loads, data_setup(0,1), design2 owner3 factory; existing cvr-initialized-infantry.md asserts fresh facing2 before override.",
+  "limitations": [
+    "Destination blit not recaptured; existing scout-target-copy contract applies.",
+    "Controlled flat world/owner3 fixture, not a captured original campaign.",
+    "Nonzero animation-counter attempt did not return and was stopped; no animation claim.",
+    "No per-Unit live facing transport or movement-facing write authority added."
+  ]
+}

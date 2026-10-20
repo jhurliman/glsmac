@@ -41,6 +41,7 @@ public:
 
 	sprite::Sprite* GetUnitBadgeSprite( const backend::unit::morale_t morale, const bool is_active, char order_glyph = 0, uint8_t color_index = 0 );
     sprite::Sprite* GetNativeMapBadge(backend::unit::morale_t level,bool spent,char glyph,uint8_t color);
+    sprite::Sprite* GetStackMarker(backend::unit::morale_t level,bool spent);
     std::shared_ptr<types::texture::Texture> MakeCardOverlay(int level,int variant,float health,int32_t maximum,char glyph,uint8_t color) const;
 
 	const size_t ShowFakeBadge( const types::Vec3& coords, const uint8_t offset );
@@ -53,6 +54,7 @@ private:
 	sprite::Sprite* GetOrderBadgeSprite(backend::unit::morale_t morale,bool active,char glyph,uint8_t color);
     std::unordered_map<uint32_t,sprite::Sprite> m_order_sprites;
     std::unordered_map<uint32_t,sprite::Sprite> m_native_map_badges;
+    std::unordered_map<uint32_t,sprite::Sprite> m_stack_markers;
 	BadgeDefs* const m_badge_defs;
 	sprite::InstancedSpriteManager* const m_ism;
 	const std::string m_badges_key;

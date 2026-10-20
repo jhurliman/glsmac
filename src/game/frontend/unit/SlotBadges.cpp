@@ -95,13 +95,42 @@ sprite::Sprite* SlotBadges::GetNativeMapBadge(backend::unit::morale_t level,bool
         auto* sprite=m_ism->GetInstancedSprite(m_badges_key+"_NATIVE_MAP_"+std::to_string(key),pixels.get(),
             {0,0},{23,30},{23,0},{23.0f/96,30.0f/48},ZL_UNITS,0.008f);
         sprite->texture_owner=std::move(pixels);
+        sprite->actor->GetSpriteActor()->SetRenderFlags(scene::actor::Actor::RF_IGNORE_LIGHTING);
         try {found=m_native_map_badges.emplace(key,sprite::Sprite{sprite,1}).first;}
         catch(...) {m_ism->RemoveInstancedSpriteByKey(sprite->key);throw;}
     }
     return &found->second;
 }
 
+sprite::Sprite* SlotBadges::GetStackMarker(backend::unit::morale_t level,bool spent) {
+    if(m_faction && (m_native_palette_slot<1 || m_native_palette_slot>7)) {return nullptr;}
+    const uint32_t key=uint32_t(level)*2+(m_faction && spent ? 1u:0u);
+    auto found=m_stack_markers.find(key);
+    if(found==m_stack_markers.end()) {
+        const auto palette=g_engine->GetTextureLoader()->GetSmacGraphPalette();
+        if(!palette) {return nullptr;}
+        const auto color=palette->colors[palette->alternate[m_faction ? m_native_palette_slot:0]];
+        auto pixels=std::make_shared<types::texture::Texture>("SMAC stack silhouette",23,30,types::texture::TF_SMAC_PALETTE);
+        // Use the raw flag mask, before health or order text is composed.
+        std::shared_ptr<const loader::texture::SmacUnitBadge> source;
+        std::shared_ptr<types::texture::Texture> native;
+        if(m_faction) {source=g_engine->GetTextureLoader()->GetSmacUnitBadge(m_native_palette_slot,level,spent?1:0);if(!source) {return nullptr;}}
+        else {native=m_badge_defs->GetNativeBadgeSprite(level)->instanced_sprite->texture_owner;if(!native || native->GetWidth()!=23 || native->GetHeight()!=30) {return nullptr;}}
+        const auto* rgba=source ? source->rgba.data():native->GetBitmap();
+        for(size_t p=0;p<23*30;++p) {if(rgba[p*4+3]) {pixels->SetPixel(p%23,p/23,types::Color::FromRGB(color[0],color[1],color[2]));}}
+        pixels->FullUpdate();
+        auto* sprite=m_ism->GetInstancedSprite(m_badges_key+"_STACK_"+std::to_string(key),pixels.get(),
+            {0,0},{23,30},{23,0},{23.0f/96,30.0f/48},ZL_UNITS,0.007f);
+        sprite->texture_owner=std::move(pixels);
+        sprite->actor->GetSpriteActor()->SetRenderFlags(scene::actor::Actor::RF_IGNORE_LIGHTING);
+        try {found=m_stack_markers.emplace(key,sprite::Sprite{sprite,1}).first;}
+        catch(...) {m_ism->RemoveInstancedSpriteByKey(sprite->key);throw;}
+    }
+    return &found->second;
+}
+
 SlotBadges::~SlotBadges() {
+    for(const auto& item:m_stack_markers) {m_ism->RemoveInstancedSpriteByKey(item.second.instanced_sprite->key);}
     for(const auto& item:m_native_map_badges) {m_ism->RemoveInstancedSpriteByKey(item.second.instanced_sprite->key);}
     for(const auto& item:m_order_sprites) {m_ism->RemoveInstancedSpriteByKey(item.second.instanced_sprite->key);}
 	for ( const auto& it : m_per_morale_sprites ) {

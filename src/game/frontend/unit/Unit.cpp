@@ -1,4 +1,5 @@
 #include "Unit.h"
+#include <algorithm>
 
 #include "game/frontend/Game.h"
 #include "game/frontend/tile/Tile.h"
@@ -196,6 +197,7 @@ void Unit::Show() {
 }
 
 void Unit::Hide() {
+    HideStackMarker();
     HideFakeBadge();
 	if ( m_render.is_rendered ) {
 		m_render.body->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
@@ -212,11 +214,32 @@ void Unit::ShowBadge() {
 	if(!m_render.is_rendered || !m_um->IsBodyAdmitted(this) || (m_render.badge.blink && !m_badge_defs->IsSelectionBlinkVisible())) {HideBadge();return;}
 	m_render.badge.def->instanced_sprite->actor->SetInstance( m_render.badge.instance_id, GetRenderedBadgeCoords(false) );
 	m_render.badge.healthbar.def->instanced_sprite->actor->SetInstance( m_render.badge.healthbar.instance_id, GetRenderedBadgeCoords(true) );
+    ShowStackMarker();
 }
 
 void Unit::HideBadge() {
+    HideStackMarker();
 	m_render.badge.def->instanced_sprite->actor->RemoveInstance( m_render.badge.instance_id );
 	m_render.badge.healthbar.def->instanced_sprite->actor->RemoveInstance( m_render.badge.healthbar.instance_id );
+}
+
+void Unit::SetStackMarker(bool enabled,int chassis_offset) {
+    enabled=enabled && chassis_offset>=0;
+    if(m_stack_marker.enabled!=enabled || m_stack_marker.chassis_offset!=chassis_offset) {HideStackMarker();}
+    m_stack_marker.enabled=enabled;m_stack_marker.chassis_offset=chassis_offset;
+}
+void Unit::HideStackMarker() {
+    if(m_stack_marker.id) {m_stack_marker.def->instanced_sprite->actor->RemoveInstance(m_stack_marker.id);m_stack_marker.id=0;}
+}
+void Unit::ShowStackMarker() {
+    const auto plan=m_um->GetTilePresentation(*m_tile);
+    if(!m_stack_marker.enabled || !m_render.is_rendered || !plan || plan->body!=m_id || plan->stack.size()<2) {HideStackMarker();return;}
+    auto* def=m_slot_badges->GetStackMarker(m_morale,m_is_owned && !CanMove());
+    if(!def) {HideStackMarker();return;}
+    if(def!=m_stack_marker.def) {HideStackMarker();m_stack_marker.def=def;}
+    if(!m_stack_marker.id) {m_stack_marker.id=def->next_instance_id++;}
+    auto coords=GetRenderedBadgeCoords(false);coords.x-=6.0f/96;
+    def->instanced_sprite->actor->SetInstance(m_stack_marker.id,coords);
 }
 
 void Unit::ShowFakeBadge( const uint8_t offset ) {
@@ -415,12 +438,14 @@ bool Unit::UsesNativeMapOverlay() const {
 }
 
 types::Vec3 Unit::GetRenderedBadgeCoords(bool health) const {
+    const float stack_shift=m_stack_marker.enabled && m_stack_marker.chassis_offset<=50 ? 6.0f/96:0;
     if(UsesNativeMapOverlay()) {
         // Original flag canvas starts at the dispatcher helper; health starts at(6,6).
-        return {m_render.coords.x-0.5f+(health?6.0f/96:0),
+        return {m_render.coords.x+std::max(0,m_um->GetStackChassisOffset(this))/96.0f+stack_shift-0.5f+(health?6.0f/96:0),
             m_render.coords.y+1-(health?6.0f/48:0),m_render.coords.z};
     }
-    return health?BadgeDefs::GetBadgeHealthbarCoords(m_render.coords,m_maximum_hit_points>0):BadgeDefs::GetBadgeCoords(m_render.coords);
+    auto coords=health?BadgeDefs::GetBadgeHealthbarCoords(m_render.coords,m_maximum_hit_points>0):BadgeDefs::GetBadgeCoords(m_render.coords);
+    coords.x+=stack_shift;return coords;
 }
 
 const bool Unit::ShouldBeActive() const {
@@ -482,6 +507,7 @@ void Unit::SetRenderCoords( const types::Vec3& coords ) {
 		m_slot_badges->HideFakeBadge( m_render.fake_badge.instance_id );
 		m_render.fake_badge.instance_id = m_slot_badges->ShowFakeBadge( m_render.coords, m_fake_badge_offset );
 	}
+    if(m_stack_marker.id) {ShowStackMarker();}
 	m_need_refresh = true;
 }
 

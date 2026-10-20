@@ -19,6 +19,7 @@ struct Unit {
     std::optional<uint8_t> order;
     bool working=false;
     std::optional<uint8_t> domain;
+    std::optional<int32_t> chassis;
 };
 struct BaseVisibility {bool body=false,name=false;};
 struct Base {

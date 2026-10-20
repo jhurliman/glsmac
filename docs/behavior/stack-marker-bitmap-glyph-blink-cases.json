@@ -1,0 +1,1031 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Raw marker silhouette, primary sprite, glyph ordering and shared blink gate.",
+  "source_guards": [
+    {
+      "address": "0x570355",
+      "mnemonic": "mov",
+      "operands": "edx, dword ptr [edi*4 + 0x6aeed4]"
+    },
+    {
+      "address": "0x57037c",
+      "mnemonic": "call",
+      "operands": "0x5fcc90"
+    },
+    {
+      "address": "0x5703df",
+      "mnemonic": "call",
+      "operands": "0x5fd9e0"
+    },
+    {
+      "address": "0x5706f8",
+      "mnemonic": "movsx",
+      "operands": "eax, byte ptr [eax + 0x9951c1]"
+    },
+    {
+      "address": "0x570a54",
+      "mnemonic": "call",
+      "operands": "0x5f5f30"
+    },
+    {
+      "address": "0x57020b",
+      "mnemonic": "test",
+      "operands": "al, 0x40"
+    },
+    {
+      "address": "0x57020f",
+      "mnemonic": "test",
+      "operands": "ah, 4"
+    },
+    {
+      "address": "0x57021a",
+      "mnemonic": "je",
+      "operands": "0x570a59"
+    },
+    {
+      "address": "0x5fcf19",
+      "mnemonic": "mov",
+      "operands": "al, byte ptr [ebp + 0xc]"
+    },
+    {
+      "address": "0x5fcf1c",
+      "mnemonic": "mov",
+      "operands": "ah, byte ptr [ebp + 0x18]"
+    },
+    {
+      "address": "0x5fcf6a",
+      "mnemonic": "cmp",
+      "operands": "byte ptr [esi], al"
+    },
+    {
+      "address": "0x5fcf6e",
+      "mnemonic": "mov",
+      "operands": "byte ptr [edi], ah"
+    },
+    {
+      "address": "0x5fdcb0",
+      "mnemonic": "cmp",
+      "operands": "byte ptr [esi], al"
+    },
+    {
+      "address": "0x5fdcb4",
+      "mnemonic": "mov",
+      "operands": "ah, byte ptr [esi]"
+    },
+    {
+      "address": "0x5fdcb6",
+      "mnemonic": "mov",
+      "operands": "byte ptr [edi], ah"
+    }
+  ],
+  "source_functions": [
+    {
+      "start": "0x56fd50",
+      "end": "0x570a90",
+      "sha256": "0f7d8130a653eb2833e1aee99d1cc0fde69e8c162501deeca6f973008afaba02"
+    },
+    {
+      "start": "0x5fcc90",
+      "end": "0x5fd920",
+      "sha256": "d8b2aaa675e401e2cbec3fe42d9134e87ccfffe8c5caf174d0d28a69553c443e"
+    },
+    {
+      "start": "0x5fd9e0",
+      "end": "0x5fe680",
+      "sha256": "2493f7c4da0176a94b0c04b8aab76dd20f63d516db28de67d768778e995afed8"
+    }
+  ],
+  "bitmap_controls": {
+    "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+    "scope": "Actual software5fcc90/5fd9e0 with actual lock/unlock, supplied IntersectRect service, synthetic indexed sprite; scale1 only.",
+    "cases": [
+      {
+        "entry": "0x5fcc90",
+        "source": [
+          0,
+          9,
+          7,
+          31,
+          41,
+          0,
+          255,
+          17
+        ],
+        "source_size": [
+          4,
+          2
+        ],
+        "source_offset": [
+          -1,
+          -2
+        ],
+        "key": 0,
+        "color": 248,
+        "anchor": [
+          3,
+          4
+        ],
+        "clip": [
+          0,
+          0,
+          12,
+          8
+        ],
+        "writes": [
+          [
+            3,
+            2,
+            248
+          ],
+          [
+            4,
+            2,
+            248
+          ],
+          [
+            5,
+            2,
+            248
+          ],
+          [
+            2,
+            3,
+            248
+          ],
+          [
+            4,
+            3,
+            248
+          ],
+          [
+            5,
+            3,
+            248
+          ]
+        ],
+        "frame_sha256": "7b5fc8d1504a6a26374237b1bad37bb99861977058433cc8afbba55a8f5df42a"
+      },
+      {
+        "entry": "0x5fcc90",
+        "source": [
+          0,
+          9,
+          7,
+          31,
+          41,
+          0,
+          255,
+          17
+        ],
+        "source_size": [
+          4,
+          2
+        ],
+        "source_offset": [
+          -1,
+          -2
+        ],
+        "key": 9,
+        "color": 37,
+        "anchor": [
+          3,
+          4
+        ],
+        "clip": [
+          0,
+          0,
+          12,
+          8
+        ],
+        "writes": [
+          [
+            2,
+            2,
+            37
+          ],
+          [
+            4,
+            2,
+            37
+          ],
+          [
+            5,
+            2,
+            37
+          ],
+          [
+            2,
+            3,
+            37
+          ],
+          [
+            3,
+            3,
+            37
+          ],
+          [
+            4,
+            3,
+            37
+          ],
+          [
+            5,
+            3,
+            37
+          ]
+        ],
+        "frame_sha256": "27ec921be9cc17410acacb72dafb9b45d1d936cea6ce9d20e43042b0d9a1f4fc"
+      },
+      {
+        "entry": "0x5fcc90",
+        "source": [
+          0,
+          9,
+          7,
+          31,
+          41,
+          0,
+          255,
+          17
+        ],
+        "source_size": [
+          4,
+          2
+        ],
+        "source_offset": [
+          -1,
+          -2
+        ],
+        "key": 0,
+        "color": 248,
+        "anchor": [
+          3,
+          4
+        ],
+        "clip": [
+          3,
+          3,
+          5,
+          5
+        ],
+        "writes": [
+          [
+            4,
+            3,
+            248
+          ]
+        ],
+        "frame_sha256": "7f6be7f5dba127d2a04253f2e09fde18319a15c163ca425d3441bbb0f50d3e9f"
+      },
+      {
+        "entry": "0x5fd9e0",
+        "source": [
+          0,
+          9,
+          7,
+          31,
+          41,
+          0,
+          255,
+          17
+        ],
+        "source_size": [
+          4,
+          2
+        ],
+        "source_offset": [
+          -1,
+          -2
+        ],
+        "key": 0,
+        "color": 248,
+        "anchor": [
+          3,
+          4
+        ],
+        "clip": [
+          0,
+          0,
+          12,
+          8
+        ],
+        "writes": [
+          [
+            3,
+            2,
+            9
+          ],
+          [
+            4,
+            2,
+            7
+          ],
+          [
+            5,
+            2,
+            31
+          ],
+          [
+            2,
+            3,
+            41
+          ],
+          [
+            4,
+            3,
+            255
+          ],
+          [
+            5,
+            3,
+            17
+          ]
+        ],
+        "frame_sha256": "6f015081d51b0bc400544dcfa9ea5c38c8e09dd988aec61ff6d164cab2b37102"
+      },
+      {
+        "entry": "0x5fd9e0",
+        "source": [
+          0,
+          9,
+          7,
+          31,
+          41,
+          0,
+          255,
+          17
+        ],
+        "source_size": [
+          4,
+          2
+        ],
+        "source_offset": [
+          -1,
+          -2
+        ],
+        "key": 9,
+        "color": 37,
+        "anchor": [
+          3,
+          4
+        ],
+        "clip": [
+          0,
+          0,
+          12,
+          8
+        ],
+        "writes": [
+          [
+            2,
+            2,
+            0
+          ],
+          [
+            4,
+            2,
+            7
+          ],
+          [
+            5,
+            2,
+            31
+          ],
+          [
+            2,
+            3,
+            41
+          ],
+          [
+            3,
+            3,
+            0
+          ],
+          [
+            4,
+            3,
+            255
+          ],
+          [
+            5,
+            3,
+            17
+          ]
+        ],
+        "frame_sha256": "e50f5db4ef28ecfc051be368f4f57158dcddc329d33e674b37c38caba46e06c7"
+      },
+      {
+        "entry": "0x5fd9e0",
+        "source": [
+          0,
+          9,
+          7,
+          31,
+          41,
+          0,
+          255,
+          17
+        ],
+        "source_size": [
+          4,
+          2
+        ],
+        "source_offset": [
+          -1,
+          -2
+        ],
+        "key": 0,
+        "color": 248,
+        "anchor": [
+          3,
+          4
+        ],
+        "clip": [
+          3,
+          3,
+          5,
+          5
+        ],
+        "writes": [
+          [
+            4,
+            3,
+            255
+          ]
+        ],
+        "frame_sha256": "5895f7c8d7058dfa996ffabd7a7059baa187f9c50cf5fee1753a3b4c1a0ca794"
+      }
+    ]
+  },
+  "glyph_blink_controls": {
+    "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+    "scope": "Actual main painter and56fd50 through order-text draw; supplied geometry, body/bitmap/font sinks and fixed glyph lookup X; glyph content not claimed.",
+    "cases": [
+      {
+        "input": {
+          "id": "normal_stack",
+          "stack": true
+        },
+        "events": [
+          {
+            "kind": "consumer",
+            "entry": "0x473290",
+            "caller": "0x47688a"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4737b0",
+            "caller": "0x47335f"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4f9320",
+            "caller": "0x4737f7"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x5d7fe0",
+            "caller": "0x47364b"
+          },
+          {
+            "kind": "unit_request",
+            "args": [
+              822084676,
+              0,
+              100,
+              76,
+              0,
+              3,
+              1
+            ]
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x56fc40",
+            "caller": "0x56fd6a"
+          },
+          {
+            "kind": "stack_count_return",
+            "value": 2
+          },
+          {
+            "kind": "overlay_leaf",
+            "entry": "0x5fcc90",
+            "caller": "0x570381",
+            "this": "0x77eed8",
+            "args": [
+              822084676,
+              0,
+              100,
+              76,
+              248
+            ]
+          },
+          {
+            "kind": "primary_flag_branch",
+            "value": 6
+          },
+          {
+            "kind": "overlay_leaf",
+            "entry": "0x5fd9e0",
+            "caller": "0x5703e4",
+            "this": "0x77eed8",
+            "args": [
+              822084676,
+              0,
+              106,
+              76
+            ]
+          },
+          {
+            "kind": "overlay_leaf",
+            "entry": "0x5f8ad0",
+            "caller": "0x5704bc",
+            "this": "0x31000444",
+            "args": [
+              536932052,
+              0
+            ]
+          },
+          {
+            "kind": "overlay_leaf",
+            "entry": "0x5f8ad0",
+            "caller": "0x570669",
+            "this": "0x31000444",
+            "args": [
+              536932052,
+              250
+            ]
+          },
+          {
+            "kind": "glyph_lookup",
+            "text_id": 0
+          },
+          {
+            "kind": "order_glyph",
+            "this": "0x31000444",
+            "text": "X",
+            "rect": [
+              116,
+              81,
+              127,
+              95
+            ]
+          },
+          {
+            "kind": "unit_body",
+            "unit": 1,
+            "flags": 3,
+            "overlay": true
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4743e0",
+            "caller": "0x4768ce"
+          }
+        ],
+        "unit_bodies": [
+          {
+            "kind": "unit_body",
+            "unit": 1,
+            "flags": 3,
+            "overlay": true
+          }
+        ],
+        "base_bodies": [],
+        "base_names": [],
+        "unit_records_after": "1600260000000000000000000000030000000000ffff00000000000000000000000000000000000000000000000000000100ffff1600260000000000000001000000030000000000ffff0000000000000000000000000000000000000000000000000000ffff0000",
+        "tile_record_after": "00000f0008000000020000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "input": {
+          "id": "order2_stack",
+          "stack": true,
+          "order": 2
+        },
+        "events": [
+          {
+            "kind": "consumer",
+            "entry": "0x473290",
+            "caller": "0x47688a"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4737b0",
+            "caller": "0x47335f"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4f9320",
+            "caller": "0x4737f7"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x5d7fe0",
+            "caller": "0x47364b"
+          },
+          {
+            "kind": "unit_request",
+            "args": [
+              822084676,
+              0,
+              100,
+              76,
+              0,
+              3,
+              1
+            ]
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x56fc40",
+            "caller": "0x56fd6a"
+          },
+          {
+            "kind": "stack_count_return",
+            "value": 2
+          },
+          {
+            "kind": "overlay_leaf",
+            "entry": "0x5fcc90",
+            "caller": "0x570381",
+            "this": "0x77eed8",
+            "args": [
+              822084676,
+              0,
+              100,
+              76,
+              248
+            ]
+          },
+          {
+            "kind": "primary_flag_branch",
+            "value": 6
+          },
+          {
+            "kind": "overlay_leaf",
+            "entry": "0x5fd9e0",
+            "caller": "0x5703e4",
+            "this": "0x77eed8",
+            "args": [
+              822084676,
+              0,
+              106,
+              76
+            ]
+          },
+          {
+            "kind": "overlay_leaf",
+            "entry": "0x5f8ad0",
+            "caller": "0x5704bc",
+            "this": "0x31000444",
+            "args": [
+              536932052,
+              0
+            ]
+          },
+          {
+            "kind": "overlay_leaf",
+            "entry": "0x5f8ad0",
+            "caller": "0x570669",
+            "this": "0x31000444",
+            "args": [
+              536932052,
+              250
+            ]
+          },
+          {
+            "kind": "glyph_lookup",
+            "text_id": 0
+          },
+          {
+            "kind": "order_glyph",
+            "this": "0x31000444",
+            "text": "X",
+            "rect": [
+              116,
+              81,
+              127,
+              95
+            ]
+          },
+          {
+            "kind": "unit_body",
+            "unit": 1,
+            "flags": 3,
+            "overlay": true
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4743e0",
+            "caller": "0x4768ce"
+          }
+        ],
+        "unit_bodies": [
+          {
+            "kind": "unit_body",
+            "unit": 1,
+            "flags": 3,
+            "overlay": true
+          }
+        ],
+        "base_bodies": [],
+        "base_names": [],
+        "unit_records_after": "1600260000000000000000000000030000020000ffff00000000000000000000000000000000000000000000000000000100ffff1600260000000000000001000000030000020000ffff0000000000000000000000000000000000000000000000000000ffff0000",
+        "tile_record_after": "00000f0008000000020000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "input": {
+          "id": "selected_on",
+          "stack": true,
+          "selected": true
+        },
+        "events": [
+          {
+            "kind": "consumer",
+            "entry": "0x473290",
+            "caller": "0x47688a"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4737b0",
+            "caller": "0x47335f"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4f9320",
+            "caller": "0x4737f7"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x5d9980",
+            "caller": "0x473501"
+          },
+          {
+            "kind": "unit_request",
+            "args": [
+              822084676,
+              0,
+              100,
+              76,
+              0,
+              3,
+              1
+            ]
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x56fc40",
+            "caller": "0x56fd6a"
+          },
+          {
+            "kind": "stack_count_return",
+            "value": 2
+          },
+          {
+            "kind": "overlay_leaf",
+            "entry": "0x5fcc90",
+            "caller": "0x570381",
+            "this": "0x77eed8",
+            "args": [
+              822084676,
+              0,
+              100,
+              76,
+              248
+            ]
+          },
+          {
+            "kind": "primary_flag_branch",
+            "value": 6
+          },
+          {
+            "kind": "overlay_leaf",
+            "entry": "0x5fd9e0",
+            "caller": "0x5703e4",
+            "this": "0x77eed8",
+            "args": [
+              822084676,
+              0,
+              106,
+              76
+            ]
+          },
+          {
+            "kind": "overlay_leaf",
+            "entry": "0x5f8ad0",
+            "caller": "0x5704bc",
+            "this": "0x31000444",
+            "args": [
+              536932052,
+              0
+            ]
+          },
+          {
+            "kind": "overlay_leaf",
+            "entry": "0x5f8ad0",
+            "caller": "0x570669",
+            "this": "0x31000444",
+            "args": [
+              536932052,
+              250
+            ]
+          },
+          {
+            "kind": "glyph_lookup",
+            "text_id": 0
+          },
+          {
+            "kind": "order_glyph",
+            "this": "0x31000444",
+            "text": "X",
+            "rect": [
+              116,
+              81,
+              127,
+              95
+            ]
+          },
+          {
+            "kind": "unit_body",
+            "unit": 0,
+            "flags": 3,
+            "overlay": true
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4743e0",
+            "caller": "0x4768ce"
+          }
+        ],
+        "unit_bodies": [
+          {
+            "kind": "unit_body",
+            "unit": 0,
+            "flags": 3,
+            "overlay": true
+          }
+        ],
+        "base_bodies": [],
+        "base_names": [],
+        "unit_records_after": "1600260000000000000000000000030000000000ffff00000000000000000000000000000000000000000000000000000100ffff1600260000000000000001000000030000000000ffff0000000000000000000000000000000000000000000000000000ffff0000",
+        "tile_record_after": "00000f0008000000020000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "input": {
+          "id": "selected_off_far",
+          "stack": true,
+          "selected": true,
+          "blink": 1
+        },
+        "events": [
+          {
+            "kind": "consumer",
+            "entry": "0x473290",
+            "caller": "0x47688a"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4737b0",
+            "caller": "0x47335f"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4f9320",
+            "caller": "0x4737f7"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x5d9980",
+            "caller": "0x473501"
+          },
+          {
+            "kind": "unit_request",
+            "args": [
+              822084676,
+              0,
+              100,
+              76,
+              0,
+              1027,
+              1
+            ]
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x56fc40",
+            "caller": "0x56fd6a"
+          },
+          {
+            "kind": "unit_body",
+            "unit": 0,
+            "flags": 1027,
+            "overlay": false
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4743e0",
+            "caller": "0x4768ce"
+          }
+        ],
+        "unit_bodies": [
+          {
+            "kind": "unit_body",
+            "unit": 0,
+            "flags": 1027,
+            "overlay": false
+          }
+        ],
+        "base_bodies": [],
+        "base_names": [],
+        "unit_records_after": "1600260000000000000000000000030000000000ffff00000000000000000000000000000000000000000000000000000100ffff1600260000000000000001000000030000000000ffff0000000000000000000000000000000000000000000000000000ffff0000",
+        "tile_record_after": "00000f0008000000020000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "input": {
+          "id": "selected_off_near",
+          "stack": true,
+          "selected": true,
+          "blink": 1,
+          "mouse": [
+            22,
+            38
+          ]
+        },
+        "events": [
+          {
+            "kind": "consumer",
+            "entry": "0x473290",
+            "caller": "0x47688a"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4737b0",
+            "caller": "0x47335f"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4f9320",
+            "caller": "0x4737f7"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x5d9980",
+            "caller": "0x473501"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4743e0",
+            "caller": "0x4768ce"
+          }
+        ],
+        "unit_bodies": [],
+        "base_bodies": [],
+        "base_names": [],
+        "unit_records_after": "1600260000000000000000000000030000000000ffff00000000000000000000000000000000000000000000000000000100ffff1600260000000000000001000000030000000000ffff0000000000000000000000000000000000000000000000000000ffff0000",
+        "tile_record_after": "00000f0008000000020000000000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "input": {
+          "id": "selected_off_whole",
+          "stack": true,
+          "selected": true,
+          "blink": 1,
+          "whole": true
+        },
+        "events": [
+          {
+            "kind": "consumer",
+            "entry": "0x473290",
+            "caller": "0x47688a"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4737b0",
+            "caller": "0x47335f"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4f9320",
+            "caller": "0x4737f7"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x5d9980",
+            "caller": "0x473501"
+          },
+          {
+            "kind": "consumer",
+            "entry": "0x4743e0",
+            "caller": "0x4768ce"
+          }
+        ],
+        "unit_bodies": [],
+        "base_bodies": [],
+        "base_names": [],
+        "unit_records_after": "1600260000000000000000000000030000000000ffff00000000000000000000000000000000000000000000000000000100ffff1600260000000000000001000000030000000000ffff0000000000000000000000000000000000000000000000000000ffff0000",
+        "tile_record_after": "00000f0008000000020000000000000000000000000000000000000000000000000000000000000000000000"
+      }
+    ]
+  }
+}

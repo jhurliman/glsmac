@@ -100,6 +100,7 @@ public:
 	const bool IsBadgeVisible() const;
 	void ShowBadge();
 	void HideBadge();
+    void SetStackMarker(bool enabled,int chassis_offset);
 
 	void ShowFakeBadge( const uint8_t offset );
 	void HideFakeBadge();
@@ -167,6 +168,10 @@ private:
 		} fake_badge;
         sprite::Sprite* body = nullptr; // actual actor owning instance_id, independent of pending facing
 	} m_render;
+
+    struct {bool enabled=false;int chassis_offset=0;sprite::Sprite* def=nullptr;size_t id=0;} m_stack_marker;
+    void ShowStackMarker();
+    void HideStackMarker();
 
 	const bool m_is_owned = false;
 	bool m_is_active = false;

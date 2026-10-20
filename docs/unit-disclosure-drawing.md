@@ -52,8 +52,9 @@ not from the original executable. They do not establish scene pixel parity.
 
 The ordinary static profile does not close editor/special override pointers,
 transport/chassis exceptions, display-option/zoom contexts or source blink-phase
-selection. The port's bounded layout of up to11 extra stack flags is retained;
-the original's complete stack-overlay layout is not yet proven. Tile picking
+selection. The [native stack marker](native-stack-marker.md) now replaces ordinary per-member
+flags with one raw representative silhouette and connects actual selection,
+startup descriptor and restore-ready callers. Special-view layouts remain open. Tile picking
 and lower-console roster disclosure need their separate consumer audit.
 
 An empty native pool and old saves with missing source-pool authority still

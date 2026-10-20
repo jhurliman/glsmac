@@ -49,6 +49,7 @@ CLASS( UnitManager, common::Class )
 	~UnitManager();
 
 	void Iterate();
+    int GetStackChassisOffset(const Unit* unit) const;
     bool IsSelectionBlinkAdmitted(const Unit* unit) const;
     const actor_visibility::UnitPlan* GetTilePresentation(const tile::Tile& tile) const;
     bool IsBodyAdmitted(const Unit* unit) const;
@@ -98,6 +99,7 @@ private:
     mutable bool m_visibility_active=false;
     mutable std::map<std::array<int32_t,2>,std::vector<uint64_t>> m_visibility_members;
     mutable std::map<std::array<int32_t,2>,actor_visibility::UnitPlan> m_visibility_plans;
+    mutable std::map<int32_t,int> m_chassis_flag_offsets;
     const actor_visibility::UnitPlan m_hidden_plan;
 
 	sprite::InstancedSpriteManager* m_ism;

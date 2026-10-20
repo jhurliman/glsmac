@@ -1,0 +1,549 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Semantic stack-count and renderer-call subset of the frozen original handoff; bitmap/font/model sinks and special-view limits remain as declared. Not all view contexts are implemented by the port.",
+  "parent_manifest_sha256": "47b8e09e8f6bffcef687c176b9fe17a00aac7015fae073d1bc271ef9673afea1",
+  "source_guards": [
+    {
+      "address": "0x56fd65",
+      "mnemonic": "call",
+      "operands": "0x56fc40"
+    },
+    {
+      "address": "0x57020b",
+      "mnemonic": "test",
+      "operands": "al, 0x40"
+    },
+    {
+      "address": "0x57020f",
+      "mnemonic": "test",
+      "operands": "ah, 4"
+    },
+    {
+      "address": "0x57021a",
+      "mnemonic": "je",
+      "operands": "0x570a59"
+    },
+    {
+      "address": "0x5702bf",
+      "mnemonic": "test",
+      "operands": "byte ptr [esp + 0x54], 2"
+    },
+    {
+      "address": "0x5702d7",
+      "mnemonic": "call",
+      "operands": "0x5d0c40"
+    },
+    {
+      "address": "0x5702df",
+      "mnemonic": "cmp",
+      "operands": "eax, 1"
+    },
+    {
+      "address": "0x5702e2",
+      "mnemonic": "jle",
+      "operands": "0x5703ab"
+    },
+    {
+      "address": "0x57037c",
+      "mnemonic": "call",
+      "operands": "0x5fcc90"
+    },
+    {
+      "address": "0x5703df",
+      "mnemonic": "call",
+      "operands": "0x5fd9e0"
+    },
+    {
+      "address": "0x5d0cd5",
+      "mnemonic": "test",
+      "operands": "ebp, ebp"
+    },
+    {
+      "address": "0x5d0cd7",
+      "mnemonic": "jl",
+      "operands": "0x5d123f"
+    },
+    {
+      "address": "0x5d1246",
+      "mnemonic": "movsx",
+      "operands": "esi, word ptr [eax*4 + 0x9951e0]"
+    }
+  ],
+  "stack_controls": [
+    {
+      "input": {
+        "id": "stack_thirteen",
+        "stack": true,
+        "stack_count": 13
+      },
+      "counts": [
+        13
+      ],
+      "leaves": [
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fcc90",
+          "caller": "0x570381",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            100,
+            76,
+            248
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fd9e0",
+          "caller": "0x5703e4",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            106,
+            76
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x5704bc",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            0
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x570669",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            250
+          ]
+        }
+      ],
+      "resolved_units": [
+        1
+      ]
+    },
+    {
+      "input": {
+        "id": "stack403",
+        "stack": true,
+        "render_flags": 1027
+      },
+      "counts": [],
+      "leaves": [],
+      "resolved_units": []
+    },
+    {
+      "input": {
+        "id": "stack_flag1",
+        "stack": true,
+        "render_flags": 1
+      },
+      "counts": [],
+      "leaves": [
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fd9e0",
+          "caller": "0x5703e4",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            100,
+            76
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x5704bc",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            0
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x570669",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            250
+          ]
+        }
+      ],
+      "resolved_units": [
+        1
+      ]
+    },
+    {
+      "input": {
+        "id": "single"
+      },
+      "counts": [
+        1
+      ],
+      "leaves": [
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fd9e0",
+          "caller": "0x5703e4",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            100,
+            76
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x5704bc",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            0
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x570669",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            250
+          ]
+        }
+      ],
+      "resolved_units": [
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "stack_own",
+        "stack": true
+      },
+      "counts": [
+        2
+      ],
+      "leaves": [
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fcc90",
+          "caller": "0x570381",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            100,
+            76,
+            248
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fd9e0",
+          "caller": "0x5703e4",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            106,
+            76
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x5704bc",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            0
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x570669",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            250
+          ]
+        }
+      ],
+      "resolved_units": [
+        1
+      ]
+    },
+    {
+      "input": {
+        "id": "stack_foreign_tail_hidden",
+        "stack": true,
+        "second_owner": 2,
+        "second_seen": 0
+      },
+      "counts": [
+        2
+      ],
+      "leaves": [
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fcc90",
+          "caller": "0x570381",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            100,
+            76,
+            248
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fd9e0",
+          "caller": "0x5703e4",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            106,
+            76
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x5704bc",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            0
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x570669",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            250
+          ]
+        }
+      ],
+      "resolved_units": [
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "stack_foreign_tail_seen",
+        "stack": true,
+        "second_owner": 2,
+        "second_seen": 8
+      },
+      "counts": [
+        2
+      ],
+      "leaves": [
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fcc90",
+          "caller": "0x570381",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            100,
+            76,
+            248
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fd9e0",
+          "caller": "0x5703e4",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            106,
+            76
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x5704bc",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            0
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x570669",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            250
+          ]
+        }
+      ],
+      "resolved_units": [
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "stack_foreign_head_seen",
+        "stack": true,
+        "owner": 2,
+        "seen": 8,
+        "second_owner": 3
+      },
+      "counts": [
+        2
+      ],
+      "leaves": [
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fcc90",
+          "caller": "0x570381",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            100,
+            76,
+            248
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fd9e0",
+          "caller": "0x5703e4",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            106,
+            76
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x5704bc",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            0
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x570669",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            250
+          ]
+        }
+      ],
+      "resolved_units": [
+        1
+      ]
+    },
+    {
+      "input": {
+        "id": "stack_foreign_head_hidden",
+        "stack": true,
+        "owner": 2,
+        "seen": 0,
+        "second_owner": 3
+      },
+      "counts": [],
+      "leaves": [],
+      "resolved_units": []
+    },
+    {
+      "input": {
+        "id": "stack_z8",
+        "stack": true,
+        "zoom": 8
+      },
+      "counts": [
+        2
+      ],
+      "leaves": [
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fcc90",
+          "caller": "0x570381",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            100,
+            76,
+            248
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5fd9e0",
+          "caller": "0x5703e4",
+          "this": "0x77eed8",
+          "args": [
+            822084676,
+            0,
+            109,
+            76
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x5704bc",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            0
+          ]
+        },
+        {
+          "kind": "overlay_leaf",
+          "entry": "0x5f8ad0",
+          "caller": "0x570669",
+          "this": "0x31000444",
+          "args": [
+            536932052,
+            250
+          ]
+        }
+      ],
+      "resolved_units": [
+        1
+      ]
+    }
+  ]
+}

@@ -20,7 +20,9 @@ smac_terrain::LandmarkGeometry* Map::GetNativeGeometry() const {
             const auto& tile=source->At(x,y);
             cells.push_back({uint8_t(tile.Climate()>>5),tile.Landmarks()});
         }}
-        auto geometry=std::make_unique<smac_terrain::LandmarkGeometry>(80,80,wrap,std::move(cells));
+        // The retained Planet path uses the same bounded authored negative-detail
+        // mappings as the view renderer; rejecting them mixes legacy/native fans.
+        auto geometry=std::make_unique<smac_terrain::LandmarkGeometry>(80,80,wrap,std::move(cells),false,true);
         m_native_geometry=std::move(geometry);m_native_geometry_source=source;m_native_geometry_wrap=wrap;
     }
     return m_native_geometry.get();

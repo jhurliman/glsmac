@@ -100,6 +100,44 @@ public:
     size_t NextId() const { return world.m_next_sprite_instance_id; }
     bool InstancesEmpty() const { return world.m_sprite_instances.empty(); }
     bool ContextIdle() const { return !world.m_land_canvas && !world.m_current_ts; }
+    bool CheckAuthoredNegativeFinalizer() {
+        using Planet=map::SmacPlanetMap;
+        std::string wire(Planet::FILE_BYTES,'\0');
+        wire.replace(0,11,"TERRANMAP\0\x1a",11);
+        wire[11]=5;wire[15]=80;wire[19]=80;wire[15+0xa30]=4;
+        for(size_t i=0;i<Planet::TILE_COUNT;++i) {
+            wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*Planet::RECORD_BYTES]=char(4<<5);
+        }
+        // Authored Pholus Ridge detail -48 uses the measured preceding mapping
+        // bytes. Uniform band4 gives C/W/N/E/S =45/30/50/30/50, not legacy Z.
+        const auto offset=Planet::PREFIX_BYTES+Planet::HEADER_BYTES+81*Planet::RECORD_BYTES+12;
+        const uint32_t word=0xd0400800u;
+        for(unsigned i=0;i<4;++i) {wire[offset+i]=char(word>>(8*i));}
+        world.m_resource_policy=map::GlsmacResourceMapPolicy::InstalledPlanetV1(Planet::Decode(wire),true);
+        types::mesh::Render render(25,20);
+        types::mesh::Data picking(5,4);
+        world.m_meshes.terrain=&render;world.m_meshes.terrain_data=&picking;
+        world.m_land_random=&gameplay;
+        auto* t=world.GetTile(2,2);auto* ts=world.GetTileState(t);
+        ts->coord={10,20};ts->has_water=false;ts->is_coastline_corner=false;
+        world.m_map_state->first_run=true;
+        map::module::Finalize finalizer(&world);
+        finalizer.GenerateTile(t,ts,world.m_map_state);
+        types::Vec3 center,west,north,pick_center,pick_west;
+        render.GetVertexCoord(ts->layers[tile::LAYER_LAND].indices.center,&center);
+        render.GetVertexCoord(ts->layers[tile::LAYER_LAND].indices.left,&west);
+        render.GetVertexCoord(ts->layers[tile::LAYER_LAND].indices.top,&north);
+        picking.GetVertexCoord(ts->data_mesh.indices.center,&pick_center);
+        picking.GetVertexCoord(ts->data_mesh.indices.left,&pick_west);
+        const auto close=[](float a,float b) {return std::abs(a-b)<0.000001f;};
+        const bool result=ts->smac_projector_height==40 &&
+            close(center.x,10) && close(center.y,20) && close(center.z,2+45.0f/48) &&
+            close(west.x,9.5f) && close(west.z,2+30.0f/48) &&
+            close(north.y,19.5f) && close(north.z,2+50.0f/48) &&
+            pick_center==center && pick_west==west;
+        world.m_meshes.terrain=nullptr;world.m_meshes.terrain_data=nullptr;
+        return result;
+    }
     bool CheckNativeFinalizer(bool coast) {
         using Planet=map::SmacPlanetMap;
         std::string wire(Planet::FILE_BYTES,'\0');
@@ -866,6 +904,11 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
             };
             GT_ASSERT(map::smac_terrain::OrdinaryHeights(c.x,c.y,band_at,c.low)==c.expected,"Case: "+std::string(c.name));
         }
+        GT_OK();
+    });
+    task->AddTest("SMAC authored negative landmark reaches backend display and picking geometry",GT(){
+        TerrainRenderFixture f;
+        GT_ASSERT(f.CheckAuthoredNegativeFinalizer(),"Authored negative detail fell back to incompatible legacy terrain");
         GT_OK();
     });
     task->AddTest("SMAC ordinary land finalizer shares display picking and retained tile heights without jitter",GT(){

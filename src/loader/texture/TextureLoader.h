@@ -22,6 +22,7 @@ namespace loader {
 namespace texture {
 struct SmacBaseCard;
 struct SmacTurnFrames;
+struct SmacDialogSource;
 struct SmacGraphPalette;
 struct SmacUnitBadge;
 
@@ -56,6 +57,7 @@ CLASS( TextureLoader, Loader )
     virtual std::shared_ptr<types::texture::Texture> GetSmacEffectTexture(bool death);
 
     virtual std::shared_ptr<const SmacTurnFrames> GetSmacTurnFrames();
+    virtual std::shared_ptr<const SmacDialogSource> GetSmacDialogSource();
     virtual std::shared_ptr<const SmacGraphPalette> GetSmacGraphPalette();
 
 	// create texture of solid color

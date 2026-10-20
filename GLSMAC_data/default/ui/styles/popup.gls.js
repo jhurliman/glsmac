@@ -1,4 +1,6 @@
 return (ui) => {
+    ui.class('smac-original-window').set({header_height: 0});
+
 
 	ui.class('popup').set({
 		background: 'interface.pcx:crop(86, 353, 109, 376)',
@@ -170,4 +172,13 @@ return (ui) => {
 		color: 'rgb(159, 196, 198)',
 		font: 'arialnb.ttf:18',
 	});
+    ui.class('smac-faction-row').set({height: 16, font: 'arialn.ttf:16:mono-bold',
+        color: 'rgb(0, 0, 0)', smac_frame: [[27, 0, 0, 525, 16]],
+        _hover: {color: 'rgb(144, 184, 228)', smac_frame: [[28, 0, 0, 525, 16]]},
+        _selected: {color: 'rgb(0, 0, 0)', smac_frame: [[29, 0, 0, 525, 16]]},
+    });
+
+    ui.class('smac-original-input').set({background: 'transparent', border: 'transparent',
+        color: 'rgb(109, 126, 178)', font: 'arialn.ttf:16:mono-bold', height: 20});
+
 };

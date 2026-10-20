@@ -10,6 +10,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacPlanetMap.cpp
 	${PWD}/UIClass.cpp
     ${PWD}/SmacDialogFont.cpp
+    ${PWD}/SmacDialogFrame.cpp
 	${PWD}/Sound.cpp
 	${PWD}/Flic.cpp
 	${PWD}/TerrainRenderUpdate.cpp

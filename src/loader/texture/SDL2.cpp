@@ -10,6 +10,7 @@
 #include "SmacUnitBadge.h"
 #include "SmacBaseCard.h"
 #include "SmacTurnFrames.h"
+#include "SmacDialogFrame.h"
 #include "SmacGraphPalette.h"
 #include "loader/flic/TurnComplete.h"
 #include "loader/cvr/CvrActorMaterial.h"
@@ -515,5 +516,27 @@ void SDL2::FixTexture( types::texture::Texture* texture ) const {
 	}
 }
 
+}
+}
+
+namespace loader::texture {
+std::shared_ptr<const SmacDialogSource> SDL2::GetSmacDialogSource() {
+    const auto atlas_path=GetCustomFilename("interface.pcx"),palette_path=GetCustomFilename("palette.pcx");
+    const auto key=atlas_path+":"+palette_path;auto found=m_dialog_sources.find(key);
+    if(found!=m_dialog_sources.end()) {return found->second;}
+    using Image=std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)>;
+    std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,atlas_path);Image atlas(load_image(bytes),SDL_FreeSurface);
+    util::FS::ReadFile(bytes,palette_path);Image palette(load_image(bytes),SDL_FreeSurface);
+    if(!atlas || !atlas->format || atlas->format->BitsPerPixel!=8 || atlas->w!=750 || atlas->h!=900 || atlas->pitch<750) {
+        THROW("Small dialog frames require original indexed750x900 interface.pcx");
+    }
+    auto source=std::make_shared<SmacDialogSource>();
+    source->palette=MakeSmacSoftwarePalette(palette && palette->format?palette->format->palette:nullptr);
+    source->indexed.resize(750*900);
+    if(SDL_LockSurface(atlas.get())!=0) {THROW(SDL_GetError());}
+    util::FinallyGuard unlock([&]{SDL_UnlockSurface(atlas.get());});
+    for(int y=0;y<900;++y) {const auto* row=static_cast<const uint8_t*>(atlas->pixels)+size_t(y)*atlas->pitch;
+        for(int x=0;x<750;++x) {source->indexed[size_t(y)*750+x]=static_cast<uint8_t>(row[x]+10);}}
+    return m_dialog_sources.emplace(key,std::move(source)).first->second;
 }
 }

@@ -1,0 +1,3559 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "resolution": [
+    1024,
+    768
+  ],
+  "naturally_booted_frontend": false,
+  "modal_input_loop_executed": false,
+  "profiles": [
+    {
+      "id": "name-mode0-plain",
+      "evidence_kind": "bounded original x86 with declared Win32/GDI services and controlled view inputs",
+      "outer_rect": [
+        337,
+        649,
+        1019,
+        763
+      ],
+      "client": [
+        0,
+        0,
+        682,
+        114
+      ],
+      "mode": 0,
+      "frames": [
+        {
+          "rect": [
+            0,
+            0,
+            682,
+            114
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            4,
+            4,
+            678,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            7,
+            7,
+            675,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            7,
+            35,
+            673,
+            67
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "caption_text_rect": [
+        10,
+        10,
+        672,
+        22
+      ],
+      "controls": [
+        {
+          "address": "0x4031c370",
+          "rect": [
+            337,
+            649,
+            1019,
+            763
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x0",
+          "dib": 1077109824
+        },
+        {
+          "address": "0x4031cdcc",
+          "rect": [
+            232,
+            79,
+            448,
+            99
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077167344,
+          "button_action": -1
+        },
+        {
+          "address": "0x4031d918",
+          "rect": [
+            454,
+            79,
+            670,
+            99
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077192304,
+          "button_action": -2
+        },
+        {
+          "address": "0x4031e6c8",
+          "rect": [
+            10,
+            38,
+            670,
+            64
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077135248
+        },
+        {
+          "address": "0x4033c7a0",
+          "rect": [
+            101,
+            1,
+            663,
+            21
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031e6c8",
+          "dib": 1077156208
+        },
+        {
+          "address": "0x40344500",
+          "rect": [
+            10,
+            79,
+            226,
+            99
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077181264,
+          "button_action": 1
+        }
+      ],
+      "row_states": [],
+      "rails": [],
+      "text": [
+        {
+          "text": "ENTER YOUR NAME",
+          "x": 273,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1077109824
+        },
+        {
+          "text": "Deirdre",
+          "x": 4,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": [
+            4,
+            0,
+            558,
+            20
+          ],
+          "dib": 1077156208
+        },
+        {
+          "text": "Deirdre",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077156208
+        },
+        {
+          "text": "Deirdre",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077156208
+        },
+        {
+          "text": "Name (Male):",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077135248
+        },
+        {
+          "text": "Deirdre",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077156208
+        },
+        {
+          "text": "OK",
+          "x": 99,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077167344
+        },
+        {
+          "text": "OK",
+          "x": 97,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077167344
+        },
+        {
+          "text": "Change Gender",
+          "x": 71,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077181264
+        },
+        {
+          "text": "Change Gender",
+          "x": 54,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077181264
+        },
+        {
+          "text": "Cancel",
+          "x": 92,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077192304
+        },
+        {
+          "text": "Cancel",
+          "x": 84,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077192304
+        },
+        {
+          "text": "Deirdre",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077156208
+        }
+      ],
+      "service_limits": [
+        "Profile writes supplied success without modifying host INI; profile reads use installed INI/default.",
+        "Single emulated UI-thread GetCurrentThreadId returns1.",
+        "EnumThreadWindows sees no host windows and returns success without callbacks.",
+        "CharUpperA delegates character/string casing to host User32 with guest buffers copied in/out.",
+        "GetCursorPos supplies fixed (0,0); host cursor is never read or moved.",
+        "LoadCursorA/SetCursor/ShowCursor use inert guest cursor handles; no host cursor APIs run.",
+        "InvalidateRect records invalidation and succeeds; there is no host window/message delivery.",
+        "Native630b40 initializes stock default-font7f0968 (bootstrap46c292/647297); GetDC supplies a memory DC, not a desktop DC.",
+        "StretchBlt supports only asserted 1:1 SRCCOPY between top-down guest DIBs.",
+        "Main host HWND global9c0010 is opaque guest sentinel1, admitting offscreen list controls; no native desktop window exists."
+      ]
+    },
+    {
+      "id": "faction-mode0-plain",
+      "evidence_kind": "bounded original x86 with declared Win32/GDI services and controlled view inputs",
+      "outer_rect": [
+        472,
+        545,
+        1019,
+        763
+      ],
+      "client": [
+        0,
+        0,
+        547,
+        218
+      ],
+      "mode": 0,
+      "frames": [
+        {
+          "rect": [
+            0,
+            0,
+            547,
+            218
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            4,
+            4,
+            543,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            7,
+            7,
+            540,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            7,
+            35,
+            538,
+            171
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "caption_text_rect": [
+        10,
+        10,
+        537,
+        22
+      ],
+      "controls": [
+        {
+          "address": "0x4031c370",
+          "rect": [
+            472,
+            545,
+            1019,
+            763
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x0",
+          "dib": 1077152720
+        },
+        {
+          "address": "0x4031cdcc",
+          "rect": [
+            187,
+            183,
+            358,
+            203
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077241600,
+          "button_action": -1
+        },
+        {
+          "address": "0x4031d918",
+          "rect": [
+            364,
+            183,
+            535,
+            203
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077264800,
+          "button_action": -2
+        },
+        {
+          "address": "0x4031e6c8",
+          "rect": [
+            10,
+            38,
+            535,
+            168
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077229632
+        },
+        {
+          "address": "0x40356710",
+          "rect": [
+            10,
+            183,
+            181,
+            203
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077254640,
+          "button_action": 1
+        }
+      ],
+      "row_states": [
+        {
+          "value": 1,
+          "state": 2,
+          "rect": [
+            0,
+            0,
+            525,
+            16
+          ]
+        },
+        {
+          "value": 2,
+          "state": 0,
+          "rect": [
+            0,
+            19,
+            525,
+            35
+          ]
+        },
+        {
+          "value": 3,
+          "state": 0,
+          "rect": [
+            0,
+            38,
+            525,
+            54
+          ]
+        },
+        {
+          "value": 4,
+          "state": 0,
+          "rect": [
+            0,
+            57,
+            525,
+            73
+          ]
+        },
+        {
+          "value": 5,
+          "state": 0,
+          "rect": [
+            0,
+            76,
+            525,
+            92
+          ]
+        },
+        {
+          "value": 6,
+          "state": 0,
+          "rect": [
+            0,
+            95,
+            525,
+            111
+          ]
+        },
+        {
+          "value": 7,
+          "state": 0,
+          "rect": [
+            0,
+            114,
+            525,
+            130
+          ]
+        },
+        {
+          "value": 2,
+          "state": 1,
+          "rect": [
+            0,
+            19,
+            525,
+            35
+          ]
+        }
+      ],
+      "rails": [],
+      "text": [
+        {
+          "text": "CHOOSE A FACTION",
+          "x": 204,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1077152720
+        },
+        {
+          "text": "Gaia's Stepdaughters",
+          "x": 6,
+          "baseline": 14,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            0,
+            522,
+            16
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "(The Green)",
+          "x": 440,
+          "baseline": 14,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            0,
+            522,
+            16
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "Human Hive",
+          "x": 6,
+          "baseline": 33,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            19,
+            522,
+            35
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "(The Despot)",
+          "x": 433,
+          "baseline": 33,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            19,
+            522,
+            35
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "University of Planet",
+          "x": 6,
+          "baseline": 52,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            38,
+            522,
+            54
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "(The Scientist)",
+          "x": 423,
+          "baseline": 52,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            38,
+            522,
+            54
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "Morgan Industries",
+          "x": 6,
+          "baseline": 71,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            57,
+            522,
+            73
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "(The Mogul)",
+          "x": 440,
+          "baseline": 71,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            57,
+            522,
+            73
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "Spartan Federation",
+          "x": 6,
+          "baseline": 90,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            76,
+            522,
+            92
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "(The Survivalist)",
+          "x": 411,
+          "baseline": 90,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            76,
+            522,
+            92
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "The Lord's Believers",
+          "x": 6,
+          "baseline": 109,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            95,
+            522,
+            111
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "(The Fundamentalist)",
+          "x": 379,
+          "baseline": 109,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            95,
+            522,
+            111
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "Peacekeeping Forces",
+          "x": 6,
+          "baseline": 128,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            114,
+            522,
+            130
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "(The Humanitarian)",
+          "x": 395,
+          "baseline": 128,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            114,
+            522,
+            130
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "OK",
+          "x": 76,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077241600
+        },
+        {
+          "text": "OK",
+          "x": 75,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077241600
+        },
+        {
+          "text": "OTHER",
+          "x": 65,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077254640
+        },
+        {
+          "text": "OTHER",
+          "x": 61,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077254640
+        },
+        {
+          "text": "Cancel",
+          "x": 69,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077264800
+        },
+        {
+          "text": "Cancel",
+          "x": 62,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077264800
+        },
+        {
+          "text": "Human Hive",
+          "x": 6,
+          "baseline": 33,
+          "font": 129,
+          "color": 285147359,
+          "clip": [
+            6,
+            19,
+            522,
+            35
+          ],
+          "dib": 1077229632
+        },
+        {
+          "text": "(The Despot)",
+          "x": 433,
+          "baseline": 33,
+          "font": 129,
+          "color": 285147359,
+          "clip": [
+            6,
+            19,
+            522,
+            35
+          ],
+          "dib": 1077229632
+        }
+      ],
+      "service_limits": [
+        "Profile writes supplied success without modifying host INI; profile reads use installed INI/default.",
+        "Single emulated UI-thread GetCurrentThreadId returns1.",
+        "EnumThreadWindows sees no host windows and returns success without callbacks.",
+        "CharUpperA delegates character/string casing to host User32 with guest buffers copied in/out.",
+        "GetCursorPos supplies fixed (0,0); host cursor is never read or moved.",
+        "LoadCursorA/SetCursor/ShowCursor use inert guest cursor handles; no host cursor APIs run.",
+        "InvalidateRect records invalidation and succeeds; there is no host window/message delivery.",
+        "Native630b40 initializes stock default-font7f0968 (bootstrap46c292/647297); GetDC supplies a memory DC, not a desktop DC.",
+        "StretchBlt supports only asserted 1:1 SRCCOPY between top-down guest DIBs.",
+        "Main host HWND global9c0010 is opaque guest sentinel1, admitting offscreen list controls; no native desktop window exists."
+      ]
+    },
+    {
+      "id": "firstbase-mode0-plain",
+      "evidence_kind": "bounded original x86 with declared Win32/GDI services and controlled view inputs",
+      "outer_rect": [
+        10,
+        40,
+        512,
+        154
+      ],
+      "client": [
+        0,
+        0,
+        502,
+        114
+      ],
+      "mode": 0,
+      "frames": [
+        {
+          "rect": [
+            0,
+            0,
+            502,
+            114
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            4,
+            4,
+            498,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            7,
+            7,
+            495,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            7,
+            35,
+            493,
+            67
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "caption_text_rect": [
+        10,
+        10,
+        492,
+        22
+      ],
+      "controls": [
+        {
+          "address": "0x4031c370",
+          "rect": [
+            10,
+            40,
+            512,
+            154
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x0",
+          "dib": 1077089280
+        },
+        {
+          "address": "0x4031cdcc",
+          "rect": [
+            10,
+            79,
+            490,
+            99
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077144784,
+          "button_action": -1
+        },
+        {
+          "address": "0x4031e6c8",
+          "rect": [
+            10,
+            38,
+            490,
+            64
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077110048
+        },
+        {
+          "address": "0x40336530",
+          "rect": [
+            53,
+            1,
+            483,
+            21
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031e6c8",
+          "dib": 1077128368
+        }
+      ],
+      "row_states": [],
+      "rails": [],
+      "text": [
+        {
+          "text": "ENTER A NAME FOR YOUR FIRST BASE.",
+          "x": 115,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1077089280
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 4,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": [
+            4,
+            0,
+            426,
+            20
+          ],
+          "dib": 1077128368
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077128368
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077128368
+        },
+        {
+          "text": "Name:",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077110048
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077128368
+        },
+        {
+          "text": "OK",
+          "x": 231,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077144784
+        },
+        {
+          "text": "OK",
+          "x": 229,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077144784
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077128368
+        }
+      ],
+      "service_limits": [
+        "Profile writes supplied success without modifying host INI; profile reads use installed INI/default.",
+        "Single emulated UI-thread GetCurrentThreadId returns1.",
+        "EnumThreadWindows sees no host windows and returns success without callbacks.",
+        "CharUpperA delegates character/string casing to host User32 with guest buffers copied in/out.",
+        "GetCursorPos supplies fixed (0,0); host cursor is never read or moved.",
+        "LoadCursorA/SetCursor/ShowCursor use inert guest cursor handles; no host cursor APIs run.",
+        "InvalidateRect records invalidation and succeeds; there is no host window/message delivery.",
+        "Native630b40 initializes stock default-font7f0968 (bootstrap46c292/647297); GetDC supplies a memory DC, not a desktop DC.",
+        "StretchBlt supports only asserted 1:1 SRCCOPY between top-down guest DIBs.",
+        "Main host HWND global9c0010 is opaque guest sentinel1, admitting offscreen list controls; no native desktop window exists."
+      ]
+    },
+    {
+      "id": "name-mode6-plain",
+      "evidence_kind": "bounded original x86 with declared Win32/GDI services and controlled view inputs",
+      "outer_rect": [
+        319,
+        640,
+        1019,
+        763
+      ],
+      "client": [
+        0,
+        0,
+        700,
+        123
+      ],
+      "mode": 6,
+      "frames": [
+        {
+          "rect": [
+            0,
+            0,
+            700,
+            123
+          ],
+          "style": "0x6a7a28"
+        },
+        {
+          "rect": [
+            13,
+            13,
+            687,
+            37
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            16,
+            16,
+            684,
+            34
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            16,
+            44,
+            682,
+            76
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "caption_text_rect": [
+        19,
+        19,
+        681,
+        31
+      ],
+      "controls": [
+        {
+          "address": "0x4031c370",
+          "rect": [
+            319,
+            640,
+            1019,
+            763
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x0",
+          "dib": 1077117952
+        },
+        {
+          "address": "0x4031cdcc",
+          "rect": [
+            241,
+            88,
+            457,
+            108
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077175472,
+          "button_action": -1
+        },
+        {
+          "address": "0x4031d918",
+          "rect": [
+            463,
+            88,
+            679,
+            108
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077200432,
+          "button_action": -2
+        },
+        {
+          "address": "0x4031e6c8",
+          "rect": [
+            19,
+            47,
+            679,
+            73
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077143376
+        },
+        {
+          "address": "0x4033e760",
+          "rect": [
+            101,
+            1,
+            663,
+            21
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031e6c8",
+          "dib": 1077164336
+        },
+        {
+          "address": "0x403464c0",
+          "rect": [
+            19,
+            88,
+            235,
+            108
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077189392,
+          "button_action": 1
+        }
+      ],
+      "row_states": [],
+      "rails": [],
+      "text": [
+        {
+          "text": "ENTER YOUR NAME",
+          "x": 282,
+          "baseline": 30,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1077117952
+        },
+        {
+          "text": "Deirdre",
+          "x": 4,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": [
+            4,
+            0,
+            558,
+            20
+          ],
+          "dib": 1077164336
+        },
+        {
+          "text": "Deirdre",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077164336
+        },
+        {
+          "text": "Deirdre",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077164336
+        },
+        {
+          "text": "Name (Male):",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077143376
+        },
+        {
+          "text": "Deirdre",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077164336
+        },
+        {
+          "text": "OK",
+          "x": 99,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077175472
+        },
+        {
+          "text": "OK",
+          "x": 97,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077175472
+        },
+        {
+          "text": "Change Gender",
+          "x": 71,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077189392
+        },
+        {
+          "text": "Change Gender",
+          "x": 54,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077189392
+        },
+        {
+          "text": "Cancel",
+          "x": 92,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077200432
+        },
+        {
+          "text": "Cancel",
+          "x": 84,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077200432
+        },
+        {
+          "text": "Deirdre",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077164336
+        }
+      ],
+      "service_limits": [
+        "Profile writes supplied success without modifying host INI; profile reads use installed INI/default.",
+        "Single emulated UI-thread GetCurrentThreadId returns1.",
+        "EnumThreadWindows sees no host windows and returns success without callbacks.",
+        "CharUpperA delegates character/string casing to host User32 with guest buffers copied in/out.",
+        "GetCursorPos supplies fixed (0,0); host cursor is never read or moved.",
+        "LoadCursorA/SetCursor/ShowCursor use inert guest cursor handles; no host cursor APIs run.",
+        "InvalidateRect records invalidation and succeeds; there is no host window/message delivery.",
+        "Native630b40 initializes stock default-font7f0968 (bootstrap46c292/647297); GetDC supplies a memory DC, not a desktop DC.",
+        "StretchBlt supports only asserted 1:1 SRCCOPY between top-down guest DIBs.",
+        "Main host HWND global9c0010 is opaque guest sentinel1, admitting offscreen list controls; no native desktop window exists."
+      ]
+    },
+    {
+      "id": "faction-mode6-plain",
+      "evidence_kind": "bounded original x86 with declared Win32/GDI services and controlled view inputs",
+      "outer_rect": [
+        454,
+        536,
+        1019,
+        763
+      ],
+      "client": [
+        0,
+        0,
+        565,
+        227
+      ],
+      "mode": 6,
+      "frames": [
+        {
+          "rect": [
+            0,
+            0,
+            565,
+            227
+          ],
+          "style": "0x6a7a28"
+        },
+        {
+          "rect": [
+            13,
+            13,
+            552,
+            37
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            16,
+            16,
+            549,
+            34
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            16,
+            44,
+            547,
+            180
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "caption_text_rect": [
+        19,
+        19,
+        546,
+        31
+      ],
+      "controls": [
+        {
+          "address": "0x4031c370",
+          "rect": [
+            454,
+            536,
+            1019,
+            763
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x0",
+          "dib": 1077162192
+        },
+        {
+          "address": "0x4031cdcc",
+          "rect": [
+            196,
+            192,
+            367,
+            212
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077251072,
+          "button_action": -1
+        },
+        {
+          "address": "0x4031d918",
+          "rect": [
+            373,
+            192,
+            544,
+            212
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077274272,
+          "button_action": -2
+        },
+        {
+          "address": "0x4031e6c8",
+          "rect": [
+            19,
+            47,
+            544,
+            177
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077239104
+        },
+        {
+          "address": "0x40358c10",
+          "rect": [
+            19,
+            192,
+            190,
+            212
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077264112,
+          "button_action": 1
+        }
+      ],
+      "row_states": [
+        {
+          "value": 1,
+          "state": 2,
+          "rect": [
+            0,
+            0,
+            525,
+            16
+          ]
+        },
+        {
+          "value": 2,
+          "state": 0,
+          "rect": [
+            0,
+            19,
+            525,
+            35
+          ]
+        },
+        {
+          "value": 3,
+          "state": 0,
+          "rect": [
+            0,
+            38,
+            525,
+            54
+          ]
+        },
+        {
+          "value": 4,
+          "state": 0,
+          "rect": [
+            0,
+            57,
+            525,
+            73
+          ]
+        },
+        {
+          "value": 5,
+          "state": 0,
+          "rect": [
+            0,
+            76,
+            525,
+            92
+          ]
+        },
+        {
+          "value": 6,
+          "state": 0,
+          "rect": [
+            0,
+            95,
+            525,
+            111
+          ]
+        },
+        {
+          "value": 7,
+          "state": 0,
+          "rect": [
+            0,
+            114,
+            525,
+            130
+          ]
+        },
+        {
+          "value": 2,
+          "state": 1,
+          "rect": [
+            0,
+            19,
+            525,
+            35
+          ]
+        }
+      ],
+      "rails": [],
+      "text": [
+        {
+          "text": "CHOOSE A FACTION",
+          "x": 213,
+          "baseline": 30,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1077162192
+        },
+        {
+          "text": "Gaia's Stepdaughters",
+          "x": 6,
+          "baseline": 14,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            0,
+            522,
+            16
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "(The Green)",
+          "x": 440,
+          "baseline": 14,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            0,
+            522,
+            16
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "Human Hive",
+          "x": 6,
+          "baseline": 33,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            19,
+            522,
+            35
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "(The Despot)",
+          "x": 433,
+          "baseline": 33,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            19,
+            522,
+            35
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "University of Planet",
+          "x": 6,
+          "baseline": 52,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            38,
+            522,
+            54
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "(The Scientist)",
+          "x": 423,
+          "baseline": 52,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            38,
+            522,
+            54
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "Morgan Industries",
+          "x": 6,
+          "baseline": 71,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            57,
+            522,
+            73
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "(The Mogul)",
+          "x": 440,
+          "baseline": 71,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            57,
+            522,
+            73
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "Spartan Federation",
+          "x": 6,
+          "baseline": 90,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            76,
+            522,
+            92
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "(The Survivalist)",
+          "x": 411,
+          "baseline": 90,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            76,
+            522,
+            92
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "The Lord's Believers",
+          "x": 6,
+          "baseline": 109,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            95,
+            522,
+            111
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "(The Fundamentalist)",
+          "x": 379,
+          "baseline": 109,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            95,
+            522,
+            111
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "Peacekeeping Forces",
+          "x": 6,
+          "baseline": 128,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            114,
+            522,
+            130
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "(The Humanitarian)",
+          "x": 395,
+          "baseline": 128,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            114,
+            522,
+            130
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "OK",
+          "x": 76,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077251072
+        },
+        {
+          "text": "OK",
+          "x": 75,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077251072
+        },
+        {
+          "text": "OTHER",
+          "x": 65,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077264112
+        },
+        {
+          "text": "OTHER",
+          "x": 61,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077264112
+        },
+        {
+          "text": "Cancel",
+          "x": 69,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077274272
+        },
+        {
+          "text": "Cancel",
+          "x": 62,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077274272
+        },
+        {
+          "text": "Human Hive",
+          "x": 6,
+          "baseline": 33,
+          "font": 129,
+          "color": 285147359,
+          "clip": [
+            6,
+            19,
+            522,
+            35
+          ],
+          "dib": 1077239104
+        },
+        {
+          "text": "(The Despot)",
+          "x": 433,
+          "baseline": 33,
+          "font": 129,
+          "color": 285147359,
+          "clip": [
+            6,
+            19,
+            522,
+            35
+          ],
+          "dib": 1077239104
+        }
+      ],
+      "service_limits": [
+        "Profile writes supplied success without modifying host INI; profile reads use installed INI/default.",
+        "Single emulated UI-thread GetCurrentThreadId returns1.",
+        "EnumThreadWindows sees no host windows and returns success without callbacks.",
+        "CharUpperA delegates character/string casing to host User32 with guest buffers copied in/out.",
+        "GetCursorPos supplies fixed (0,0); host cursor is never read or moved.",
+        "LoadCursorA/SetCursor/ShowCursor use inert guest cursor handles; no host cursor APIs run.",
+        "InvalidateRect records invalidation and succeeds; there is no host window/message delivery.",
+        "Native630b40 initializes stock default-font7f0968 (bootstrap46c292/647297); GetDC supplies a memory DC, not a desktop DC.",
+        "StretchBlt supports only asserted 1:1 SRCCOPY between top-down guest DIBs.",
+        "Main host HWND global9c0010 is opaque guest sentinel1, admitting offscreen list controls; no native desktop window exists."
+      ]
+    },
+    {
+      "id": "firstbase-mode6-plain",
+      "evidence_kind": "bounded original x86 with declared Win32/GDI services and controlled view inputs",
+      "outer_rect": [
+        10,
+        40,
+        530,
+        163
+      ],
+      "client": [
+        0,
+        0,
+        520,
+        123
+      ],
+      "mode": 6,
+      "frames": [
+        {
+          "rect": [
+            0,
+            0,
+            520,
+            123
+          ],
+          "style": "0x6a7a28"
+        },
+        {
+          "rect": [
+            13,
+            13,
+            507,
+            37
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            16,
+            16,
+            504,
+            34
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            16,
+            44,
+            502,
+            76
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "caption_text_rect": [
+        19,
+        19,
+        501,
+        31
+      ],
+      "controls": [
+        {
+          "address": "0x4031c370",
+          "rect": [
+            10,
+            40,
+            530,
+            163
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x0",
+          "dib": 1077095792
+        },
+        {
+          "address": "0x4031cdcc",
+          "rect": [
+            19,
+            88,
+            499,
+            108
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077151296,
+          "button_action": -1
+        },
+        {
+          "address": "0x4031e6c8",
+          "rect": [
+            19,
+            47,
+            499,
+            73
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031c370",
+          "dib": 1077116560
+        },
+        {
+          "address": "0x40337ea0",
+          "rect": [
+            53,
+            1,
+            483,
+            21
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x4031e6c8",
+          "dib": 1077134880
+        }
+      ],
+      "row_states": [],
+      "rails": [],
+      "text": [
+        {
+          "text": "ENTER A NAME FOR YOUR FIRST BASE.",
+          "x": 124,
+          "baseline": 30,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1077095792
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 4,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": [
+            4,
+            0,
+            426,
+            20
+          ],
+          "dib": 1077134880
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077134880
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077134880
+        },
+        {
+          "text": "Name:",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077116560
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077134880
+        },
+        {
+          "text": "OK",
+          "x": 231,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077151296
+        },
+        {
+          "text": "OK",
+          "x": 229,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1077151296
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1077134880
+        }
+      ],
+      "service_limits": [
+        "Profile writes supplied success without modifying host INI; profile reads use installed INI/default.",
+        "Single emulated UI-thread GetCurrentThreadId returns1.",
+        "EnumThreadWindows sees no host windows and returns success without callbacks.",
+        "CharUpperA delegates character/string casing to host User32 with guest buffers copied in/out.",
+        "GetCursorPos supplies fixed (0,0); host cursor is never read or moved.",
+        "LoadCursorA/SetCursor/ShowCursor use inert guest cursor handles; no host cursor APIs run.",
+        "InvalidateRect records invalidation and succeeds; there is no host window/message delivery.",
+        "Native630b40 initializes stock default-font7f0968 (bootstrap46c292/647297); GetDC supplies a memory DC, not a desktop DC.",
+        "StretchBlt supports only asserted 1:1 SRCCOPY between top-down guest DIBs.",
+        "Main host HWND global9c0010 is opaque guest sentinel1, admitting offscreen list controls; no native desktop window exists."
+      ]
+    },
+    {
+      "id": "name-mode0-console",
+      "evidence_kind": "bounded original x86 with declared Win32/GDI services and controlled view inputs",
+      "outer_rect": [
+        148,
+        255,
+        908,
+        555
+      ],
+      "client": [
+        0,
+        0,
+        760,
+        300
+      ],
+      "mode": 0,
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            705,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            701,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            698,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            30,
+            35,
+            696,
+            67
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "caption_text_rect": [
+        33,
+        10,
+        695,
+        22
+      ],
+      "controls": [
+        {
+          "address": "0x404ef9c0",
+          "rect": [
+            148,
+            255,
+            908,
+            555
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x943294",
+          "dib": 1079174288
+        },
+        {
+          "address": "0x404f041c",
+          "rect": [
+            255,
+            79,
+            471,
+            99
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x404ef9c0",
+          "dib": 1079231808,
+          "button_action": -1
+        },
+        {
+          "address": "0x404f0f68",
+          "rect": [
+            477,
+            79,
+            693,
+            99
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x404ef9c0",
+          "dib": 1079256768,
+          "button_action": -2
+        },
+        {
+          "address": "0x404f1d18",
+          "rect": [
+            33,
+            38,
+            693,
+            64
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x404ef9c0",
+          "dib": 1079199712
+        },
+        {
+          "address": "0x405347f0",
+          "rect": [
+            101,
+            1,
+            663,
+            21
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x404f1d18",
+          "dib": 1079220672
+        },
+        {
+          "address": "0x4053c550",
+          "rect": [
+            33,
+            79,
+            249,
+            99
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x404ef9c0",
+          "dib": 1079245728,
+          "button_action": 1
+        }
+      ],
+      "row_states": [],
+      "rails": [
+        {
+          "sprite": "0x7ecf64",
+          "xy": [
+            0,
+            300
+          ],
+          "clip": [
+            0,
+            0,
+            760,
+            300
+          ],
+          "sprite_fields": {
+            "0x10": 15,
+            "0x14": 529,
+            "0x18": 15,
+            "0x1c": 529,
+            "0x20": 0,
+            "0x24": 0,
+            "0x28": 0
+          },
+          "pixels_changed": 0
+        },
+        {
+          "sprite": "0x7ecf90",
+          "xy": [
+            15,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            760,
+            300
+          ],
+          "sprite_fields": {
+            "0x10": 8,
+            "0x14": 529,
+            "0x18": 8,
+            "0x1c": 529,
+            "0x20": 0,
+            "0x24": 0,
+            "0x28": 0
+          },
+          "pixels_changed": 2391
+        },
+        {
+          "sprite": "0x7ecfbc",
+          "xy": [
+            705,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            760,
+            300
+          ],
+          "sprite_fields": {
+            "0x10": 8,
+            "0x14": 529,
+            "0x18": 8,
+            "0x1c": 529,
+            "0x20": 0,
+            "0x24": 0,
+            "0x28": 0
+          },
+          "pixels_changed": 2393
+        },
+        {
+          "sprite": "0x7ecfe8",
+          "xy": [
+            713,
+            300
+          ],
+          "clip": [
+            0,
+            0,
+            760,
+            300
+          ],
+          "sprite_fields": {
+            "0x10": 15,
+            "0x14": 529,
+            "0x18": 15,
+            "0x1c": 529,
+            "0x20": 0,
+            "0x24": 0,
+            "0x28": 0
+          },
+          "pixels_changed": 0
+        }
+      ],
+      "text": [
+        {
+          "text": "ENTER YOUR NAME",
+          "x": 296,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1079174288
+        },
+        {
+          "text": "Deirdre",
+          "x": 4,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": [
+            4,
+            0,
+            558,
+            20
+          ],
+          "dib": 1079220672
+        },
+        {
+          "text": "Deirdre",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1079220672
+        },
+        {
+          "text": "Deirdre",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1079220672
+        },
+        {
+          "text": "Name (Male):",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1079199712
+        },
+        {
+          "text": "Deirdre",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1079220672
+        },
+        {
+          "text": "OK",
+          "x": 99,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079231808
+        },
+        {
+          "text": "OK",
+          "x": 97,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079231808
+        },
+        {
+          "text": "Change Gender",
+          "x": 71,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079245728
+        },
+        {
+          "text": "Change Gender",
+          "x": 54,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079245728
+        },
+        {
+          "text": "Cancel",
+          "x": 92,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079256768
+        },
+        {
+          "text": "Cancel",
+          "x": 84,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079256768
+        },
+        {
+          "text": "Deirdre",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1079220672
+        }
+      ],
+      "service_limits": [
+        "Profile writes supplied success without modifying host INI; profile reads use installed INI/default.",
+        "Single emulated UI-thread GetCurrentThreadId returns1.",
+        "EnumThreadWindows sees no host windows and returns success without callbacks.",
+        "CharUpperA delegates character/string casing to host User32 with guest buffers copied in/out.",
+        "GetCursorPos supplies fixed (0,0); host cursor is never read or moved.",
+        "LoadCursorA/SetCursor/ShowCursor use inert guest cursor handles; no host cursor APIs run.",
+        "InvalidateRect records invalidation and succeeds; there is no host window/message delivery.",
+        "Native630b40 initializes stock default-font7f0968 (bootstrap46c292/647297); GetDC supplies a memory DC, not a desktop DC.",
+        "StretchBlt supports only asserted 1:1 SRCCOPY between top-down guest DIBs.",
+        "Main host HWND global9c0010 is opaque guest sentinel1, admitting offscreen list controls; no native desktop window exists.",
+        "Controlled console-visible admission sets console+9c bit0 after native bounded constructor; this is not a naturally booted frontend state."
+      ]
+    },
+    {
+      "id": "faction-mode0-console",
+      "evidence_kind": "bounded original x86 with declared Win32/GDI services and controlled view inputs",
+      "outer_rect": [
+        215,
+        255,
+        840,
+        555
+      ],
+      "client": [
+        0,
+        0,
+        625,
+        300
+      ],
+      "mode": 0,
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            570,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            566,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            563,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            30,
+            35,
+            561,
+            171
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "caption_text_rect": [
+        33,
+        10,
+        560,
+        22
+      ],
+      "controls": [
+        {
+          "address": "0x404ef9c0",
+          "rect": [
+            215,
+            255,
+            840,
+            555
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x943294",
+          "dib": 1079136096
+        },
+        {
+          "address": "0x404f041c",
+          "rect": [
+            210,
+            183,
+            381,
+            203
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x404ef9c0",
+          "dib": 1079224976,
+          "button_action": -1
+        },
+        {
+          "address": "0x404f0f68",
+          "rect": [
+            387,
+            183,
+            558,
+            203
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x404ef9c0",
+          "dib": 1079248176,
+          "button_action": -2
+        },
+        {
+          "address": "0x404f1d18",
+          "rect": [
+            33,
+            38,
+            558,
+            168
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x404ef9c0",
+          "dib": 1079213008
+        },
+        {
+          "address": "0x4053aaa0",
+          "rect": [
+            33,
+            183,
+            204,
+            203
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x404ef9c0",
+          "dib": 1079238016,
+          "button_action": 1
+        }
+      ],
+      "row_states": [
+        {
+          "value": 1,
+          "state": 2,
+          "rect": [
+            0,
+            0,
+            525,
+            16
+          ]
+        },
+        {
+          "value": 2,
+          "state": 0,
+          "rect": [
+            0,
+            19,
+            525,
+            35
+          ]
+        },
+        {
+          "value": 3,
+          "state": 0,
+          "rect": [
+            0,
+            38,
+            525,
+            54
+          ]
+        },
+        {
+          "value": 4,
+          "state": 0,
+          "rect": [
+            0,
+            57,
+            525,
+            73
+          ]
+        },
+        {
+          "value": 5,
+          "state": 0,
+          "rect": [
+            0,
+            76,
+            525,
+            92
+          ]
+        },
+        {
+          "value": 6,
+          "state": 0,
+          "rect": [
+            0,
+            95,
+            525,
+            111
+          ]
+        },
+        {
+          "value": 7,
+          "state": 0,
+          "rect": [
+            0,
+            114,
+            525,
+            130
+          ]
+        },
+        {
+          "value": 2,
+          "state": 1,
+          "rect": [
+            0,
+            19,
+            525,
+            35
+          ]
+        }
+      ],
+      "rails": [
+        {
+          "sprite": "0x7ecf64",
+          "xy": [
+            0,
+            300
+          ],
+          "clip": [
+            0,
+            0,
+            625,
+            300
+          ],
+          "sprite_fields": {
+            "0x10": 15,
+            "0x14": 529,
+            "0x18": 15,
+            "0x1c": 529,
+            "0x20": 0,
+            "0x24": 0,
+            "0x28": 0
+          },
+          "pixels_changed": 0
+        },
+        {
+          "sprite": "0x7ecf90",
+          "xy": [
+            15,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            625,
+            300
+          ],
+          "sprite_fields": {
+            "0x10": 8,
+            "0x14": 529,
+            "0x18": 8,
+            "0x1c": 529,
+            "0x20": 0,
+            "0x24": 0,
+            "0x28": 0
+          },
+          "pixels_changed": 2391
+        },
+        {
+          "sprite": "0x7ecfbc",
+          "xy": [
+            570,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            625,
+            300
+          ],
+          "sprite_fields": {
+            "0x10": 8,
+            "0x14": 529,
+            "0x18": 8,
+            "0x1c": 529,
+            "0x20": 0,
+            "0x24": 0,
+            "0x28": 0
+          },
+          "pixels_changed": 2393
+        },
+        {
+          "sprite": "0x7ecfe8",
+          "xy": [
+            578,
+            300
+          ],
+          "clip": [
+            0,
+            0,
+            625,
+            300
+          ],
+          "sprite_fields": {
+            "0x10": 15,
+            "0x14": 529,
+            "0x18": 15,
+            "0x1c": 529,
+            "0x20": 0,
+            "0x24": 0,
+            "0x28": 0
+          },
+          "pixels_changed": 0
+        }
+      ],
+      "text": [
+        {
+          "text": "CHOOSE A FACTION",
+          "x": 227,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1079136096
+        },
+        {
+          "text": "Gaia's Stepdaughters",
+          "x": 6,
+          "baseline": 14,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            0,
+            522,
+            16
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "(The Green)",
+          "x": 440,
+          "baseline": 14,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            0,
+            522,
+            16
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "Human Hive",
+          "x": 6,
+          "baseline": 33,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            19,
+            522,
+            35
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "(The Despot)",
+          "x": 433,
+          "baseline": 33,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            19,
+            522,
+            35
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "University of Planet",
+          "x": 6,
+          "baseline": 52,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            38,
+            522,
+            54
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "(The Scientist)",
+          "x": 423,
+          "baseline": 52,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            38,
+            522,
+            54
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "Morgan Industries",
+          "x": 6,
+          "baseline": 71,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            57,
+            522,
+            73
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "(The Mogul)",
+          "x": 440,
+          "baseline": 71,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            57,
+            522,
+            73
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "Spartan Federation",
+          "x": 6,
+          "baseline": 90,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            76,
+            522,
+            92
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "(The Survivalist)",
+          "x": 411,
+          "baseline": 90,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            76,
+            522,
+            92
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "The Lord's Believers",
+          "x": 6,
+          "baseline": 109,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            95,
+            522,
+            111
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "(The Fundamentalist)",
+          "x": 379,
+          "baseline": 109,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            95,
+            522,
+            111
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "Peacekeeping Forces",
+          "x": 6,
+          "baseline": 128,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            114,
+            522,
+            130
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "(The Humanitarian)",
+          "x": 395,
+          "baseline": 128,
+          "font": 129,
+          "color": 285147136,
+          "clip": [
+            6,
+            114,
+            522,
+            130
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "OK",
+          "x": 76,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079224976
+        },
+        {
+          "text": "OK",
+          "x": 75,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079224976
+        },
+        {
+          "text": "OTHER",
+          "x": 65,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079238016
+        },
+        {
+          "text": "OTHER",
+          "x": 61,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079238016
+        },
+        {
+          "text": "Cancel",
+          "x": 69,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079248176
+        },
+        {
+          "text": "Cancel",
+          "x": 62,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079248176
+        },
+        {
+          "text": "Human Hive",
+          "x": 6,
+          "baseline": 33,
+          "font": 129,
+          "color": 285147359,
+          "clip": [
+            6,
+            19,
+            522,
+            35
+          ],
+          "dib": 1079213008
+        },
+        {
+          "text": "(The Despot)",
+          "x": 433,
+          "baseline": 33,
+          "font": 129,
+          "color": 285147359,
+          "clip": [
+            6,
+            19,
+            522,
+            35
+          ],
+          "dib": 1079213008
+        }
+      ],
+      "service_limits": [
+        "Profile writes supplied success without modifying host INI; profile reads use installed INI/default.",
+        "Single emulated UI-thread GetCurrentThreadId returns1.",
+        "EnumThreadWindows sees no host windows and returns success without callbacks.",
+        "CharUpperA delegates character/string casing to host User32 with guest buffers copied in/out.",
+        "GetCursorPos supplies fixed (0,0); host cursor is never read or moved.",
+        "LoadCursorA/SetCursor/ShowCursor use inert guest cursor handles; no host cursor APIs run.",
+        "InvalidateRect records invalidation and succeeds; there is no host window/message delivery.",
+        "Native630b40 initializes stock default-font7f0968 (bootstrap46c292/647297); GetDC supplies a memory DC, not a desktop DC.",
+        "StretchBlt supports only asserted 1:1 SRCCOPY between top-down guest DIBs.",
+        "Main host HWND global9c0010 is opaque guest sentinel1, admitting offscreen list controls; no native desktop window exists.",
+        "Controlled console-visible admission sets console+9c bit0 after native bounded constructor; this is not a naturally booted frontend state."
+      ]
+    },
+    {
+      "id": "firstbase-mode0-console",
+      "evidence_kind": "bounded original x86 with declared Win32/GDI services and controlled view inputs",
+      "outer_rect": [
+        238,
+        255,
+        818,
+        555
+      ],
+      "client": [
+        0,
+        0,
+        580,
+        300
+      ],
+      "mode": 0,
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            525,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            521,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            518,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            30,
+            35,
+            516,
+            67
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "caption_text_rect": [
+        33,
+        10,
+        515,
+        22
+      ],
+      "controls": [
+        {
+          "address": "0x404ef9c0",
+          "rect": [
+            238,
+            255,
+            818,
+            555
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x943294",
+          "dib": 1079120272
+        },
+        {
+          "address": "0x404f041c",
+          "rect": [
+            33,
+            79,
+            513,
+            99
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x404ef9c0",
+          "dib": 1079175776,
+          "button_action": -1
+        },
+        {
+          "address": "0x404f1d18",
+          "rect": [
+            33,
+            38,
+            513,
+            64
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x404ef9c0",
+          "dib": 1079141040
+        },
+        {
+          "address": "0x405262c0",
+          "rect": [
+            53,
+            1,
+            483,
+            21
+          ],
+          "alternate_rect": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "parent": "0x404f1d18",
+          "dib": 1079159360
+        }
+      ],
+      "row_states": [],
+      "rails": [
+        {
+          "sprite": "0x7ecf64",
+          "xy": [
+            0,
+            300
+          ],
+          "clip": [
+            0,
+            0,
+            580,
+            300
+          ],
+          "sprite_fields": {
+            "0x10": 15,
+            "0x14": 529,
+            "0x18": 15,
+            "0x1c": 529,
+            "0x20": 0,
+            "0x24": 0,
+            "0x28": 0
+          },
+          "pixels_changed": 0
+        },
+        {
+          "sprite": "0x7ecf90",
+          "xy": [
+            15,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            580,
+            300
+          ],
+          "sprite_fields": {
+            "0x10": 8,
+            "0x14": 529,
+            "0x18": 8,
+            "0x1c": 529,
+            "0x20": 0,
+            "0x24": 0,
+            "0x28": 0
+          },
+          "pixels_changed": 2391
+        },
+        {
+          "sprite": "0x7ecfbc",
+          "xy": [
+            525,
+            0
+          ],
+          "clip": [
+            0,
+            0,
+            580,
+            300
+          ],
+          "sprite_fields": {
+            "0x10": 8,
+            "0x14": 529,
+            "0x18": 8,
+            "0x1c": 529,
+            "0x20": 0,
+            "0x24": 0,
+            "0x28": 0
+          },
+          "pixels_changed": 2393
+        },
+        {
+          "sprite": "0x7ecfe8",
+          "xy": [
+            533,
+            300
+          ],
+          "clip": [
+            0,
+            0,
+            580,
+            300
+          ],
+          "sprite_fields": {
+            "0x10": 15,
+            "0x14": 529,
+            "0x18": 15,
+            "0x1c": 529,
+            "0x20": 0,
+            "0x24": 0,
+            "0x28": 0
+          },
+          "pixels_changed": 0
+        }
+      ],
+      "text": [
+        {
+          "text": "ENTER A NAME FOR YOUR FIRST BASE.",
+          "x": 138,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1079120272
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 4,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": [
+            4,
+            0,
+            426,
+            20
+          ],
+          "dib": 1079159360
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1079159360
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1079159360
+        },
+        {
+          "text": "Name:",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1079141040
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1079159360
+        },
+        {
+          "text": "OK",
+          "x": 231,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079175776
+        },
+        {
+          "text": "OK",
+          "x": 229,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079175776
+        },
+        {
+          "text": "Gaia's Landing",
+          "x": 0,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147360,
+          "clip": null,
+          "dib": 1079159360
+        }
+      ],
+      "service_limits": [
+        "Profile writes supplied success without modifying host INI; profile reads use installed INI/default.",
+        "Single emulated UI-thread GetCurrentThreadId returns1.",
+        "EnumThreadWindows sees no host windows and returns success without callbacks.",
+        "CharUpperA delegates character/string casing to host User32 with guest buffers copied in/out.",
+        "GetCursorPos supplies fixed (0,0); host cursor is never read or moved.",
+        "LoadCursorA/SetCursor/ShowCursor use inert guest cursor handles; no host cursor APIs run.",
+        "InvalidateRect records invalidation and succeeds; there is no host window/message delivery.",
+        "Native630b40 initializes stock default-font7f0968 (bootstrap46c292/647297); GetDC supplies a memory DC, not a desktop DC.",
+        "StretchBlt supports only asserted 1:1 SRCCOPY between top-down guest DIBs.",
+        "Main host HWND global9c0010 is opaque guest sentinel1, admitting offscreen list controls; no native desktop window exists.",
+        "Controlled console-visible admission sets console+9c bit0 after native bounded constructor; this is not a naturally booted frontend state."
+      ]
+    }
+  ],
+  "theme_sample_pairs": {
+    "0x8d098c": [
+      226,
+      9
+    ],
+    "0x8d0994": [
+      226,
+      9
+    ],
+    "0x8d099c": [
+      157,
+      9
+    ],
+    "0x8d09a4": [
+      223,
+      9
+    ],
+    "0x8d09ac": [
+      0,
+      9
+    ],
+    "0x8d09b4": [
+      223,
+      9
+    ],
+    "0x8d09bc": [
+      0,
+      9
+    ]
+  },
+  "palette_rgb_0": [
+    0,
+    0,
+    0
+  ],
+  "palette_rgb_223": [
+    144,
+    184,
+    228
+  ],
+  "static_instruction_assertions": 13
+}

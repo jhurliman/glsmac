@@ -363,3 +363,7 @@ types::texture::Texture* TextureLoader::GetColorTexture( const types::Color& col
 
 }
 }
+
+namespace loader::texture {
+std::shared_ptr<const SmacDialogSource> TextureLoader::GetSmacDialogSource() {return {};}
+}

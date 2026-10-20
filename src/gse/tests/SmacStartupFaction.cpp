@@ -12,6 +12,8 @@
 #include "loader/txt/FactionTXTLoader.h"
 #include "game/backend/base/SmacStartupBase.h"
 #include "fixtures/SmacStartupBase.h"
+#include "game/backend/map/SmacStartupTerritory.h"
+#include "fixtures/SmacStartupTerritory.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 
@@ -39,7 +41,7 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
         }
         return {};
     });
-    task->AddTest("SMAC generated startup derives first site named grant and Base seed radius from zero storage",GT(){
+    task->AddTest("SMAC generated startup derives first Base territory from zero storage",GT(){
         using namespace game::backend::faction;namespace generation=game::backend::map::smac_generation;
         namespace expected=fixtures::generated_first_site;
         generation::State terrain{std::vector<generation::Record>(3200),{{2,1,1,1,1,1,1}},game::backend::SmacGameplayRandomState(1,1)};
@@ -96,7 +98,24 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
         const auto cleanup=PrepareSmacStartupBaseRadius(terrain.records,actors,{80,80,true},*selected.site,1,[&](const auto&){++radius_stores;});
         GT_ASSERT(util::SHA256(baseBytes())==fixtures::startup_base::RADIUS_BASES_HEX && util::SHA256(planeBytes())==fixtures::startup_base::RADIUS_TILES_HEX
             && cleanup[0]==19 && cleanup[1]==35 && radius_stores==70 && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
-            "Original generated Base/radius projection differs");return {};
+            "Original generated Base/radius projection differs");
+        std::string territory_stores,territory_queries;size_t store_count=0,query_count=0;
+        const auto pack=[](std::string& out,uint32_t v,unsigned size){for(unsigned k=0;k<size;++k) {out+=char(uint8_t(v>>(8*k)));}};
+        const auto rebuilt=game::backend::map::RebuildSmacStartupTerritory(terrain.records,actors,{base},regions,
+            {{80,80,true},8,terrain.resource_pattern,11,61,terrain.primary_rules,2,3,terrain.dirty_flags},[&](const auto& s){
+                pack(territory_stores,s.offset,4);pack(territory_stores,s.size,1);pack(territory_stores,s.value,4);pack(territory_stores,s.caller,4);++store_count;
+            },[&](const auto& p,int32_t value){pack(territory_queries,uint32_t(p[0]),4);pack(territory_queries,uint32_t(p[1]),4);pack(territory_queries,uint32_t(value),4);++query_count;});
+        const auto& owner=actors[1].record;
+        const std::string owner_stats(reinterpret_cast<const char*>(owner.data()+(0x95e620-0x95d1a8)),0x500);
+        const std::string owner_goals(reinterpret_cast<const char*>(owner.data()+(0x95eba0-0x95d1a8)),0x95f1e0-0x95eba0);
+        const std::string region_bytes(reinterpret_cast<const char*>(regions.records.data()),regions.records.size());
+        namespace territory_expected=fixtures::startup_territory;
+        GT_ASSERT(util::SHA256(planeBytes())==territory_expected::GENERATED_TILES_HEX && util::SHA256(region_bytes)==territory_expected::GENERATED_REGIONS_HEX
+            && util::SHA256(baseBytes())==territory_expected::GENERATED_BASES_HEX && util::SHA256(owner_stats)==territory_expected::GENERATED_STATS
+            && util::SHA256(owner_goals)==territory_expected::GENERATED_GOALS && rebuilt.dirty==territory_expected::GENERATED_DIRTY
+            && rebuilt.uncached==3155 && query_count==3155 && store_count==9555 && util::SHA256(territory_stores)==territory_expected::GENERATED_STORES
+            && util::SHA256(territory_queries)==territory_expected::GENERATED_QUERIES && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
+            "Original generated full territory/region/Base and faction statistics/goals projection differs");return {};
     });
     task->AddTest("SMAC startup site strategy and exploration match eighty one original complete records and stores",GT(){
         using namespace game::backend::faction;

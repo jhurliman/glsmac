@@ -1,6 +1,7 @@
 SUBDIR( mocks )
 
 SET( SRC ${SRC}
+    ${PWD}/SmacStartupTerritory.cpp
     ${PWD}/SmacStartupBase.cpp
     ${PWD}/SmacStartupFaction.cpp
 

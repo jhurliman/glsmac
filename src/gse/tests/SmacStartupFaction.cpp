@@ -10,6 +10,8 @@
 #include "fixtures/SmacStartupTechnology.h"
 #include "fixtures/SmacFactionStartupSource.h"
 #include "loader/txt/FactionTXTLoader.h"
+#include "game/backend/base/SmacStartupBase.h"
+#include "fixtures/SmacStartupBase.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 
@@ -37,7 +39,7 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
         }
         return {};
     });
-    task->AddTest("SMAC generated startup derives first site exploration and named grant from zero storage",GT(){
+    task->AddTest("SMAC generated startup derives first site named grant and Base seed radius from zero storage",GT(){
         using namespace game::backend::faction;namespace generation=game::backend::map::smac_generation;
         namespace expected=fixtures::generated_first_site;
         generation::State terrain{std::vector<generation::Record>(3200),{{2,1,1,1,1,1,1}},game::backend::SmacGameplayRandomState(1,1)};
@@ -74,7 +76,27 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
         GT_ASSERT(util::SHA256(factionBytes())==fixtures::startup_technology::GENERATED_RECORD
             && util::SHA256(ownership_bytes)==fixtures::startup_technology::GENERATED_OWNERSHIP
             && util::SHA256(planeBytes())==expected::PREPARED_TILES_SHA256 && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
-            "Generated first named grant differs from original complete faction/tile/ownership boundary");return {};
+            "Generated first named grant differs from original complete faction/tile/ownership boundary");
+        using namespace game::backend::base;
+        SmacBaseSeedCatalog catalog{};catalog.ownership=ownership;catalog.design_costs={{3,2,1}};catalog.formers_prerequisite=6;
+        catalog.free_facility_technologies.fill(-2); // stock loader disables all legacy Free-tech fields
+        for(size_t i=0;i<89;++i) {for(size_t j=0;j<2;++j) {
+            const auto ref=technologies.ResolveToken(technologies.technologies[i].prerequisites[j]);
+            using Kind=game::backend::settings::SmacTechnologyReference::Kind;
+            GT_ASSERT(ref.kind!=Kind::UNKNOWN,"Missing owned technology prerequisite input");
+            catalog.prerequisites[i][j]=ref.kind==Kind::NONE?-1:ref.kind==Kind::DISABLED?-2:*ref.technology_id;
+        }}
+        for(const auto& bonus:gaia->Records()) {if(bonus.kind==game::backend::settings::SmacFactionStartupBonus::Kind::FACILITY) {catalog.facility_bonuses.push_back(bonus.parameter);}}
+        SmacStartupBaseRecord base{};
+        const auto seeded=SeedSmacStartupBase(base,terrain.records,state,{{80,80,true},*selected.site,1,0,3,2,2,10,0,false,false,false,false,"Gaia's Landing"},catalog);
+        const auto baseBytes=[&](){return std::string(reinterpret_cast<const char*>(base.data()),base.size());};
+        GT_ASSERT(seeded.index==0 && seeded.count==1 && util::SHA256(baseBytes())==fixtures::startup_base::SEEDED_BASES_HEX
+            && util::SHA256(planeBytes())==fixtures::startup_base::SEEDED_TILES_HEX,"Original generated Base/tile seed projection differs");
+        std::array<SmacStartupFaction,8> actors{};actors[1]=state;size_t radius_stores=0;
+        const auto cleanup=PrepareSmacStartupBaseRadius(terrain.records,actors,{80,80,true},*selected.site,1,[&](const auto&){++radius_stores;});
+        GT_ASSERT(util::SHA256(baseBytes())==fixtures::startup_base::RADIUS_BASES_HEX && util::SHA256(planeBytes())==fixtures::startup_base::RADIUS_TILES_HEX
+            && cleanup[0]==19 && cleanup[1]==35 && radius_stores==70 && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
+            "Original generated Base/radius projection differs");return {};
     });
     task->AddTest("SMAC startup site strategy and exploration match eighty one original complete records and stores",GT(){
         using namespace game::backend::faction;

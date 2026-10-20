@@ -921,7 +921,8 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareConventionalUnit( GSE_
 	auto data = std::make_unique< PreparedConventionalUnit::Data >();
 	data->manager = this; data->tile = tile; data->id = id;
 	data->sight = m_game->PrepareConventionalSight( id, state.owner_simulation_id, tile, nullptr );
-	data->candidate.reset( new Unit( Unit::Unplaced{}, this, id, def, owner, state ) );
+	auto created=state;created.facing=2; // original fresh factory store, not migration
+	data->candidate.reset( new Unit( Unit::Unplaced{}, this, id, def, owner, created ) );
     data->stacks=PrepareConventionalStackMove(data->candidate.get(),tile);
     for(const auto& row:data->stacks) {if(row.first==data->candidate.get()) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}}
 	data->history = PreparePlacementHistory( *data->candidate, tile );
@@ -989,13 +990,15 @@ Unit* UnitManager::SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slo
 	}
 	const ConventionalUnitResolver resolver = [ this ]( const auto& value, const auto* slot ) { return ResolveConventional( value, slot ); };
 	ValidateConventionalCreation( id, def, owner, tile, state, resolver );
-	auto* unit = new Unit( GSE_CALL, this, id, def, owner, tile, state );
+	auto created=state;created.facing=2;
+	auto* unit = new Unit( GSE_CALL, this, id, def, owner, tile, created );
 	SpawnUnit( GSE_CALL, unit ); return unit;
 }
 
 Unit* UnitManager::SpawnStartingConventionalUnit( GSE_CALLABLE, Def* def, slot::Slot* owner, map::tile::Tile* tile, SmacMoraleMode mode, bool compensation_pod ) {
 	m_game->CheckRW( GSE_CALL );
 	auto state = m_game->PrepareStartingConventionalUnit( owner, mode );
+    state.facing=2; // native fresh Unit factory, distinct from restore
     size_t existing=0;
     for(const auto& entry:m_units) {if(entry.second->IsConventional() && entry.second->m_owner==owner) {
         ++existing;
@@ -1298,6 +1301,9 @@ void UnitManager::PushUpdates() {
                 fr.data.unit_spawn.held = unit->IsConventional() && unit->Conventional().IsHeld();
                 fr.data.unit_spawn.order_glyph = unit->VisibleOrderGlyph(m_game->GetSlotNum());
                 fr.data.unit_spawn.order_color_index = order_foreground();
+                const auto facing=unit->IsNative() ? std::optional<uint8_t>(unit->Native().facing)
+                    : unit->IsConventional() ? unit->Conventional().facing : std::nullopt;
+                fr.data.unit_spawn.has_facing=facing.has_value();fr.data.unit_spawn.facing=facing.value_or(0);
 				m_game->AddFrontendRequest( fr );
 			}
 			if ( uu.ops & UUO_REFRESH ) {
@@ -1315,6 +1321,9 @@ void UnitManager::PushUpdates() {
                 fr.data.unit_update.held = unit->IsConventional() && unit->Conventional().IsHeld();
                 fr.data.unit_update.order_glyph = unit->VisibleOrderGlyph(m_game->GetSlotNum());
                 fr.data.unit_update.order_color_index = order_foreground();
+                const auto facing=unit->IsNative() ? std::optional<uint8_t>(unit->Native().facing)
+                    : unit->IsConventional() ? unit->Conventional().facing : std::nullopt;
+                fr.data.unit_update.has_facing=facing.has_value();fr.data.unit_update.facing=facing.value_or(0);
 				const auto* tile = unit->GetTile();
 				fr.data.unit_update.tile_coords = {
 					tile->coord.x,

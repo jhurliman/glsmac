@@ -2356,6 +2356,36 @@ public:
 				actor->GetDstOffsets() == types::Vec2< float >( 0.5f, -1 ), "actual Unit/GetSprite placement or instance missing" );
 			GT_ASSERT( actor->NormalizePosition( { 3, 5, 0 } ) == types::Vec3( 3.5f, 4, 0 ), "actual Sprite offset sign differs from image-center mapping" );
 			const auto baseline = std::string( reinterpret_cast< char* >( actor->GetTexture()->GetBitmap() ), actor->GetTexture()->GetBitmapSize() );
+            {
+                const auto base_card=unit->GetCardSprite(false)->texture_owner;
+                auto* original_body=unit->GetSprite();const auto original_id=unit->m_render.instance_id;
+                unit->SetFacing(5);unit->Refresh();auto* rotated=unit->GetSprite();const auto rotated_id=unit->m_render.instance_id;
+                GT_ASSERT(rotated!=original_body && !original_body->instanced_sprite->actor->HasInstance(original_id)
+                    && rotated->instanced_sprite->actor->HasInstance(rotated_id),"Facing switch left an orphan or failed to show new body");
+                for(const bool roster:{false,true}) {
+                    const CvrScoutRender expected(5,roster ? -8:-4,0,1,{1,1},{128,128},profile);
+                    GT_ASSERT(unit->GetCardSprite(roster)->texture_owner==ism->GetScoutSprite("ExpectedPerUnitFacing",expected)->texture_owner,
+                        "Actual Unit card ignored retained facing");
+                }
+                // An unrelated Unit sharing this definition must allocate its own
+                // instance on the same rotated actor; switching the first away
+                // cannot retire the second's live instance.
+                auto other=std::make_unique<game::frontend::unit::Unit>(um.get(),badges.get(),990,def.get(),&slot,&tile,
+                    types::Vec3(3,5,0),true,1,0,"Rank",1,false,true,1,false,uint8_t(5));
+                other->Show();const auto other_id=other->m_render.instance_id;
+                GT_ASSERT(other_id!=rotated_id,"Per-facing instance counters collided");
+                unit->SetFacing(0);unit->Refresh();
+                GT_ASSERT(rotated->instanced_sprite->actor->HasInstance(other_id)
+                    && !rotated->instanced_sprite->actor->HasInstance(rotated_id),"Facing switch retired another Unit");
+                unit->SetFacing(255);unit->Refresh();
+                const CvrScoutRender minus_one(-1,-4,0,1,{1,1},{128,128},profile);
+                GT_ASSERT(unit->GetCardSprite(false)->texture_owner==ism->GetScoutSprite("ExpectedMinusOne",minus_one)->texture_owner,
+                    "Native signed FF byte was not rendered as minus one");
+                unit->SetFacing(128);unit->Refresh();
+                GT_ASSERT(unit->GetCardSprite(false)->texture_owner==base_card,"Unadmitted raw byte invented a renderer angle");
+                other.reset();unit->SetFacing({});unit->Refresh();
+                GT_ASSERT(unit->GetSprite()==original_body && unit->GetCardSprite(false)->texture_owner==base_card,"Unknown facing did not retain descriptor fallback");
+            }
 			// Exercise the actual frontend's exact conventional actionability and
 			// morale refresh, then return this shared preview fixture to legacy mode.
 			unit->SetMovement( 0.01f ); unit->SetActionability( true, true, 2 );
@@ -2385,7 +2415,7 @@ public:
 			unit->SetActionability( false, true );
 			GT_ASSERT( !unit->CanMove(), "legacy frontend threshold changed" );
 			unit->SetMovement( 1 ); unit->SetMorale( 6, "Elite refreshed" );
-			GT_ASSERT( unit->GetMoraleString() == "Elite refreshed" && unit->GetSprite()->instanced_sprite->actor->HasInstance( 2 ),
+			GT_ASSERT( unit->GetMoraleString() == "Elite refreshed" && unit->GetSprite()->instanced_sprite->actor->HasInstance( unit->m_render.instance_id ),
 				"frontend did not refresh morale text and rendered actor" );
 			unit->SetMorale( 0, "Rank" );
 			tile_manager.InitTiles( { 8, 8 } );
@@ -2394,13 +2424,14 @@ public:
 				auto& update = move.data.unit_update;
 				update.unit_id = 1; update.tile_coords = { 4, 2 }; update.render_coords = { 0, 0, 0 };
 				update.movement = 0.01f; update.full_movement = 1.0f; update.health = 0.8f;
-				update.conventional = true; update.has_moves = true; update.morale = 1; NEW( update.morale_string, std::string, "Fresh move" );
+				update.conventional = true; update.has_moves = true; update.morale = 1;update.has_facing=true;update.facing=5; NEW( update.morale_string, std::string, "Fresh move" );
 				frontend.ProcessRequest( &move );
 				GT_ASSERT( unit->GetTile() == tile_manager.GetTile( 4, 2 ) && tile.GetUnits().empty()
-					&& unit->CanMove() && !unit->IsMoving() && um->m_moving_units.empty() && unit->GetMoraleString() == "Fresh move",
+					&& unit->CanMove() && !unit->IsMoving() && um->m_moving_units.empty() && unit->GetMoraleString() == "Fresh move"
+                    && unit->GetFacing()==5,
 					"committed conventional refresh did not relocate without animation" );
 				// Return the shared preview fixture to its original source tile.
-				unit->SetTile( &tile ); unit->SetMorale( 0, "Rank" );
+				unit->SetTile( &tile ); unit->SetFacing({}); unit->SetMorale( 0, "Rank" );
 			}
 			unit->SetActionability( false, true );
 			auto presenter = std::make_unique< game::frontend::widget::UnitPreview >( &frontend, ui );

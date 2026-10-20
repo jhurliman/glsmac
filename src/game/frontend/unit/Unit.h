@@ -21,6 +21,8 @@ class Render;
 }
 }
 
+namespace gse::tests {class BackendFixture;}
+
 namespace game {
 namespace frontend {
 
@@ -44,6 +46,7 @@ class SlotBadges;
 class UnitManager;
 
 class Unit : public TileObject {
+    friend class gse::tests::BackendFixture;
 public:
 
 	static constexpr size_t MOVE_DURATION_MS = 125;
@@ -61,7 +64,7 @@ public:
 		const backend::unit::morale_t morale,
 		const std::string& morale_string,
 		const backend::unit::health_t health,
-		bool conventional = false, bool has_moves = false, backend::unit::movement_t full_movement = 0, bool native = false
+		bool conventional = false, bool has_moves = false, backend::unit::movement_t full_movement = 0, bool native = false, std::optional<uint8_t> facing = {}
 	);
 	~Unit();
 
@@ -105,6 +108,8 @@ public:
 
 	void Refresh();
 
+	void SetFacing(std::optional<uint8_t> facing);
+    std::optional<uint8_t> GetFacing() const {return m_facing;}
 	void SetMovement( const backend::unit::movement_t movement );
 	void SetHealth( const backend::unit::health_t health );
     void SetMaximumHitPoints(int32_t maximum);
@@ -159,6 +164,7 @@ private:
 		struct {
 			size_t instance_id = 0;
 		} fake_badge;
+        sprite::Sprite* body = nullptr; // actual actor owning instance_id, independent of pending facing
 	} m_render;
 
 	const bool m_is_owned = false;
@@ -175,6 +181,7 @@ private:
 	const bool m_native = false;
 	backend::unit::movement_t m_full_movement = 0;
 
+	std::optional<uint8_t> m_facing;
 	bool m_need_refresh = true;
     using CardOverlayKey=std::tuple<int,bool,float,int32_t,char,uint8_t>;
     mutable std::optional<CardOverlayKey> m_card_overlay_key;

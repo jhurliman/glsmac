@@ -1,0 +1,1237 @@
+{
+  "research_id": "RE-SMAC-UNIT-FACING-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Thirty complete original movement wrappers:26 ordinary (13 offscreen +13 focused-human), four hostile; actual factory/command/state/RNG code, frozen headless services. No initialized animation/render claim.",
+  "directions": [
+    [
+      0,
+      1,
+      -1
+    ],
+    [
+      1,
+      2,
+      0
+    ],
+    [
+      2,
+      1,
+      1
+    ],
+    [
+      3,
+      0,
+      2
+    ],
+    [
+      4,
+      -1,
+      1
+    ],
+    [
+      5,
+      -2,
+      0
+    ],
+    [
+      6,
+      -1,
+      -1
+    ],
+    [
+      7,
+      0,
+      -2
+    ]
+  ],
+  "writers": {
+    "factory": {
+      "pc": "0x5d84fb",
+      "opcode": "c680d951990002",
+      "value": 2
+    },
+    "offscreen_move": {
+      "pc": "0x5af979",
+      "opcode": "8890d9519900"
+    },
+    "local_move": {
+      "pc": "0x570ebe",
+      "opcode": "880c85d9519900"
+    },
+    "command_tail": {
+      "pc": "0x5b11df",
+      "opcode": "8887d9519900"
+    },
+    "dense_compaction": {
+      "pc": "0x5d8af7",
+      "opcode": "f3a5"
+    }
+  },
+  "private_receipts": {
+    "unit-facing-ordinary-private.json": "3a2aa984f7a239482f6f81a946603f88774f46ca5bcbc9eb2992f778e83678d2",
+    "unit-facing-local-private.json": "11d63b2869d3429a25beb5150a3df1fefb4885b7e366503af702550ce974ff98",
+    "unit-facing-hostile-private.json": "4d0e574e48b477c4210c4db4563094030b8e70d80c8632431831f685414da74a"
+  },
+  "producers": {
+    "probe_unit_facing_ordinary.py": "45737cd9270d092055d04a65fbb199e9fc69cbea4ed60d467172eb01e4f9538a",
+    "probe_unit_facing_local.py": "ee6c968472e157c2e9a3e54dd4d84fbc397a2b10207a6163843bef852631ffdb",
+    "probe_unit_facing_hostile.py": "be9098b9cc69f438c3af622826d62351d33934d235b170826af3247bff39e57b"
+  },
+  "ordinary": [
+    {
+      "id": "ordinary_direction_0",
+      "inputs": {
+        "name": "direction_0",
+        "direction": 0,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          9,
+          7
+        ],
+        "facing": 0,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x5af979",
+            "prior": 5,
+            "value": 0
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 0,
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordinary_direction_1",
+      "inputs": {
+        "name": "direction_1",
+        "direction": 1,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          10,
+          8
+        ],
+        "facing": 1,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x5af979",
+            "prior": 5,
+            "value": 1
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 1,
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordinary_direction_2",
+      "inputs": {
+        "name": "direction_2",
+        "direction": 2,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          9,
+          9
+        ],
+        "facing": 2,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x5af979",
+            "prior": 5,
+            "value": 2
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 2,
+            "value": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordinary_direction_3",
+      "inputs": {
+        "name": "direction_3",
+        "direction": 3,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          8,
+          10
+        ],
+        "facing": 3,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x5af979",
+            "prior": 5,
+            "value": 3
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 3,
+            "value": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordinary_direction_4",
+      "inputs": {
+        "name": "direction_4",
+        "direction": 4,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          7,
+          9
+        ],
+        "facing": 4,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x5af979",
+            "prior": 5,
+            "value": 4
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 4,
+            "value": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordinary_direction_5",
+      "inputs": {
+        "name": "direction_5",
+        "direction": 5,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          6,
+          8
+        ],
+        "facing": 5,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x5af979",
+            "prior": 5,
+            "value": 5
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 5,
+            "value": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordinary_direction_6",
+      "inputs": {
+        "name": "direction_6",
+        "direction": 6,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          7,
+          7
+        ],
+        "facing": 6,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x5af979",
+            "prior": 5,
+            "value": 6
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 6,
+            "value": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordinary_direction_7",
+      "inputs": {
+        "name": "direction_7",
+        "direction": 7,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          8,
+          6
+        ],
+        "facing": 7,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x5af979",
+            "prior": 5,
+            "value": 7
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 7,
+            "value": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "ordinary_exhausted",
+      "inputs": {
+        "name": "exhausted",
+        "direction": 2,
+        "spent": 3,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 0,
+        "position": [
+          8,
+          8
+        ],
+        "facing": 5,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": []
+      }
+    },
+    {
+      "id": "ordinary_overspent",
+      "inputs": {
+        "name": "overspent",
+        "direction": 2,
+        "spent": 4,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 0,
+        "position": [
+          8,
+          8
+        ],
+        "facing": 5,
+        "spent": 4,
+        "shared_after": 3,
+        "writes": []
+      }
+    },
+    {
+      "id": "ordinary_water_blocked",
+      "inputs": {
+        "name": "water_blocked",
+        "direction": 2,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": true
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 0,
+        "position": [
+          8,
+          8
+        ],
+        "facing": 5,
+        "spent": 0,
+        "shared_after": 3,
+        "writes": []
+      }
+    },
+    {
+      "id": "ordinary_lottery_refused",
+      "inputs": {
+        "name": "lottery_refused",
+        "direction": 2,
+        "spent": 2,
+        "seed": 1,
+        "initial_facing": 5,
+        "sea": false
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          8,
+          8
+        ],
+        "facing": 5,
+        "spent": 3,
+        "shared_after": 1015568748,
+        "writes": []
+      }
+    },
+    {
+      "id": "ordinary_partial_success",
+      "inputs": {
+        "name": "partial_success",
+        "direction": 2,
+        "spent": 2,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          9,
+          9
+        ],
+        "facing": 2,
+        "spent": 5,
+        "shared_after": 1018897798,
+        "writes": [
+          {
+            "pc": "0x5af979",
+            "prior": 5,
+            "value": 2
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 2,
+            "value": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "local_direction_0",
+      "inputs": {
+        "name": "direction_0",
+        "direction": 0,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          9,
+          7
+        ],
+        "facing": 0,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x570ebe",
+            "prior": 5,
+            "value": 0
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 0,
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "local_direction_1",
+      "inputs": {
+        "name": "direction_1",
+        "direction": 1,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          10,
+          8
+        ],
+        "facing": 1,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x570ebe",
+            "prior": 5,
+            "value": 1
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 1,
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "local_direction_2",
+      "inputs": {
+        "name": "direction_2",
+        "direction": 2,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          9,
+          9
+        ],
+        "facing": 2,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x570ebe",
+            "prior": 5,
+            "value": 2
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 2,
+            "value": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "local_direction_3",
+      "inputs": {
+        "name": "direction_3",
+        "direction": 3,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          8,
+          10
+        ],
+        "facing": 3,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x570ebe",
+            "prior": 5,
+            "value": 3
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 3,
+            "value": 3
+          }
+        ]
+      }
+    },
+    {
+      "id": "local_direction_4",
+      "inputs": {
+        "name": "direction_4",
+        "direction": 4,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          7,
+          9
+        ],
+        "facing": 4,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x570ebe",
+            "prior": 5,
+            "value": 4
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 4,
+            "value": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "local_direction_5",
+      "inputs": {
+        "name": "direction_5",
+        "direction": 5,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          6,
+          8
+        ],
+        "facing": 5,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x570ebe",
+            "prior": 5,
+            "value": 5
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 5,
+            "value": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "local_direction_6",
+      "inputs": {
+        "name": "direction_6",
+        "direction": 6,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          7,
+          7
+        ],
+        "facing": 6,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x570ebe",
+            "prior": 5,
+            "value": 6
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 6,
+            "value": 6
+          }
+        ]
+      }
+    },
+    {
+      "id": "local_direction_7",
+      "inputs": {
+        "name": "direction_7",
+        "direction": 7,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          8,
+          6
+        ],
+        "facing": 7,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": [
+          {
+            "pc": "0x570ebe",
+            "prior": 5,
+            "value": 7
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 7,
+            "value": 7
+          }
+        ]
+      }
+    },
+    {
+      "id": "local_exhausted",
+      "inputs": {
+        "name": "exhausted",
+        "direction": 2,
+        "spent": 3,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 0,
+        "position": [
+          8,
+          8
+        ],
+        "facing": 5,
+        "spent": 3,
+        "shared_after": 3,
+        "writes": []
+      }
+    },
+    {
+      "id": "local_overspent",
+      "inputs": {
+        "name": "overspent",
+        "direction": 2,
+        "spent": 4,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 0,
+        "position": [
+          8,
+          8
+        ],
+        "facing": 5,
+        "spent": 4,
+        "shared_after": 3,
+        "writes": []
+      }
+    },
+    {
+      "id": "local_water_blocked",
+      "inputs": {
+        "name": "water_blocked",
+        "direction": 2,
+        "spent": 0,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": true,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 0,
+        "position": [
+          8,
+          8
+        ],
+        "facing": 5,
+        "spent": 0,
+        "shared_after": 3,
+        "writes": []
+      }
+    },
+    {
+      "id": "local_lottery_refused",
+      "inputs": {
+        "name": "lottery_refused",
+        "direction": 2,
+        "spent": 2,
+        "seed": 1,
+        "initial_facing": 5,
+        "sea": false,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          8,
+          8
+        ],
+        "facing": 5,
+        "spent": 3,
+        "shared_after": 1015568748,
+        "writes": []
+      }
+    },
+    {
+      "id": "local_partial_success",
+      "inputs": {
+        "name": "partial_success",
+        "direction": 2,
+        "spent": 2,
+        "seed": 3,
+        "initial_facing": 5,
+        "sea": false,
+        "active_faction": 1
+      },
+      "factory_facing": 2,
+      "expected": {
+        "wrapper_return": 1,
+        "position": [
+          9,
+          9
+        ],
+        "facing": 2,
+        "spent": 5,
+        "shared_after": 1018897798,
+        "writes": [
+          {
+            "pc": "0x570ebe",
+            "prior": 5,
+            "value": 2
+          },
+          {
+            "pc": "0x5b11df",
+            "prior": 2,
+            "value": 2
+          }
+        ]
+      }
+    }
+  ],
+  "hostile": [
+    {
+      "id": "human_neutral",
+      "inputs": {
+        "human_mask": 6,
+        "morale": 1,
+        "initial_units": [
+          {
+            "design": 2,
+            "owner": 1,
+            "position": [
+              8,
+              8
+            ],
+            "damage": 0,
+            "morale": 1,
+            "spent": 0,
+            "facing": 5,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          },
+          {
+            "design": 2,
+            "owner": 2,
+            "position": [
+              9,
+              9
+            ],
+            "damage": 0,
+            "morale": 1,
+            "spent": 0,
+            "facing": 6,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          }
+        ],
+        "direction": 2,
+        "crt_seed": 3
+      },
+      "expected": {
+        "wrapper_return": 0,
+        "units": [
+          {
+            "design": 2,
+            "owner": 1,
+            "position": [
+              8,
+              8
+            ],
+            "damage": 9,
+            "morale": 2,
+            "spent": 3,
+            "facing": 2,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          }
+        ],
+        "writes": [
+          {
+            "unit": 0,
+            "pc": "0x5b11df",
+            "instruction": "mov byte ptr [edi + 0x9951d9], al",
+            "opcode": "8887d9519900",
+            "address": "0x9951d9",
+            "size": 1,
+            "before": 5,
+            "new_byte": 2,
+            "count": 1,
+            "position": [
+              8,
+              8
+            ]
+          }
+        ],
+        "selected": 0,
+        "subsequent_key_emitted": false
+      }
+    },
+    {
+      "id": "ai_control",
+      "inputs": {
+        "human_mask": 2,
+        "morale": 1,
+        "initial_units": [
+          {
+            "design": 2,
+            "owner": 1,
+            "position": [
+              8,
+              8
+            ],
+            "damage": 0,
+            "morale": 1,
+            "spent": 0,
+            "facing": 5,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          },
+          {
+            "design": 2,
+            "owner": 2,
+            "position": [
+              9,
+              9
+            ],
+            "damage": 0,
+            "morale": 1,
+            "spent": 0,
+            "facing": 6,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          }
+        ],
+        "direction": 2,
+        "crt_seed": 3
+      },
+      "expected": {
+        "wrapper_return": 0,
+        "units": [
+          {
+            "design": 2,
+            "owner": 1,
+            "position": [
+              8,
+              8
+            ],
+            "damage": 9,
+            "morale": 2,
+            "spent": 3,
+            "facing": 2,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          }
+        ],
+        "writes": [
+          {
+            "unit": 0,
+            "pc": "0x5b11df",
+            "instruction": "mov byte ptr [edi + 0x9951d9], al",
+            "opcode": "8887d9519900",
+            "address": "0x9951d9",
+            "size": 1,
+            "before": 5,
+            "new_byte": 2,
+            "count": 1,
+            "position": [
+              8,
+              8
+            ]
+          }
+        ],
+        "selected": 0,
+        "subsequent_key_emitted": false
+      }
+    },
+    {
+      "id": "human_elite",
+      "inputs": {
+        "human_mask": 6,
+        "morale": 6,
+        "initial_units": [
+          {
+            "design": 2,
+            "owner": 1,
+            "position": [
+              8,
+              8
+            ],
+            "damage": 0,
+            "morale": 6,
+            "spent": 0,
+            "facing": 5,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          },
+          {
+            "design": 2,
+            "owner": 2,
+            "position": [
+              9,
+              9
+            ],
+            "damage": 0,
+            "morale": 1,
+            "spent": 0,
+            "facing": 6,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          }
+        ],
+        "direction": 2,
+        "crt_seed": 1
+      },
+      "expected": {
+        "wrapper_return": 0,
+        "units": [
+          {
+            "design": 2,
+            "owner": 1,
+            "position": [
+              8,
+              8
+            ],
+            "damage": 1,
+            "morale": 6,
+            "spent": 3,
+            "facing": 2,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          }
+        ],
+        "writes": [
+          {
+            "unit": 0,
+            "pc": "0x5b11df",
+            "instruction": "mov byte ptr [edi + 0x9951d9], al",
+            "opcode": "8887d9519900",
+            "address": "0x9951d9",
+            "size": 1,
+            "before": 5,
+            "new_byte": 2,
+            "count": 1,
+            "position": [
+              8,
+              8
+            ]
+          }
+        ],
+        "selected": 0,
+        "subsequent_key_emitted": true
+      }
+    },
+    {
+      "id": "human_defender_wins",
+      "inputs": {
+        "human_mask": 6,
+        "morale": 1,
+        "initial_units": [
+          {
+            "design": 2,
+            "owner": 1,
+            "position": [
+              8,
+              8
+            ],
+            "damage": 9,
+            "morale": 1,
+            "spent": 0,
+            "facing": 5,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          },
+          {
+            "design": 2,
+            "owner": 2,
+            "position": [
+              9,
+              9
+            ],
+            "damage": 9,
+            "morale": 1,
+            "spent": 0,
+            "facing": 6,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          }
+        ],
+        "direction": 2,
+        "crt_seed": 308
+      },
+      "expected": {
+        "wrapper_return": 0,
+        "units": [
+          {
+            "design": 2,
+            "owner": 2,
+            "position": [
+              9,
+              9
+            ],
+            "damage": 9,
+            "morale": 2,
+            "spent": 0,
+            "facing": 6,
+            "home": -1,
+            "links": [
+              -1,
+              -1
+            ]
+          }
+        ],
+        "writes": [
+          {
+            "unit": 0,
+            "pc": "0x5d8af7",
+            "instruction": "rep movsd dword ptr es:[edi], dword ptr [esi]",
+            "opcode": "f3a5",
+            "address": "0x9951d8",
+            "size": 4,
+            "before": 5,
+            "new_byte": 6,
+            "count": 2,
+            "position": [
+              9,
+              9
+            ]
+          }
+        ],
+        "selected": -1,
+        "subsequent_key_emitted": false
+      }
+    }
+  ]
+}

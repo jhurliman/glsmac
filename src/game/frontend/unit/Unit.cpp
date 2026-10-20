@@ -195,6 +195,7 @@ void Unit::Show() {
 }
 
 void Unit::Hide() {
+    HideFakeBadge();
 	if ( m_render.is_rendered ) {
 		m_render.body->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
 		HideBadge(); // Tile redraws hide sprites without ending selection.
@@ -220,7 +221,7 @@ void Unit::HideBadge() {
 void Unit::ShowFakeBadge( const uint8_t offset ) {
 	if ( !m_render.fake_badge.instance_id || m_fake_badge_offset != offset ) {
 		if ( m_render.fake_badge.instance_id ) {
-			m_slot_badges->HideFakeBadge( !m_render.fake_badge.instance_id );
+			m_slot_badges->HideFakeBadge( m_render.fake_badge.instance_id );
 		}
 		m_render.fake_badge.instance_id = m_slot_badges->ShowFakeBadge( m_render.coords, offset );
 		m_fake_badge_offset = offset;

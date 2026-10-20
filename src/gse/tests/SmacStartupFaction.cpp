@@ -16,6 +16,7 @@
 #include "fixtures/SmacStartupBase.h"
 #include "game/backend/map/SmacStartupTerritory.h"
 #include "fixtures/SmacStartupTerritory.h"
+#include "game/backend/unit/SmacOpeningDesigns.h"
 #include "game/backend/unit/SmacStartupGroundUnit.h"
 #include "game/backend/unit/SmacUnitInitialization.h"
 #include "fixtures/SmacStartupGroundUnit.h"
@@ -94,7 +95,20 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
             catalog.prerequisites[i][j]=ref.kind==Kind::NONE?-1:ref.kind==Kind::DISABLED?-2:*ref.technology_id;
         }}
         std::array<SmacStartupFaction,8> capability_actors{};capability_actors[1]=state;
-        RefreshSmacStartupCapabilities(capability_actors,ownership,catalog.prerequisites,fixtures::capability::StockCatalog(),{1,0x1a0e,0,3,2,-1,-1});
+        game::backend::unit::SmacOriginalDesignPool opening_designs{};
+        // Declared basic caller pool; complete installed predefined catalog and
+        // automatic localized naming remain separate integration requirements.
+        for(size_t i=0;i<3;++i) {
+            auto& d=opening_designs[i];d[37]=uint8_t(i==0?8:i==1?9:0);d[39]=1;
+            d[41]=uint8_t(i==0?3:i==1?2:1);d[42]=uint8_t(i==0?8:i==1?9:3);d[48]=1;
+            d[50]=uint8_t(i==1?6:255);d[51]=uint8_t(i==1?0:255);
+        }
+        const auto original_designs=opening_designs;int32_t first_new_design=123;
+        game::backend::unit::GenerateSmacOpeningDesigns(capability_actors,opening_designs,ownership,catalog.prerequisites,
+            fixtures::capability::StockCatalog(),1,3,first_new_design,{});
+        const auto selected_scout=game::backend::unit::MarkAndSelectSmacStartingScout(opening_designs,1);
+        GT_ASSERT(selected_scout==2 && first_new_design==-1 && opening_designs==original_designs,
+            "Generated Gaia opening unexpectedly allocated or changed designs");
         state=capability_actors[1];
         GT_ASSERT(util::SHA256(factionBytes())==fixtures::capability::GENERATED_RECORD
             && util::SHA256(planeBytes())==expected::PREPARED_TILES_SHA256 && terrain.random.Crt()==2011860586 && terrain.random.Shared()==110,
@@ -130,7 +144,7 @@ void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
         using namespace game::backend::unit;
         SmacStartupUnitFactoryState factory;factory.dirty=rebuilt.dirty|2;factory.cached_base=0; // original Base-return dirty tail
         std::vector<SmacNativeUnitRecord> units;
-        const auto scout=CreateSmacStartupGroundUnit(terrain.records,units,actors[1],{base},factory,{{80,80,true},*selected.site,1,2,3,0,1});
+        const auto scout=CreateSmacStartupGroundUnit(terrain.records,units,actors[1],{base},factory,{{80,80,true},*selected.site,1,selected_scout,3,0,1});
         GT_ASSERT(scout==0 && units.size()==1 && units[0].home_base==0,"Startup Scout nearest-home assignment differs");
         units[0].home_base=-1; // separate startup caller 0x5c9f5d, not the general factory
         const auto record=OriginalSmacUnitBytes(units[0]);const std::string unit_bytes(reinterpret_cast<const char*>(record.data()),record.size());

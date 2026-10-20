@@ -1,4 +1,5 @@
 SET( SRC ${SRC}
+    ${PWD}/SmacOpeningDesigns.cpp
     ${PWD}/SmacStartupGroundUnit.cpp
     ${PWD}/SmacUnitInitialization.cpp
     ${PWD}/SmacUnitStackPlacement.cpp

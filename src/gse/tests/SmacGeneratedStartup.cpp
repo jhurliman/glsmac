@@ -2,6 +2,8 @@
 #include "fixtures/SmacGeneratedStartup.h"
 #include "task/gsetests/GSETests.h"
 #include "game/backend/unit/SmacUnitInitialization.h"
+#include "game/backend/map/GlsmacResourceMapPolicy.h"
+#include "game/backend/map/SmacTerrainAuthority.h"
 #include "loader/txt/UnitRulesTXTLoader.h"
 #include "util/SHA256.h"
 #include <algorithm>
@@ -94,6 +96,12 @@ void AddSmacGeneratedStartupTests(task::gsetests::GSETests* task) {
         GT_ASSERT(first.empty() && last.empty(),"Original complete generated setup return differs"+first+last);
         GT_ASSERT(boundaries==7 && random_count==8339 && util::SHA256(random)==expected::RNG,"Complete original startup ordered RNG differs: "+std::to_string(random_count)+" hash="+util::SHA256(random));
         GT_ASSERT(terrain.records==original && terrain.random==original_random && regions.records==original_regions,"Startup changed caller-owned prestartup geography");
+        using Authority=game::backend::map::SmacTerrainAuthority;using Policy=game::backend::map::GlsmacResourceMapPolicy;
+        const auto policy=Policy::GeneratedTerrainV3(Authority::GeneratedPrestartup(world.terrain,{80,80}));
+        const auto restored=Policy::Deserialize(policy.Serialize().ToString());std::string raw;
+        for(const auto& tile:world.terrain.records) {Bytes(raw,tile);}
+        GT_ASSERT(restored==policy && !restored.OriginalPlanet() && restored.NativeTerrainSource()->RecordBytes()==raw
+            && restored.NativeTerrainSource()->Info().categories[0]==2,"Complete generated gameplay terrain lost records or provenance through policy persistence");
         return {};
     });
 }

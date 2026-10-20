@@ -13,6 +13,11 @@ buffers and8,339 ordered RNG draws. This closes the detached record-state
 composition for that fixture. Ordinary live publication and persistence below
 remain required; a generated terrain result alone is still insufficient.
 
+The [generated V3 resource policy](generated-terrain-policy.md) now preserves
+complete generated raw terrain and resolved metadata without an installed-map
+container. Whole-world provenance/options binding and mutation/publication
+callers remain required before switching ordinary generated games.
+
 ## Current coupling found in the live code
 
 | Boundary | Current implementation | Required change |

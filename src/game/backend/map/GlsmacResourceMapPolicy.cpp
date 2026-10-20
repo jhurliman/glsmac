@@ -13,6 +13,14 @@
 namespace game::backend::map {
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::DisplayedTerrainV1() { return {}; }
+GlsmacResourceMapPolicy GlsmacResourceMapPolicy::GeneratedTerrainV3(SmacTerrainAuthority source) {
+    if(source.SourceOrigin()!=SmacTerrainAuthority::Origin::Generated || source.InstalledSource() || !source.Info().generation_primary_rules) {
+        throw std::invalid_argument("Generated terrain policy requires generated source provenance");
+    }
+    GlsmacResourceMapPolicy result;
+    result.m_automatic_land_resources=bool(*source.Info().generation_primary_rules&0x2000);
+    result.m_native=std::make_shared<const SmacTerrainAuthority>(std::move(source));return result;
+}
 void GlsmacResourceMapPolicy::SetOriginalSource(SmacPlanetMap source) {
     auto native=std::make_shared<const SmacTerrainAuthority>(SmacTerrainAuthority::Installed(std::move(source)));
     auto planet=native->InstalledSource();
@@ -75,8 +83,9 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithBloomTerrain(const base::Sm
 }
 
 bool GlsmacResourceMapPolicy::operator==( const GlsmacResourceMapPolicy& other ) const {
-	return m_retained_climate==other.m_retained_climate && m_automatic_land_resources==other.m_automatic_land_resources && (m_planet==other.m_planet
-		|| (m_planet && other.m_planet && m_planet->Encode()==other.m_planet->Encode()));
+    if(m_retained_climate!=other.m_retained_climate || m_automatic_land_resources!=other.m_automatic_land_resources) {return false;}
+    if(m_planet || other.m_planet) {return m_planet && other.m_planet && m_planet->Encode()==other.m_planet->Encode();}
+    return m_native==other.m_native || (m_native && other.m_native && *m_native==*other.m_native);
 }
 
 resource::smac::AltitudeBand GlsmacResourceMapPolicy::Altitude( const tile::Tile& value ) const {
@@ -156,6 +165,14 @@ resource::smac::ResourceBonus GlsmacResourceMapPolicy::Bonus( const tile::Tile& 
 }
 
 types::Buffer GlsmacResourceMapPolicy::Serialize() const {
+	if(m_native && !m_planet) {
+        const auto& meta=m_native->Info();types::Buffer result;result.WriteInt(3);result.WriteInt(3);result.WriteBool(m_automatic_land_resources);
+        result.WriteInt(meta.width);result.WriteInt(meta.height);result.WriteBool(meta.horizontal_wrap);
+        result.WriteInt(meta.pattern);result.WriteInt(meta.sea_offset);result.WriteInt(meta.climate_extra);
+        for(const auto category:meta.categories) {result.WriteInt(category.value());}
+        result.WriteInt(meta.generation_primary_rules.value());result.WriteString(m_native->RecordBytes());
+        if(result.lenw>MAX_WIRE_BYTES) {throw std::runtime_error("Generated resource policy exceeds wire budget");}return result;
+    }
 	types::Buffer result; result.WriteInt( m_retained_climate ? 2 : 1 ); result.WriteInt( m_planet ? 2 : 1 );
 	if(m_planet) {result.WriteBool(m_automatic_land_resources);result.WriteString(m_planet->Encode());}
 	return result;
@@ -165,8 +182,22 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::Deserialize( const std::string&
 	if ( wire.size() > MAX_WIRE_BYTES ) { throw std::runtime_error( "GLSMAC resource map policy exceeds wire budget" ); }
 	types::Buffer input( wire );
     const auto version=input.ReadInt();
-    if(version!=1 && version!=2) {throw std::runtime_error("Unsupported GLSMAC resource map policy");}
+    if(version!=1 && version!=2 && version!=3) {throw std::runtime_error("Unsupported GLSMAC resource map policy");}
 	const auto kind=input.ReadInt();
+    if(version==3) {
+        if(kind!=3) {throw std::runtime_error("Unsupported GLSMAC resource map policy V3 kind");}
+        const auto integer=[&](int64_t low,int64_t high){const auto v=input.ReadInt();if(v<low || v>high) {throw std::runtime_error("Generated terrain metadata integer is outside its domain");}return v;};
+        const auto automatic=input.ReadBool();SmacTerrainAuthority::Metadata meta;
+        meta.width=uint32_t(integer(16,512));meta.height=uint32_t(integer(8,256));meta.horizontal_wrap=input.ReadBool();
+        if((meta.width&1) || (meta.height&1)) {throw std::runtime_error("Generated terrain requires even parity-grid dimensions");}
+        meta.pattern=int32_t(integer(1,32767));meta.sea_offset=int32_t(integer(INT32_MIN,INT32_MAX));meta.climate_extra=int32_t(integer(INT32_MIN,INT32_MAX));
+        for(size_t i=0;i<7;++i) {meta.categories[i]=int32_t(integer(0,i==0?4:2));}
+        meta.generation_primary_rules=uint32_t(integer(0,UINT32_MAX));
+        if(automatic!=bool(*meta.generation_primary_rules&0x2000)) {throw std::runtime_error("Generated terrain automatic-resource option differs from source rules");}
+        const auto records=input.ReadString(meta.width/2*meta.height*44);
+        auto generated=GeneratedTerrainV3(SmacTerrainAuthority::GeneratedRetained(std::move(meta),records));
+        if(input.lenr!=input.lenw) {throw std::runtime_error("Unexpected generated resource map policy fields");}return generated;
+    }
     if(version==2 && kind!=2) {throw std::runtime_error("Retained climate requires installed Planet policy");}
 	auto result=DisplayedTerrainV1();
 	if(kind==2) {

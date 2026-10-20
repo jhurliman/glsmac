@@ -3,6 +3,7 @@
 #include "game/backend/map/GlsmacResourceMapPolicy.h"
 #include "game/backend/map/tile/Tile.h"
 #include "task/gsetests/GSETests.h"
+#include "game/backend/map/SmacTerrainAuthority.h"
 
 #include <functional>
 #include <limits>
@@ -15,6 +16,53 @@ bool Rejects( const std::function< void() >& operation ) { try { operation(); } 
 }
 
 void AddGlsmacResourceMapPolicyTests( task::gsetests::GSETests* task ) {
+
+    task->AddTest("GLSMAC generated resource policy retains origin metadata opaque gameplay fields and bounded codec",GT(){
+        using Authority=game::backend::map::SmacTerrainAuthority;namespace tile=game::backend::map::tile;
+        Authority::Metadata meta;meta.width=16;meta.height=8;meta.horizontal_wrap=true;meta.pattern=11446;meta.sea_offset=-19;meta.climate_extra=-3;
+        for(size_t i=0;i<7;++i) {meta.categories[i]=int32_t(i%3);}meta.generation_primary_rules=0x3a0e;
+        std::string raw(16/2*8*44,0);
+        for(size_t i=0;i<raw.size()/44;++i) {for(size_t k=0;k<44;++k) {raw[44*i+k]=char(uint8_t(i*17+k*11));}
+            raw[44*i]=96;raw[44*i+3]=1;raw[44*i+5]=0;
+        }
+        // Explicit original forced energy and Jungle; legacy Tile fields below
+        // intentionally disagree. Presence, visibility and opaque bytes stay raw.
+        const auto word=[&](size_t off,uint32_t value){for(unsigned k=0;k<4;++k) {raw[off+k]=char(uint8_t(value>>(8*k)));}};
+        word(8,0x20010403);word(12,4);raw[4]=char(255);
+        auto policy=Policy::GeneratedTerrainV3(Authority::GeneratedRetained(meta,raw));const auto retained=policy.NativeTerrainSource();
+        GT_ASSERT(!policy.OriginalPlanet() && !policy.OriginalPlanetSource() && retained && !retained->InstalledSource()
+            && retained->SourceOrigin()==Authority::Origin::Generated && retained->RecordBytes()==raw,"Generated policy fabricated installed provenance or changed raw fields");
+        const auto wire=policy.Serialize().ToString();const auto restored=Policy::Deserialize(wire);
+        GT_ASSERT(restored==policy && restored.Serialize().ToString()==wire && restored.NativeTerrainSource()->RecordBytes()==raw
+            && !(restored==Policy::DisplayedTerrainV1()) && !(Policy::DisplayedTerrainV1()==restored),"Generated policy codec or equality lost its source");
+        const auto& info=restored.NativeTerrainSource()->Info();
+        GT_ASSERT(info.width==16 && info.height==8 && info.horizontal_wrap && info.pattern==11446 && info.sea_offset==-19 && info.climate_extra==-3
+            && info.categories==meta.categories && info.generation_primary_rules==meta.generation_primary_rules && restored.AutomaticLandResources(),"Generated policy lost producer metadata");
+        tile::Tile cell;cell.coord={0,0};cell.bonus=tile::BONUS_MINERALS;cell.features=0;cell.is_water_tile=true;
+        GT_ASSERT(restored.Altitude(cell)==Band::Land3 && restored.Bonus(cell)==game::backend::resource::smac::ResourceBonus::Energy
+            && restored.LandmarkBonuses(cell)[0],"Generated resource queries fell back to displayed terrain");
+        for(size_t end=0;end<wire.size();++end) {GT_ASSERT(Rejects([&]{Policy::Deserialize(wire.substr(0,end));}),"Truncated generated payload accepted");}
+        GT_ASSERT(Rejects([&]{Policy::Deserialize(wire+"x");}),"Generated trailing fields accepted");
+        auto changed=meta;changed.climate_extra=7;
+        GT_ASSERT(!(Policy::GeneratedTerrainV3(Authority::GeneratedRetained(changed,raw))==policy),"Generated equality ignored metadata");
+        changed=meta;changed.categories[3].reset();GT_ASSERT(Rejects([&]{Authority::GeneratedRetained(changed,raw);}),"Missing generated category accepted");
+        changed=meta;changed.categories[3]=-1;GT_ASSERT(Rejects([&]{Authority::GeneratedRetained(changed,raw);}),"Unresolved generated category accepted");
+        changed=meta;changed.generation_primary_rules.reset();GT_ASSERT(Rejects([&]{Authority::GeneratedRetained(changed,raw);}),"Missing generation rules accepted");
+        changed=meta;changed.width=UINT32_MAX;GT_ASSERT(Rejects([&]{Authority::GeneratedRetained(changed,raw);}),"Wide geometry accepted");
+        GT_ASSERT(Rejects([&]{Authority::GeneratedRetained(meta,raw.substr(1));}),"Mismatched raw record count accepted");
+        const auto malformed=[&](int64_t width,int64_t version,int64_t kind,bool automatic){types::Buffer b;b.WriteInt(version);b.WriteInt(kind);b.WriteBool(automatic);
+            b.WriteInt(width);b.WriteInt(meta.height);b.WriteBool(meta.horizontal_wrap);b.WriteInt(meta.pattern);b.WriteInt(meta.sea_offset);b.WriteInt(meta.climate_extra);
+            for(const auto c:meta.categories) {b.WriteInt(c.value());}b.WriteInt(meta.generation_primary_rules.value());b.WriteString(raw);return b.ToString();};
+        for(const auto width:{int64_t(-1),int64_t(17),int64_t(514),INT64_MAX}) {GT_ASSERT(Rejects([&]{Policy::Deserialize(malformed(width,3,3,true));}),"Invalid generated wire dimensions accepted");}
+        GT_ASSERT(Rejects([&]{Policy::Deserialize(malformed(16,3,3,false));}) && Rejects([&]{Policy::Deserialize(malformed(16,3,2,true));})
+            && Rejects([&]{Policy::Deserialize(malformed(16,1,3,true));}),"Contradictory generated options or origin tags accepted");
+        types::Buffer nested;Policy::WriteOptional(nested,policy,true);nested.WriteInt(99);
+        GT_ASSERT(Policy::ReadOptional(nested,true)==policy && nested.ReadInt()==99,"Generated nested codec consumed its following frame");
+        policy=Policy::DisplayedTerrainV1();GT_ASSERT(retained->RecordBytes()==raw,"Retired generated policy invalidated queued raw ownership");
+        changed=meta;changed.width=512;changed.height=256;std::string maximum(size_t(512/2)*256*44,0);
+        const auto large=Policy::GeneratedTerrainV3(Authority::GeneratedRetained(changed,maximum));
+        GT_ASSERT(Policy::Deserialize(large.Serialize().ToString())==large,"Maximum supported generated geometry did not roundtrip");GT_OK();
+    });
 	task->AddTest( "GLSMAC displayed resource policy preserves exact visible depth and land tiers", GT() {
 		const auto policy = Policy::DisplayedTerrainV1();
 		for ( const auto row : { std::pair< int64_t, Band >{ -3500, Band::Trench }, { -2001, Band::Trench }, { -2000, Band::DeepOcean },
@@ -58,7 +106,7 @@ void AddGlsmacResourceMapPolicyTests( task::gsetests::GSETests* task ) {
 	} );
 	task->AddTest( "GLSMAC map resource policy codec preserves absence and bounds before allocation", GT() {
 		const auto policy = Policy::DisplayedTerrainV1(); const auto wire = policy.Serialize().ToString();
-		GT_ASSERT( wire.size() == 28 && Policy::MAX_WIRE_BYTES == 256*1024 && Policy::Deserialize( wire ) == policy, "policy framing differs" );
+		GT_ASSERT( wire.size() == 28 && Policy::MAX_WIRE_BYTES == 4*1024*1024 && Policy::Deserialize( wire ) == policy, "policy framing differs" );
 		for ( size_t end = 0; end < wire.size(); ++end ) { GT_ASSERT( Rejects( [ & ] { Policy::Deserialize( wire.substr( 0, end ) ); } ), "truncated policy accepted" ); }
 		for ( int field = 0; field < 2; ++field ) { for ( const auto value : { int64_t( -1 ), int64_t( 0 ), int64_t( 2 ), INT64_MAX } ) {
 			types::Buffer bad; bad.WriteInt( field == 0 ? value : 1 ); bad.WriteInt( field == 1 ? value : 1 );

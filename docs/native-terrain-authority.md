@@ -30,10 +30,10 @@ operation. Existing installed-pointer provenance checks remain explicit while
 their callers are migrated.
 
 The original policy wire formats are unchanged. `RecordBytes()` exports only
-the complete raw plane; it is not an installed-map or campaign codec. No
-generated-policy factory, generated save format, live generated-world
-publication or post-startup mutation adapter is introduced here. The new
-generated snapshot is a detached startup input, not a playable-world claim.
+the complete raw plane; it is not an installed-map or campaign codec. The later
+[generated V3 policy](generated-terrain-policy.md) now adds explicit generated
+terrain persistence. Live generated-world publication and post-startup mutation
+adapters remain separate work; a raw snapshot alone is not a playable-world claim.
 
 Regions, landmark labels/profiles and gameplay RNG retain their existing
 separate owners; this class does not create competing mutable copies of those
@@ -57,7 +57,8 @@ NULL-view previews continue to avoid creating or touching geometry caches, and
 source replacement still refreshes full-view geometry while old snapshots own
 their copied values. Current renderer snapshot admission remains80x80.
 
-This migration does not add a generated policy/codec or switch generated games.
+The initial snapshot migration did not switch generated games. The later
+generated policy/codec is tracked separately above.
 Installed snapshots retain current observer filtering, material fields, geometry
 and lifetime behavior. There is no new runtime image claimed for the migration.
 Cached incremental build and29 selected native groups pass, including actual

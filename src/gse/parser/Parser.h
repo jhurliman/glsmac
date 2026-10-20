@@ -248,10 +248,6 @@ protected:
 
 	// read and until end character encountered
 	const std::string read_until_char( char chr, bool consume, bool handle_backslashes = false );
-	// read until any of end characters encountered
-	const std::string read_until_char_any( const char* chrs, bool consume );
-	// read until end sequence encountered
-	const std::string read_until_sequence( const char* sequence, bool consume );
 	// read while any of characters match
 	const std::string read_while_char_any( const char* chrs );
 	// skip while any of characters match
@@ -261,8 +257,6 @@ protected:
 	// skip until end sequence encountered
 	void skip_until_sequence( const char* sequence, bool consume );
 
-	// check if character occurs at current position
-	const bool match_char( const char chr, bool consume );
 	// check if any of characters occurs at current position
 	const char match_char_any( const char* chrs, bool consume );
 	// check if sequence occurs at current position

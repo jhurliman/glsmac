@@ -9,21 +9,28 @@ int32_t Checked(int64_t n) {if(n<INT32_MIN || n>INT32_MAX) {throw std::overflow_
 void Population(int32_t p,int32_t x=0) {if(p<0 || p>127 || x<0 || x>p) {throw std::invalid_argument("Citizen population or excluded count is outside measured bounds");}}
 void Difficulty(int32_t d) {if(d<0 || d>5) {throw std::invalid_argument("Citizen difficulty is outside ordinary rules");}}
 int32_t Clamp(int64_t n,int32_t p) {return static_cast<int32_t>(std::clamp<int64_t>(n,0,p));}
-void Normalize(SmacCitizenCounts& c,int32_t capacity) {
-    if(c.talents<0 || c.drones<0 || c.extra_drone_steps<0) {throw std::invalid_argument("Citizen normalization requires nonnegative counts");}
-    const auto paired=[&](int32_t& burden) {
-        const int64_t excess=int64_t(c.talents)+c.drones+c.extra_drone_steps-capacity;
-        if(excess>0) {const auto n=static_cast<int32_t>(std::min({int64_t(c.talents),int64_t(burden),(excess+1)/2}));c.talents-=n;burden-=n;}
-    };
-    paired(c.extra_drone_steps);paired(c.drones);
-    const auto excess=int64_t(c.talents)+c.drones+c.extra_drone_steps-capacity;
-    if(excess>0 && c.talents) {c.talents-=static_cast<int32_t>(std::min(int64_t(c.talents),excess));}
-    if(int64_t(c.talents)+c.drones+c.extra_drone_steps>capacity) {
-        c.drones=std::min(c.drones,capacity);
-        c.extra_drone_steps=std::min(c.extra_drone_steps,c.drones);
-    }
-}
+void Normalize(SmacCitizenCounts& c,int32_t capacity) {NormalizeSmacCitizenCounts(c,capacity);}
 void Bound(SmacCitizenCounts& c,int32_t p,int32_t x) {c.talents=Clamp(c.talents,p);c.drones=Clamp(c.drones,p);Normalize(c,p-x);}
+}
+void NormalizeSmacCitizenCounts(SmacCitizenCounts& c,int32_t capacity,const std::function<void(uint8_t,int32_t)>& observer) {
+    if(capacity<0 || c.talents<0 || c.drones<0 || c.extra_drone_steps<0) {throw std::invalid_argument("Citizen normalization requires nonnegative counts and capacity");}
+    const auto excess=[&](){return int64_t(c.talents)+c.drones+c.extra_drone_steps-capacity;};
+    const auto paired=[&](int32_t& burden,uint8_t branch) {
+        if(excess()<=0) {return;}
+        const auto n=int32_t(std::min({int64_t(c.talents),int64_t(burden),(excess()+1)/2}));
+        if(observer) {for(int32_t i=0;i<n;++i) {--c.talents;observer(0,c.talents);--burden;observer(branch,burden);}}
+        else {c.talents-=n;burden-=n;}
+    };
+    paired(c.extra_drone_steps,1);paired(c.drones,2);
+    if(excess()>0 && c.talents) {
+        const auto n=int32_t(std::min(int64_t(c.talents),excess()));
+        if(observer) {for(int32_t i=0;i<n;++i) {--c.talents;observer(0,c.talents);}}else {c.talents-=n;}
+    }
+    if(excess()>0) {
+        const auto n=std::max(0,c.drones-capacity);
+        if(observer) {for(int32_t i=0;i<n;++i) {--c.drones;observer(3,c.drones);}}else {c.drones-=n;}
+        if(excess()>0) {c.extra_drone_steps=std::min(c.extra_drone_steps,c.drones);if(observer) {observer(4,c.extra_drone_steps);}}
+    }
 }
 SmacCitizenPrefix CalculateSmacCitizenPrefix(int32_t p,bool human,int32_t difficulty,int32_t drone,int32_t talent,uint8_t timer) {
     Population(p);Difficulty(difficulty);const auto d=human?difficulty:3;

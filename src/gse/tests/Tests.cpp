@@ -27,6 +27,7 @@
 #include "SmacStartupBase.h"
 #include "SmacStartupTerritory.h"
 #include "SmacStartupGroundUnit.h"
+#include "SmacOpeningEnergy.h"
 #include "SmacOpeningDesigns.h"
 #include "SmacStartupCapability.h"
 #include "SmacBaseAccounting.h"
@@ -204,6 +205,7 @@ void AddTests( task::gsetests::GSETests* task ) {
         tests::AddSmacStartupBaseTests(task);
         tests::AddSmacStartupTerritoryTests(task);
         tests::AddSmacStartupGroundUnitTests(task);
+        tests::AddSmacOpeningEnergyTests(task);
         tests::AddSmacOpeningDesignTests(task);
         tests::AddSmacStartupCapabilityTests(task);
         tests::AddSmacBaseAccountingTests(task);

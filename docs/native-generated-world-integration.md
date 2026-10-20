@@ -81,6 +81,10 @@ must be separated at its callers.
    now match complete raw-record and ordered-store controls, sharing the live
    arithmetic core. Worker intake, energy/citizens and controller composition
    remain required before publishing a generated game.
+   [First-HQ energy and settled citizens](native-opening-energy.md) now match
+   complete native records, commerce/citizen scratch and ordered stores. The
+   actual calculated psych feeds the citizen tail. Worker/intake and full
+   generated first-Base orchestration are still required.
    [Canonical Unit initialization and stack placement](native-startup-units.md)
    now match original complete-record/pool controls; Base founding, complete
    factory visibility and seven-faction starting-package composition remain

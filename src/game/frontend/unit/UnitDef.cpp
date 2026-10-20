@@ -11,6 +11,13 @@
 namespace game {
 namespace frontend {
 namespace unit {
+namespace {
+// Preserve the original raw byte in state; only proven renderer inputs are
+// admitted. Unknown bytes and old records retain their presentation descriptor.
+int32_t Facing(std::optional<uint8_t> value,int32_t fallback) {
+    return !value ? fallback : *value<8 ? *value : *value==255 ? -1 : fallback;
+}
+}
 
 UnitDef::UnitDef( sprite::InstancedSpriteManager* ism, const backend::unit::Def* unitdef, bool native_projection )
 	: m_ism( ism )
@@ -86,7 +93,7 @@ bool UnitDef::UsesNativeMapPlacement() const {
         (view.scale_numerator<=0 || view.scale_numerator==view.scale_denominator);
 }
 
-sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
+sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale, std::optional<uint8_t> facing ) {
 	ASSERT( m_type == backend::unit::DT_STATIC, "only static units are supported for now" );
 	ASSERT( static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 	if ( m_colony_marker ) {
@@ -98,6 +105,19 @@ sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
 		return &static_.render.sprite;
 	}
 	if ( m_scout_render ) {
+        const auto direction=Facing(facing,m_scout_render->view.facing);
+        if(direction!=m_scout_render->view.facing) {
+            auto found=m_facing_sprites.find(direction);
+            if(found==m_facing_sprites.end()) {
+                const auto& original=*m_scout_render;const auto& view=original.view;
+                const backend::unit::CvrScoutRender descriptor(direction,view.zoom,view.scale_numerator,view.scale_denominator,
+                    original.size,original.center,original.composition);
+                sprite::Sprite body;
+                body.instanced_sprite=m_ism->GetScoutSprite("Unit_"+m_id+"_Facing_"+std::to_string(direction),descriptor,UsesNativeMapPlacement());
+                found=m_facing_sprites.emplace(direction,body).first;
+            }
+            return &found->second;
+        }
 		if ( !static_.render.sprite.instanced_sprite ) {
             static_.render.sprite.instanced_sprite = m_ism->GetScoutSprite( "Unit_" + m_id, *m_scout_render, UsesNativeMapPlacement() );
 		}
@@ -169,13 +189,12 @@ sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
 	}
 }
 
-sprite::InstancedSprite* UnitDef::GetCardSprite( bool roster ) const {
+sprite::InstancedSprite* UnitDef::GetCardSprite( bool roster, std::optional<uint8_t> retained ) const {
 	if ( !m_scout_render ) { return nullptr; }
-	// The initialized original card dispatcher preserves the Unit facing.
-	// Until per-Unit facing is transported, honor the admitted presentation
-	// descriptor instead of silently replacing it with the old facing-0 fixture.
-	const auto facing = m_scout_render->composition == backend::unit::CvrScoutRender::Composition::InitializedScout
-		? m_scout_render->view.facing : 0;
+	// Old records retain the initialized descriptor or legacy fixture view.
+    const auto fallback=m_scout_render->composition==backend::unit::CvrScoutRender::Composition::InitializedScout
+        ? m_scout_render->view.facing : 0;
+    const auto facing=Facing(retained,fallback);
 	const backend::unit::CvrScoutRender descriptor( facing, roster ? -8 : -4, 0, 1,
 		{ 1, 1 }, { 128, 128 }, m_scout_render->composition );
 	return m_ism->GetScoutSprite( "UnitCard_" + m_id, descriptor );

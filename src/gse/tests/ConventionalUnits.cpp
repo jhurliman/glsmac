@@ -230,13 +230,13 @@ std::string WithLastHome( const std::string& bytes, Game* game, int64_t home ) {
 		if ( i + 1 == count ) {
 			types::Buffer record( wire );
 			const auto version=record.ReadInt();
-			if ( (version!=4 && version!=6) || record.ReadInt() != 1 ) { throw std::runtime_error( "expected current conventional Unit record" ); }
+			if ( (version!=4 && version!=6 && version!=7 && version!=8 && version!=9) || record.ReadInt() != 1 ) { throw std::runtime_error( "expected current conventional Unit record" ); }
 			(void)record.ReadInt(); (void)record.ReadString();
 			for ( int field = 0; field < 3; ++field ) { (void)record.ReadInt(); } // owner and coordinates
 			types::Buffer changed( wire.substr( 0, record.lenr ) );
-			auto state = ConventionalUnitState::Deserialize( record, version>=6 );
+			auto state = ConventionalUnitState::Deserialize( record, version>=6, version>=7, version>=8, version>=9 );
 			if ( !state.home_base_id || record.lenr != record.lenw ) { throw std::runtime_error( "expected complete homed Unit state" ); }
-			state.home_base_id = static_cast< uint64_t >( home ); state.Serialize( changed, version>=6 ); wire = changed.ToString();
+			state.home_base_id = static_cast< uint64_t >( home ); state.Serialize( changed, version>=6, version>=7, version>=8, version>=9 ); wire = changed.ToString();
 		}
 		replacement.WriteString( wire );
 	}
@@ -257,17 +257,102 @@ struct WireRecord {
 	std::string definition = "EXPLICIT_SCOUT";
 	int64_t design = 2, simulation = 1, morale = 255, damage = 4, spent = 255, home = 0, mode = 1;
 	bool failed = true;
+    std::optional<int64_t> facing;
 	std::string Encode() const {
 		types::Buffer bytes;
 		bytes.WriteInt( version ); bytes.WriteInt( kind ); bytes.WriteInt( id ); bytes.WriteString( definition );
 		bytes.WriteInt( owner ); bytes.WriteInt( x ); bytes.WriteInt( y );
 		for ( auto field : { design, simulation, morale, damage, spent } ) { bytes.WriteInt( field ); }
-		bytes.WriteBool( failed ); bytes.WriteInt( home ); bytes.WriteInt( mode ); bytes.WriteInt( 0 ); bytes.WriteInt( 0 ); return bytes.ToString();
+		bytes.WriteBool( failed ); bytes.WriteInt( home ); bytes.WriteInt( mode ); bytes.WriteInt( 0 ); bytes.WriteInt( 0 );
+        if(version>=6) {bytes.WriteBool(true);bytes.WriteInt(0);bytes.WriteBool(false);}
+        if(version>=7) {bytes.WriteInt(version==7 ? 2:0);bytes.WriteInt(0);}
+        if(version>=8) {bytes.WriteBool(true);bytes.WriteInt(0);bytes.WriteInt(-1);bytes.WriteInt(-1);}
+        if(version>=9) {bytes.WriteBool(facing.has_value());if(facing) {bytes.WriteInt(*facing);}}
+        return bytes.ToString();
 	}
 };
 }
 
 void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
+    task->AddTest("Conventional facing raw byte codec preserves stack and legacy absence",GT(){
+        for(const int raw:{0,2,7,8,128,255}) {
+            auto state=Record();state.facing=static_cast<uint8_t>(raw);state.stack=ConventionalUnitState::Stack{13,14,12};
+            types::Buffer wire;state.Serialize(wire,true,true,true,true);
+            GT_ASSERT(ConventionalUnitState::Deserialize(wire,true,true,true,true)==state && wire.lenr==wire.lenw,
+                "Raw facing or independent stack was lost");
+            bool rejected=false;try {types::Buffer old;state.Serialize(old,true,true,true);}catch(const std::exception&) {rejected=true;}
+            GT_ASSERT(rejected,"Legacy codec silently discarded known facing");
+        }
+        for(int version:{4,6,7,8}) {
+            auto state=Record();types::Buffer wire;state.Serialize(wire,version>=6,version>=7,version>=8);
+            const auto restored=ConventionalUnitState::Deserialize(wire,version>=6,version>=7,version>=8);
+            GT_ASSERT(!restored.facing && restored==state,"Migration invented facing history");
+        }
+        GT_OK();
+    });
+    task->AddTest("Conventional Unit9 actual record retains raw facing and Unit8 source binding",GT(){
+        ConventionalUnitFixture fixture;fixture.Configure();
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* manager=fixture.Game()->GetUM();Define(manager);
+            const ConventionalUnitResolver resolver=[](const auto&,const auto*) {
+                return ConventionalUnitContext{settings::SmacMovementRules::GroundChassis::Infantry,3,3,-4,1};
+            };
+            for(const int version:{4,6,7,8,9}) {for(const int raw:{0,7,8,255}) {
+                WireRecord source;source.version=version;if(version==9) {source.facing=raw;}
+                const auto bytes=source.Encode();types::Buffer wire(bytes);
+                auto* unit=Unit::Deserialize(GSE_CALL,wire,manager,resolver);manager->SpawnUnit(GSE_CALL,unit);
+                const auto& state=unit->Conventional();
+                GT_ASSERT(state.facing==(version==9 ? std::optional<uint8_t>(raw):std::nullopt)
+                    && bool(state.stack)==(version>=8) && Unit::Serialize(unit).ToString()==bytes,
+                    "Actual Unit codec changed facing, links or old wire version");
+                manager->DespawnUnit(GSE_CALL,unit->m_id);
+            }}
+            for(const int raw:{-1,256}) {
+                WireRecord source;source.version=9;source.facing=raw;types::Buffer wire(source.Encode());
+                bool rejected=false;try {auto* unit=Unit::Deserialize(GSE_CALL,wire,manager,resolver);manager->SpawnUnit(GSE_CALL,unit);}catch(const std::exception&) {rejected=true;}
+                GT_ASSERT(rejected && manager->GetUnits().empty(),"Out-of-byte facing published a Unit");
+            }
+            GT_OK();
+        });
+    });
+    task->AddTest("Conventional actual movement commits eight facings and preserves refusal orientation",GT(){
+        using namespace map::tile;
+        const direction_t directions[]={D_NE,D_E,D_SE,D_S,D_SW,D_W,D_NW,D_N};
+        for(int scenario=0;scenario<14;++scenario) {
+            ConventionalUnitFixture fixture;fixture.Configure(true,3,true);
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* manager=game->GetUM();Define(manager);Land(game);
+                auto* actor=Spawn(GSE_CALL,fixture,Record());GT_ASSERT(actor->Conventional().facing==2,"Fresh factory lost native facing2");
+                const auto& birth=fixture.Updates();const auto spawn=std::find_if(birth.begin(),birth.end(),[](const auto& request){return request.type==game::FrontendRequest::FR_UNIT_SPAWN;});
+                GT_ASSERT(spawn!=birth.end() && spawn->data.unit_spawn.has_facing && spawn->data.unit_spawn.facing==2,"Fresh factory publication lost facing");
+                game::FrontendRequest copy(*spawn),empty_spawn(game::FrontendRequest::FR_UNIT_SPAWN),empty_update(game::FrontendRequest::FR_UNIT_UPDATE);
+                GT_ASSERT(copy.data.unit_spawn.has_facing && copy.data.unit_spawn.facing==2 && !empty_spawn.data.unit_spawn.has_facing && !empty_update.data.unit_update.has_facing,
+                    "Packet copy/default invented or discarded facing");
+                auto state=actor->Conventional();state.facing=5;
+                if(scenario==8) {state.spent=3;}if(scenario==9) {state.spent=4;}
+                if(scenario==11 || scenario==12) {state.spent=2;}
+                manager->UpdateConventionalUnit(GSE_CALL,actor,state);
+                auto* source=actor->GetTile();if(scenario==13) {source=game->GetMap()->GetTile(0,2);actor->SetTile(GSE_CALL,source);}
+                const auto direction=scenario<8 ? scenario:scenario==13 ? 5:2;
+                auto* destination=source->GetNeighbour(directions[direction]);
+                if(scenario==10) {destination->is_water_tile=true;}
+                fixture.GameplayRandom({scenario==11 ? 1u:3u,77});fixture.Updates();
+                fixture.MoveEvent(GSE_CALL,actor,destination);
+                const bool moved=scenario<8 || scenario==12 || scenario==13;
+                GT_ASSERT(actor->GetTile()==(moved ? destination:source) && actor->Conventional().facing==(moved ? direction:5),
+                    "Actual command confused wrapper acceptance with facing commit at scenario"+std::to_string(scenario));
+                const auto& updates=fixture.Updates();
+                const auto published=std::find_if(updates.begin(),updates.end(),[](const auto& request){return request.type==game::FrontendRequest::FR_UNIT_UPDATE;});
+                if(moved || scenario==11) {
+                    GT_ASSERT(published!=updates.end() && published->data.unit_update.has_facing
+                        && published->data.unit_update.facing==actor->Conventional().facing,
+                        "Actual move/failed lottery publication lost retained facing");
+                }
+                GT_OK();
+            });if(!error.empty()) {return error;}
+        }
+        GT_OK();
+    });
     task->AddTest("Conventional source stack codec retains absence links and dense erasure preconditions",GT(){
         using Stack=ConventionalUnitState::Stack;
         for(const auto binding:{Stack{0,-1,-1},Stack{13,-1,15},Stack{2047,0,2046}}) {
@@ -881,7 +966,8 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				game->GetUM()->ValidateConventionalMove( unit, destination, 0 );
 				GT_ASSERT( fixture.MovementHistory() == history && fixture.GameplayRandom() == SmacGameplayRandomState( 12345, 0xa1b2c3d4 ), "ordinary validation changed authority" );
 				fixture.MoveEvent( GSE_CALL, unit, destination );
-				auto expected = record; expected.spent = static_cast< uint8_t >( c.spent );
+				auto expected = record; expected.facing=0; // original fixtures move (+1,-1), north-east
+                expected.spent = static_cast< uint8_t >( c.spent );
 				GT_ASSERT( unit->GetTile() == destination && unit->Conventional() == expected && source->units.empty()
 					&& destination->units.size() == 1 && destination->units.at( unit->m_id ) == unit
 					&& fixture.GameplayRandom() == SmacGameplayRandomState( c.shared_after, 0xa1b2c3d4 ), "original owned-Base movement differs at " + std::string( c.id ) );
@@ -922,7 +1008,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				bool admitted=true;try{manager->ValidateConventionalMove(unit,destination,0);}catch(const std::exception&){admitted=false;}
 				GT_ASSERT(admitted==c.moved && fixture.GameplayRandom()==SmacGameplayRandomState(12345,77),"Base presence overrode current allowance or validation drew RNG");
 				fixture.MoveEvent(GSE_CALL,unit,destination);
-				auto expected=record;expected.spent=static_cast<uint8_t>(c.spent_after);
+				auto expected=record;expected.facing=2;expected.spent=static_cast<uint8_t>(c.spent_after);
 				GT_ASSERT(unit->Conventional()==expected && unit->GetTile()==(c.moved ? destination : source)
 					&& source->units.count(unit->m_id)==(c.moved ? 0u : 1u) && destination->units.count(unit->m_id)==(c.moved ? 1u : 0u),
 					"damaged/promoted command failed to move once or changed health/morale");
@@ -1108,7 +1194,8 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					const auto jsf = game->GetRandom()->GetStateString(); const auto next = Unit::GetNextId();
 					const auto sf = source->features, df = destination->features, st = source->terraforming, dt = destination->terraforming;
 					fixture.MoveEvent( GSE_CALL, unit, destination, 0 );
-					auto expected = record; expected.spent = static_cast< uint8_t >( c.spent_after ); expected.failed_move = c.failed;
+					auto expected = record; if(c.moved) {expected.facing=2;} // measured south-east step
+                    expected.spent = static_cast< uint8_t >( c.spent_after ); expected.failed_move = c.failed;
 					GT_ASSERT( unit->Conventional() == expected && unit->GetTile() == ( c.moved ? destination : source )
 						&& source->units.count( unit->m_id ) == ( c.moved ? 0u : 1u ) && destination->units.count( unit->m_id ) == ( c.moved ? 1u : 0u )
 						&& fixture.GameplayRandom() == SmacGameplayRandomState( c.shared_after, 0xabcdef01 ), "case " + std::string( c.id ) + " differs from literal original movement outcome" );
@@ -1147,7 +1234,8 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					const auto jsf = game->GetRandom()->GetStateString(); const auto next = Unit::GetNextId();
 					const auto sf = source->features, df = destination->features, st = source->terraforming, dt = destination->terraforming;
 					fixture.MoveEvent( GSE_CALL, unit, destination, 0 );
-					auto expected = record; expected.spent = static_cast< uint8_t >( c.spent_after ); expected.failed_move = c.failed;
+					auto expected = record; if(c.moved) {expected.facing=2;} // measured south-east step
+                    expected.spent = static_cast< uint8_t >( c.spent_after ); expected.failed_move = c.failed;
 					GT_ASSERT( unit->Conventional() == expected && unit->GetTile() == ( c.moved ? destination : source )
 						&& source->units.count( unit->m_id ) == ( c.moved ? 0u : 1u ) && destination->units.count( unit->m_id ) == ( c.moved ? 1u : 0u )
 						&& fixture.GameplayRandom() == SmacGameplayRandomState( c.shared_after, 0xabcdef01 ), "case " + std::string( c.id ) + " differs from literal original movement outcome" );
@@ -1292,7 +1380,8 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					const auto jsf = game->GetRandom()->GetStateString(); const auto next = Unit::GetNextId();
 					const auto sf = source->features, df = destination->features, st = source->terraforming, dt = destination->terraforming;
 					fixture.MoveEvent( GSE_CALL, unit, destination, 0 );
-					auto expected = record; expected.spent = static_cast< uint8_t >( c.spent_after ); expected.failed_move = c.failed;
+					auto expected = record; if(c.moved) {expected.facing=2;} // measured south-east step
+                    expected.spent = static_cast< uint8_t >( c.spent_after ); expected.failed_move = c.failed;
 					GT_ASSERT( unit->Conventional() == expected && unit->GetTile() == ( c.moved ? destination : source )
 						&& source->units.count( unit->m_id ) == ( c.moved ? 0u : 1u ) && destination->units.count( unit->m_id ) == ( c.moved ? 1u : 0u )
 						&& fixture.GameplayRandom() == SmacGameplayRandomState( c.shared_after, 0xabcdef01 ), "case " + std::string( c.id ) + " differs from literal original movement outcome" );
@@ -1547,7 +1636,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			ConventionalUnitFixture fixture; fixture.Configure( true, 3, true );
 			const auto error = fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* game = fixture.Game(); auto* manager = game->GetUM(); Land( game ); Define( manager );
-				fixture.RetainedPlanet( scenario == 1 ? 1 : 0, 9 ); auto record = Record();
+				fixture.RetainedPlanet( scenario == 1 ? 1 : 0, 9 ); auto record = Record();record.facing=2;
 				if ( scenario == 2 ) { record.spent = 1; record.failed_move = true; }
 				auto* unit = Spawn( GSE_CALL, fixture, record ); auto* source = unit->GetTile(); auto* destination = source->E;
 				destination->features = FEATURE_XENOFUNGUS; if ( scenario == 3 ) { source->features = FEATURE_XENOFUNGUS; }
@@ -1752,11 +1841,12 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			const auto random = game->GetRandom()->GetStateString();
 			auto* unit = Spawn( GSE_CALL, fixture, Record() );
 			GT_ASSERT( hooks == 1 && unit == manager->GetUnit( 71 ) && unit->m_def == def && unit->m_owner == &game->GetState()->m_slots->GetSlot( 0 )
-				&& unit->GetTile()->units.at( 71 ) == unit && unit->Conventional() == Record(), "actual spawn lost canonical ownership or stored bytes" );
+				&& unit->GetTile()->units.at( 71 ) == unit && [&]{auto fresh=Record();fresh.facing=2;return unit->Conventional()==fresh;}(), "actual spawn lost canonical ownership or stored bytes" );
 			auto* wrapper = static_cast< value::Object* >( unit->Wrap( GSE_CALL ) );
 			auto* owned_state = static_cast< value::Object* >( Call( GSE_CALL, wrapper, "get_conventional_state" ) );
 			owned_state->Assign( "spent", VALUE( value::Int,, 255 ) );
-			GT_ASSERT( unit->Conventional() == Record(), "copied state exposed a mutable native scalar" );
+			auto expected_fresh=Record();expected_fresh.facing=2;
+            GT_ASSERT( unit->Conventional() == expected_fresh, "copied state exposed a mutable native scalar" );
 			GT_ASSERT( wrapper->Get( "movement" )->type == VT_UNDEFINED && wrapper->Get( "health" )->type == VT_UNDEFINED, "conventional wrapper exposes mutable float authority" );
 			auto* before = Call( GSE_CALL, wrapper, "query_conventional_stats", { VALUE( value::Int,, 0 ) } );
 			GT_ASSERT( Int( before, "effective_morale" ) == 0 && Int( before, "full_allowance" ) == 3 && Int( before, "hit_points" ) == 10,
@@ -1823,7 +1913,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "conventional unit snapshots resolve private downloaded context and destination identities", []( GSE* unused_gse, context::Context* unused_ctx ) -> std::string {
 		ConventionalUnitFixture source, destination; source.Configure(); destination.Configure();
 		const auto next = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ]() { Unit::SetNextId( next ); } );
-		std::string bytes; ConventionalUnitState saved = Record(); saved.stored_morale = 255; saved.damage = 4; saved.spent = 5; saved.failed_move = true;
+		std::string bytes; ConventionalUnitState saved = Record(); saved.facing=2; saved.stored_morale = 255; saved.damage = 4; saved.spent = 5; saved.failed_move = true;
 		const auto setup = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			Define( source.Game()->GetUM() ); source.RetainedMorale( -4, 4 ); Spawn( GSE_CALL, source, saved ); bytes = source.Snapshot(); GT_OK();
 		} ); if ( !setup.empty() ) { return setup; }
@@ -1847,7 +1937,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		ConventionalUnitFixture fixture; fixture.Configure();
 		const auto next = Unit::GetNextId(); util::FinallyGuard restore_id( [ = ]() { Unit::SetNextId( next ); } );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
-			auto* game = fixture.Game(); Define( game->GetUM() ); auto record = Record(); record.damage = 4; record.spent = 2; record.failed_move = true;
+			auto* game = fixture.Game(); Define( game->GetUM() ); auto record = Record(); record.facing=2; record.damage = 4; record.spent = 2; record.failed_move = true;
 			auto* unit = Spawn( GSE_CALL, fixture, record ); auto* wrapper = static_cast< value::Object* >( unit->Wrap( GSE_CALL ) );
 			const auto rng = game->GetRandom()->GetStateString();
 			auto* data = VALUEEXT( value::Object, GSE_CALL, ( value::object_properties_t{ { "unit", wrapper }, { "attacker", wrapper }, { "defender", wrapper },

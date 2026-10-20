@@ -2708,10 +2708,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
                 auto* foreign=&game->GetState()->m_slots->GetSlot(6);
                 base->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");foreign->GetPlayer()->SetDifficultyLevel("Librarian");
-                auto record=actor->Conventional();if(scenario==2) {record.stored_morale=6;}if(scenario==3) {record.damage=9;}
+                auto record=actor->Conventional();record.facing=5;if(scenario==2) {record.stored_morale=6;}if(scenario==3) {record.damage=9;}
                 um->UpdateConventionalUnit(GSE_CALL,actor,record);actor->SetTile(GSE_CALL,game->GetMap()->GetTile(8,8));
                 const ConventionalUnitState enemy{2,2,1,static_cast<uint8_t>(scenario==3 ? 9 : 0),0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
                 auto* defender=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-scout"),foreign,game->GetMap()->GetTile(9,9),enemy);
+                auto defender_state=defender->Conventional();defender_state.facing=6;um->UpdateConventionalUnit(GSE_CALL,defender,defender_state);
                 if(scenario==0) {
                     auto own=record;um->SpawnConventionalUnit(GSE_CALL,93,um->GetUnitDef("live-scout"),base->m_owner,game->GetMap()->GetTile(10,10),own);
                     um->SpawnConventionalUnit(GSE_CALL,94,um->GetUnitDef("live-scout"),foreign,game->GetMap()->GetTile(11,11),enemy);
@@ -2759,6 +2760,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT((defender_wins ? retained_actor : retained_defender)->type==VT_UNDEFINED,"casualty left a callable native Unit wrapper linked");
                 survivor_id=defender_wins ? 92 : 91;winner=defender_wins ? 2 : 1;loser=defender_wins ? 1 : 2;
                 auto* survivor=um->GetUnit(survivor_id);
+                GT_ASSERT(survivor->Conventional().facing==(defender_wins ? 6:2)
+                    && survivor->GetTile()==game->GetMap()->GetTile(defender_wins ? 9:8,defender_wins ? 9:8),
+                    "Hostile completion lost surviving attacker direction or overwrote defender orientation");
                 const auto expected_damage=scenario==2 ? 1 : scenario==4 || scenario==5 ? 7 : 9;
                 saved_crt=scenario==2 ? 255755822u : scenario==3 ? 2715072846u : scenario==4 || scenario==5 ? 4127244341u : 1369276809u;
                 GT_ASSERT(survivor && !um->GetUnit(defender_wins ? 91 : 92) && survivor->GetTile()==game->GetMap()->GetTile(defender_wins ? 9 : 8,defender_wins ? 9 : 8)

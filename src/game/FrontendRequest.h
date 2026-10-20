@@ -176,6 +176,8 @@ public:
             char order_glyph;
             uint8_t order_color_index;
             int32_t maximum_hit_points;
+            bool has_facing;
+            uint8_t facing;
 			backend::unit::movement_t full_movement;
 		} unit_spawn;
 		struct {
@@ -192,6 +194,8 @@ public:
             char order_glyph;
             uint8_t order_color_index;
             int32_t maximum_hit_points;
+            bool has_facing;
+            uint8_t facing;
 			backend::unit::movement_t full_movement;
 			struct {
 				size_t x;

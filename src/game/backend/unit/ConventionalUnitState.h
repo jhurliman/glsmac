@@ -50,10 +50,12 @@ struct ConventionalUnitState {
         Stack AfterUnlinkedIndexErasure(int32_t removed) const;
     };
     std::optional<Stack> stack;
+    // Original Unit +0x29. Absence on migrated records is not factory facing 2.
+    std::optional<uint8_t> facing;
 	bool operator==( const ConventionalUnitState& other ) const;
 	void Validate() const;
-	void Serialize( types::Buffer& buffer, bool include_state_history = true, bool include_orders = false, bool include_stack = false ) const;
-	static ConventionalUnitState Deserialize( types::Buffer& buffer, bool include_state_history = true, bool include_orders = false, bool include_stack = false );
+	void Serialize( types::Buffer& buffer, bool include_state_history = true, bool include_orders = false, bool include_stack = false, bool include_facing = false ) const;
+	static ConventionalUnitState Deserialize( types::Buffer& buffer, bool include_state_history = true, bool include_orders = false, bool include_stack = false, bool include_facing = false );
 };
 
 // An owned resolved copy produced from a checked current or downloaded bound

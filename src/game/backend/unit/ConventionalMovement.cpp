@@ -1,4 +1,5 @@
 #include "UnitManager.h"
+#include "SmacUnitFacing.h"
 
 #include "Unit.h"
 #include "SmacGroundEdgeCost.h"
@@ -274,6 +275,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	auto result = smac_move::ResolveEmptyGroundStep( { unit->m_id, stored.spent, stored.failed_move }, stats.quantum, stats.full_allowance,
 		cost, ( edge_destination.features & smac_edge::Fungus ) != 0, simulation.gameplay_random );
 	auto changed = stored;
+    if(result.outcome==smac_move::Outcome::Moved) {changed.facing=SmacFacingForStep(*source,*destination);}
 	changed.spent = static_cast< uint8_t >( result.unit.spent ); changed.failed_move = result.unit.prior_failure_marker;
 	QueryConventionalUnit( changed, context, stored.render_morale_mode );
 	auto sight = result.outcome == smac_move::Outcome::Moved

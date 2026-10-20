@@ -207,7 +207,7 @@ void UnitManager::SpawnUnit(
 	const backend::unit::morale_t morale,
 	const std::string& morale_string,
 	const backend::unit::health_t health,
-	const bool conventional, const bool has_moves, const backend::unit::movement_t full_movement, const bool native
+	const bool conventional, const bool has_moves, const backend::unit::movement_t full_movement, const bool native, std::optional<uint8_t> facing
 ) {
 
 	ASSERT( m_unitdefs.find( unitdef_id ) != m_unitdefs.end(), "unitdef not found" );
@@ -241,7 +241,7 @@ void UnitManager::SpawnUnit(
 				movement,
 				morale,
 				morale_string,
-				health, conventional, has_moves, full_movement, native
+				health, conventional, has_moves, full_movement, native, facing
 			)
 		}
 	).first->second;

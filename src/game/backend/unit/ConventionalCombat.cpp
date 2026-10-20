@@ -1,4 +1,5 @@
 #include "UnitManager.h"
+#include "SmacUnitFacing.h"
 #include "game/ScoutBattlePresentation.h"
 #include "Unit.h"
 #include "Def.h"
@@ -109,7 +110,9 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
 	auto result=smac_scout::ResolveFlatScoutAttack({actor->m_id,1,attack_stats.hit_points,a.stored_morale,attack_stats.effective_morale,a.spent},
 		{defender->m_id,1,defend_stats.hit_points,d.stored_morale,defend_stats.effective_morale,d.spent},attack_stats.full_allowance,random,{actor->m_id,defender->m_id},fanatic,bonuses);
 	auto* survivor=result.deleted_identity==actor->m_id ? defender : actor;auto* loser=survivor==actor ? defender : actor;
-	auto candidate=survivor->Conventional();candidate.damage=static_cast<uint8_t>(10-result.survivor.health);
+	auto candidate=survivor->Conventional();
+    if(survivor==actor) {candidate.facing=SmacFacingForStep(*source,*destination);}
+    candidate.damage=static_cast<uint8_t>(10-result.survivor.health);
 	candidate.stored_morale=static_cast<uint8_t>(result.survivor.stored_morale);candidate.spent=static_cast<uint8_t>(result.survivor.spent);
 	(void)QueryConventionalUnit(candidate,ResolveConventional(candidate,survivor->m_owner),candidate.render_morale_mode);
 	auto history=simulation.hostility;history.RecordScoutBattle(actor_owner,defender_owner,survivor->Conventional().owner_simulation_id,

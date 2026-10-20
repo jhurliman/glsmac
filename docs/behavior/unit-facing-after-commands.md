@@ -100,3 +100,21 @@ scripts/buffers stay in the isolated `tmp/unit-facing-contract` sandbox with cop
 frozen dependencies and owned original executable/assets; the primary checkout is
 read-only. The portable checker verifies all literal direction/refusal/hostile
 controls; optional private-receipt checking also binds the full original records.
+
+## Retained port implementation
+
+Conventional Unit9 appends optional raw facing to the independent Unit8 stack
+extension. Unit4/6/7/8 readers retain absence; Native Unit5 already owns this byte.
+Only the new factory initializes2. Accepted empty-ground commits and surviving
+attacker completion write the measured direction; rejection, failed lottery and
+surviving defenders retain prior state. Empty Base capture is not covered by the
+original controls here and remains a separate authority question.
+
+Spawn/update packets own presence plus the byte. Native Units publish their
+existing field. Only renderer inputs0..7 and signedFF→−1 are admitted; other raw
+bytes survive save/reload but retain the definition fallback. Each Unit chooses
+its own immutable map/card view. Actor switches remove the old actor's instance
+and allocate from the destination view's counter rather than reusing another
+Unit's instance ID. The Colony Governor-choice freshness token includes all
+retained sections, including independent stack and facing, without discarding
+them through a legacy state writer.

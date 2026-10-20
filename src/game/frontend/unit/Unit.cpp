@@ -32,7 +32,7 @@ Unit::Unit(
 	const backend::unit::morale_t morale,
 	const std::string& morale_string,
 	const backend::unit::health_t health,
-	const bool conventional, const bool has_moves, const backend::unit::movement_t full_movement, const bool native
+	const bool conventional, const bool has_moves, const backend::unit::movement_t full_movement, const bool native, std::optional<uint8_t> facing
 )
 	: TileObject( TOT_UNIT, tile )
 	, m_um( um )
@@ -54,7 +54,7 @@ Unit::Unit(
 	, m_morale( morale )
 	, m_morale_string( morale_string )
 	, m_health( health )
-	, m_conventional( conventional ), m_has_moves( has_moves ), m_native(native), m_full_movement( full_movement ) {
+	, m_conventional( conventional ), m_has_moves( has_moves ), m_native(native), m_full_movement( full_movement ), m_facing(facing) {
 	m_is_active = ShouldBeActive();
 	m_render.badge.def = m_slot_badges->GetUnitBadgeSprite( m_morale, m_is_active || (m_held && m_is_owned && CanMove()), m_order_glyph, m_order_color_index );
 	m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
@@ -118,7 +118,7 @@ const size_t Unit::GetSelectionWeight() const {
 }
 
 sprite::Sprite* Unit::GetSprite() const {
-	return m_def->GetSprite( m_morale );
+	return m_def->GetSprite( m_morale, m_facing );
 }
 
 sprite::Sprite* Unit::GetBadgeSprite() const {
@@ -168,7 +168,8 @@ void Unit::Show() {
 	if ( !m_render.is_rendered ) {
 		const auto& c = m_render.coords;
 
-		auto* sprite = m_def->GetSprite( m_morale );
+		auto* sprite = GetSprite();
+        if(m_render.body!=sprite) {m_render.body=sprite;m_render.instance_id=0;}
 
 		if ( !m_render.instance_id ) {
 			m_render.instance_id = sprite->next_instance_id++;
@@ -195,7 +196,7 @@ void Unit::Show() {
 
 void Unit::Hide() {
 	if ( m_render.is_rendered ) {
-		m_def->GetSprite( m_morale )->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
+		m_render.body->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
 		HideBadge(); // Tile redraws hide sprites without ending selection.
 		m_render.is_rendered = false;
 	}
@@ -252,6 +253,7 @@ void Unit::StopBadgeBlink( const bool is_badge_shown ) {
 void Unit::Refresh() {
 	if ( m_need_refresh ) {
 		m_need_refresh = false;
+        if(m_render.is_rendered && m_render.body!=GetSprite()) {Hide();}
 		m_is_active = ShouldBeActive();
 		if ( !m_is_active ) {
 			StopBadgeBlink( true );
@@ -301,6 +303,10 @@ void Unit::Refresh() {
 		}
 		m_um->RefreshUnit( this );
 	}
+}
+
+void Unit::SetFacing(std::optional<uint8_t> facing) {
+    if(m_facing!=facing) {m_facing=facing;m_need_refresh=true;}
 }
 
 void Unit::SetMovement( const backend::unit::movement_t movement ) {
@@ -382,7 +388,7 @@ const bool Unit::IsMoving() const {
 }
 
 sprite::InstancedSprite* Unit::GetCardSprite( bool roster ) const {
-	return m_def->GetCardSprite( roster );
+	return m_def->GetCardSprite( roster, m_facing );
 }
 
 std::shared_ptr<types::texture::Texture> Unit::GetCardOverlay() const {
@@ -454,13 +460,13 @@ void Unit::UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* spr
 
 void Unit::SetRenderCoords( const types::Vec3& coords ) {
 	m_render.coords = coords;
-	m_def->GetSprite( m_morale )->instanced_sprite->actor->UpdateInstance(
+	if(m_render.is_rendered) {m_render.body->instanced_sprite->actor->UpdateInstance(
 		m_render.instance_id, {
 			coords.x,
 			coords.y,
 			coords.z
 		}
-	);
+	);}
 	m_render.badge.def->instanced_sprite->actor->UpdateInstance(
 		m_render.badge.instance_id,
 		GetRenderedBadgeCoords(false)

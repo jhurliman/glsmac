@@ -62,7 +62,7 @@ bool Game::HandleSmacFoundingEvent(GSE_CALLABLE,const std::string& name,
     const bool has_base=std::any_of(m_bm->GetBases().begin(),m_bm->GetBases().end(),[&](const auto& row){return row.second->m_owner==colony->m_owner;});
     if(missing && has_base && !recovery) {THROW("Apply Governor settings in an owned Base before founding a new Base");}
     types::Buffer state;state.WriteInt(m_active_admission ? m_active_admission->ticket : 0);state.WriteInt(GetTurnId());
-    state.WriteInt(colony->m_id);state.WriteInt(colony->GetTile()->coord.x);state.WriteInt(colony->GetTile()->coord.y);colony->Conventional().Serialize(state);
+    state.WriteInt(colony->m_id);state.WriteInt(colony->GetTile()->coord.x);state.WriteInt(colony->GetTile()->coord.y);colony->Conventional().Serialize(state,true,true,true,true);
     if(recovery) {
         const auto expected=args.find("expected_state");
         if(expected==args.end() || !expected->second || expected->second->Deref()->type!=gse::VT_STRING) {THROW("Default Governor choice requires its current Pod state");}

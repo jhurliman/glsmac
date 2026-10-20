@@ -96,6 +96,10 @@ must be separated at its callers.
    [Relocated first-HQ energy/citizens](native-opening-energy.md) now match
    all seven owners at later Base indices with foreign decoys. Actual later
    faction worker/resource and all-seven controller composition still need closing.
+   The [opening worker](native-first-worker.md) now selects actual computer
+   personality priorities and preserves its conditional specialist write, with
+   complete human/AI score and store controls. Cumulative founding and controller
+   integration remain separate from these declared-input controls.
    [Canonical Unit initialization and stack placement](native-startup-units.md)
    now match original complete-record/pool controls; Base founding, complete
    factory visibility and seven-faction starting-package composition remain

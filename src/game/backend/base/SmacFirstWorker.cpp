@@ -86,13 +86,19 @@ int32_t CalculateSmacFirstWorker(const std::vector<std::array<uint8_t,44>>& tile
     const auto unavailable=SmacWorkerAvailability::Build(context,squares,{});global(0x9186b0,0,0x4fc68e);global(0x9186b0,int32_t(unavailable),0x4fc6b5);
     global(0x918678,2,0x4fd66d);put(0x30,Read(base,0x30)&~0x8000u,0x4fd6bb);put(0x80,0,0x4fd6c3);put(0x78,Read(base,0x78)&(~unavailable|1u),0x4fd6de);
     for(unsigned i=0;i<4;++i) {const auto off=0xbc+4*i;if(i<3) {put(off,0,0x4fd710);put(off,0,0x4fd785);put(off,0,0x4fd79b);}else {put(off,0,0x4fd7a6);}}
+    const bool human=in.human_mask&(1u<<owner);
+    if(!human) {put(0x7c,Read(base,0x7c)-Read(base,0x80),0x4fd84a);}
+    // The existing scorer names these priorities aggression/explore/discover/
+    // build/conquer. Original actor fields are fight/wealth/power/growth/tech.
+    const auto priorities=SmacWorkerAllocationRules::Priorities({human,false,false,false,false,false,
+        {field(0x95d584),field(0x95d588),field(0x95d58c),field(0x95d590),field(0x95d594)}});
     const auto query=[&](bool dispatcher,int resource,const auto& p){const auto value=yield(resource,p);if(query_observer) {query_observer({dispatcher,resource,p[0],p[1],value});}return value;};
     const auto collect=[&](int index,uint32_t pc,uint32_t sea_pc){const auto p=*positions[index];if((tile(p)[0]>>5)<3) {put(0x30,Read(base,0x30)|0x8000,sea_pc);}
         for(int resource=0;resource<4;++resource) {put(0xbc+4*resource,int64_t(SmacWrap32(Read(base,0xbc+4*resource)))+query(true,resource,p),pc);}};
     collect(0,0x4fd97c,0x4fd938);global(0x918678,1,0x4fd99e);global(0x918674,0,0x4fdc43);SmacWorkerRanking ranking;
     for(int i=1;i<21;++i) {if(scratch.reasons[i]) {continue;}const auto p=*positions[i];std::array<int32_t,3> values;
         for(int resource=0;resource<3;++resource) {values[resource]=query(false,resource,p);}
-        const auto scored=SmacWorkerAllocationRules::Score({1,1,rules.food_per_citizen,{{SmacWrap32(Read(base,0xbc)),SmacWrap32(Read(base,0xc0)),SmacWrap32(Read(base,0xc4))}},0,SmacWorkerProduction::Unit,{}},values);
+        const auto scored=SmacWorkerAllocationRules::Score({1,1,rules.food_per_citizen,{{SmacWrap32(Read(base,0xbc)),SmacWrap32(Read(base,0xc0)),SmacWrap32(Read(base,0xc4))}},0,SmacWorkerProduction::Unit,priorities},values);
         if(score_observer) {score_observer(i,scored.score);}if(scored.food_sufficient) {global(0x918674,1,0x4fdec4);}ranking=SmacWorkerAllocationRules::Rank(ranking,i,false,scored.score);
     }
     uint32_t visited=1;int32_t remaining=1;
@@ -119,7 +125,8 @@ int32_t CalculateSmacFirstBase(const std::vector<std::array<uint8_t,44>>& tiles,
         throw std::invalid_argument("First-Base composition requires one human Base and no Units");
     }
     PrepareSmacOpeningSupport(bases,0,units,scratch.support,observer);
-    const auto selected=CalculateSmacFirstWorker(tiles,bases[0],actors[bases[0][4]],ownership,rules,in.worker,scratch.worker,observer,query_observer,score_observer);
+    auto worker_options=in.worker;worker_options.human_mask=in.citizens.human_mask;
+    const auto selected=CalculateSmacFirstWorker(tiles,bases[0],actors[bases[0][4]],ownership,rules,worker_options,scratch.worker,observer,query_observer,score_observer);
     scratch.growth=AccountSmacBaseNutrients(bases,actors,{0,0,scratch.support[1],scratch.support[5],rules.food_per_citizen,0},observer);
     AccountSmacBaseMinerals(bases,actors,{0,0,scratch.support[2],scratch.support[6],scratch.support[0],in.citizens.human_mask,
         in.global_difficulty,in.sea_level,in.sea_rise_rule,in.native_life,in.worker.primary_rules,in.secondary_rules,{}},observer);

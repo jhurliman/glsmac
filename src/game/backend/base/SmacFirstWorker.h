@@ -10,10 +10,10 @@ struct SmacOpeningYieldRules {
     std::array<int32_t,3> limit_technologies;
     int32_t platform_technology,food_per_citizen,mine_nutrients,unroaded_mine_limit;
 };
-struct SmacFirstWorkerOptions {int32_t width,height;bool horizontal_wrap;int32_t pattern;uint32_t primary_rules;};
+struct SmacFirstWorkerOptions {int32_t width,height;bool horizontal_wrap;int32_t pattern;uint32_t primary_rules;uint8_t human_mask=255;};
 struct SmacFirstWorkerScratch {int32_t food_sufficient,remaining,unavailable;std::array<int32_t,25> reasons;};
 struct SmacFirstWorkerQuery {bool dispatcher;int32_t resource,x,y,value;};
-// Complete 4fd650 in the unmanaged human population-one opening profile:
+// Complete 4fd650 in the unmanaged population-one opening profile:
 // single founded Base, no Units/contacts/satellites/projects/events, empty or
 // center-only initial selection, no retained specialists, Unit target.
 // Calculates raw yields and scores from current records using existing rules.

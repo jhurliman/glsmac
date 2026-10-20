@@ -1,5 +1,6 @@
 #include "SmacFirstWorker.h"
 #include "fixtures/SmacFirstWorker.h"
+#include "fixtures/SmacOpeningAiWorker.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 #include <algorithm>
@@ -14,7 +15,9 @@ void Append(std::string& s,uint32_t v,unsigned size) {for(unsigned k=0;k<size;++
 void AddSmacFirstWorkerTests(task::gsetests::GSETests* task) {
     task->AddTest("SMAC first worker derives original yields ranking intake and complete raw records",GT(){
         using namespace game::backend;using namespace game::backend::base;size_t stores=0,queries=0,case_index=0;
-        for(const auto& c:fixtures::first_worker::Cases()) {
+        auto cases=fixtures::first_worker::Cases();const auto ai=fixtures::first_worker::AiCases();
+        cases.insert(cases.end(),ai.begin(),ai.end());
+        for(const auto& c:cases) {
             std::vector<std::array<uint8_t,44>> tiles(384);
             for(auto& t:tiles) {t[0]=uint8_t(c.band*32+c.moisture*8);t[1]=50;t[2]=15;t[3]=1;t[4]=c.known?uint8_t(1u<<c.owner):0;t[5]=uint8_t(c.rockiness<<6);t[7]=uint8_t(c.owner);Word(t,8,c.items);}
             const SmacWorkerRadiusMap map{c.position,32,24,c.options.horizontal_wrap};
@@ -28,7 +31,9 @@ void AddSmacFirstWorkerTests(task::gsetests::GSETests* task) {
             for(int i=0;i<21;++i) {const auto p=SmacWorkedSquareCollection::Resolve(map,i);if(p) {auto& t=at(*p);Word(t,8,Read(t,8)|0x1000);}}
             auto& center=at(c.position);center[2]=uint8_t((center[2]&0xf0)|c.owner);Word(center,8,Read(center,8)|1);
             faction::SmacStartupFaction actor;SmacGameplayRandomState random(1,1);
-            faction::InitializeSmacFactionPrefix(actor,{c.owner,3,uint8_t(1u<<c.owner),255,c.options.primary_rules,0,false,10,{-1,0,0,0,1,0},"Template"," "},random);
+            const auto& p=c.personality;
+            const auto human_mask=c.options.human_mask==255?uint8_t(1u<<c.owner):c.options.human_mask;
+            faction::InitializeSmacFactionPrefix(actor,{c.owner,3,human_mask,255,c.options.primary_rules,0,false,10,{p[0],p[4],p[2],p[3],p[1],0},"Template"," "},random);
             Word(actor.record,0,c.reveal?0x200:0);Word(actor.record,0x95e200-0x95d1a8,1);
             for(size_t i=0;i<3;++i) {Word(actor.record,0x95d4bc-0x95d1a8+4*i,uint32_t(c.fungal[i]));}
             SmacStartupBaseRecord base;for(size_t i=0;i<304;++i) {base[i]=uint8_t(i*11+5);}
@@ -51,7 +56,7 @@ void AddSmacFirstWorkerTests(task::gsetests::GSETests* task) {
             GT_ASSERT(count==c.stores && qcount==c.query_count && scount==c.score_count && util::SHA256(trace)==c.trace && util::SHA256(query_trace)==c.queries
                 && util::SHA256(score_trace)==c.scores && util::SHA256(scratch_bytes)==c.scratch,"First-worker native journals or scratch differ");stores+=count;queries+=qcount;++case_index;
         }
-        GT_ASSERT(stores==6922 && queries==4119,"First-worker native coverage changed");return {};
+        GT_ASSERT(stores==6922+8610 && queries==4119+5712,"First-worker native coverage changed");return {};
     });
 }
 }

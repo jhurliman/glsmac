@@ -65,18 +65,19 @@ public:
         }
         int value=base+step_*(*profile)/100;
         if(*profile<0) {value=std::max(-127,value);}
-        // 47cc48..56 stores the capped byte but returns the uncapped center
-        // on a cold query. Shared corners and warm reads return the byte.
-        if(!vertex) {cached=std::min(127,value);return value;}
-        value=std::min(127,value);
+        else if(*profile>0) {value=std::min(127,value);}
+        // Profile-sign clamps precede publication. Both cold centers and cold
+        // corners return value; their published shared bytes can be smaller.
+        const int stored=std::min(127,value);
+        if(!vertex) {cached=stored;return value;}
         if(vertex) {
             constexpr unsigned neighbor_vertex[]={3,4,1,2};
             for(unsigned n=0;n<4;++n) {
                 const auto& offset=CORNERS[vertex-1][n];
                 const auto neighbor=Index(x+offset[0],y+offset[1]);
-                if(neighbor) {cache_[*neighbor][neighbor_vertex[n]]=value;}
+                if(neighbor) {cache_[*neighbor][neighbor_vertex[n]]=stored;}
             }
-        } else {cached=value;}
+        } else {cached=stored;}
         return value;
     }
 

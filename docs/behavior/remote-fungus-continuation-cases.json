@@ -1,0 +1,6198 @@
+{
+  "scope": "One connected ordinary remote land Scout admission plan; nine existing requests reused. Source fungus and destination fungus are independent inputs. Native constructor and relocation/sight effects execute in the owning engine.",
+  "cases": [
+    {
+      "source": "reused_nine_requests",
+      "variant": "positive_Scout_before_global_birth",
+      "request": [
+        13,
+        0,
+        3
+      ],
+      "source_cell": {
+        "band": 3,
+        "flags": 1048610,
+        "affiliation": 2
+      },
+      "destination": [
+        48,
+        66
+      ],
+      "destination_cell": {
+        "band": 3,
+        "flags": 1073741824,
+        "affiliation": 15
+      },
+      "resolved_site": false,
+      "numeric": {
+        "width": 80,
+        "height": 80,
+        "flat": 0,
+        "pattern": 27067,
+        "life": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "retained_distance": 24,
+        "capacity_count": 14,
+        "edge_cost": 3,
+        "allowance": 3,
+        "spent": 0,
+        "CRT": 1,
+        "shared": 1,
+        "CRT_movement": true,
+        "protection": [
+          {
+            "position": [
+              48,
+              66
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              65
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              67
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              67
+            ],
+            "band": 3,
+            "flags": 1048610,
+            "affiliation": 2
+          },
+          {
+            "position": [
+              46,
+              66
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              65
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              64
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              64
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              68
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              68
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              64
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              63
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              65
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              67
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              69
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              67
+            ],
+            "band": 4,
+            "flags": 537003040,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              65
+            ],
+            "band": 5,
+            "flags": 1048576,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              63
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              52,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              66
+            ],
+            "band": 5,
+            "flags": 1048576,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              62
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          }
+        ]
+      },
+      "prediction": {
+        "action": "relocate",
+        "native_return": 1,
+        "spent": 3,
+        "nearest": null,
+        "distance": 24,
+        "threshold": null,
+        "skip_reason": "destination_not_fungus",
+        "draws": [],
+        "actions": [
+          "canonical_edge_cost_query",
+          "spend_raw_cost",
+          "clear_failure_and_0x40",
+          "canonical_unlink_placement_sight"
+        ],
+        "crt": 1,
+        "shared": 1
+      },
+      "Scout_before": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 0,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          48,
+          66
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 65540,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 0,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "map_changes": [
+        {
+          "position": [
+            48,
+            64
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            49,
+            65
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            48,
+            66
+          ],
+          "byte_changes": [
+            [
+              2,
+              95,
+              82
+            ],
+            [
+              8,
+              0,
+              2
+            ],
+            [
+              10,
+              0,
+              16
+            ],
+            [
+              20,
+              0,
+              2
+            ],
+            [
+              22,
+              0,
+              16
+            ]
+          ]
+        },
+        {
+          "position": [
+            50,
+            66
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            47,
+            67
+          ],
+          "byte_changes": [
+            [
+              8,
+              34,
+              32
+            ],
+            [
+              20,
+              34,
+              32
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "source": "reused_nine_requests",
+      "variant": "positive_Scout_before_global_birth",
+      "request": [
+        13,
+        1,
+        3
+      ],
+      "source_cell": {
+        "band": 3,
+        "flags": 1048610,
+        "affiliation": 2
+      },
+      "destination": [
+        49,
+        67
+      ],
+      "destination_cell": {
+        "band": 3,
+        "flags": 1073741856,
+        "affiliation": 15
+      },
+      "resolved_site": true,
+      "numeric": {
+        "width": 80,
+        "height": 80,
+        "flat": 0,
+        "pattern": 27067,
+        "life": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "retained_distance": 24,
+        "capacity_count": 14,
+        "edge_cost": 9,
+        "allowance": 3,
+        "spent": 0,
+        "CRT": 1,
+        "shared": 1,
+        "CRT_movement": true,
+        "protection": [
+          {
+            "position": [
+              49,
+              67
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              67
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              68
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              67
+            ],
+            "band": 3,
+            "flags": 1048610,
+            "affiliation": 2
+          },
+          {
+            "position": [
+              48,
+              66
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              65
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              65
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              69
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              65
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              64
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              52,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              52,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              68
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              66
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              64
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              53,
+              67
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              67
+            ],
+            "band": 4,
+            "flags": 537003040,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              71
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              63
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          }
+        ]
+      },
+      "prediction": {
+        "action": "lottery_refusal",
+        "native_return": 1,
+        "spent": 3,
+        "nearest": null,
+        "distance": 24,
+        "threshold": null,
+        "skip_reason": "resolved_site",
+        "draws": [
+          {
+            "stream": "CRT",
+            "reason": "movement_lottery",
+            "before": 1,
+            "after": 2745024,
+            "raw": 41,
+            "value": 5
+          }
+        ],
+        "actions": [
+          "canonical_edge_cost_query",
+          "canonical_endturn",
+          "set_failure_0x8000"
+        ],
+        "crt": 2745024,
+        "shared": 1
+      },
+      "Scout_before": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 0,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 32772,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "map_changes": []
+    },
+    {
+      "source": "reused_nine_requests",
+      "variant": "positive_Scout_before_global_birth",
+      "request": [
+        13,
+        3,
+        3
+      ],
+      "source_cell": {
+        "band": 3,
+        "flags": 1048610,
+        "affiliation": 2
+      },
+      "destination": [
+        47,
+        69
+      ],
+      "destination_cell": {
+        "band": 3,
+        "flags": 32,
+        "affiliation": 15
+      },
+      "resolved_site": false,
+      "numeric": {
+        "width": 80,
+        "height": 80,
+        "flat": 0,
+        "pattern": 27067,
+        "life": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "retained_distance": 24,
+        "capacity_count": 14,
+        "edge_cost": 9,
+        "allowance": 3,
+        "spent": 0,
+        "CRT": 1,
+        "shared": 1,
+        "CRT_movement": true,
+        "protection": [
+          {
+            "position": [
+              47,
+              69
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              71
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              70
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              69
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              68
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              67
+            ],
+            "band": 3,
+            "flags": 1048610,
+            "affiliation": 2
+          },
+          {
+            "position": [
+              49,
+              67
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              71
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              71
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              67
+            ],
+            "band": 4,
+            "flags": 537003040,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              66
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              68
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              72
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              72
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              70
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              68
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              66
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              43,
+              69
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              73
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              65
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          }
+        ]
+      },
+      "prediction": {
+        "action": "lottery_refusal",
+        "native_return": 1,
+        "spent": 3,
+        "nearest": 6,
+        "distance": 24,
+        "threshold": 34,
+        "skip_reason": null,
+        "draws": [
+          {
+            "stream": "CRT",
+            "reason": "native_encounter",
+            "before": 1,
+            "after": 2745024,
+            "raw": 41,
+            "value": 41
+          },
+          {
+            "stream": "CRT",
+            "reason": "movement_lottery",
+            "before": 2745024,
+            "after": 3357800067,
+            "raw": 18467,
+            "value": 8
+          }
+        ],
+        "actions": [
+          "canonical_edge_cost_query",
+          "canonical_endturn",
+          "set_failure_0x8000"
+        ],
+        "crt": 3357800067,
+        "shared": 1
+      },
+      "Scout_before": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 0,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 32772,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "map_changes": []
+    },
+    {
+      "source": "reused_nine_requests",
+      "variant": "mixed_stack_after_global_before_native_phase",
+      "request": [
+        13,
+        0,
+        3
+      ],
+      "source_cell": {
+        "band": 3,
+        "flags": 1048610,
+        "affiliation": 2
+      },
+      "destination": [
+        48,
+        66
+      ],
+      "destination_cell": {
+        "band": 3,
+        "flags": 1073741824,
+        "affiliation": 15
+      },
+      "resolved_site": false,
+      "numeric": {
+        "width": 80,
+        "height": 80,
+        "flat": 0,
+        "pattern": 27067,
+        "life": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "retained_distance": 24,
+        "capacity_count": 16,
+        "edge_cost": 3,
+        "allowance": 3,
+        "spent": 0,
+        "CRT": 433661943,
+        "shared": 1,
+        "CRT_movement": true,
+        "protection": [
+          {
+            "position": [
+              48,
+              66
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              65
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              67
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              67
+            ],
+            "band": 3,
+            "flags": 1048610,
+            "affiliation": 2
+          },
+          {
+            "position": [
+              46,
+              66
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              65
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              64
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              64
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              68
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              68
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              64
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              63
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              65
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              67
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              69
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              67
+            ],
+            "band": 4,
+            "flags": 537003040,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              65
+            ],
+            "band": 5,
+            "flags": 1048576,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              63
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              52,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              66
+            ],
+            "band": 5,
+            "flags": 1048576,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              62
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          }
+        ]
+      },
+      "prediction": {
+        "action": "relocate",
+        "native_return": 1,
+        "spent": 3,
+        "nearest": null,
+        "distance": 24,
+        "threshold": null,
+        "skip_reason": "destination_not_fungus",
+        "draws": [],
+        "actions": [
+          "canonical_edge_cost_query",
+          "spend_raw_cost",
+          "clear_failure_and_0x40",
+          "canonical_unlink_placement_sight"
+        ],
+        "crt": 433661943,
+        "shared": 1
+      },
+      "Scout_before": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 0,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": 15
+      },
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          48,
+          66
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 65540,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 0,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "map_changes": [
+        {
+          "position": [
+            48,
+            64
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            49,
+            65
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            48,
+            66
+          ],
+          "byte_changes": [
+            [
+              2,
+              95,
+              82
+            ],
+            [
+              8,
+              0,
+              2
+            ],
+            [
+              10,
+              0,
+              16
+            ],
+            [
+              20,
+              0,
+              2
+            ],
+            [
+              22,
+              0,
+              16
+            ]
+          ]
+        },
+        {
+          "position": [
+            50,
+            66
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "source": "reused_nine_requests",
+      "variant": "mixed_stack_after_global_before_native_phase",
+      "request": [
+        13,
+        1,
+        3
+      ],
+      "source_cell": {
+        "band": 3,
+        "flags": 1048610,
+        "affiliation": 2
+      },
+      "destination": [
+        49,
+        67
+      ],
+      "destination_cell": {
+        "band": 3,
+        "flags": 1073741856,
+        "affiliation": 15
+      },
+      "resolved_site": true,
+      "numeric": {
+        "width": 80,
+        "height": 80,
+        "flat": 0,
+        "pattern": 27067,
+        "life": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "retained_distance": 24,
+        "capacity_count": 16,
+        "edge_cost": 9,
+        "allowance": 3,
+        "spent": 0,
+        "CRT": 433661943,
+        "shared": 1,
+        "CRT_movement": true,
+        "protection": [
+          {
+            "position": [
+              49,
+              67
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              67
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              68
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              67
+            ],
+            "band": 3,
+            "flags": 1048610,
+            "affiliation": 2
+          },
+          {
+            "position": [
+              48,
+              66
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              65
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              65
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              69
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              65
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              64
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              52,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              52,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              68
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              66
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              64
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              53,
+              67
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              67
+            ],
+            "band": 4,
+            "flags": 537003040,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              71
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              63
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          }
+        ]
+      },
+      "prediction": {
+        "action": "lottery_refusal",
+        "native_return": 1,
+        "spent": 3,
+        "nearest": null,
+        "distance": 24,
+        "threshold": null,
+        "skip_reason": "resolved_site",
+        "draws": [
+          {
+            "stream": "CRT",
+            "reason": "movement_lottery",
+            "before": 433661943,
+            "after": 3642606302,
+            "raw": 22813,
+            "value": 7
+          }
+        ],
+        "actions": [
+          "canonical_edge_cost_query",
+          "canonical_endturn",
+          "set_failure_0x8000"
+        ],
+        "crt": 3642606302,
+        "shared": 1
+      },
+      "Scout_before": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 0,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": 15
+      },
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 32772,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": 15
+      },
+      "map_changes": []
+    },
+    {
+      "source": "reused_nine_requests",
+      "variant": "mixed_stack_after_global_before_native_phase",
+      "request": [
+        13,
+        3,
+        3
+      ],
+      "source_cell": {
+        "band": 3,
+        "flags": 1048610,
+        "affiliation": 2
+      },
+      "destination": [
+        47,
+        69
+      ],
+      "destination_cell": {
+        "band": 3,
+        "flags": 32,
+        "affiliation": 15
+      },
+      "resolved_site": false,
+      "numeric": {
+        "width": 80,
+        "height": 80,
+        "flat": 0,
+        "pattern": 27067,
+        "life": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "retained_distance": 24,
+        "capacity_count": 16,
+        "edge_cost": 9,
+        "allowance": 3,
+        "spent": 0,
+        "CRT": 433661943,
+        "shared": 1,
+        "CRT_movement": true,
+        "protection": [
+          {
+            "position": [
+              47,
+              69
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              71
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              70
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              69
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              68
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              67
+            ],
+            "band": 3,
+            "flags": 1048610,
+            "affiliation": 2
+          },
+          {
+            "position": [
+              49,
+              67
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              71
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              71
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              67
+            ],
+            "band": 4,
+            "flags": 537003040,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              66
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              68
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              72
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              72
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              70
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              68
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              66
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              43,
+              69
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              73
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              65
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          }
+        ]
+      },
+      "prediction": {
+        "action": "encounter_birth",
+        "native_return": 0,
+        "spent": 0,
+        "nearest": 6,
+        "distance": 24,
+        "threshold": 34,
+        "skip_reason": null,
+        "draws": [
+          {
+            "stream": "CRT",
+            "reason": "native_encounter",
+            "before": 433661943,
+            "after": 3642606302,
+            "raw": 22813,
+            "value": 13
+          }
+        ],
+        "actions": [
+          "canonical_native_factory",
+          "mark_destination_history_0x100000",
+          "return_without_movement"
+        ],
+        "crt": 3642606302,
+        "shared": 1
+      },
+      "Scout_before": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 0,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": 15
+      },
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 4,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": 15
+      },
+      "map_changes": [
+        {
+          "position": [
+            45,
+            69
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "position": [
+            47,
+            69
+          ],
+          "byte_changes": [
+            [
+              2,
+              15,
+              0
+            ],
+            [
+              8,
+              32,
+              34
+            ],
+            [
+              10,
+              0,
+              16
+            ],
+            [
+              20,
+              32,
+              34
+            ]
+          ]
+        },
+        {
+          "position": [
+            49,
+            69
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "position": [
+            46,
+            70
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "position": [
+            48,
+            70
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "position": [
+            47,
+            71
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "source": "reused_nine_requests",
+      "variant": "after_complete_native_phase_before_owner1_upkeep",
+      "request": [
+        13,
+        0,
+        3
+      ],
+      "source_cell": {
+        "band": 3,
+        "flags": 1048610,
+        "affiliation": 2
+      },
+      "destination": [
+        48,
+        66
+      ],
+      "destination_cell": {
+        "band": 3,
+        "flags": 1073741824,
+        "affiliation": 15
+      },
+      "resolved_site": false,
+      "numeric": {
+        "width": 80,
+        "height": 80,
+        "flat": 0,
+        "pattern": 27067,
+        "life": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "retained_distance": 21,
+        "capacity_count": 14,
+        "edge_cost": 3,
+        "allowance": 3,
+        "spent": 0,
+        "CRT": 2543226160,
+        "shared": 1,
+        "CRT_movement": true,
+        "protection": [
+          {
+            "position": [
+              48,
+              66
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              65
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              67
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              67
+            ],
+            "band": 3,
+            "flags": 1048610,
+            "affiliation": 2
+          },
+          {
+            "position": [
+              46,
+              66
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              65
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              64
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              64
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              68
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              68
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              64
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              63
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              65
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              67
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              69
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 0
+          },
+          {
+            "position": [
+              45,
+              67
+            ],
+            "band": 4,
+            "flags": 537003040,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              65
+            ],
+            "band": 5,
+            "flags": 1048576,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              63
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              52,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              66
+            ],
+            "band": 5,
+            "flags": 1048576,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              62
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          }
+        ]
+      },
+      "prediction": {
+        "action": "relocate",
+        "native_return": 1,
+        "spent": 3,
+        "nearest": null,
+        "distance": 21,
+        "threshold": null,
+        "skip_reason": "destination_not_fungus",
+        "draws": [],
+        "actions": [
+          "canonical_edge_cost_query",
+          "spend_raw_cost",
+          "clear_failure_and_0x40",
+          "canonical_unlink_placement_sight"
+        ],
+        "crt": 2543226160,
+        "shared": 1
+      },
+      "Scout_before": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 4,
+        "flags": 0,
+        "order": 0,
+        "damage": 5,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          48,
+          66
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 65540,
+        "flags": 0,
+        "order": 0,
+        "damage": 5,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 0,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "map_changes": [
+        {
+          "position": [
+            48,
+            64
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            49,
+            65
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            48,
+            66
+          ],
+          "byte_changes": [
+            [
+              2,
+              95,
+              82
+            ],
+            [
+              8,
+              0,
+              2
+            ],
+            [
+              10,
+              0,
+              16
+            ],
+            [
+              20,
+              0,
+              2
+            ],
+            [
+              22,
+              0,
+              16
+            ]
+          ]
+        },
+        {
+          "position": [
+            50,
+            66
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            47,
+            67
+          ],
+          "byte_changes": [
+            [
+              8,
+              34,
+              32
+            ],
+            [
+              20,
+              34,
+              32
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "source": "reused_nine_requests",
+      "variant": "after_complete_native_phase_before_owner1_upkeep",
+      "request": [
+        13,
+        1,
+        3
+      ],
+      "source_cell": {
+        "band": 3,
+        "flags": 1048610,
+        "affiliation": 2
+      },
+      "destination": [
+        49,
+        67
+      ],
+      "destination_cell": {
+        "band": 3,
+        "flags": 1073741856,
+        "affiliation": 15
+      },
+      "resolved_site": true,
+      "numeric": {
+        "width": 80,
+        "height": 80,
+        "flat": 0,
+        "pattern": 27067,
+        "life": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "retained_distance": 21,
+        "capacity_count": 14,
+        "edge_cost": 9,
+        "allowance": 3,
+        "spent": 0,
+        "CRT": 2543226160,
+        "shared": 1,
+        "CRT_movement": true,
+        "protection": [
+          {
+            "position": [
+              49,
+              67
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              67
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              68
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              67
+            ],
+            "band": 3,
+            "flags": 1048610,
+            "affiliation": 2
+          },
+          {
+            "position": [
+              48,
+              66
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              65
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              65
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              69
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 0
+          },
+          {
+            "position": [
+              47,
+              65
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              64
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              52,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              52,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              68
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              66
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              64
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              53,
+              67
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              67
+            ],
+            "band": 4,
+            "flags": 537003040,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              71
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              63
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          }
+        ]
+      },
+      "prediction": {
+        "action": "lottery_refusal",
+        "native_return": 1,
+        "spent": 3,
+        "nearest": null,
+        "distance": 21,
+        "threshold": null,
+        "skip_reason": "resolved_site",
+        "draws": [
+          {
+            "stream": "CRT",
+            "reason": "movement_lottery",
+            "before": 2543226160,
+            "after": 3732125491,
+            "raw": 24179,
+            "value": 5
+          }
+        ],
+        "actions": [
+          "canonical_edge_cost_query",
+          "canonical_endturn",
+          "set_failure_0x8000"
+        ],
+        "crt": 3732125491,
+        "shared": 1
+      },
+      "Scout_before": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 4,
+        "flags": 0,
+        "order": 0,
+        "damage": 5,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 32772,
+        "flags": 0,
+        "order": 0,
+        "damage": 5,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "map_changes": []
+    },
+    {
+      "source": "reused_nine_requests",
+      "variant": "after_complete_native_phase_before_owner1_upkeep",
+      "request": [
+        13,
+        3,
+        3
+      ],
+      "source_cell": {
+        "band": 3,
+        "flags": 1048610,
+        "affiliation": 2
+      },
+      "destination": [
+        47,
+        69
+      ],
+      "destination_cell": {
+        "band": 3,
+        "flags": 32,
+        "affiliation": 0
+      },
+      "resolved_site": false,
+      "numeric": {
+        "width": 80,
+        "height": 80,
+        "flat": 0,
+        "pattern": 27067,
+        "life": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "retained_distance": 21,
+        "capacity_count": 14,
+        "edge_cost": 9,
+        "allowance": 3,
+        "spent": 0,
+        "CRT": 2543226160,
+        "shared": 1,
+        "CRT_movement": true,
+        "protection": [
+          {
+            "position": [
+              47,
+              69
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 0
+          },
+          {
+            "position": [
+              48,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              71
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              70
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              69
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              68
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              67
+            ],
+            "band": 3,
+            "flags": 1048610,
+            "affiliation": 2
+          },
+          {
+            "position": [
+              49,
+              67
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              71
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              71
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              67
+            ],
+            "band": 4,
+            "flags": 537003040,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              66
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              68
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              72
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              72
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              70
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              68
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              66
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              43,
+              69
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              73
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              65
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          }
+        ]
+      },
+      "prediction": {
+        "action": "relocate",
+        "native_return": 1,
+        "spent": 9,
+        "nearest": 6,
+        "distance": 24,
+        "threshold": 34,
+        "skip_reason": null,
+        "draws": [
+          {
+            "stream": "CRT",
+            "reason": "native_encounter",
+            "before": 2543226160,
+            "after": 3732125491,
+            "raw": 24179,
+            "value": 79
+          },
+          {
+            "stream": "CRT",
+            "reason": "movement_lottery",
+            "before": 3732125491,
+            "after": 1192101162,
+            "raw": 18190,
+            "value": 1
+          }
+        ],
+        "actions": [
+          "canonical_edge_cost_query",
+          "spend_raw_cost",
+          "clear_failure_and_0x40",
+          "canonical_unlink_placement_sight"
+        ],
+        "crt": 1192101162,
+        "shared": 1
+      },
+      "Scout_before": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 4,
+        "flags": 0,
+        "order": 0,
+        "damage": 5,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          69
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 65540,
+        "flags": 0,
+        "order": 0,
+        "damage": 5,
+        "work": 0,
+        "tag": 0,
+        "spent": 9,
+        "facing": 3,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "map_changes": [
+        {
+          "position": [
+            47,
+            67
+          ],
+          "byte_changes": [
+            [
+              8,
+              34,
+              32
+            ],
+            [
+              20,
+              34,
+              32
+            ]
+          ]
+        },
+        {
+          "position": [
+            45,
+            69
+          ],
+          "byte_changes": [
+            [
+              4,
+              1,
+              5
+            ]
+          ]
+        },
+        {
+          "position": [
+            47,
+            69
+          ],
+          "byte_changes": [
+            [
+              2,
+              0,
+              2
+            ],
+            [
+              8,
+              32,
+              34
+            ],
+            [
+              10,
+              0,
+              16
+            ],
+            [
+              22,
+              0,
+              16
+            ]
+          ]
+        },
+        {
+          "position": [
+            49,
+            69
+          ],
+          "byte_changes": [
+            [
+              4,
+              1,
+              5
+            ]
+          ]
+        },
+        {
+          "position": [
+            46,
+            70
+          ],
+          "byte_changes": [
+            [
+              4,
+              1,
+              5
+            ],
+            [
+              20,
+              0,
+              32
+            ]
+          ]
+        },
+        {
+          "position": [
+            48,
+            70
+          ],
+          "byte_changes": [
+            [
+              4,
+              1,
+              5
+            ]
+          ]
+        },
+        {
+          "position": [
+            47,
+            71
+          ],
+          "byte_changes": [
+            [
+              4,
+              1,
+              5
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "source": "live_branch_instrumentation",
+      "variant": "decisive_post_birth_clear_destination",
+      "request": [
+        13,
+        0,
+        3
+      ],
+      "source_cell": {
+        "band": 3,
+        "flags": 1048610,
+        "affiliation": 2
+      },
+      "destination": [
+        48,
+        66
+      ],
+      "destination_cell": {
+        "band": 3,
+        "flags": 1073741824,
+        "affiliation": 15
+      },
+      "resolved_site": false,
+      "numeric": {
+        "width": 80,
+        "height": 80,
+        "flat": 0,
+        "pattern": 27067,
+        "life": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "retained_distance": 24,
+        "capacity_count": 16,
+        "edge_cost": 3,
+        "allowance": 3,
+        "spent": 0,
+        "CRT": 433661943,
+        "shared": 1,
+        "CRT_movement": true,
+        "protection": [
+          {
+            "position": [
+              48,
+              66
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              65
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              67
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              67
+            ],
+            "band": 3,
+            "flags": 1048610,
+            "affiliation": 2
+          },
+          {
+            "position": [
+              46,
+              66
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              65
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              64
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              64
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              68
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              68
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              64
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              63
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              65
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              67
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              69
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              67
+            ],
+            "band": 4,
+            "flags": 537003040,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              65
+            ],
+            "band": 5,
+            "flags": 1048576,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              63
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              52,
+              66
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              66
+            ],
+            "band": 5,
+            "flags": 1048576,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              62
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          }
+        ]
+      },
+      "prediction": {
+        "action": "relocate",
+        "native_return": 1,
+        "spent": 3,
+        "nearest": null,
+        "distance": 24,
+        "threshold": null,
+        "skip_reason": "destination_not_fungus",
+        "draws": [],
+        "actions": [
+          "canonical_edge_cost_query",
+          "spend_raw_cost",
+          "clear_failure_and_0x40",
+          "canonical_unlink_placement_sight"
+        ],
+        "crt": 433661943,
+        "shared": 1
+      },
+      "Scout_before": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 0,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": 15
+      },
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          48,
+          66
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 65540,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 3,
+        "facing": 0,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "map_changes": [
+        {
+          "position": [
+            48,
+            64
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            49,
+            65
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            48,
+            66
+          ],
+          "byte_changes": [
+            [
+              2,
+              95,
+              82
+            ],
+            [
+              8,
+              0,
+              2
+            ],
+            [
+              10,
+              0,
+              16
+            ],
+            [
+              20,
+              0,
+              2
+            ],
+            [
+              22,
+              0,
+              16
+            ]
+          ]
+        },
+        {
+          "position": [
+            50,
+            66
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "source": "live_branch_instrumentation",
+      "variant": "post_birth_encounter",
+      "request": [
+        13,
+        3,
+        3
+      ],
+      "source_cell": {
+        "band": 3,
+        "flags": 1048610,
+        "affiliation": 2
+      },
+      "destination": [
+        47,
+        69
+      ],
+      "destination_cell": {
+        "band": 3,
+        "flags": 32,
+        "affiliation": 15
+      },
+      "resolved_site": false,
+      "numeric": {
+        "width": 80,
+        "height": 80,
+        "flat": 0,
+        "pattern": 27067,
+        "life": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "retained_distance": 24,
+        "capacity_count": 16,
+        "edge_cost": 9,
+        "allowance": 3,
+        "spent": 0,
+        "CRT": 433661943,
+        "shared": 1,
+        "CRT_movement": true,
+        "protection": [
+          {
+            "position": [
+              47,
+              69
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              71
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              70
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              69
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              68
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              67
+            ],
+            "band": 3,
+            "flags": 1048610,
+            "affiliation": 2
+          },
+          {
+            "position": [
+              49,
+              67
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              71
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              71
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              67
+            ],
+            "band": 4,
+            "flags": 537003040,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              66
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              68
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              72
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              72
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              70
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              68
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              66
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              43,
+              69
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              73
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              65
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          }
+        ]
+      },
+      "prediction": {
+        "action": "encounter_birth",
+        "native_return": 0,
+        "spent": 0,
+        "nearest": 6,
+        "distance": 24,
+        "threshold": 34,
+        "skip_reason": null,
+        "draws": [
+          {
+            "stream": "CRT",
+            "reason": "native_encounter",
+            "before": 433661943,
+            "after": 3642606302,
+            "raw": 22813,
+            "value": 13
+          }
+        ],
+        "actions": [
+          "canonical_native_factory",
+          "mark_destination_history_0x100000",
+          "return_without_movement"
+        ],
+        "crt": 3642606302,
+        "shared": 1
+      },
+      "Scout_before": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 0,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": 15
+      },
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 4,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": 15
+      },
+      "map_changes": [
+        {
+          "position": [
+            45,
+            69
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "position": [
+            47,
+            69
+          ],
+          "byte_changes": [
+            [
+              2,
+              15,
+              0
+            ],
+            [
+              8,
+              32,
+              34
+            ],
+            [
+              10,
+              0,
+              16
+            ],
+            [
+              20,
+              32,
+              34
+            ]
+          ]
+        },
+        {
+          "position": [
+            49,
+            69
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "position": [
+            46,
+            70
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "position": [
+            48,
+            70
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              1
+            ]
+          ]
+        },
+        {
+          "position": [
+            47,
+            71
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              1
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "source": "live_branch_instrumentation",
+      "variant": "post_birth_factory_capacity_failure",
+      "request": [
+        13,
+        3,
+        3
+      ],
+      "source_cell": {
+        "band": 3,
+        "flags": 1048610,
+        "affiliation": 2
+      },
+      "destination": [
+        47,
+        69
+      ],
+      "destination_cell": {
+        "band": 3,
+        "flags": 32,
+        "affiliation": 15
+      },
+      "resolved_site": false,
+      "numeric": {
+        "width": 80,
+        "height": 80,
+        "flat": 0,
+        "pattern": 27067,
+        "life": 1,
+        "bases": [
+          {
+            "id": 0,
+            "owner": 1,
+            "former": 1,
+            "population": 1,
+            "position": [
+              17,
+              61
+            ],
+            "food": 0,
+            "minerals": 10,
+            "target": 1,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 1,
+            "owner": 2,
+            "former": 2,
+            "population": 1,
+            "position": [
+              34,
+              36
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              4
+            ]
+          },
+          {
+            "id": 2,
+            "owner": 3,
+            "former": 3,
+            "population": 1,
+            "position": [
+              24,
+              38
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1,
+              8
+            ]
+          },
+          {
+            "id": 3,
+            "owner": 4,
+            "former": 4,
+            "population": 1,
+            "position": [
+              59,
+              23
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 4,
+            "owner": 5,
+            "former": 5,
+            "population": 1,
+            "position": [
+              29,
+              25
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 5,
+            "owner": 6,
+            "former": 6,
+            "population": 1,
+            "position": [
+              4,
+              64
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "owner": 7,
+            "former": 7,
+            "population": 1,
+            "position": [
+              15,
+              71
+            ],
+            "food": 0,
+            "minerals": 5,
+            "target": 2,
+            "facilities": [
+              1
+            ]
+          }
+        ],
+        "retained_distance": 0,
+        "capacity_count": 2048,
+        "edge_cost": 9,
+        "allowance": 3,
+        "spent": 0,
+        "CRT": 433661943,
+        "shared": 1,
+        "CRT_movement": true,
+        "protection": [
+          {
+            "position": [
+              47,
+              69
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              68
+            ],
+            "band": 2,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              71
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              70
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              69
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              68
+            ],
+            "band": 3,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              67
+            ],
+            "band": 3,
+            "flags": 1048610,
+            "affiliation": 2
+          },
+          {
+            "position": [
+              49,
+              67
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              49,
+              71
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              71
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              45,
+              67
+            ],
+            "band": 4,
+            "flags": 537003040,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              66
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              68
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              50,
+              70
+            ],
+            "band": 3,
+            "flags": 1073741824,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              48,
+              72
+            ],
+            "band": 3,
+            "flags": 1073741856,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              72
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              70
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              44,
+              68
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              46,
+              66
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              51,
+              69
+            ],
+            "band": 2,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              43,
+              69
+            ],
+            "band": 4,
+            "flags": 0,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              73
+            ],
+            "band": 3,
+            "flags": 32,
+            "affiliation": 15
+          },
+          {
+            "position": [
+              47,
+              65
+            ],
+            "band": 4,
+            "flags": 32,
+            "affiliation": 15
+          }
+        ]
+      },
+      "prediction": {
+        "action": "relocate",
+        "native_return": 1,
+        "spent": 9,
+        "nearest": 6,
+        "distance": 24,
+        "threshold": 34,
+        "skip_reason": null,
+        "draws": [
+          {
+            "stream": "CRT",
+            "reason": "native_encounter",
+            "before": 433661943,
+            "after": 3642606302,
+            "raw": 22813,
+            "value": 13
+          },
+          {
+            "stream": "CRT",
+            "reason": "movement_lottery",
+            "before": 3642606302,
+            "after": 2771013161,
+            "raw": 9514,
+            "value": 1
+          }
+        ],
+        "actions": [
+          "canonical_native_factory",
+          "factory_failed_continue_without_rollback",
+          "canonical_edge_cost_query",
+          "spend_raw_cost",
+          "clear_failure_and_0x40",
+          "canonical_unlink_placement_sight"
+        ],
+        "crt": 2771013161,
+        "shared": 1
+      },
+      "Scout_before": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          67
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 0,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 0,
+        "facing": 2,
+        "home": -1,
+        "next": -1,
+        "previous": 15
+      },
+      "Scout_after": {
+        "id": 13,
+        "design": 2,
+        "owner": 2,
+        "position": [
+          47,
+          69
+        ],
+        "triad": 0,
+        "role": 3,
+        "weapon_offense": 1,
+        "state": 65540,
+        "flags": 0,
+        "order": 0,
+        "damage": 0,
+        "work": 0,
+        "tag": 0,
+        "spent": 9,
+        "facing": 3,
+        "home": -1,
+        "next": -1,
+        "previous": -1
+      },
+      "map_changes": [
+        {
+          "position": [
+            45,
+            69
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            47,
+            69
+          ],
+          "byte_changes": [
+            [
+              2,
+              15,
+              2
+            ],
+            [
+              8,
+              32,
+              34
+            ],
+            [
+              10,
+              0,
+              16
+            ],
+            [
+              20,
+              32,
+              34
+            ],
+            [
+              22,
+              0,
+              16
+            ]
+          ]
+        },
+        {
+          "position": [
+            49,
+            69
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            46,
+            70
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ],
+            [
+              20,
+              0,
+              32
+            ]
+          ]
+        },
+        {
+          "position": [
+            48,
+            70
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        },
+        {
+          "position": [
+            47,
+            71
+          ],
+          "byte_changes": [
+            [
+              4,
+              0,
+              4
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -145,21 +145,25 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
                 && manager->GetUnit(73)->Native().stack_previous==1,"Mixed constructor changed Scout body/RNG or final head");
             saved=fixture.Snapshot();knowledge_wire=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();GT_OK();
         });GT_ASSERT(error.empty(),"Mixed factory: "+error);
+        for(const bool fungal_exit:{false,true}) {
         ConventionalUnitFixture restored;restored.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);
         const auto restore_error=restored.Run([&](GSE_CALLABLE)->std::string {
             restored.Restore(GSE_CALL,saved,true);auto* game=restored.Game();auto* manager=game->GetUM();auto* scout=manager->GetUnit(71);
             GT_ASSERT((scout->Conventional().stack==Stack{0,-1,2}),"Full world restore lost Scout source links");
             GT_ASSERT(game->GetMap()->GetSmacWorkerKnowledge()->Serialize()==knowledge_wire,"Full world restore changed mixed birth sight/occupancy authority");
-            // Ordinary geometry isolates source occupancy. Remote fungal
-            // movement with Bases still needs its independent continuation.
-            auto* source=scout->GetTile();source->features&=~map::tile::FEATURE_XENOFUNGUS;source->Update();
-            auto* destination=game->GetMap()->GetTile(42,40);
+            // Repeat after identical full restore, retaining actual source
+            // fungus in the second case. Destination remains clear in both.
+            auto* source=scout->GetTile();
+            if(!fungal_exit) {source->features&=~map::tile::FEATURE_XENOFUNGUS;source->Update();}
+            const auto source_features=source->features;
+            auto* destination=game->GetMap()->GetTile(41,39);
             const auto before_move=restored.Snapshot();const auto random=restored.GameplayRandom();
             manager->ValidateConventionalMove(scout,destination,0);
             GT_ASSERT(restored.Snapshot()==before_move,"Mixed departure validation changed live state");
             manager->MoveConventionalUnit(GSE_CALL,scout,destination,0);
             GT_ASSERT((scout->GetTile()==destination && scout->Conventional().stack==Stack{0,-1,-1}
-                && scout->Conventional().spent==3 && restored.GameplayRandom()==random),"Mixed departure lost singleton, budget or RNG");
+                && scout->Conventional().spent==3 && scout->Conventional().facing==0
+                && source->features==source_features && restored.GameplayRandom()==random),"Mixed departure lost singleton, budget or RNG");
             GT_ASSERT(source->units.size()==2 && destination->units.size()==1
                 && manager->GetUnit(72)->GetTile()==source && manager->GetUnit(73)->GetTile()==source
                 && manager->GetUnit(72)->Native().stack_previous==-1 && manager->GetUnit(72)->Native().stack_next==2
@@ -170,7 +174,7 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
             const auto visible=[&](uint64_t id) {return std::find_if(after_sight.units.begin(),after_sight.units.end(),[&](const auto& row){return row.id==id;})->visible_to;};
             GT_ASSERT(visible(71)==1 && visible(72)==2 && visible(73)==2
                 && after_sight.occupancy->At({40,40}).affiliation==1
-                && after_sight.occupancy->At({42,40}).affiliation==1,
+                && after_sight.occupancy->At({41,39}).affiliation==1,
                 "Mixed departure lost native detection or recomputed source affiliation");
             manager->ResetConventionalSpent(GSE_CALL,scout);
             const auto departed=restored.Snapshot();
@@ -192,7 +196,8 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
             retire.Commit();creation.Notify(GSE_CALL);retire.Notify(GSE_CALL);
             GT_ASSERT((scout->Conventional().stack==Stack{0,-1,1} && third->Conventional().stack==Stack{1,0,-1}),"Combined conventional creation/casualty lost source links");
             types::Buffer roundtrip;manager->Serialize(roundtrip);GT_OK();
-        });GT_ASSERT(restore_error.empty(),"Mixed factory restore/departure: "+restore_error);GT_OK();
+        });GT_ASSERT(restore_error.empty(),"Mixed factory restore/departure: "+restore_error);
+        }GT_OK();
     });
 
     task->AddTest("SMAC native occupied Base factory retains affiliation sight and restored mixed links",GT(){

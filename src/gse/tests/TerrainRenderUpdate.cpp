@@ -234,6 +234,33 @@ public:
         }
         if(local.GetTile(42,66)->terraforming || local.GetTile(42,66)->features!=tile::FEATURE_XENOFUNGUS) return false;
         auto prepared=local.PrepareGlobalSpread(1,{},initial);
+        auto other=local.PrepareGlobalSpread(1,{},initial);
+        auto* original_geometry=local.GetNativeGeometry();const auto original_geometry_source=local.m_native_geometry_source;
+        const auto original_height=original_geometry->Height(40,40,0);
+        bool observed=false,query_threw=false;
+        try {
+            local.QueryGlobalSpread(*prepared,[&]{
+                if((local.GetTile(42,66)->features&tile::FEATURE_XENOFUNGUS)
+                    || !(local.GetTile(42,66)->terraforming&tile::TERRAFORMING_FOREST)
+                    || local.m_resource_policy->OriginalPlanet()->At(42,66).bytes[18]!=32
+                    || local.m_worker_knowledge->CopyData().remembered[1][target]) throw std::runtime_error("Wrong staged flora query");
+                auto* staged_geometry=local.GetNativeGeometry();
+                if(!staged_geometry || staged_geometry==original_geometry) throw std::runtime_error("Query reused original geometry ownership");
+                (void)staged_geometry->Height(40,40,0);
+                bool nested=false;try {local.QueryGlobalSpread(*prepared,[]{});}catch(const std::invalid_argument&) {nested=true;}
+                bool committed=false;try {local.CommitGlobalSpread(*prepared);}catch(const std::invalid_argument&) {committed=true;}
+                bool other_commit=false;try {local.CommitGlobalSpread(*other);}catch(const std::invalid_argument&) {other_commit=true;}
+                bool other_prepare=false;try {(void)local.PrepareGlobalSpread(1,{},initial);}catch(const std::invalid_argument&) {other_prepare=true;}
+                if(!nested || !committed || !other_commit || !other_prepare) throw std::runtime_error("Query admitted recursive publication");
+                observed=true;throw std::runtime_error("Injected consumer failure");
+            });
+        }catch(const std::runtime_error&) {query_threw=true;}
+        if(!observed || !query_threw || local.m_resource_policy->OriginalPlanet()->Encode()!=wire
+            || local.m_worker_knowledge->Serialize()!=saved || local.GetTile(42,66)->features!=tile::FEATURE_XENOFUNGUS
+            || local.GetTile(42,66)->terraforming || local.m_native_geometry.get()!=original_geometry
+            || local.m_native_geometry_source!=original_geometry_source || original_geometry->Height(40,40,0)!=original_height) return false;
+        local.QueryGlobalSpread(*prepared,[&]{observed=bool(local.GetTile(42,66)->terraforming&tile::TERRAFORMING_FOREST);});
+        if(!observed || local.GetTile(42,66)->terraforming || local.m_native_geometry.get()!=original_geometry) return false;
         auto* unrelated=local.GetTile(0,0);unrelated->features=tile::FEATURE_MONOLITH;
         bool stale=false;try {local.CommitGlobalSpread(*prepared);}catch(const std::runtime_error&) {stale=true;}
         if(!stale || local.GetTile(42,66)->terraforming || local.m_worker_knowledge->Serialize()!=saved) return false;
@@ -253,7 +280,14 @@ public:
         local.GetTile(42,66)->features=tile::FEATURE_XENOFUNGUS;local.GetTile(42,66)->terraforming=0;
         data.remembered[1][target]=map::SmacWorkerKnowledge::Improvements{tile::FEATURE_XENOFUNGUS,tile::TERRAFORMING_ROAD,false,false};
         local.m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);
-        auto known=local.PrepareGlobalSpread(1,{},initial);local.CommitGlobalSpread(*known);
+        auto known=local.PrepareGlobalSpread(1,{},initial);
+        bool known_query=false;
+        local.QueryGlobalSpread(*known,[&]{
+            const auto staged=local.m_worker_knowledge->CopyData().remembered[1][target];
+            known_query=staged && !staged->features && staged->terraforming==(tile::TERRAFORMING_ROAD|tile::TERRAFORMING_FOREST);
+        });
+        if(!known_query || local.m_worker_knowledge->CopyData().remembered[1][target]->features!=tile::FEATURE_XENOFUNGUS) return false;
+        local.CommitGlobalSpread(*known);
         const auto memory=local.m_worker_knowledge->CopyData().remembered[1][target];
         if(!memory || memory->features || memory->terraforming!=(tile::TERRAFORMING_ROAD|tile::TERRAFORMING_FOREST)
             || !(initial==game::backend::SmacGameplayRandomState(123,1))) return false;

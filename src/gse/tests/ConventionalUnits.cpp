@@ -1216,7 +1216,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			// A genuine retained Spartan source is global identity. A different
 			// current controller may keep128; its own fabricated192 is still rejected.
 			ConventionalUnitState retained{128,3,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
-            retained.facing=2;
+            retained.native_flags=0;retained.facing=2;
 			auto* unit=Spawn(GSE_CALL,fixture,retained,next,6,"EXPLICIT_ROVER");
 			GT_ASSERT(unit->Conventional()==retained && unit->m_owner==&game->GetState()->m_slots->GetSlot(6) && hooks==1,
 				"retained Spartan128 was rebound to the recipient's invalid local192 or rejected");GT_OK();

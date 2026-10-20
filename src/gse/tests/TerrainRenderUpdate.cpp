@@ -833,6 +833,34 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_OK();
     });
 
+    task->AddTest("SMAC Unity Survey keeps geometry but replaces face shade with explicit global lighting",GT(){
+        namespace native=game::frontend::native_terrain;
+        game::native_terrain::World world;world.retained_geometry=true;
+        for(auto& tile:world.tiles) {tile.band=3;tile.material_admitted=tile.ordinary=true;}
+        native::ViewGeometry geometry(world);native::ViewGeometry::Knowledge known{};
+        size_t heights=0,shades=0,projectors=0;
+        const auto plan=geometry.Prepare(native::Layout(22,38,0,true),0,25,false,true,
+            [&](const auto& query) {using Kind=native::ViewGeometry::Query::Kind;
+                if(query.kind==Kind::Height) {++heights;}else if(query.kind==Kind::Shade) {++shades;}else {++projectors;}
+            },&known,2);
+        GT_ASSERT(heights==4608 && projectors==576 && shades==0 && plan.opaque_background,"Survey warmed face shade or changed native query schedule");
+        for(const auto& tile:plan.terrain) {
+            GT_ASSERT(tile.survey && !tile.unknown && std::all_of(tile.lighting.begin(),tile.lighting.end(),[](int value){return value==2;}),
+                "Survey collapsed into known terrain or ordinary unknown outlines");
+        }
+        native::Source source;source.loaded={1000,1000,std::vector<uint8_t>(1000000,77)};
+        const auto frame=native::RenderPrepared(world,source,plan,0);
+        GT_ASSERT(frame.indexed[200*1024+500]==65 && frame.indexed[201*1024+500]==79 && frame.rgba[(201*1024+500)*4+3]==255,
+            "Survey did not bind the alternate raster, global light or opaque backing");
+        known[38*40+11]=true;shades=0;
+        const auto mixed=geometry.Prepare(native::Layout(22,38,0,true),0,25,false,true,[&](const auto& query) {
+            if(query.kind==native::ViewGeometry::Query::Kind::Shade) {++shades;}
+        },&known,2);
+        GT_ASSERT(shades==12 && mixed.terrain.size()==plan.terrain.size(),"Known survey-view land lost its real face-shade calls");
+        bool rejected=false;try {(void)geometry.Prepare(native::Layout(22,38,0,true),0,25,false,true,{},nullptr,2);}
+        catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Survey without observer knowledge silently revealed terrain");GT_OK();
+    });
     task->AddTest("SMAC unknown view uses signed cold sea cache and opaque backing",GT(){
         namespace native=game::frontend::native_terrain;
         game::native_terrain::World world;world.retained_geometry=true;

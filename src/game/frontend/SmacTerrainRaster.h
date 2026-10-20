@@ -45,6 +45,8 @@ struct Command {
     // Opaque indexed line stores share the ordered batch with terrain/sprites.
     std::array<int32_t,4> line{};
     uint8_t line_color=0;
+    // Original0x41 wrapper: absolute even-Y fill65, textured odd rows.
+    bool alternate_rows=false;
 };
 
 // Ordinary integer triangles only; preserves native winding, tie selection,

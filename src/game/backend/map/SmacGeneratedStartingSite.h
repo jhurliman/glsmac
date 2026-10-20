@@ -18,5 +18,5 @@ using StartingCacheObserver=std::function<void(const StartingCacheStore&)>;
 // state; cache writes are staged in it, including on refusal/cancellation.
 smac_start::Result SelectGeneratedStartingSite(State& state,Geometry geometry,const Regions& regions,
     const StartingContext& context,const StartingCacheObserver& stores={},
-    const smac_start::Observe& observe={},const std::function<bool()>& cancelled={});
+    const smac_start::Observe& observe={},const std::function<bool()>& cancelled={},const smac_start::ObserveDraw& draws={});
 }

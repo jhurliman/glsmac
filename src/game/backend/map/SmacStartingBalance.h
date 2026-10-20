@@ -28,7 +28,8 @@ struct Result {
 using Query=std::function<Tile(Coordinate)>;
 // Resolve the original site query against the staged, current items word.
 using Site=std::function<int32_t(Coordinate,uint32_t)>;
+using ObserveDraw=std::function<void(uint32_t,uint32_t,uint16_t)>; // before,after,value
 // Detached plan only: the owning startup transaction creates real Units and
 // publishes ordered live terrain changes. No fixed positions or packages.
-Result Prepare(const Input& input,const SmacGameplayRandomState& initial,const Query& query,const Site& site);
+Result Prepare(const Input& input,const SmacGameplayRandomState& initial,const Query& query,const Site& site,const ObserveDraw& draws={});
 }

@@ -121,14 +121,20 @@ int32_t CalculateSmacFirstBase(const std::vector<std::array<uint8_t,44>>& tiles,
     const faction::SmacStartupTechnologyOwnership& ownership,const SmacOpeningYieldRules& rules,
     const SmacFirstBaseOptions& in,SmacFirstBaseScratch& scratch,const SmacBaseAccountingObserver& observer,
     const std::function<void(const SmacFirstWorkerQuery&)>& query_observer,const std::function<void(int32_t,int32_t)>& score_observer) {
-    if(bases.size()!=1 || !units.empty() || bases[0][4]<1 || bases[0][4]>7 || !(in.citizens.human_mask&(1u<<bases[0][4]))) {
-        throw std::invalid_argument("First-Base composition requires one human Base and no Units");
+    const auto index=in.citizens.selected_base;
+    if(bases.empty() || bases.size()>512 || index<0 || size_t(index)>=bases.size() || bases[index][4]<1 || bases[index][4]>7) {
+        throw std::invalid_argument("First-Base composition requires a valid selected Base");
     }
-    PrepareSmacOpeningSupport(bases,0,units,scratch.support,observer);
+    const auto owner=bases[index][4];
+    if(std::count_if(bases.begin(),bases.end(),[&](const auto& b){return b[4]==owner;})!=1) {
+        throw std::invalid_argument("First-Base composition requires one owned Base");
+    }
+    PrepareSmacOpeningSupport(bases,index,units,scratch.support,observer);
     auto worker_options=in.worker;worker_options.human_mask=in.citizens.human_mask;
-    const auto selected=CalculateSmacFirstWorker(tiles,bases[0],actors[bases[0][4]],ownership,rules,worker_options,scratch.worker,observer,query_observer,score_observer);
-    scratch.growth=AccountSmacBaseNutrients(bases,actors,{0,0,scratch.support[1],scratch.support[5],rules.food_per_citizen,0},observer);
-    AccountSmacBaseMinerals(bases,actors,{0,0,scratch.support[2],scratch.support[6],scratch.support[0],in.citizens.human_mask,
+    const auto selected=CalculateSmacFirstWorker(tiles,bases[index],actors[owner],ownership,rules,worker_options,scratch.worker,
+        [&](const auto& store){if(observer) {auto relocated=store;if(relocated.space==SmacBaseAccountingStore::Space::Bases) {relocated.offset+=uint32_t(304*index);}observer(relocated);}},query_observer,score_observer);
+    scratch.growth=AccountSmacBaseNutrients(bases,actors,{index,index,scratch.support[1],scratch.support[5],rules.food_per_citizen,0},observer);
+    AccountSmacBaseMinerals(bases,actors,{index,index,scratch.support[2],scratch.support[6],scratch.support[0],in.citizens.human_mask,
         in.global_difficulty,in.sea_level,in.sea_rise_rule,in.native_life,in.worker.primary_rules,in.secondary_rules,{}},observer);
     AccountSmacOpeningEnergy(bases,actors,scratch.energy,{in.citizens,scratch.support[3],scratch.support[7],in.flat_labs},observer);
     return selected;

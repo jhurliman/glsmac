@@ -1,5 +1,6 @@
 #include "SmacStartupFaction.h"
 #include "game/backend/faction/SmacStartupFaction.h"
+#include "SmacGeneratedStartup.h"
 #include "fixtures/SmacFactionPrefix.h"
 #include "fixtures/SmacSitePreparation.h"
 #include "game/backend/map/SmacCompleteTerrainGeneration.h"
@@ -31,6 +32,7 @@
 
 namespace gse::tests {
 void AddSmacStartupFactionTests(task::gsetests::GSETests* task) {
+    AddSmacGeneratedStartupTests(task);
     task->AddTest("SMAC startup named technology grants match one hundred three original complete records",GT(){
         using namespace game::backend::faction;
         const auto bytes=[](const auto& a) {return std::string(reinterpret_cast<const char*>(a.data()),a.size());};

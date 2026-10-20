@@ -1,0 +1,14 @@
+{
+  "contract": "RE-SMAC-SETUP-CONTINUATION-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "evidence_kind": "static PE plus installed text and PCX headers",
+  "new_original_execution_controls": 0,
+  "prior_original_setup_controls": 13,
+  "receipt": "tmp/reference/setup-dialog-static-source-20261019.json",
+  "portrait": {"x":304,"y":457,"width":131,"height":157,"palette_key":9,"sheet_width":1024,"sheet_height":768,"sprite_base":"0x7c6e00","slot_stride":"0x65c"},
+  "definition": {"base":"0x95a4c8","stride":"0x59c","gender":"0x0","filename":"0x4","leader":"0x34","title":"0x4c","description":"0x64","noun":"0x2e4","adjective":"0x304","formal_name":"0x384","descriptor":"0x3c4","saved_bytes":"0x2ce0"},
+  "preview": {"normal":"BLURB","details":["DATALINKS1","DATALINKS2"],"source":"selected definition filename","row":"formalName + |( + descriptor + )","modal_position_arguments":[50,50],"width_argument":500,"conditional_stored_width":750,"final_rendered_layout_verified":false},
+  "customization": {"conditional":true,"rows":["Name","Formal","Noun","Adjective","Title","Description","Gender"],"max_bytes":[23,39,23,23,23,23,23],"negative_return":"faction selection","secondary_action":"reload definition and graphics, rebuild customization","gender_edited_result_verified":false,"gender_static_compare":"original stack scratch first character vs localized Female, case insensitive"},
+  "first_base": {"routine":"0x5c5b30","modal_call":"0x5c622c","name_offset":"0x13","base_stride":"0x130","max_bytes":23,"template_xy_width":[10,40,320],"target":"first live base owned by supplied faction","no_base_fallback_prompts":false,"return_value_branch_before_name_copy":false,"new_base_created_by_name_copy":false},
+  "unmeasured":["rendered layout","native input and cancellation","gender edit","customized full startup and save/load round trip","complete rendered introduction"]
+}

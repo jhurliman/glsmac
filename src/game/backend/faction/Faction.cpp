@@ -20,7 +20,7 @@ namespace faction {
 namespace {
 
 constexpr char snapshot_marker[] = "GLSMAC_FACTION";
-constexpr long long snapshot_version = 2;
+constexpr long long snapshot_version = 3;
 constexpr auto known_flags = Faction::FF_NAVAL | Faction::FF_PROGENITOR;
 
 void CheckFlags( const long long flags ) {
@@ -105,6 +105,11 @@ const types::Buffer Faction::Serialize() const {
 		buf.WriteString(m_display_identity->faction_name);
 		buf.WriteString(m_display_identity->leader_title);
 		buf.WriteString(m_display_identity->leader_name);
+        buf.WriteBool(m_display_identity->setup.has_value());
+        if(m_display_identity->setup) {
+            const auto& setup=*m_display_identity->setup;
+            buf.WriteString(setup.noun);buf.WriteString(setup.adjective);buf.WriteString(setup.description);buf.WriteBool(setup.female);
+        }
 	}
 
 	return buf;
@@ -115,7 +120,7 @@ void Faction::Deserialize( types::Buffer buf ) {
 		throw std::runtime_error( "Unsupported faction snapshot format" );
 	}
 	const auto version = buf.ReadInt();
-	if (version != 1 && version != snapshot_version) { throw std::runtime_error("Unsupported faction snapshot version"); }
+	if (version != 1 && version != 2 && version != snapshot_version) { throw std::runtime_error("Unsupported faction snapshot version"); }
 
 	Faction next;
 	next.m_id = buf.ReadString();
@@ -142,7 +147,12 @@ void Faction::Deserialize( types::Buffer buf ) {
 	next.m_bases_render.scale_y = buf.ReadFloat();
 	if (version >= 2 && buf.ReadBool()) {
 		next.m_display_identity = DisplayIdentity{buf.ReadString(DisplayIdentity::MAX_FIELD_BYTES), buf.ReadString(DisplayIdentity::MAX_FIELD_BYTES), buf.ReadString(DisplayIdentity::MAX_FIELD_BYTES)};
-		next.m_display_identity->Validate();
+		if(version>=3 && buf.ReadBool()) {
+            next.m_display_identity->setup=DisplayIdentity::SetupFields{
+                buf.ReadString(DisplayIdentity::MAX_FIELD_BYTES),buf.ReadString(DisplayIdentity::MAX_FIELD_BYTES),
+                buf.ReadString(DisplayIdentity::MAX_FIELD_BYTES),buf.ReadBool()};
+        }
+        next.m_display_identity->Validate();
 	}
 	if ( buf.lenr != buf.lenw ) { throw std::runtime_error( "Unexpected trailing faction snapshot data" ); }
 
@@ -167,7 +177,13 @@ WRAPIMPL_BEGIN( Faction )
 				m_display_identity ? static_cast<gse::Value*>(VALUEEXT(gse::value::Object, GSE_CALL, (gse::value::object_properties_t{
 					{"faction_name", VALUE(gse::value::String,,m_display_identity->faction_name)},
 					{"leader_title", VALUE(gse::value::String,,m_display_identity->leader_title)},
-					{"leader_name", VALUE(gse::value::String,,m_display_identity->leader_name)}
+					{"leader_name", VALUE(gse::value::String,,m_display_identity->leader_name)},
+                    {"setup", m_display_identity->setup ? static_cast<gse::Value*>(VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+                        {"noun",VALUE(gse::value::String,,m_display_identity->setup->noun)},
+                        {"adjective",VALUE(gse::value::String,,m_display_identity->setup->adjective)},
+                        {"description",VALUE(gse::value::String,,m_display_identity->setup->description)},
+                        {"female",VALUE(gse::value::Bool,,m_display_identity->setup->female)}
+                    }))) : VALUE(gse::value::Undefined)}
 				}))) : VALUE(gse::value::Undefined)
 			},
 			{

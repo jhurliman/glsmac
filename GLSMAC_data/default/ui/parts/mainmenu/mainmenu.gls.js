@@ -151,6 +151,7 @@ return (m) => {
 			'select_difficulty_level',
 			'select_rules',
 			'select_faction',
+			'select_identity',
 			'multiplayer_type',
 			'multiplayer_role',
 			'multiplayer_host',

@@ -84,7 +84,13 @@ WRAPIMPL_BEGIN( FactionManager )
 				return VALUEEXT(gse::value::Object, GSE_CALL, (gse::value::object_properties_t{
 					{"faction_name", VALUE(gse::value::String,,identity.faction_name)},
 					{"leader_title", VALUE(gse::value::String,,identity.leader_title)},
-					{"leader_name", VALUE(gse::value::String,,identity.leader_name)}
+					{"leader_name", VALUE(gse::value::String,,identity.leader_name)},
+                    {"setup", VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
+                        {"noun",VALUE(gse::value::String,,identity.setup->noun)},
+                        {"adjective",VALUE(gse::value::String,,identity.setup->adjective)},
+                        {"description",VALUE(gse::value::String,,identity.setup->description)},
+                        {"female",VALUE(gse::value::Bool,,identity.setup->female)}
+                    }))}
 				}));
 			})
 		},
@@ -143,7 +149,14 @@ WRAPIMPL_BEGIN( FactionManager )
 				if (faction_def.find("display_identity") != faction_def.end()) {
 					N_GETPROP(fields,faction_def,"display_identity",Object);
 					N_GETPROP(faction_name,fields,"faction_name",String); N_GETPROP(title,fields,"leader_title",String); N_GETPROP(leader,fields,"leader_name",String);
-					identity=DisplayIdentity{faction_name,title,leader}; identity->Validate();
+					identity=DisplayIdentity{faction_name,title,leader};
+                    if(fields.find("setup")!=fields.end()) {
+                        N_GETPROP(setup,fields,"setup",Object);
+                        N_GETPROP(noun,setup,"noun",String);N_GETPROP(adjective,setup,"adjective",String);
+                        N_GETPROP(description,setup,"description",String);N_GETPROP(female,setup,"female",Bool);
+                        identity->setup=DisplayIdentity::SetupFields{noun,adjective,description,female};
+                    }
+                    identity->Validate();
 				}
 
 				auto* faction = new Faction( id, name );

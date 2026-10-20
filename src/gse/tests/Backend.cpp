@@ -603,10 +603,10 @@ public:
 		RegisterEvent( "knowledge_probe", new game::backend::event::EventHandler( gc_space, "knowledge_probe", probe, probe, probe, probe ) );
 		m_game.Event( GSE_CALL, "knowledge_probe", {} );
 	}
-	void SelectSinglePlayerFaction( const std::optional< std::string >& id ) {
+	void SelectSinglePlayerFaction( const std::optional< std::string >& id, const game::backend::faction::DisplayIdentity* setup = nullptr ) {
 		m_glsmac->m_state = m_state;
 		util::FinallyGuard clear( [ & ] { m_glsmac->m_state = nullptr; } );
-		m_glsmac->AddSinglePlayerSlot( id );
+		m_glsmac->AddSinglePlayerSlot( id,setup );
 	}
 	BackendFixture()
 		: m_random( new game::backend::Random( &m_game, 12345 ) )
@@ -9329,6 +9329,28 @@ static void AddRulesetTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
+    task->AddTest("single-player accepted identity reaches the selected live faction and saved definitions",GT(){
+        using namespace game::backend;
+        BackendFixture fixture;
+        const auto error=fixture.WithScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* state=fixture.GetGame()->GetState();state->m_slots->Clear();
+            state->m_settings.local.game_mode=settings::LocalSettings::GM_SINGLEPLAYER;
+            state->m_settings.local.network_role=settings::LocalSettings::NR_NONE;
+            state->GetFM()->Add(new faction::Faction("SPARTANS","Stable catalog label"));
+            faction::DisplayIdentity custom{"The Builders","Director","Ada"};
+            custom.setup=faction::DisplayIdentity::SetupFields{"Builders","Builder","careful",true};
+            auto invalid=custom;invalid.leader_name=std::string(24,'x');
+            GT_ASSERT(RejectsSettings([&]{fixture.SelectSinglePlayerFaction("SPARTANS",&invalid);}) && state->m_slots->GetSlots().empty(),"overlong identity published a roster");
+            GT_ASSERT(RejectsSettings([&]{fixture.SelectSinglePlayerFaction({},&custom);}) && state->m_slots->GetSlots().empty(),"custom identity attached to unresolved Random faction");
+            fixture.SelectSinglePlayerFaction("SPARTANS",&custom);
+            const auto* selected=state->m_slots->GetSlot(0).GetPlayer()->GetFaction();
+            GT_ASSERT(selected->m_id=="SPARTANS" && selected->m_name=="Stable catalog label" && selected->m_display_identity==custom,"accepted identity changed rules identity or failed live binding");
+            faction::Faction restored;restored.Deserialize(selected->Serialize());
+            GT_ASSERT(restored.m_display_identity==custom,"accepted fields lost in saved faction definitions");
+            GT_OK();
+        });
+        GT_ASSERT(error.empty(),"accepted identity startup: "+error);GT_OK();
+    });
 	task->AddTest( "test production faction configure registers both rulesets", GT() {
 		using game::backend::faction::Faction;
 		BackendFixture fixture;

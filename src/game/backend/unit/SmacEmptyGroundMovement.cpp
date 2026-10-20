@@ -1,4 +1,4 @@
-#include "SmacEmptyGroundMovement.h"
+#include "SmacSelectedMovement.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -16,6 +16,14 @@ MovementState::MovementState( uint64_t identity, int32_t spent, bool prior_failu
 	: identity( identity ), spent( spent ), prior_failure_marker( prior_failure_marker ) {}
 
 Result ResolveEmptyGroundStep( const MovementState& unit, int32_t quantum, int32_t full_allowance, int32_t raw_edge_cost, bool destination_fungus, const SmacGameplayRandomState& random ) {
+    return ResolveSelectedGroundStep(unit,quantum,full_allowance,raw_edge_cost,destination_fungus,random,LotteryStream::SharedLow16);
+}
+
+Result ResolveSelectedGroundStep(const MovementState& unit,int32_t quantum,int32_t full_allowance,
+    int32_t raw_edge_cost,bool destination_fungus,const SmacGameplayRandomState& random,LotteryStream stream) {
+    if(stream!=LotteryStream::SharedLow16 && stream!=LotteryStream::CrtModulo) {
+        throw std::invalid_argument("Movement lottery requires an admitted controller stream");
+    }
 	ValidateState( unit );
 	if ( quantum < 1 || quantum > 100 || full_allowance < 0 || full_allowance > 255 ||
 		raw_edge_cost < 0 || raw_edge_cost > 255 || int64_t( unit.spent ) + raw_edge_cost > 255 ) {
@@ -27,10 +35,12 @@ Result ResolveEmptyGroundStep( const MovementState& unit, int32_t quantum, int32
 	const int64_t remaining = std::clamp< int64_t >( available, 0, 999 );
 	bool admitted = raw_edge_cost <= remaining || ( remaining >= quantum && !destination_fungus );
 	if ( !admitted ) {
-		const uint32_t before = result.random.Shared();
-		const uint16_t raw = result.random.NextSharedLow16();
-		const int32_t scaled = static_cast< int32_t >( uint64_t( raw ) * static_cast< uint32_t >( raw_edge_cost ) / 65536 );
-		result.draw = Draw{ before, result.random.Shared(), raw, scaled };
+        const bool crt=stream==LotteryStream::CrtModulo;
+        const uint32_t before=crt?result.random.Crt():result.random.Shared();
+        const uint16_t raw=crt?result.random.NextCrtRaw15():result.random.NextSharedLow16();
+        const int32_t scaled=crt ? raw%raw_edge_cost
+            : static_cast<int32_t>(uint64_t(raw)*static_cast<uint32_t>(raw_edge_cost)/65536);
+        result.draw=Draw{before,crt?result.random.Crt():result.random.Shared(),raw,scaled};
 		const int64_t threshold = remaining + ( unit.prior_failure_marker ? int64_t( quantum ) : 0 );
 		admitted = scaled < threshold;
 	}

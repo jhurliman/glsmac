@@ -102,7 +102,7 @@ const actual_popup = #include('../default/ui/parts/mainmenu/popup')({
     root: {window: (data) => {
         title = data.title; clicks = {}; controls = [];
         return {
-            remove: () => {}, on: (event, callback) => {keydown = callback;},
+            remove: () => {}, on: (event, callback) => {keydown = callback;}, text: (style) => {return {text: style.text};},
             panel: (style) => {return {
                 text: (style) => {return {text: style.text};},
                 input: (style) => {const field = {value: style.value, on: (event, callback) => {}}; controls :+field; return field;},

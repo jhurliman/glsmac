@@ -24,7 +24,7 @@ const root = {
     window: (data) => {
         title = data.title; clicks = {};
         return {
-            remove: () => {}, on: (event, callback) => {},
+            remove: () => {}, on: (event, callback) => {}, text: (style) => { return {text: style.text}; },
             panel: (style) => {return {
                 choicelist: (style) => {
                     choices = {items: style.items, value: 'RANDOM', handlers: {}, on: (event, callback) => {this.handlers[event] = callback;}};
@@ -49,8 +49,8 @@ const i = {glsmac: glsmac, popup: popup, steps: {select_identity: (context, fact
 }}};
 popup.show({title: 'Rules', width: 440, height: 200});
 choose_faction(i);
-test.assert(title == 'CHOOSE A FACTION' && portrait == '');
-test.assert((choices.items[1])[1] == 'Morgan Industries (Role MORGAN)');
+test.assert(title == 'CHOOSE A FACTION' && portrait == 'morgan.pcx');
+test.assert((choices.items[0])[1] == 'Morgan Industries (Role MORGAN)');
 choices.value = 'MORGANITES';
 test.assert(choices.handlers.select({value: 'MORGANITES'}) == true);
 test.assert(portrait == 'morgan.pcx' && lines[0] == 'Quote morgan.txt' && lines[1] == 'Attribution');

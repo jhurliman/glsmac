@@ -3,6 +3,7 @@
 #include "Flic.h"
 #include "UIClass.h"
 #include "SmacDialogFont.h"
+#include "SmacDialogFrame.h"
 #include "SmacOrdinaryLandExploration.h"
 #include "TerrainRenderUpdate.h"
 #include "SmacTerrainPolygonRaster.h"
@@ -173,6 +174,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		AddFlicTests( task );
 		AddUIClassTests( task );
         AddSmacDialogFontTests(task);
+        AddSmacDialogFrameTests(task);
 		tests::AddSmacOrdinaryLandExplorationTests( task );
 		tests::AddTerrainRenderUpdateTests( task );
 		tests::AddSmacTerrainPolygonRasterTests( task );

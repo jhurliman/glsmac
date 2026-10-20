@@ -3,6 +3,7 @@ return (i) => {
     let remembered = 'RANDOM';
 	const fm = i.glsmac.game.get_fm();
 	const has_preview = #is_defined(fm.import_selection_preview);
+    const original = has_preview && i.glsmac.game.get_ruleset() == 'smac';
 	let sources = {};
 	let preview_data = {};
 	let preview_panel = null;
@@ -44,25 +45,31 @@ return (i) => {
 		probe.remove();
 		if (top + 10 > 190) { preview_panel.height = top + 10; }
 	};
-	let items = [['RANDOM', 'Random faction']];
+	let items = original ? [] : [['RANDOM', 'Random faction']];
+    let row_index = 0;
 	for (faction of i.glsmac.game.get_fm().list()) {
 		// Use the configured ruleset's stable IDs, not display-name inference.
 		const id = faction.id;
 		const name = #is_defined(faction.display_identity) ? faction.display_identity.faction_name : faction.name;
 		if (has_preview && #is_defined(preview_data[id])) {
-			items :+[id, name + ' (' + preview_data[id].descriptor + ')', {textalign: 'left', textleft: 6}];
+			let row_style = {textalign: 'left', textleft: 6};
+            if (original) { row_style = row_style + {left: 0, right: 0, top: row_index * 19,
+                height: 16, smac_frame_phase: [0, row_index * 19]}; }
+            items :+[id, name + ' (' + preview_data[id].descriptor + ')', row_style];
 		} else { items :+[id, name]; }
+        row_index++;
 	}
+    if (original && #sizeof(items) > 0) { remembered = '' + (items[0])[0]; }
 	let dialog = {
 		title: 'Select Faction',
 		width: 480,
 		height: 80 + #sizeof(items) * 20,
 		generator: (body) => {
 			choices = body.choicelist({
-				left: 10, right: 10, top: 16,
+				left: original ? 0 : 10, right: original ? 0 : 10, top: original ? 0 : 16,
 				keyboard: true,
-				itemclass: 'popup-list-button',
-				itemheight: 19, itempadding: 1,
+				itemclass: original ? 'smac-faction-row' : 'popup-list-button',
+				itemheight: original ? 16 : 19, itempadding: original ? 0 : 1,
 				items: items,
 			});
             choices.value = remembered;
@@ -104,5 +111,6 @@ return (i) => {
 		for (button of dialog.buttons) { button.style.width = 180; }
 		dialog.buttons :+{style: {text: 'Faction Details', align: 'center', width: 190}, onclick: () => { details = !details; render_preview(remembered); return true; }};
 	}
+    if (original) { dialog.smac_kind = 'faction'; }
 	i.popup.show(dialog);
 };

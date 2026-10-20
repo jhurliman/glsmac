@@ -80,18 +80,24 @@ return (i, faction) => {
         }
         return true;
     };
-    i.popup.show({
+    const original_name = i.glsmac.game.get_ruleset() == 'smac';
+    let name_dialog = {
         title: 'ENTER YOUR NAME', width: 600, height: 150,
         generator: (body) => {
-            body.text({class: 'popup-text', left: 12, top: 12, text: 'Name (' + (draft.setup.female ? 'Female' : 'Male') + '):'});
-            input = body.input({class: 'popup-input', left: 140, right: 12, top: 12, max_bytes: 23, value: draft.leader_name});
+            body.text({class: 'popup-text', left: original_name ? 6 : 12, top: original_name ? 0 : 12, text: 'Name (' + (draft.setup.female ? 'Female' : 'Male') + '):'});
+            let input_style = {class: 'popup-input', left: 140, right: 12, top: 12, max_bytes: 23, value: draft.leader_name};
+            if (original_name) { input_style = {class: 'smac-original-input', left: draft.setup.female ? 119 : 101,
+                top: 1, width: draft.setup.female ? 544 : 562, height: 20, max_bytes: 23, value: draft.leader_name}; }
+            input = body.input(input_style);
             input.on('input', accept);
-            status = body.text({class: 'popup-text', left: 12, right: 12, top: 48, text: ''});
+            status = body.text({class: 'popup-text', left: 12, right: 12, top: original_name ? 27 : 48, text: ''});
         },
         buttons: [
             {style: {text: 'Customize', align: 'left', width: 190}, onclick: () => { if (commit_name()) { customize(); } return true; }},
             {style: {text: 'OK', align: 'center', width: 190, is_ok: true}, onclick: accept},
             {style: {text: 'Cancel', align: 'right', width: 190, is_cancel: true}, onclick: () => { i.popup.back(); return true; }},
         ],
-    });
+    };
+    if (original_name) { name_dialog.smac_kind = 'name'; }
+    i.popup.show(name_dialog);
 };

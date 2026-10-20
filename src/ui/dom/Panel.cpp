@@ -19,6 +19,8 @@ Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
 	Embed( m_border_surface );
 
 	ForwardProperty( GSE_CALL, "background", m_surface );
+    ForwardProperty(GSE_CALL,"smac_frame",m_surface);
+    ForwardProperty(GSE_CALL,"smac_frame_phase",m_surface);
 
 	Property(
 		GSE_CALL, "border", gse::VT_STRING, nullptr, PF_NONE,

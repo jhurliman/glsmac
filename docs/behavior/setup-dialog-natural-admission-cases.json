@@ -1,0 +1,91 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "evidence_kind": "static indexed PE instructions and source state propagation; no new native execution",
+  "new_original_execution_controls": 0,
+  "static_instruction_assertions": 60,
+  "routes": [
+    {
+      "id": "FACTION",
+      "scope": "normal cold-launch local single-player accepted stock setup, standard rules and MAPMENU row2 maps/planet.mp",
+      "evidence_kind": "static caller/state propagation mapped to previously executed conditioned layout",
+      "new_native_controls": 0,
+      "layout_case": "faction-mode0-plain",
+      "outer_rect": [
+        472,
+        545,
+        1019,
+        763
+      ],
+      "mode_global": 0,
+      "dialog_mode": 0,
+      "dialog_parent_field_a14": 0,
+      "active_view_type": 0,
+      "active_view_stack_index": 0,
+      "console_visible": false,
+      "template_flags": 64,
+      "modal_call": "0x5a16b4",
+      "buttons": [
+        "OTHER",
+        "OK",
+        "Cancel"
+      ]
+    },
+    {
+      "id": "NAME",
+      "scope": "normal cold-launch local single-player accepted stock setup, standard rules and MAPMENU row2 maps/planet.mp",
+      "evidence_kind": "static caller/state propagation mapped to previously executed conditioned layout",
+      "new_native_controls": 0,
+      "layout_case": "name-mode0-plain",
+      "outer_rect": [
+        337,
+        649,
+        1019,
+        763
+      ],
+      "mode_global": 0,
+      "dialog_mode": 0,
+      "dialog_parent_field_a14": 0,
+      "active_view_type": 0,
+      "active_view_stack_index": 0,
+      "console_visible": false,
+      "template_flags": 68,
+      "modal_call": "0x64110a",
+      "buttons": [
+        "Change Gender",
+        "OK",
+        "Cancel"
+      ]
+    },
+    {
+      "id": "FIRSTBASE",
+      "scope": "normal cold-launch local single-player accepted stock setup, standard rules and MAPMENU row2 maps/planet.mp",
+      "evidence_kind": "static caller/state propagation mapped to previously executed conditioned layout",
+      "new_native_controls": 0,
+      "layout_case": "firstbase-mode0-console",
+      "outer_rect": [
+        238,
+        255,
+        818,
+        555
+      ],
+      "mode_global": 0,
+      "dialog_mode": 0,
+      "dialog_parent_field_a14": 0,
+      "active_view_type": 0,
+      "active_view_stack_index": 0,
+      "console_visible": true,
+      "template_flags": 4,
+      "modal_call": "0x5c622c",
+      "buttons": [
+        "OK"
+      ]
+    }
+  ],
+  "unresolved": [
+    "No new naturally booted desktop/modal capture; conclusions are static source propagation.",
+    "Re-entry after a previous game, editor/scenario, multiplayer, load/resume and external view changes are outside this cold-launch route.",
+    "NAME2 female-label edit geometry is not newly measured; the same mode/visibility selection applies."
+  ],
+  "firstbase_cancel": false,
+  "previous_layout_manifest_sha256": "12c7de6a49f863abc99f5b49df3e29b98ed8dadb4e6cd99239a0a542e36935c6"
+}

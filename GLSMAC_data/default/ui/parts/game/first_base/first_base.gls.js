@@ -8,7 +8,7 @@ return {
         if (this.pending != null && this.pending.request_id == pending.request_id) { return; }
         this.pending = pending; this.submitted = false;
         if (this.name == null) {
-            this.name = this.window.input({class: 'popup-input', left: 68, right: 10, top: 12, max_bytes: 23, value: ''});
+            this.name = this.body.input({class: 'smac-original-input', left: 53, top: 1, width: 430, height: 20, max_bytes: 23, value: ''});
             this.name.on('input', () => { this.submit(); return true; });
         }
         this.name.value = '' + pending.name;
@@ -25,18 +25,17 @@ return {
     },
     init: (p) => {
         this.p = p; this.pending = null; this.submitted = false; this.name = null;
-        this.window = p.root.window({class: 'window', title: 'Enter a name for your first base.',
-            align: 'top left', left: 10, top: 40, width: 320, height: 140,
-            zindex: 0.9, blocker: 'transparent'});
+        const original = #include('../../smac_dialog')(p.root, 'first_base', 'Enter a name for your first base.');
+        this.window = original.window; this.body = original.body;
+        this.window.zindex = 0.9;
         this.window.hide();
-        this.window.text({class: 'popup-text', left: 10, top: 14, text: 'Name:'});
-        this.status = this.window.text({class: 'popup-text', font: 'arialnb.ttf:14', left: 10, right: 10, top: 42, text: ''});
-        for (style of [{text: 'OK', align: 'bottom left', left: 10}, {text: 'Cancel', align: 'bottom right', right: 10}]) {
-            const item = this.window.button(style + {class: 'popup-button', bottom: 10, width: 130});
-            // FIRSTBASE copies current text on every modal return, including
-            // cancellation; it does not use ordinary Rename's discard policy.
-            item.on('click', () => { this.submit(); return true; });
-        }
+        this.body.text({class: 'popup-text', left: 6, top: 0, text: 'Name:'});
+        this.status = this.window.text({class: 'popup-text', font: 'arialnb.ttf:14', left: 33, right: 67, top: 110, text: ''});
+        // The installed FIRSTBASE template has one OK control. Escape still
+        // transfers current text through the original modal result boundary.
+        const item = original.footer.button({class: 'popup-button', left: 0, top: 0,
+            width: 480, height: 20, text: 'OK'});
+        item.on('click', () => { this.submit(); return true; });
         this.window.on('keydown', (e) => {
             if (e.modifiers == {} && (e.code == 'ESCAPE' || e.code == 'ENTER')) { this.submit(); }
             if (e.modifiers == {ctrl: true, shift: true} && e.code == 'Q') { this.p.glsmac.reset(); }

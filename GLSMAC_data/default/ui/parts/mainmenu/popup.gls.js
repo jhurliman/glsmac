@@ -43,22 +43,22 @@ return (m) => {
 				window_class += '-noheader';
 			}
 
+			let original = null;
+            if (#is_defined(data.smac_kind)) { original = #include('../smac_dialog')(m.root, data.smac_kind, data.title); }
 			const placement = #is_defined(data.placement) ? data.placement : {};
-			current_menublock = m.root.window({
+			if (original == null) { current_menublock = m.root.window({
 				class: window_class,
 				title: data.title,
 				width: data.width,
 				height: data.height,
 				blocker: 'transparent',
-			} + placement);
+			} + placement); } else { current_menublock = original.window; }
 
 			let body_class = 'popup-body popup-body-noheader';
 			if (!#is_defined(data.buttons)) {
 				body_class += ' popup-body-nofooter';
 			}
-			const body = current_menublock.panel({
-				class: body_class,
-			});
+			const body = original == null ? current_menublock.panel({class: body_class}) : original.body;
 
 			if (#is_defined(data.generator)) {
 				data.generator(body);
@@ -66,11 +66,18 @@ return (m) => {
 			if (#is_defined(data.preview)) { current_preview = data.preview(m.root); }
 
 			if (#is_defined(data.buttons)) {
-				const footer = current_menublock.panel({
-					class: 'popup-footer',
-				});
+				const footer = original == null ? current_menublock.panel({class: 'popup-footer'}) : original.footer;
 				for (button of data.buttons) {
-					const btn = footer.button(button.style + {class: 'popup-button'});
+                    let style = button.style + {class: 'popup-button'};
+                    if (original != null) {
+                        let slot = 0;
+                        if (style.text == 'OK') { slot = 1; }
+                        if (style.text == 'Cancel') { slot = 2; }
+                        style = style + {top: 0, height: 20};
+                        style.align = 'top left'; style.left = slot * original.button_stride;
+                        style.width = original.button_width;
+                    }
+					const btn = footer.button(style);
 					btn.on('click', button.onclick);
 				}
 			}

@@ -4,9 +4,10 @@
 #include <memory>
 #include <cstdint>
 #include <vector>
+#include <array>
 
 namespace task::intro { class Movie; }
-namespace loader::texture {struct SmacTurnFrames;struct SmacGraphPalette;}
+namespace loader::texture {struct SmacDialogSource;struct SmacTurnFrames;struct SmacGraphPalette;}
 
 namespace types {
 namespace mesh {
@@ -52,6 +53,10 @@ private:
 	scene::actor::Mesh* m_actor = nullptr;
 
 	void ClearTexture();
+    std::shared_ptr<const loader::texture::SmacDialogSource> m_dialog_source;
+    std::vector<std::array<int,5>> m_dialog_frames;
+    std::array<int,2> m_dialog_size{{-1,-1}},m_dialog_phase{{0,0}};
+    void UpdateDialogFrames();
 	std::unique_ptr<task::intro::Movie> m_movie;
     std::shared_ptr<const loader::texture::SmacTurnFrames> m_turn_frames;
     std::shared_ptr<const loader::texture::SmacGraphPalette> m_graph_palette;

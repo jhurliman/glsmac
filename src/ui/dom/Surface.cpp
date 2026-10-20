@@ -8,6 +8,7 @@
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "loader/texture/SmacTurnFrames.h"
+#include "loader/texture/SmacDialogFrame.h"
 #include "ui/SmacDominanceRaster.h"
 #include "gse/value/Array.h"
 #include "gse/value/Object.h"
@@ -28,6 +29,7 @@
 #include "audio/Audio.h"
 #include "ui/dom/Container.h"
 #include <cstring>
+#include <cmath>
 #include <stdexcept>
 
 namespace ui {
@@ -55,6 +57,40 @@ Surface::Surface( DOM_ARGS_T )
         m_geometry->AsRectangle()->SetStretched();
         return VALUE(gse::value::Undefined);
     }));
+    Property(GSE_CALL,"smac_frame",gse::VT_ARRAY,nullptr,PF_NONE,[this](GSE_CALLABLE,gse::Value* const value) {
+        std::vector<std::array<int,5>> calls;
+        const auto& rows=static_cast<gse::value::Array*>(value)->value;
+        if(rows.size()>128) {GSE_ERROR(gse::EC.UI_ERROR,"Too many dialog frame calls");}
+        for(const auto* row:rows) {
+            if(!row || row->type!=gse::VT_ARRAY || static_cast<const gse::value::Array*>(row)->value.size()!=5) {
+                GSE_ERROR(gse::EC.UI_ERROR,"Dialog frame calls require [style,left,top,right,bottom]");
+            }
+            std::array<int,5> call{};size_t field=0;
+            for(const auto* v:static_cast<const gse::value::Array*>(row)->value) {
+                if(!v || v->type!=gse::VT_INT || static_cast<const gse::value::Int*>(v)->value<-4096 || static_cast<const gse::value::Int*>(v)->value>4096) {
+                    GSE_ERROR(gse::EC.UI_ERROR,"Dialog frame fields require bounded integer pixels");
+                }
+                call[field++]=static_cast<const gse::value::Int*>(v)->value;
+            }
+            if(call[0]<0 || call[0]>=51) {GSE_ERROR(gse::EC.UI_ERROR,"Small dialog style must be0..50");}
+            calls.push_back(call);
+        }
+        if(calls!=m_dialog_frames) {m_dialog_frames=std::move(calls);m_dialog_size={-1,-1};
+            if(m_dialog_frames.empty()) {ClearTexture();} else {UpdateDialogFrames();}}
+    },[this](GSE_CALLABLE){m_dialog_frames.clear();m_dialog_size={-1,-1};ClearTexture();});
+    Property(GSE_CALL,"smac_frame_phase",gse::VT_ARRAY,nullptr,PF_NONE,[this](GSE_CALLABLE,gse::Value* const value) {
+        const auto& fields=static_cast<gse::value::Array*>(value)->value;
+        if(fields.size()!=2) {GSE_ERROR(gse::EC.UI_ERROR,"Dialog pattern phase requires [x,y]");}
+        std::array<int,2> phase{};
+        for(size_t i=0;i<2;++i) {
+            if(!fields[i] || fields[i]->type!=gse::VT_INT || static_cast<const gse::value::Int*>(fields[i])->value<0 || static_cast<const gse::value::Int*>(fields[i])->value>4096) {
+                GSE_ERROR(gse::EC.UI_ERROR,"Dialog pattern phase requires nonnegative bounded pixels");
+            }
+            phase[i]=static_cast<const gse::value::Int*>(fields[i])->value;
+        }
+        if(phase!=m_dialog_phase) {m_dialog_phase=phase;m_dialog_size={-1,-1};UpdateDialogFrames();}
+    },[this](GSE_CALLABLE){m_dialog_phase={0,0};m_dialog_size={-1,-1};UpdateDialogFrames();});
+    GeometryHandler(GH_ON_AREA_UPDATE,[this]{UpdateDialogFrames();});
 	Method( GSE_CALL, "playmovie", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 ); N_GETVALUE( path, 0, String );
 		StopMovie();
@@ -157,7 +193,8 @@ Surface::Surface( DOM_ARGS_T )
 				const auto params = util::String::Split( str, ':' );
 				ASSERT( !params.empty(), "texture params empty" );
 				const auto palette_flags = params.size() > 1 && params.at( 1 ) == "smacpalette()"
-					? types::texture::TF_SMAC_PALETTE : types::texture::TF_NONE;
+					? types::texture::TF_SMAC_PALETTE : params.size() > 1 && params.at( 1 ) == "smacsoftware()"
+                    ? types::texture::TF_SMAC_SOFTWARE_TERRAIN : types::texture::TF_NONE;
 				const bool is_smac_menu = params.size() > 1 && params.at( 1 ).find( "smacmenu(" ) == 0;
 				types::texture::Texture* texture = nullptr;
 				if ( is_smac_menu ) {
@@ -212,10 +249,10 @@ Surface::Surface( DOM_ARGS_T )
 						return f_expect_args_fromto( args, args );
 					};
 
-					if ( f == "smacpalette" ) {
+					if ( f == "smacpalette" || f == "smacsoftware" ) {
 						f_expect_args( 0 );
-						if ( it != params.begin() + 1 || palette_flags != types::texture::TF_SMAC_PALETTE ) {
-							GSE_ERROR( gse::EC.UI_ERROR, "smacpalette() must be the first texture operation" );
+						if ( it != params.begin() + 1 || palette_flags != (f == "smacpalette" ? types::texture::TF_SMAC_PALETTE : types::texture::TF_SMAC_SOFTWARE_TERRAIN) ) {
+							GSE_ERROR( gse::EC.UI_ERROR, f + "() must be the first texture operation" );
 						}
 					}
 					else if ( f == "smacmenu" ) {
@@ -404,5 +441,30 @@ types::texture::Texture* Surface::GetOwnedTexturePtr() {
 	return m_background.texture;
 }
 
+}
+}
+
+namespace ui::dom {
+void Surface::UpdateDialogFrames() {
+    if(m_dialog_frames.empty()) {return;}
+    const auto& area=m_geometry->m_area;
+    if(area.width<=0 || area.height<=0) {return;}
+    if(!std::isfinite(area.width) || !std::isfinite(area.height) || area.width>2048 || area.height>2048) {
+        throw std::invalid_argument("Dialog canvas exceeds supported logical size");
+    }
+    const int width=static_cast<int>(std::round(area.width)),height=static_cast<int>(std::round(area.height));
+    if(width<=0 || height<=0 || m_dialog_size==std::array<int,2>{width,height}) {return;}
+    if(width>2048 || height>2048) {throw std::invalid_argument("Dialog canvas exceeds supported logical size");}
+    if(!m_dialog_source) {m_dialog_source=g_engine->GetTextureLoader()->GetSmacDialogSource();}
+    if(!m_dialog_source) {throw std::runtime_error("Original dialog frame source unavailable");}
+    std::vector<uint8_t> indexed(size_t(width)*height,9);
+    for(const auto& call:m_dialog_frames) {
+        loader::texture::smac_dialog_frame::Paint(indexed,width,height,*m_dialog_source,call,{0,0,width,height},m_dialog_phase);
+    }
+    const auto rgba=loader::texture::smac_dialog_frame::Rgba(indexed,*m_dialog_source);
+    m_dialog_size={width,height}; // geometry/actor updates may synchronously revisit this hook
+    CreateTexture();m_background.texture->Resize(width,height);
+    std::copy(rgba.begin(),rgba.end(),m_background.texture->GetBitmap());
+    m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
 }
 }

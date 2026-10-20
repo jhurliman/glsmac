@@ -258,7 +258,7 @@ struct WireRecord {
 	std::string definition = "EXPLICIT_SCOUT";
 	int64_t design = 2, simulation = 1, morale = 255, damage = 4, spent = 255, home = 0, mode = 1;
 	bool failed = true;
-    std::optional<int64_t> facing;
+    std::optional<int64_t> facing, native_flags;
 	std::string Encode() const {
 		types::Buffer bytes;
 		bytes.WriteInt( version ); bytes.WriteInt( kind ); bytes.WriteInt( id ); bytes.WriteString( definition );
@@ -269,12 +269,46 @@ struct WireRecord {
         if(version>=7) {bytes.WriteInt(version==7 ? 2:0);bytes.WriteInt(0);}
         if(version>=8) {bytes.WriteBool(true);bytes.WriteInt(0);bytes.WriteInt(-1);bytes.WriteInt(-1);}
         if(version>=9) {bytes.WriteBool(facing.has_value());if(facing) {bytes.WriteInt(*facing);}}
+        if(version>=10) {bytes.WriteBool(native_flags.has_value());if(native_flags) {bytes.WriteInt(*native_flags);}}
         return bytes.ToString();
 	}
 };
 }
 
 void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
+    task->AddTest("Conventional Unit10 preserves native visibility flags and legacy absence",GT(){
+        ConventionalUnitFixture fixture;fixture.Configure();
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* manager=fixture.Game()->GetUM();Define(manager);
+            const ConventionalUnitResolver resolver=[](const auto&,const auto*) {
+                return ConventionalUnitContext{settings::SmacMovementRules::GroundChassis::Infantry,3,3,-4,1};
+            };
+            for(const int version:{4,6,7,8,9,10}) {for(const int raw:{0,0x40,0x400,0x440,0xffff}) {
+                WireRecord source;source.version=version;
+                if(version>=9) {source.facing=255;}
+                if(version>=10) {source.native_flags=raw;}
+                const auto bytes=source.Encode();types::Buffer wire(bytes);
+                auto* unit=Unit::Deserialize(GSE_CALL,wire,manager,resolver);manager->SpawnUnit(GSE_CALL,unit);
+                const auto& state=unit->Conventional();
+                GT_ASSERT(state.native_flags==(version>=10 ? std::optional<uint16_t>(raw):std::nullopt)
+                    && Unit::Serialize(unit).ToString()==bytes && wire.lenr==wire.lenw,
+                    "Actual save/load changed flags or invented legacy visibility authority");
+                if(version>=10) {
+                    bool rejected=false;try {types::Buffer old;state.Serialize(old,true,true,true,true);}catch(const std::exception&) {rejected=true;}
+                    GT_ASSERT(rejected,"Legacy state codec discarded native flags");
+                    auto changed=state;changed.native_flags=uint16_t(raw ^ 0x440);
+                    GT_ASSERT(!(changed==state),"State equality ignored visibility flags");
+                }
+                manager->DespawnUnit(GSE_CALL,unit->m_id);
+            }}
+            for(const int raw:{-1,65536}) {
+                WireRecord source;source.version=10;source.native_flags=raw;types::Buffer wire(source.Encode());
+                bool rejected=false;try {auto* unit=Unit::Deserialize(GSE_CALL,wire,manager,resolver);manager->SpawnUnit(GSE_CALL,unit);}catch(const std::exception&) {rejected=true;}
+                GT_ASSERT(rejected && manager->GetUnits().empty(),"Out-of-word flags published a Unit");
+            }
+            GT_OK();
+        });
+    });
     task->AddTest("Conventional facing raw byte codec preserves stack and legacy absence",GT(){
         for(const int raw:{0,2,7,8,128,255}) {
             auto state=Record();state.facing=static_cast<uint8_t>(raw);state.stack=ConventionalUnitState::Stack{13,14,12};

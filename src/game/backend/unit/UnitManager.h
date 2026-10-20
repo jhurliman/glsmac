@@ -25,6 +25,8 @@ class SmacMovementHistory;
 
 namespace map {
 class Map;
+struct TerrainRenderUpdate;
+namespace smac_wildlife {struct Input;struct Result;}
 namespace tile {
 class Tile;
 }
@@ -75,6 +77,25 @@ public:
         explicit PreparedNativeBirths(std::unique_ptr<Data> data);
         std::unique_ptr<Data> m_data;
     };
+    class PreparedGlobalEcology {
+    public:
+        ~PreparedGlobalEcology();
+        PreparedGlobalEcology(PreparedGlobalEcology&&) noexcept;
+        PreparedGlobalEcology& operator=(PreparedGlobalEcology&&) noexcept;
+        const map::smac_wildlife::Result& Result() const;
+        const map::TerrainRenderUpdate* TerrainPayload() const;
+        void Commit();
+        void Notify(GSE_CALLABLE);
+    private:
+        friend class UnitManager;
+        struct Data;
+        explicit PreparedGlobalEcology(std::unique_ptr<Data> data);
+        std::unique_ptr<Data> m_data;
+    };
+    // Owning synchronous flora/fauna composition. Independent original global
+    // wildlife inputs are supplied by the round controller, never synthesized
+    // from missing legacy state. No scripts/yields/mutations before commit.
+    PreparedGlobalEcology PrepareGlobalEcology(GSE_CALLABLE,const map::smac_wildlife::Input& input);
     PreparedNativeBirths PrepareEcologyNativeBirths(GSE_CALLABLE, const base::SmacNativeSpawnPlan& plan);
     // Synchronous C++ producer only; these closures must not escape, yield or
     // invoke scripts. All operations share one detached factory/sight/stack

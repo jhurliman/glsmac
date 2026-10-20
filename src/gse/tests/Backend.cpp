@@ -395,6 +395,10 @@ public:
 		m_game.ValidateCanonicalContinuation(*decoded);
 	}
 	void BasePresentationRoles( const std::array<std::string,8>& roles ) { m_game.m_smac_base_presentations=roles; }
+    void InstalledResourcePolicy(const std::string& source) {
+        auto& settings=m_state->m_settings.global;settings.SelectInstalledPlanet();
+        m_game.m_map->m_resource_policy=game::backend::map::GlsmacResourceMapPolicy::InstalledPlanetV1(game::backend::map::SmacPlanetMap::Decode(source),settings.GetSmacCampaignRules()->AutomaticLandResources());
+    }
 	void ResourcePolicy( const bool present ) {
 		m_gse->GetGCSpace()->Accumulate( m_gse, [ & ]() {
 			m_game.m_map->m_resource_policy = present ? std::optional( game::backend::map::GlsmacResourceMapPolicy::DisplayedTerrainV1() ) : std::nullopt;
@@ -6974,6 +6978,7 @@ void ConventionalUnitFixture::ConfigureTwoResourceParticipants( const std::funct
 	fixture->ConfigureConventional( true, 3, false, false, false, nullptr, source, local_faction, production_map,width,height ); fixture->ResourcePolicy( true );
 }
 void ConventionalUnitFixture::ResourcePolicy( bool present ) { fixture->ResourcePolicy( present ); }
+void ConventionalUnitFixture::InstalledResourcePolicy(const std::string& source) {fixture->InstalledResourcePolicy(source);}
 void ConventionalUnitFixture::SiteRatings(const std::string& packed) {fixture->SiteRatings(packed);}
 void ConventionalUnitFixture::TerritoryTopology(const std::string& serialized) {fixture->TerritoryTopology(serialized);}
 void ConventionalUnitFixture::SelectStartup( int32_t simulation, int32_t design ) { fixture->ConventionalSelectStartup( simulation, design ); }

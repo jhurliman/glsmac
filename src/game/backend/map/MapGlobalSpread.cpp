@@ -61,6 +61,25 @@ smac_spread::Input Map::CopyGlobalSpreadInput(int32_t turn,const std::array<uint
     return result;
 }
 
+SmacPlanetMap::Tile Map::CopyGlobalWildlifeTile(std::array<int32_t,2> point,const SmacWorkerKnowledge::Data& knowledge) const {
+    const auto* planet=m_resource_policy?m_resource_policy->OriginalPlanet():nullptr;
+    if(!planet || GetWidth()!=80 || GetHeight()!=80 || !m_worker_knowledge_ready
+        || point[0]<0 || point[0]>=80 || point[1]<0 || point[1]>=80 || ((point[0]^point[1])&1)
+        || knowledge.width!=80 || knowledge.height!=80 || knowledge.tiles.size()!=3200 || !knowledge.occupancy
+        || knowledge.occupancy->Width()!=80 || knowledge.occupancy->Height()!=80
+        || knowledge.occupancy->Wraps()!=knowledge.horizontal_wrap) {
+        throw std::runtime_error("Wildlife tile requires installed Planet geometry and retained occupancy knowledge");
+    }
+    auto result=planet->At(point[0],point[1]);const auto* live=GetTile(point[0],point[1]);
+    const auto cache=knowledge.occupancy->At(point);
+    result.bytes[2]=uint8_t((result.bytes[2]&0xf0u)|cache.affiliation);
+    result.bytes[4]=knowledge.tiles[size_t(point[1])*40+point[0]/2].explored_by;
+    auto flags=(result.Items()&~0x23u)|cache.presence;
+    if(live->features&tile::FEATURE_XENOFUNGUS) {flags|=0x20u;}
+    for(size_t i=0;i<4;++i) {result.bytes[8+i]=uint8_t(flags>>(8*i));}
+    return result;
+}
+
 struct Map::PreparedGlobalSpread::Data {
     Map* owner;
     smac_spread::Input before;

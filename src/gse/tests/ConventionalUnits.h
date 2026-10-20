@@ -39,6 +39,7 @@ public:
 	std::optional< game::backend::map::SmacWorkerKnowledge > PrepareTechnologyReveal( int32_t owner ) const;
 	void CommitTechnologyReveal( std::optional< game::backend::map::SmacWorkerKnowledge > value );
 	void ResourcePolicy( bool present );
+    void InstalledResourcePolicy(const std::string& source);
 	void SiteRatings( const std::string& packed );
 	void TerritoryTopology( const std::string& serialized );
 	void BasePresentationRoles( const std::array<std::string,8>& roles );

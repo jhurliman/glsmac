@@ -1,3 +1,6 @@
+#include "game/backend/map/SmacGlobalWildlife.h"
+#include "game/backend/map/SmacGlobalSpread.h"
+#include "game/backend/map/SmacPlanetMap.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Object.h"
 #include "gse/value/Int.h"
@@ -124,14 +127,14 @@ void BirthDefinitions(game::backend::Game* game) {
         tile->features=0;tile->terraforming=0;tile->rockiness=game::backend::map::tile::ROCKINESS_FLAT;tile->Update();
     }}
 }
-game::backend::base::Base* BirthBase(GSE_CALLABLE, game::backend::Game* game,int32_t population=1) {
+game::backend::base::Base* BirthBase(GSE_CALLABLE, game::backend::Game* game,int32_t population=1,int32_t x=16,int32_t y=16) {
     using namespace game::backend;auto* bm=game->GetBM();base::Base::SmacAllocationRoles roles;roles.worker="birth-worker";
     bm->DefinePop(new base::PopDef(roles.worker,"Worker",{},{},base::PopDef::PF_TILE_WORKER));
     for(uint8_t n=0;n<7;++n) {roles.specialists[n]="birth-specialist"+std::to_string(n);bm->DefinePop(new base::PopDef(roles.specialists[n],"Specialist",{},{},base::PopDef::PF_NONE,n));}
     auto* owner=&game->GetState()->m_slots->GetSlot(0);base::Base::pops_t pops;
-    pops.emplace(1,base::Pop(nullptr,1,bm->GetPopDef(roles.worker),0,game->GetMap()->GetTile(17,15)));
+    pops.emplace(1,base::Pop(nullptr,1,bm->GetPopDef(roles.worker),0,game->GetMap()->GetTile(x+1,y-1)));
     if(population==2) {pops.emplace(2,base::Pop(nullptr,2,bm->GetPopDef(roles.specialists[0]),0));}
-    auto* result=new base::Base(game,901,owner,owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(16,16),"Sight Base",{},pops,population+1,0,{},base::SmacBaseResourceContext{1,false,0,0,0,false});
+    auto* result=new base::Base(game,901,owner,owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(x,y),"Sight Base",{},pops,population+1,0,{},base::SmacBaseResourceContext{1,false,0,0,0,false});
     bm->SpawnBase(GSE_CALL,result);result->PublishSmacAllocation(GSE_CALL,{3,{{},population-1}},roles);return result;
 }
 void ExploreNine(game::backend::map::SmacWorkerKnowledge::Data& data,int32_t x,int32_t y,uint8_t bit) {
@@ -143,6 +146,70 @@ void ExploreNine(game::backend::map::SmacWorkerKnowledge::Data& data,int32_t x,i
 
 }
 void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC composed live flora and wildlife retain evolving factory knowledge and restore",[](GSE*,context::Context*) -> std::string {
+        using namespace game::backend;using namespace game::backend::unit;using Planet=map::SmacPlanetMap;using Knowledge=map::SmacWorkerKnowledge;
+        for(const bool repeated:{false,true}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);std::string saved;
+            const std::array<int32_t,2> birth=repeated?std::array<int32_t,2>{{3,75}}:std::array<int32_t,2>{{68,16}};
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* world=game->GetMap();auto* manager=game->GetUM();BirthDefinitions(game);
+                auto& settings=game->GetState()->m_settings.global;settings.SelectSmacCampaignRules(false);
+                const std::array<int32_t,2> center{{(birth[0]+6)%80,birth[1]}};BirthBase(GSE_CALL,game,1,center[0],center[1]);
+                std::string wire(Planet::FILE_BYTES,'\0');wire.replace(0,11,"TERRANMAP\0\x1a",11);wire[11]=5;wire[15]=80;wire[19]=80;wire[15+0xa30]=4;wire[15+0xa34]=1;
+                Knowledge::Data knowledge{80,80,true,true,0,{},{},{}};knowledge.tiles.resize(3200,{0,std::nullopt});
+                knowledge.observers[1]=Knowledge::Observer{};knowledge.observers[1]->pact_with=0;
+                knowledge.remembered[1].resize(3200);knowledge.occupancy=map::SmacOccupancyCache::Blank(80,80,true);
+                knowledge.occupancy->FoundBase(center,1);Knowledge::BaseObservation base{901,0,{}};knowledge.bases.push_back(base);
+                for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
+                    const auto index=size_t(y)*40+x/2,at=Planet::PREFIX_BYTES+Planet::HEADER_BYTES+index*44;
+                    wire[at]=96;wire[at+1]=87;wire[at+2]=char(0xaf);wire[at+3]=1;wire[at+5]=23;
+                    auto* tile=world->GetTile(x,y);tile->moisture=1;tile->features=map::tile::FEATURE_XENOFUNGUS;
+                    knowledge.remembered[1][index]=Knowledge::Improvements{tile->features,0,tile->base!=nullptr,false};
+                }}
+                auto* source=world->GetTile(41,67);source->features=0;source->terraforming=map::tile::TERRAFORMING_FOREST;
+                auto* target=world->GetTile(42,66);target->moisture=2;target->rockiness=2;
+                for(const auto delta:std::array<std::array<int,2>,7>{{{{2,0}},{{1,1}},{{0,2}},{{-1,1}},{{-2,0}},{{-1,-1}},{{0,-2}}}}) {
+                    world->GetTile(41+delta[0],67+delta[1])->rockiness=3;
+                }
+                fixture.InstalledResourcePolicy(wire);
+                fixture.TerritoryTopology(map::GlsmacTerritoryTopology::Build(80,80,true,std::vector<bool>(3200,false)).Serialize());
+                fixture.ResourceState([&](auto& state){state.ecology_world=faction::SmacEcologyWorld{1,1,0};
+                    state.native_factory=faction::SmacNativeFactoryState{0,{{-1,-1}},0,{}};
+                    state.movement_history=SmacMovementHistory::NewGeneratedWorld(80,80);});
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+                const SmacGameplayRandomState initial(123,repeated?641:1);fixture.GameplayRandom(initial);
+                map::smac_wildlife::Input input{{80,80,true},1,1,0,-1,0,settings.GetSmacCampaignRules()->primary,0,{},{},{},{},{{0,center}}};
+                const auto before=fixture.Snapshot();const auto next=Unit::GetNextId();
+                {auto discarded=manager->PrepareGlobalEcology(GSE_CALL,input);GT_ASSERT(discarded.Result().actions.size()==1,"Composed policy did not select its one real factory");}
+                GT_ASSERT(fixture.Snapshot()==before && Unit::GetNextId()==next,"Discarded composition leaked terrain, sight, body or RNG");
+                fixture.ResourceState([](auto& state){state.native_factory->assignment_reference[0]=0;});const auto rejected=fixture.Snapshot();
+                GT_ASSERT(Rejects([&]{manager->PrepareGlobalEcology(GSE_CALL,input);}) && fixture.Snapshot()==rejected && Unit::GetNextId()==next,
+                    "Throwing factory consumer leaked staged flora or native state");
+                fixture.ResourceState([](auto& state){state.native_factory->assignment_reference[0]=-1;});
+                auto prepared=manager->PrepareGlobalEcology(GSE_CALL,input);const auto result=prepared.Result();
+                GT_ASSERT(result.actions.size()==1 && result.actions[0].point==birth && result.land_samples.size()==4,
+                    "Live sampler ignored staged occupancy or changed CRT order");
+                if(repeated) {GT_ASSERT(result.land_samples[0]==birth && result.land_samples[1]==birth,"Repeated-sample fixture lost its exact CRT prefix");}
+                auto shifted=initial;shifted.NextCrtRaw15();fixture.GameplayRandom(shifted);
+                GT_ASSERT(Rejects([&]{prepared.Commit();}) && world->GetTile(42,66)->features==map::tile::FEATURE_XENOFUNGUS && manager->GetUnits().empty(),"Stale RNG published part of composition");
+                fixture.GameplayRandom(initial);prepared.Commit();
+                GT_ASSERT(manager->GetUnits().size()==1 && fixture.GameplayRandom()==result.random && manager->GetUnit(next)->Native().x==birth[0],"Combined authority publication differs");
+                const auto cache=world->GetSmacWorkerKnowledge()->CopyData();
+                const auto sample=world->CopyGlobalWildlifeTile(birth,cache);
+                GT_ASSERT(sample.CachedOccupant()==0 && (sample.Items()&3u)==2 && (sample.bytes[4]&1u) && (sample.bytes[2]&0xf0u)==0xa0,
+                    "Wildlife projection guessed affiliation or lost staged presence, exploration or retained nibble");
+                if(!repeated) {GT_ASSERT((target->terraforming&map::tile::TERRAFORMING_FOREST) && !(target->features&map::tile::FEATURE_XENOFUNGUS),"Combined flora growth did not publish physical terrain");}
+                prepared.Notify(GSE_CALL);saved=fixture.Snapshot();GT_OK();
+            });if(!error.empty()) {return std::string(repeated?"repeated: ":"growth: ")+error;}
+            ConventionalUnitFixture restored;restored.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);
+            const auto error2=restored.Run([&](GSE_CALLABLE)->std::string {
+                restored.Game()->GetState()->m_settings.global.SelectSmacCampaignRules(false);
+                restored.Game()->GetState()->m_settings.global.SelectInstalledPlanet();
+                restored.Restore(GSE_CALL,saved,true);GT_ASSERT(CanonicalEncounterSnapshot(restored.Game(),restored.Snapshot())==CanonicalEncounterSnapshot(restored.Game(),saved),
+                    "Composed flora/fauna runtime state changed through full restore");GT_OK();
+            });if(!error2.empty()) {return "restore: "+error2;}
+        }GT_OK();
+    });
     task->AddTest("SMAC native factory publishes mixed Scout brood observation and restores bound departure",GT(){
         using namespace game::backend;using namespace game::backend::unit;using Knowledge=map::SmacWorkerKnowledge;using Stack=ConventionalUnitState::Stack;
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(NativeComponentSource,"GAIANS",80,80);std::string saved,knowledge_wire;

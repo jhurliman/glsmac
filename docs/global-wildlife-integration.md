@@ -253,3 +253,34 @@ activation of the recorded faction cursor with canonical native/positive
 command execution. Connected original coverage must include actual flora growth
 and a later wildlife read overlapping an earlier full constructor/sight mutation;
 the existing four connected returns do not cover either case.
+
+
+## Combined live flora/fauna transaction
+
+`UnitManager::PrepareGlobalEcology` now prepares actual Map flora, then executes
+wildlife policy with the real native birth factory inside the staged flora view.
+Each wildlife tile query reads that factory's evolving occupancy affiliation,
+presence and exploration, plus current physical fungus and retained altitude/
+region. It does not use flora's partial packed plane as complete live authority
+or reconstruct affiliation from the physical stack head. Canonical site queries
+use saved placement history and current campaign options.
+
+Discard or a throwing constructor restores the original Map view and publishes
+no terrain, Units, knowledge, counters, IDs or RNG. Commit checks the RNG ticket
+and the flora stale inputs before publishing flora, final native state and the
+resulting stream pair; notifications follow authority publication. The caller
+can copy the optional terrain render payload for its existing frontend queue.
+Preparation and commit remain one owning accumulation with no scripts, yields
+or intervening mutations.
+
+Two controlled live integration frames cover real forest growth plus a native
+birth and exact repeated sampling where the first birth prevents a duplicate.
+They exercise exception rollback, discard, stale-RNG refusal, cached affiliation
+and full world restore. The constituent rules have original receipts; these
+controlled port frames are not new original connected receipts.
+
+This joins producers, not the round controller. Independent wildlife global
+inputs (Voice marker, region areas, native diplomacy, locust masks and observer
+status) remain explicit supplied authority; unknown legacy values are not filled
+with zero. Native maintenance/planning/commands and faction-cursor activation,
+and the requested original connected overlap/growth receipts, remain gates.

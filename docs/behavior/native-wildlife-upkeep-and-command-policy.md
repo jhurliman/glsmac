@@ -63,7 +63,7 @@ Here L is the turn-only return of `515d50(-1,0)`:
 
 Initialize best score0 and chosen direction-1. Replace only on **strictly greater** score, preserving the earlier candidate on ties. This direction bias favors continuing away from the reverse heading; it is not distance-to-target scoring in these early, small-target-faction worlds. The later `turn>50 && target owner Base-count>2` branch can obtain a direction from the real pathfinder; see limits below.
 
-Every admitted intermediate score is independently compared to original `57d78e`. The tie control gives directions0 and3 score9 and selects0. A road raises direction6 from6 to14, beating direction2's10; difficulty2 or Unit state`0x100` removes that bonus and selects2. Feature inputs change the winning direction. Turning one candidate into water consumes7 rather than8 draws and shifts the later candidates' jitter. Facing0/7 and turn45/90 controls change heading terms according to the formula.
+Every admitted intermediate score is independently compared to original `57d78e`. The tie control gives directions0 and3 score9 and selects0. The item-0x2000 control raises direction6 from6 to14, beating direction2's10; difficulty2 or Unit state`0x100` removes that bonus and selects2. Feature inputs change the winning direction. Turning one candidate into water consumes7 rather than8 draws and shifts the later candidates' jitter. Facing0/7 and turn45/90 controls change heading terms according to the formula.
 
 Use the native result to set order`0x58` and first waypoint to the selected adjacent coordinate. Continue through the existing action/path/movement engine; that is where actual movement, fungus admission, spent budget, stack/cargo and shared RNG effects occur. Do not set final positions directly from this policy function. The healthy early controls take no later native-AI CRT checks, but the movement helper can consume the separate shared stream.
 
@@ -155,8 +155,9 @@ established by this decision test.
 
 The original reference names one term `road`, but its numeric flag is `0x2000`.
 The current terrain mapping identifies that flag as Monolith and Road as `0x4`.
-The C++ field is `item_2000_bonus` pending clarification of the source label;
-the proven numeric condition and the reference fixture key are unchanged.
+The reverse-engineering follow-up confirms this is a monolith bonus. The C++
+field remains `item_2000_bonus`; the proven numeric condition and historical
+reference fixture key are unchanged.
 
 Validation: cached incremental build and both native groups pass normally and
 with the production policy and its test translation unit under ASan/UBSan;

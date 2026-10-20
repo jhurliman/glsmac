@@ -154,6 +154,7 @@ def choose_neighbors(*,position,current_sea,triad,facing,turn,difficulty,state,s
                 terms.append(dict(direction=c['direction'],rejected='air_mismatch'));continue
             base_bonus=999
         features=4*(c['flags']&FEATURE_MASK).bit_count()
+        # Historical fixture key: 0x2000 is Monolith; Road is 0x4.
         road=8 if difficulty>2 and c['flags']&0x2000 and not state&0x100 else 0
         seed,draw=crt(seed);jitter=draw%8
         angle=((facing^4)-c['direction'])&7;angle=min(angle,8-angle)

@@ -225,6 +225,38 @@ public:
         // Detached inputs/results never repaint tiles or replace retained authority.
         if(local.m_resource_policy->OriginalPlanet()->Encode()!=wire || local.m_worker_knowledge->Serialize()!=saved
             || local.GetTile(42,66)->features!=tile::FEATURE_XENOFUNGUS) return false;
+        const auto original_policy=*local.m_resource_policy;
+        const game::backend::SmacGameplayRandomState initial(123,1);
+        {
+            auto discarded=local.PrepareGlobalSpread(1,{},initial);
+            if(!(local.GetGlobalSpreadRandom(*discarded)==plan.random) || local.GetGlobalSpreadTerrainPayload(*discarded)
+                || local.m_resource_policy->OriginalPlanet()->Encode()!=wire || local.m_worker_knowledge->Serialize()!=saved) return false;
+        }
+        if(local.GetTile(42,66)->terraforming || local.GetTile(42,66)->features!=tile::FEATURE_XENOFUNGUS) return false;
+        auto prepared=local.PrepareGlobalSpread(1,{},initial);
+        auto* unrelated=local.GetTile(0,0);unrelated->features=tile::FEATURE_MONOLITH;
+        bool stale=false;try {local.CommitGlobalSpread(*prepared);}catch(const std::runtime_error&) {stale=true;}
+        if(!stale || local.GetTile(42,66)->terraforming || local.m_worker_knowledge->Serialize()!=saved) return false;
+        unrelated->features=0;local.CommitGlobalSpread(*prepared);
+        if((local.GetTile(42,66)->features&tile::FEATURE_XENOFUNGUS)
+            || !(local.GetTile(42,66)->terraforming&tile::TERRAFORMING_FOREST)
+            || local.m_worker_knowledge->CopyData().remembered[1][target]
+            || local.m_resource_policy->OriginalPlanet()->At(42,66).bytes[18]!=32
+            || !(local.GetGlobalSpreadRandom(*prepared)==plan.random)
+            || !(map::GlsmacResourceMapPolicy::Deserialize(local.m_resource_policy->Serialize().ToString())==*local.m_resource_policy)
+            || !(map::SmacWorkerKnowledge::Deserialize(local.m_worker_knowledge->Serialize())==*local.m_worker_knowledge)) return false;
+        bool repeated=false;try {local.CommitGlobalSpread(*prepared);}catch(const std::invalid_argument&) {repeated=true;}
+        if(!repeated) return false;
+        // Repeat from the same physical world with an existing full observer
+        // memory: preserve its remembered Road while replacing fungus with forest.
+        local.m_resource_policy=original_policy;
+        local.GetTile(42,66)->features=tile::FEATURE_XENOFUNGUS;local.GetTile(42,66)->terraforming=0;
+        data.remembered[1][target]=map::SmacWorkerKnowledge::Improvements{tile::FEATURE_XENOFUNGUS,tile::TERRAFORMING_ROAD,false,false};
+        local.m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);
+        auto known=local.PrepareGlobalSpread(1,{},initial);local.CommitGlobalSpread(*known);
+        const auto memory=local.m_worker_knowledge->CopyData().remembered[1][target];
+        if(!memory || memory->features || memory->terraforming!=(tile::TERRAFORMING_ROAD|tile::TERRAFORMING_FOREST)
+            || !(initial==game::backend::SmacGameplayRandomState(123,1))) return false;
         data.remembered[1][source].reset();local.m_worker_knowledge=map::SmacWorkerKnowledge::Create(data);
         bool refused=false;try {(void)local.CopyGlobalSpreadInput(1,{});}catch(const std::runtime_error&) {refused=true;}
         if(!refused) return false;

@@ -45,6 +45,29 @@ std::string SmacPlanetMap::Encode() const {
     return result;
 }
 
+SmacPlanetMap SmacPlanetMap::WithLiveGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const {
+    if(before.geometry.width!=int32_t(WIDTH) || before.geometry.height!=int32_t(HEIGHT)
+        || before.tiles.size()!=TILE_COUNT || m_tiles.size()!=TILE_COUNT) {
+        throw std::invalid_argument("Live flora projection requires the bound standard Planet plane");
+    }
+    std::array<uint8_t,RECORD_BYTES> masks{};masks[0]=0x18;masks[4]=0xff;masks[5]=0xc0;
+    for(size_t k=0;k<4;++k) {
+        masks[8+k]=uint8_t(smac_spread::LIVE_MATERIAL_MASK>>(8*k));
+        for(size_t owner=1;owner<=7;++owner) {masks[12+4*owner+k]=masks[8+k];}
+    }
+    auto projected=*this;
+    for(size_t i=0;i<TILE_COUNT;++i) {
+        auto& tile=projected.m_tiles[i];const auto& current=before.tiles[i];
+        for(size_t k=0;k<RECORD_BYTES;++k) {
+            if((tile.bytes[k]^current.bytes[k])&uint8_t(~masks[k])) {
+                throw std::invalid_argument("Live flora projection changed unowned retained terrain authority");
+            }
+            tile.bytes[k]=current.bytes[k];
+        }
+    }
+    return projected.WithGlobalSpread(before,plan);
+}
+
 SmacPlanetMap SmacPlanetMap::WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const {
     if(before.geometry.width!=int32_t(WIDTH) || before.geometry.height!=int32_t(HEIGHT)
         || before.tiles.size()!=TILE_COUNT || plan.tiles.size()!=TILE_COUNT || m_tiles.size()!=TILE_COUNT) {

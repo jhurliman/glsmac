@@ -21,6 +21,7 @@
 #include "Backend.h"
 #include "RosterRecords.h"
 #include "SmacGameplayRandomState.h"
+#include "SmacGenerationBootstrap.h"
 #include "SmacScoutCombat.h"
 #include "SmacEmptyGroundMovement.h"
 #include "SmacGroundEdgeCost.h"
@@ -189,6 +190,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddSmacTerrainLightingTests( task );
 		tests::AddRosterRecordTests( task );
 		tests::AddSmacGameplayRandomStateTests( task );
+        tests::AddSmacGenerationBootstrapTests(task);
 		tests::AddSmacScoutCombatTests( task );
 		tests::AddSmacEmptyGroundMovementTests( task );
 		tests::AddSmacGroundEdgeCostTests( task );

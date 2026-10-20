@@ -326,6 +326,9 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
                 const auto& birth=fixture.Updates();const auto spawn=std::find_if(birth.begin(),birth.end(),[](const auto& request){return request.type==game::FrontendRequest::FR_UNIT_SPAWN;});
                 GT_ASSERT(spawn!=birth.end() && spawn->data.unit_spawn.has_facing && spawn->data.unit_spawn.facing==2,"Fresh factory publication lost facing");
                 game::FrontendRequest copy(*spawn),empty_spawn(game::FrontendRequest::FR_UNIT_SPAWN),empty_update(game::FrontendRequest::FR_UNIT_UPDATE);
+                NEW(empty_spawn.data.unit_spawn.unitdef_id,std::string);
+                NEW(empty_spawn.data.unit_spawn.morale_string,std::string);
+                NEW(empty_update.data.unit_update.morale_string,std::string);
                 GT_ASSERT(copy.data.unit_spawn.has_facing && copy.data.unit_spawn.facing==2 && !empty_spawn.data.unit_spawn.has_facing && !empty_update.data.unit_update.has_facing,
                     "Packet copy/default invented or discarded facing");
                 auto state=actor->Conventional();state.facing=5;

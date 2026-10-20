@@ -1,6 +1,8 @@
 #include "SmacContinentGeneration.h"
 #include "fixtures/SmacContinentGeneration.h"
 #include "game/backend/map/SmacContinentGeneration.h"
+#include "game/backend/map/SmacGenerationNoise.h"
+#include "fixtures/SmacGenerationNoise.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 #include <string>
@@ -23,6 +25,31 @@ uint32_t Caller(generation::CrtUse use) {
 }
 }
 void AddSmacContinentGenerationTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC generation noise matches original grid samples and random continuation",GT(){
+        size_t samples=0;
+        for(const auto& control:fixtures::generation_noise::Cases()) {
+            game::backend::SmacGameplayRandomState random(1234567,control.before);
+            game::backend::SmacGameplayRandomState expected(1234567,control.before);
+            size_t draws=0;bool ordered=true;
+            generation::Noise noise(random,[&](const generation::Draw& draw){
+                const auto before=expected.Crt();const auto value=expected.NextCrtRaw15();
+                ordered=ordered && draw.kind==generation::Draw::Kind::Crt && draw.before==before
+                    && draw.after==expected.Crt() && draw.value==value;++draws;
+            });
+            GT_ASSERT(draws==324 && ordered && random.Crt()==control.after && random.Shared()==1234567,
+                "Original noise constructor random stream differs");
+            for(size_t x=0;x<17;++x) {for(size_t y=0;y<17;++y) {
+                GT_ASSERT(noise.Grid()[x][y]==control.grid[x*17+y],"Original periodic noise grid differs");
+            }}
+            for(const auto& sample:control.samples) {
+                GT_ASSERT(noise.Evaluate(sample[0],sample[1])==sample[2],"Original noise interpolation differs");
+                GT_ASSERT(noise.Evaluate(sample[0]+4096,sample[1]-4096)==sample[2],"Noise period differs");
+                ++samples;
+            }
+            GT_ASSERT(random.Crt()==control.after && random.Shared()==1234567,"Noise evaluation consumed randomness");
+        }
+        GT_ASSERT(samples==135,"Original noise sample coverage changed");GT_OK();
+    });
     task->AddTest("SMAC continent generation matches original ordered stores RNG and return boundaries",GT(){
         uint64_t writes=0,draws=0;
         for(const auto& control:fixture::Cases()) {

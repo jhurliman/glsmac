@@ -76,8 +76,9 @@ launch was repeated for this detached generation stage.
 
 ## Next required stages
 
-Continent seeding/growth must consume this exact state, followed by the original
-hill/ocean shaping, regions and rejection/retry loop. Later terrain, landmarks,
+[Continent seeding/growth](continent-generation.md) now consumes this exact state
+and matches its complete original callee controls. The outer controller,
+hill/ocean shaping, regions and rejection/retry loop remain required. Later terrain, landmarks,
 climate, flora and startup must keep their original ordering and shared stream.
 Existing climate/starting-site modules are later components, not replacements
 for the missing initial plane. Complete generated startup's observed active mask

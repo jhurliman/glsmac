@@ -6,6 +6,7 @@ SET( SRC ${SRC}
 
 	${PWD}/SmacClimate.cpp
 	${PWD}/SmacGenerationBootstrap.cpp
+	${PWD}/SmacContinentGeneration.cpp
 	${PWD}/SmacGlobalSpread.cpp
 	${PWD}/MapGlobalSpread.cpp
 	${PWD}/SmacGlobalWildlife.cpp

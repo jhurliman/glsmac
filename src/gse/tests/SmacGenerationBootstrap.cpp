@@ -22,7 +22,7 @@ std::string RecordBytes(const generation::State& state) {
 void AddSmacGenerationBootstrapTests(task::gsetests::GSETests* task) {
     task->AddTest("SMAC generation bootstrap matches original records RNG and continuation",GT(){
         size_t records=0,draws=0;
-        for(const auto& control:fixtures::generation_bootstrap::Cases) {
+        for(const auto& control:fixtures::generation_bootstrap::Cases()) {
             generation::State state{std::vector<generation::Record>(control.count),control.categories,
                 game::backend::SmacGameplayRandomState(control.shared,control.crt)};
             for(size_t i=0;i<state.records.size();++i) {for(size_t k=0;k<44;++k) {

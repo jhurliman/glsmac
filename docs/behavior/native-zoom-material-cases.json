@@ -1,0 +1,130 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "asset_hashes": {
+    "maps/planet.MP": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+    "TEXTURE.PCX": "3dfa56f9eaa2a13af4fac199a0ac9ff3bf59effed17871a24f15b1b553b7c0ab",
+    "TER1.PCX": "82ef33e48f40d00a60e08fbcc403b1ecd9b340bd065830e2658ba3bacbf5b327",
+    "RAINFALL.PCX": "03b87d7873f5a9419d8c4ddd6c5a8bd333fe81a6b3ce4730056f129dcb94d364",
+    "PALETTE.PCX": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "alpha.txt": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4"
+  },
+  "map_base_low16": 48992,
+  "cases": [
+    {
+      "input": {
+        "id": "planet_partial_zminus1_first"
+      },
+      "profile": {
+        "id": "planet_partial_zminus1",
+        "zoom": -1,
+        "knowledge": "21"
+      },
+      "visible_frame_sha256": "72e8baab7b2a500d23273e2ea4cb0a37c9fe2dac5ef9c45896f5d311325d621f",
+      "store_count": 621732
+    },
+    {
+      "input": {
+        "id": "planet_partial_zminus1_east",
+        "pan": [
+          24,
+          38
+        ]
+      },
+      "profile": {
+        "id": "planet_partial_zminus1",
+        "zoom": -1,
+        "knowledge": "21"
+      },
+      "visible_frame_sha256": "82e1040b49eae3248c10aa5726f483931c678262967a358d7ac1a3cc79d69be0",
+      "store_count": 527445
+    },
+    {
+      "input": {
+        "id": "planet_partial_zminus1_back",
+        "pan": [
+          22,
+          38
+        ]
+      },
+      "profile": {
+        "id": "planet_partial_zminus1",
+        "zoom": -1,
+        "knowledge": "21"
+      },
+      "visible_frame_sha256": "290a8830b91149cde3b14e0c6e26aff65d3d86f0686beafafa289c9e4b2df42d",
+      "store_count": 527468
+    },
+    {
+      "input": {
+        "id": "planet_tile_z1",
+        "tile": [
+          22,
+          38
+        ],
+        "clip": [
+          0,
+          0,
+          1024,
+          511
+        ]
+      },
+      "profile": {
+        "id": "planet_tile_z1",
+        "zoom": 1,
+        "knowledge": "21"
+      },
+      "visible_frame_sha256": "9737263ef5125fb9109d039523ea5cbb9466f522e069b45bd728b1a81a3ab0d7",
+      "store_count": 3945
+    },
+    {
+      "input": {
+        "id": "planet_tile_z3",
+        "tile": [
+          21,
+          35
+        ],
+        "clip": [
+          113,
+          87,
+          190,
+          157
+        ]
+      },
+      "profile": {
+        "id": "planet_tile_z3",
+        "zoom": 3,
+        "knowledge": "21"
+      },
+      "visible_frame_sha256": "dc045d831e7e4ae466f31f19239c81649c3b3fa15756704ff702dc0885fe930c",
+      "store_count": 5441
+    },
+    {
+      "input": {
+        "id": "planet_tile_z8",
+        "tile": [
+          19,
+          39
+        ],
+        "clip": [
+          117,
+          97,
+          200,
+          177
+        ]
+      },
+      "profile": {
+        "id": "planet_tile_z8",
+        "zoom": 8,
+        "knowledge": "21"
+      },
+      "visible_frame_sha256": "fb821eac12547fa8e8738f2a427370f997b01c47df24c75d8a48b160176d895b",
+      "store_count": 4279
+    }
+  ],
+  "evidence_manifest_sha256": "47b8e09e8f6bffcef687c176b9fe17a00aac7015fae073d1bc271ef9673afea1",
+  "tile_anchor": [
+    100,
+    100
+  ],
+  "tile_backdrop": 73
+}

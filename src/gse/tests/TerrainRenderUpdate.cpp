@@ -833,6 +833,26 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_OK();
     });
 
+    task->AddTest("SMAC zoomed known terrain separates diamond size from original relief",GT(){
+        namespace native=game::frontend::native_terrain;
+        game::native_terrain::World world;world.retained_geometry=true;
+        for(auto& tile:world.tiles) {tile.band=4;tile.material_admitted=true;}
+        native::ViewGeometry geometry(world);native::Source source;
+        source.loaded={1024,768,std::vector<uint8_t>(1024*768,77)};
+        const auto third=geometry.Prepare(native::Layout(22,38,3,true),3,25,false);
+        const auto fourth=geometry.Prepare(native::Layout(22,38,4,true),4,25,false);
+        GT_ASSERT(third.unit==15 && fourth.unit==15 && third.zoom==3 && fourth.zoom==4 &&
+            third.terrain.front().heights[0]==29 && fourth.terrain.front().heights[0]==31,
+            "Adjacent original zooms conflated quantized footprint and relief");
+        const auto a=native::RenderPrepared(world,source,third,0),b=native::RenderPrepared(world,source,fourth,0);
+        GT_ASSERT(a.unit==15 && b.unit==15 && a.zoom==3 && b.zoom==4 && a.writes && b.writes,
+            "Zoomed material path or frame identity unavailable");
+        auto pan=fourth;pan.regions=native::ViewRegions{};pan.scroll={{120,0}};
+        bool rejected=false;try {(void)native::RenderPrepared(world,source,pan,0,0x10421,0,&a);}
+        catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Same-footprint different-zoom bitmap history admitted");GT_OK();
+    });
+
     task->AddTest("SMAC dimensioned bitmap keeps flat zoomed unknown terrain opaque across pan",GT(){
         namespace native=game::frontend::native_terrain;
         game::native_terrain::World world(64,32);world.horizontal_wrap=false;

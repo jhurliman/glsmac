@@ -32,7 +32,7 @@ public:
         std::vector<Object> objects;
         bool opaque_background=false;
         Point world{{80,80}},viewport{{1024,511}};
-        int unit=12;
+        int unit=12,zoom=0;
     };
     using Cell=backend::map::smac_terrain::LandmarkGeometry::Cell;
     ViewGeometry(int width,int height,bool wrap,std::vector<Cell> cells,bool pinned_planet=false)
@@ -48,7 +48,7 @@ public:
         if(known && known->size()!=bands_.size()) {throw std::invalid_argument("Native knowledge dimensions differ");}
         if(survey_light && !known) {throw std::invalid_argument("Survey requires explicit observer knowledge");}
         geometry_.Configure(zoom,relief);Plan result;result.opaque_background=known!=nullptr;
-        result.world=world_;result.viewport=view.viewport;result.unit=view.unit;
+        result.world=world_;result.viewport=view.viewport;result.unit=view.unit;result.zoom=zoom;
         result.clip={{0,0,view.viewport[0],view.viewport[1]}};
         if(!paint) {return result;}
         if(incremental && previous_ && zoom==zoom_ && relief==relief_) {

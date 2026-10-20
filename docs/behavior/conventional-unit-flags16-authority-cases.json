@@ -1,0 +1,1438 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Bounded original flags16 initializer, persistence and mutation controls.",
+  "controls": 49,
+  "case_kinds": {
+    "initializer": 3,
+    "factory": 2,
+    "disclose": 12,
+    "relocation": 3,
+    "editor_fragment": 5,
+    "modern_codec_fragment": 6,
+    "legacy48_import_fragment": 3,
+    "upkeep_countdown_fragment": 3,
+    "ownership_transfer": 3,
+    "stack_disclosure": 6,
+    "move_capture_owner_fragment": 3
+  },
+  "source_guards": [
+    {
+      "address": "0x5d8456",
+      "mnemonic": "mov",
+      "operands": "byte ptr [eax + 0x9951bf], cl"
+    },
+    {
+      "address": "0x5d8463",
+      "mnemonic": "mov",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "address": "0x5d84ad",
+      "mnemonic": "mov",
+      "operands": "dword ptr [eax + 0x9951b4], ecx"
+    },
+    {
+      "address": "0x5d84e6",
+      "mnemonic": "mov",
+      "operands": "byte ptr [eax + 0x9951d7], cl"
+    },
+    {
+      "address": "0x5d85b9",
+      "mnemonic": "call",
+      "operands": "0x5d8420"
+    },
+    {
+      "address": "0x5d85ee",
+      "mnemonic": "or",
+      "operands": "byte ptr [eax*4 + 0x9951b8], 0x20"
+    },
+    {
+      "address": "0x5d863e",
+      "mnemonic": "call",
+      "operands": "0x5d81d0"
+    },
+    {
+      "address": "0x5d8646",
+      "mnemonic": "call",
+      "operands": "0x5cdaa0"
+    },
+    {
+      "address": "0x5cd28c",
+      "mnemonic": "mov",
+      "operands": "ecx, 0xfffffbbf"
+    },
+    {
+      "address": "0x5cd29a",
+      "mnemonic": "or",
+      "operands": "byte ptr [eax + 0x9951d7], dl"
+    },
+    {
+      "address": "0x5cd2a0",
+      "mnemonic": "test",
+      "operands": "ebx, ebx"
+    },
+    {
+      "address": "0x5cd2a4",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "address": "0x5cd61f",
+      "mnemonic": "mov",
+      "operands": "ecx, 0xfffffbbf"
+    },
+    {
+      "address": "0x5cd635",
+      "mnemonic": "test",
+      "operands": "esi, esi"
+    },
+    {
+      "address": "0x5cd63f",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "address": "0x5ce61b",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], 0xfbbf"
+    },
+    {
+      "address": "0x5ce7ab",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "address": "0x5cfcc1",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], 0xfbbf"
+    },
+    {
+      "address": "0x4f2f3d",
+      "mnemonic": "and",
+      "operands": "word ptr [ebp + 0x9951b8], 0xf81f"
+    },
+    {
+      "address": "0x4f2f8a",
+      "mnemonic": "or",
+      "operands": "byte ptr [ebp + 0x9951b8], 0x40"
+    },
+    {
+      "address": "0x4f2f95",
+      "mnemonic": "or",
+      "operands": "byte ptr [ebp + 0x9951b9], 4"
+    },
+    {
+      "address": "0x4f2fa9",
+      "mnemonic": "mov",
+      "operands": "dword ptr [ebp + 0x9951b4], eax"
+    },
+    {
+      "address": "0x577c78",
+      "mnemonic": "mov",
+      "operands": "al, byte ptr [ebx + 0x9951bf]"
+    },
+    {
+      "address": "0x577c89",
+      "mnemonic": "je",
+      "operands": "0x577c9e"
+    },
+    {
+      "address": "0x577c8b",
+      "mnemonic": "dec",
+      "operands": "al"
+    },
+    {
+      "address": "0x577c8d",
+      "mnemonic": "mov",
+      "operands": "byte ptr [ebx + 0x9951bf], al"
+    },
+    {
+      "address": "0x577c93",
+      "mnemonic": "jne",
+      "operands": "0x577c9e"
+    },
+    {
+      "address": "0x577c95",
+      "mnemonic": "and",
+      "operands": "word ptr [ebx + 0x9951b8], 0xfbbf"
+    },
+    {
+      "address": "0x4e394d",
+      "mnemonic": "mov",
+      "operands": "byte ptr [esi + 0x9951be], bl"
+    },
+    {
+      "address": "0x4e395a",
+      "mnemonic": "mov",
+      "operands": "byte ptr [esi + 0x9951c1], 0"
+    },
+    {
+      "address": "0x4e396f",
+      "mnemonic": "mov",
+      "operands": "dword ptr [esi + 0x9951b4], eax"
+    },
+    {
+      "address": "0x5b0c27",
+      "mnemonic": "mov",
+      "operands": "byte ptr [edi + 0x9951be], cl"
+    },
+    {
+      "address": "0x5b0c2d",
+      "mnemonic": "mov",
+      "operands": "byte ptr [edi + 0x9951c1], 0"
+    },
+    {
+      "address": "0x5ac545",
+      "mnemonic": "and",
+      "operands": "byte ptr [edi + 0x9951b8], 0xfb"
+    },
+    {
+      "address": "0x5ac623",
+      "mnemonic": "or",
+      "operands": "byte ptr [edi + 0x9951b8], 4"
+    },
+    {
+      "address": "0x5adc51",
+      "mnemonic": "call",
+      "operands": "0x5cdaa0"
+    },
+    {
+      "address": "0x5beb9f",
+      "mnemonic": "mov",
+      "operands": "edi, 3"
+    },
+    {
+      "address": "0x5bed0e",
+      "mnemonic": "cmp",
+      "operands": "dword ptr [0x95a29c], edi"
+    },
+    {
+      "address": "0x5bed19",
+      "mnemonic": "lea",
+      "operands": "eax, [edx + ecx*4]"
+    },
+    {
+      "address": "0x5bed22",
+      "mnemonic": "shl",
+      "operands": "eax, 2"
+    },
+    {
+      "address": "0x5bed35",
+      "mnemonic": "push",
+      "operands": "0x9951b0"
+    },
+    {
+      "address": "0x5bed50",
+      "mnemonic": "push",
+      "operands": "0x9951b0"
+    },
+    {
+      "address": "0x5bed57",
+      "mnemonic": "call",
+      "operands": "0x660b70"
+    },
+    {
+      "address": "0x5bed5e",
+      "mnemonic": "call",
+      "operands": "0x660ca9"
+    },
+    {
+      "address": "0x5bed7e",
+      "mnemonic": "shl",
+      "operands": "edx, 4"
+    },
+    {
+      "address": "0x5bee1c",
+      "mnemonic": "mov",
+      "operands": "dx, word ptr [ecx + 4]"
+    },
+    {
+      "address": "0x5bee20",
+      "mnemonic": "mov",
+      "operands": "word ptr [eax + 6], dx"
+    },
+    {
+      "address": "0x5beed0",
+      "mnemonic": "add",
+      "operands": "eax, 0x34"
+    },
+    {
+      "address": "0x5bee78",
+      "mnemonic": "add",
+      "operands": "ecx, 0x30"
+    }
+  ],
+  "source_functions": [
+    {
+      "start": "0x4e3690",
+      "end": "0x4e3c40",
+      "sha256": "89c633624e85001a00041eeb31b27bc3c27c0bef1ca3b54ea9e278dd0f826d69"
+    },
+    {
+      "start": "0x4f2c00",
+      "end": "0x4f3e20",
+      "sha256": "78cf0130f91ac57cb526cfce449388f88d5f95fc27f556d7905d05496350b915"
+    },
+    {
+      "start": "0x5773c0",
+      "end": "0x57ae30",
+      "sha256": "4e46a9786b9d107ebb0f56da8124cb160b3b53773720bcee0e77f879775839eb"
+    },
+    {
+      "start": "0x5abe40",
+      "end": "0x5b1a40",
+      "sha256": "67e44febb9c5edd3d09f625abd5ad2747d1f7c115d312d460157145b4a94f49e"
+    },
+    {
+      "start": "0x5be250",
+      "end": "0x5c00a0",
+      "sha256": "e3d482645cbcadbe439bdf7577e0273aca6cbe9967fe8bec797f34072d9d3464"
+    },
+    {
+      "start": "0x5cd150",
+      "end": "0x5cd2c0",
+      "sha256": "bd694f8b2d949fa6dae84bd98b780d4bb14c4f96dfcd063bda8ebd6dab52f23f"
+    },
+    {
+      "start": "0x5cd320",
+      "end": "0x5cd660",
+      "sha256": "e2e48a52f6218d4d81792f04ebfed43f244c1401b6a0913258ee8932ce93f57d"
+    },
+    {
+      "start": "0x5cdaa0",
+      "end": "0x5d01c0",
+      "sha256": "88f14e46f790657ad5e2ca36b10ab15e78c7c78501fbc5dd9defd635d206cb17"
+    },
+    {
+      "start": "0x5d8420",
+      "end": "0x5d8520",
+      "sha256": "c8b9f1acb540cb55574795996a2ae399a824e0ee0f0366062d73f519e8134335"
+    },
+    {
+      "start": "0x5d8520",
+      "end": "0x5d89f0",
+      "sha256": "a66d6674e5541f67c67d4d6faf0210f5344c57cc0c960011a28a0f5c5d7b6e24"
+    }
+  ],
+  "literal_writer_inventory_scope": "Writes with an explicit Unit+8/+9 base literal in indexed Capstone functions. Not an exhaustive alias/call-path proof; bulk import/copy and register-based writers are separately traced.",
+  "literal_writers": [
+    {
+      "function": "0x4f2c00",
+      "address": "0x4f2f3d",
+      "mnemonic": "and",
+      "operands": "word ptr [ebp + 0x9951b8], 0xf81f"
+    },
+    {
+      "function": "0x4f2c00",
+      "address": "0x4f2f5e",
+      "mnemonic": "or",
+      "operands": "byte ptr [ebp + 0x9951b8], 0x20"
+    },
+    {
+      "function": "0x4f2c00",
+      "address": "0x4f2f69",
+      "mnemonic": "or",
+      "operands": "byte ptr [ebp + 0x9951b8], 0x80"
+    },
+    {
+      "function": "0x4f2c00",
+      "address": "0x4f2f74",
+      "mnemonic": "or",
+      "operands": "byte ptr [ebp + 0x9951b9], 1"
+    },
+    {
+      "function": "0x4f2c00",
+      "address": "0x4f2f7f",
+      "mnemonic": "or",
+      "operands": "byte ptr [ebp + 0x9951b9], 2"
+    },
+    {
+      "function": "0x4f2c00",
+      "address": "0x4f2f8a",
+      "mnemonic": "or",
+      "operands": "byte ptr [ebp + 0x9951b8], 0x40"
+    },
+    {
+      "function": "0x4f2c00",
+      "address": "0x4f2f95",
+      "mnemonic": "or",
+      "operands": "byte ptr [ebp + 0x9951b9], 4"
+    },
+    {
+      "function": "0x4f2c00",
+      "address": "0x4f3210",
+      "mnemonic": "mov",
+      "operands": "word ptr [ebp + 0x9951b8], ax"
+    },
+    {
+      "function": "0x4f2c00",
+      "address": "0x4f3259",
+      "mnemonic": "mov",
+      "operands": "word ptr [ebp + 0x9951b8], dx"
+    },
+    {
+      "function": "0x5059b0",
+      "address": "0x506676",
+      "mnemonic": "or",
+      "operands": "byte ptr [esi + 0x9951b9], 0x10"
+    },
+    {
+      "function": "0x51ab20",
+      "address": "0x51f47c",
+      "mnemonic": "mov",
+      "operands": "word ptr [esi + 0x9951b8], dx"
+    },
+    {
+      "function": "0x51ab20",
+      "address": "0x51f48e",
+      "mnemonic": "or",
+      "operands": "word ptr [esi + 0x9951b8], ax"
+    },
+    {
+      "function": "0x524f40",
+      "address": "0x525315",
+      "mnemonic": "mov",
+      "operands": "word ptr [ecx + 0x9951b8], ax"
+    },
+    {
+      "function": "0x53a950",
+      "address": "0x53a9ee",
+      "mnemonic": "and",
+      "operands": "byte ptr [esi + 0x9951b9], 0xef"
+    },
+    {
+      "function": "0x53a950",
+      "address": "0x53aa21",
+      "mnemonic": "mov",
+      "operands": "word ptr [esi + 0x9951b8], ax"
+    },
+    {
+      "function": "0x5773c0",
+      "address": "0x577c95",
+      "mnemonic": "and",
+      "operands": "word ptr [ebx + 0x9951b8], 0xfbbf"
+    },
+    {
+      "function": "0x5773c0",
+      "address": "0x57849c",
+      "mnemonic": "and",
+      "operands": "byte ptr [ebx + 0x9951b9], 0xf7"
+    },
+    {
+      "function": "0x5abe40",
+      "address": "0x5ac545",
+      "mnemonic": "and",
+      "operands": "byte ptr [edi + 0x9951b8], 0xfb"
+    },
+    {
+      "function": "0x5abe40",
+      "address": "0x5ac623",
+      "mnemonic": "or",
+      "operands": "byte ptr [edi + 0x9951b8], 4"
+    },
+    {
+      "function": "0x5abe40",
+      "address": "0x5ae975",
+      "mnemonic": "or",
+      "operands": "byte ptr [eax*4 + 0x9951b9], 0x20"
+    },
+    {
+      "function": "0x5cd150",
+      "address": "0x5cd2a4",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "function": "0x5cd320",
+      "address": "0x5cd63f",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "function": "0x5cdaa0",
+      "address": "0x5ce61b",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], 0xfbbf"
+    },
+    {
+      "function": "0x5cdaa0",
+      "address": "0x5ce7ab",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "function": "0x5cdaa0",
+      "address": "0x5ceac5",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "function": "0x5cdaa0",
+      "address": "0x5cecb3",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "function": "0x5cdaa0",
+      "address": "0x5cf063",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], si"
+    },
+    {
+      "function": "0x5cdaa0",
+      "address": "0x5cf59f",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "function": "0x5cdaa0",
+      "address": "0x5cfa1d",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "function": "0x5cdaa0",
+      "address": "0x5cfcc1",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], 0xfbbf"
+    },
+    {
+      "function": "0x5cdaa0",
+      "address": "0x5cff31",
+      "mnemonic": "and",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "function": "0x5d8420",
+      "address": "0x5d8463",
+      "mnemonic": "mov",
+      "operands": "word ptr [eax + 0x9951b8], cx"
+    },
+    {
+      "function": "0x5d8520",
+      "address": "0x5d85ee",
+      "mnemonic": "or",
+      "operands": "byte ptr [eax*4 + 0x9951b8], 0x20"
+    }
+  ],
+  "cases": [
+    {
+      "id": "initializer_owner0",
+      "kind": "initializer",
+      "owner": 0,
+      "word": 0,
+      "status": 0,
+      "seen": 0,
+      "writes": [
+        {
+          "pc": "0x5d8463",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 0,
+          "word_before": 42405
+        }
+      ]
+    },
+    {
+      "id": "initializer_owner1",
+      "kind": "initializer",
+      "owner": 1,
+      "word": 0,
+      "status": 0,
+      "seen": 0,
+      "writes": [
+        {
+          "pc": "0x5d8463",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 0,
+          "word_before": 42405
+        }
+      ]
+    },
+    {
+      "id": "initializer_owner3",
+      "kind": "initializer",
+      "owner": 3,
+      "word": 0,
+      "status": 0,
+      "seen": 0,
+      "writes": [
+        {
+          "pc": "0x5d8463",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 0,
+          "word_before": 42405
+        }
+      ]
+    },
+    {
+      "id": "full_scout_factory_owner1",
+      "kind": "factory",
+      "owner": 1,
+      "result": 0,
+      "word": 0,
+      "status": 0,
+      "seen": 0,
+      "writes": [
+        {
+          "pc": "0x5d8463",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 0,
+          "word_before": 65535
+        }
+      ]
+    },
+    {
+      "id": "full_scout_factory_owner3",
+      "kind": "factory",
+      "owner": 3,
+      "result": 0,
+      "word": 0,
+      "status": 0,
+      "seen": 0,
+      "writes": [
+        {
+          "pc": "0x5d8463",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 0,
+          "word_before": 65535
+        }
+      ]
+    },
+    {
+      "id": "disclose_observer0_0x440",
+      "kind": "disclose",
+      "observer": 0,
+      "before": 1088,
+      "word": 1088,
+      "seen": 129,
+      "writes": []
+    },
+    {
+      "id": "disclose_observer0_0xffff",
+      "kind": "disclose",
+      "observer": 0,
+      "before": 65535,
+      "word": 65535,
+      "seen": 129,
+      "writes": []
+    },
+    {
+      "id": "disclose_observer0_0x400",
+      "kind": "disclose",
+      "observer": 0,
+      "before": 1024,
+      "word": 1024,
+      "seen": 129,
+      "writes": []
+    },
+    {
+      "id": "disclose_observer0_0x40",
+      "kind": "disclose",
+      "observer": 0,
+      "before": 64,
+      "word": 64,
+      "seen": 129,
+      "writes": []
+    },
+    {
+      "id": "disclose_observer1_0x440",
+      "kind": "disclose",
+      "observer": 1,
+      "before": 1088,
+      "word": 0,
+      "seen": 130,
+      "writes": [
+        {
+          "pc": "0x5cd2a4",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 0,
+          "word_before": 1088
+        }
+      ]
+    },
+    {
+      "id": "disclose_observer1_0xffff",
+      "kind": "disclose",
+      "observer": 1,
+      "before": 65535,
+      "word": 64447,
+      "seen": 130,
+      "writes": [
+        {
+          "pc": "0x5cd2a4",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 64447,
+          "word_before": 65535
+        }
+      ]
+    },
+    {
+      "id": "disclose_observer1_0x400",
+      "kind": "disclose",
+      "observer": 1,
+      "before": 1024,
+      "word": 0,
+      "seen": 130,
+      "writes": [
+        {
+          "pc": "0x5cd2a4",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 0,
+          "word_before": 1024
+        }
+      ]
+    },
+    {
+      "id": "disclose_observer1_0x40",
+      "kind": "disclose",
+      "observer": 1,
+      "before": 64,
+      "word": 0,
+      "seen": 130,
+      "writes": [
+        {
+          "pc": "0x5cd2a4",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 0,
+          "word_before": 64
+        }
+      ]
+    },
+    {
+      "id": "disclose_observer3_0x440",
+      "kind": "disclose",
+      "observer": 3,
+      "before": 1088,
+      "word": 0,
+      "seen": 136,
+      "writes": [
+        {
+          "pc": "0x5cd2a4",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 0,
+          "word_before": 1088
+        }
+      ]
+    },
+    {
+      "id": "disclose_observer3_0xffff",
+      "kind": "disclose",
+      "observer": 3,
+      "before": 65535,
+      "word": 64447,
+      "seen": 136,
+      "writes": [
+        {
+          "pc": "0x5cd2a4",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 64447,
+          "word_before": 65535
+        }
+      ]
+    },
+    {
+      "id": "disclose_observer3_0x400",
+      "kind": "disclose",
+      "observer": 3,
+      "before": 1024,
+      "word": 0,
+      "seen": 136,
+      "writes": [
+        {
+          "pc": "0x5cd2a4",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 0,
+          "word_before": 1024
+        }
+      ]
+    },
+    {
+      "id": "disclose_observer3_0x40",
+      "kind": "disclose",
+      "observer": 3,
+      "before": 64,
+      "word": 0,
+      "seen": 136,
+      "writes": [
+        {
+          "pc": "0x5cd2a4",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 0,
+          "word_before": 64
+        }
+      ]
+    },
+    {
+      "id": "relocation_0x0",
+      "kind": "relocation",
+      "before": 0,
+      "word": 0,
+      "coordinate": [
+        24,
+        38
+      ],
+      "writes": []
+    },
+    {
+      "id": "relocation_0x440",
+      "kind": "relocation",
+      "before": 1088,
+      "word": 1088,
+      "coordinate": [
+        24,
+        38
+      ],
+      "writes": []
+    },
+    {
+      "id": "relocation_0xffff",
+      "kind": "relocation",
+      "before": 65535,
+      "word": 65535,
+      "coordinate": [
+        24,
+        38
+      ],
+      "writes": []
+    },
+    {
+      "id": "editor_attributes_0x0",
+      "kind": "editor_fragment",
+      "selection": 0,
+      "before": 65535,
+      "word": 63519,
+      "status": 0,
+      "writes": [
+        {
+          "pc": "0x4f2f3d",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 63519,
+          "word_before": 65535
+        }
+      ]
+    },
+    {
+      "id": "editor_attributes_0x10",
+      "kind": "editor_fragment",
+      "selection": 16,
+      "before": 65535,
+      "word": 63583,
+      "status": 0,
+      "writes": [
+        {
+          "pc": "0x4f2f3d",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 63519,
+          "word_before": 65535
+        },
+        {
+          "pc": "0x4f2f8a",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 1,
+          "value": 95,
+          "word_before": 63519
+        }
+      ]
+    },
+    {
+      "id": "editor_attributes_0x20",
+      "kind": "editor_fragment",
+      "selection": 32,
+      "before": 65535,
+      "word": 64543,
+      "status": 0,
+      "writes": [
+        {
+          "pc": "0x4f2f3d",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 63519,
+          "word_before": 65535
+        },
+        {
+          "pc": "0x4f2f95",
+          "unit": 0,
+          "address": "0x9951b9",
+          "size": 1,
+          "value": 252,
+          "word_before": 63519
+        }
+      ]
+    },
+    {
+      "id": "editor_attributes_0x30",
+      "kind": "editor_fragment",
+      "selection": 48,
+      "before": 65535,
+      "word": 64607,
+      "status": 0,
+      "writes": [
+        {
+          "pc": "0x4f2f3d",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 63519,
+          "word_before": 65535
+        },
+        {
+          "pc": "0x4f2f8a",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 1,
+          "value": 95,
+          "word_before": 63519
+        },
+        {
+          "pc": "0x4f2f95",
+          "unit": 0,
+          "address": "0x9951b9",
+          "size": 1,
+          "value": 252,
+          "word_before": 63583
+        }
+      ]
+    },
+    {
+      "id": "editor_attributes_0x7f",
+      "kind": "editor_fragment",
+      "selection": 127,
+      "before": 65535,
+      "word": 65535,
+      "status": 256,
+      "writes": [
+        {
+          "pc": "0x4f2f3d",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 63519,
+          "word_before": 65535
+        },
+        {
+          "pc": "0x4f2f5e",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 1,
+          "value": 63,
+          "word_before": 63519
+        },
+        {
+          "pc": "0x4f2f69",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 1,
+          "value": 191,
+          "word_before": 63551
+        },
+        {
+          "pc": "0x4f2f74",
+          "unit": 0,
+          "address": "0x9951b9",
+          "size": 1,
+          "value": 249,
+          "word_before": 63679
+        },
+        {
+          "pc": "0x4f2f7f",
+          "unit": 0,
+          "address": "0x9951b9",
+          "size": 1,
+          "value": 251,
+          "word_before": 63935
+        },
+        {
+          "pc": "0x4f2f8a",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 1,
+          "value": 255,
+          "word_before": 64447
+        },
+        {
+          "pc": "0x4f2f95",
+          "unit": 0,
+          "address": "0x9951b9",
+          "size": 1,
+          "value": 255,
+          "word_before": 64511
+        }
+      ]
+    },
+    {
+      "id": "modern_codec_0x0",
+      "kind": "modern_codec_fragment",
+      "before": 0,
+      "word": 0,
+      "wire_hex": "000102030405060700000a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233",
+      "restored_hex": "000102030405060700000a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233",
+      "io": [
+        {
+          "operation": "write",
+          "args": [
+            10047920,
+            52,
+            1,
+            4660
+          ]
+        },
+        {
+          "operation": "read",
+          "args": [
+            10047920,
+            52,
+            1,
+            4660
+          ]
+        }
+      ]
+    },
+    {
+      "id": "modern_codec_0x40",
+      "kind": "modern_codec_fragment",
+      "before": 64,
+      "word": 64,
+      "wire_hex": "000102030405060740000a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233",
+      "restored_hex": "000102030405060740000a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233",
+      "io": [
+        {
+          "operation": "write",
+          "args": [
+            10047920,
+            52,
+            1,
+            4660
+          ]
+        },
+        {
+          "operation": "read",
+          "args": [
+            10047920,
+            52,
+            1,
+            4660
+          ]
+        }
+      ]
+    },
+    {
+      "id": "modern_codec_0x400",
+      "kind": "modern_codec_fragment",
+      "before": 1024,
+      "word": 1024,
+      "wire_hex": "000102030405060700040a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233",
+      "restored_hex": "000102030405060700040a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233",
+      "io": [
+        {
+          "operation": "write",
+          "args": [
+            10047920,
+            52,
+            1,
+            4660
+          ]
+        },
+        {
+          "operation": "read",
+          "args": [
+            10047920,
+            52,
+            1,
+            4660
+          ]
+        }
+      ]
+    },
+    {
+      "id": "modern_codec_0x440",
+      "kind": "modern_codec_fragment",
+      "before": 1088,
+      "word": 1088,
+      "wire_hex": "000102030405060740040a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233",
+      "restored_hex": "000102030405060740040a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233",
+      "io": [
+        {
+          "operation": "write",
+          "args": [
+            10047920,
+            52,
+            1,
+            4660
+          ]
+        },
+        {
+          "operation": "read",
+          "args": [
+            10047920,
+            52,
+            1,
+            4660
+          ]
+        }
+      ]
+    },
+    {
+      "id": "modern_codec_0xa55a",
+      "kind": "modern_codec_fragment",
+      "before": 42330,
+      "word": 42330,
+      "wire_hex": "00010203040506075aa50a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233",
+      "restored_hex": "00010203040506075aa50a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233",
+      "io": [
+        {
+          "operation": "write",
+          "args": [
+            10047920,
+            52,
+            1,
+            4660
+          ]
+        },
+        {
+          "operation": "read",
+          "args": [
+            10047920,
+            52,
+            1,
+            4660
+          ]
+        }
+      ]
+    },
+    {
+      "id": "modern_codec_0xffff",
+      "kind": "modern_codec_fragment",
+      "before": 65535,
+      "word": 65535,
+      "wire_hex": "0001020304050607ffff0a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233",
+      "restored_hex": "0001020304050607ffff0a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233",
+      "io": [
+        {
+          "operation": "write",
+          "args": [
+            10047920,
+            52,
+            1,
+            4660
+          ]
+        },
+        {
+          "operation": "read",
+          "args": [
+            10047920,
+            52,
+            1,
+            4660
+          ]
+        }
+      ]
+    },
+    {
+      "id": "legacy48_import_0x440",
+      "kind": "legacy48_import_fragment",
+      "before": 1088,
+      "word": 1088,
+      "input_hex": "000102030405060740040a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f",
+      "restored_hex": "000102030405060740040a0000000b000c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f"
+    },
+    {
+      "id": "legacy48_import_0xa55a",
+      "kind": "legacy48_import_fragment",
+      "before": 42330,
+      "word": 42330,
+      "input_hex": "00010203040506075aa50a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f",
+      "restored_hex": "00010203040506075aa50a0000000b000c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f"
+    },
+    {
+      "id": "legacy48_import_0xffff",
+      "kind": "legacy48_import_fragment",
+      "before": 65535,
+      "word": 65535,
+      "input_hex": "0001020304050607ffff0a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f",
+      "restored_hex": "0001020304050607ffff0a0000000b000c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f"
+    },
+    {
+      "id": "upkeep_duration0",
+      "kind": "upkeep_countdown_fragment",
+      "duration_before": 0,
+      "duration_after": 0,
+      "before": 65535,
+      "word": 65535,
+      "writes": []
+    },
+    {
+      "id": "upkeep_duration1",
+      "kind": "upkeep_countdown_fragment",
+      "duration_before": 1,
+      "duration_after": 0,
+      "before": 65535,
+      "word": 64447,
+      "writes": [
+        {
+          "pc": "0x577c95",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 64447,
+          "word_before": 65535
+        }
+      ]
+    },
+    {
+      "id": "upkeep_duration2",
+      "kind": "upkeep_countdown_fragment",
+      "duration_before": 2,
+      "duration_after": 1,
+      "before": 65535,
+      "word": 65535,
+      "writes": []
+    },
+    {
+      "id": "ownership_transfer_0x0",
+      "kind": "ownership_transfer",
+      "before": 0,
+      "word": 0,
+      "owner": 1,
+      "writes": []
+    },
+    {
+      "id": "ownership_transfer_0x440",
+      "kind": "ownership_transfer",
+      "before": 1088,
+      "word": 1088,
+      "owner": 1,
+      "writes": []
+    },
+    {
+      "id": "ownership_transfer_0xffff",
+      "kind": "ownership_transfer",
+      "before": 65535,
+      "word": 65535,
+      "owner": 1,
+      "writes": []
+    },
+    {
+      "id": "stack_disclosure_0x5cd150_0",
+      "kind": "stack_disclosure",
+      "entry": "0x5cd150",
+      "observer": 0,
+      "before": 65535,
+      "words": [
+        65535,
+        65535
+      ],
+      "seen": [
+        129,
+        129
+      ],
+      "writes": []
+    },
+    {
+      "id": "stack_disclosure_0x5cd150_1",
+      "kind": "stack_disclosure",
+      "entry": "0x5cd150",
+      "observer": 1,
+      "before": 65535,
+      "words": [
+        64447,
+        64447
+      ],
+      "seen": [
+        130,
+        130
+      ],
+      "writes": [
+        {
+          "pc": "0x5cd2a4",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 64447,
+          "word_before": 65535
+        },
+        {
+          "pc": "0x5cd2a4",
+          "unit": 1,
+          "address": "0x9951ec",
+          "size": 2,
+          "value": 64447,
+          "word_before": 65535
+        }
+      ]
+    },
+    {
+      "id": "stack_disclosure_0x5cd150_3",
+      "kind": "stack_disclosure",
+      "entry": "0x5cd150",
+      "observer": 3,
+      "before": 65535,
+      "words": [
+        64447,
+        64447
+      ],
+      "seen": [
+        136,
+        136
+      ],
+      "writes": [
+        {
+          "pc": "0x5cd2a4",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 64447,
+          "word_before": 65535
+        },
+        {
+          "pc": "0x5cd2a4",
+          "unit": 1,
+          "address": "0x9951ec",
+          "size": 2,
+          "value": 64447,
+          "word_before": 65535
+        }
+      ]
+    },
+    {
+      "id": "stack_disclosure_0x5cd320_0",
+      "kind": "stack_disclosure",
+      "entry": "0x5cd320",
+      "observer": 0,
+      "before": 65535,
+      "words": [
+        65535,
+        65535
+      ],
+      "seen": [
+        129,
+        129
+      ],
+      "writes": []
+    },
+    {
+      "id": "stack_disclosure_0x5cd320_1",
+      "kind": "stack_disclosure",
+      "entry": "0x5cd320",
+      "observer": 1,
+      "before": 65535,
+      "words": [
+        64447,
+        64447
+      ],
+      "seen": [
+        130,
+        130
+      ],
+      "writes": [
+        {
+          "pc": "0x5cd63f",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 64447,
+          "word_before": 65535
+        },
+        {
+          "pc": "0x5cd63f",
+          "unit": 1,
+          "address": "0x9951ec",
+          "size": 2,
+          "value": 64447,
+          "word_before": 65535
+        }
+      ]
+    },
+    {
+      "id": "stack_disclosure_0x5cd320_3",
+      "kind": "stack_disclosure",
+      "entry": "0x5cd320",
+      "observer": 3,
+      "before": 65535,
+      "words": [
+        64447,
+        64447
+      ],
+      "seen": [
+        136,
+        136
+      ],
+      "writes": [
+        {
+          "pc": "0x5cd63f",
+          "unit": 0,
+          "address": "0x9951b8",
+          "size": 2,
+          "value": 64447,
+          "word_before": 65535
+        },
+        {
+          "pc": "0x5cd63f",
+          "unit": 1,
+          "address": "0x9951ec",
+          "size": 2,
+          "value": 64447,
+          "word_before": 65535
+        }
+      ]
+    },
+    {
+      "id": "move_capture_owner_store_0x0",
+      "kind": "move_capture_owner_fragment",
+      "before": 0,
+      "word": 0,
+      "owner": 3,
+      "order": 0,
+      "writes": []
+    },
+    {
+      "id": "move_capture_owner_store_0x440",
+      "kind": "move_capture_owner_fragment",
+      "before": 1088,
+      "word": 1088,
+      "owner": 3,
+      "order": 0,
+      "writes": []
+    },
+    {
+      "id": "move_capture_owner_store_0xffff",
+      "kind": "move_capture_owner_fragment",
+      "before": 65535,
+      "word": 65535,
+      "owner": 3,
+      "order": 0,
+      "writes": []
+    }
+  ]
+}

@@ -14,7 +14,9 @@ check the integer range before narrowing. A legacy state-codec request rejects
 silently dropping a known word. State equality includes the optional word.
 
 This is persistence infrastructure, not completed actor admission. Fresh factory
-initialization, disclosure/upkeep mutation events, frontend transport and the
+initialization is now connected in all four admitted creation paths, including
+startup and restart. It does not rerun on restore. Disclosure/upkeep mutation
+events, frontend transport and the
 ordinary main-map consumers still need their separate integration. In
 particular, absent flags do not authorize treating an imported unit as flags=0.
 
@@ -26,3 +28,12 @@ both changed production translation units. The same five groups pass with
 ConventionalUnitState.cpp, Unit.cpp and ConventionalUnits.cpp instrumented under
 ASan/UBSan; other objects remain uninstrumented and leak detection is disabled.
 No visual behavior is claimed by this PR.
+
+The factory follow-up also includes flags in the first-base recovery token,
+so a freshly manufactured Colony Pod can still enter the naming/governor flow
+and its identity check retains the full conventional state. Its 90 affected
+native groups pass across conventional creation/movement/restore, Former work,
+Hold, manufacturing and restart/founding continuations. Both changed production
+translation units pass correctness analysis. Original initializer and event
+semantics are pinned by 49 controls in an 11-file SHA-verified source bundle
+(manifest b293b00e4eb12cb4de3d9fc4986c2c5823de87041bcc032b4fc83c2d369ef489).

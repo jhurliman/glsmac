@@ -212,7 +212,7 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
             const auto actions=um->QueryConventionalCommands(actor).actions;
             GT_ASSERT(actions==std::vector<int32_t>{7},"Held unit lacks sole Activate command");
             types::Buffer old;auto plain=actor->Conventional();plain.facing.reset();plain.stack.reset(); // fields absent from the authored Unit4 migration control
-            plain.order=ConventionalUnitState::Order::None;plain.order_countdown=0;plain.Serialize(old,false,false);
+            plain.native_flags.reset();plain.order=ConventionalUnitState::Order::None;plain.order_countdown=0;plain.Serialize(old,false,false);
             const auto migrated=ConventionalUnitState::Deserialize(old,false,false);
             GT_ASSERT(migrated==plain && old.lenr==old.lenw,"Unit4 migration invented an order");GT_OK();
         });
@@ -459,8 +459,8 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
                 GT_ASSERT(fixture.Snapshot()==before&&fixture.GameplayRandom()==random&&fixture.Updates().empty(),"failed work changed authority");
                 tile->features=old;tile->terraforming=terraform;
             }
-            auto state=actor->Conventional();state.work_order=Order::None;state.work_progress=255;types::Buffer wire;state.Serialize(wire,true,true,true,true);
-            GT_ASSERT(ConventionalUnitState::Deserialize(wire,true,true,true,true)==state,"unassigned saved progress was normalized");
+            auto state=actor->Conventional();state.work_order=Order::None;state.work_progress=255;types::Buffer wire;state.Serialize(wire,true,true,true,true,true);
+            GT_ASSERT(ConventionalUnitState::Deserialize(wire,true,true,true,true,true)==state,"unassigned saved progress was normalized");
             state.work_order=static_cast<Order>(255);GT_ASSERT(Rejects([&]{state.Validate();}),"unknown saved order admitted");
             state=actor->Conventional();state.design_id=2;state.work_progress=1;
             GT_ASSERT(Rejects([&]{game->GetUM()->UpdateConventionalUnit(GSE_CALL,actor,state);}),"Scout retained Former progress");GT_OK();

@@ -977,6 +977,77 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(rejected,"Same-footprint different-zoom bitmap history admitted");GT_OK();
     });
 
+    task->AddTest("SMAC terrain picker uses committed relief before pending UI changes",GT(){
+        namespace native=game::frontend::native_terrain;
+        game::native_terrain::World world;world.retained_geometry=true;
+        world.viewer=3;world.exploration_ready=true;world.observers_present=8;world.initial_survey=false;
+        for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {world.tiles[y*40+x/2].band=x<22?3:x<26?4:5;}}
+        native::Session session(world);native::ViewContext context;context.camera={{22,38}};context.zoom=3;context.relief=8;
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,77)};
+        const auto publish=[&] {
+            const auto plan=session.Prepare(world,context);
+            if(!plan) {throw std::runtime_error("Relief frame unavailable");}
+            session.Commit(native::RenderPrepared(world,source,*plan,0,context.flags,0,nullptr,context.preferences),context.Layout(world));
+        };
+        publish();context.relief=25;
+        const auto low=session.Pick({{720,301}});
+        GT_ASSERT(low && low->code==0 && low->written==native::Point({{24,38}}),"Pending UI relief replaced committed low-relief picking");
+        publish();const auto ordinary=session.Pick({{720,301}});
+        GT_ASSERT(ordinary && ordinary->code==0 && ordinary->written==native::Point({{24,40}}),"New ordinary-relief frame retained old picker heights");
+        session.InvalidateAppearance();GT_ASSERT(!session.Pick({{720,301}}),"Retired frame retained native picking");GT_OK();
+    });
+
+    task->AddTest("SMAC terrain picker preserves native output writes and equal-q tile differences",GT(){
+        namespace native=game::frontend::native_terrain;
+        // Original same-pixel controls: pattern, pixel, zoom3 tile, zoom4 tile.
+        constexpr int cases[][7]={
+            {1,500,275,21,37,20,38},
+            {1,500,315,20,38,21,39},
+            {1,540,285,21,37,21,39},
+            {1,541,285,21,37,22,38},
+            {1,541,286,22,38,21,39},
+            {1,559,245,22,36,21,37},
+            {1,559,346,21,39,22,40},
+            {1,600,255,22,36,22,38},
+            {2,559,39,21,29,22,30},
+            {2,559,58,22,30,21,31},
+            {2,559,99,21,31,22,32},
+            {2,559,118,22,32,21,33},
+            {2,559,159,21,33,22,34},
+            {2,559,178,22,34,21,35},
+            {2,559,219,21,35,22,36},
+            {2,559,238,22,36,21,37},
+            {3,601,29,22,28,23,29},
+            {3,601,30,23,29,22,30},
+            {3,601,89,22,30,23,31},
+            {3,601,90,23,31,22,32},
+            {3,601,149,22,32,23,33},
+            {3,601,150,23,33,22,34},
+            {3,601,209,22,34,23,35},
+            {3,601,210,23,35,22,36},
+        };
+        for(const auto& c:cases) {
+            game::native_terrain::World world;
+            for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
+                world.tiles[y*40+x/2].band=c[0]==1?(x==22 && y==38?5:3):c[0]==2?(x<22?3:x<26?4:5):(x<22?2:4);
+            }}native::ViewGeometry geometry(world);
+            for(const int zoom:{3,4}) {
+                const auto result=geometry.Pick(native::Layout(22,38,zoom,true),zoom,25,{{c[1],c[2]}});
+                const int offset=zoom==3?3:5;
+                GT_ASSERT(result.code==0 && result.written==native::Point({{c[offset],c[offset+1]}}),"Original equal-q terrain pick differs");
+            }
+        }
+        game::native_terrain::World small(16,12);for(auto& tile:small.tiles) {tile.band=3;}
+        native::ViewGeometry geometry(small);const auto view=native::Layout(8,6,0,true,{{16,12}});
+        const auto left=geometry.Pick(view,0,25,{{0,255}});
+        GT_ASSERT(left.code==1 && !left.written,"Early centered-viewport miss overwrote native outputs");
+        const auto right=geometry.Pick(view,0,25,{{1023,255}});
+        GT_ASSERT(right.code==0 && right.written==native::Point({{3,5}}),"Picker invented a symmetric right letterbox rejection");
+        const auto bottom=geometry.Pick(view,0,25,{{512,510}});
+        GT_ASSERT(bottom.code==1 && bottom.written==native::Point({{8,16}}),"Post-walk world rejection failed to write native coordinates");
+        GT_OK();
+    });
+
     task->AddTest("SMAC owned observer view rejects unavailable knowledge and keeps current context",GT(){
         namespace native=game::frontend::native_terrain;
         using World=game::native_terrain::World;

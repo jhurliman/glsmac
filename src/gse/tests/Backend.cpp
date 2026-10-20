@@ -1,3 +1,4 @@
+#include "types/mesh/Rectangle.h"
 #include "game/frontend/NativeActorMarker.h"
 #include "game/NativeZoom.h"
 #include "Backend.h"
@@ -6367,6 +6368,62 @@ public:
             GT_ASSERT(target.nutrients==4 && target.selected_items==0x88040,"Owned snapshot borrowed later tile/knowledge state");GT_OK();
         });
     }
+    std::string CheckNativeTerrainPicking() {
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            namespace native=game::frontend::native_terrain;
+            auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+            util::FinallyGuard close_ui([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
+            game::frontend::Game frontend(m_glsmac.get(),m_state,ui,{},{});
+            scene::Scene scene("Native picking request fixture",scene::SCENE_TYPE_WORLD);
+            frontend.m_world_scene=&scene;frontend.m_world_retired=false;
+            frontend.m_viewport.window_width=1024;frontend.m_viewport.window_height=768;
+            auto* mesh=new types::mesh::Rectangle(types::Vec2<float>{-1,1},types::Vec2<float>{1,-1},0);
+            frontend.m_native_actor=new scene::actor::Mesh("Native picking surface",mesh);
+            scene.AddActor(frontend.m_native_actor);frontend.m_native_actor->Show();
+            util::FinallyGuard detach([&]{frontend.ClearNativeTerrain();frontend.m_world_scene=nullptr;});
+            game::native_terrain::World world;world.retained_geometry=true;
+            world.viewer=3;world.exploration_ready=true;world.observers_present=8;world.initial_survey=false;
+            for(auto& tile:world.tiles) {tile.band=3;tile.material_admitted=true;}
+            world.tiles[38*40+11].band=5;
+            frontend.m_native_view=std::make_shared<native::Session>(world);
+            native::ViewContext context;context.camera={{22,38}};context.zoom=3;
+            native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,77)};
+            const auto publish=[&] {
+                const auto plan=frontend.m_native_view->Prepare(world,context);
+                if(!plan) {throw std::runtime_error("Native picking frame unavailable");}
+                frontend.m_native_view->Commit(native::RenderPrepared(world,source,*plan,0,context.flags,0,nullptr,context.preferences),context.Layout(world));
+            };
+            publish();
+            frontend.GetTileAtScreenCoords(game::backend::TQP_TILE_SELECT,500,768-275);
+            GT_ASSERT(frontend.IsTileAtRequestPending() && !frontend.m_tile_at_request_id,"Native request went through legacy GPU data mesh");
+            auto result=frontend.GetTileAtScreenCoordsResult();
+            GT_ASSERT(result.is_set && result.tile_pos==types::Vec2<size_t>(21,37) && !frontend.IsTileAtRequestPending(),"Actual native screen/result route differs");
+            frontend.GetTileAtScreenCoords(game::backend::TQP_TILE_SELECT,500,768-275);frontend.CancelTileAtRequest();
+            GT_ASSERT(!frontend.IsTileAtRequestPending(),"Cancellation retained native response");
+            frontend.GetTileAtScreenCoords(game::backend::TQP_TILE_SELECT,500,768-275);
+            frontend.GetTileAtScreenCoords(game::backend::TQP_OBJECT_SELECT,500,768-315);
+            result=frontend.GetTileAtScreenCoordsResult();
+            GT_ASSERT(result.is_set && result.tile_pos==types::Vec2<size_t>(20,38) && frontend.m_tile_at_query_purpose==game::backend::TQP_OBJECT_SELECT,
+                "Replacement native request delivered old tile/purpose");
+            context.zoom=4; // Pending UI state must not change picking for the visible zoom3 frame.
+            frontend.GetTileAtScreenCoords(game::backend::TQP_TILE_SELECT,500,768-275);
+            result=frontend.GetTileAtScreenCoordsResult();
+            GT_ASSERT(result.is_set && result.tile_pos==types::Vec2<size_t>(21,37),"Pending zoom changed committed-frame picking");
+            publish();frontend.GetTileAtScreenCoords(game::backend::TQP_TILE_SELECT,500,768-275);
+            result=frontend.GetTileAtScreenCoordsResult();
+            GT_ASSERT(result.is_set && result.tile_pos==types::Vec2<size_t>(20,38),"Same-q new frame retained old height/zoom picking");
+            frontend.GetTileAtScreenCoords(game::backend::TQP_TILE_SELECT,1024,768-275);
+            GT_ASSERT(frontend.IsTileAtRequestPending() && !frontend.GetTileAtScreenCoordsResult().is_set,"Native miss fell through to absent legacy data mesh");
+            frontend.GetTileAtScreenCoords(game::backend::TQP_TILE_SELECT,500,768-275);
+            frontend.m_world_retired=true;
+            GT_ASSERT(!frontend.GetTileAtScreenCoordsResult().is_set,"Queued native response survived world retirement");
+            frontend.GetTileAtScreenCoords(game::backend::TQP_TILE_SELECT,500,768-275);
+            GT_ASSERT(!frontend.GetTileAtScreenCoordsResult().is_set,"Retired native surface selected old world");
+            frontend.m_world_retired=false;
+            frontend.GetTileAtScreenCoords(game::backend::TQP_TILE_SELECT,500,768-275);frontend.ClearNativeTerrain();
+            GT_ASSERT(!frontend.IsTileAtRequestPending(),"World teardown retained native response");GT_OK();
+        });
+    }
     std::string CheckNativeDevelopedVisibility() {
         return WithScriptValues([&](GSE_CALLABLE)->std::string {
             auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
@@ -8772,6 +8829,9 @@ public:
 };
 
 static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
+    task->AddTest("world admission native terrain picking uses committed frame and cancellation",GT(){
+        BackendFixture fixture;return fixture.CheckNativeTerrainPicking();
+    });
     task->AddTest("world admission native terrain owns saved exploration and distinct survey authority",GT(){
         BackendFixture fixture;return fixture.CheckNativeExplorationSnapshot();
     });

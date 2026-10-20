@@ -48,20 +48,24 @@ struct Session {
             bool(HorizontalPan(*layout,next));
         auto result=geometry.Prepare(next,context.zoom,context.relief,incremental,true,observer,
             inspection?nullptr:&known,survey);
-        pending_observer_=viewer;return result;
+        pending_observer_=viewer;pending_relief_=context.relief;return result;
     }
     // Publish bitmap/layout and observer identity together only after rendering
     // succeeds. An uncommitted preparation cannot authorize retained pixels.
     void Commit(Frame next,const ViewLayout& view) {
         if(!pending_observer_) {throw std::logic_error("Native view commit without preparation");}
-        frame=std::move(next);layout=view;observer_=*pending_observer_;pending_observer_.reset();
+        frame=std::move(next);layout=view;observer_=*pending_observer_;committed_relief_=pending_relief_;pending_observer_.reset();
+    }
+    std::optional<PickResult> Pick(Point pixel) {
+        if(!frame || !layout) {return {};}
+        return geometry.Pick(*layout,frame->zoom,committed_relief_,pixel);
     }
     ViewGeometry geometry;
     std::optional<Frame> frame;
     std::optional<ViewLayout> layout;
     std::array<std::pair<uint8_t,uint32_t>,3200> cells{};
 private:
-    int observer_=0;
+    int observer_=0,pending_relief_=25,committed_relief_=25;
     std::optional<int> pending_observer_;
 };
 }

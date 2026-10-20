@@ -1,5 +1,6 @@
 #pragma once
 #include "NativeTerrainView.h"
+#include "NativeTerrainPicking.h"
 #include "game/NativeTerrainWorld.h"
 #include "game/backend/map/SmacLandmarkGeometry.h"
 #include <functional>
@@ -127,6 +128,19 @@ private:
         if(observer) {observer({Query::Kind::Height,tile,vertex,{{value,0}}});}return value;
     }
 public:
+    PickResult Pick(const ViewLayout& view,int zoom,int relief,Point pixel,
+        const Observer& observer={},const PickObserver& edges={}) {
+        if(view.world!=world_ || view.horizontal_wrap!=wrap_ || view.unit!=::game::native_zoom::Unit(zoom)) {
+            throw std::invalid_argument("Native picker and view geometry differ");
+        }
+        geometry_.Configure(zoom,relief);
+        return PickTerrain(view,pixel,[&](int x,int y,unsigned vertex) {
+            // The native direct producer rejects outside coordinates before
+            // its valid corner aggregation wraps neighboring contributors.
+            const int value=x<0 || x>=world_[0] || y<0 || y>=world_[1]?0:Require(geometry_.Height(x,y,vertex));
+            if(observer) {observer({Query::Kind::Height,{{x,y}},vertex,{{value,0}}});}return value;
+        },edges);
+    }
     // Also used for actors outside the terrain traversal (including offscreen
     // anchors). Preserve the original flat-map out-of-view displacement rule.
     Point Projector(const ViewLayout& view,Point tile,const Observer& observer={}) {

@@ -2223,25 +2223,28 @@ void Game::ScrollToTile( const tile::Tile* tile, bool center_on_tile ) {
 }
 
 void Game::CancelTileAtRequest() {
-	ASSERT( m_tile_at_request_id, "tileat request not found" );
-	m_actors.terrain->GetMeshActor()->CancelDataRequest( m_tile_at_request_id );
+    ASSERT(IsTileAtRequestPending(),"tileat request not found");
+    m_native_tile_at_response.reset();
+    if(m_tile_at_request_id) {m_actors.terrain->GetMeshActor()->CancelDataRequest(m_tile_at_request_id);}
 	m_tile_at_request_id = 0;
 }
 
 void Game::GetTileAtScreenCoords( const backend::tile_query_purpose_t tile_query_purpose, const size_t screen_x, const size_t screen_inverse_y ) {
-	if ( m_tile_at_request_id ) {
-		m_actors.terrain->GetMeshActor()->CancelDataRequest( m_tile_at_request_id );
-	}
+    if(IsTileAtRequestPending()) {CancelTileAtRequest();}
 	ASSERT( tile_query_purpose != backend::TQP_NONE, "tile query purpose is not set" );
 	m_tile_at_query_purpose = tile_query_purpose;
+    if(TryNativeTileAt(screen_x,screen_inverse_y)) {return;}
 	m_tile_at_request_id = m_actors.terrain->GetMeshActor()->GetDataAt( screen_x, screen_inverse_y );
 }
 
 const bool Game::IsTileAtRequestPending() const {
-	return m_tile_at_request_id;
+    return m_tile_at_request_id || m_native_tile_at_response.has_value();
 }
 
 const Game::tile_at_result_t Game::GetTileAtScreenCoordsResult() {
+    if(m_native_tile_at_response) {
+        const auto result=m_world_retired?tile_at_result_t{}:*m_native_tile_at_response;m_native_tile_at_response.reset();return result;
+    }
 	if ( m_tile_at_request_id ) {
 		auto result = m_actors.terrain->GetMeshActor()->GetDataResponse( m_tile_at_request_id );
 		if ( result.first ) {

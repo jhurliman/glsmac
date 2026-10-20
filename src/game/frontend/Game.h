@@ -296,6 +296,7 @@ private:
 	);
 	void Deinitialize();
     void UpdateNativeTerrain();
+    bool TryNativeTileAt(size_t screen_x,size_t screen_inverse_y);
     void ClearNativeTerrain();
     void RestoreNativeTerrainProjection();
     void UpdateNativeTerrainSpriteVisibility(const std::vector<bool>* covered,const std::vector<bool>* landmarks=nullptr,const std::vector<bool>* resources=nullptr);
@@ -441,6 +442,7 @@ private:
 	// tile request stuff
 	rr::id_t m_tile_at_request_id = 0;
 	backend::tile_query_purpose_t m_tile_at_query_purpose = backend::TQP_NONE;
+    std::optional<tile_at_result_t> m_native_tile_at_response;
 
 	void CancelTileAtRequest();
 	void GetTileAtScreenCoords( const backend::tile_query_purpose_t tile_query_purpose, const size_t screen_x, const size_t screen_inverse_y ); // async, y needs to be upside down

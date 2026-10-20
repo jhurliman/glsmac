@@ -36,6 +36,13 @@ Text::Text( DOM_ARGS )
 	} ) );
 	Actor( m_actor );
 
+    Property(GSE_CALL, "baseline", gse::VT_INT, nullptr, PF_NONE,
+        [this](GSE_CALLABLE, gse::Value* const value) {
+            const auto pixels = static_cast<gse::value::Int*>(value)->value;
+            if (pixels < -4096 || pixels > 4096) { GSE_ERROR(gse::EC.UI_ERROR, "Text baseline exceeds supported logical range"); }
+            m_geometry->AsText()->SetParentBaseline(static_cast<coord_t>(pixels));
+        }, [this](GSE_CALLABLE) { m_geometry->AsText()->SetParentBaseline(std::nullopt); });
+
 	Property(
 		GSE_CALL, "text", gse::VT_STRING, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			SetText( ( (gse::value::String*)v )->value );

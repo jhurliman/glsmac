@@ -57,9 +57,11 @@ disabled. No platform matrix was repeated.
 
 ## Remaining live milestone
 
-This establishes the first site, not full startup. Later factions must consume
+The [named technology stage](native-startup-technology.md) now extends this
+composition through the first parsed Gaia grant at `0x5c9e8d`. This establishes
+the first site and grant, not full startup. Later factions must consume
 Base/Unit factories, ownership/territory/cache effects and the evolving RNG in
-controller order. Named technologies, designs, complete factory visibility,
+controller order. Designs, complete factory visibility,
 seven-faction composition and generated save/network publication remain required.
 The live generated-game branch still needs switching only after those stages
 compose. The [integration plan](native-generated-world-integration.md) retains

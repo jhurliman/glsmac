@@ -56,6 +56,9 @@ must be separated at its callers.
    the first prefix. The [generated search/cache adapter](native-generated-first-site.md)
    now derives the original first site and initial exploration; subsequent Base,
    technology/design, Unit factory and controller stages still need composition.
+   [Named technology acquisition](native-startup-technology.md) now extends that
+   first-faction composition through its parsed initial award. Designs and the
+   remaining construction stages still follow it.
    [Canonical Unit initialization and stack placement](native-startup-units.md)
    now match original complete-record/pool controls; Base founding, technology
    grants, complete factory visibility and starting-package composition remain

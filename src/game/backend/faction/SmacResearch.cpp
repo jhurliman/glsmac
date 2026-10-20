@@ -1,4 +1,5 @@
 #include "SmacResearch.h"
+#include "SmacTechnologyQuery.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -22,7 +23,9 @@ bool Available(const settings::SmacTechnologyReference& reference,
 	const auto first=technologies.ResolveToken(row.prerequisites[0]).kind;
 	const auto second=technologies.ResolveToken(row.prerequisites[1]).kind;
 	if(first==Kind::UNKNOWN || second==Kind::UNKNOWN) { throw std::runtime_error("Unknown owned research definition"); }
-	return first!=Kind::DISABLED && (second!=Kind::DISABLED || first==Kind::NONE) && owner.owned[id];
+	const auto numeric=[](Kind value) {return value==Kind::NONE?-1:value==Kind::DISABLED?-2:0;};
+	const auto mask=owner.owned[id]?uint8_t(1u<<owner.admission.simulation_id):uint8_t(0);
+	return QuerySmacTechnology(owner.admission.simulation_id,id,mask,{{numeric(first),numeric(second)}});
 }
 }
 

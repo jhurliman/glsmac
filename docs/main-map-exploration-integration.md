@@ -78,3 +78,34 @@ matches both four-frame survey sequences through its real material/raster
 producers. Global lighting is explicit, known land alone calls face shade and
 River geography remains visible. Ordinary main-map caller/entity integration,
 other map/camera profiles and display-option state remain open.
+
+## Live actor bridge: verified requirements
+
+The [complete actor/name/stack consumer controls](behavior/live-object-name-stack-admission.md)
+now distinguish the live presentation inputs. The frozen archive was verified
+against manifest SHA256
+`cd11abca9326e5237e8a0134b2869701d083507c81212952345a6b836fccc92a`.
+Do not wire all scene actors to one terrain-known Boolean:
+
+- Base bodies and primary names have separate admission. Own or stored-disclosed
+  names can survive an unexplored tile while its body is hidden.
+- Ordinary own Unit bodies bypass stored masks, except the native16-bit flag
+  combination0x440. Retain that word separately from DWORD status. Conventional
+  records now retain an optional native word in Unit10. Fresh factories set
+  zero, while older port saves retain absence and native imports must preserve
+  their original word. The [initializer/event controls](behavior/conventional-unit-flags16-authority.md)
+  also require explicit disclosure and duration-expiry mutations; those event
+  consumers and frontend transport remain open.
+- Admit the lookup/head Unit before native stack promotion; filtering and sorting
+  all members independently changes the mixed-owner control. Use retained source
+  links/status/domain and the actual selection/control/pending context.
+- Survey alone does not admit bodies. Editor and special override pointers are
+  explicit presentation contexts, rather than general exploration exceptions.
+- Render lifecycle is independent of turn>0. Publish first Base roster/name data
+  with founding and repaint under the current active context.
+- Hidden bodies must remove model, ordinary overlays and separate stack badges.
+  The stack-instance lifetime fix is in PR424; labels still need their own gate.
+
+Terrain integration also must preserve disclosure across camera fallback,
+selection, new-game reset and reload. The existing inspector cannot become the
+ordinary game's reveal fallback when a camera or snapshot is unsupported.

@@ -1,7 +1,7 @@
 # First worker and complete generated first Base
 
 `CalculateSmacFirstWorker` implements original `4fd650` in the fresh unmanaged
-human population-one opening profile. It derives availability, raw yields,
+population-one opening profile. It derives availability, raw yields,
 candidate scores, selection, Doctor fallback and terraforming burden from current
 raw records and decoded numeric rules. It uses the existing resource-bonus,
 Base-center, nutrient/mineral/energy, availability, scoring and ranking algorithms.
@@ -42,17 +42,18 @@ earlier seeded-Base projection with complete accounting for this fixture.
 label and cursor before construction. The complete Gaia faction record now
 matches too, with no expected cursor normalization or producer patch. The
 original worker fixture's cursor-normalized comparison is superseded by this
-later naming boundary. Installed design initialization and all-seven controller
-equality remain required.
+later naming boundary. Installed design initialization is now covered by the
+[installed catalog](native-installed-designs.md); all-seven controller equality
+remains required.
 
 ## Admission and validation
 
-Worker admission is one fresh human Base, no Units/contacts/satellites/projects/
+Worker admission is one fresh Base, no Units/contacts/satellites/projects/
 events, inactive governor, Unit production target, no retained specialists, and
 initial worker mask0 or1. A selected underfed square requiring subsequent swaps
 rejects in this opening API. The complete Base composition additionally requires
 exactly one Base, no Units and the neutral first-HQ energy profile without
-specialists. AI/governor, larger populations, competing Bases, later resource
+specialists. Active governor, larger populations, competing Bases, later resource
 contexts and Doctor energy outputs remain separate work. These staged mutation
 APIs must not publish partial results after a failure. Live generated-game,
 save/load/network integration is still tracked in the integration plan.
@@ -78,3 +79,49 @@ correctness analysis. A focused six-TU ASan/UBSan build instruments the adapter,
 ecology, availability/ranking and direct/composition tests, passing the same groups;
 other objects are normal and leak detection is disabled. No new runtime image or
 duplicate full platform matrix is claimed.
+
+## Human versus computer opening priorities
+
+The worker options now carry the actual human mask. The complete first-Base
+composition forwards its citizen context's mask, while the standalone worker
+default preserves its earlier all-human admission. An unmanaged human uses zero
+priorities. A computer owner uses the actor's five signed personality words at
+offsets 0x3dc/0x3e0/0x3e4/0x3e8/0x3ec: fight/wealth/power/growth/tech.
+These map to the existing scorer's aggression/explore/discover/build/conquer
+fields. No second scoring formula was introduced. In particular, the Unit mineral
+weight is 6-power+fight+tech+growth; the energy weight is growth+2*power+1,
+multiplied by clamp(population-tech,1,99), with existing truncation points.
+The computer branch also emits the original remaining-specialist write at
+4fd84a, even when its result is zero.
+
+An additional 84 original-x86 controls use all seven owners, human/computer masks,
+three declared personality vectors and two terrain recipes, with empty initial
+worker masks. Personality vectors are (-1,1,0,0,0), (1,0,1,1,0) and(-1,0,1,0,1)
+in fight/wealth/power/growth/tech order. The second terrain recipe adds declared
+solar/river, road/mine and farm candidate patches; no captured map or computed
+score is a producer input. Full Base/eight-faction/terrain buffers, scratch,
+8,610 ordered stores, 5,712 queries and 1,680 candidate scores match. Among 42
+human/computer pairs, 28 differ in scores while every selected worker stays the
+same. The score journals therefore check differences that output masks miss.
+The prior 71 controls remain unchanged, for 155 complete worker controls total.
+
+The private capture used the fully verified 297-file controller evidence bundle,
+manifest `295eee84b55f4653e2ab36930f5f72fbe778baf3aab743cbc25dbeb740761ecf`,
+and the same pinned executable listed above, under Unicorn 2.1.4. The capture
+recipe retains the frozen first-worker harness and helpers, changes only declared
+prefix personality/human-mask inputs and the runtime human mask, and executes
+original 4fd650 with all availability/yield/scoring helpers intact. It stops on
+any CRT draw. Private compressed receipt SHA256:
+`e5346426d2a16311d717bff6cc8bd8c1d9e05d78b80330e62708d7b3d1037117`.
+Capture recipe SHA256:
+`7ca3542d2674882170e185e540e5d0c2cf34027b8af4c845e985d364a363ca0f`.
+Public fixtures retain numeric input recipes and comparison hashes, not purchased
+assets or the complete private capture buffers.
+
+Cached incremental build and eleven affected native groups pass. The worker
+producer and shared scorer pass targeted correctness analysis. Focused five-TU
+ASan/UBSan instrumentation passes worker, opening-accounting and generated-Gaia
+composition controls; other objects are normal and leak detection is disabled.
+This closes the opening personality input and its conditional store, not a full
+AI governor or the cumulative seven-faction controller. Later Base relocation,
+foreign Units outside the radius and full startup remain integration work.

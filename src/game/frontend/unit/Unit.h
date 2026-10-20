@@ -109,6 +109,8 @@ public:
 	void StopBadgeBlink( const bool is_badge_shown );
 
 	void Refresh();
+    void PrepareNativeBody(int zoom) const;
+    void RefreshNativeBody();
 
 	void SetFacing(std::optional<uint8_t> facing);
     std::optional<uint8_t> GetFacing() const {return m_facing;}

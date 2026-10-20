@@ -1,4 +1,5 @@
 #include "InstancedSpriteManager.h"
+#include "game/NativeZoom.h"
 
 #include "InstancedSprite.h"
 #include "ScoutSpriteCache.h"
@@ -74,10 +75,11 @@ InstancedSprite* InstancedSpriteManager::GetScoutSprite( const std::string& name
     auto size=descriptor.size,offset=descriptor.Offset();
     if(native_projection) {
         const auto target=m_scout_cache->GetTargetAnchor(*g_engine->GetResourceManager(),descriptor);
-        size={256.0f/96,256.0f/48};
-        // The native dispatcher starts at tile center minus48 pixels. The
+        const int unit=game::native_zoom::Unit(descriptor.view.zoom);
+        size={256.0f/(8*unit),256.0f/(4*unit)};
+        // The native dispatcher uses quantized half-diamonds. The
         // model's returned anchor is relative to that dispatcher, not128.
-        offset={(target[0]-48)/96.0f,(48-target[1])/48.0f};
+        offset={(target[0]-4*unit)/float(8*unit),(4*unit-target[1])/float(4*unit)};
     }
 	NEWV( sprite, scene::actor::Sprite, name, size, texture.get(), { { 0, 0 }, { 1, 1 } }, offset );
     if(native_projection) {sprite->SetRenderFlags(scene::actor::Actor::RF_IGNORE_LIGHTING);}

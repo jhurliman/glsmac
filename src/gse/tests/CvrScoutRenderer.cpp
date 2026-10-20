@@ -432,6 +432,10 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
 		rejected = false;
 		try { cache.Get( resources, CvrScoutRender( 2, 0, 1, 1, { 2, 2 }, { 128, 128 } ) ); } catch ( const std::exception& ) { rejected = true; }
 		GT_ASSERT( rejected && cache.Get( resources, baseline ) == first, "cache budget evicted an in-use image or admitted unbounded churn" );
+        const CvrScoutRender native_view(0,3,0,16,{2,2},{128,128});
+        const auto native=cache.Get(resources,native_view);
+        GT_ASSERT(native && native!=first && cache.Get(resources,native_view)==native && cache.Get(resources,baseline)==first,
+            "Independent cache budget blocked finite native views or invalidated existing owners");
 		GT_OK();
 		} catch ( const std::exception& error ) { GT_FAIL( std::string( "Scout cache: " ) + error.what() ); }
 	} );

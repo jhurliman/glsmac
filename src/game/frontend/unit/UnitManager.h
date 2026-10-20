@@ -49,6 +49,8 @@ CLASS( UnitManager, common::Class )
 	~UnitManager();
 
 	void Iterate();
+    int GetNativeBodyZoom() const {return m_native_body_zoom;}
+    void SetNativeBodyZoom(int zoom);
     int GetStackChassisOffset(const Unit* unit) const;
     bool IsSelectionBlinkAdmitted(const Unit* unit) const;
     const actor_visibility::UnitPlan* GetTilePresentation(const tile::Tile& tile) const;
@@ -94,6 +96,7 @@ private:
 	friend class gse::tests::BackendFixture;
 
 	Game* m_game;
+    int m_native_body_zoom=0;
     mutable const actor_visibility::Snapshot* m_visibility_snapshot=nullptr;
     mutable std::optional<uint64_t> m_visibility_selected;
     mutable bool m_visibility_active=false;

@@ -29,7 +29,7 @@ std::string Bits( const float value ) {
 CvrScoutRender::CvrScoutRender( const int32_t facing, const int32_t zoom, const int32_t numerator, const int32_t denominator,
 	const types::Vec2< float >& image_size, const types::Vec2< float >& image_center, const Composition selected )
 	: Render( RenderType( selected ) ), composition( selected ), view{ facing, zoom, numerator, denominator, { 0, 0 } }, size( image_size ), center( image_center ) {
-	if ( facing < -1 || facing > 7 || zoom < -8 || zoom > 8 || denominator <= 0 ) {
+	if ( facing < -1 || facing > 7 || zoom < -14 || zoom > 16 || denominator <= 0 ) {
 		throw std::invalid_argument( "Unsupported Scout idle view" );
 	}
 	// MakeView adds this quotient to the descriptor's fixed zero anchor. Check

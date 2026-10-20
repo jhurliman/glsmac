@@ -1,5 +1,6 @@
 #include "fixtures/NativeZoomPolicy.h"
 #include "fixtures/PrimaryViewCursor.h"
+#include "fixtures/AutomaticUnitFocus.h"
 #include "game/frontend/NativeZoomPolicy.h"
 #include "input/Event.h"
 #include "types/mesh/Rectangle.h"
@@ -6504,6 +6505,42 @@ public:
             GT_ASSERT(target.nutrients==4 && target.selected_items==0x88040,"Owned snapshot borrowed later tile/knowledge state");GT_OK();
         });
     }
+    std::string CheckAutomaticNativeFocus() {
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            namespace native=game::frontend::native_terrain;
+            auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
+            util::FinallyGuard close_ui([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
+            game::frontend::Game frontend(m_glsmac.get(),m_state,ui,{},{});
+            scene::Scene scene("Automatic native focus",scene::SCENE_TYPE_WORLD);
+            game::frontend::sprite::InstancedSpriteManager sprites(&scene);frontend.m_ism=&sprites;
+            util::FinallyGuard detach([&]{frontend.m_ism=nullptr;});
+            game::frontend::unit::UnitManager controller(&frontend);
+            frontend.m_native_world=std::make_unique<game::native_terrain::World>();
+            frontend.m_native_context=std::make_unique<native::ViewContext>();
+            for(const auto& control:fixtures::automatic_focus::Cases) {
+                auto& world=*frontend.m_native_world;world.horizontal_wrap=!control.flat;
+                auto& context=*frontend.m_native_context;context.camera=control.camera;context.zoom=0;
+                const auto layout=context.Layout(world);
+                GT_ASSERT(layout.first==control.first && layout.span==control.span,
+                    "Automatic focus layout differs from original fields: "+std::string(control.id));
+                GT_ASSERT(native::NeedsUnitRecenter(layout,control.tile,control.band)==control.recenter,
+                    "Automatic focus margin differs from original call decision: "+std::string(control.id));
+                game::frontend::tile::Tile tile({size_t(control.tile[0]),size_t(control.tile[1])});
+                world.tiles.at(size_t(control.tile[1])*40+size_t(control.tile[0])/2).band=uint8_t(control.band);
+                frontend.SetUiCursor({{control.tile[0],control.tile[1]}});
+                frontend.m_native_camera_from_legacy=false;frontend.m_native_frame_dirty=false;
+                controller.FocusAutomaticSelection(&tile,true);
+                GT_ASSERT(context.camera==control.camera && !frontend.m_native_frame_dirty,
+                    "Retained current selection forced a native recenter");
+                controller.FocusAutomaticSelection(&tile,false);
+                GT_ASSERT(context.camera==control.after && frontend.m_native_frame_dirty==control.recenter
+                    && !frontend.m_native_camera_from_legacy,
+                    "Actual automatic focus wrote a different camera or lost native ownership: "+std::string(control.id));
+                GT_ASSERT(frontend.GetUiCursor()==std::optional<game::ui_view::Cursor>{control.tile},
+                    "Camera margin policy replaced the independent selected cursor");
+            }GT_OK();
+        });
+    }
     std::string CheckCampaignCursorReopen() {
         return WithScriptValues([&](GSE_CALLABLE)->std::string {
             auto* ui=new ::ui::UI(GSE_CALL);m_gse->AddRootObject(ui);
@@ -9057,6 +9094,9 @@ public:
 };
 
 static void AddWorldAdmissionTests( task::gsetests::GSETests* task ) {
+    task->AddTest("world admission automatic Unit focus matches original interior seam and altitude margin",GT(){
+        BackendFixture fixture;return fixture.CheckAutomaticNativeFocus();
+    });
     task->AddTest("Campaign actual frontend reopens from saved cursor independently of selected Units",GT(){
         BackendFixture fixture;return fixture.CheckCampaignCursorReopen();
     });

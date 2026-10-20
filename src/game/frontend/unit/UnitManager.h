@@ -141,6 +141,7 @@ private:
 	std::optional<size_t> m_controller_selection;
 	bool QueueAutomaticSelection();
 	void ReceiveAutomaticSelection();
+    void FocusAutomaticSelection(const tile::Tile* tile,bool retained);
 	void QueueAutomaticSelectionAt( types::Vec2<size_t> focus );
     void QueueAutomaticSelectionFromCursor(ui_view::Cursor focus);
 

@@ -1,5 +1,7 @@
 #include "UnitManager.h"
 #include "game/NativeZoom.h"
+#include "game/frontend/NativeViewContext.h"
+#include "game/frontend/tile/Tile.h"
 #include "game/frontend/MapProjection.h"
 
 #include <algorithm>
@@ -196,6 +198,24 @@ bool UnitManager::QueueAutomaticSelection() {
 	return true;
 }
 
+void UnitManager::FocusAutomaticSelection(const tile::Tile* tile,bool retained) {
+    if(retained) {return;}
+    if(m_game->m_native_context && m_game->m_native_world && m_game->m_native_world->ValidDimensions()) {
+        auto& context=*m_game->m_native_context;const auto& world=*m_game->m_native_world;
+        const auto& coords=tile->GetCoords();
+        if(coords.x>=size_t(world.width) || coords.y>=size_t(world.height) || ((coords.x^coords.y)&1)) {
+            throw std::runtime_error("Automatic native selection has no physical world tile");
+        }
+        const native_terrain::Point target{{int(coords.x),int(coords.y)}};
+        const auto band=world.tiles.at(coords.y*size_t(world.width/2)+coords.x/2).band;
+        if(native_terrain::NeedsUnitRecenter(context.Layout(world),target,band)) {
+            context.camera=target;m_game->m_native_camera_from_legacy=false;m_game->m_native_frame_dirty=true;
+        }
+        return;
+    }
+    m_game->ScrollToTile(tile,true);
+}
+
 void UnitManager::ReceiveAutomaticSelection() {
 	if ( !m_selection_visit ) { return; }
 	if ( !m_game->IsTurnActive() || m_game->m_world_retired || m_selection_visit->turn_id != m_game->m_turn_id ) {
@@ -208,9 +228,10 @@ void UnitManager::ReceiveAutomaticSelection() {
 		// Backend updates may precede their frontend records. Keep this result
 		// until the corresponding ready presentation arrives; never choose by FR order.
 		if ( !unit || !unit->IsActive() ) { return; }
+        const bool retained=m_controller_selection==selected;
 		m_selection_visit.reset();
 		SelectUnit( unit, true );
-		m_game->ScrollToTile( unit->GetTile(), true );
+        FocusAutomaticSelection(unit->GetTile(),retained);
 	} else {
 		m_selection_visit.reset();
 		const auto retained = m_controller_selection;

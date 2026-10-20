@@ -88,20 +88,21 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             command.shader=pass->shader;command.shade_limits=pass->shade_limits;commands.push_back(command);
         }
     };
-    const auto append_water=[&](int x,int y,const std::array<Point,5>& points) {
+    const auto append_water=[&](int x,int y,const std::array<Point,5>& points,bool survey=false) {
         const bool sea=At(world,x,y)->band<3;bool quads=false;
         const auto& tile=*At(world,x,y);
         for(const auto& pass:smac_water_coast::Select(x,y,points,cells,
+            survey?std::optional<uint32_t>{tile.selected_items&~0x20u}:
             tile.selected_known?std::optional<uint32_t>{tile.selected_items}:std::nullopt)) {
-            if(sea && !quads && pass.shader==raster::Shader::KeyedUnlit) {
+            if(!survey && sea && !quads && pass.shader==raster::Shader::KeyedUnlit) {
                 append_quads(x,y,points,{});quads=true;
             }
             raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
-            command.shader=pass.shader;command.shade_limits=pass.shade_limits;
+            command.shader=pass.shader;command.shade_limits=pass.shade_limits;command.alternate_rows=survey;
             if(pass.shader==raster::Shader::CoastMapped) {command.mask=&source.coast_mask;command.mask_mapping=pass.mapping;}
             commands.push_back(command);
         }
-        if(sea && !quads) {append_quads(x,y,points,{});}
+        if(!survey && sea && !quads) {append_quads(x,y,points,{});}
     };
     const auto append_boundary=[&](int x,int y,const std::array<Point,5>& points) {
         if(world.viewer<=0) {return;}
@@ -141,11 +142,12 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
                 command.line={{a[0]+offset[0],a[1]+offset[1],b[0]+offset[0],b[1]+offset[1]}};commands.push_back(command);
             }++frame.tiles;continue;
         }
-        const bool admitted=submission && world.retained_geometry?tile.material_admitted:tile.ordinary;
+        const bool survey=submission && submission->survey;
+        const bool admitted=survey || (submission && world.retained_geometry?tile.material_admitted:tile.ordinary);
         if(!admitted) {continue;}
         const auto center=submission?submission->flat_center:placement.flat_center;
         const auto fx=center[0]+offset[0],fy=center[1]+offset[1];
-        const auto resources=tile.resource_ready && !source.ter1.pixels.empty()
+        const auto resources=!survey && tile.resource_ready && !source.ter1.pixels.empty()
             ?smac_resource_art::Select(x,y,tile.band,tile.resource_items,world.resource_pattern,world.automatic_land_resources,display_flags)
             :std::vector<smac_resource_art::Pick>{};
         const auto append_resources=[&](const Point& anchor,bool late) {
@@ -156,7 +158,9 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
         if(tile.band<3) {
             frame.landmark_tiles[static_cast<size_t>(y)*40+x/2]=!source.ter1.pixels.empty();
             const std::array<Point,5> points{{{{fx,fy}},{{fx-48,fy}},{{fx,fy-24}},{{fx+48,fy}},{{fx,fy+24}}}};
-            append_water(x,y,points);append_boundary(x,y,points);
+            append_water(x,y,points,survey);
+            if(survey) {++frame.tiles;continue;}
+            append_boundary(x,y,points);
             const Point anchor{{fx-48,fy-24}};
             append_developed(tile,anchor,true);append_resources(anchor,false);append_developed(tile,anchor,false);
             append_marker(smac_landmark_art::Nexus(tile.landmarks,display_flags),anchor);append_resources(anchor,true);
@@ -182,12 +186,20 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             {{fx,fy-24-heights[2]}},{{fx+48,fy-heights[3]}},{{fx,fy+24-heights[4]}}}};
         const auto seed=static_cast<uint16_t>(base+placement.record_offset);
         bool quads=false;
-        for(const auto& pass:material::Select({{x,y}},materials,seed,tile.selected_known?std::optional<uint32_t>{tile.selected_items}:std::nullopt)) {
+        const material::TileAt center_materials=survey?material::TileAt{[&materials,x,y](int tx,int ty) {
+            auto cell=materials(tx,ty);
+            if(cell && tx==x && ty==y) {cell->moisture=0;cell->rockiness=0;}
+            return cell;
+        }}:materials;
+        const auto center_items=survey?std::optional<uint32_t>{tile.selected_items&~0x20u}:
+            tile.selected_known?std::optional<uint32_t>{tile.selected_items}:std::nullopt;
+        for(const auto& pass:material::Select({{x,y}},center_materials,seed,center_items)) {
+            if(survey && (pass.role==material::Role::Forest || pass.role==material::Role::Fungus)) {continue;}
             if(!quads && (pass.role==material::Role::Forest || pass.role==material::Role::Fungus)) {
                 append_quads(x,y,points,*light);quads=true;
             }
-            const auto dunes=smac_landmark_art::Dunes(tile.landmarks,true,tile.selected_known?tile.selected_items:tile.items,display_flags);
-            raster::Command command;command.texture=crop(pass.role==material::Role::Base && dunes?*dunes:pass.crop);command.polygon.count=pass.vertices;
+            const auto dunes=survey?std::optional<material::Crop>{}:smac_landmark_art::Dunes(tile.landmarks,true,tile.selected_known?tile.selected_items:tile.items,display_flags);
+            raster::Command command;command.texture=crop(pass.role==material::Role::Base && dunes?*dunes:pass.crop);command.polygon.count=pass.vertices;command.alternate_rows=survey;
             command.shader=pass.role==material::Role::Base?raster::Shader::OpaqueShaded:
                 pass.role==material::Role::Fungus?raster::Shader::KeyedUnlit:raster::Shader::KeyedShaded;
             for(size_t v=0;v<pass.vertices;++v) {
@@ -196,13 +208,14 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             }
             commands.push_back(command);
         }
-        if(!quads) {append_quads(x,y,points,*light);}
-        append_boundary(x,y,points);
-        append_water(x,y,points);
+        if(!survey && !quads) {append_quads(x,y,points,*light);}
+        if(!survey) {append_boundary(x,y,points);}
+        append_water(x,y,points,survey);
         for(const auto& pass:smac_river::Select(x,y,points,*light,cells,display_flags)) {
             raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
-            command.shader=pass.shader;command.shade_limits=pass.shade_limits;commands.push_back(command);
+            command.shader=pass.shader;command.shade_limits=pass.shade_limits;command.alternate_rows=survey;commands.push_back(command);
         }
+        if(survey) {++frame.tiles;continue;}
         for(const auto& pass:smac_road_tube::Select(x,y,points,*light,roads,display_flags)) {
             raster::Command command;command.texture=crop(pass.crop);command.polygon=pass.polygon;
             command.shader=pass.shader;command.shade_limits=pass.shade_limits;commands.push_back(command);

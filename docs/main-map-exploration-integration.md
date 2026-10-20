@@ -72,3 +72,9 @@ The [mixed exploration renderer](mixed-exploration-renderer.md) now closes all
 four original partial21 indexed frames with production material selection,
 including the distinct remembered-center/live-neighbor inputs. Survey and live
 ordinary presentation are still separate remaining boundaries.
+
+The [production Unity Survey renderer](native-unity-survey-renderer.md) now
+matches both four-frame survey sequences through its real material/raster
+producers. Global lighting is explicit, known land alone calls face shade and
+River geography remains visible. Ordinary main-map caller/entity integration,
+other map/camera profiles and display-option state remain open.

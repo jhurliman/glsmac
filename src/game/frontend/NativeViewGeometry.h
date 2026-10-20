@@ -20,7 +20,7 @@ public:
         Placement placement;
         Point projector,flat_center;
         std::array<int,5> heights{},lighting{};
-        bool unknown=false;
+        bool unknown=false,survey=false;
         std::array<Point,4> outline{};
     };
     struct Object {Point tile,projector,dispatcher;};
@@ -37,8 +37,9 @@ public:
         if(!world.horizontal_wrap) {throw std::invalid_argument("Native view schedule requires wrapped Planet");}
     }
     Plan Prepare(const ViewLayout& view,int zoom,int relief,bool incremental,
-        bool paint=true,const Observer& observer={},const Knowledge* known=nullptr) {
+        bool paint=true,const Observer& observer={},const Knowledge* known=nullptr,std::optional<int> survey_light=std::nullopt) {
         if(!view.horizontal_wrap) {throw std::invalid_argument("Native view schedule requires wrapped Planet");}
+        if(survey_light && !known) {throw std::invalid_argument("Survey requires explicit observer knowledge");}
         geometry_.Configure(zoom,relief);Plan result;result.opaque_background=known!=nullptr;
         if(!paint) {return result;}
         if(incremental && previous_ && zoom==zoom_ && relief==relief_) {
@@ -59,7 +60,8 @@ public:
             output.flat_center={{output.projector[0]+4*view.unit,
                 output.projector[1]+Geometry::FloorQuarter(sum)+2*view.unit}};
             const auto index=size_t(tile[1])*40+size_t(tile[0])/2;
-            output.unknown=known && !known->at(index);
+            output.survey=known && !known->at(index) && survey_light.has_value();
+            output.unknown=known && !known->at(index) && !output.survey;
             if(output.unknown) {
                 constexpr unsigned triangles[4][3]={{0,1,2},{0,2,3},{0,3,4},{0,4,1}};
                 const Point delta[5]={{{0,0}},{{-4*view.unit,0}},{{0,-2*view.unit}},{{4*view.unit,0}},{{0,2*view.unit}}};
@@ -72,8 +74,11 @@ public:
                 constexpr unsigned triangles[4][3]={{0,1,2},{0,2,3},{0,3,4},{0,4,1}};
                 for(const auto& triangle:triangles) {for(const auto v:triangle) {
                     output.heights[v]=Height(tile,v,observer);
-                    const auto shade=Require(geometry_.Shade(tile[0],tile[1],v));output.lighting[v]=shade;
-                    if(observer) {observer({Query::Kind::Shade,tile,v,{{shade,0}}});}
+                    if(output.survey) {output.lighting[v]=*survey_light;}
+                    else {
+                        const auto shade=Require(geometry_.Shade(tile[0],tile[1],v));output.lighting[v]=shade;
+                        if(observer) {observer({Query::Kind::Shade,tile,v,{{shade,0}}});}
+                    }
                 }}
             }
             result.terrain.push_back(output);

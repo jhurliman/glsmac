@@ -146,6 +146,8 @@ Result Draw(const Bitmap& initial,const Bitmap& texture,const std::vector<Triang
 Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,const Clip& clip,bool track_coverage) {
     ValidateBitmap(initial);
     for(const auto& command:commands) {
+        if(command.alternate_rows && command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded &&
+            command.shader!=Shader::WaterDepth16 && command.shader!=Shader::CoastMapped) {Invalid();}
         if(command.shader==Shader::IndexedLine) {continue;}
         if(!command.texture || (command.shader!=Shader::OpaqueShaded && command.shader!=Shader::KeyedShaded && command.shader!=Shader::KeyedUnlit && command.shader!=Shader::WaterDepth16 && command.shader!=Shader::CoastMapped && command.shader!=Shader::OwnerClut && command.shader!=Shader::Sprite && command.shader!=Shader::SpriteShadow)) {Invalid();}
         ValidateBitmap(*command.texture);
@@ -200,7 +202,9 @@ Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,cons
             int64_t u=span.u,v=span.v;
             auto shade=span.shade;
             for(auto x=span.left;x<span.right;++x) {
-                const auto offset=Floor(v,65536)*texture.width+Floor(u,65536);
+                const bool black_row=command.alternate_rows && !(span.y&1);
+                const bool lag=command.alternate_rows && !black_row && command.shader==Shader::OpaqueShaded && x>span.left;
+                const auto offset=Floor(v-(lag?span.dv:0),65536)*texture.width+Floor(u-(lag?span.du:0),65536);
                 if(offset<0 || static_cast<uint64_t>(offset)>=texture.pixels.size()) {Invalid();}
                 const auto loaded=texture.pixels[static_cast<size_t>(offset)];
                 ++result.attempts;
@@ -217,12 +221,12 @@ Result DrawBatch(const Bitmap& initial,const std::vector<Command>& commands,cons
                     owner_selector=command.owner_mapping[loaded];
                 }
                 const bool store=(!keyed || loaded!=9) &&
-                    (command.shader!=Shader::WaterDepth16 || signed_shade<16) &&
+                    (command.shader!=Shader::WaterDepth16 || black_row || signed_shade<16) &&
                     (command.shader!=Shader::CoastMapped || mapped!=0) &&
                     (command.shader!=Shader::OwnerClut || owner_selector!=0);
                 if(store) {
                     result.bitmap.pixels[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]=
-                        command.shader==Shader::OwnerClut?(*command.owner_clut)[owner_selector-1][result.bitmap.pixels[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]]:
+                        black_row?65:command.shader==Shader::OwnerClut?(*command.owner_clut)[owner_selector-1][result.bitmap.pixels[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]]:
                         command.shader==Shader::CoastMapped && mapped>1?mapped:static_cast<uint8_t>(loaded+(shaded?signed_shade:0));
                     ++result.writes;
                     if(track_coverage) {result.coverage[static_cast<size_t>(span.y)*static_cast<size_t>(initial.width)+static_cast<size_t>(x)]=1;}

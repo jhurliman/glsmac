@@ -55,16 +55,19 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::RetainedClimatePlanetV2(SmacPla
 }
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const {
+    if(m_native && !m_planet) {return GeneratedTerrainV3(m_native->WithClimateTerrain(world,sea_level_offset,climate_extra));}
     if(!m_planet || !world.horizontal_wrap) {throw std::runtime_error("Climate publication requires installed wrapped Planet authority");}
     return RetainedClimatePlanetV2(m_planet->WithClimateTerrain(world,sea_level_offset,climate_extra),m_automatic_land_resources);
 }
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const {
+    if(m_native && !m_planet) {return GeneratedTerrainV3(m_native->WithGlobalSpread(before,plan));}
     if(!m_planet || !before.geometry.wrap) {throw std::invalid_argument("Global spread publication requires wrapped installed terrain authority");}
     auto result=*this;result.SetOriginalSource(m_planet->WithGlobalSpread(before,plan));return result;
 }
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithLiveGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const {
+    if(m_native && !m_planet) {return GeneratedTerrainV3(m_native->WithGlobalSpread(before,plan,true));}
     if(!m_planet || !before.geometry.wrap) {throw std::runtime_error("Live flora publication requires installed wrapped Planet authority");}
     // Visibility/current terrain are legal in the existing retained-world V2
     // codec; the stricter new-import V1 codec deliberately rejects them.
@@ -72,11 +75,13 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithLiveGlobalSpread(const smac
 }
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithStartingBalance(const smac_balance::Result& plan) const {
+    if(m_native && !m_planet) {return GeneratedTerrainV3(m_native->WithStartingBalance(plan));}
     if(!m_planet) {throw std::runtime_error("Compensation markers require original terrain item authority");}
     auto result=*this;result.SetOriginalSource(m_planet->WithStartingBalance(plan));return result;
 }
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const {
+    if(m_native && !m_planet) {return GeneratedTerrainV3(m_native->WithBloomTerrain(plan));}
     if (!m_planet) { throw std::runtime_error("Bloom terrain requires original Planet resource authority"); }
     const auto updated=m_planet->WithBloomTerrain(plan);
     return m_retained_climate ? RetainedClimatePlanetV2(updated,m_automatic_land_resources):InstalledPlanetV1(updated,m_automatic_land_resources);

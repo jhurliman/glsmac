@@ -3,6 +3,7 @@ SUBDIR( module )
 SUBDIR( tile )
 
 SET( SRC ${SRC}
+    ${PWD}/SmacRetainedTerrain.cpp
     ${PWD}/SmacStartupTerritory.cpp
     ${PWD}/SmacRawSiteQuality.cpp
     ${PWD}/SmacGeneratedStartingSite.cpp

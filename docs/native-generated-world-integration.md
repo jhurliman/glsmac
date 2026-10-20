@@ -18,6 +18,11 @@ complete generated raw terrain and resolved metadata without an installed-map
 container. Whole-world provenance/options binding and mutation/publication
 callers remain required before switching ordinary generated games.
 
+[Shared terrain publication](shared-terrain-publication.md) now gives generated
+policy the existing climate, spread, bloom and starting-marker kernels. The
+remaining mutation work is at live callers that still fetch the installed
+container; complete-world binding and ordinary startup publication remain open.
+
 ## Current coupling found in the live code
 
 | Boundary | Current implementation | Required change |

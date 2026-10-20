@@ -2,6 +2,7 @@
 #include "game/backend/map/SmacPlanetMap.h"
 #include "game/backend/map/SmacClimate.h"
 #include "game/backend/map/SmacGlobalSpread.h"
+#include "game/backend/map/SmacStartingBalance.h"
 #include "game/backend/settings/Settings.h"
 #include "fixtures/SmacRulesSource.h"
 #include "fixtures/SmacBloomTerrain.h"
@@ -36,6 +37,53 @@ bool Rejects(const std::string& wire) {
 }
 }
 void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC generated terrain mutations preserve raw authority topology and ordered journals",GT(){
+        using Authority=game::backend::map::SmacTerrainAuthority;using Policy=game::backend::map::GlsmacResourceMapPolicy;
+        namespace spread=game::backend::map::smac_spread;namespace balance=game::backend::map::smac_balance;
+        Authority::Metadata meta;meta.width=80;meta.height=80;meta.horizontal_wrap=true;meta.pattern=11446;meta.generation_primary_rules=0x3a0e;
+        for(size_t i=0;i<7;++i) {meta.categories[i]=1;}meta.categories[0]=2;
+        std::string raw(3200*44,0);for(size_t i=0;i<3200;++i) {raw[i*44]=96;raw[i*44+1]=87;raw[i*44+6]=27;raw[i*44+7]=char(0xa5);}
+        const auto off=[](int x,int y){return (size_t(y)*40+size_t(x/2))*44;};
+        Put(raw,off(41,67)+8,0x200000);Put(raw,off(41,67)+16,0x200000);
+        const auto policy=Policy::GeneratedTerrainV3(Authority::GeneratedRetained(meta,raw));const auto queued=policy.NativeTerrainSource();
+        spread::Input before{{80,80,true},3200,1,{},{}};
+        for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {before.tiles.push_back(queued->At(x,y));}}
+        before.tiles[67*40+41/2].bytes[4]=2;
+        before.tiles[66*40+42/2].bytes[8]=0x24;
+        const auto plan=spread::Prepare(before,game::backend::SmacGameplayRandomState(123,1));
+        GT_ASSERT(!plan.changes.empty(),"Generated spread test did not run the producer");
+        const auto changed=policy.WithLiveGlobalSpread(before,plan);std::string expected;
+        for(const auto& cell:plan.tiles) {expected.append(reinterpret_cast<const char*>(cell.bytes.data()),44);}
+        GT_ASSERT(changed.NativeTerrainSource()->RecordBytes()==expected && queued->RecordBytes()==raw && !changed.OriginalPlanet()
+            && Policy::Deserialize(changed.Serialize().ToString())==changed,"Generated live flora lost bytes, source or provenance");
+        bool rejected=false;auto malformed=plan;malformed.changes.back().after.bytes[1]^=1;
+        try {(void)policy.WithLiveGlobalSpread(before,malformed);}catch(const std::exception&) {rejected=true;}
+        GT_ASSERT(rejected && queued->RecordBytes()==raw,"Late generated flora journal failure changed its source");
+        rejected=false;auto flat=before;flat.geometry.wrap=false;
+        try {(void)policy.WithLiveGlobalSpread(flat,plan);}catch(const std::exception&) {rejected=true;}
+        GT_ASSERT(rejected,"Generated flora accepted mismatched topology");
+        balance::Result markers{game::backend::SmacGameplayRandomState(1,1),{},{},{},{{1,{{0,0}},0,0x04000000,0x04000000},{1,{{0,0}},0x04000000,0x08000000,0x0c000000}}};
+        const auto marked=policy.WithStartingBalance(markers);auto marked_bytes=raw;Put(marked_bytes,8,0x0c000000);
+        GT_ASSERT(marked.NativeTerrainSource()->RecordBytes()==marked_bytes && !marked.OriginalPlanet(),"Generated starting markers lost order or unowned fields");
+        markers.writes.back().before=0;rejected=false;
+        try {(void)policy.WithStartingBalance(markers);}catch(const std::exception&) {rejected=true;}
+        GT_ASSERT(rejected && queued->RecordBytes()==raw,"Stale late starting marker partly published");
+        // Flat, non-Planet geometry and retained raw climate codes exercise the
+        // common adapter independently of the wrapped installed container.
+        meta.width=16;meta.height=8;meta.horizontal_wrap=false;meta.categories[0]=0;
+        std::string small(64*44,0);for(size_t i=0;i<64;++i) {small[44*i]=char(255);small[44*i+2]=char(0xaf);small[44*i+3]=1;small[44*i+7]=char(0xe7);}
+        const auto initial=Policy::GeneratedTerrainV3(Authority::GeneratedRetained(meta,small));auto climate=initial.NativeTerrainSource()->ExportClimateTerrain();
+        GT_ASSERT(!climate.horizontal_wrap && climate.tiles.front().temperature==7 && climate.tiles.front().moisture==3,"Raw retained climate codes were normalized");
+        climate.tiles[0]={6,7,3,255,129,0x81234567u,0xefa98765u,3,2,{{1,2,3,4,5,6,UINT32_MAX}}};
+        const auto current=initial.WithClimateTerrain(climate,-11,7);const auto bytes=current.NativeTerrainSource()->RecordBytes();
+        GT_ASSERT(uint8_t(bytes[0])==223 && uint8_t(bytes[2])==0xa3 && bytes[3]==1 && uint8_t(bytes[7])==0xe7
+            && current.NativeTerrainSource()->Info().sea_offset==-11 && current.NativeTerrainSource()->Info().climate_extra==7
+            && Policy::Deserialize(current.Serialize().ToString())==current && initial.NativeTerrainSource()->RecordBytes()==small,
+            "Generated climate changed unrelated fields, topology, metadata or queued source");
+        rejected=false;climate.horizontal_wrap=true;
+        try {(void)initial.WithClimateTerrain(climate,0,0);}catch(const std::exception&) {rejected=true;}
+        GT_ASSERT(rejected,"Generated climate accepted another topology");GT_OK();
+    });
     task->AddTest("SMAC Planet terrain authority preserves provenance opaque bytes and policy codecs",GT(){
         using Policy=game::backend::map::GlsmacResourceMapPolicy;using Authority=game::backend::map::SmacTerrainAuthority;
         auto wire=Synthetic();Put(wire,15+0xa30,4);Put(wire,15+0xa34,1);Put(wire,15+8,11446);
@@ -271,6 +319,18 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
             }
             GT_ASSERT(original.OriginalPlanet()->Encode() == wire && prepared.OriginalPlanet()->Encode() == expected,
                 "Bloom changed source authority, contours, region or opaque bytes: " + std::string(row.id));
+            using Authority=game::backend::map::SmacTerrainAuthority;
+            Authority::Metadata meta;meta.width=uint32_t(row.map.width);meta.height=uint32_t(row.map.height);meta.horizontal_wrap=row.map.horizontal_wrap;
+            meta.pattern=11446;meta.generation_primary_rules=0x3a0e;for(auto& category:meta.categories) {category=1;}meta.categories[0]=0;
+            std::string generated_input,generated_expected;
+            for(int y=0;y<row.map.height;++y) {for(int x=y&1;x<row.map.width;x+=2) {
+                const auto at=offset({{x,y}});auto input=wire.substr(at,44),output=expected.substr(at,44);input[3]=output[3]=1;
+                generated_input+=input;generated_expected+=output;
+            }}
+            const auto generated=Policy::GeneratedTerrainV3(Authority::GeneratedRetained(meta,generated_input));
+            const auto bloomed=generated.WithBloomTerrain(plan);
+            GT_ASSERT(bloomed.NativeTerrainSource()->RecordBytes()==generated_expected && generated.NativeTerrainSource()->RecordBytes()==generated_input
+                && !bloomed.OriginalPlanet() && Policy::Deserialize(bloomed.Serialize().ToString())==bloomed,"Native bloom receipt differs through generated authority");
             const auto restored = Policy::Deserialize(prepared.Serialize().ToString());
             GT_ASSERT(restored == prepared && restored.AutomaticLandResources(), "Saved bloom resource authority changed");
             for (const auto& delta : row.changes) {

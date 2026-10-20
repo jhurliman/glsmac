@@ -83,6 +83,10 @@ matrix was repeated for this diagnostic addition.
 
 ## Remaining gameplay work
 
+The [native pretemperature pipeline](native-pretemperature-generation.md) now
+reproduces actual setup through its first temperature entry, including retries.
+Later generation stages and startup remain to be connected.
+
 The port's legacy procedural generator does not reproduce the original complete
 44-byte generated records and stage ordering. Ordinary native map authority is
 still connected to retained Planet. Generated-world preparation and its live

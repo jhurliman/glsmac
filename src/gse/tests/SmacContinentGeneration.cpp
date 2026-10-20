@@ -6,6 +6,8 @@
 #include "fixtures/SmacHillAltitude.h"
 #include "fixtures/SmacGenerationRegions.h"
 #include "game/backend/map/SmacGenerationRegions.h"
+#include "game/backend/map/SmacPretemperatureGeneration.h"
+#include "fixtures/SmacPretemperatureGeneration.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 #include <string>
@@ -27,8 +29,96 @@ uint32_t Caller(generation::CrtUse use) {
         0x5daa6e,0x5daa9b,0x5dd902,0x5dd935,0x5dd969,0x5dd9a3};
     return sites[size_t(use)];
 }
+void PrepareRegionInput(generation::State& state,generation::Geometry g,generation::Regions& storage,
+    const std::string& profile,const std::string& areas,const std::string& fresh="none") {
+    const std::array<int,8> thresholds{{0,15,32,45,60,75,80,100}};
+    for(int y=0;y<g.height;++y) {for(int x=y&1;x<g.width;x+=2) {
+        const auto i=size_t(y)*size_t(g.width/2)+size_t(x/2);auto& record=state.records[i];
+        const int band=profile=="mosaic"?((3*x+5*y)/2)%7:profile=="coast"?(y<g.height/2?1:3)
+            :profile=="islands"?(x%8==0 && y%4==0?3:1):profile=="lakes"?(x%8==0 && y%4==0?1:3):profile[0]-'0';
+        record[0]=uint8_t(band*32+((i*7)&31));record[1]=uint8_t(thresholds[band]+(x+y)%(thresholds[band+1]-thresholds[band]));
+        record[2]=163;record[3]=99;record[5]=17;record[6]=uint8_t(i*13);record[7]=uint8_t(i*11);
+        const uint32_t marks=(fresh=="all" || (fresh=="sparse" && i%4==0))?0x12000080:0x12000000;
+        for(unsigned k=0;k<4;++k) {record[12+k]=uint8_t(marks>>(8*k));}
+    }}
+    storage.secondary_flags=0x4100;storage.summary_width=(g.width+4)/5;storage.summary_height=(g.height+4)/5;
+    storage.summary.assign(size_t((storage.summary_width+1)/2)*size_t(storage.summary_height),165);
+    for(size_t i=0;i<storage.records.size();++i) {storage.records[i]=uint8_t(i*7+13);}
+    for(size_t i=0;i<128;++i) {
+        const auto area=uint32_t(areas=="high"?1000:areas=="stale"?5+(i*3)%29:0);
+        for(unsigned k=0;k<4;++k) {storage.records[i*28+k]=uint8_t(area>>(8*k));}
+    }
+}
+std::string RegionBytes(const generation::Regions& r) {return std::string(reinterpret_cast<const char*>(r.records.data()),r.records.size());}
+std::string SummaryBytes(const generation::Regions& r) {return std::string(r.summary.begin(),r.summary.end());}
 }
 void AddSmacContinentGenerationTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC contour morph matches original two passes stores RNG and region history",GT(){
+        uint64_t tiles=0,regions=0,draws=0;
+        for(const auto& c:fixtures::pretemperature::Morphs()) {
+            const generation::Geometry g{c.width,c.height};
+            generation::State state{std::vector<generation::Record>(size_t(g.width/2)*size_t(g.height)),{{2,c.ocean,c.land,c.erosion,1,1,1}},
+                game::backend::SmacGameplayRandomState(1234567,c.crt)};
+            generation::Regions storage;PrepareRegionInput(state,g,storage,c.profile,c.areas);
+            state.stage=generation::Stage::ContinentLoop;state.generation_flags={{1,1}};state.topology=c.flat?1:0;
+            state.resource_pattern=11446;state.dirty_flags=16;state.working_land_table={{0,15,32,45,60,75,80,100,100,100,100}};
+            GT_ASSERT(util::SHA256(Bytes(state))==c.input_hash && util::SHA256(RegionBytes(storage))==c.input_regions_hash,"Original morph input differs");
+            auto rules=generation::DEFAULT_WORLD_RULES;if(c.zero) {for(size_t k=18;k<24;++k) {rules[k]=0;}}
+            std::string tile_trace,region_trace,rng;generation::ContinentTrace shaping;generation::RegionTrace region;
+            const auto draw=[&](uint32_t before,uint32_t after,uint16_t value){Word(rng,before);Word(rng,after);Word(rng,value,2);++draws;};
+            const auto tile=[&](uint32_t off,unsigned size,uint32_t value){Word(tile_trace,off);Word(tile_trace,size,1);Word(tile_trace,value);++tiles;};
+            shaping.on_write=[&](uint32_t off,uint8_t value){tile(off,1,value);};region.on_tile_store=tile;
+            shaping.on_draw=[&](generation::CrtUse,uint32_t before,uint32_t after,uint16_t value){draw(before,after,value);};
+            region.on_region_store=[&](uint32_t off,unsigned size,uint32_t value){Word(region_trace,off);Word(region_trace,size,1);Word(region_trace,value);++regions;};
+            uint64_t checkpoints=0;shaping.checkpoint=[&]{++checkpoints;};region.checkpoint=shaping.checkpoint;
+            const generation::Observer observer=[&](const generation::Draw& d){draw(d.before,d.after,uint16_t(d.value));};
+            generation::MorphContours(state,g,rules,storage,{&shaping,&region,observer});
+            GT_ASSERT(util::SHA256(Bytes(state))==c.output_hash && util::SHA256(RegionBytes(storage))==c.output_regions_hash
+                && util::SHA256(SummaryBytes(storage))==c.summary_hash && storage.secondary_flags==c.secondary
+                && state.random.Crt()==c.crt_after && state.random.Shared()==1234567 && state.dirty_flags==20,
+                "Original complete morph output differs: "+std::string(c.id));
+            GT_ASSERT(util::SHA256(tile_trace)==c.tile_hash && util::SHA256(region_trace)==c.region_hash && util::SHA256(rng)==c.rng_hash
+                && shaping.writes+region.tile_stores==c.tiles && region.region_stores==c.regions && shaping.draws+324==c.draws
+                && shaping.pumps+region.pumps==c.pumps && checkpoints==c.pumps,"Original ordered morph trace differs: "+std::string(c.id));
+        }
+        GT_ASSERT(tiles==72093 && regions==27751 && draws==12580,"Original morph coverage changed");GT_OK();
+    });
+    task->AddTest("SMAC complete pretemperature pipeline matches original attempts and actual setup",GT(){
+        uint64_t draws=0;size_t attempts=0;
+        for(const auto& c:fixtures::pretemperature::Prefixes()) {
+            const generation::Geometry g{c.width,c.height};
+            generation::State s{std::vector<generation::Record>(size_t(g.width/2)*size_t(g.height)),c.settings,
+                game::backend::SmacGameplayRandomState(c.shared,c.crt)};
+            for(size_t i=0;i<s.records.size();++i) {for(size_t k=0;k<44;++k) {s.records[i][k]=uint8_t((i*44+k)*37+11);}}
+            generation::Regions regions;generation::ContinentTrace shaping;generation::RegionTrace region;std::string rng;
+            const auto draw=[&](uint32_t before,uint32_t after,uint16_t value){Word(rng,before);Word(rng,after);Word(rng,value,2);++draws;};
+            shaping.on_draw=[&](generation::CrtUse,uint32_t before,uint32_t after,uint16_t value){draw(before,after,value);};
+            const generation::Observer observer=[&](const generation::Draw& d){if(d.kind==generation::Draw::Kind::Crt) {draw(d.before,d.after,uint16_t(d.value));}};
+            const auto result=generation::GeneratePretemperature(s,g,c.rules,regions,{&shaping,&region,observer});
+            GT_ASSERT(util::SHA256(Bytes(s))==c.output_hash && util::SHA256(rng)==c.rng_hash && s.random.Crt()==c.crt_after
+                && s.random.Shared()==c.shared_after && s.resource_pattern==c.pattern && s.land_progress==c.progress && s.land_target==c.target
+                && s.painted==c.painted && s.continent_attempts==c.carried && result.retries==c.retries && s.dirty_flags==c.dirty
+                && s.stage==generation::Stage::Pretemperature && shaping.pumps+region.pumps==c.pumps,"Original complete generation differs: "+std::string(c.id));
+            GT_ASSERT(result.attempts.size()==c.attempts.size(),"Original retry count differs");
+            for(size_t i=0;i<result.attempts.size();++i) {
+                const auto& a=result.attempts[i];const std::array<int32_t,6> actual{{a.entry,a.carried,a.iterations,a.continent_calls,a.hills,a.rejected?1:0}};
+                GT_ASSERT(actual==c.attempts[i],"Original generation attempt history differs: "+std::string(c.id));
+            }
+            for(size_t i=0;i<128;++i) {GT_ASSERT(regions.Area(i)==c.areas[i],"Original generation region history differs");}
+            GT_ASSERT(result.accepted==!result.attempts.back().rejected,"Original rejection outcome differs");attempts+=result.attempts.size();
+        }
+        GT_ASSERT(draws==205014 && attempts==19,"Complete generation coverage changed");
+        generation::State actual{std::vector<generation::Record>(3200),{{2,1,1,1,1,1,1}},game::backend::SmacGameplayRandomState(1,1)};
+        generation::Regions storage;storage.summary_width=16;storage.summary_height=16;storage.summary_initial=0;
+        const auto result=generation::GeneratePretemperature(actual,{80,80},generation::DEFAULT_WORLD_RULES,storage);
+        GT_ASSERT(util::SHA256(Bytes(actual))=="bbc3bdc35928316e48e2fc1f5e98370f00f4a59e2356697e17359e6555c1e215"
+            && util::SHA256(RegionBytes(storage))=="a173f98907300d2531ba565eeb4ba86041c4d32ce163f0445ec304e0042fda5b"
+            && util::SHA256(SummaryBytes(storage))=="60a88af59ddf64f017c4530709020b1e834f5a0c9a2d76560cf6a3d2cf697cd4",
+            "Actual original setup pretemperature bytes differ");
+        GT_ASSERT(actual.random.Crt()==3828047505u && actual.random.Shared()==1586005467u && actual.resource_pattern==17133
+            && actual.continent_attempts==103 && result.retries==1 && result.accepted && actual.land_progress==642 && actual.land_target==640
+            && actual.painted==10 && actual.dirty_flags==4 && storage.secondary_flags==0,"Actual original setup continuation differs");GT_OK();
+    });
     task->AddTest("SMAC generation regions match original history capacity adjacency and summary",GT(){
         uint64_t tiles=0,regions=0,pumps=0;
         for(const auto& c:fixtures::generation_regions::Cases()) {

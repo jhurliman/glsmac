@@ -10,7 +10,7 @@ struct ContinentRules {
     std::array<int32_t,5> ratios;
     uint32_t primary;
 };
-enum class CrtUse {CandidateX,CandidateY,SmallSize,ConditionalSize,Direction,Contour};
+enum class CrtUse {CandidateX,CandidateY,SmallSize,ConditionalSize,Direction,Contour,HillX,HillY,PolarNorth,PolarNorthInner,PolarSouth,PolarSouthInner};
 // Optional synchronous observation/progress. Callbacks must not mutate or
 // reenter the detached State. Omit this object to avoid trace allocation.
 struct ContinentTrace {
@@ -28,4 +28,7 @@ struct ContinentTrace {
 void SeedContinent(State& state,Geometry geometry,const ContinentRules& rules,int32_t ordinal,ContinentTrace* trace=nullptr);
 void GrowContinent(State& state,Geometry geometry,const ContinentRules& rules,Coordinate seed,int32_t category,int32_t target,ContinentTrace* trace=nullptr);
 void PaintContinent(State& state,Geometry geometry,const ContinentRules& rules,Coordinate point,int32_t category,ContinentTrace* trace=nullptr);
+void SeedHill(State& state,Geometry geometry,const ContinentRules& rules,int32_t plateau_base,int32_t plateau_modifier,int32_t category=4,ContinentTrace* trace=nullptr);
+void SeedPolarContours(State& state,Geometry geometry,const ContinentRules& rules,ContinentTrace* trace=nullptr);
+void ReconstructAltitudes(State& state,Geometry geometry,const ContinentRules& rules,ContinentTrace* trace=nullptr);
 }

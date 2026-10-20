@@ -3,6 +3,7 @@
 #include "game/backend/map/SmacContinentGeneration.h"
 #include "game/backend/map/SmacGenerationNoise.h"
 #include "fixtures/SmacGenerationNoise.h"
+#include "fixtures/SmacHillAltitude.h"
 #include "task/gsetests/GSETests.h"
 #include "util/SHA256.h"
 #include <string>
@@ -20,11 +21,54 @@ std::string Bytes(const generation::State& state) {
     return result;
 }
 uint32_t Caller(generation::CrtUse use) {
-    constexpr uint32_t sites[]={0x5da872,0x5da8a2,0x5da9f2,0x5da99f,0x5da731,0x5a8ddb};
+    constexpr uint32_t sites[]={0x5da872,0x5da8a2,0x5da9f2,0x5da99f,0x5da731,0x5a8ddb,
+        0x5daa6e,0x5daa9b,0x5dd902,0x5dd935,0x5dd969,0x5dd9a3};
     return sites[size_t(use)];
 }
 }
 void AddSmacContinentGenerationTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC hill polar and altitude stages match original ordered boundaries",GT(){
+        uint64_t stores=0,draws=0;
+        for(const auto& control:fixtures::hill_altitude::Cases()) {
+            const auto count=size_t(control.width/2)*size_t(control.height);
+            generation::State state{std::vector<generation::Record>(count),control.settings,
+                game::backend::SmacGameplayRandomState(control.shared,control.crt)};
+            for(size_t i=0;i<count;++i) {
+                state.records[i]={{32,20,15,0,0,0}};
+                for(size_t f=6;f<8;++f) {state.records[i][f]=uint8_t((i*44+f)*37+11);}
+            }
+            for(const auto& field:control.fields) {
+                GT_ASSERT(field.first<44 && field.second.size()==count*2,"Invalid raw-plane fixture field");
+                const auto nibble=[](char c){return c<='9'?c-'0':c-'a'+10;};
+                for(size_t i=0;i<count;++i) {state.records[i][field.first]=uint8_t(nibble(field.second[2*i])*16+nibble(field.second[2*i+1]));}
+            }
+            GT_ASSERT(util::SHA256(Bytes(state))==control.input_hash,"Original hill/altitude input differs");
+            state.resource_pattern=control.pattern;state.land_progress=control.progress;state.painted=control.painted;state.dirty_flags=control.dirty;
+            state.stage=generation::Stage::ContinentLoop;state.generation_flags={{1,1}};
+            for(size_t i=0;i<8;++i) {state.working_land_table[i]=control.thresholds[i];}
+            for(size_t i=8;i<11;++i) {state.working_land_table[i]=control.thresholds[7];}
+            std::string writes,rng;uint64_t pumps=0;generation::ContinentTrace trace;
+            trace.on_write=[&](uint32_t offset,uint8_t value){Word(writes,offset);Word(writes,value,1);};
+            trace.on_draw=[&](generation::CrtUse use,uint32_t before,uint32_t after,uint16_t value){
+                Word(rng,before);Word(rng,after);Word(rng,value,2);Word(rng,Caller(use));
+            };
+            trace.checkpoint=[&]{++pumps;};
+            const generation::Geometry geometry{control.width,control.height};
+            const generation::ContinentRules rules{12,24,{{3,6,12,18,24}},0};
+            if(control.kind==0) {generation::SeedHill(state,geometry,rules,control.base,control.modifier,control.category,&trace);}
+            else if(control.kind==1) {generation::SeedPolarContours(state,geometry,rules,&trace);}
+            else {generation::ReconstructAltitudes(state,geometry,rules,&trace);}
+            GT_ASSERT(util::SHA256(Bytes(state))==control.output_hash && state.random.Crt()==control.crt_after
+                && state.random.Shared()==control.shared && state.land_progress==control.progress_after
+                && state.painted==control.painted_after && state.dirty_flags==control.dirty_after,
+                "Original hill/altitude outgoing state differs: "+std::string(control.id));
+            GT_ASSERT(trace.writes==control.writes && trace.draws==control.draws && trace.pumps==control.pumps && pumps==control.pumps
+                && util::SHA256(writes)==control.store_hash && util::SHA256(rng)==control.rng_hash,
+                "Original ordered hill/altitude stores or RNG differ: "+std::string(control.id));
+            stores+=trace.writes;draws+=trace.draws;
+        }
+        GT_ASSERT(stores==27719 && draws==1652,"Hill/altitude original coverage changed");GT_OK();
+    });
     task->AddTest("SMAC generation noise matches original grid samples and random continuation",GT(){
         size_t samples=0;
         for(const auto& control:fixtures::generation_noise::Cases()) {

@@ -24,6 +24,7 @@
 #include "SmacGenerationBootstrap.h"
 #include "SmacContinentGeneration.h"
 #include "SmacStartupFaction.h"
+#include "SmacStartupBase.h"
 #include "SmacScoutCombat.h"
 #include "SmacEmptyGroundMovement.h"
 #include "SmacGroundEdgeCost.h"
@@ -195,6 +196,7 @@ void AddTests( task::gsetests::GSETests* task ) {
         tests::AddSmacGenerationBootstrapTests(task);
         tests::AddSmacContinentGenerationTests(task);
         tests::AddSmacStartupFactionTests(task);
+        tests::AddSmacStartupBaseTests(task);
 		tests::AddSmacScoutCombatTests( task );
 		tests::AddSmacEmptyGroundMovementTests( task );
 		tests::AddSmacGroundEdgeCostTests( task );

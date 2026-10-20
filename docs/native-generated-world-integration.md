@@ -58,6 +58,9 @@ must be separated at its callers.
    [Named technology acquisition](native-startup-technology.md) now extends that
    first-faction composition through its parsed initial award. Base construction,
    automatic designs, full Unit factory and controller stages still follow it.
+   [Base seed and radius preparation](native-startup-base.md) now match complete
+   original controls and the generated first-Base/tile projection. Full territory,
+   resource/citizen passes and intervening automatic-design state remain open.
    [Canonical Unit initialization and stack placement](native-startup-units.md)
    now match original complete-record/pool controls; Base founding, complete
    factory visibility and seven-faction starting-package composition remain

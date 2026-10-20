@@ -1,4 +1,5 @@
 SET( SRC ${SRC}
+    ${PWD}/SmacNativeAI.cpp
 	${PWD}/SmacGroundEdgeCost.cpp
 	${PWD}/SmacScoutKeyboardAdmission.cpp
 	${PWD}/SmacPredefinedUnitCatalog.cpp

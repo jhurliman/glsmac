@@ -4,6 +4,7 @@
 #include "game/ActorVisibilitySnapshot.h"
 #include "game/UnitVisibility.h"
 #include "game/NativeTerrainWorld.h"
+#include "game/frontend/NativeTerrainSession.h"
 #include "game/backend/map/SmacLandmarkGeometry.h"
 #include "util/String.h"
 #include "loader/txt/FactionTXTLoader.h"
@@ -6292,6 +6293,14 @@ public:
             GT_ASSERT(first->KnowledgeAt(40*40+20)==World::Knowledge::Known &&
                 first->KnowledgeAt(0)==(*first->initial_survey?World::Knowledge::Survey:World::Knowledge::Unknown),
                 "Foreign reveal or absent improvement memory changed terrain knowledge");
+            game::frontend::native_terrain::Session view(*first);
+            game::frontend::native_terrain::ViewContext context;context.camera={{40,40}};
+            context.zoom=4;context.preferences={0x100,0};
+            const auto actual=view.Prepare(*first,context);
+            GT_ASSERT(actual && actual->opaque_background && actual->zoom==4,"Actual MT world did not prepare an owned observed view");
+            size_t observed=0;for(const auto& cell:actual->terrain) {observed+=!cell.unknown && !cell.survey;}
+            GT_ASSERT(observed==1 && context.zoom==4 && (context.camera==std::array<int,2>({{40,40}})),
+                "Actual observed view lost saved exploration or reset current camera");
             GT_ASSERT(m_game.m_map->m_worker_knowledge->Serialize()==wire && m_game.m_simulation->value.gameplay_random==random
                 && !m_game.m_map->m_native_geometry,"Presentation query mutated saved knowledge, RNG or native geometry");
             data.tiles[40*40+20].explored_by=0;data.all_map_revealed=bit;install();const auto revealed=inspect();

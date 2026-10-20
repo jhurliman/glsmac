@@ -977,6 +977,72 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(rejected,"Same-footprint different-zoom bitmap history admitted");GT_OK();
     });
 
+    task->AddTest("SMAC owned observer view rejects unavailable knowledge and keeps current context",GT(){
+        namespace native=game::frontend::native_terrain;
+        using World=game::native_terrain::World;
+        World world;world.retained_geometry=true;world.viewer=3;
+        for(auto& tile:world.tiles) {tile.band=4;tile.material_admitted=true;}
+        native::Session session(world);native::ViewContext context;
+        context.camera={{22,38}};context.zoom=3;context.flags=0x60010ee3;context.preferences={0x100,0};
+        GT_ASSERT(!session.Prepare(world,context),"Missing observer knowledge became a revealed view");
+        world.exploration_ready=true;world.observers_present=8;world.initial_survey=false;
+        world.tiles[38*40+11].explored_by=8;
+        const auto plan=session.Prepare(world,context);
+        GT_ASSERT(plan && plan->opaque_background && plan->zoom==3,"Owned primary view lost its zoom/unknown backing");
+        size_t known=0;for(const auto& tile:plan->terrain) {known+=!tile.unknown;}
+        GT_ASSERT(known==1 && context.zoom==3 && context.camera==native::Point({{22,38}}) && context.flags==0x60010ee3,
+            "Snapshot reset camera/policy or consumed another observer");
+        native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,77)};
+        session.Commit(native::RenderPrepared(world,source,*plan,0,context.flags,0,nullptr,context.preferences),context.Layout(world));
+        context.camera[0]=24;
+        auto pan=session.Prepare(world,context);GT_ASSERT(pan && pan->regions,"Unchanged observer lost native pan reuse");
+        const auto abandoned=session.Prepare(world,context);
+        GT_ASSERT(abandoned && !abandoned->regions,"Uncommitted preparation reused bitmap history");
+        session.Commit(native::RenderPrepared(world,source,*abandoned,0,context.flags,0,nullptr,context.preferences),context.Layout(world));
+        context.camera[0]=26;
+        context.preferences.more=0x800000;
+        const auto changed_preferences=session.Prepare(world,context);
+        GT_ASSERT(changed_preferences && !changed_preferences->regions,"Changed preferences reused old bitmap interior");
+        context.preferences.more=0;
+        session.InvalidateAppearance();
+        const auto refreshed=session.Prepare(world,context);
+        GT_ASSERT(refreshed && !refreshed->regions && context.zoom==3 && context.camera==native::Point({{26,38}}),
+            "Appearance invalidation reset current view or reused old pixels");
+        session.Commit(native::RenderPrepared(world,source,*refreshed,0,context.flags,0,nullptr,context.preferences),context.Layout(world));
+        context.camera[0]=28;world.viewer=4;world.observers_present|=16;
+        world.tiles[38*40+11].explored_by=24; // Equal masks; observer identity must still invalidate.
+        const auto other=session.Prepare(world,context);
+        GT_ASSERT(other && !other->regions,"Different observer retained previous terrain interior with an equal mask");
+        world.tiles[38*40+11].explored_by=8;
+        const auto hidden=session.Prepare(world,context);
+        GT_ASSERT(hidden.has_value(),"Other observer view unavailable");
+        for(const auto& tile:hidden->terrain) {GT_ASSERT(tile.unknown,"Other faction consumed viewer3 exploration");}
+        world.initial_survey=true;
+        const auto survey=session.Prepare(world,context);
+        GT_ASSERT(survey.has_value(),"Expected observed view unavailable");
+        for(const auto& tile:survey->terrain) {GT_ASSERT(tile.survey && tile.lighting[0]==2,"Survey lost initialized palette light2");}
+        world.initial_survey.reset();
+        GT_ASSERT(!session.Prepare(world,context) && !session.frame && !session.layout,"Unavailable authority retained old observed pixels");
+        const auto inspection=session.Prepare(world,context,native::Session::Observation::RevealedInspector);
+        GT_ASSERT(inspection && !inspection->opaque_background,"Explicit inspector unexpectedly required observer authority");
+        for(const auto& tile:inspection->terrain) {GT_ASSERT(!tile.unknown && !tile.survey,"Inspector inherited normal observation mask");}
+        world.initial_survey=false;world.revealed_by=8;
+        const auto foreign=session.Prepare(world,context);
+        GT_ASSERT(foreign.has_value(),"Expected observed view unavailable");
+        for(const auto& tile:foreign->terrain) {GT_ASSERT(tile.unknown,"Foreign reveal disclosed observed terrain");}
+        world.revealed_by=16;
+        const auto revealed=session.Prepare(world,context);
+        GT_ASSERT(revealed.has_value(),"Expected observed view unavailable");
+        for(const auto& tile:revealed->terrain) {GT_ASSERT(!tile.unknown,"Own faction reveal did not reach terrain");}
+        context.active=0;GT_ASSERT(!session.Prepare(world,context),"Inactive view prepared terrain");
+        context.active=1;world.tiles[0].band=5;
+        GT_ASSERT(!session.Prepare(world,context),"Changed geometry reused old session");
+        bool rejected=false;try {World small(16,12);native::Session unsupported(small);}
+        catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Unsupported world reached fixed-size session storage");
+        GT_OK();
+    });
+
     task->AddTest("SMAC known grid matches original northern edges colors and preferences",GT(){
         namespace grid=game::frontend::smac_known_grid;
         for(const auto& c:fixtures::smac_known_grid::Cases) {

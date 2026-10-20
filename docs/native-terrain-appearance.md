@@ -7,6 +7,11 @@ regions independently match their original hashes, as does the complete 256-entr
 Gamma100 software palette. This comparison required no saturation, contrast,
 coast smoothing or arbitrary height adjustment in production drawing code.
 
+The [generated startup acceptance](generated-terrain-appearance.md) extends this
+to a natural coast and unknown-grid boundary, with both relief modes matching
+every indexed/RGB pixel. The original-style generated map producer and ordinary
+live generated-world snapshot connection remain implementation work.
+
 The original control is retained wrapped 80x80 Planet at camera (22,38), raw zoom 0,
 viewer 3 revealed, no Units/Bases, flags 0x10621, known grid off and variation
 base-low16 0xbf60. It is a bounded renderer fixture, not ordinary startup or a

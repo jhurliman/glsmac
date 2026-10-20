@@ -119,7 +119,7 @@ const size_t Unit::GetSelectionWeight() const {
 }
 
 sprite::Sprite* Unit::GetSprite() const {
-	return m_def->GetSprite( m_morale, m_facing );
+	return m_def->GetSprite( m_morale, m_facing, m_um->GetNativeBodyZoom() );
 }
 
 sprite::Sprite* Unit::GetBadgeSprite() const {
@@ -329,6 +329,18 @@ void Unit::Refresh() {
 		}
 		m_um->RefreshUnit( this );
 	}
+}
+
+void Unit::PrepareNativeBody(int zoom) const {
+    m_def->GetSprite(m_morale,m_facing,zoom);
+}
+void Unit::RefreshNativeBody() {
+    auto* next=GetSprite();
+    const bool visible=m_render.is_rendered;
+    if(visible) {Hide();}
+    m_render.body=next;m_render.instance_id=0;
+    UpdateMeshTex(m_render_data.unit,next->instanced_sprite);
+    if(visible) {Show();}
 }
 
 void Unit::SetFacing(std::optional<uint8_t> facing) {

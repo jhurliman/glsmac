@@ -263,7 +263,7 @@ Frame Render(const World& world,const Source& source,const std::vector<Placement
 }
 Frame RenderPrepared(const World& world,const Source& source,const ViewGeometry::Plan& plan,uint16_t base,uint32_t flags,uint8_t initial_index,const Frame* previous) {
     if(plan.world!=Point{{world.width,world.height}} || plan.zoom< -14 || plan.zoom>16 ||
-        plan.unit!=std::max(1,(50*(plan.zoom+16)/16+1)/4)) {
+        plan.unit!=::game::native_zoom::Unit(plan.zoom)) {
         throw std::invalid_argument("Native material plan has inconsistent zoom geometry");
     }
     if(bool(plan.regions)!=bool(previous)) {throw std::invalid_argument("Native dirty plan requires matching retained bitmap history");}

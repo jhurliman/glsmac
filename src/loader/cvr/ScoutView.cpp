@@ -95,7 +95,7 @@ void ValidateMapLight( const std::string_view source ) {
 
 View MakeView( const CvrScoutViewInput& input, const IdleProfile profile ) {
 	RequireNearestRounding();
-	if ( input.facing < -1 || input.facing > 7 || input.zoom < -8 || input.zoom > 8 || input.scale_denominator <= 0 ) {
+	if ( input.facing < -1 || input.facing > 7 || input.zoom < -14 || input.zoom > 16 || input.scale_denominator <= 0 ) {
 		throw std::invalid_argument( "CVR Scout: view outside bounded idle domain" );
 	}
 	const auto facing = input.facing == -1 ? 0 : input.facing;

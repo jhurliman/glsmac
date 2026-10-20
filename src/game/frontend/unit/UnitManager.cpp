@@ -1,4 +1,5 @@
 #include "UnitManager.h"
+#include "game/NativeZoom.h"
 #include "game/frontend/MapProjection.h"
 
 #include <algorithm>
@@ -30,6 +31,16 @@ UnitManager::UnitManager( Game* game )
 	: m_game( game )
 	, m_ism( game->GetISM() ) {
 	NEW( m_badge_defs, BadgeDefs, m_ism );
+}
+
+void UnitManager::SetNativeBodyZoom(int zoom) {
+    ::game::native_zoom::Unit(zoom); // validate before changing live state
+    if(zoom==m_native_body_zoom || !m_game->UsesNativeMapProjection()) {return;}
+    // Resolve current bodies before publication; an unavailable asset cannot
+    // leave half the live units pointing into a newly selected view.
+    for(const auto& entry:m_units) {entry.second->PrepareNativeBody(zoom);}
+    m_native_body_zoom=zoom;
+    for(const auto& entry:m_units) {entry.second->RefreshNativeBody();}
 }
 
 UnitManager::~UnitManager() {

@@ -30,7 +30,16 @@ std::shared_ptr< types::texture::Texture > ScoutSpriteCache::Get( resource::Reso
 	const auto key = descriptor.PixelKey();
 	const auto existing = m_textures.find( key );
 	if ( existing != m_textures.end() ) { return existing->second.texture; }
-	if ( m_textures.size() >= MAX_VIEWS ) { throw std::runtime_error( "Scout scene view cache is full" ); }
+    const bool native_view=descriptor.view.scale_numerator==0 && descriptor.view.scale_denominator==16;
+    if(m_textures.size()>=MAX_VIEWS || (!native_view && m_independent_views>=64)) {
+        throw std::runtime_error("Scout scene view cache is full");
+    }
+    const auto publish=[&](const auto& image) {
+        std::shared_ptr<types::texture::Texture> texture(image.CreateTexture());
+        auto result=m_textures.emplace(key,Cached{std::move(texture),image.target_anchor}).first->second.texture;
+        if(!native_view) {++m_independent_views;}
+        return result;
+    };
 	if ( descriptor.composition == backend::unit::CvrScoutRender::Composition::SpartanRover ) {
 		if ( !m_rover ) {
 			// Only fixed composition filenames reach the installed/mod resolver.
@@ -39,8 +48,7 @@ std::shared_ptr< types::texture::Texture > ScoutSpriteCache::Get( resource::Reso
 			} ) );
 		}
 		const auto image = m_rover->Render( descriptor.view );
-		std::shared_ptr< types::texture::Texture > texture( image.CreateTexture() );
-		return m_textures.emplace( key, Cached{std::move(texture),image.target_anchor} ).first->second.texture;
+		return publish(image);
 	}
 	if ( descriptor.composition == backend::unit::CvrScoutRender::Composition::InitializedScout ) {
 		if ( !m_initialized ) {
@@ -51,8 +59,7 @@ std::shared_ptr< types::texture::Texture > ScoutSpriteCache::Get( resource::Reso
 			m_initialized.emplace( loader::cvr::CvrScoutRenderer::LoadInitialized( infantry, reactor, palette, system ) );
 		}
 		const auto image = m_initialized->Render( descriptor.view );
-		std::shared_ptr< types::texture::Texture > texture( image.CreateTexture() );
-		return m_textures.emplace( key, Cached{std::move(texture),image.target_anchor} ).first->second.texture;
+		return publish(image);
 	}
 	if ( !m_renderer ) {
 		// The serialized descriptor cannot choose paths. Use normal installed/mod resolution.
@@ -61,8 +68,7 @@ std::shared_ptr< types::texture::Texture > ScoutSpriteCache::Get( resource::Reso
 		m_renderer.emplace( loader::cvr::CvrScoutRenderer::Load( infantry, reactor ) );
 	}
 	const auto image = m_renderer->Render( descriptor.view );
-	std::shared_ptr< types::texture::Texture > texture( image.CreateTexture() );
-	return m_textures.emplace( key, Cached{std::move(texture),image.target_anchor} ).first->second.texture;
+	return publish(image);
 }
 
 }

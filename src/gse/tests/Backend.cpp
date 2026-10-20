@@ -1,3 +1,4 @@
+#include "game/NativeZoom.h"
 #include "Backend.h"
 #include "game/ActorVisibilitySnapshot.h"
 #include "game/UnitVisibility.h"
@@ -2271,6 +2272,20 @@ public:
                         game::frontend::unit::Unit overlay(um.get(),badges.get(),98,um->m_unitdefs.at("NATIVE_WORLD_SCOUT"),
                             &map_slot,&overlay_tile,coords,true,1,0,"Rank",0.4f,true,true,1);
                         overlay.SetMaximumHitPoints(10);overlay.Refresh();overlay.Show();
+                        if(height==0) {
+                            um->m_units.emplace(98,&overlay);
+                            util::FinallyGuard remove_borrowed([&]{um->m_units.erase(98);});
+                            for(const int zoom:{3,4,0}) {
+                                auto* old=overlay.m_render.body->instanced_sprite;
+                                um->SetNativeBodyZoom(zoom);
+                                auto* current=overlay.m_render.body->instanced_sprite;
+                                GT_ASSERT(um->GetNativeBodyZoom()==zoom && overlay.m_render.is_rendered &&
+                                    current==um->m_unitdefs.at("NATIVE_WORLD_SCOUT")->GetSprite(0,{},zoom)->instanced_sprite &&
+                                    (old==current || old->actor->GetInstanceMatrices().empty()),
+                                    "Live camera body refresh left stale instance or hid an admitted unit");
+                            }
+                        }
+
                         const auto project=[](const auto& transform,const types::Vec3& c) {const auto& m=transform.m;return types::Vec2<float>{
                             (m[0][0]*c.x+m[0][1]*c.y+m[0][2]*c.z+m[0][3]+1)*512,
                             (1-m[1][0]*c.x-m[1][1]*c.y-m[1][2]*c.z-m[1][3])*384};};
@@ -2389,6 +2404,34 @@ public:
                     GT_ASSERT(std::abs(single.x-anchor.x-(rover?14:13))<0.001f,"Singleton retained shifted stack primary anchor");
                     representative.Hide();representative.Hide();GT_ASSERT(marker_count()==0,"Repeated hide retained marker instance");
                 }
+                // The camera uses quantized q, while model pixels and target
+                // anchors use the independent native art ratio (zoom+16)/16.
+                auto* native_def=um->m_unitdefs.at("NATIVE_WORLD_SCOUT");
+                auto* original_card=native_def->GetCardSprite(false);
+                for(const int zoom:{-14,-1,0,3,4,8,16}) {
+                    const int q=game::native_zoom::Unit(zoom);
+                    camera.SetScale(game::frontend::map_projection::CameraScale(0.125f*q/12,true));
+                    auto* body=native_def->GetSprite(0,{},zoom)->instanced_sprite;
+                    GT_ASSERT(body==native_def->GetSprite(0,{},zoom)->instanced_sprite,"Repeated native zoom recreated a body");
+                    const types::Vec3 coords{0,0,2+25.0f/(4*q)};
+                    body->actor->SetInstance(77,coords);
+                    const auto matrix=camera.GetMatrix()*body->actor->GetInstanceMatrices().back();
+                    auto mesh=body->actor->GetSpriteActor()->GenerateMesh();types::Vec3 a,z;
+                    mesh->GetVertexCoord(0,&a);mesh->GetVertexCoord(2,&z);
+                    const auto project=[](const auto& transform,const types::Vec3& c) {const auto& m=transform.m;return types::Vec2<float>{
+                        (m[0][0]*c.x+m[0][1]*c.y+m[0][2]*c.z+m[0][3]+1)*512,
+                        (1-m[1][0]*c.x-m[1][1]*c.y-m[1][2]*c.z-m[1][3])*384};};
+                    const auto first=project(matrix,a),last=project(matrix,z);
+                    const auto anchor=project(camera.GetMatrix(),types::Vec3{coords.x-0.5f,coords.y+1,coords.z});
+                    const float target=50*(zoom+16)/16;
+                    GT_ASSERT(std::abs(first.x-anchor.x-target+128)<0.002f && std::abs(first.y-anchor.y-target+128)<0.002f &&
+                        std::abs(last.x-first.x-256)<0.002f && std::abs(last.y-first.y-256)<0.002f,
+                        "Native body zoom lost dispatcher anchor or fixed copy canvas: "+std::to_string(zoom));
+                    GT_ASSERT(native_def->GetCardSprite(false)==original_card,"Map zoom replaced console card descriptor");
+                    body->actor->RemoveInstance(77);
+                }
+                camera.SetScale(game::frontend::map_projection::CameraScale(0.125f,true));
+                GT_ASSERT(native_def->GetSprite(0,{},0)->instanced_sprite==native,"Returning to zoom0 replaced original actor");
                 auto* card=um->m_unitdefs.at("NATIVE_WORLD_SCOUT")->GetCardSprite(false);
                 GT_ASSERT(card->actor->GetSpriteActor()->GetDimensions()==types::Vec2<float>(1,1),"Native map placement changed independent console-card geometry");
             }
@@ -3456,8 +3499,8 @@ public:
 		};
 		const char* idle="Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]";
 		const char* working="Farm [F]|Road [R]|Forest [O]|Solar [S]|Mine [M]|Cancel [C]";
-		const char* none="Former — Order: None  |  Stored work: 0";
-		const char* farm="Former — Order: Farm  |  Stored work: 0";
+		const char* none="Former â€” Order: None  |  Stored work: 0";
+		const char* farm="Former â€” Order: Farm  |  Stored work: 0";
 		const auto before=WorldSnapshot();
 		auto error=script("check",idle,none);if(!error.empty()){return error;}
 		error=script("click","Farm [F]");if(!error.empty()){return error;}
@@ -3490,7 +3533,7 @@ public:
         std::exception_ptr selection_failure;
         std::thread select([&]{try {frontend->ProcessRequest(&inspect);}catch(...){selection_failure=std::current_exception();}});select.join();
         if(selection_failure){std::rethrow_exception(selection_failure);}ProcessAccumulations();
-        error=script("check","Activate unit","Holding position — stored work: 0");if(!error.empty()){return error;}
+        error=script("check","Activate unit","Holding position â€” stored work: 0");if(!error.empty()){return error;}
         error=script("click","Activate unit");if(!error.empty()){return error;}
         error=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string{ProcessEvents();GT_OK();});if(!error.empty()){return error;}
         error=publish();if(!error.empty()){return error;}

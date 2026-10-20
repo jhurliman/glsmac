@@ -196,6 +196,14 @@ public:
         const auto overridden=shown.GetRenderData().coords;
         const bool view_anchor=close_coord(overridden,types::Vec3(center.x,center.y,2.0f-19.0f/48)) &&
             shown.GetRenderData().name_anchor==std::optional<types::Vec3>(overridden) && shown.GetRenderData().selection_coords.center==center;
+        bool zoomed=true;
+        for(const auto view:std::array<std::array<int,2>,4>{{{-14,1},{3,15},{4,15},{16,25}}}) {
+            shown.SetNativeProjectorHeight(-19,view[0]);
+            zoomed=zoomed && close_coord(shown.GetRenderData().coords,
+                types::Vec3(center.x,center.y,2.0f-19.0f/(4*view[1]))) &&
+                shown.GetRenderData().selection_coords.center==center;
+        }
+        shown.SetNativeProjectorHeight(-19);
         // Backend refresh replaces canonical metadata, but does not destroy
         // the active view-owned projector. Clearing restores the latest input.
         ts->smac_projector_height=7;shown.Update(*t,*ts);
@@ -204,7 +212,7 @@ public:
         const bool restored=shown.GetRenderData().coords==ts->GetProjectorCoords(tile::LAYER_LAND) &&
             shown.GetRenderData().name_anchor==std::optional<types::Vec3>(ts->GetProjectorCoords(tile::LAYER_LAND));
         world.m_meshes.terrain=nullptr;world.m_meshes.terrain_data=nullptr;
-        return result && projected && legacy && view_anchor && retained && restored;
+        return result && projected && legacy && view_anchor && zoomed && retained && restored;
     }
     bool CheckSpriteAnchors(bool native) {
         auto* t=world.GetTile(2,2);auto* ts=world.GetTileState(t);

@@ -1,5 +1,6 @@
 #pragma once
 #include "SmacTerrainRaster.h"
+#include "game/NativeZoom.h"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -30,7 +31,7 @@ inline ViewLayout Layout(int x,int y,int zoom,bool wrap,
         x<0 || x>=w || y<0 || y>=h || zoom< -14 || zoom>16) {
         throw std::invalid_argument("Unsupported native main-view configuration");
     }
-    const int unit=std::max(1,(50*(zoom+16)/16+1)/4);
+    const int unit=::game::native_zoom::Unit(zoom);
     const auto ceil_div=[](int n,int d) {return (n+d-1)/d;};
     int sx=ceil_div(vw,8*unit),sy=ceil_div(vh+2*unit,4*unit);
     int ox=ceil_div(vw+4*unit,8*unit),oy=sy,px=0,py=0;

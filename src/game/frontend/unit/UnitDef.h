@@ -38,7 +38,7 @@ public:
 
 	const bool IsArtillery() const;
 
-	sprite::Sprite* GetSprite( const backend::unit::morale_t morale, std::optional<uint8_t> facing = {} );
+	sprite::Sprite* GetSprite( const backend::unit::morale_t morale, std::optional<uint8_t> facing = {}, std::optional<int> map_zoom = {} );
     bool UsesNativeMapPlacement() const;
 	// Native console zoom is independent of the map; initialized Infantry keeps
 	// its retained presentation facing. Legacy profiles retain their fixture view.

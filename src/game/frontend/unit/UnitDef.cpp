@@ -91,11 +91,10 @@ bool UnitDef::UsesNativeMapPlacement() const {
     const auto& render=*m_scout_render;const auto& view=render.view;
     // Native sprite placement derives its bounds from the returned CVR anchor;
     // normal startup retains legacy world sizes in its descriptor.
-    return view.zoom==0 &&
-        (view.scale_numerator<=0 || view.scale_numerator==view.scale_denominator);
+    return view.scale_numerator<=0 || view.scale_numerator==view.scale_denominator;
 }
 
-sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale, std::optional<uint8_t> facing ) {
+sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale, std::optional<uint8_t> facing, std::optional<int> map_zoom ) {
 	ASSERT( m_type == backend::unit::DT_STATIC, "only static units are supported for now" );
 	ASSERT( static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 	if ( m_colony_marker ) {
@@ -108,6 +107,23 @@ sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale, std::o
 	}
 	if ( m_scout_render ) {
         const auto direction=Facing(facing,m_scout_render->view.facing);
+        if(UsesNativeMapPlacement() && map_zoom && *map_zoom!=m_scout_render->view.zoom) {
+            const auto& original=*m_scout_render;
+            const int zoom=*map_zoom;
+            if(zoom< -14 || zoom>16) {throw std::invalid_argument("Unsupported native unit body zoom");}
+            const int key=4096+(zoom+14)*9+(direction<0?8:direction);
+            auto found=m_facing_sprites.find(key);
+            if(found==m_facing_sprites.end()) {
+                // The live map supplies its view. Legacy identity-scale wire
+                // descriptors do not freeze ordinary model size across zoom.
+                const backend::unit::CvrScoutRender descriptor(direction,zoom,
+                    0,16,
+                    original.size,original.center,original.composition);
+                sprite::Sprite body;body.instanced_sprite=m_ism->GetScoutSprite("Unit_"+m_id+"_Map_"+std::to_string(key),descriptor,true);
+                found=m_facing_sprites.emplace(key,body).first;
+            }
+            return &found->second;
+        }
         if(direction!=m_scout_render->view.facing) {
             auto found=m_facing_sprites.find(direction);
             if(found==m_facing_sprites.end()) {

@@ -10,6 +10,7 @@
 #include <vector>
 #include "SmacTerrainCorners.h"
 #include "SmacLandmarkTables.h"
+#include "SmacPreparedLandmarkProfiles.h"
 #include "SmacNegativeLandmarkTables.h"
 #include "SmacTerrainLighting.h"
 
@@ -29,17 +30,8 @@ public:
         for(auto& entry:cache_) {entry.fill(std::nullopt);}
         face_cache_.resize(cells_.size());
         relief_=step_;
-        profiles_=landmark_tables::HEIGHT;
-        for(const auto& cell:cells_) {
-            const unsigned detail=cell.landmarks>>24;
-            if(detail<128 || !(cell.landmarks&3u)) {continue;}
-            const unsigned row=255-detail;
-            for(unsigned p=0;p<2;++p) {
-                if(!(cell.landmarks&(p==0?2u:1u))) {continue;}
-                if(row>=49) {prepared_[p]=false;continue;}
-                for(unsigned v=0;v<5;++v) {profiles_[p][landmark_tables::MAPPING[row*5+v]]=0;}
-            }
-        }
+        const auto profiles=landmark_tables::PrepareHeightProfiles(cells_.size(),[&](size_t i){return cells_[i].landmarks;});
+        profiles_=profiles.values;prepared_=profiles.admitted;
     }
 
     std::optional<int> Height(int x,int y,unsigned vertex) {

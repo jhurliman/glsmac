@@ -1,10 +1,10 @@
 # Connect the native generated world to gameplay
 
-This is the implementation sequence after the native generation tail closes.
-The current generator reaches the original prelandmark boundary; its raw plane
-must not be published as a finished world. The original-game reference now
-matches seed 1 through final preparation and is checking discriminating controls.
-That reference result is not yet port acceptance.
+The [owned native terrain producer](native-complete-terrain-generation.md) now
+matches original seed 1 through final preparation, before faction startup.
+Its terrain/region/profile/name buffers and RNG are verified in the port.
+The live caller still needs the authority and startup integration below;
+pre-startup terrain must not be presented as a completed playable world.
 
 ## Current coupling found in the live code
 
@@ -27,12 +27,11 @@ must be separated at its callers.
 
 ## Ordered implementation
 
-1. **Close the producer.** Import the frozen landmark/final-preparation algorithms
-   and controls. Compose them after `GenerateInitialClimate`. Verify final raw
-   tiles, region storage, summary, landmark labels/centers, RNG and external
-   clock inputs against actual original setup before faction startup. Reuse the
-   existing climate algorithms where their caller thresholds/globals match.
-   Initial source placement is not the later river-routing operation.
+1. **Producer acceptance is established before startup.** `GenerateTerrain`
+   composes the frozen rules and verifies complete original seed-1 output,
+   profiles/names, clocks and RNG. Retain the discriminating controls and
+   distinguish initial source placement from later river routing when
+   extending admitted world profiles.
 2. **Introduce the common owner.** Own dimensions/topology, every 44-byte record,
    resolved generation categories, resource pattern, sea/climate offsets and
    relevant rule flags independently of file format. Keep the complete raw

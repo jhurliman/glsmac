@@ -90,7 +90,7 @@ private:
 	class SizedNull : public graphics::Null {
 	public:
 		SizedNull(unsigned short width,unsigned short height,bool fit_stage):width(width),height(height),
-			stage(fit_stage ? graphics::PresentationViewport::Fit(width,height) : graphics::PresentationViewport{0,0,width,height}) { OnWindowResize(); }
+			stage(fit_stage ? graphics::PresentationViewport{0,0,1024,768} : graphics::PresentationViewport{0,0,width,height}) { OnWindowResize(); }
 		const unsigned short GetWindowWidth() const override { return width; }
 		const unsigned short GetWindowHeight() const override { return height; }
 		const unsigned short GetViewportWidth() const override { return stage.width; }
@@ -545,12 +545,12 @@ static std::string CheckMovieStageLayout() {
 		surface->PresentMovieFrame(592,288,std::vector<uint8_t>(592*288*4,255));
 		ui->GetRoot()->GetGeometry()->NeedUpdate();
 		const auto art=surface->GetGeometry()->GetEffectiveArea();
-		const auto stage=graphics::PresentationViewport::Fit(1920,1080);
+		const auto stage=graphics::PresentationViewport::Canonical(1920,1080);
 		result=[&]() -> std::string {
-			GT_ASSERT(g_engine->GetGraphics()->GetWindowWidth()==1920 && ui->GetRoot()->GetGeometry()->GetWidth()==1440,
+			GT_ASSERT(g_engine->GetGraphics()->GetWindowWidth()==1920 && ui->GetRoot()->GetGeometry()->GetWidth()==1024,
 				"movie UI root used raw window width instead of presentation stage");
-			GT_ASSERT(stage.x==240 && stage.width==1440 && art.left==0 && art.right==1440 &&
-				std::abs(art.top-189.72973f)<0.1f && std::abs(art.bottom-890.27027f)<0.1f,
+			GT_ASSERT(stage.x==448 && stage.y==156 && stage.width==1024 && art.left==0 && art.right==1024 &&
+				std::abs(art.top-134.91892f)<0.1f && std::abs(art.bottom-633.08108f)<0.1f,
 				"native movie aspect did not remain letterboxed inside the 4:3 stage: "+
 				std::to_string(art.left)+","+std::to_string(art.top)+","+std::to_string(art.right)+","+std::to_string(art.bottom));
 			GT_OK();

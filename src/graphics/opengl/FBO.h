@@ -5,6 +5,7 @@
 
 #include "common/Common.h"
 #include "types/Vec2.h"
+#include "graphics/PresentationViewport.h"
 
 namespace types {
 namespace texture {
@@ -36,6 +37,8 @@ CLASS( FBO, common::Class )
 	void WriteEnd();
 
 	void Draw( shader_program::Orthographic* sp );
+    GLuint GetFramebuffer() const { return m_fbo; }
+    void Present(const PresentationViewport& area, int drawable_height);
 
 	void CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right );
 	// Copy into an allocated cropped RGBA8 texture without CPU readback.

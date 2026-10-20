@@ -100,7 +100,7 @@ protected:
 	types::Vec2< unsigned short > m_window_size;
 	types::Vec2< unsigned short > m_last_window_size;
 	types::Vec2< unsigned short > m_viewport_size = {};
-	PresentationViewport m_presentation_viewport;
+
 	SDL_Window* m_window;
 	SDL_GLContext m_gl_context;
 #ifdef __APPLE__
@@ -137,6 +137,8 @@ private:
 	bool m_is_fullscreen = false;
 
 	FBO* m_capture_to_texture_fbo = nullptr;
+    FBO* m_presentation_fbo = nullptr;
+    bool m_frame_active = false;
 
 	struct {
 		util::Clamper< float > x;
@@ -145,6 +147,7 @@ private:
 
 	void UpdateViewportSize( const size_t width, const size_t height );
 	void ApplyDefaultViewport() const;
+    void BindPresentationTarget(bool active);
 
 	// unload requests can be done from multiple threads but actual unloading done from main one
 	common::Mutex m_texture_objs_to_unload_mutex;

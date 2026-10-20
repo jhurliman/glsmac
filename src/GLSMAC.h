@@ -32,6 +32,7 @@ class Game;
 namespace game::backend {
 namespace faction {
 class Faction;
+struct DisplayIdentity;
 }
 class State;
 }
@@ -115,7 +116,7 @@ private:
 	void InitGameState( GSE_CALLABLE );
 	void RandomizeSettings( GSE_CALLABLE );
 
-	void AddSinglePlayerSlot( const std::optional< std::string >& faction_id );
+	void AddSinglePlayerSlot( const std::optional< std::string >& faction_id, const game::backend::faction::DisplayIdentity* setup = nullptr );
 	void StartGame( GSE_CALLABLE, std::optional<std::string> campaign_world = {} );
 	void LoadCampaign(GSE_CALLABLE,const std::string& path);
 	game::backend::State* m_campaign_previous_state = nullptr;

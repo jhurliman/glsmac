@@ -43,7 +43,7 @@ static std::string Match( const Faction& actual, const Faction& expected ) {
 
 // Independent synthetic wire writer makes malformed scalar cases without
 // corrupting Buffer checksums or depending on the production serializer.
-static types::Buffer Record( const Faction& f, const std::string& marker = "GLSMAC_FACTION", const long long version = 2, const std::optional< long long > flags = {}, const std::optional< long long > land_count = {}, const std::optional< long long > water_count = {}, const std::optional< long long > grid_x = {} ) {
+static types::Buffer Record( const Faction& f, const std::string& marker = "GLSMAC_FACTION", const long long version = 3, const std::optional< long long > flags = {}, const std::optional< long long > land_count = {}, const std::optional< long long > water_count = {}, const std::optional< long long > grid_x = {} ) {
 	types::Buffer buf;
 	buf.WriteString( marker );
 	buf.WriteInt( version );
@@ -71,6 +71,13 @@ static types::Buffer Record( const Faction& f, const std::string& marker = "GLSM
 		buf.WriteBool(f.m_display_identity.has_value());
 		if (f.m_display_identity) {
 			buf.WriteString(f.m_display_identity->faction_name);buf.WriteString(f.m_display_identity->leader_title);buf.WriteString(f.m_display_identity->leader_name);
+            if(version>=3) {
+                buf.WriteBool(f.m_display_identity->setup.has_value());
+                if(f.m_display_identity->setup) {
+                    const auto& fields=*f.m_display_identity->setup;
+                    buf.WriteString(fields.noun);buf.WriteString(fields.adjective);buf.WriteString(fields.description);buf.WriteBool(fields.female);
+                }
+            }
 		}
 	}
 	return buf;
@@ -94,6 +101,10 @@ void AddFactionTests( task::gsetests::GSETests* task ) {
 		using loader::txt::FactionTXTLoader;
 		const std::string source="; synthetic records around installed University identity fields\n#UNIV\nUniversity of Planet, The Scientist, University, M, 1, Zakharov, M, 0, 0, 1, 0, 0,\n\nValues, Knowledge, RESEARCH\nPolitics, Fundamentalist, nil\nUniversity, Univ.\nAssistant, Surname, Base\nProvost, brilliant, unethical, talented, reckless\n#BASES\nOne\n";
 		const auto identity=FactionTXTLoader::ParseDisplayIdentity(source,"UNIV");
+        auto lowercase=source;const auto gender=lowercase.find("Zakharov, M,");
+        lowercase.replace(gender,12,"Zakharov, f,");
+        GT_ASSERT(FactionTXTLoader::ParseDisplayIdentity(lowercase,"UNIV").setup->female,"lowercase source gender lost");
+		GT_ASSERT(identity.setup && identity.setup->noun=="University" && identity.setup->adjective=="University" && identity.setup->description=="brilliant" && !identity.setup->female,"source customization fields were confused");
 		GT_ASSERT(identity.faction_name=="University of Planet" && identity.leader_title=="Provost" && identity.leader_name=="Zakharov","source display fields were confused with priorities or controller name");
 		for (const std::string bonus : {"", "TECH, Biogen"}) {
 			const auto formatted = std::string("#UNIV\n\nUniversity of Planet, The Scientist, University, M, 1, Zakharov, M, 0, 0, 1, 0, 0,\n") + bonus
@@ -106,6 +117,30 @@ void AddFactionTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	});
+    task->AddTest("faction identity customization saves exactly and old snapshots retain absent setup fields",GT(){
+        Faction source,restored;Populate(source,"source",Faction::FF_NONE);
+        source.m_display_identity->setup=game::backend::faction::DisplayIdentity::SetupFields{"Citizens","Civic","patient",true};
+        restored.Deserialize(source.Serialize());
+        GT_ASSERT(source.Serialize().ToString()==Record(source).ToString(),"customized wire fields differ from independent record");
+        GT_ASSERT(restored.m_display_identity==source.m_display_identity,"customization did not survive snapshot v3");
+        const auto before=restored.Serialize().ToString();
+        source.m_display_identity->setup->description="";
+        bool rejected=false;try {restored.Deserialize(Record(source));}catch(const std::runtime_error&) {rejected=true;}
+        GT_ASSERT(rejected && restored.Serialize().ToString()==before,"invalid v3 setup metadata partially published");
+        source.m_display_identity->setup->description="patient";
+        restored.Deserialize(Record(source,"GLSMAC_FACTION",2));
+        GT_ASSERT(restored.m_display_identity && !restored.m_display_identity->setup,"v2 identity acquired invented setup metadata");
+        restored.Deserialize(Record(source,"GLSMAC_FACTION",1));
+        GT_ASSERT(!restored.m_display_identity,"v1 identity acquired invented metadata");
+        const auto invalid=[&](game::backend::faction::DisplayIdentity value) {
+            try {value.ValidateUserSetup();} catch(const std::exception&) {return true;}return false;
+        };
+        auto edit=*source.m_display_identity;edit.leader_name=std::string(23,'x');edit.faction_name=std::string(39,'f');edit.ValidateUserSetup();
+        edit.faction_name+='f';GT_ASSERT(invalid(edit),"formal name exceeded original limit");
+        edit=*source.m_display_identity;edit.setup->noun="bad\nname";GT_ASSERT(invalid(edit),"multiline custom name admitted");
+        edit=*source.m_display_identity;edit.setup->adjective="";GT_ASSERT(invalid(edit),"empty custom adjective admitted");
+        GT_OK();
+    });
 	task->AddTest("faction snapshot v1 preserves absent display identity and v2 retains explicit metadata", GT() {
 		Faction source,restored;Populate(source,"source",Faction::FF_NONE);Populate(restored,"destination",Faction::FF_NONE);
 		restored.Deserialize(Record(source,"GLSMAC_FACTION",1));
@@ -138,7 +173,7 @@ void AddFactionTests( task::gsetests::GSETests* task ) {
 		Populate( source, "source", Faction::FF_NAVAL );
 		std::vector< std::string > bad;
 		bad.push_back( Record( source, "unknown" ).ToString() );
-		for ( const auto version : { -1LL, 0LL, 3LL } ) { bad.push_back( Record( source, "GLSMAC_FACTION", version ).ToString() ); }
+		for ( const auto version : { -1LL, 0LL, 4LL } ) { bad.push_back( Record( source, "GLSMAC_FACTION", version ).ToString() ); }
 		for ( const auto flags : { -1LL, 4LL, 255LL, 256LL } ) { bad.push_back( Record( source, "GLSMAC_FACTION", 1, flags ).ToString() ); }
 		for ( const auto count : { -1LL, std::numeric_limits< long long >::max() } ) {
 			bad.push_back( Record( source, "GLSMAC_FACTION", 1, {}, count ).ToString() );

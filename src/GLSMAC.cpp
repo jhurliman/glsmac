@@ -17,6 +17,7 @@
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 #include "gse/value/Undefined.h"
+#include "gse/value/Bool.h"
 
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
@@ -313,6 +314,7 @@ WRAPIMPL_BEGIN( GLSMAC )
 			"connect",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
+
 				if ( !m_state ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
 				}
@@ -342,12 +344,22 @@ WRAPIMPL_BEGIN( GLSMAC )
 		{
 			"start_game",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS_MIN_MAX( 0, 1 );
+				N_EXPECT_ARGS_MIN_MAX( 0, 2 );
 				std::optional< std::string > faction_id;
+                std::optional<game::backend::faction::DisplayIdentity> setup;
 				if ( !arguments.empty() ) {
 					N_GETVALUE( id, 0, String );
 					faction_id = id;
 				}
+                if(arguments.size()==2) {
+                    N_GETVALUE(fields,1,Object);
+                    N_GETPROP(formal,fields,"faction_name",String);N_GETPROP(title,fields,"leader_title",String);N_GETPROP(leader,fields,"leader_name",String);
+                    N_GETPROP(details,fields,"setup",Object);
+                    N_GETPROP(noun,details,"noun",String);N_GETPROP(adjective,details,"adjective",String);
+                    N_GETPROP(description,details,"description",String);N_GETPROP(female,details,"female",Bool);
+                    setup=game::backend::faction::DisplayIdentity{formal,title,leader};
+                    setup->setup=game::backend::faction::DisplayIdentity::SetupFields{noun,adjective,description,female};
+                }
 				if ( !m_state ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
 				}
@@ -358,7 +370,7 @@ WRAPIMPL_BEGIN( GLSMAC )
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game still initializing" );
 				}
 				if ( faction_id || m_state->m_slots->GetSlots().empty() ) {
-					try { AddSinglePlayerSlot( faction_id ); }
+					try { AddSinglePlayerSlot( faction_id,setup ? &*setup : nullptr ); }
 					catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
 				}
 				StartGame( GSE_CALL );
@@ -655,7 +667,7 @@ void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
 	}
 }
 
-void GLSMAC::AddSinglePlayerSlot( const std::optional< std::string >& faction_id ) {
+void GLSMAC::AddSinglePlayerSlot( const std::optional< std::string >& faction_id, const game::backend::faction::DisplayIdentity* setup ) {
 	if ( !m_state || m_state->m_connection || !m_state->m_slots->GetSlots().empty()
 		|| m_state->m_settings.local.game_mode != game::backend::settings::LocalSettings::GM_SINGLEPLAYER
 		|| m_state->m_settings.local.network_role != game::backend::settings::LocalSettings::NR_NONE ) {
@@ -664,6 +676,12 @@ void GLSMAC::AddSinglePlayerSlot( const std::optional< std::string >& faction_id
 	if ( faction_id && !m_state->GetFM()->Get( *faction_id ) ) {
 		THROW( "Unknown faction for the configured ruleset: " + *faction_id );
 	}
+    // Validate and allocate the accepted identity before publishing the roster.
+    std::optional<game::backend::faction::DisplayIdentity> accepted;
+    if(setup) {
+        if(!faction_id) {THROW("Customized identity requires a selected faction");}
+        setup->ValidateUserSetup();accepted=*setup;
+    }
     const auto& rules = m_state->m_settings.global.rules;
     if (m_state->m_settings.global.difficulty_level < INT32_MIN || m_state->m_settings.global.difficulty_level > INT32_MAX) { THROW("Unknown single-player difficulty"); }
     const auto difficulty = rules.m_difficulty_levels.GetVK().find( static_cast<int>(m_state->m_settings.global.difficulty_level) );
@@ -673,6 +691,7 @@ void GLSMAC::AddSinglePlayerSlot( const std::optional< std::string >& faction_id
         faction_id, difficulty->second},
         m_state->m_settings.local.account.GetGSID(), 0, "", false);
     m_state->m_slots->GetSlot(0).SetPlayerFlag(game::backend::slot::PF_READY);
+    if(accepted) {m_state->GetFM()->Get(*faction_id)->m_display_identity.swap(accepted);}
 
 }
 

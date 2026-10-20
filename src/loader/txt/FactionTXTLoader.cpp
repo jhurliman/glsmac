@@ -100,7 +100,11 @@ game::backend::faction::DisplayIdentity FactionTXTLoader::ParseDisplayIdentity(c
 	if (!titles.empty() && titles.back().empty()) { titles.pop_back(); }
 	if (header.size() != 12 || titles.size() != 5) { throw std::invalid_argument("Unsupported faction display identity records"); }
 	game::backend::faction::DisplayIdentity result{header[0], titles[0], header[5]};
-	result.Validate();
+	auto adjectives=Fields(rows[4]);
+    if(!adjectives.empty() && adjectives.back().empty()) {adjectives.pop_back();}
+    if(adjectives.size()!=2) {throw std::invalid_argument("Unsupported faction setup identity records");}
+    result.setup=game::backend::faction::DisplayIdentity::SetupFields{header[2],adjectives[0],titles[1],!header[6].empty() && (header[6][0]=='F' || header[6][0]=='f')};
+    result.Validate();
 	return result;
 }
 

@@ -6,6 +6,7 @@
 #include "loader/texture/TextureLoader.h"
 
 #include "scene/actor/Instanced.h"
+#include "scene/actor/Sprite.h"
 
 namespace game {
 namespace frontend {
@@ -100,6 +101,12 @@ sprite::Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size,
 			}
 		).first;
 
+        if(native) {
+            // Indexed Base art is already in its display palette. The world
+            // terrain shader's extra gamma/contrast pass is not a sprite shade.
+            auto* actor=it->second.instanced_sprite->actor->GetSpriteActor();
+            actor->SetRenderFlags(actor->GetRenderFlags() | scene::actor::Actor::RF_IGNORE_LIGHTING);
+        }
 	}
 	return &it->second;
 }

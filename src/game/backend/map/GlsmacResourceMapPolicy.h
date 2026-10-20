@@ -17,6 +17,7 @@ namespace smac_climate { struct World; }
 namespace smac_balance {struct Result;}
 namespace smac_spread {struct Input;struct Result;}
 class SmacPlanetMap;
+class SmacTerrainAuthority;
 
 // GLSMAC map semantics, not an original generator or height reconstruction.
 // The raw Tile fields remain authoritative; this saved tag specifies how the
@@ -29,6 +30,7 @@ public:
 	bool operator==( const GlsmacResourceMapPolicy& other ) const;
 	const SmacPlanetMap* OriginalPlanet() const { return m_planet.get(); }
     const std::shared_ptr<const SmacPlanetMap>& OriginalPlanetSource() const { return m_planet; }
+    const std::shared_ptr<const SmacTerrainAuthority>& NativeTerrainSource() const {return m_native;}
 	bool AutomaticLandResources() const { return m_automatic_land_resources; }
     GlsmacResourceMapPolicy WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const;
     GlsmacResourceMapPolicy WithStartingBalance(const smac_balance::Result& plan) const;
@@ -52,10 +54,12 @@ public:
 	static std::optional< GlsmacResourceMapPolicy > ReadOptional( types::Buffer& input, bool smac );
 
 private:
+    void SetOriginalSource(SmacPlanetMap source);
 	GlsmacResourceMapPolicy() = default;
     static GlsmacResourceMapPolicy RetainedClimatePlanetV2(SmacPlanetMap source,bool automatic_land_resources);
     bool m_retained_climate=false;
 	std::shared_ptr<const SmacPlanetMap> m_planet;
+    std::shared_ptr<const SmacTerrainAuthority> m_native;
 	bool m_automatic_land_resources = false;
 };
 

@@ -5,6 +5,7 @@
 
 #include "tile/Tile.h"
 #include "SmacPlanetMap.h"
+#include "SmacTerrainAuthority.h"
 #include "SmacGlobalSpread.h"
 #include "SmacClimate.h"
 #include "game/backend/resource/SmacSiteSignal.h"
@@ -12,6 +13,11 @@
 namespace game::backend::map {
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::DisplayedTerrainV1() { return {}; }
+void GlsmacResourceMapPolicy::SetOriginalSource(SmacPlanetMap source) {
+    auto native=std::make_shared<const SmacTerrainAuthority>(SmacTerrainAuthority::Installed(std::move(source)));
+    auto planet=native->InstalledSource();
+    m_planet=std::move(planet);m_native=std::move(native);
+}
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::InstalledPlanetV1( SmacPlanetMap source, bool automatic_land_resources ) {
 	if ( source.WorldSizeCategory() != 4 || source.Header()[0x1c] != 0 || source.Header()[0x1d] != 0
@@ -26,7 +32,7 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::InstalledPlanetV1( SmacPlanetMa
 		}
 	}}
 	GlsmacResourceMapPolicy result;
-	result.m_planet=std::make_shared<const SmacPlanetMap>(std::move(source));
+	result.SetOriginalSource(std::move(source));
 	result.m_automatic_land_resources=automatic_land_resources;
 	return result;
 }
@@ -36,7 +42,7 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::RetainedClimatePlanetV2(SmacPla
         || source.Header()[0x1e]!=0 || source.Header()[0x1f]!=0) {throw std::runtime_error("Retained Planet climate requires admitted standard-world headers");}
     if(source.OceanCoverageCategory()<0 || source.OceanCoverageCategory()>2) {throw std::runtime_error("Retained Planet climate requires normal ocean category");}
     (void)source.ExportClimateTerrain(true);
-    GlsmacResourceMapPolicy result;result.m_planet=std::make_shared<const SmacPlanetMap>(std::move(source));
+    GlsmacResourceMapPolicy result;result.SetOriginalSource(std::move(source));
     result.m_automatic_land_resources=automatic_land_resources;result.m_retained_climate=true;return result;
 }
 
@@ -47,7 +53,7 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithClimateTerrain(const smac_c
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const {
     if(!m_planet || !before.geometry.wrap) {throw std::invalid_argument("Global spread publication requires wrapped installed terrain authority");}
-    auto result=*this;result.m_planet=std::make_shared<const SmacPlanetMap>(m_planet->WithGlobalSpread(before,plan));return result;
+    auto result=*this;result.SetOriginalSource(m_planet->WithGlobalSpread(before,plan));return result;
 }
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithLiveGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const {
@@ -59,7 +65,7 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithLiveGlobalSpread(const smac
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithStartingBalance(const smac_balance::Result& plan) const {
     if(!m_planet) {throw std::runtime_error("Compensation markers require original terrain item authority");}
-    auto result=*this;result.m_planet=std::make_shared<const SmacPlanetMap>(m_planet->WithStartingBalance(plan));return result;
+    auto result=*this;result.SetOriginalSource(m_planet->WithStartingBalance(plan));return result;
 }
 
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const {
@@ -74,18 +80,18 @@ bool GlsmacResourceMapPolicy::operator==( const GlsmacResourceMapPolicy& other )
 }
 
 resource::smac::AltitudeBand GlsmacResourceMapPolicy::Altitude( const tile::Tile& value ) const {
-	if(m_planet) {
-		if(value.coord.x>=SmacPlanetMap::WIDTH || value.coord.y>=SmacPlanetMap::HEIGHT) {throw std::runtime_error("Imported resource coordinate exceeds source geometry");}
-		return static_cast<resource::smac::AltitudeBand>(m_planet->At(value.coord.x,value.coord.y).Climate()>>5);
+	if(m_native) {
+        if(value.coord.x>=m_native->Info().width || value.coord.y>=m_native->Info().height) {throw std::runtime_error("Native resource coordinate exceeds source geometry");}
+		return static_cast<resource::smac::AltitudeBand>(m_native->At(value.coord.x,value.coord.y).Climate()>>5);
 	}
 	if(!value.elevation.center) {throw std::runtime_error("Resource tile has no elevation");}
 	return Altitude(value.is_water_tile,*value.elevation.center);
 }
 
 std::array<bool,3> GlsmacResourceMapPolicy::LandmarkBonuses( const tile::Tile& value ) const {
-	if(!m_planet) {return {!value.is_water_tile && bool(value.features&tile::FEATURE_JUNGLE),false,false};}
+	if(!m_native) {return {!value.is_water_tile && bool(value.features&tile::FEATURE_JUNGLE),false,false};}
 	const auto altitude=Altitude(value);
-	const auto word=m_planet->At(value.coord.x,value.coord.y).Landmarks();
+	const auto word=m_native->At(value.coord.x,value.coord.y).Landmarks();
 	const bool land=altitude>=resource::smac::AltitudeBand::Land3;
 	const bool unsuppressed=(word&0x80000000u)==0;
 	const bool inner=(word>>24)<9;
@@ -95,7 +101,7 @@ std::array<bool,3> GlsmacResourceMapPolicy::LandmarkBonuses( const tile::Tile& v
 }
 
 resource::smac::AltitudeBand GlsmacResourceMapPolicy::Altitude( bool water, int64_t center_elevation ) const {
-	if(m_planet) {throw std::runtime_error("Imported resource altitude requires a tile coordinate");}
+	if(m_native) {throw std::runtime_error("Native resource altitude requires a tile coordinate");}
 	using resource::smac::AltitudeBand;
 	if ( center_elevation < tile::ELEVATION_MIN || center_elevation > tile::ELEVATION_MAX ) {
 		throw std::runtime_error( "GLSMAC resource elevation is outside DisplayedTerrainV1" );
@@ -115,21 +121,21 @@ bool GlsmacResourceMapPolicy::AllowsGeneratedBonus( bool water, int64_t center_e
 }
 
 uint8_t GlsmacResourceMapPolicy::SiteSignal(const tile::Tile& value) const {
-    if(!m_planet) {return (value.features&tile::FEATURE_UNITY_POD)?1:0;}
+    if(!m_native) {return (value.features&tile::FEATURE_UNITY_POD)?1:0;}
     const auto altitude=Altitude(value); // authenticates imported coordinates
-    const auto flags=m_planet->At(value.coord.x,value.coord.y).Items();
+    const auto flags=m_native->At(value.coord.x,value.coord.y).Items();
     return resource::smac::ResolveSiteSignal({static_cast<int32_t>(value.coord.x),static_cast<int32_t>(value.coord.y),
-        altitude,flags,m_automatic_land_resources,m_planet->ResourcePattern(),11,61});
+        altitude,flags,m_automatic_land_resources,m_native->Info().pattern,11,61});
 }
 
 resource::smac::ResourceBonus GlsmacResourceMapPolicy::Bonus( const tile::Tile& value ) const {
 	using resource::smac::ResourceBonus;
-	if(m_planet) {
+	if(m_native) {
 		const auto altitude=Altitude(value);
-		const auto& square=m_planet->At(value.coord.x,value.coord.y);
+		const auto& square=m_native->At(value.coord.x,value.coord.y);
 		const auto items=square.Items();
 		return resource::smac::ResolveResourceBonus({static_cast<int32_t>(value.coord.x),static_cast<int32_t>(value.coord.y),altitude,
-			m_planet->ResourcePattern(),m_automatic_land_resources,bool(items&0x400),bool(items&0x20000000),bool(items&0x10000),bool(items&0x20000)});
+			m_native->Info().pattern,m_automatic_land_resources,bool(items&0x400),bool(items&0x20000000),bool(items&0x10000),bool(items&0x20000)});
 	}
 	if ( !value.elevation.center ) { throw std::runtime_error( "GLSMAC resource tile has no elevation" ); }
 	const auto altitude = Altitude( value.is_water_tile, *value.elevation.center );

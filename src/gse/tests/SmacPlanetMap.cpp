@@ -6,6 +6,7 @@
 #include "fixtures/SmacRulesSource.h"
 #include "fixtures/SmacBloomTerrain.h"
 #include "game/backend/map/GlsmacResourceMapPolicy.h"
+#include "game/backend/map/SmacTerrainAuthority.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/WorldSnapshotRules.h"
 #include "task/gsetests/GSETests.h"
@@ -35,6 +36,31 @@ bool Rejects(const std::string& wire) {
 }
 }
 void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Planet terrain authority preserves provenance opaque bytes and policy codecs",GT(){
+        using Policy=game::backend::map::GlsmacResourceMapPolicy;using Authority=game::backend::map::SmacTerrainAuthority;
+        auto wire=Synthetic();Put(wire,15+0xa30,4);Put(wire,15+0xa34,1);Put(wire,15+8,11446);
+        Put(wire,15+0xa40,2);Put(wire,15+0xa44,0);Put(wire,15+0xa48,2);
+        Put(wire,15+0x0c,uint32_t(-19));Put(wire,15+0x10,uint32_t(-3));
+        Put(wire,15+0xa38,0xf1f2f3f4u);Put(wire,15+0xa3c,0x12345678u);
+        for(size_t i=0;i<Planet::TILE_COUNT;++i) {wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+i*44]=96;}
+        wire[Planet::PREFIX_BYTES+Planet::HEADER_BYTES+6]=char(165);wire.back()=char(188);
+        auto policy=Policy::InstalledPlanetV1(Planet::Decode(wire),true);const auto snapshot=policy.NativeTerrainSource();
+        GT_ASSERT(snapshot && snapshot->SourceOrigin()==Authority::Origin::Installed && snapshot->InstalledSource()==policy.OriginalPlanetSource(),
+            "Native terrain and installed source lost one immutable authority");
+        const auto& meta=snapshot->Info();
+        GT_ASSERT(meta.width==80 && meta.height==80 && meta.horizontal_wrap && meta.pattern==11446 && meta.sea_offset==-19 && meta.climate_extra==-3
+            && meta.categories[0]==4 && meta.categories[1]==1 && meta.categories[4]==2 && meta.categories[5]==0 && meta.categories[6]==2
+            && !meta.categories[2] && !meta.categories[3] && !meta.generation_primary_rules,"Installed metadata was guessed or changed");
+        const auto raw=wire.substr(Planet::PREFIX_BYTES+Planet::HEADER_BYTES,Planet::TILE_COUNT*Planet::RECORD_BYTES);
+        GT_ASSERT(snapshot->RecordBytes()==raw && snapshot->InstalledSource()->Encode()==wire,"Native terrain changed opaque container bytes");
+        types::Buffer expected;expected.WriteInt(1);expected.WriteInt(2);expected.WriteBool(true);expected.WriteString(wire);
+        GT_ASSERT(policy.Serialize().ToString()==expected.ToString(),"Shared terrain authority changed the saved policy wire");
+        const auto restored=Policy::Deserialize(expected.ToString());
+        GT_ASSERT(restored==policy && restored.NativeTerrainSource()->RecordBytes()==raw && restored.OriginalPlanet()->Encode()==wire,
+            "Policy restore did not reconstruct the common terrain authority");
+        policy=Policy::DisplayedTerrainV1();
+        GT_ASSERT(!policy.NativeTerrainSource() && snapshot->RecordBytes()==raw,"Retired policy invalidated a queued terrain snapshot");GT_OK();
+    });
     task->AddTest("SMAC Planet live flora publication preserves unowned bits and saves current observer memory",GT(){
         namespace spread=game::backend::map::smac_spread;using Policy=game::backend::map::GlsmacResourceMapPolicy;
         auto wire=Synthetic();Put(wire,15+0xa30,4);
@@ -58,6 +84,7 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
             && policy.OriginalPlanet()->Encode()==wire && updated.AutomaticLandResources(),"Live publication changed source/header/trailer/policy");
         for(uint32_t y=0;y<80;++y) {for(uint32_t x=y&1;x<80;x+=2) {
             GT_ASSERT(updated.OriginalPlanet()->At(x,y).bytes==plan.tiles[size_t(y)*40+x/2].bytes,"Live publication differs from exact final projected plane");
+            GT_ASSERT(updated.NativeTerrainSource()->At(x,y).bytes==updated.OriginalPlanet()->At(x,y).bytes,"Live publication left the shared terrain view stale");
         }}
         GT_ASSERT(updated.OriginalPlanet()->At(42,66).bytes[18]==32 && !(updated.OriginalPlanet()->At(42,66).Items()&0x20u)
             && updated.OriginalPlanet()->At(78,78).Items()==0x10000004u,"Live flora lost observer propagation or unrelated material bits");
@@ -161,6 +188,9 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
         world.horizontal_wrap=true;
         const auto policy=Policy::InstalledPlanetV1(source,true);const auto legacy=policy.Serialize().ToString();
         const auto current=policy.WithClimateTerrain(world,-11,7);const auto saved=current.Serialize().ToString();
+        GT_ASSERT(current.NativeTerrainSource()->Info().sea_offset==-11 && current.NativeTerrainSource()->Info().climate_extra==7
+            && current.NativeTerrainSource()->At(0,0).bytes==current.OriginalPlanet()->At(0,0).bytes
+            && policy.NativeTerrainSource()->Info().sea_offset==source.CumulativeSeaLevelOffset(),"Climate publication left native metadata or queued source stale");
         GT_ASSERT(current.OriginalPlanet()->Encode()==expected && current.AutomaticLandResources() && Policy::Deserialize(saved)==current
             && Policy::Deserialize(legacy).Serialize().ToString()==legacy,"Retained V2 climate policy failed to retain occupied fields, automatic-resource setting or old V1 bytes");
         bool rejected=false;try {(void)Policy::InstalledPlanetV1(updated,true);}catch(const std::exception&){rejected=true;}

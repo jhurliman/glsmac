@@ -14,6 +14,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacFinalGeneration.cpp
 	${PWD}/SmacLandmarkGeneration.cpp
 	${PWD}/SmacCompleteTerrainGeneration.cpp
+	${PWD}/SmacTerrainAuthority.cpp
 	${PWD}/SmacGlobalSpread.cpp
 	${PWD}/MapGlobalSpread.cpp
 	${PWD}/SmacGlobalWildlife.cpp

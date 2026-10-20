@@ -55,6 +55,10 @@ must be separated at its callers.
    complete original record/store/RNG controls; terrain generation composes with
    the first prefix. The generated search/cache adapter and subsequent Base,
    technology/design, Unit factory and controller stages still need composition.
+   [Canonical Unit initialization and stack placement](native-startup-units.md)
+   now match original complete-record/pool controls; Base founding, technology
+   grants, complete factory visibility and starting-package composition remain
+   separate required stages.
 5. **Persist one consistent world.** Introduce a versioned generated-authority
    payload and validate its origin/options at every save, load and network
    boundary. Preserve existing saved policy versions. Keep parse/validation

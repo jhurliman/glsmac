@@ -51,7 +51,9 @@ void AddSmacTilePreviewTests(task::gsetests::GSETests* task) {
         GT_ASSERT(remembered && remembered->writes>bare->writes,"Remembered Fungus bypassed original feature painter");
         tile.selected_known=false;GT_ASSERT(!preview::Paint(world,source,8,8,0,background),"Unknown center painted");
         tile.selected_known=true;world.tiles[7*40+3].selected_known=false;
-        GT_ASSERT(!preview::Paint(world,source,8,8,0,background),"Unknown neighbor memory silently became live memory");
+        const auto no_neighbor_memory=preview::Paint(world,source,8,8,0,background);
+        GT_ASSERT(no_neighbor_memory && no_neighbor_memory->indexed==remembered->indexed,
+            "Neighbor memory gated the original live Fungus connectivity read");
         world.tiles[7*40+3].selected_known=true;tile.band=2;
         GT_ASSERT(!preview::Paint(world,source,8,8,0,background),"Unmeasured sea admitted");
         tile.band=3;tile.selected_items=0x8000;

@@ -11,13 +11,14 @@ void Validate(const Tile& tile) {
 }
 }
 
-std::vector<Pass> Select(Point center,const TileAt& tile_at,uint16_t seed) {
+std::vector<Pass> Select(Point center,const TileAt& tile_at,uint16_t seed,std::optional<uint32_t> center_items) {
     if(!tile_at || center[0]< -32765 || center[0]>32764 || center[1]< -32765 || center[1]>32764) {
         throw std::invalid_argument("Invalid ordinary terrain material lookup");
     }
-    const auto own=tile_at(center[0],center[1]);
+    auto own=tile_at(center[0],center[1]);
     if(!own || own->band<3) {throw std::invalid_argument("Ordinary land material requires admitted land");}
     Validate(*own);
+    if(center_items) {own->items=*center_items;}
     const auto neighbor=[&](Point offset) {
         const auto tile=tile_at(center[0]+offset[0],center[1]+offset[1]);
         // Neighbor rockiness is not read by these selectors, and sea connects

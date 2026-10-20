@@ -62,9 +62,10 @@ Mapping CoastMapping(unsigned pattern,int x,int y) {
     }
     return result;
 }
-std::vector<Pass> Select(int x,int y,const std::array<raster::Point,5>& points,const CellAt& at) {
+std::vector<Pass> Select(int x,int y,const std::array<raster::Point,5>& points,const CellAt& at,std::optional<uint32_t> center_items) {
     if(!Center(x,y)) {return {};}
-    const auto own=at(x,y);if(!own) {return {};}
+    auto own=at(x,y);if(!own) {return {};}
+    if(center_items) {own->items=*center_items;}
     const bool sea=own->band<3;const auto patterns=CoastPatterns(x,y,at);
     std::vector<Pass> result;result.reserve(8);
     for(unsigned sector=0;sector<4;++sector) {

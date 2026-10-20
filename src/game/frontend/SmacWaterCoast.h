@@ -21,7 +21,10 @@ struct Pass {
 };
 // Sea: overlay/base pairs in W,N,E,S order. Land: coast continuation only,
 // appended after the separately measured land-material/feature prefix.
-std::vector<Pass> Select(int x,int y,const std::array<raster::Point,5>& points,const CellAt& at);
+// Connectivity reads live neighbor items; only center admission uses the
+// separately selected/remembered word when supplied.
+std::vector<Pass> Select(int x,int y,const std::array<raster::Point,5>& points,const CellAt& at,
+    std::optional<uint32_t> center_items=std::nullopt);
 // Loaded (+10) RAINFALL.PCX. Reconstructs both original56x56 class masks;
 // ordinary coast painting uses mask0. No palette/RGBA approximation.
 std::array<raster::Bitmap,2> CoastMasks(const raster::Bitmap& rainfall);

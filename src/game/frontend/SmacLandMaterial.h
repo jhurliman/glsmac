@@ -27,7 +27,10 @@ struct Pass {
 // The original variation seed is the tile-record address's low16 bits.
 // The caller must supply an explicit compatibility value; this function never
 // hashes coordinates or consumes a gameplay/presentation RNG stream.
-std::vector<Pass> Select(Point center,const TileAt& tile_at,uint16_t variation_seed_low16);
+// tile_at supplies live neighbor items. Only the center's selected/remembered
+// item word is overridden; neighbor connectivity never uses that memory row.
+std::vector<Pass> Select(Point center,const TileAt& tile_at,uint16_t variation_seed_low16,
+    std::optional<uint32_t> center_items=std::nullopt);
 
 using Rgb=std::array<uint8_t,3>;
 using Palette=std::array<Rgb,256>;

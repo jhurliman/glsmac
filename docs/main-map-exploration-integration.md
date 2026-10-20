@@ -67,3 +67,8 @@ geometry caches and gameplay RNG untouched. Five production translation units
 (changed units and known frontend consumers) pass correctness analysis. A focused
 five-TU ASan/UBSan run passes these groups; remaining objects are uninstrumented
 and leak detection is disabled. Ordinary-game fog remains an integration task.
+
+The [mixed exploration renderer](mixed-exploration-renderer.md) now closes all
+four original partial21 indexed frames with production material selection,
+including the distinct remembered-center/live-neighbor inputs. Survey and live
+ordinary presentation are still separate remaining boundaries.

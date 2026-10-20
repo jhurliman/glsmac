@@ -360,6 +360,7 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	const bool IsStarted() const;
 	Random* GetRandom() const;
 	map::Map* GetMap() const;
+    bool AllowsLocalTileInspection(size_t x,size_t y) const;
 	State* GetState() const;
 	const Player* GetPlayer() const;
 	const size_t GetSlotNum() const;

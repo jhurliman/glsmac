@@ -3013,7 +3013,11 @@ public:
                 using Base=game::backend::base::Base;
                 auto* native=new Base(&m_game,9,&m_state->m_slots->GetSlot(2),m_game.GetFaction("GAIANS"),m_game.GetMap()->GetTile(2,2),"Selected",{},{});
                 WithRW([&]{m_game.GetBM()->SpawnBase(GSE_CALL,native);});
-                m_game.GetMap()->On(GSE_CALL,"tile_preview",NATIVE_CALL(&tiles){++tiles;return VALUE(value::Undefined);}));
+                m_game.GetMap()->On(GSE_CALL,"tile_preview",NATIVE_CALL(&tiles,&valid){
+                    ++tiles;N_EXPECT_ARGS(1);N_GETVALUE(args,0,Object);
+                    valid=valid && args.find("known")!=args.end() && args.at("known")->type==VT_BOOL;
+                    return VALUE(value::Undefined);
+                }));
                 m_game.GetMap()->On(GSE_CALL,"base_preview",NATIVE_CALL(this,&previews,&valid,scenario) {
                     ++previews;N_EXPECT_ARGS(1);N_GETVALUE(args,0,Object);
                     auto* field=args.at("base");
@@ -5934,6 +5938,9 @@ public:
             const auto wire=m_game.m_map->m_worker_knowledge->Serialize();
             const auto random=m_game.m_simulation->value.gameplay_random;
             const auto first=inspect();
+            GT_ASSERT(m_game.AllowsLocalTileInspection(40,40) && !m_game.AllowsLocalTileInspection(0,0)
+                && !m_game.AllowsLocalTileInspection(80,0) && !m_game.AllowsLocalTileInspection(1,0),
+                "Console inspection ignored persistent exploration, local reveal or coordinate bounds");
             const auto& rules=m_state->m_settings.global.GetSmacCampaignRules();
             GT_ASSERT(rules && first->initial_survey==bool(rules->primary&0x100u),"Snapshot inferred or lost retained Unity Survey selection");
             GT_ASSERT(first->viewer==viewer && first->exploration_ready && first->tiles[40*40+20].explored_by==bit,
@@ -5944,9 +5951,11 @@ public:
             GT_ASSERT(m_game.m_map->m_worker_knowledge->Serialize()==wire && m_game.m_simulation->value.gameplay_random==random
                 && !m_game.m_map->m_native_geometry,"Presentation query mutated saved knowledge, RNG or native geometry");
             data.tiles[40*40+20].explored_by=0;data.all_map_revealed=bit;install();const auto revealed=inspect();
+            GT_ASSERT(m_game.AllowsLocalTileInspection(0,0),"Actual console reader ignored local faction reveal");
             GT_ASSERT(revealed->KnowledgeAt(0)==World::Knowledge::Known && !revealed->tiles[0].explored_by,
                 "Faction reveal was discarded or converted into saved exploration");
             m_game.m_map->m_worker_knowledge_ready=false;const auto unavailable=inspect();
+            GT_ASSERT(!m_game.AllowsLocalTileInspection(40,40),"Actual console reader admitted unready saved knowledge");
             GT_ASSERT(!unavailable->exploration_ready && !unavailable->KnowledgeAt(0),"Unready knowledge became revealed terrain");
             GT_ASSERT(first->tiles[40*40+20].explored_by==bit && first->revealed_by!=bit && revealed->revealed_by==bit,
                 "Owned exploration snapshot borrowed subsequent knowledge state");
@@ -6017,6 +6026,19 @@ public:
             auto* solar=sprites.GetInstancedSprite("test Solar",&texture,{0,0},{100,62},{50,25},{1,1},game::frontend::ZL_TERRAIN);
             auto* monolith=sprites.GetInstancedSprite("test Monolith",&texture,{0,0},{100,62},{50,25},{1,1},game::frontend::ZL_TERRAIN);
             frontend.m_tm=&tiles;frontend.m_ism=&sprites;frontend.m_map_data.width=80;frontend.m_map_data.height=80;
+            frontend.m_map_data.native_projection=true;
+            GT_ASSERT(!frontend.AllowsNativeTileInspection(40,40),"Preview fallback disclosed terrain before its snapshot arrived");
+            frontend.m_native_world=std::make_unique<::game::native_terrain::World>();
+            auto& knowledge=*frontend.m_native_world;knowledge.viewer=3;knowledge.exploration_ready=true;
+            knowledge.observers_present=8;knowledge.initial_survey=true;
+            GT_ASSERT(!frontend.AllowsNativeTileInspection(40,40),"Survey enabled the legacy preview fallback");
+            knowledge.tiles[40*40+20].explored_by=8;
+            GT_ASSERT(frontend.AllowsNativeTileInspection(40,40),"Preview gate hid persistently explored terrain");
+            knowledge.tiles[40*40+20].explored_by=0;knowledge.revealed_by=8;
+            GT_ASSERT(frontend.AllowsNativeTileInspection(40,40),"Preview gate ignored local faction reveal");
+            knowledge.revealed_by=16;
+            GT_ASSERT(!frontend.AllowsNativeTileInspection(40,40),"Preview gate consumed another observer's reveal");
+            frontend.m_native_world.reset();frontend.m_map_data.native_projection=false;
             util::FinallyGuard detach([&]{frontend.ClearNativeTerrain();frontend.m_tm=nullptr;frontend.m_ism=nullptr;});
             solar->actor->SetInstance(11,{1,2,3});monolith->actor->SetInstance(12,{4,5,6});
             frontend.m_native_legacy_instances={{11,{solar->key,{1,2,3}}},{12,{monolith->key,{4,5,6}}}};

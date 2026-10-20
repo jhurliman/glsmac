@@ -24,6 +24,24 @@
 #include <stdexcept>
 
 namespace game::backend {
+bool Game::AllowsLocalTileInspection(size_t x,size_t y) const {
+    if(!m_state) {return false;}
+    if(m_state->m_settings.global.GetRulesetId()!="smac") {return true;}
+    if(!IsRunning() || !m_simulation || !m_slot || !m_player || !m_map || m_state->GetConnection()
+        || m_player->GetRole()!=Player::PR_SINGLE || x>=m_map->GetWidth() || y>=m_map->GetHeight() || ((x^y)&1)) {return false;}
+    const auto& participant=RequireSimulationParticipant(m_player);
+    if(participant.slot!=static_cast<int32_t>(m_slot->GetIndex())) {throw std::runtime_error("Tile inspection local participant mismatch");}
+    const auto& saved=m_map->GetSmacWorkerKnowledge();
+    if(!saved || !m_map->m_worker_knowledge_ready) {return false;}
+    const auto data=saved->CopyData();const auto viewer=participant.simulation_id;
+    if(data.width!=static_cast<int64_t>(m_map->GetWidth()) || data.height!=static_cast<int64_t>(m_map->GetHeight())
+        || viewer<1 || viewer>7 || !data.observers.at(viewer)) {throw std::runtime_error("Tile inspection knowledge differs from current local world");}
+    const auto bit=static_cast<uint8_t>(1u<<viewer);
+    const auto index=y*(m_map->GetWidth()/2)+x/2;
+    // Survey geography is not permission to inspect climate/features or a
+    // terrain preview. Only persistent exploration or this viewer's reveal is.
+    return ((data.tiles.at(index).explored_by|data.all_map_revealed)&bit)!=0;
+}
 gse::Value* Game::CopyLocalMinimap(GSE_CALLABLE) const {
     const auto unavailable=[&]()->gse::Value* {
         // An explicit empty frame prevents an existing saved unknown mask from

@@ -1,0 +1,4858 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "map_sha256": "24b1a6b018f0aaddde0ecc5712cc302359c872228b0342f0f30b9004670cdb30",
+  "static_instruction_assertions": 37,
+  "full_native_controls": 13,
+  "prefix_continuation_controls": 21,
+  "console_selection_controls": 8,
+  "scope": "13 full native main-map controls, supplied viewer3 and knowledge; ordinary pref100 grid versus view bit2; same generic/empty-roster services as frozen unknown sequence.",
+  "palette": {
+    "37": [
+      21,
+      41,
+      24
+    ],
+    "190": [
+      14,
+      37,
+      75
+    ],
+    "194": [
+      13,
+      28,
+      48
+    ]
+  },
+  "totals": {
+    "derived_known_lines": 92,
+    "derived_outer_queries": 43104,
+    "semantic_cache_bytes": 374400
+  },
+  "cases": [
+    {
+      "id": "partial_off_first",
+      "input": {
+        "sequence": "partial_off",
+        "preference": 0,
+        "flags": 1610682083,
+        "exploration": "21",
+        "id": "first"
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          76,
+          -2
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [],
+      "unknown_line_count": 1068,
+      "query_sha256": "fa3823cae7a7b5605c84ae2cc2e0754e7067c897158dd9efcda1d98f7562b7ef",
+      "cache_sha256": "913e0be959b713ec3e3b513fcf1a0d54d3de319764b0442874f1c1ccf4d8ccbf",
+      "indexed_frame_sha256": "f74c5e8cfc7e6ccc45d98a97a8240dbb25df828926548c7cfc8b80baea71da37"
+    },
+    {
+      "id": "partial_off_repeat",
+      "input": {
+        "sequence": "partial_off",
+        "preference": 0,
+        "flags": 1610682083,
+        "exploration": "21",
+        "id": "repeat"
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [],
+      "unknown_line_count": 1068,
+      "query_sha256": "fa3823cae7a7b5605c84ae2cc2e0754e7067c897158dd9efcda1d98f7562b7ef",
+      "cache_sha256": "913e0be959b713ec3e3b513fcf1a0d54d3de319764b0442874f1c1ccf4d8ccbf",
+      "indexed_frame_sha256": "bf441968931aef5474c9719c915ca10689db059e2866391356ce60e67380c989"
+    },
+    {
+      "id": "partial_off_east",
+      "input": {
+        "sequence": "partial_off",
+        "preference": 0,
+        "flags": 1610682083,
+        "exploration": "21",
+        "id": "east",
+        "pan": [
+          24,
+          38
+        ]
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [],
+      "unknown_line_count": 252,
+      "query_sha256": "ac1003d24c0c79320cebb721d08eabbd975c17a49f798384ff64174e4b5bec9f",
+      "cache_sha256": "024a627dc23351e092692616f3a392176ac7026df209386e3287a804256a981a",
+      "indexed_frame_sha256": "78e0ee10d018debc85b26fb9a20bd5ce8d7b202804c0c86072c8f699ad2be721"
+    },
+    {
+      "id": "partial_off_back",
+      "input": {
+        "sequence": "partial_off",
+        "preference": 0,
+        "flags": 1610682083,
+        "exploration": "21",
+        "id": "back",
+        "pan": [
+          22,
+          38
+        ]
+      },
+      "before": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [],
+      "unknown_line_count": 200,
+      "query_sha256": "abccac4d268a0883f11e4e7822453d85fdb9e4aaa9b492b7f4ee97409d2fffd8",
+      "cache_sha256": "024a627dc23351e092692616f3a392176ac7026df209386e3287a804256a981a",
+      "indexed_frame_sha256": "b8b23b455cc18543c5292adc81f5a512287f498d1512594074f08bfb904e4315"
+    },
+    {
+      "id": "partial_on_first",
+      "input": {
+        "sequence": "partial_on",
+        "preference": 256,
+        "flags": 1610682083,
+        "exploration": "21",
+        "id": "first"
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [
+        {
+          "tile": [
+            21,
+            35
+          ],
+          "line": [
+            480,
+            216,
+            528,
+            180,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 445,
+          "quad": [
+            480,
+            216,
+            528,
+            180,
+            576,
+            198,
+            528,
+            234
+          ]
+        },
+        {
+          "tile": [
+            21,
+            35
+          ],
+          "line": [
+            528,
+            180,
+            576,
+            198,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 446,
+          "quad": [
+            480,
+            216,
+            528,
+            180,
+            576,
+            198,
+            528,
+            234
+          ]
+        },
+        {
+          "tile": [
+            23,
+            35
+          ],
+          "line": [
+            576,
+            198,
+            624,
+            155,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 468,
+          "quad": [
+            576,
+            198,
+            624,
+            155,
+            672,
+            185,
+            624,
+            222
+          ]
+        },
+        {
+          "tile": [
+            23,
+            35
+          ],
+          "line": [
+            624,
+            155,
+            672,
+            185,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 469,
+          "quad": [
+            576,
+            198,
+            624,
+            155,
+            672,
+            185,
+            624,
+            222
+          ]
+        },
+        {
+          "tile": [
+            20,
+            36
+          ],
+          "line": [
+            480,
+            216,
+            528,
+            234,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 522,
+          "quad": [
+            432,
+            240,
+            480,
+            216,
+            528,
+            234,
+            480,
+            264
+          ]
+        },
+        {
+          "tile": [
+            22,
+            36
+          ],
+          "line": [
+            528,
+            234,
+            576,
+            198,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 541,
+          "quad": [
+            528,
+            234,
+            576,
+            198,
+            624,
+            222,
+            576,
+            258
+          ]
+        },
+        {
+          "tile": [
+            22,
+            36
+          ],
+          "line": [
+            576,
+            198,
+            624,
+            222,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 542,
+          "quad": [
+            528,
+            234,
+            576,
+            198,
+            624,
+            222,
+            576,
+            258
+          ]
+        },
+        {
+          "tile": [
+            24,
+            36
+          ],
+          "line": [
+            624,
+            222,
+            672,
+            185,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 559,
+          "quad": [
+            624,
+            222,
+            672,
+            185,
+            720,
+            228,
+            672,
+            258
+          ]
+        },
+        {
+          "tile": [
+            24,
+            36
+          ],
+          "line": [
+            672,
+            185,
+            720,
+            228,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 560,
+          "quad": [
+            624,
+            222,
+            672,
+            185,
+            720,
+            228,
+            672,
+            258
+          ]
+        },
+        {
+          "tile": [
+            19,
+            37
+          ],
+          "line": [
+            432,
+            240,
+            480,
+            264,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 609,
+          "quad": [
+            384,
+            264,
+            432,
+            240,
+            480,
+            264,
+            432,
+            288
+          ]
+        },
+        {
+          "tile": [
+            21,
+            37
+          ],
+          "line": [
+            480,
+            264,
+            528,
+            234,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 623,
+          "quad": [
+            480,
+            264,
+            528,
+            234,
+            576,
+            258,
+            528,
+            288
+          ]
+        },
+        {
+          "tile": [
+            21,
+            37
+          ],
+          "line": [
+            528,
+            234,
+            576,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 624,
+          "quad": [
+            480,
+            264,
+            528,
+            234,
+            576,
+            258,
+            528,
+            288
+          ]
+        },
+        {
+          "tile": [
+            23,
+            37
+          ],
+          "line": [
+            576,
+            258,
+            624,
+            222,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 642,
+          "quad": [
+            576,
+            258,
+            624,
+            222,
+            672,
+            258,
+            624,
+            288
+          ]
+        },
+        {
+          "tile": [
+            23,
+            37
+          ],
+          "line": [
+            624,
+            222,
+            672,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 643,
+          "quad": [
+            576,
+            258,
+            624,
+            222,
+            672,
+            258,
+            624,
+            288
+          ]
+        },
+        {
+          "tile": [
+            25,
+            37
+          ],
+          "line": [
+            672,
+            258,
+            720,
+            228,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 661,
+          "quad": [
+            672,
+            258,
+            720,
+            228,
+            768,
+            264,
+            720,
+            288
+          ]
+        },
+        {
+          "tile": [
+            25,
+            37
+          ],
+          "line": [
+            720,
+            228,
+            768,
+            264,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 662,
+          "quad": [
+            672,
+            258,
+            720,
+            228,
+            768,
+            264,
+            720,
+            288
+          ]
+        },
+        {
+          "tile": [
+            20,
+            38
+          ],
+          "line": [
+            432,
+            288,
+            480,
+            264,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 712,
+          "quad": [
+            432,
+            288,
+            480,
+            264,
+            528,
+            288,
+            480,
+            312
+          ]
+        },
+        {
+          "tile": [
+            20,
+            38
+          ],
+          "line": [
+            480,
+            264,
+            528,
+            288,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 713,
+          "quad": [
+            432,
+            288,
+            480,
+            264,
+            528,
+            288,
+            480,
+            312
+          ]
+        },
+        {
+          "tile": [
+            22,
+            38
+          ],
+          "line": [
+            528,
+            288,
+            576,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 725,
+          "quad": [
+            528,
+            288,
+            576,
+            258,
+            624,
+            288,
+            576,
+            312
+          ]
+        },
+        {
+          "tile": [
+            22,
+            38
+          ],
+          "line": [
+            576,
+            258,
+            624,
+            288,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 726,
+          "quad": [
+            528,
+            288,
+            576,
+            258,
+            624,
+            288,
+            576,
+            312
+          ]
+        },
+        {
+          "tile": [
+            24,
+            38
+          ],
+          "line": [
+            624,
+            288,
+            672,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 738,
+          "quad": [
+            624,
+            288,
+            672,
+            258,
+            720,
+            288,
+            672,
+            312
+          ]
+        },
+        {
+          "tile": [
+            24,
+            38
+          ],
+          "line": [
+            672,
+            258,
+            720,
+            288,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 739,
+          "quad": [
+            624,
+            288,
+            672,
+            258,
+            720,
+            288,
+            672,
+            312
+          ]
+        },
+        {
+          "tile": [
+            23,
+            41
+          ],
+          "line": [
+            624,
+            336,
+            672,
+            360,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 907,
+          "quad": [
+            576,
+            360,
+            624,
+            336,
+            672,
+            360,
+            624,
+            384
+          ]
+        }
+      ],
+      "unknown_line_count": 1068,
+      "query_sha256": "fa3823cae7a7b5605c84ae2cc2e0754e7067c897158dd9efcda1d98f7562b7ef",
+      "cache_sha256": "913e0be959b713ec3e3b513fcf1a0d54d3de319764b0442874f1c1ccf4d8ccbf",
+      "indexed_frame_sha256": "43e1cc639304769e85b8508c4714014f9aaad3024257ca652fd44fbbfed890af"
+    },
+    {
+      "id": "partial_on_repeat",
+      "input": {
+        "sequence": "partial_on",
+        "preference": 256,
+        "flags": 1610682083,
+        "exploration": "21",
+        "id": "repeat"
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [
+        {
+          "tile": [
+            21,
+            35
+          ],
+          "line": [
+            480,
+            216,
+            528,
+            180,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 445,
+          "quad": [
+            480,
+            216,
+            528,
+            180,
+            576,
+            198,
+            528,
+            234
+          ]
+        },
+        {
+          "tile": [
+            21,
+            35
+          ],
+          "line": [
+            528,
+            180,
+            576,
+            198,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 446,
+          "quad": [
+            480,
+            216,
+            528,
+            180,
+            576,
+            198,
+            528,
+            234
+          ]
+        },
+        {
+          "tile": [
+            23,
+            35
+          ],
+          "line": [
+            576,
+            198,
+            624,
+            155,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 468,
+          "quad": [
+            576,
+            198,
+            624,
+            155,
+            672,
+            185,
+            624,
+            222
+          ]
+        },
+        {
+          "tile": [
+            23,
+            35
+          ],
+          "line": [
+            624,
+            155,
+            672,
+            185,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 469,
+          "quad": [
+            576,
+            198,
+            624,
+            155,
+            672,
+            185,
+            624,
+            222
+          ]
+        },
+        {
+          "tile": [
+            20,
+            36
+          ],
+          "line": [
+            480,
+            216,
+            528,
+            234,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 522,
+          "quad": [
+            432,
+            240,
+            480,
+            216,
+            528,
+            234,
+            480,
+            264
+          ]
+        },
+        {
+          "tile": [
+            22,
+            36
+          ],
+          "line": [
+            528,
+            234,
+            576,
+            198,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 541,
+          "quad": [
+            528,
+            234,
+            576,
+            198,
+            624,
+            222,
+            576,
+            258
+          ]
+        },
+        {
+          "tile": [
+            22,
+            36
+          ],
+          "line": [
+            576,
+            198,
+            624,
+            222,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 542,
+          "quad": [
+            528,
+            234,
+            576,
+            198,
+            624,
+            222,
+            576,
+            258
+          ]
+        },
+        {
+          "tile": [
+            24,
+            36
+          ],
+          "line": [
+            624,
+            222,
+            672,
+            185,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 559,
+          "quad": [
+            624,
+            222,
+            672,
+            185,
+            720,
+            228,
+            672,
+            258
+          ]
+        },
+        {
+          "tile": [
+            24,
+            36
+          ],
+          "line": [
+            672,
+            185,
+            720,
+            228,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 560,
+          "quad": [
+            624,
+            222,
+            672,
+            185,
+            720,
+            228,
+            672,
+            258
+          ]
+        },
+        {
+          "tile": [
+            19,
+            37
+          ],
+          "line": [
+            432,
+            240,
+            480,
+            264,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 609,
+          "quad": [
+            384,
+            264,
+            432,
+            240,
+            480,
+            264,
+            432,
+            288
+          ]
+        },
+        {
+          "tile": [
+            21,
+            37
+          ],
+          "line": [
+            480,
+            264,
+            528,
+            234,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 623,
+          "quad": [
+            480,
+            264,
+            528,
+            234,
+            576,
+            258,
+            528,
+            288
+          ]
+        },
+        {
+          "tile": [
+            21,
+            37
+          ],
+          "line": [
+            528,
+            234,
+            576,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 624,
+          "quad": [
+            480,
+            264,
+            528,
+            234,
+            576,
+            258,
+            528,
+            288
+          ]
+        },
+        {
+          "tile": [
+            23,
+            37
+          ],
+          "line": [
+            576,
+            258,
+            624,
+            222,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 642,
+          "quad": [
+            576,
+            258,
+            624,
+            222,
+            672,
+            258,
+            624,
+            288
+          ]
+        },
+        {
+          "tile": [
+            23,
+            37
+          ],
+          "line": [
+            624,
+            222,
+            672,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 643,
+          "quad": [
+            576,
+            258,
+            624,
+            222,
+            672,
+            258,
+            624,
+            288
+          ]
+        },
+        {
+          "tile": [
+            25,
+            37
+          ],
+          "line": [
+            672,
+            258,
+            720,
+            228,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 661,
+          "quad": [
+            672,
+            258,
+            720,
+            228,
+            768,
+            264,
+            720,
+            288
+          ]
+        },
+        {
+          "tile": [
+            25,
+            37
+          ],
+          "line": [
+            720,
+            228,
+            768,
+            264,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 662,
+          "quad": [
+            672,
+            258,
+            720,
+            228,
+            768,
+            264,
+            720,
+            288
+          ]
+        },
+        {
+          "tile": [
+            20,
+            38
+          ],
+          "line": [
+            432,
+            288,
+            480,
+            264,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 712,
+          "quad": [
+            432,
+            288,
+            480,
+            264,
+            528,
+            288,
+            480,
+            312
+          ]
+        },
+        {
+          "tile": [
+            20,
+            38
+          ],
+          "line": [
+            480,
+            264,
+            528,
+            288,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 713,
+          "quad": [
+            432,
+            288,
+            480,
+            264,
+            528,
+            288,
+            480,
+            312
+          ]
+        },
+        {
+          "tile": [
+            22,
+            38
+          ],
+          "line": [
+            528,
+            288,
+            576,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 725,
+          "quad": [
+            528,
+            288,
+            576,
+            258,
+            624,
+            288,
+            576,
+            312
+          ]
+        },
+        {
+          "tile": [
+            22,
+            38
+          ],
+          "line": [
+            576,
+            258,
+            624,
+            288,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 726,
+          "quad": [
+            528,
+            288,
+            576,
+            258,
+            624,
+            288,
+            576,
+            312
+          ]
+        },
+        {
+          "tile": [
+            24,
+            38
+          ],
+          "line": [
+            624,
+            288,
+            672,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 738,
+          "quad": [
+            624,
+            288,
+            672,
+            258,
+            720,
+            288,
+            672,
+            312
+          ]
+        },
+        {
+          "tile": [
+            24,
+            38
+          ],
+          "line": [
+            672,
+            258,
+            720,
+            288,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 739,
+          "quad": [
+            624,
+            288,
+            672,
+            258,
+            720,
+            288,
+            672,
+            312
+          ]
+        },
+        {
+          "tile": [
+            23,
+            41
+          ],
+          "line": [
+            624,
+            336,
+            672,
+            360,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 907,
+          "quad": [
+            576,
+            360,
+            624,
+            336,
+            672,
+            360,
+            624,
+            384
+          ]
+        }
+      ],
+      "unknown_line_count": 1068,
+      "query_sha256": "fa3823cae7a7b5605c84ae2cc2e0754e7067c897158dd9efcda1d98f7562b7ef",
+      "cache_sha256": "913e0be959b713ec3e3b513fcf1a0d54d3de319764b0442874f1c1ccf4d8ccbf",
+      "indexed_frame_sha256": "ab287453261dd09fb12b0fb180185652d145c754e7a7942256603d9358d5a5dd"
+    },
+    {
+      "id": "partial_on_east",
+      "input": {
+        "sequence": "partial_on",
+        "preference": 256,
+        "flags": 1610682083,
+        "exploration": "21",
+        "id": "east",
+        "pan": [
+          24,
+          38
+        ]
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [],
+      "unknown_line_count": 252,
+      "query_sha256": "ac1003d24c0c79320cebb721d08eabbd975c17a49f798384ff64174e4b5bec9f",
+      "cache_sha256": "024a627dc23351e092692616f3a392176ac7026df209386e3287a804256a981a",
+      "indexed_frame_sha256": "cfb344831799e4e87cde338f6034a44d0ebeb6271aee4d61eddfb61928ef1a33"
+    },
+    {
+      "id": "partial_on_back",
+      "input": {
+        "sequence": "partial_on",
+        "preference": 256,
+        "flags": 1610682083,
+        "exploration": "21",
+        "id": "back",
+        "pan": [
+          22,
+          38
+        ]
+      },
+      "before": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [],
+      "unknown_line_count": 200,
+      "query_sha256": "abccac4d268a0883f11e4e7822453d85fdb9e4aaa9b492b7f4ee97409d2fffd8",
+      "cache_sha256": "024a627dc23351e092692616f3a392176ac7026df209386e3287a804256a981a",
+      "indexed_frame_sha256": "b43116905b4c31a8484d467cb5e4500271df8c1b5d9f10fccb6087ad8123cc81"
+    },
+    {
+      "id": "partial_on_viewbit2clear_first",
+      "input": {
+        "sequence": "partial_on_viewbit2clear",
+        "preference": 256,
+        "flags": 1610682081,
+        "exploration": "21",
+        "id": "first"
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [
+        {
+          "tile": [
+            21,
+            35
+          ],
+          "line": [
+            480,
+            216,
+            528,
+            180,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 445,
+          "quad": [
+            480,
+            216,
+            528,
+            180,
+            576,
+            198,
+            528,
+            234
+          ]
+        },
+        {
+          "tile": [
+            21,
+            35
+          ],
+          "line": [
+            528,
+            180,
+            576,
+            198,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 446,
+          "quad": [
+            480,
+            216,
+            528,
+            180,
+            576,
+            198,
+            528,
+            234
+          ]
+        },
+        {
+          "tile": [
+            23,
+            35
+          ],
+          "line": [
+            576,
+            198,
+            624,
+            155,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 468,
+          "quad": [
+            576,
+            198,
+            624,
+            155,
+            672,
+            185,
+            624,
+            222
+          ]
+        },
+        {
+          "tile": [
+            23,
+            35
+          ],
+          "line": [
+            624,
+            155,
+            672,
+            185,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 469,
+          "quad": [
+            576,
+            198,
+            624,
+            155,
+            672,
+            185,
+            624,
+            222
+          ]
+        },
+        {
+          "tile": [
+            20,
+            36
+          ],
+          "line": [
+            480,
+            216,
+            528,
+            234,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 522,
+          "quad": [
+            432,
+            240,
+            480,
+            216,
+            528,
+            234,
+            480,
+            264
+          ]
+        },
+        {
+          "tile": [
+            22,
+            36
+          ],
+          "line": [
+            528,
+            234,
+            576,
+            198,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 541,
+          "quad": [
+            528,
+            234,
+            576,
+            198,
+            624,
+            222,
+            576,
+            258
+          ]
+        },
+        {
+          "tile": [
+            22,
+            36
+          ],
+          "line": [
+            576,
+            198,
+            624,
+            222,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 542,
+          "quad": [
+            528,
+            234,
+            576,
+            198,
+            624,
+            222,
+            576,
+            258
+          ]
+        },
+        {
+          "tile": [
+            24,
+            36
+          ],
+          "line": [
+            624,
+            222,
+            672,
+            185,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 559,
+          "quad": [
+            624,
+            222,
+            672,
+            185,
+            720,
+            228,
+            672,
+            258
+          ]
+        },
+        {
+          "tile": [
+            24,
+            36
+          ],
+          "line": [
+            672,
+            185,
+            720,
+            228,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 560,
+          "quad": [
+            624,
+            222,
+            672,
+            185,
+            720,
+            228,
+            672,
+            258
+          ]
+        },
+        {
+          "tile": [
+            19,
+            37
+          ],
+          "line": [
+            432,
+            240,
+            480,
+            264,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 609,
+          "quad": [
+            384,
+            264,
+            432,
+            240,
+            480,
+            264,
+            432,
+            288
+          ]
+        },
+        {
+          "tile": [
+            21,
+            37
+          ],
+          "line": [
+            480,
+            264,
+            528,
+            234,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 623,
+          "quad": [
+            480,
+            264,
+            528,
+            234,
+            576,
+            258,
+            528,
+            288
+          ]
+        },
+        {
+          "tile": [
+            21,
+            37
+          ],
+          "line": [
+            528,
+            234,
+            576,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 624,
+          "quad": [
+            480,
+            264,
+            528,
+            234,
+            576,
+            258,
+            528,
+            288
+          ]
+        },
+        {
+          "tile": [
+            23,
+            37
+          ],
+          "line": [
+            576,
+            258,
+            624,
+            222,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 642,
+          "quad": [
+            576,
+            258,
+            624,
+            222,
+            672,
+            258,
+            624,
+            288
+          ]
+        },
+        {
+          "tile": [
+            23,
+            37
+          ],
+          "line": [
+            624,
+            222,
+            672,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 643,
+          "quad": [
+            576,
+            258,
+            624,
+            222,
+            672,
+            258,
+            624,
+            288
+          ]
+        },
+        {
+          "tile": [
+            25,
+            37
+          ],
+          "line": [
+            672,
+            258,
+            720,
+            228,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 661,
+          "quad": [
+            672,
+            258,
+            720,
+            228,
+            768,
+            264,
+            720,
+            288
+          ]
+        },
+        {
+          "tile": [
+            25,
+            37
+          ],
+          "line": [
+            720,
+            228,
+            768,
+            264,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 662,
+          "quad": [
+            672,
+            258,
+            720,
+            228,
+            768,
+            264,
+            720,
+            288
+          ]
+        },
+        {
+          "tile": [
+            20,
+            38
+          ],
+          "line": [
+            432,
+            288,
+            480,
+            264,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 712,
+          "quad": [
+            432,
+            288,
+            480,
+            264,
+            528,
+            288,
+            480,
+            312
+          ]
+        },
+        {
+          "tile": [
+            20,
+            38
+          ],
+          "line": [
+            480,
+            264,
+            528,
+            288,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 713,
+          "quad": [
+            432,
+            288,
+            480,
+            264,
+            528,
+            288,
+            480,
+            312
+          ]
+        },
+        {
+          "tile": [
+            22,
+            38
+          ],
+          "line": [
+            528,
+            288,
+            576,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 725,
+          "quad": [
+            528,
+            288,
+            576,
+            258,
+            624,
+            288,
+            576,
+            312
+          ]
+        },
+        {
+          "tile": [
+            22,
+            38
+          ],
+          "line": [
+            576,
+            258,
+            624,
+            288,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 726,
+          "quad": [
+            528,
+            288,
+            576,
+            258,
+            624,
+            288,
+            576,
+            312
+          ]
+        },
+        {
+          "tile": [
+            24,
+            38
+          ],
+          "line": [
+            624,
+            288,
+            672,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 738,
+          "quad": [
+            624,
+            288,
+            672,
+            258,
+            720,
+            288,
+            672,
+            312
+          ]
+        },
+        {
+          "tile": [
+            24,
+            38
+          ],
+          "line": [
+            672,
+            258,
+            720,
+            288,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 739,
+          "quad": [
+            624,
+            288,
+            672,
+            258,
+            720,
+            288,
+            672,
+            312
+          ]
+        },
+        {
+          "tile": [
+            23,
+            41
+          ],
+          "line": [
+            624,
+            336,
+            672,
+            360,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 907,
+          "quad": [
+            576,
+            360,
+            624,
+            336,
+            672,
+            360,
+            624,
+            384
+          ]
+        }
+      ],
+      "unknown_line_count": 1068,
+      "query_sha256": "fa3823cae7a7b5605c84ae2cc2e0754e7067c897158dd9efcda1d98f7562b7ef",
+      "cache_sha256": "913e0be959b713ec3e3b513fcf1a0d54d3de319764b0442874f1c1ccf4d8ccbf",
+      "indexed_frame_sha256": "43e1cc639304769e85b8508c4714014f9aaad3024257ca652fd44fbbfed890af"
+    },
+    {
+      "id": "partial_on_viewbit2clear_repeat",
+      "input": {
+        "sequence": "partial_on_viewbit2clear",
+        "preference": 256,
+        "flags": 1610682081,
+        "exploration": "21",
+        "id": "repeat"
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [
+        {
+          "tile": [
+            21,
+            35
+          ],
+          "line": [
+            480,
+            216,
+            528,
+            180,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 445,
+          "quad": [
+            480,
+            216,
+            528,
+            180,
+            576,
+            198,
+            528,
+            234
+          ]
+        },
+        {
+          "tile": [
+            21,
+            35
+          ],
+          "line": [
+            528,
+            180,
+            576,
+            198,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 446,
+          "quad": [
+            480,
+            216,
+            528,
+            180,
+            576,
+            198,
+            528,
+            234
+          ]
+        },
+        {
+          "tile": [
+            23,
+            35
+          ],
+          "line": [
+            576,
+            198,
+            624,
+            155,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 468,
+          "quad": [
+            576,
+            198,
+            624,
+            155,
+            672,
+            185,
+            624,
+            222
+          ]
+        },
+        {
+          "tile": [
+            23,
+            35
+          ],
+          "line": [
+            624,
+            155,
+            672,
+            185,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 469,
+          "quad": [
+            576,
+            198,
+            624,
+            155,
+            672,
+            185,
+            624,
+            222
+          ]
+        },
+        {
+          "tile": [
+            20,
+            36
+          ],
+          "line": [
+            480,
+            216,
+            528,
+            234,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 522,
+          "quad": [
+            432,
+            240,
+            480,
+            216,
+            528,
+            234,
+            480,
+            264
+          ]
+        },
+        {
+          "tile": [
+            22,
+            36
+          ],
+          "line": [
+            528,
+            234,
+            576,
+            198,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 541,
+          "quad": [
+            528,
+            234,
+            576,
+            198,
+            624,
+            222,
+            576,
+            258
+          ]
+        },
+        {
+          "tile": [
+            22,
+            36
+          ],
+          "line": [
+            576,
+            198,
+            624,
+            222,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 542,
+          "quad": [
+            528,
+            234,
+            576,
+            198,
+            624,
+            222,
+            576,
+            258
+          ]
+        },
+        {
+          "tile": [
+            24,
+            36
+          ],
+          "line": [
+            624,
+            222,
+            672,
+            185,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 559,
+          "quad": [
+            624,
+            222,
+            672,
+            185,
+            720,
+            228,
+            672,
+            258
+          ]
+        },
+        {
+          "tile": [
+            24,
+            36
+          ],
+          "line": [
+            672,
+            185,
+            720,
+            228,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 560,
+          "quad": [
+            624,
+            222,
+            672,
+            185,
+            720,
+            228,
+            672,
+            258
+          ]
+        },
+        {
+          "tile": [
+            19,
+            37
+          ],
+          "line": [
+            432,
+            240,
+            480,
+            264,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 609,
+          "quad": [
+            384,
+            264,
+            432,
+            240,
+            480,
+            264,
+            432,
+            288
+          ]
+        },
+        {
+          "tile": [
+            21,
+            37
+          ],
+          "line": [
+            480,
+            264,
+            528,
+            234,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 623,
+          "quad": [
+            480,
+            264,
+            528,
+            234,
+            576,
+            258,
+            528,
+            288
+          ]
+        },
+        {
+          "tile": [
+            21,
+            37
+          ],
+          "line": [
+            528,
+            234,
+            576,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 624,
+          "quad": [
+            480,
+            264,
+            528,
+            234,
+            576,
+            258,
+            528,
+            288
+          ]
+        },
+        {
+          "tile": [
+            23,
+            37
+          ],
+          "line": [
+            576,
+            258,
+            624,
+            222,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 642,
+          "quad": [
+            576,
+            258,
+            624,
+            222,
+            672,
+            258,
+            624,
+            288
+          ]
+        },
+        {
+          "tile": [
+            23,
+            37
+          ],
+          "line": [
+            624,
+            222,
+            672,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 643,
+          "quad": [
+            576,
+            258,
+            624,
+            222,
+            672,
+            258,
+            624,
+            288
+          ]
+        },
+        {
+          "tile": [
+            25,
+            37
+          ],
+          "line": [
+            672,
+            258,
+            720,
+            228,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 661,
+          "quad": [
+            672,
+            258,
+            720,
+            228,
+            768,
+            264,
+            720,
+            288
+          ]
+        },
+        {
+          "tile": [
+            25,
+            37
+          ],
+          "line": [
+            720,
+            228,
+            768,
+            264,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 662,
+          "quad": [
+            672,
+            258,
+            720,
+            228,
+            768,
+            264,
+            720,
+            288
+          ]
+        },
+        {
+          "tile": [
+            20,
+            38
+          ],
+          "line": [
+            432,
+            288,
+            480,
+            264,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 712,
+          "quad": [
+            432,
+            288,
+            480,
+            264,
+            528,
+            288,
+            480,
+            312
+          ]
+        },
+        {
+          "tile": [
+            20,
+            38
+          ],
+          "line": [
+            480,
+            264,
+            528,
+            288,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 713,
+          "quad": [
+            432,
+            288,
+            480,
+            264,
+            528,
+            288,
+            480,
+            312
+          ]
+        },
+        {
+          "tile": [
+            22,
+            38
+          ],
+          "line": [
+            528,
+            288,
+            576,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 725,
+          "quad": [
+            528,
+            288,
+            576,
+            258,
+            624,
+            288,
+            576,
+            312
+          ]
+        },
+        {
+          "tile": [
+            22,
+            38
+          ],
+          "line": [
+            576,
+            258,
+            624,
+            288,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 726,
+          "quad": [
+            528,
+            288,
+            576,
+            258,
+            624,
+            288,
+            576,
+            312
+          ]
+        },
+        {
+          "tile": [
+            24,
+            38
+          ],
+          "line": [
+            624,
+            288,
+            672,
+            258,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 738,
+          "quad": [
+            624,
+            288,
+            672,
+            258,
+            720,
+            288,
+            672,
+            312
+          ]
+        },
+        {
+          "tile": [
+            24,
+            38
+          ],
+          "line": [
+            672,
+            258,
+            720,
+            288,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 739,
+          "quad": [
+            624,
+            288,
+            672,
+            258,
+            720,
+            288,
+            672,
+            312
+          ]
+        },
+        {
+          "tile": [
+            23,
+            41
+          ],
+          "line": [
+            624,
+            336,
+            672,
+            360,
+            37
+          ],
+          "phase": "features",
+          "pixel_order": 907,
+          "quad": [
+            576,
+            360,
+            624,
+            336,
+            672,
+            360,
+            624,
+            384
+          ]
+        }
+      ],
+      "unknown_line_count": 1068,
+      "query_sha256": "fa3823cae7a7b5605c84ae2cc2e0754e7067c897158dd9efcda1d98f7562b7ef",
+      "cache_sha256": "913e0be959b713ec3e3b513fcf1a0d54d3de319764b0442874f1c1ccf4d8ccbf",
+      "indexed_frame_sha256": "ab287453261dd09fb12b0fb180185652d145c754e7a7942256603d9358d5a5dd"
+    },
+    {
+      "id": "partial_on_viewbit2clear_east",
+      "input": {
+        "sequence": "partial_on_viewbit2clear",
+        "preference": 256,
+        "flags": 1610682081,
+        "exploration": "21",
+        "id": "east",
+        "pan": [
+          24,
+          38
+        ]
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [],
+      "unknown_line_count": 252,
+      "query_sha256": "ac1003d24c0c79320cebb721d08eabbd975c17a49f798384ff64174e4b5bec9f",
+      "cache_sha256": "024a627dc23351e092692616f3a392176ac7026df209386e3287a804256a981a",
+      "indexed_frame_sha256": "cfb344831799e4e87cde338f6034a44d0ebeb6271aee4d61eddfb61928ef1a33"
+    },
+    {
+      "id": "partial_on_viewbit2clear_back",
+      "input": {
+        "sequence": "partial_on_viewbit2clear",
+        "preference": 256,
+        "flags": 1610682081,
+        "exploration": "21",
+        "id": "back",
+        "pan": [
+          22,
+          38
+        ]
+      },
+      "before": {
+        "camera": [
+          24,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          12,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [],
+      "unknown_line_count": 200,
+      "query_sha256": "abccac4d268a0883f11e4e7822453d85fdb9e4aaa9b492b7f4ee97409d2fffd8",
+      "cache_sha256": "024a627dc23351e092692616f3a392176ac7026df209386e3287a804256a981a",
+      "indexed_frame_sha256": "b43116905b4c31a8484d467cb5e4500271df8c1b5d9f10fccb6087ad8123cc81"
+    },
+    {
+      "id": "unknown_on_first",
+      "input": {
+        "sequence": "unknown_on",
+        "preference": 256,
+        "flags": 1610682083,
+        "exploration": "none",
+        "id": "first"
+      },
+      "before": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "after": {
+        "camera": [
+          22,
+          38
+        ],
+        "zoom": 0,
+        "first": [
+          10,
+          26
+        ],
+        "step": 25,
+        "incremental": 0
+      },
+      "known_grid_lines": [],
+      "unknown_line_count": 1152,
+      "query_sha256": "8e4b169e7829a2b291cb872fd32987f41a686995d5b32ac33b8f36dbf6363807",
+      "cache_sha256": "f196d99f763da57063d8bde8e668d86f1c0e9258203ddd7cf48f9b334a8f0f88",
+      "indexed_frame_sha256": "b25fc0cb05a007e703fb7f62192caee675278a031c5a6217b59c596ae74bea80"
+    }
+  ],
+  "context_scope": "21 original46fd00 admission prefixes to470781/4730be/471065, followed when admitted by original47147f..47160b with supplied flat WNES quad. Null renderer, explicit ESI0 matching no-landmark path; line sinks. No material/raster execution in these context controls.",
+  "contexts": [
+    {
+      "input": {
+        "id": "known_pref0",
+        "pref": 0
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 0,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": []
+    },
+    {
+      "input": {
+        "id": "known_pref100",
+        "pref": 256
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          0,
+          24,
+          48,
+          0,
+          37
+        ],
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "known_viewbit2clear",
+        "pref": 256,
+        "flags": 1
+      },
+      "viewer": 3,
+      "flags": 1,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          0,
+          24,
+          48,
+          0,
+          37
+        ],
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "unknown",
+        "mask": 0
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x4730be",
+      "lines": []
+    },
+    {
+      "input": {
+        "id": "viewer4_not_known",
+        "viewer": 4,
+        "mask": 8
+      },
+      "viewer": 4,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x4730be",
+      "lines": []
+    },
+    {
+      "input": {
+        "id": "viewer4_known",
+        "viewer": 4,
+        "mask": 16
+      },
+      "viewer": 4,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          0,
+          24,
+          48,
+          0,
+          37
+        ],
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "viewer0_known",
+        "viewer": 0,
+        "mask": 1
+      },
+      "viewer": 0,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          0,
+          24,
+          48,
+          0,
+          37
+        ],
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "negative_viewer",
+        "viewer": -1,
+        "mask": 0
+      },
+      "viewer": -1,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          0,
+          24,
+          48,
+          0,
+          37
+        ],
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "reveal_unknown",
+        "mask": 0,
+        "reveal": 512
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          0,
+          24,
+          48,
+          0,
+          37
+        ],
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "editor_unknown",
+        "mask": 0,
+        "editor": 128
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x4730be",
+      "lines": []
+    },
+    {
+      "input": {
+        "id": "survey_unknown",
+        "mask": 0,
+        "rules": 256
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          0,
+          24,
+          48,
+          0,
+          37
+        ],
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "sea_default",
+        "band": 2
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 2,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": []
+    },
+    {
+      "input": {
+        "id": "sea_enabled",
+        "band": 2,
+        "options": 8388608
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 2,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          0,
+          24,
+          48,
+          0,
+          190
+        ],
+        [
+          48,
+          0,
+          96,
+          24,
+          190
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "land_NW_sea",
+        "nw": 2
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "land_NW_sea_enabled",
+        "nw": 2,
+        "options": 8388608
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          0,
+          24,
+          48,
+          0,
+          190
+        ],
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "special_default",
+        "flags": 2147483651
+      },
+      "viewer": 3,
+      "flags": 2147483651,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": []
+    },
+    {
+      "input": {
+        "id": "special_forced",
+        "pref": 0,
+        "flags": 2214592515
+      },
+      "viewer": 3,
+      "flags": 2214592515,
+      "pref": 0,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          0,
+          24,
+          48,
+          0,
+          37
+        ],
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "ordinary_forced",
+        "pref": 0,
+        "flags": 67108865
+      },
+      "viewer": 3,
+      "flags": 67108865,
+      "pref": 0,
+      "current_band": 3,
+      "tile": [
+        8,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          0,
+          24,
+          48,
+          0,
+          37
+        ],
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "north_edge",
+        "tile": [
+          8,
+          0
+        ]
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        8,
+        0
+      ],
+      "admission_stop": "0x470781",
+      "lines": []
+    },
+    {
+      "input": {
+        "id": "west_wrap",
+        "tile": [
+          0,
+          8
+        ]
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        0,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          0,
+          24,
+          48,
+          0,
+          37
+        ],
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "west_flat",
+        "tile": [
+          0,
+          8
+        ],
+        "flat": true
+      },
+      "viewer": 3,
+      "flags": 3,
+      "pref": 256,
+      "current_band": 3,
+      "tile": [
+        0,
+        8
+      ],
+      "admission_stop": "0x470781",
+      "lines": [
+        [
+          48,
+          0,
+          96,
+          24,
+          37
+        ]
+      ]
+    }
+  ],
+  "context_quad": [
+    [
+      0,
+      24
+    ],
+    [
+      48,
+      0
+    ],
+    [
+      96,
+      24
+    ],
+    [
+      48,
+      48
+    ]
+  ],
+  "console_scope": "Eight complete original4cb9f0 selection repaints; real labels/fonts/layout, supplied neutral selected tile8,8 with high elevation/fungus/resource and empty rosters. Terrain renderer, body/frame/presentation boundaries are sinks; TextOut captured with current-host GDI metrics. No console pixel or foreground claim.",
+  "console": [
+    {
+      "input": {
+        "id": "known3",
+        "mask": 8
+      },
+      "viewer": 3,
+      "preview": [
+        {
+          "args": [
+            8174596,
+            0,
+            0,
+            3,
+            0,
+            1569,
+            8,
+            8,
+            148,
+            67
+          ],
+          "ratio": [
+            85,
+            100
+          ]
+        }
+      ],
+      "text": [
+        {
+          "kind": "TextOutA",
+          "text": "Elev: 2590m",
+          "x": 146,
+          "y": 122,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Flat & Moist",
+          "x": 146,
+          "y": 135,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Xenofungus",
+          "x": 146,
+          "y": 148,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Nutrient bonus",
+          "x": 146,
+          "y": 161,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "events": [
+        {
+          "kind": "TextOutA",
+          "text": "Elev: 2590m",
+          "x": 146,
+          "y": 122,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Flat & Moist",
+          "x": 146,
+          "y": 135,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Xenofungus",
+          "x": 146,
+          "y": 148,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Nutrient bonus",
+          "x": 146,
+          "y": 161,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "scale_after": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "input": {
+        "id": "unknown3",
+        "mask": 0
+      },
+      "viewer": 3,
+      "preview": [],
+      "text": [
+        {
+          "kind": "TextOutA",
+          "text": "Unexplored",
+          "x": 159,
+          "y": 129,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "events": [
+        {
+          "kind": "TextOutA",
+          "text": "Unexplored",
+          "x": 159,
+          "y": 129,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "scale_after": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "input": {
+        "id": "other_faction_only",
+        "mask": 16
+      },
+      "viewer": 3,
+      "preview": [],
+      "text": [
+        {
+          "kind": "TextOutA",
+          "text": "Unexplored",
+          "x": 159,
+          "y": 129,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "events": [
+        {
+          "kind": "TextOutA",
+          "text": "Unexplored",
+          "x": 159,
+          "y": 129,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "scale_after": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "input": {
+        "id": "known4",
+        "mask": 16,
+        "viewer": 4
+      },
+      "viewer": 4,
+      "preview": [
+        {
+          "args": [
+            8174596,
+            0,
+            0,
+            4,
+            0,
+            1569,
+            8,
+            8,
+            148,
+            67
+          ],
+          "ratio": [
+            85,
+            100
+          ]
+        }
+      ],
+      "text": [
+        {
+          "kind": "TextOutA",
+          "text": "Elev: 2590m",
+          "x": 146,
+          "y": 122,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Flat & Moist",
+          "x": 146,
+          "y": 135,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Xenofungus",
+          "x": 146,
+          "y": 148,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Nutrient bonus",
+          "x": 146,
+          "y": 161,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "events": [
+        {
+          "kind": "TextOutA",
+          "text": "Elev: 2590m",
+          "x": 146,
+          "y": 122,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Flat & Moist",
+          "x": 146,
+          "y": 135,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Xenofungus",
+          "x": 146,
+          "y": 148,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Nutrient bonus",
+          "x": 146,
+          "y": 161,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "scale_after": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "input": {
+        "id": "reveal3",
+        "mask": 0,
+        "reveal": 512
+      },
+      "viewer": 3,
+      "preview": [
+        {
+          "args": [
+            8174596,
+            0,
+            0,
+            3,
+            0,
+            1569,
+            8,
+            8,
+            148,
+            67
+          ],
+          "ratio": [
+            85,
+            100
+          ]
+        }
+      ],
+      "text": [
+        {
+          "kind": "TextOutA",
+          "text": "Elev: 2590m",
+          "x": 146,
+          "y": 122,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Flat & Moist",
+          "x": 146,
+          "y": 135,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Xenofungus",
+          "x": 146,
+          "y": 148,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Nutrient bonus",
+          "x": 146,
+          "y": 161,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "events": [
+        {
+          "kind": "TextOutA",
+          "text": "Elev: 2590m",
+          "x": 146,
+          "y": 122,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Flat & Moist",
+          "x": 146,
+          "y": 135,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Xenofungus",
+          "x": 146,
+          "y": 148,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Nutrient bonus",
+          "x": 146,
+          "y": 161,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "scale_after": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "input": {
+        "id": "editor",
+        "mask": 0,
+        "editor": 128
+      },
+      "viewer": 3,
+      "preview": [
+        {
+          "args": [
+            8174596,
+            0,
+            0,
+            -1,
+            0,
+            1569,
+            8,
+            8,
+            148,
+            67
+          ],
+          "ratio": [
+            85,
+            100
+          ]
+        }
+      ],
+      "text": [
+        {
+          "kind": "TextOutA",
+          "text": "Elev: 2590m",
+          "x": 146,
+          "y": 122,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Flat & Moist",
+          "x": 146,
+          "y": 135,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Xenofungus",
+          "x": 146,
+          "y": 148,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Nutrient bonus",
+          "x": 146,
+          "y": 161,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "events": [
+        {
+          "kind": "TextOutA",
+          "text": "Elev: 2590m",
+          "x": 146,
+          "y": 122,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Flat & Moist",
+          "x": 146,
+          "y": 135,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Xenofungus",
+          "x": 146,
+          "y": 148,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "Nutrient bonus",
+          "x": 146,
+          "y": 161,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "scale_after": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "input": {
+        "id": "survey_unknown",
+        "mask": 0,
+        "rules": 256
+      },
+      "viewer": 3,
+      "preview": [],
+      "text": [
+        {
+          "kind": "TextOutA",
+          "text": "Unexplored",
+          "x": 159,
+          "y": 129,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "events": [
+        {
+          "kind": "TextOutA",
+          "text": "Unexplored",
+          "x": 159,
+          "y": 129,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "scale_after": [
+        -1,
+        -1
+      ]
+    },
+    {
+      "input": {
+        "id": "unknown_alt_detail",
+        "mask": 0,
+        "detail": 1
+      },
+      "viewer": 3,
+      "preview": [],
+      "text": [
+        {
+          "kind": "TextOutA",
+          "text": "Unexplored",
+          "x": 159,
+          "y": 129,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "events": [
+        {
+          "kind": "TextOutA",
+          "text": "Unexplored",
+          "x": 159,
+          "y": 129,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        },
+        {
+          "kind": "TextOutA",
+          "text": "(8 , 8)",
+          "x": 202,
+          "y": 179,
+          "font": 100,
+          "COLORREF": 285147288,
+          "rgb": [
+            116,
+            156,
+            56
+          ],
+          "alignment": 24,
+          "background_mode": 1,
+          "clip": [
+            146,
+            66,
+            235,
+            183
+          ]
+        }
+      ],
+      "scale_after": [
+        -1,
+        -1
+      ]
+    }
+  ],
+  "late_grid_overlay_different_pixels": 40
+}

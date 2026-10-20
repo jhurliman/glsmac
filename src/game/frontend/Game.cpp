@@ -1,6 +1,7 @@
 #include "MapProjection.h"
 #include "Game.h"
 #include "game/NativeTerrainWorld.h"
+#include "gse/value/Bool.h"
 #include "game/backend/LocalMoveCommand.h"
 #include "game/backend/map/TerrainRenderUpdate.h"
 
@@ -2561,16 +2562,18 @@ void Game::SetSelectedTile( tile::Tile* tile ) {
 }
 
 void Game::UpdateTilePreview( tile::Tile* const tile ) {
-	const auto& c = tile->GetCoords();
-	auto* const t = m_game->GetMap()->GetTile( c.x, c.y );
-	Trigger(
-		m_game->GetMap(), "tile_preview", ARGS_F( &t ) {
-			{
-				"tile",
-				t->Wrap( GSE_CALL )
-			},
-		}; }
-	);
+    if(!tile) {return;}
+    const auto coordinate=tile->GetCoords();auto* state=m_game->GetState();
+    state->WithGameSession(state->CaptureGameSession(),state,[coordinate](backend::Game* const game,GSE_CALLABLE) {
+        auto* map=game->GetMap();
+        if(!map || coordinate.x>=map->GetWidth() || coordinate.y>=map->GetHeight()) {return;}
+        auto* current=map->GetTile(coordinate.x,coordinate.y);
+        const bool known=game->AllowsLocalTileInspection(coordinate.x,coordinate.y);
+        game->GetState()->TriggerObject(map,"tile_preview",ARGS_F(current,known) {
+            {"tile",current->Wrap(GSE_CALL)},
+            {"known",VALUE(gse::value::Bool,,known)},
+        };});
+    });
 }
 
 void Game::UpdateUnitPreview( const unit::Unit* const unit ) {

@@ -192,6 +192,7 @@ CLASS( Game, common::Module )
 	sprite::InstancedSpriteManager* GetISM() const;
     bool UsesNativeMapProjection() const {return m_map_data.native_projection;}
     std::shared_ptr<types::texture::Texture> GetNativeTilePreview(int x,int y);
+    bool AllowsNativeTileInspection(int x,int y) const;
 	text::InstancedTextManager* GetITM() const;
 
 	types::texture::Texture* GetSourceTexture( const ::resource::resource_t res );

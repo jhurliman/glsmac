@@ -23,6 +23,11 @@
 #include <cmath>
 
 namespace game::frontend {
+bool Game::AllowsNativeTileInspection(int x,int y) const {
+    if(!m_map_data.native_projection || m_native_inspector) {return true;}
+    if(m_world_retired || !m_native_world || x<0 || x>=80 || y<0 || y>=80 || ((x^y)&1)) {return false;}
+    return m_native_world->KnowledgeAt(size_t(y)*40+size_t(x)/2)==::game::native_terrain::World::Knowledge::Known;
+}
 std::shared_ptr<types::texture::Texture> Game::GetNativeTilePreview(int x,int y) {
     if(m_world_retired || !m_native_world) {return {};}
     const std::array<int,2> tile{{x,y}};
@@ -100,6 +105,7 @@ void Game::UpdateNativeTerrain() {
                 // viewer and asset-family table. No old-world result survives.
                 m_native_preview_tile.reset();m_native_preview_texture.reset();
                 if(m_widgets.TilePreview) {m_widgets.TilePreview->Refresh();}
+                if(m_tm && m_tm->GetSelectedTile()) {UpdateTilePreview(m_tm->GetSelectedTile());}
             }
             m_game->MT_DestroyResponse(response);
         }

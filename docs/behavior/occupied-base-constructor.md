@@ -43,3 +43,20 @@ dense reciprocal link repair, surviving observation and retained exploration.
 This admits the shared factory; global spawn selection and turn activation remain
 separate callers. Fresh/restart source ordering is documented above but is not
 automatically inferred for ambiguous legacy saves.
+
+
+### Fresh producer source links
+
+The claimed fresh-start factory now binds each new Scout/Rover to its actual
+zero-based dense source row. A later compensation Colony Pod prepends to that
+same physical stack. The owning prepared publication commits both new and
+existing reciprocal links before the spawn hook, including the startup path
+without worker knowledge. Derived readiness remains pending until the existing
+first-turn seal; no script can command or serialize the partial startup.
+
+The actual default-world startup controls check links in spawn hooks, normal
+movement and full save/reload, including the Thinker compensation Pod. The
+synthetic three-participant controls additionally cover queued/immediate Start,
+cancellation, reset and throwing hooks. This establishes producer-owned links;
+it does not infer ambiguous legacy save order. The separately documented
+nonzero-turn restart promotion order still needs its live producer wiring.

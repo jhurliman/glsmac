@@ -5,6 +5,8 @@
 #include "ui/UI.h"
 #include "ui/dom/Root.h"
 #include "ui/dom/Object.h"
+#include "ui/dom/Input.h"
+#include "input/Event.h"
 #include "gc/Space.h"
 #include "gse/GSE.h"
 #include "gse/ExecutionPointer.h"
@@ -90,6 +92,45 @@ std::string Exercise(GSE_CALLABLE,::ui::UI& gui,bool inherited) {
 }
 }
 void AddUIClassTests(task::gsetests::GSETests* task) {
+    task->AddTest("UI input narrow byte limits clamp defaults assignments and keyboard edits",GT(){
+        return WithWidgetGraphics([&]() -> std::string {
+            GSE runtime;std::string result;
+            auto* gc_space=runtime.GetGCSpace();
+            try {gc_space->Accumulate(&runtime,[&] {
+                auto* ctx=runtime.CreateGlobalContext();ExecutionPointer ep;const si_t si{};
+                auto* gui=new ::ui::UI(GSE_CALL);
+                util::FinallyGuard cleanup([&]{gui->GetRoot()->Container::Destroy(GSE_CALL);});
+                result=[&]() -> std::string {
+                    auto* root=AsObject(AsObject(gui->Wrap(GSE_CALL))->value.at("root"));
+                    auto* wrapped=AsObject(Call(GSE_CALL,root,"input",{VALUEEXT(value::Object,GSE_CALL,(value::object_properties_t{
+                        {"value",VALUE(value::String,,std::string(127,'a'))},{"max_bytes",VALUE(value::Int,,23)}
+                    }))}));
+                    auto* node=static_cast<::ui::dom::Input*>(::ui::dom::Object::Unwrap(wrapped));
+                    const auto text=[&]{return static_cast<value::String*>(AsObject(node->Wrap(GSE_CALL))->value.at("value"))->value;};
+                    GT_ASSERT(text()==std::string(23,'a'),"default was not truncated during control construction");
+                    node->WrapSet("value",VALUE(value::String,,std::string(90,'a')),GSE_CALL);
+                    GT_ASSERT(text()==std::string(23,'a'),"repeated oversized assignment leaked raw text into the public value");
+                    node->OnFocus();input::Event key;key.SetType(input::EV_KEY_DOWN);key.data.key.is_printable=true;key.data.key.key='b';
+                    node->ProcessEvent(GSE_CALL,key);GT_ASSERT(text()==std::string(23,'a'),"full control accepted another printable byte");
+                    key.data.key.is_printable=false;key.data.key.code=input::K_BACKSPACE;node->ProcessEvent(GSE_CALL,key);
+                    key.data.key.is_printable=true;key.data.key.code=input::K_NONE;node->ProcessEvent(GSE_CALL,key);
+                    GT_ASSERT(text()==std::string(22,'a')+"b","backspace did not free one byte for insertion");
+                    node->WrapSet("value",VALUE(value::String,,std::string("ab\0tail",7)),GSE_CALL);
+                    GT_ASSERT(text()=="ab","bounded narrow default did not stop at its first NUL");
+                    node->WrapSet("max_bytes",VALUE(value::Int,,39),GSE_CALL);
+                    node->WrapSet("value",VALUE(value::String,,std::string(80,'f')),GSE_CALL);
+                    GT_ASSERT(text().size()==39,"Formal-size control did not enforce its own limit");
+                    node->WrapSet("max_bytes",VALUE(value::Int,,23),GSE_CALL);
+                    GT_ASSERT(text().size()==23,"lowering the limit did not trim current text");
+                    node->WrapSet("max_bytes",VALUE(value::Int,,0),GSE_CALL);
+                    node->WrapSet("value",VALUE(value::String,,std::string(80,'u')),GSE_CALL);
+                    GT_ASSERT(text().size()==80,"unbounded legacy control was unexpectedly limited");
+                    GT_OK();
+                }();
+            });}catch(const std::exception& error){result=std::string("Input byte limit check threw: ")+error.what();}
+            return result;
+        });
+    });
     for(bool inherited:{false,true}) {
         task->AddTest(inherited ? "UI class modifier refresh preserves inherited live styles" : "UI class modifier refresh preserves live and manual styles",GT(inherited){
             return WithWidgetGraphics([&]() -> std::string {

@@ -77,7 +77,21 @@ OTHER definitions and source graphics reload remain unfinished. Name-only
 acceptance checks its23-byte edit limit without rejecting untouched TXT fields
 that can legitimately exceed their own form edit limits. Research UI still
 uses the separate controller name in some headings.
-Empty-input handling and automatic byte truncation at control construction
-still need matching; this pass retains the port's explicit input validation.
+The actual input controls now use `max_bytes: 23`, with39 for Formal.
+Defaults, later assignments (including Restore Defaults), keyboard insertion
+and clipboard assignment all pass through the same bounded setter. Lowering
+the bound trims the existing text; bounded strings stop at their first NUL.
+Unrelated controls retain the default zero/unbounded setting. The
+[generic modal trace](behavior/setup-modal-result-boundaries.md) establishes
+default truncation before user edits, rather than rejecting long parsed TXT
+defaults only when the form is submitted. Its private nine-file receipt was
+hash-verified with manifest SHA256
+`e4c7ac9c5d3f330e499b04bfdccfc0fccb67e3a4c06c03ea1ad8a729170e4d70`.
+Native real-widget tests cover initialization, repeated overlong assignment,
+typing at the limit, Backspace/insertion, first-NUL behavior and bound changes;
+the setup script asserts all six per-field limits. Input.cpp and its Container
+consumer pass targeted C++ analysis with zero findings. No new visual parity
+claim follows from this interaction change. Empty-input acceptance and full
+code-page/selection behavior still need matching.
 First-base naming and the main-map exploration mask remain separate unfinished
 features in the [playthrough audit](smac-playthrough-ui-audit.md).

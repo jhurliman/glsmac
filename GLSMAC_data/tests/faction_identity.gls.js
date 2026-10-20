@@ -14,7 +14,7 @@ const i = {
             shown = data; inputs = []; texts = [];
             data.generator({
                 text: (style) => { const result = {text: style.text}; texts :+result; return result; },
-                input: (style) => { const result = {value: style.value, handlers: {}, on: (event, callback) => { this.handlers[event] = callback; }}; inputs :+result; return result; },
+                input: (style) => { const result = {value: style.value, max_bytes: style.max_bytes, handlers: {}, on: (event, callback) => { this.handlers[event] = callback; }}; inputs :+result; return result; },
             });
         },
         dismiss: () => { dismissed++; },
@@ -45,12 +45,14 @@ const click = (label) => {
 };
 select_identity(i, {id: 'MORGANITES', display_identity: original});
 test.assert(shown.title == 'ENTER YOUR NAME' && inputs[0].value == 'Morgan');
+test.assert(inputs[0].max_bytes == 23);
 inputs[0].value = 'Ada'; test.assert(inputs[0].handlers.input({}) == true);
 test.assert(submitted.id == 'MORGANITES' && submitted.identity.leader_name == 'Ada' && dismissed == 1);
 test.assert(original.leader_name == 'Morgan');
 select_identity(i, {id: 'MORGANITES', display_identity: original});
 inputs[0].value = 'Edited leader'; click('Customize');
 test.assert(shown.title == 'Customize Your Faction' && #sizeof(inputs) == 6 && inputs[0].value == 'Edited leader');
+for (let field = 0; field < #sizeof(inputs); field++) {test.assert(inputs[field].max_bytes == (field == 1 ? 39 : 23));}
 test.assert(live.leader_name == 'Edited leader', 'Name was not committed before optional customization');
 inputs[1].value = 'The Builders'; inputs[2].value = 'Builders'; inputs[3].value = 'Builder'; inputs[4].value = 'Director'; inputs[5].value = 'careful';
 test.assert(inputs[3].handlers.input({}) == true);

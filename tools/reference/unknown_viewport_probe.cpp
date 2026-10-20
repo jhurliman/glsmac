@@ -17,7 +17,7 @@ int main(int argc,char** argv) {
     std::ifstream input(argv[2],std::ios::binary);
     const std::vector<uint8_t> bytes{std::istreambuf_iterator<char>(input),{}};
     if(bytes.size()!=3200) {return 1;}
-    native::ViewGeometry::Knowledge known{};
+    native::ViewGeometry::Knowledge known(3200,false);
     for(size_t i=0;i<bytes.size();++i) {if(bytes[i]>1) {return 1;}known[i]=bytes[i]!=0;}
     const std::filesystem::path out(argv[3]);std::filesystem::create_directories(out);
     native::ViewGeometry geometry(world);std::optional<native::Frame> previous;

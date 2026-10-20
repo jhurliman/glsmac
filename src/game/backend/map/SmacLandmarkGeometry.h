@@ -65,6 +65,9 @@ public:
         }
         int value=base+step_*(*profile)/100;
         if(*profile<0) {value=std::max(-127,value);}
+        // 47cc48..56 stores the capped byte but returns the uncapped center
+        // on a cold query. Shared corners and warm reads return the byte.
+        if(!vertex) {cached=std::min(127,value);return value;}
         value=std::min(127,value);
         if(vertex) {
             constexpr unsigned neighbor_vertex[]={3,4,1,2};
@@ -105,7 +108,7 @@ public:
     // Camera movement preserves both caches. Zoom changes invalidate both;
     // relief changes invalidate heights while retaining ordinary face shades.
     void Configure(int zoom,int relief) {
-        if(zoom< -14 || zoom>8 || (relief!=8 && relief!=25)) {
+        if(zoom< -14 || zoom>16 || (relief!=8 && relief!=25)) {
             throw std::invalid_argument("Unsupported native geometry view configuration");
         }
         if(zoom!=zoom_) {

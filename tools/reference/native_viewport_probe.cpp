@@ -17,7 +17,7 @@ int main(int argc,char** argv) {
     int tw,th,sw,sh,rw,rh,seed,automatic,initial,observer0_alias,viewer;
     if(!(input>>tw>>th>>sw>>sh>>rw>>rh>>seed>>automatic>>initial>>observer0_alias>>viewer) || seed<0 || seed>65535 || initial<0 || initial>255) {return 1;}
     int partial=0;if(input>>partial) {if(partial<0 || partial>3 || (partial && viewer!=3)) {return 1;}}
-    native::ViewGeometry::Knowledge known{};
+    native::ViewGeometry::Knowledge known(3200,false);
     native::Source source;source.loaded={tw,th,Read(dir+"/texture.bin")};source.ter1={sw,sh,Read(dir+"/ter1.bin")};
     source.coast_mask=game::frontend::smac_water_coast::CoastMasks({rw,rh,Read(dir+"/rainfall.bin")})[0];
     const auto shadow=Read(dir+"/shadow.bin");if(shadow.size()!=256) {return 1;}

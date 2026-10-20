@@ -833,11 +833,39 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_OK();
     });
 
+    task->AddTest("SMAC native camera centers small flat worlds and dimensions unknown traversal",GT(){
+        namespace native=game::frontend::native_terrain;
+        const auto view=native::Layout(0,0,3,false,{{16,12}},{{1024,511}});
+        GT_ASSERT(view.first==native::Point({{-4,-2}}) && view.offset==native::Point({{32,75}}) && view.unit==15,
+            "Small flat map differs from original camera control");
+        const std::vector<native::ViewGeometry::Cell> cells(96,{4,0});
+        native::ViewGeometry geometry(16,12,false,cells);
+        const native::ViewGeometry::Knowledge known(96,false);
+        size_t shades=0;
+        const auto plan=geometry.Prepare(view,3,25,false,true,[&](const auto& q) {
+            if(q.kind==native::ViewGeometry::Query::Kind::Shade) {++shades;}
+        },&known);
+        GT_ASSERT(plan.opaque_background && shades==0 && !plan.terrain.empty(),"Unknown generic world queried face shading");
+        for(const auto& tile:plan.terrain) {
+            GT_ASSERT(tile.unknown && tile.placement.record_offset==44u*(unsigned(tile.placement.tile[1])*8u+unsigned(tile.placement.tile[0])/2u),
+                "Small world retained Planet record stride");
+        }
+        bool rejected=false;
+        try {const native::ViewGeometry::Knowledge bad(3200,false);geometry.Prepare(view,3,25,false,true,{},&bad);}
+        catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Wrong-world knowledge mask admitted");
+        game::native_terrain::World world;native::Source source;
+        rejected=false;try {(void)native::RenderPrepared(world,source,plan,0);}
+        catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Fixed material renderer silently accepted unsupported geometry");
+        GT_OK();
+    });
+
     task->AddTest("SMAC Unity Survey keeps geometry but replaces face shade with explicit global lighting",GT(){
         namespace native=game::frontend::native_terrain;
         game::native_terrain::World world;world.retained_geometry=true;
         for(auto& tile:world.tiles) {tile.band=3;tile.material_admitted=tile.ordinary=true;}
-        native::ViewGeometry geometry(world);native::ViewGeometry::Knowledge known{};
+        native::ViewGeometry geometry(world);native::ViewGeometry::Knowledge known(3200,false);
         size_t heights=0,shades=0,projectors=0;
         const auto plan=geometry.Prepare(native::Layout(22,38,0,true),0,25,false,true,
             [&](const auto& query) {using Kind=native::ViewGeometry::Query::Kind;
@@ -865,7 +893,7 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         namespace native=game::frontend::native_terrain;
         game::native_terrain::World world;world.retained_geometry=true;
         for(auto& cell:world.tiles) {cell.band=2;}
-        native::ViewGeometry geometry(world);native::ViewGeometry::Knowledge known{};
+        native::ViewGeometry geometry(world);native::ViewGeometry::Knowledge known(3200,false);
         std::array<size_t,3> counts{};
         const auto layout=native::Layout(22,38,0,true);
         const auto plan=geometry.Prepare(layout,0,25,false,true,[&](const auto& query) {++counts[size_t(query.kind)];},&known);
@@ -873,7 +901,7 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(plan.terrain.size()==288 && plan.terrain.front().unknown && plan.terrain.front().outline==outline,
             "Unknown sea used height return0 instead of the signed cold cache byte FF");
         GT_ASSERT(counts[0]==4608 && counts[1]==0 && counts[2]==576,"Unknown query schedule warmed material shade caches");
-        known.fill(true); // Preparing a frame must not retain this borrowed mask.
+        std::fill(known.begin(),known.end(),true); // Preparing a frame must not retain this borrowed mask.
         native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,9)};
         const auto full=native::RenderPrepared(world,source,plan,0);
         GT_ASSERT(full.opaque_background && full.indexed[100*1024+1]==65,"Unknown full redraw lost its original black backing");

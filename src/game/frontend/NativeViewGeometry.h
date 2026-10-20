@@ -15,7 +15,7 @@ public:
         Kind kind;Point tile;unsigned vertex;Point result;
     };
     using Observer=std::function<void(const Query&)>;
-    using Knowledge=std::array<bool,3200>; // synchronous owned-caller input; never retained
+    using Knowledge=std::vector<bool>; // synchronous owned-caller input; never retained
     struct Terrain {
         Placement placement;
         Point projector,flat_center;
@@ -31,23 +31,32 @@ public:
         std::vector<Terrain> terrain;
         std::vector<Object> objects;
         bool opaque_background=false;
+        Point world{{80,80}},viewport{{1024,511}};
+        int unit=12;
     };
+    using Cell=backend::map::smac_terrain::LandmarkGeometry::Cell;
+    ViewGeometry(int width,int height,bool wrap,std::vector<Cell> cells,bool pinned_planet=false)
+        : bands_(Bands(cells)),geometry_(width,height,wrap,std::move(cells),false,pinned_planet),
+          world_{{width,height}},wrap_(wrap) {}
     explicit ViewGeometry(const ::game::native_terrain::World& world)
-        : geometry_(80,80,world.horizontal_wrap,Cells(world),false,true) {
-        if(!world.horizontal_wrap) {throw std::invalid_argument("Native view schedule requires wrapped Planet");}
-    }
+        : ViewGeometry(80,80,world.horizontal_wrap,Cells(world),true) {}
     Plan Prepare(const ViewLayout& view,int zoom,int relief,bool incremental,
         bool paint=true,const Observer& observer={},const Knowledge* known=nullptr,std::optional<int> survey_light=std::nullopt) {
-        if(!view.horizontal_wrap) {throw std::invalid_argument("Native view schedule requires wrapped Planet");}
+        if(view.world!=world_ || view.horizontal_wrap!=wrap_ || view.viewport[0]<=0 || view.viewport[1]<=0) {
+            throw std::invalid_argument("Native view and geometry dimensions/topology differ");
+        }
+        if(known && known->size()!=bands_.size()) {throw std::invalid_argument("Native knowledge dimensions differ");}
         if(survey_light && !known) {throw std::invalid_argument("Survey requires explicit observer knowledge");}
         geometry_.Configure(zoom,relief);Plan result;result.opaque_background=known!=nullptr;
+        result.world=world_;result.viewport=view.viewport;result.unit=view.unit;
+        result.clip={{0,0,view.viewport[0],view.viewport[1]}};
         if(!paint) {return result;}
         if(incremental && previous_ && zoom==zoom_ && relief==relief_) {
             result.regions=HorizontalPan(*previous_,view);
             if(!result.regions) {throw std::invalid_argument("Unmeasured incremental native view");}
             result.scroll={{(previous_->first[0]-view.first[0])*4*view.unit,0}};
             const int dx=result.scroll[0];
-            result.clip=dx<0?std::array<int,4>{{1024+dx,0,1024,511}}:std::array<int,4>{{0,0,dx,511}};
+            result.clip=dx<0?std::array<int,4>{{view.viewport[0]+dx,0,view.viewport[0],view.viewport[1]}}:std::array<int,4>{{0,0,dx,view.viewport[1]}};
             for(const auto& tile:{view.first,previous_->first}) {
                 Projector(view,tile,observer);
                 for(unsigned v=4;v>0;--v) {Height(tile,v,observer);}
@@ -59,7 +68,7 @@ public:
             int sum=0;for(unsigned v=4;v>0;--v) {sum+=Height(tile,v,observer);}
             output.flat_center={{output.projector[0]+4*view.unit,
                 output.projector[1]+Geometry::FloorQuarter(sum)+2*view.unit}};
-            const auto index=size_t(tile[1])*40+size_t(tile[0])/2;
+            const auto index=size_t(tile[1])*size_t(world_[0]/2)+size_t(tile[0])/2;
             output.survey=known && !known->at(index) && survey_light.has_value();
             output.unknown=known && !known->at(index) && !output.survey;
             if(output.unknown) {
@@ -92,10 +101,10 @@ public:
     std::vector<uint8_t> CacheBytes() const {return geometry_.CacheBytes();}
 private:
     using Geometry=backend::map::smac_terrain::LandmarkGeometry;
-    std::vector<Geometry::Cell> Cells(const ::game::native_terrain::World& world) {
+    static std::vector<Geometry::Cell> Cells(const ::game::native_terrain::World& world) {
         std::vector<Geometry::Cell> result;result.reserve(world.tiles.size());
         for(size_t i=0;i<world.tiles.size();++i) {
-            const auto& cell=world.tiles[i];bands_[i]=cell.band;
+            const auto& cell=world.tiles[i];
             result.push_back({cell.band,cell.landmarks});
         }
         return result;
@@ -107,17 +116,34 @@ private:
         const int value=Require(geometry_.Height(tile[0],tile[1],vertex));
         if(observer) {observer({Query::Kind::Height,tile,vertex,{{value,0}}});}return value;
     }
-    Point Projector(const ViewLayout& view,Point tile,const Observer& observer) {
-        int dx=tile[0]-view.first[0];const int wrapped=(dx%80+80)%80;
-        if(view.first[1]<=tile[1] && tile[1]<view.first[1]+view.span[1]+view.span[3] && wrapped<view.span[0]+view.span[2]) {dx=wrapped;}
-        else {if(dx>40) {dx-=80;}if(dx< -40) {dx+=80;}}
-        const Point value{{(dx-1)*4*view.unit,(tile[1]-view.first[1]-1)*2*view.unit-
+public:
+    // Also used for actors outside the terrain traversal (including offscreen
+    // anchors). Preserve the original flat-map out-of-view displacement rule.
+    Point Projector(const ViewLayout& view,Point tile,const Observer& observer={}) {
+        if(view.world!=world_ || view.horizontal_wrap!=wrap_) {throw std::invalid_argument("Native projector topology differs");}
+        const int w=world_[0];int candidate=tile[0];
+        const bool inside_y=view.first[1]<=tile[1] && tile[1]<view.first[1]+view.span[1]+view.span[3];
+        if(inside_y && wrap_) {
+            if(candidate<view.first[0]) {candidate+=w;}
+            if(candidate>=view.first[0]+view.span[0]+view.span[2]) {candidate-=w;}
+        }
+        int dx=tile[0]-view.first[0];
+        if(inside_y && view.first[0]<=candidate && candidate<view.first[0]+view.span[0]+view.span[2]) {
+            if(wrap_) {if(dx<0) {dx+=w;}else if(dx>=w) {dx-=w;}}
+        } else {if(dx>w/2) {dx-=w;}if(dx< -w/2) {dx+=w;}}
+        const Point value{{view.offset[0]+(dx-1)*4*view.unit,view.offset[1]+(tile[1]-view.first[1]-1)*2*view.unit-
             Require(geometry_.ProjectorHeight(tile[0],tile[1]))}};
         if(observer) {observer({Query::Kind::Projector,tile,0,value});}return value;
     }
-    // Declared first: constructor's Cells() fills these before geometry exists.
-    std::array<uint8_t,3200> bands_{};
+private:
+    static std::vector<uint8_t> Bands(const std::vector<Cell>& cells) {
+        std::vector<uint8_t> result;result.reserve(cells.size());
+        for(const auto& cell:cells) {result.push_back(cell.band);}return result;
+    }
+    // Own the appearance bands independently of the geometry cache.
+    std::vector<uint8_t> bands_;
     Geometry geometry_;
+    Point world_;bool wrap_;
     std::optional<ViewLayout> previous_;
     int zoom_=0,relief_=25;
 };

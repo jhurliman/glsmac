@@ -10,6 +10,10 @@ struct SmacCitizenCounts {
     int32_t talents=0,drones=0,extra_drone_steps=0;
     bool operator==(const SmacCitizenCounts& b) const {return talents==b.talents && drones==b.drones && extra_drone_steps==b.extra_drone_steps;}
 };
+// Shared cancellation core. Optional observer receives original branch0..4
+// (talent, extra, paired drone, excess drone, extra clamp) after each store.
+void NormalizeSmacCitizenCounts(SmacCitizenCounts& counts,int32_t capacity,
+    const std::function<void(uint8_t,int32_t)>& observer={});
 struct SmacCitizenPrefix {int32_t content_allowance,ordinary,assimilation,after_faction,faction_talents;};
 SmacCitizenPrefix CalculateSmacCitizenPrefix(int32_t population,bool human,int32_t difficulty,int32_t drone_parameter,int32_t talent_parameter,uint8_t assimilation);
 struct SmacBureaucracyInput {int32_t interval,drones;};

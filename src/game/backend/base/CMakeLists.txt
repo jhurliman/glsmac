@@ -1,4 +1,5 @@
 SET( SRC ${SRC}
+    ${PWD}/SmacOpeningEnergy.cpp
     ${PWD}/SmacBaseAccounting.cpp
     ${PWD}/SmacStartupBase.cpp
 

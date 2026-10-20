@@ -1,3 +1,4 @@
+#include "SmacEnergyArithmetic.h"
 #include "SmacBaseEnergy.h"
 
 #include <algorithm>
@@ -66,8 +67,8 @@ namespace {
 void Nonnegative( SmacEnergyCategories value ) {
 	if ( value.economy < 0 || value.psych < 0 || value.labs < 0 ) { throw std::invalid_argument( "Negative SMAC energy category is outside the measured tail" ); }
 }
-int32_t Multiply( int32_t value, int32_t quarters ) { return Checked( int64_t( Checked( int64_t( value ) * quarters ) ) + 3 ) / 4; }
-int32_t Reduce( int32_t value, int32_t percent ) { return Checked( int64_t( Checked( int64_t( value ) * ( 100 - percent ) ) ) + 50 ) / 100; }
+int32_t Multiply( int32_t value, int32_t quarters ) { return MultiplySmacEnergyQuarters(value,quarters,Checked); }
+int32_t Reduce( int32_t value, int32_t percent ) { return ReduceSmacEnergyPercent(value,percent,Checked); }
 }
 
 SmacEnergyRates AdjustSmacEnergyRates(SmacEnergyRates rates,int32_t button,uint32_t locks) {

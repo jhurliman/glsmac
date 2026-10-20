@@ -30,7 +30,7 @@ std::vector<Placement> View(int x,int y,bool wrap) {
     return SelectView(Layout(x,y,0,wrap));
 }
 
-static Frame RenderImpl(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags,uint8_t initial_index,const std::vector<ViewGeometry::Terrain>* prepared,const Frame* previous=nullptr,Point scroll={{0,0}},raster::Clip clip={{0,0,1024,511}}) {
+static Frame RenderImpl(const World& world,const Source& source,const std::vector<Placement>& placements,uint16_t base,Point offset,uint32_t display_flags,uint8_t initial_index,const std::vector<ViewGeometry::Terrain>* prepared,const Frame* previous=nullptr,Point scroll={{0,0}},raster::Clip clip={{0,0,1024,511}},bool opaque_background=false) {
     raster::AtlasCrops crops(source.loaded);
     if(offset[0]<-4096 || offset[0]>4096 || offset[1]<-4096 || offset[1]>4096 || placements.size()>3200) {
         throw std::invalid_argument("Unsupported native terrain view offset or size");
@@ -137,6 +137,13 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
             placement.flat_center[0]<-4096 || placement.flat_center[0]>4096 ||
             placement.flat_center[1]<-4096 || placement.flat_center[1]>4096) {throw std::invalid_argument("Invalid native terrain placement");}
         const auto& tile=*At(world,x,y);
+        if(submission && submission->unknown) {
+            for(unsigned edge=0;edge<4;++edge) {
+                const auto& a=submission->outline[edge];const auto& b=submission->outline[(edge+1)%4];
+                raster::Command command;command.shader=raster::Shader::IndexedLine;command.line_color=194;
+                command.line={{a[0]+offset[0],a[1]+offset[1],b[0]+offset[0],b[1]+offset[1]}};commands.push_back(command);
+            }++frame.tiles;continue;
+        }
         const bool admitted=submission && world.retained_geometry?tile.material_admitted:tile.ordinary;
         if(!admitted) {continue;}
         const auto center=submission?submission->flat_center:placement.flat_center;
@@ -211,10 +218,10 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
         frame.developed_tiles[static_cast<size_t>(y)*40+x/2]=tile.developed_ready && !source.ter1.pixels.empty();
         ++frame.tiles;
     }
-    raster::Bitmap background{1024,511,std::vector<uint8_t>(1024*511,initial_index)};
+    raster::Bitmap background{1024,511,std::vector<uint8_t>(1024*511,opaque_background?(previous?0:65):initial_index)};
     std::vector<uint8_t> retained_coverage(1024*511,0);
     if(previous) {
-        if(previous->indexed.size()!=1024*511 || previous->coverage.size()!=1024*511 || scroll[1]!=0 ||
+        if(previous->opaque_background!=opaque_background || previous->indexed.size()!=1024*511 || previous->coverage.size()!=1024*511 || scroll[1]!=0 ||
             (scroll[0]!=-96 && scroll[0]!=96)) {throw std::invalid_argument("Invalid native horizontal bitmap history");}
         for(int y=0;y<511;++y) {for(int x=0;x<1024;++x) {
             const int sx=x-scroll[0];if(sx<0 || sx>=1024) {continue;}
@@ -229,6 +236,8 @@ static Frame RenderImpl(const World& world,const Source& source,const std::vecto
     }
     auto drawn=raster::DrawBatch(background,commands,clip,true);
     for(size_t i=0;i<drawn.coverage.size();++i) {drawn.coverage[i]|=retained_coverage[i];}
+    if(opaque_background) {std::fill(drawn.coverage.begin(),drawn.coverage.end(),1);}
+    frame.opaque_background=opaque_background;
     frame.rgba=material::ResolveRgba(drawn.bitmap.pixels,source.palette);
     for(size_t i=0;i<drawn.coverage.size();++i) {frame.rgba[4*i+3]=drawn.coverage[i]?255:0;}
     frame.indexed=drawn.bitmap.pixels;frame.coverage=drawn.coverage;
@@ -242,6 +251,6 @@ Frame RenderPrepared(const World& world,const Source& source,const ViewGeometry:
     if(bool(plan.regions)!=bool(previous)) {throw std::invalid_argument("Native dirty plan requires matching retained bitmap history");}
     std::vector<Placement> placements;placements.reserve(plan.terrain.size());
     for(const auto& tile:plan.terrain) {placements.push_back(tile.placement);}
-    return RenderImpl(world,source,placements,base,{{0,0}},flags,initial_index,&plan.terrain,previous,plan.scroll,plan.clip);
+    return RenderImpl(world,source,placements,base,{{0,0}},flags,initial_index,&plan.terrain,previous,plan.scroll,plan.clip,plan.opaque_background);
 }
 }

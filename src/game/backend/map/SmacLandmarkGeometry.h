@@ -77,6 +77,21 @@ public:
         return value;
     }
 
+    // Raw signed height byte after a query. Sea can return0 while leaving FF
+    // in this cache; the original unknown outline reads that byte as minus1.
+    std::optional<int> CachedHeight(int x,int y,unsigned vertex) const {
+        const auto index=Index(x,y);if(!index || vertex>=5) {return {};}
+        return cache_[*index][vertex].value_or(-1);
+    }
+    // Read-only semantic cache receipt: four biased shade bytes, five heights.
+    std::vector<uint8_t> CacheBytes() const {
+        std::vector<uint8_t> bytes;bytes.reserve(cache_.size()*9);
+        for(size_t i=0;i<cache_.size();++i) {
+            for(const auto value:face_cache_[i]) {bytes.push_back(static_cast<uint8_t>(value.value_or(127)+128));}
+            for(const auto value:cache_[i]) {bytes.push_back(static_cast<uint8_t>(value.value_or(-1)));}
+        }return bytes;
+    }
+
     std::optional<int> ExtraShade(int x,int y,unsigned vertex) const {
         const auto index=Index(x,y);
         if(!index || vertex>=5) {return std::nullopt;}

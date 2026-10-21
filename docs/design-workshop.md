@@ -4,7 +4,7 @@ The user requested the complete original unit customization screen on
 2026-10-20. This is a functional and visual release requirement for both SMAC
 and SMAX. A static screen or a list of decoded components does not satisfy it.
 
-## Historical starting audit — 2026-10-20
+## Historical starting audit â€” 2026-10-20
 
 This describes the pre-implementation baseline; the dated slices below track
 the implemented editor and remaining acceptance.
@@ -413,7 +413,7 @@ human history. General AI prototype allocation remains unfinished.
 Legacy frames with unknown history
 cannot silently treat it as empty. The selective V5 design codec preserves
 all known rows, including nonparticipating owners and untouched slots/cursors;
-absent history keeps the existing V1â€“V4 encoding. Nonzero faction restart and
+absent history keeps the existing V1Ã¢â‚¬â€œV4 encoding. Nonzero faction restart and
 actual Start restore preserve it. The bounded design frame now accommodates
 all seven full custom banks rather than stopping at the old 16 KiB budget.
 
@@ -433,7 +433,7 @@ the complete flags word and per-owner exclusion byte. Frozen source definitions
 remain immutable. Switching to an excluded matched intrinsic sets flag 8 and
 clears only the requesting owner's exclusion bit. An already-selected match
 leaves both unchanged; switching to an already-included match adds no flag.
-The selective V6 design codec preserves every override and leaves V1â€“V5
+The selective V6 design codec preserves every override and leaves V1Ã¢â‚¬â€œV5
 encoding unchanged when no override exists.
 
 Workshop commits publish the shared overrides alongside custom-bank changes.
@@ -721,3 +721,42 @@ This supplies the ordered data for the browser; its visible strip, scrolling,
 card hit/selection routing, full draft projection and normal-open controller
 are still required. The prior41 original browse-list controls are reference
 evidence, not claimed as41 new C++ whole-list replays by this change.
+
+
+### Conventional human recommendation model
+
+The detached post-capability-refresh controller now ports the original597de0
+producer and597390 preview policy. It generates equipment upgrades and the
+human land, sea, air, missile and worker role families from installed rules,
+current ownership, explicit faction inputs and retained design/count state.
+Each proposal is applied immediately: alias unexclusion can admit a later own
+row during the same prefix. Mode3 locks the published tuple/category without
+suppressing later same-category alias side effects. Full banks preserve the
+incoming draft when no alias or replacement candidate exists.
+
+The input context deliberately requires every scalar authority. Missing rank,
+AI policy, social Industry, capabilities or retained air-summary counters is
+an error; it does not become zero. The installed MORALE bonus is named
+`innate_morale`, correcting the reference's earlier `personality` label. Rank,
+Base count and the five current AI priorities are separate authorities; see
+[the semantic input map](behavior/design-workshop-input-authority.md).
+
+Validation:32 selected native groups pass. The new C++ fixture replays22
+original controls, all414 proposal tuples, each published tuple/mode/filter/
+return and complete512-record final pool digests. Inputs are declared registry,
+counts and technology state; scalar projections come from independent refresh
+of declared input Faction buffers, never captured output tuples. Caller state,
+selector/name and retirement history remain intact. Twenty-nine relevant groups
+pass focused ASan/UBSan with nine production and three test files instrumented;
+targeted correctness analysis is clean for four production translation units.
+No rendering changed, so unchanged UI evidence is reused.
+
+This model is not yet the live normal-open caller. Its host adapter still needs
+current typed rank/AI policy and retained air-summary authorities, full component
+projection and the argument1 selector composition. Unsupported PSI custom
+strategic evaluation, modified tables, AI callers and alternate/project policy
+remain explicit boundaries. The existing narrow live editor still opens Scout;
+this receipt does not claim that behavior is fixed. The separately completed
+[saved-strip contract](behavior/design-workshop-saved-strip.md) supplies the
+next visible browser geometry, captions, navigation and raw-ID selection path;
+original thumbnail model pixels and full-parent screen acceptance remain open.

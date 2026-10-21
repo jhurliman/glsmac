@@ -124,13 +124,17 @@ ID 9 is `(786,598)-(898,619)`, not `(786,87)-(898,108)` on screen.
 Navigation IDs 23/24 start with zero-size constructor rectangles and are
 runtime-positioned; those constructor values are not useful hit targets.
 
-The design-strip painter `43d730` explicitly draws into console canvas
-`7cbc04`. Its rectangle at editor `+a4c` is `(266,70)-(759,168)`, mapping to
-screen `(266,581)-(759,679)`. The category outer frame `+a8c` is
-`(783,60)-(1016,248)`, mapping to `(783,571)-(1016,759)`.
-The category heading `+a6c` is `(786,63)-(1013,84)`, mapping to
-`(786,574)-(1013,595)`. Main component rectangles remain client-local as in
-the first handoff; add `(216,168)` only at composition time.
+The status/action explanation painter `43d730` draws into console canvas
+`7cbc04`, using `+a4c` `(266,70)-(759,168)`, mapping to screen
+`(266,581)-(759,679)`. It is not the saved-design strip. The saved strip uses
+`447d40` and `+b0c` `(8,192)-(764,248)`. The category outer frame `+a8c` is
+`(783,60)-(1016,248)`; its heading `+a6c` is `(786,63)-(1013,84)`.
+
+The later [saved-strip controls](design-workshop-saved-strip.md) continue native
+console initialization past this fixture's stop to establish nonzero arrow
+bounds. They supersede any visible-thumbnail inference from this receipt's
+`(30,207)` model call and zero arrow rectangles. Main component rectangles
+remain client-local; add `(216,168)` only at composition time.
 
 The Workshop parent pointer is a window-base subobject at `943294`, derived
 from map object `91f500`. Reading the most-derived object's `+13c` as if it

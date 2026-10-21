@@ -175,6 +175,210 @@ std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t ind
         if(!changed) {return variant ? short_name:full;}
     }
 }
+
+SmacWorkshopHumanPreview PrepareSmacWorkshopHumanPreview(const SmacStartupDesignState& state,
+    const SmacWorkshopDraft& provisional,const SmacPredefinedUnitCatalog& catalog,
+    const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner,
+    const SmacWorkshopHumanContext& context,const faction::SmacDesignCounts& units,
+    const faction::SmacDesignCounts& production) {
+    RequireOwner(owner);RequireComponents(provisional,catalog);state.Validate(catalog);
+    if(!state.native_registry || !state.Find(owner.admission.simulation_id) || context.threat>3
+        || catalog.chassis.chassis.size()!=9 || catalog.weapons.weapons.size()!=21
+        || catalog.defenses.defenses.size()!=10 || catalog.reactors.reactors.size()!=4) {
+        throw std::invalid_argument("Human Workshop preview requires retained stock records and explicit entry state");
+    }
+    // Address identities are evidence contracts, not reads from native memory.
+    const auto f=[&](uint32_t address)->int64_t {const auto found=context.fields.find(address);
+        if(found==context.fields.end()) {throw std::invalid_argument("Missing human Workshop faction authority");}return found->second;};
+    for(const auto address:{0x95d1acu,0x95d584u,0x95d588u,0x95d58cu,0x95d590u,0x95d594u,0x95e200u,
+        0x95d9d8u,0x95d9d0u,0x95d9c8u,0x95d418u,0x95d9ecu,0x95f230u,0x95f22cu}) {(void)f(address);}
+    const auto& CH=catalog.chassis.chassis;const auto& WE=catalog.weapons.weapons;const auto& AR=catalog.defenses.defenses;
+    const auto known=[&](const std::string& token) {return Available(Prerequisite(technologies.ResolveToken(token)),technologies,owner);};
+    const auto ability=[&](int bit) {return known(catalog.abilities.abilities.at(bit).prerequisite);};
+    const bool neural=known("Neural");int reactor=1;
+    for(int r=4;r>=1;--r) {if(known(catalog.reactors.reactors.at(r-1).prerequisite)) {reactor=r;break;}}
+    const int64_t power=2<<reactor;const int first=64*owner.admission.simulation_id;
+    const uint8_t excluded=uint8_t(1u<<owner.admission.simulation_id);
+    auto pool=*state.native_registry;SmacWorkshopHumanPreview result{state,provisional,1,-1,{}};
+    const auto read=[&](int id) {const auto& row=pool.at(id);SmacWorkshopDraft draft=provisional;
+        draft.chassis=row[36];draft.weapon=row[37];draft.armor=row[38];draft.reactor=row[39];draft.abilities=0;
+        for(unsigned k=0;k<4;++k) {draft.abilities|=uint32_t(row[32+k])<<(8*k);}RequireComponents(draft,catalog);return draft;};
+    const auto intrinsic_known=[&](int id) {const auto& row=pool.at(id);
+        return Available(int16_t(uint16_t(row[50])|(uint16_t(row[51])<<8)),technologies,owner);};
+    const auto eligible=[&](int id) {return (pool.at(id)[48]&1) && !(pool.at(id)[44]&excluded) && (id>=64 || intrinsic_known(id));};
+    for(int id=first;id<first+64;++id) {if(pool[id][48]&1) {const auto d=read(id);
+        if(WE.at(d.weapon).offense<0 || AR.at(d.armor).rating<0) {throw std::invalid_argument("Human Workshop PSI custom evaluation is not admitted");}}}
+    const auto price=[&](int ch,int we,int ar,uint32_t mask=0) {return SmacPredefinedUnitCatalog::CalculateCost(CH.at(ch),WE.at(we),AR.at(ar),reactor,mask,catalog.abilities);};
+    const auto submit=[&](const SmacWorkshopDraft& draft,int category,int source) {
+        int alias=-1;
+        if(result.filter<0 || result.filter==category) {
+            bool candidate=false;
+            for(int id=0;id<first+64;++id) {
+                if(id>=64 && id<first) {continue;}auto& row=pool[id];const bool own=id>=64,obsolete=(row[44]&excluded)!=0;
+                if(own && (row[48]&1) && obsolete && !units[id] && !production[id]) {candidate=true;continue;}
+                if(!(row[48]&1)) {candidate|=own;continue;}if(!own && !intrinsic_known(id)) {continue;}
+                const auto stored=read(id);
+                if(stored.chassis==draft.chassis && stored.weapon==draft.weapon && stored.armor==draft.armor && stored.reactor==draft.reactor
+                    && !((stored.abilities^draft.abilities)&0x44ae1b) && (stored.abilities&draft.abilities)==stored.abilities) {
+                    if(result.mode<=2) {result.draft=draft;result.mode=2;}row[44]&=uint8_t(~excluded);alias=id;break;
+                }
+                if(own) {candidate|=(obsolete && !units[id]) || row[43]==category || (!units[id] && !production[id]);}
+            }
+            if(alias<0 && candidate && result.mode<=2) {result.draft=draft;result.mode=3;result.filter=category;}
+        }
+        result.steps.push_back({draft,result.draft,category,source,alias,result.mode,result.filter});
+    };
+    const auto emit=[&](int ch,int we,int ar,uint32_t mask,int category) {auto draft=provisional;
+        draft.chassis=ch;draft.weapon=we;draft.armor=ar;draft.reactor=uint8_t(reactor);draft.abilities=mask;submit(draft,category,-1);};
+    // Upgrade prefix: the initial equipment scan is frozen, but each own-row
+    // admission below sees exclusion changes from the preceding submission.
+    std::vector<int> active;
+    for(int id=0;id<first+64;++id) {if(id>=64 && id<first) {continue;}if(eligible(id)) {active.push_back(id);}}
+    int new_weapon=-1,new_armor=-1,best=-1;
+    for(int w=0;w<21;++w) {const int strength=WE[w].offense;
+        if(!known(WE[w].prerequisite) || strength<=0 || strength>=99 || w==20 || strength<best) {continue;}
+        for(const auto id:active) {const auto draft=read(id);if(CH.at(draft.chassis).missile) {continue;}
+            if(WE.at(draft.weapon).offense>=strength) {break;}new_weapon=w;best=strength;}
+    }
+    best=-1;for(int a=0;a<10;++a) {const int strength=AR[a].rating;
+        if(!known(AR[a].prerequisite) || strength<=1 || strength<best) {continue;}
+        for(const auto id:active) {if(AR.at(read(id).armor).rating>=strength) {break;}new_armor=a;best=strength;}
+    }
+    int64_t offense_factor=10;
+    if(new_weapon>=0 || new_armor>=0) {for(int id=first;id<first+64;++id) {
+        if(!eligible(id)) {continue;}auto draft=read(id);const int plan=pool[id][42];
+        if(CH.at(draft.chassis).missile || plan>6 || plan==3 || plan==5) {continue;}
+        if(plan==0 || plan==4) {if(new_weapon<0) {continue;}draft.weapon=new_weapon;}
+        else if(plan==2) {if(new_armor<0) {continue;}draft.armor=new_armor;}
+        else if(plan==1) {
+            if(new_armor>=0) {offense_factor=reactor==1 ? 2:1;}
+            const int candidate=new_weapon>=0 ? new_weapon:int(draft.weapon);const int64_t strength=WE.at(candidate).offense;
+            if(strength<=0) {throw std::invalid_argument("Human Workshop upgrade requires positive offense");}
+            int64_t limit=(reactor==1 ? 2:1)*power*4/strength;limit=limit>=2 && strength>=2 ? std::min(limit,strength):2;
+            if(new_armor>=0 && AR.at(new_armor).rating<=limit) {draft.armor=new_armor;}else if(new_weapon<0) {continue;}
+            draft.weapon=candidate;
+        } else {
+            const auto limit=f(0x95d594)+f(0x95d588)+std::max(5,reactor*reactor);
+            if(new_weapon>=0 && price(draft.chassis,new_weapon,draft.armor,draft.abilities)<=limit) {draft.weapon=new_weapon;}
+            bool changed=false;if(new_armor>=0 && price(draft.chassis,draft.weapon,new_armor,draft.abilities)<=limit) {draft.armor=new_armor;changed=true;}
+            if(!changed && int(draft.weapon)!=new_weapon) {continue;}
+        }
+        draft.reactor=uint8_t(reactor);submit(draft,pool[id][43],id);
+    }}
+    const auto chassis=[&](int domain,int minimum) {int selected=-1;int64_t score=0;
+        for(int id=0;id<9;++id) {const auto& row=CH[id];
+            if(!known(row.prerequisite) || (domain>=0 && int(row.triad)!=domain) || (row.missile && minimum!=-1)) {continue;}
+            int64_t current;
+            if(minimum>0) {if(row.speed<minimum) {continue;}current=row.speed==minimum ? 2:1;}
+            else {if(domain==2 && ((minimum==-1 && !row.missile) || (minimum==-2 && row.range!=1))) {continue;}current=int64_t(row.speed)+1;}
+            if(current>score) {selected=id;score=current;}
+        }return selected;
+    };
+    const auto weapon=[&](int64_t budget) {int selected=0;int64_t best_strength=-1;
+        for(int id=0;id<21;++id) {const auto& row=WE[id];if(!known(row.prerequisite)) {continue;}
+            if(budget<0) {if(int(row.mode)==-budget) {return id;}continue;}
+            if(row.cost>budget || int(row.mode)>=3 || row.offense>=99 || id==20) {continue;}
+            if(2*int64_t(row.offense)>=best_strength) {selected=id;best_strength=2*int64_t(row.offense);}
+        }return selected;
+    };
+    const auto armor=[&](int64_t budget) {int selected=0;int64_t best_strength=-1;
+        for(int id=0;id<10;++id) {const auto& row=AR[id];if(known(row.prerequisite) && row.cost<=budget && row.rating>=0 && 2*int64_t(row.rating)>=best_strength) {selected=id;best_strength=2*int64_t(row.rating);}}
+        return selected;
+    };
+    const auto clean=[&] {return f(0x95d1ac)>=6 && (f(0x95d590)!=0 || f(0x95d58c)!=0) && (f(0x95d594)==0 || f(0x95d584)<1) && ability(16);};
+    int ch=chassis(0,1),we,ar;uint32_t mask;
+    if(ch>=0) {
+        ar=armor(99);mask=ability(9) ? 512:0;
+        if(!mask && (f(0x95d584)<0 || context.innate_morale<0) && ability(14)) {mask=16384;}
+        we=weapon(1);int budget=2;
+        for(;;) {if(budget>10000) {throw std::invalid_argument("Unbounded human Workshop defensive budget");}
+            const int candidate=weapon(budget);if(candidate==we || price(ch,candidate,ar,mask)>price(ch,we,ar,mask)) {break;}we=candidate;++budget;}
+        emit(ch,we,ar,mask,2);
+    }
+    ch=chassis(0,1);
+    if(ch>=0) {
+        int64_t n=2,budget=1,limit=f(0x95d594)+5;
+        if(2/(2*power)<=limit) {for(;;) {++budget;++n;if((n*(n+1)/2)/(2*power)>limit) {break;}
+            if(n>=10000) {throw std::invalid_argument("Unbounded human Workshop armor budget");}}}
+        const int strongest=weapon(99);int64_t p=WE.at(strongest).offense;
+        if(p<=0) {throw std::invalid_argument("Human Workshop attack requires positive offense");}
+        int64_t q=offense_factor*power*4/p;q=q>=2 && p>=2 ? std::min(q,p):2;
+        ar=armor(std::max<int64_t>(1,std::min<int64_t>(99,std::max(q,budget/2))));const int64_t d=AR.at(ar).rating;
+        while((p+1)*d/(2*power)<=limit) {if(++p>=100000) {throw std::invalid_argument("Unbounded human Workshop weapon budget");}}
+        we=weapon(p);mask=0;
+        if(f(0x95e200)>=8 && f(0x95d1ac)>=6 && (f(0x95d590)!=0 || f(0x95d58c)!=0) && ability(16)) {mask=65536;}
+        if(context.innate_morale<0 && !mask && ability(14)) {mask=16384;}
+        if(d>1 && !mask && f(0x95d58c)>0 && f(0x95d9d8)>1 && f(0x95d9d0)>=2*f(0x95d9c8) && ability(9)) {mask=512;}
+        if(!mask && f(0x95d584)<0 && ability(14)) {mask=16384;}
+        if(ability(10) && (!mask || neural)) {mask|=1024;}
+        emit(ch,we,ar,mask,3);const auto extra=neural ? mask&~1024u:0;
+        if(ability(4)) {emit(ch,we,ar,extra|16,11);}if(ability(3)) {emit(ch,we,ar,extra|8,12);}
+    }
+    const int strongest=weapon(99);ch=chassis(0,1);
+    if(ability(15) && ch>=0) {
+        ar=armor(1);
+        for(int iteration=0;iteration<100;++iteration) {bool changed=false;const int faster=chassis(0,2);
+            if(CH.at(ch).speed==1 && faster>=0 && faster!=ch) {const int old=price(ch,strongest,ar),next=price(faster,strongest,ar);
+                if((next<=reactor+5 && next<=old+(owner.admission.simulation_id&1)+1) || next<=old) {ch=faster;changed=true;}}
+            const int candidate=armor(int64_t(AR.at(ar).rating)+1);
+            if(AR.at(candidate).rating>AR.at(ar).rating && price(ch,strongest,candidate)<=price(ch,strongest,ar)) {ar=candidate;changed=true;}
+            if(!changed) {break;}
+        }
+        mask=0;if(neural) {for(int bit:{17,10,1}) {if(ability(bit)) {mask=1u<<bit;break;}}}emit(ch,strongest,ar,mask|32768,1);
+    }
+    ch=chassis(0,3);if(ch<0) {ch=chassis(0,2);}
+    if(ch>=0) {
+        we=weapon(99);ar=armor(1);
+        for(int iteration=0;iteration<100;++iteration) {const int64_t p=WE.at(we).offense,d=AR.at(ar).rating;if(d>=p-1) {break;}
+            const int candidate=armor(std::max(p/2,d+1));if(AR.at(candidate).rating<=d || price(ch,we,candidate)>f(0x95d594)+f(0x95d584)+reactor+3) {break;}ar=candidate;
+        }
+        mask=0;if((context.innate_morale<0 || (f(0x95d584)>0 && f(0x95d418)>=0)) && ability(14)) {mask=16384;}
+        if(ability(10) && (!mask || neural)) {mask|=1024;}emit(ch,we,ar,mask,4);
+    }
+    ch=chassis(0,3);mask=0;if(ch<0) {ch=chassis(0,2);}if(ch<0) {ch=chassis(0,1);if(ability(10)) {mask=1024;}}
+    if(ch>=0) {
+        if(!mask) {for(int bit:{1,2}) {if(ability(bit)) {mask=1u<<bit;break;}}}
+        if(ability(10)) {mask=neural ? mask|1024:1024;}emit(ch,weapon(1),armor(1),mask,10);
+    }
+    ch=chassis(1,0);
+    if(ch>=0) {
+        mask=0;for(int bit:{1,8}) {if(ability(bit)) {mask=1u<<bit;break;}}
+        if((context.threat&1) && ability(18) && (!mask || neural)) {mask|=1u<<18;}
+        for(int bit:{8,1}) {unsigned count=0;for(auto bits=mask;bits;bits>>=1) {count+=bits&1;}
+            if(ability(bit) && !(mask&(1u<<bit)) && count<2 && (!mask || neural)) {mask|=1u<<bit;}}
+        we=weapon(1);ar=armor(1);
+        for(int iteration=0;iteration<100;++iteration) {bool changed=false;int candidate=we;
+            for(int delta=1;delta<=3;++delta) {candidate=weapon(int64_t(WE.at(we).offense)+delta);if(candidate!=we) {break;}}
+            const auto limit=f(0x95d594)+f(0x95d588)+std::max(5,2*reactor-reactor/2);
+            if(candidate!=we && price(ch,candidate,ar)<=limit) {we=candidate;changed=true;}
+            candidate=ar;for(int delta=1;delta<=3;++delta) {candidate=armor(int64_t(AR.at(ar).rating)+delta);if(candidate!=ar) {break;}}
+            if(AR.at(candidate).rating>AR.at(ar).rating && price(ch,we,candidate,mask)<=limit) {ar=candidate;changed=true;}
+            if(!changed) {break;}
+        }
+        emit(ch,weapon(99),ar,mask,6);
+    }
+    ch=chassis(1,0);
+    if(ch>=0) {
+        ar=armor(f(0x95d9ec)>f(0x95f230) && f(0x95d9ec)>f(0x95f22c) ? 99:1);emit(ch,weapon(-7),ar,0,7);
+        if(ch!=3 && known(CH[3].prerequisite)) {ch=3;}ar=armor(1);we=weapon(-9);
+        mask=ability(0) ? 1:ability(13) ? 8192:0;if(mask==1 && ability(13) && neural) {mask=8193;}emit(ch,we,ar,mask,15);
+        emit(ch,weapon(-8),ar,0,16);
+    }
+    for(const auto minimum:{0,-2}) {
+        ch=chassis(2,minimum);if(ch<0) {continue;}ar=armor(1);mask=clean() ? 65536:0;
+        if((context.threat&2) && !mask && ability(11)) {mask=2048;}if(ability(1) && (!mask || neural)) {mask|=2;}
+        const int category=minimum==0 ? 8:17;emit(ch,weapon(99),ar,mask,category);
+        if(category==8) {const uint32_t intercept=ability(1) && neural ? 34:(context.threat&1) && ability(18) && neural ? 262176:32;emit(ch,weapon(99),ar,intercept,9);}
+    }
+    ch=chassis(2,-1);
+    if(ch>=0) {ar=armor(1);if(known(WE[20].prerequisite)) {emit(ch,20,ar,0,13);}
+        for(int id=0;id<21;++id) {if(known(WE[id].prerequisite) && WE[id].offense>=99) {emit(ch,id,ar,0,14);break;}}
+    }
+    if(reactor<=1 && !ability(0)) {if(ability(13)) {ch=chassis(0,1);if(ch>=0) {emit(ch,15,armor(1),8192,-1);}}}
+    else {ch=chassis(0,2);if(ch>=0) {mask=ability(0) ? 1:0;if(ability(13) && (!mask || neural)) {mask|=8192;}emit(ch,15,armor(1),mask,-1);}}
+    result.state.RetainNativeRegistry(pool,catalog);return result;
+}
+
 std::vector<int32_t> BrowseSmacWorkshopDesigns(const SmacStartupDesignState& state,
     const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
     const faction::SmacFactionTechnologyState& owner,const std::optional<faction::SmacDesignCounts>& units) {

@@ -1,5 +1,6 @@
 #pragma once
 #include "SmacStartupDesignState.h"
+#include "SmacOpeningDesigns.h"
 
 namespace game::backend::unit {
 struct SmacPrototypePriceContext {
@@ -28,6 +29,17 @@ struct SmacWorkshopDraft {
     uint8_t reactor = 1;
     std::string name; // empty requests the installed-language automatic name
 };
+// Original compatibility is independent of technology admission.
+bool SmacWorkshopAbilityCompatible(uint32_t ability,const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog);
+struct SmacWorkshopAbilitySelection {uint32_t mask;std::array<int32_t,2> slots;};
+// Original ascending removal preserves selector slots when no removal occurs.
+SmacWorkshopAbilitySelection CleanSmacWorkshopAbilities(const SmacWorkshopDraft& draft,
+    std::array<int32_t,2> slots,bool second_ability,const SmacPredefinedUnitCatalog& catalog);
+// Original custom-record construction. Preserves name, byte47 and prerequisite;
+// technology/picker legality and automatic naming belong to the caller.
+void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner);
 struct SmacWorkshopCommit {
     int32_t design_id;
     bool intrinsic_name_warning;

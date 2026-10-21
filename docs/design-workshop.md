@@ -258,3 +258,28 @@ ASan/UBSan. Normal and focused-sanitizer hidden Linux runs displayed the side
 cards and armor chooser, selected Synthmetal, used Apply then Done, and returned
 to the unchanged Scout Patrol queue. Both exited cleanly. These captures use
 software graphics and no audio; no full platform matrix was repeated.
+
+### General record builder and ability rules
+
+The live first-design commit now calls the general original record builder,
+using the retained builtin history for prototype coverage. The builder supports
+all catalog reactor ratings and computes raw shared cost, transport capacity,
+plan/category, owner claim and native prototype flags while preserving unrelated
+record bytes. Coverage can come from different active builtin/custom designs;
+reactors and abilities do not affect that scan. The original last-slot flag16
+quirk is retained.
+
+Ability compatibility and cleanup follow the separate native predicates. Cleanup
+removes bits ascending, retaining the highest two compatible choices (one without
+Neural Grafting), and preserves selectors when nothing was removed. Technology
+admission remains the editor caller's responsibility. This does not yet expand
+the live editor beyond Scout/Synthmetal: generalized naming, allocation/editing,
+component models and picker interactions must be connected together next.
+See [the conventional construction contract](behavior/design-workshop-general-construction.md).
+
+Validation:40 complete original design pools,216 compatibility predicates and11
+cleanup cases match. All26 focused Workshop/startup/custom-design groups and six
+UI scripts pass. Targeted analysis covers the builder plus its Base and game
+production consumers. The26 native groups also pass under focused ASan/UBSan
+instrumentation of the changed builder and its test consumer. The screen and
+save protocol retain the component pass's live validation.

@@ -2,6 +2,17 @@
 #include "SmacStartupDesignState.h"
 
 namespace game::backend::unit {
+struct SmacPrototypePriceContext {
+    int32_t owner_difficulty;
+    bool free_prototype, queried_base_skunkworks;
+    std::optional<std::array<int32_t,3>> percentages;
+};
+struct SmacPrototypePrice {int32_t rows;bool surcharge_present;};
+// Original 5d9810: ordinary stored rows plus rounded ability-free component
+// surcharge. Context belongs to the design owner and actual queried Base.
+SmacPrototypePrice SmacDesignProductionRows(const SmacCustomDesign& design,
+    const SmacPredefinedUnitCatalog& catalog,const SmacPrototypePriceContext& context);
+
 enum class SmacWorkshopComponent { Chassis, Weapon, Armor, Reactor };
 struct SmacWorkshopChoice {
     uint32_t component_id; // source identity, not the visible card ordinal

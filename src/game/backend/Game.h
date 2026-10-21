@@ -432,7 +432,7 @@ public:
 	base::ProductionItem MakeSmacProductionItem( const slot::Slot* owner, base::ProductionItemKind kind, int32_t source_id ) const;
 	void ValidateSmacProductionState( const slot::Slot* owner, const base::ProductionState& state ) const;
 	int32_t GetSmacProductionMineralFactor(const slot::Slot* owner) const;
-	int32_t GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item ) const;
+	int32_t GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item, const base::Base* queried_base = nullptr ) const;
 	// Only the ordinary prerequisite query, not active/role/coastal buildability.
 	bool HasSmacProductionPrerequisite( const slot::Slot* owner, const base::ProductionItem& item ) const;
 	bool IsSmacUnitProductionEligible( const base::Base& base, const base::ProductionItem& item ) const;

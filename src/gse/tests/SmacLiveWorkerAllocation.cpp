@@ -1322,7 +1322,15 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
     });
 
     task->AddTest("SMAC live Workshop commits through owned Base commands without altering production",[](GSE*,context::Context*)->std::string {
-        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");std::string expected;
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction([](const std::string& filename) {
+            auto source=TanksSource(filename);if(filename!="alpha.txt") {return source;}
+            std::istringstream input(source);std::string line,section,output;size_t row=0;
+            while(std::getline(input,line)) {
+                if(!line.empty() && line.front()=='#') {section=line;row=0;}
+                else if(section=="#RULES" && ++row>=15 && row<=17) {line="50";}
+                output+=line+'\n';
+            }return output;
+        },"GAIANS");std::string expected;
         const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
             const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
@@ -1342,6 +1350,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             bool retained=false;fixture.ResourceState([&](auto& state){const auto& row=state.designs.Find(1)->designs.at(0);
                 retained=row.id==127 && row.defense==1 && row.cost==2 && row.name==std::optional<std::string>("Test Guard") && row.explicitly_named && !row.prototyped;});
             GT_ASSERT(retained && *base->GetProductionState()==production && fixture.GameplayRandom()==random,"Workshop lost design identity or changed production/RNG");
+            const auto custom=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,127);
+            const auto factor=game->GetSmacProductionMineralFactor(base->m_owner);
+            const auto stored=unit::SmacStartupDesignState::OriginalDifficulty(base->m_owner->GetPlayer()->GetDifficultyLevel());
+            GT_ASSERT(game->GetSmacProductionCost(base->m_owner,custom,base)==(stored<=1?2:3)*factor,"Live saved Workshop design did not use first-prototype production price");
             const auto applied=fixture.Snapshot();game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
             GT_ASSERT(fixture.Snapshot()==applied,"Old queued Apply was replayed");
             args["expected_state"]=VALUE(value::String,,base->SmacWorkshopState());args["name"]=VALUE(value::String,,"Other name");
@@ -1896,10 +1908,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             base->SetProductionState(GSE_CALL,ProductionState{custom,7,custom,7,std::vector<ProductionItem>{custom,scout}});
             const auto unprototyped=fixture.Snapshot();
             auto* unsupported=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
-            GT_ASSERT(unsupported->value.count("cost")==0 && unsupported->value.count("forecast")==0
+            GT_ASSERT(unsupported->value.count("cost")==1 && unsupported->value.count("forecast")==1
+                && static_cast<value::Int*>(unsupported->Get("cost"))->value==game->GetSmacProductionCost(base->m_owner,custom,base)
                 && static_cast<value::Array*>(unsupported->Get("queue"))->value.size()==2
                 && !static_cast<value::String*>(unsupported->Get("name"))->value.empty()
-                && fixture.Snapshot()==unprototyped && fixture.GameplayRandom()==random,"unavailable custom cost hid a retained target/queue or changed authority");GT_OK();
+                && fixture.Snapshot()==unprototyped && fixture.GameplayRandom()==random,"Prototype quote hid a retained target/queue or changed authority");GT_OK();
         });
     });
 

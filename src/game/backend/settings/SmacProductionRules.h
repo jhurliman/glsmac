@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <optional>
 
 #include "types/Buffer.h"
 
@@ -21,6 +22,8 @@ struct SmacProductionRules {
 	// Slots 1..33 local facilities, 34..37 orbitals, 38 Stockpile, 39..71 projects.
 	// Names may repeat/change; identity is positional. No lookup grants eligibility.
 	std::array< SmacFacilityRule, 71 > facilities;
+	// Land/sea/air RULES 15..17. Absent in V1 saves; never invent stock defaults.
+	std::optional<std::array<int32_t,3>> prototype_percentages;
 
 	// Structural ingestion only. All signed32 numeric metadata is preserved;
 	// calculation/admission must separately validate its supported domains.

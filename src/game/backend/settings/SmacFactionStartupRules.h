@@ -37,6 +37,7 @@ struct SmacFactionStartupRule {
 	// order. The admitted ordinary campaign does not edit personality at runtime.
 	std::array< int32_t, 5 > worker_priorities{};
 	std::vector< SmacFactionStartupBonus > Records() const;
+	bool FreePrototype() const;
 	std::vector< int32_t > NamedTechnologyReferences() const;
 	int32_t ExtraTechnologyCount() const;
 	bool operator==( const SmacFactionStartupRule& other ) const;

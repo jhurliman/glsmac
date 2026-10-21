@@ -1,6 +1,7 @@
 #include "ConfigManager.h"
 
 #include <yaml-cpp/yaml.h>
+#include <fstream>
 
 #include "util/FS.h"
 #include "util/String.h"
@@ -118,8 +119,9 @@ void ConfigManager::ParseFile( const std::string& path ) {
 }
 
 void ConfigManager::UpdateSetting( const std::string& key, const std::string& value ) {
-	m_settings.insert_or_assign( key, std::make_pair( true, value ) );
-	Save();
+    auto previous=m_settings;
+    m_settings.insert_or_assign(key,std::make_pair(true,value));
+    try {Save();} catch(...) {m_settings.swap(previous);throw;}
 }
 
 const ConfigManager::settings_t& ConfigManager::GetSettings() const {
@@ -156,7 +158,12 @@ void ConfigManager::Save() {
 			root[ kv.first ] = kv.second.second;
 		}
 	}
-	util::FS::WriteFile( GetConfigPath(), Dump( root ) + util::String::EOLN() );
+	// Preference acceptance must not silently succeed on a failed write.
+    std::ofstream out;
+    out.exceptions(std::ios::failbit|std::ios::badbit);
+    out.open(GetConfigPath(),std::ios::binary|std::ios::trunc);
+    out << Dump(root) << util::String::EOLN();
+    out.close();
 }
 
 const std::string ConfigManager::GetConfigPath() const {

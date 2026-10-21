@@ -125,6 +125,7 @@ return {
 			const pp = {
 				body: body,
 				ui: p.ui,
+                config: p.config,
 				game: p.game,
 				hide: p.hide,
 				modules: p.modules,

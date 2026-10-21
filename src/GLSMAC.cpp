@@ -542,7 +542,8 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 			return;
 		}
 		if ( path.has_value() ) {
-			c->SetSMACPath( path.value() );
+            try {c->SetSMACPath(path.value());}
+            catch(const std::exception& error) {GSE_ERROR(gse::EC.GAME_ERROR,std::string("Cannot save configuration: ")+error.what());}
 		}
 	}
 	Reset( GSE_CALL );

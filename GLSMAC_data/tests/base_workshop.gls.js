@@ -671,6 +671,11 @@ entry_screen.open_workshop(); test.assert(dialog.opening && commands[#sizeof(com
 entry_screen.read_only = true; const read_only_commands = #sizeof(commands);
 entry_screen.open_workshop(); test.assert(!dialog.opening && #sizeof(commands) == read_only_commands); entry_screen.read_only = false;
 
+// Refresh the actual saved preference at every opening, not only UI init.
+let automatic_preference = false; dialog.p.config = {get_automatic_unit_designs: () => { return automatic_preference; }};
+dialog.begin(base, selection, (0 - 1)); test.assert(!dialog.automatic_suggestions); dialog.hide_view();
+automatic_preference = true; dialog.begin(base, selection, (0 - 1)); test.assert(dialog.automatic_suggestions); dialog.hide_view();
+
 // Global opening has no production prompt: carry asynchronous failure/stale
 // results to the ordinary game message area through the real editor listener.
 let opening_messages = [];

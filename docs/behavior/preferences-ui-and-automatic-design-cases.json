@@ -1,0 +1,1150 @@
+{
+  "contract": "RE-SMAC-PREFERENCES-UI-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "evidence_kind": "original x86 constructor argument capture and admitted state prefixes; no complete modal framebuffer",
+  "source_packet_sha256": "20ff6cb5f2579a3d131ab1ff4cdbf9ebaa47d48431ce44755ed132855b9e66ae",
+  "probe_sha256": "86ed8060083b9a7264511ef4a007e4094de8721db9768a6ec87ba110e7666247",
+  "native_receipt_sha256": "4e0fa98cb91e37323acaefae1468768aa750af9456e7c73181c8c24f4a0f9dbc",
+  "automatic_design": {
+    "page": 0,
+    "ordinal": 1,
+    "id": 8,
+    "word": 0,
+    "mask": 16384,
+    "label": "Design units automatically."
+  },
+  "groups": [
+    {
+      "page": 0,
+      "group_offset": "0x5974",
+      "rows": [
+        {
+          "ordinal": 0,
+          "id": 7,
+          "role": "tutorial_messages",
+          "call_return": "0x49c4f2"
+        },
+        {
+          "ordinal": 1,
+          "id": 8,
+          "role": "automatic_unit_design",
+          "call_return": "0x49c569"
+        },
+        {
+          "ordinal": 2,
+          "id": 9,
+          "role": "prune_obsolete_designs",
+          "call_return": "0x49c5e0"
+        },
+        {
+          "ordinal": 3,
+          "id": 10,
+          "role": "edge_scroll",
+          "call_return": "0x49c657"
+        },
+        {
+          "ordinal": 4,
+          "id": 11,
+          "role": "turn_autosave",
+          "call_return": "0x49c6ce"
+        },
+        {
+          "ordinal": 5,
+          "id": 12,
+          "role": "end_turn_pause",
+          "call_return": "0x49c745"
+        },
+        {
+          "ordinal": 6,
+          "id": 13,
+          "role": "fast_enemy_neutral_moves",
+          "call_return": "0x49c7bc"
+        },
+        {
+          "ordinal": 7,
+          "id": 14,
+          "role": "fast_allied_moves",
+          "call_return": "0x49c835"
+        }
+      ]
+    },
+    {
+      "page": 1,
+      "group_offset": "0x649c",
+      "rows": [
+        {
+          "ordinal": 0,
+          "id": 15,
+          "role": "single_click_radio",
+          "call_return": "0x49c963"
+        },
+        {
+          "ordinal": 1,
+          "id": 16,
+          "role": "unit_click_cancels_orders",
+          "call_return": "0x49c9da"
+        },
+        {
+          "ordinal": 2,
+          "id": 17,
+          "role": "confirm_combat_odds",
+          "call_return": "0x49ca51"
+        },
+        {
+          "ordinal": 3,
+          "id": 18,
+          "role": "pause_after_battle",
+          "call_return": "0x49cac8"
+        },
+        {
+          "ordinal": 4,
+          "id": 19,
+          "role": "fast_combat",
+          "call_return": "0x49cb3f"
+        },
+        {
+          "ordinal": 5,
+          "id": 28,
+          "role": "fast_ordered_moves",
+          "call_return": "0x49cbb6"
+        },
+        {
+          "ordinal": 6,
+          "id": 20,
+          "role": "fast_all_moves",
+          "call_return": "0x49cc2d"
+        },
+        {
+          "ordinal": 7,
+          "id": 21,
+          "role": "ordered_units_without_centering",
+          "call_return": "0x49cca4"
+        },
+        {
+          "ordinal": 8,
+          "id": 23,
+          "role": "base_zoom_without_recentering",
+          "call_return": "0x49cd1b"
+        },
+        {
+          "ordinal": 9,
+          "id": 24,
+          "role": "detailed_main_menus",
+          "call_return": "0x49cd92"
+        },
+        {
+          "ordinal": 10,
+          "id": 25,
+          "role": "detailed_context_menus",
+          "call_return": "0x49ce09"
+        },
+        {
+          "ordinal": 11,
+          "id": 26,
+          "role": "right_click_menu",
+          "call_return": "0x49ce82"
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "group_offset": "0x6fc4",
+      "rows": [
+        {
+          "ordinal": 0,
+          "id": 29,
+          "role": "air_return_at_fuel_limit",
+          "call_return": "0x49cfb0"
+        },
+        {
+          "ordinal": 1,
+          "id": 30,
+          "role": "former_forests",
+          "call_return": "0x49d027"
+        },
+        {
+          "ordinal": 2,
+          "id": 31,
+          "role": "former_elevation",
+          "call_return": "0x49d09e"
+        },
+        {
+          "ordinal": 3,
+          "id": 32,
+          "role": "former_advanced_improvements",
+          "call_return": "0x49d115"
+        },
+        {
+          "ordinal": 4,
+          "id": 33,
+          "role": "former_fungus_removal",
+          "call_return": "0x49d18c"
+        },
+        {
+          "ordinal": 5,
+          "id": 34,
+          "role": "former_sensors",
+          "call_return": "0x49d203"
+        },
+        {
+          "ordinal": 6,
+          "id": 42,
+          "role": "former_transport_links",
+          "call_return": "0x49d27a"
+        },
+        {
+          "ordinal": 7,
+          "id": 35,
+          "role": "pact_contact_cancels_movement",
+          "call_return": "0x49d2f1"
+        },
+        {
+          "ordinal": 8,
+          "id": 36,
+          "role": "treaty_contact_cancels_movement",
+          "call_return": "0x49d368"
+        },
+        {
+          "ordinal": 9,
+          "id": 37,
+          "role": "truce_contact_cancels_movement",
+          "call_return": "0x49d3df"
+        },
+        {
+          "ordinal": 10,
+          "id": 38,
+          "role": "vendetta_contact_cancels_movement",
+          "call_return": "0x49d456"
+        },
+        {
+          "ordinal": 11,
+          "id": 39,
+          "role": "ignore_other_unit_classes",
+          "call_return": "0x49d4cd"
+        },
+        {
+          "ordinal": 12,
+          "id": 40,
+          "role": "wake_landed_passengers",
+          "call_return": "0x49d544"
+        },
+        {
+          "ordinal": 13,
+          "id": 41,
+          "role": "automatic_monolith",
+          "call_return": "0x49d5bd"
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "group_offset": "0x7aec",
+      "rows": [
+        {
+          "ordinal": 0,
+          "id": 64,
+          "role": "stop_voice_on_popup_close",
+          "call_return": "0x49d70f"
+        },
+        {
+          "ordinal": 1,
+          "id": 65,
+          "role": "project_movies",
+          "call_return": "0x49d786"
+        },
+        {
+          "ordinal": 2,
+          "id": 66,
+          "role": "interludes",
+          "call_return": "0x49d7fd"
+        },
+        {
+          "ordinal": 3,
+          "id": 71,
+          "role": "monuments",
+          "call_return": "0x49d874"
+        },
+        {
+          "ordinal": 4,
+          "id": 67,
+          "role": "map_animation",
+          "call_return": "0x49d8eb"
+        },
+        {
+          "ordinal": 5,
+          "id": 68,
+          "role": "window_animation",
+          "call_return": "0x49d962"
+        },
+        {
+          "ordinal": 6,
+          "id": 69,
+          "role": "scrollbar_animation",
+          "call_return": "0x49d9d9"
+        },
+        {
+          "ordinal": 7,
+          "id": 22,
+          "role": "unit_blink",
+          "call_return": "0x49da52"
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "group_offset": "0x8614",
+      "rows": [
+        {
+          "ordinal": 0,
+          "id": 43,
+          "role": "facility_completion",
+          "call_return": "0x49db97"
+        },
+        {
+          "ordinal": 1,
+          "id": 44,
+          "role": "civilian_completion",
+          "call_return": "0x49dc0e"
+        },
+        {
+          "ordinal": 2,
+          "id": 45,
+          "role": "combat_completion",
+          "call_return": "0x49dc85"
+        },
+        {
+          "ordinal": 3,
+          "id": 46,
+          "role": "prototype_completion",
+          "call_return": "0x49dcfc"
+        },
+        {
+          "ordinal": 4,
+          "id": 47,
+          "role": "governor_queue_completion",
+          "call_return": "0x49dd73"
+        },
+        {
+          "ordinal": 5,
+          "id": 48,
+          "role": "riot_start",
+          "call_return": "0x49ddea"
+        },
+        {
+          "ordinal": 6,
+          "id": 49,
+          "role": "riot_end",
+          "call_return": "0x49de61"
+        },
+        {
+          "ordinal": 7,
+          "id": 50,
+          "role": "golden_age_start",
+          "call_return": "0x49ded8"
+        },
+        {
+          "ordinal": 8,
+          "id": 51,
+          "role": "golden_age_end",
+          "call_return": "0x49df4f"
+        },
+        {
+          "ordinal": 9,
+          "id": 52,
+          "role": "low_nutrients",
+          "call_return": "0x49dfc6"
+        },
+        {
+          "ordinal": 10,
+          "id": 54,
+          "role": "stale_build_orders",
+          "call_return": "0x49e03d"
+        },
+        {
+          "ordinal": 11,
+          "id": 55,
+          "role": "population_cap",
+          "call_return": "0x49e0b4"
+        },
+        {
+          "ordinal": 12,
+          "id": 56,
+          "role": "delayed_transcendence",
+          "call_return": "0x49e12d"
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "group_offset": "0x913c",
+      "rows": [
+        {
+          "ordinal": 0,
+          "id": 57,
+          "role": "starvation",
+          "call_return": "0x49e23a"
+        },
+        {
+          "ordinal": 1,
+          "id": 58,
+          "role": "mineral_shortage",
+          "call_return": "0x49e2b1"
+        },
+        {
+          "ordinal": 2,
+          "id": 59,
+          "role": "energy_shortage",
+          "call_return": "0x49e328"
+        },
+        {
+          "ordinal": 3,
+          "id": 60,
+          "role": "random_events",
+          "call_return": "0x49e3a1"
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "group_offset": "0x9c64",
+      "rows": [
+        {
+          "ordinal": 0,
+          "id": 72,
+          "role": "fog",
+          "call_return": "0x49e4d4"
+        },
+        {
+          "ordinal": 1,
+          "id": 73,
+          "role": "land_grid",
+          "call_return": "0x49e54b"
+        },
+        {
+          "ordinal": 2,
+          "id": 78,
+          "role": "ocean_grid",
+          "call_return": "0x49e5c2"
+        },
+        {
+          "ordinal": 3,
+          "id": 74,
+          "role": "base_grid",
+          "call_return": "0x49e639"
+        },
+        {
+          "ordinal": 4,
+          "id": 75,
+          "role": "base_names",
+          "call_return": "0x49e6b0"
+        },
+        {
+          "ordinal": 5,
+          "id": 76,
+          "role": "base_production",
+          "call_return": "0x49e727"
+        },
+        {
+          "ordinal": 6,
+          "id": 77,
+          "role": "flat_terrain",
+          "call_return": "0x49e79e"
+        },
+        {
+          "ordinal": 7,
+          "id": 79,
+          "role": "active_unit_path",
+          "call_return": "0x49e817"
+        }
+      ]
+    }
+  ],
+  "layouts": {
+    "1024": {
+      "root_xywh": [
+        162,
+        150,
+        778,
+        390
+      ],
+      "buttons": [
+        {
+          "label": "Preferences",
+          "id": 0,
+          "xywh": [
+            33,
+            10,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Adv. Preferences",
+          "id": 1,
+          "xywh": [
+            33,
+            32,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Warning Preferences",
+          "id": 2,
+          "xywh": [
+            33,
+            54,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Automation Preferences",
+          "id": 3,
+          "xywh": [
+            33,
+            76,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Audio/Visual Preferences",
+          "id": 4,
+          "xywh": [
+            33,
+            98,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Map Preferences",
+          "id": 5,
+          "xywh": [
+            33,
+            120,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Gamma Correction",
+          "id": 6,
+          "xywh": [
+            33,
+            164,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Main Off",
+          "id": 85,
+          "xywh": [
+            259,
+            290,
+            120,
+            20
+          ]
+        },
+        {
+          "label": "Voice Off",
+          "id": 87,
+          "xywh": [
+            259,
+            312,
+            120,
+            20
+          ]
+        },
+        {
+          "label": "SFX Off",
+          "id": 86,
+          "xywh": [
+            259,
+            334,
+            120,
+            20
+          ]
+        },
+        {
+          "label": "Music Off",
+          "id": 88,
+          "xywh": [
+            259,
+            356,
+            120,
+            20
+          ]
+        },
+        {
+          "label": "Restore Defaults",
+          "id": 90,
+          "xywh": [
+            33,
+            314,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "OK",
+          "id": 92,
+          "xywh": [
+            33,
+            337,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Cancel",
+          "id": 91,
+          "xywh": [
+            33,
+            360,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "More",
+          "id": 94,
+          "xywh": [
+            256,
+            360,
+            214,
+            20
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "page": 0,
+          "xywh": [
+            256,
+            10,
+            457,
+            376
+          ]
+        },
+        {
+          "page": 1,
+          "xywh": [
+            256,
+            10,
+            457,
+            376
+          ]
+        },
+        {
+          "page": 3,
+          "xywh": [
+            256,
+            10,
+            457,
+            376
+          ]
+        },
+        {
+          "page": 4,
+          "xywh": [
+            256,
+            10,
+            457,
+            281
+          ]
+        },
+        {
+          "page": 2,
+          "xywh": [
+            256,
+            10,
+            457,
+            321
+          ]
+        },
+        {
+          "page": 6,
+          "xywh": [
+            256,
+            10,
+            457,
+            281
+          ]
+        },
+        {
+          "page": 5,
+          "xywh": [
+            256,
+            10,
+            457,
+            376
+          ]
+        }
+      ]
+    },
+    "800": {
+      "root_xywh": [
+        50,
+        0,
+        778,
+        390
+      ],
+      "buttons": [
+        {
+          "label": "Preferences",
+          "id": 0,
+          "xywh": [
+            33,
+            10,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Adv. Preferences",
+          "id": 1,
+          "xywh": [
+            33,
+            32,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Warning Preferences",
+          "id": 2,
+          "xywh": [
+            33,
+            54,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Automation Preferences",
+          "id": 3,
+          "xywh": [
+            33,
+            76,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Audio/Visual Preferences",
+          "id": 4,
+          "xywh": [
+            33,
+            98,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Map Preferences",
+          "id": 5,
+          "xywh": [
+            33,
+            120,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Gamma Correction",
+          "id": 6,
+          "xywh": [
+            33,
+            164,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Main Off",
+          "id": 85,
+          "xywh": [
+            259,
+            240,
+            120,
+            20
+          ]
+        },
+        {
+          "label": "Voice Off",
+          "id": 87,
+          "xywh": [
+            259,
+            262,
+            120,
+            20
+          ]
+        },
+        {
+          "label": "SFX Off",
+          "id": 86,
+          "xywh": [
+            259,
+            284,
+            120,
+            20
+          ]
+        },
+        {
+          "label": "Music Off",
+          "id": 88,
+          "xywh": [
+            259,
+            306,
+            120,
+            20
+          ]
+        },
+        {
+          "label": "Restore Defaults",
+          "id": 90,
+          "xywh": [
+            33,
+            264,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "OK",
+          "id": 92,
+          "xywh": [
+            33,
+            287,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "Cancel",
+          "id": 91,
+          "xywh": [
+            33,
+            310,
+            214,
+            20
+          ]
+        },
+        {
+          "label": "More",
+          "id": 94,
+          "xywh": [
+            256,
+            360,
+            214,
+            20
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "page": 0,
+          "xywh": [
+            256,
+            10,
+            457,
+            376
+          ]
+        },
+        {
+          "page": 1,
+          "xywh": [
+            256,
+            10,
+            457,
+            376
+          ]
+        },
+        {
+          "page": 3,
+          "xywh": [
+            256,
+            10,
+            457,
+            376
+          ]
+        },
+        {
+          "page": 4,
+          "xywh": [
+            256,
+            10,
+            457,
+            201
+          ]
+        },
+        {
+          "page": 2,
+          "xywh": [
+            256,
+            10,
+            457,
+            321
+          ]
+        },
+        {
+          "page": 6,
+          "xywh": [
+            256,
+            10,
+            457,
+            281
+          ]
+        },
+        {
+          "page": 5,
+          "xywh": [
+            256,
+            10,
+            457,
+            376
+          ]
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "open_enabled",
+      "live_words": [
+        16384,
+        0,
+        0
+      ],
+      "automatic_checked": true,
+      "profile_write_count": 0,
+      "preference_writes": []
+    },
+    {
+      "id": "toggle_is_staged",
+      "live_words": [
+        16384,
+        0,
+        0
+      ],
+      "automatic_checked": false,
+      "profile_write_count": 0,
+      "preference_writes": []
+    },
+    {
+      "id": "escape_before_close_cleanup",
+      "live_words": [
+        16384,
+        0,
+        0
+      ],
+      "automatic_checked": false,
+      "profile_write_count": 0,
+      "preference_writes": []
+    },
+    {
+      "id": "reopen_after_escape",
+      "live_words": [
+        16384,
+        0,
+        0
+      ],
+      "automatic_checked": true,
+      "profile_write_count": 0,
+      "preference_writes": []
+    },
+    {
+      "id": "enter_saves_disabled",
+      "live_words": [
+        0,
+        0,
+        0
+      ],
+      "automatic_checked": false,
+      "profile_write_count": 17,
+      "preference_writes": [
+        "00000000"
+      ]
+    },
+    {
+      "id": "reopen_disabled",
+      "live_words": [
+        0,
+        0,
+        0
+      ],
+      "automatic_checked": false,
+      "profile_write_count": 0,
+      "preference_writes": []
+    },
+    {
+      "id": "cancel_before_close_cleanup",
+      "live_words": [
+        0,
+        0,
+        0
+      ],
+      "automatic_checked": true,
+      "profile_write_count": 0,
+      "preference_writes": []
+    },
+    {
+      "id": "reopen_after_cancel",
+      "live_words": [
+        0,
+        0,
+        0
+      ],
+      "automatic_checked": false,
+      "profile_write_count": 0,
+      "preference_writes": []
+    },
+    {
+      "id": "ok_saves_enabled",
+      "live_words": [
+        16384,
+        0,
+        0
+      ],
+      "automatic_checked": true,
+      "profile_write_count": 17,
+      "preference_writes": [
+        "100000000000000"
+      ]
+    },
+    {
+      "id": "reopen_after_ok",
+      "live_words": [
+        16384,
+        0,
+        0
+      ],
+      "automatic_checked": true,
+      "profile_write_count": 0,
+      "preference_writes": []
+    },
+    {
+      "id": "select_page_3",
+      "live_words": [
+        16384,
+        0,
+        0
+      ],
+      "automatic_checked": false,
+      "profile_write_count": 0,
+      "preference_writes": [],
+      "page": 3
+    },
+    {
+      "id": "select_page_1",
+      "live_words": [
+        16384,
+        0,
+        0
+      ],
+      "automatic_checked": false,
+      "profile_write_count": 0,
+      "preference_writes": [],
+      "page": 1
+    },
+    {
+      "id": "select_page_0",
+      "live_words": [
+        16384,
+        0,
+        0
+      ],
+      "automatic_checked": false,
+      "profile_write_count": 0,
+      "preference_writes": [],
+      "page": 0
+    },
+    {
+      "id": "page_key_38",
+      "live_words": [
+        16384,
+        0,
+        0
+      ],
+      "automatic_checked": false,
+      "profile_write_count": 0,
+      "preference_writes": [],
+      "page": 5
+    },
+    {
+      "id": "page_key_40",
+      "live_words": [
+        16384,
+        0,
+        0
+      ],
+      "automatic_checked": false,
+      "profile_write_count": 0,
+      "preference_writes": [],
+      "page": 0
+    },
+    {
+      "id": "restore_defaults_staged",
+      "live_words": [
+        0,
+        0,
+        0
+      ],
+      "automatic_checked": true,
+      "profile_write_count": 0,
+      "preference_writes": []
+    },
+    {
+      "id": "reopen_after_cancel_defaults",
+      "live_words": [
+        0,
+        0,
+        0
+      ],
+      "automatic_checked": false,
+      "profile_write_count": 0,
+      "preference_writes": []
+    }
+  ],
+  "frames": [
+    {
+      "style": 9,
+      "rect": [
+        23,
+        0,
+        723,
+        390
+      ]
+    },
+    {
+      "style": 9,
+      "rect": [
+        27,
+        4,
+        719,
+        386
+      ]
+    },
+    {
+      "style": 18,
+      "rect": [
+        30,
+        7,
+        250,
+        383
+      ]
+    },
+    {
+      "style": 18,
+      "rect": [
+        253,
+        7,
+        716,
+        383
+      ]
+    }
+  ]
+}

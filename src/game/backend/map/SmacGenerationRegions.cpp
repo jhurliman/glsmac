@@ -47,12 +47,12 @@ public:
             }
             Pump();
             if(id==limit) {
-                auto best=r.Area(limit);int32_t small=-1;
-                for(int32_t k=low;k<limit;++k) {if(r.Area(k)<best) {best=r.Area(k);small=k;}}
+                auto best=r.Area(limit);int32_t smallest_region=-1;
+                for(int32_t k=low;k<limit;++k) {if(r.Area(k)<best) {best=r.Area(k);smallest_region=k;}}
                 const auto overflow=limit+1;
-                if(small>=0) {
-                    Area(overflow,int64_t(r.Area(overflow))+r.Area(small));Area(small,0);Relabel(small,overflow);
-                    Area(small,int64_t(r.Area(small))+r.Area(limit));Area(limit,0);Relabel(limit,small);
+                if(smallest_region>=0) {
+                    Area(overflow,int64_t(r.Area(overflow))+r.Area(smallest_region));Area(smallest_region,0);Relabel(smallest_region,overflow);
+                    Area(smallest_region,int64_t(r.Area(smallest_region))+r.Area(limit));Area(limit,0);Relabel(limit,smallest_region);
                 } else {Area(overflow,int64_t(r.Area(overflow))+r.Area(limit));Area(limit,0);Relabel(limit,overflow);}
             }
         }}

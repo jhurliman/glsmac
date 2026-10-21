@@ -35,5 +35,9 @@ jobs:
           python3 -m unittest discover -s tools/tests -p test_ci_scope.py
           python3 -m unittest discover -s tools/tests -p test_affected_tests.py
           python3 -m unittest discover -s tools/tests -p test_summarize_gse_timings.py
+      - name: Check known Windows SDK macro collisions
+        run: |
+          python3 -m unittest discover -s tools/tests -p test_windows_macros.py
+          python3 tools/check_windows_macros.py
       - id: select
         run: python3 tools/ci_scope.py

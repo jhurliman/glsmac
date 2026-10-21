@@ -1416,6 +1416,40 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto mismatch=std::mismatch(actual.begin(),actual.end(),expected.begin(),expected.end());
             GT_ASSERT(actual==expected && restored.Game()->GetUM()->GetUnits().size()==2,"Retired world restore differs at normalized byte "+std::to_string(std::distance(actual.begin(),mismatch.first))+" sizes "+std::to_string(actual.size())+"/"+std::to_string(expected.size()));GT_OK();});
     });
+    task->AddTest("SMAC live Workshop Rename separates pre-dialog flags from accepted draft text without cache guards",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;unit::SmacStartupDesignState original;
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;pool[64]=pool[2];pool[64][38]=1;pool[64][48]=3;
+                state.designs.RetainNativeRegistry(pool,catalog);state.economy.at(1).design_counts.reset();state.economy.at(1).production_reference_counts.reset();original=state.designs;});
+            bool answer=false,failed=true,stale=false;std::string expected,default_name,actor_name,display_name;
+            game->On(GSE_CALL,"smac_workshop_rename",NATIVE_CALL(&){N_EXPECT_ARGS(1);N_GET(view,0,Object);
+                answer=static_cast<value::Bool*>(view->Get("answer"))->value;failed=static_cast<value::Bool*>(view->Get("failed"))->value;stale=static_cast<value::Bool*>(view->Get("stale"))->value;
+                expected=static_cast<value::String*>(view->Get("expected_state"))->value;default_name=static_cast<value::String*>(view->Get("default_name"))->value;
+                actor_name=static_cast<value::String*>(view->Get("name"))->value;display_name=static_cast<value::String*>(view->Get("display_name"))->value;return VALUE(value::Undefined);}));
+            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,64)},{"chassis",VALUE(value::Int,,0)},
+                {"weapon",VALUE(value::Int,,0)},{"armor",VALUE(value::Int,,2)},{"reactor",VALUE(value::Int,,1)},{"abilities",VALUE(value::Int,,0)},
+                {"name",VALUE(value::String,,"")},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"request_id",VALUE(value::Int,,1)}};
+            const auto before=fixture.Snapshot();game->Event(GSE_CALL,"open_smac_workshop_rename",args);
+            GT_ASSERT(fixture.Snapshot()==before,"Rename open bypassed event queue");fixture.DrainEvents();
+            GT_ASSERT(!answer && !failed && !stale && !default_name.empty() && actor_name.empty(),"Rename open rejected missing counts or changed actor name");
+            bool flag_cleared=false,stored_unchanged=false;
+            fixture.ResourceState([&](const auto& state){auto pool=*state.designs.native_registry;flag_cleared=pool[64][48]==1;
+                pool[64][48]=3;stored_unchanged=pool==*original.native_registry;});
+            GT_ASSERT(flag_cleared && stored_unchanged,"Rename open changed stored name/components or missed pre-dialog flag clear");
+            args["displayed_default"]=VALUE(value::String,,default_name);args["submitted"]=VALUE(value::String,,"Draft Guard");
+            args["expected_state"]=VALUE(value::String,,expected);args["request_id"]=VALUE(value::Int,,2);
+            game->Event(GSE_CALL,"answer_smac_workshop_rename",args);fixture.DrainEvents();
+            GT_ASSERT(answer && !failed && !stale && actor_name=="Draft Guard" && display_name=="Draft Guard" && fixture.Snapshot()==before,
+                "Rename saved an unsaved name/components, ran status allocation, or touched non-flag world state");
+            game->Event(GSE_CALL,"answer_smac_workshop_rename",args);fixture.DrainEvents();
+            GT_ASSERT(stale && fixture.Snapshot()==before,"Old Rename answer overwrote a later flag state");
+            args.erase("displayed_default");args.erase("submitted");args["selected_design"]=VALUE(value::Int,,128);
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"open_smac_workshop_rename",args);}) && fixture.Snapshot()==before,"Rename admitted foreign selection");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Workshop Obsolete toggles through fenced events without retiring units or queues",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {
@@ -5113,6 +5147,31 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(excluded && base->GetProductionState()->minerals==30 && base->GetAccumulatedNutrients()==1
                 && game->GetCanonicalEconomy(base->m_owner).credits==101,"Screen Obsolete bypassed continuation or reposted income");GT_OK();
         });GT_ASSERT(workshop_check.empty(),"Screen Workshop Obsolete result: "+workshop_check);
+        const auto workshop_rename_open=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
+            value::object_properties_t workshop_rename_args={{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,64)},{"chassis",VALUE(value::Int,,0)},
+                {"weapon",VALUE(value::Int,,0)},{"armor",VALUE(value::Int,,1)},{"reactor",VALUE(value::Int,,1)},{"abilities",VALUE(value::Int,,0)},
+                {"name",VALUE(value::String,,"Screen Draft")},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"request_id",VALUE(value::Int,,2)}};
+            workshop_rename_args["base"]=second->Wrap(GSE_CALL);
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"open_smac_workshop_rename",workshop_rename_args);}),"Screen Workshop Rename admitted another Base");
+            workshop_rename_args["base"]=base->Wrap(GSE_CALL);game->Event(GSE_CALL,"open_smac_workshop_rename",workshop_rename_args);GT_OK();
+        });GT_ASSERT(workshop_rename_open.empty(),"Screen Workshop Rename open: "+workshop_rename_open);fixture.DrainEvents();
+        const auto workshop_rename_answer=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);
+            // Recreate GSE values in this accumulation; do not retain raw GC
+            // pointers across fixture.Run boundaries.
+            game->Event(GSE_CALL,"answer_smac_workshop_rename",{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,64)},
+                {"chassis",VALUE(value::Int,,0)},{"weapon",VALUE(value::Int,,0)},{"armor",VALUE(value::Int,,1)},
+                {"reactor",VALUE(value::Int,,1)},{"abilities",VALUE(value::Int,,0)},{"name",VALUE(value::String,,"Screen Draft")},
+                {"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"request_id",VALUE(value::Int,,3)},
+                {"displayed_default",VALUE(value::String,,"Screen Draft")},{"submitted",VALUE(value::String,,"Screen Guard")}});GT_OK();
+        });GT_ASSERT(workshop_rename_answer.empty(),"Screen Workshop Rename answer: "+workshop_rename_answer);fixture.DrainEvents();
+        const auto workshop_rename_check=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);bool named=false;
+            fixture.ResourceState([&](const auto& state){named=(state.designs.native_registry->at(64)[48]&2)!=0;});
+            GT_ASSERT(named && base->GetProductionState()->minerals==30 && base->GetAccumulatedNutrients()==1
+                && game->GetCanonicalEconomy(base->m_owner).credits==101,"Screen Workshop Rename failed or reposted income");GT_OK();
+        });GT_ASSERT(workshop_rename_check.empty(),"Screen Workshop Rename result: "+workshop_rename_check);
         const auto queue_check=fixture.Run([&](GSE_CALLABLE)->std::string {auto* base=fixture.Game()->GetBM()->GetBase(701);
             GT_ASSERT(base->GetProductionState()->queue->size()==1 && base->GetProductionState()->queue->front().smac_source_id==2
                 && base->GetProductionState()->minerals==30 && base->GetAccumulatedNutrients()==1,"Screen queue edit failed or reposted upkeep");GT_OK();

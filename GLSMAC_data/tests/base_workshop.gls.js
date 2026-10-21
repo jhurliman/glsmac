@@ -7,9 +7,11 @@ const node = (data) => {
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
     data.smacworkshopparenttext = () => { let colors = []; let index = 0; while (index < 256) { colors :+ ('color' + #to_string(index)); index++; }
         return {labels: ['Vehicle Design','Moves:','Type:','Power:','Prototype Cost:','Cost:','Data','Presets','W:','A:','C:','R:','SP1:','SP2:','E:','P:'],
-            minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', obsolete: 'Obsolete', status_title: 'Design Workshop', slot: 'Slot',
+            minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', obsolete: 'Obsolete', rename: 'Rename', status_title: 'Design Workshop', slot: 'Slot',
             status_labels: ['Examining Basic Unit','New Design Based On Old','Examining Previous Design','Designing New Unit','Modifying Previous Design']}; };
     data.smacworkshopconsolebacking = () => { data.console_tiled = true; };
+    data.smacworkshoprenametext = () => { const words = data.smacworkshopparenttext(); return {title: 'What shall we call this unit type?', label: 'Name:', ok: 'OK', cancel: 'Cancel', colors: words.colors}; };
+    data.focus = () => { data.focused = true; }; data.select_all = () => { data.all_selected = true; };
     data.smacworkshopabilitytext = (technology) => { return {title: 'Select Special Ability', none: 'No special ability', ok: 'OK', cancel: 'Cancel', cost: 'Cost', attack: 'Attack', defense: 'Defense', speed: 'Speed', domains: ['Land', 'Sea', 'Air'], second_title: 'Chief Engineer', second_body: 'Research ' + technology + '.', missile_title: 'Chief Engineer', missile_body: 'Missiles cannot have special abilities.'}; };
     data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
     data.smacworkshopcomponents = (armor, only_armor) => { test.assert(only_armor); data.components_armor = armor; };
@@ -370,3 +372,26 @@ listeners.smac_workshop_obsolete({base: base, request_id: dialog.pending_id + 1}
 listeners.smac_workshop_obsolete({base: base, request_id: dialog.pending_id, selection: obsolete_reply, strip_offset: 1, stale: false, failed: false});
 test.assert(!dialog.pending && dialog.active && dialog.selected_design == 64 && dialog.selected_armor == 0 && dialog.draft_name == 'Unsaved Guard' && dialog.strip_offset == 1);
 dialog.hide_view(); test.assert(#sizeof(commands) == obsolete_count + 1);
+
+// Rename open adopts the post-flag fence. Local Cancel sends no mutation and
+// keeps that fence; accepted text updates the actor title without reselecting.
+dialog.open(base, selection); dialog.selected_design = 64; const rename_count = #sizeof(commands);
+dialog.rename_button.handlers.click(); dialog.rename_dialog.begin(dialog);
+test.assert(dialog.pending && dialog.pending_rename && #sizeof(commands) == rename_count + 1 && commands[rename_count].name == 'open_smac_workshop_rename');
+const rename_open_id = dialog.pending_id;
+listeners.smac_workshop_rename({base: base, request_id: rename_open_id, answer: false, stale: false, failed: false, expected_state: 'after-open', default_name: 'Scout Patrol', name: '', display_name: 'Scout Patrol'});
+const rename = dialog.rename_dialog;
+test.assert(!dialog.pending && rename.active && rename.window.left == 148 && rename.window.top == 255 && rename.window.width == 760);
+test.assert(rename.input.value == 'Scout Patrol' && rename.input.native_edit && rename.input.max_bytes == 31 && rename.input.focused && rename.input.all_selected);
+rename.window.handlers.keydown({code: 'ESCAPE', modifiers: {}});
+test.assert(!rename.active && dialog.active && #sizeof(commands) == rename_count + 1 && dialog.selection.expected_state == 'after-open');
+rename.begin(dialog); listeners.smac_workshop_rename({base: base, request_id: dialog.pending_id, answer: false, stale: false, failed: false, expected_state: 'opened-again', default_name: 'Scout Patrol', name: '', display_name: 'Scout Patrol'});
+const rename_selected = dialog.selected_design; const rename_armor = dialog.selected_armor;
+rename.input.value = 'Draft Guard'; test.assert(rename.input.handlers.input({value: 'Draft Guard'}) == true);
+test.assert(dialog.pending && !rename.active && commands[#sizeof(commands) - 1].name == 'answer_smac_workshop_rename'
+    && commands[#sizeof(commands) - 1].data.submitted == 'Draft Guard' && commands[#sizeof(commands) - 1].data.displayed_default == 'Scout Patrol'
+    && commands[#sizeof(commands) - 1].data.expected_state == 'opened-again');
+listeners.smac_workshop_rename({base: base, request_id: dialog.pending_id, answer: true, stale: false, failed: false, expected_state: 'after-answer', default_name: 'Scout Patrol', name: 'Draft Guard', display_name: 'Draft Guard'});
+test.assert(dialog.active && !dialog.pending && dialog.draft_name == 'Draft Guard' && dialog.title.text == 'DRAFT GUARD'
+    && dialog.selected_design == rename_selected && dialog.selected_armor == rename_armor);
+dialog.submit(false); test.assert(commands[#sizeof(commands) - 1].data.name == 'Draft Guard'); dialog.hide_view();

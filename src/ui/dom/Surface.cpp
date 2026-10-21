@@ -46,6 +46,9 @@ Surface::Surface( DOM_ARGS_T )
     Method(GSE_CALL,"smacworkshopparenttext",NATIVE_CALL(this) {
         N_EXPECT_ARGS(0);return WorkshopParentText(GSE_CALL);
     }));
+    Method(GSE_CALL,"smacworkshoprenametext",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(0);return WorkshopRenameText(GSE_CALL);
+    }));
     Method(GSE_CALL,"smacworkshopconsolebacking",NATIVE_CALL(this) {
         N_EXPECT_ARGS(0);
         if(!m_workshop_console_backing) {
@@ -692,6 +695,10 @@ void Surface::PresentTurnFrame(const std::vector<uint8_t>& rgba) {
     m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);
     m_geometry->AsRectangle()->SetStretched();
 }
+void Surface::PresentSolidColor(const types::Color& color) {
+    CreateTexture();m_background.texture->Resize(1,1);m_background.texture->SetPixel(0,0,color);
+    m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
+}
 
 void Surface::StopMovie() {
 	if(m_movie) {
@@ -747,7 +754,7 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         const auto design=loader::txt::TXTLoader::ReadUniqueSection(source,"DESIGNLABELS");
         const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
         if(design.size()!=16 || labels.size()<=918) {throw std::invalid_argument("Incomplete Workshop parent text source");}
-        std::array<std::string,25> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];text[24]=labels[757];
+        std::array<std::string,26> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];text[24]=labels[757];text[25]=labels[126];
         // LABELS includes its count at index0; offsets are four-byte entries.
         const std::array<size_t,7> status_indices{916,914,918,917,782,783,915};
         for(size_t i=0;i<status_indices.size();++i) {text[17+i]=labels[status_indices[i]];}
@@ -769,10 +776,36 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         {"status_title",VALUE(gse::value::String,,m_workshop_parent_text->at(17))},
         {"status_labels",VALUE(gse::value::Array,,status)}, {"slot",VALUE(gse::value::String,,m_workshop_parent_text->at(23))},
         {"obsolete",VALUE(gse::value::String,,m_workshop_parent_text->at(24))},
+        {"rename",VALUE(gse::value::String,,m_workshop_parent_text->at(25))},
         {"weapon",picker->Get("weapon")}, {"equipment",picker->Get("equipment")}, {"psi",picker->Get("psi")}
     });
 }
 
+gse::Value* Surface::WorkshopRenameText(GSE_CALLABLE) {
+    if(!m_workshop_rename_text) {
+        const auto read=[](const std::string& name){std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));return std::string(bytes.begin(),bytes.end());};
+        const auto source=read("script.txt");const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
+        if(source.size()>2*1024*1024 || labels.size()<=103) {throw std::invalid_argument("Incomplete Workshop Rename text source");}
+        std::array<std::string,4> text;bool inside=false,found=false;
+        for(const auto& raw:util::String::Split(source,'\n')) {
+            const auto line=util::String::TrimCopy(raw);if(line.empty() || line.front()==';') {continue;}
+            if(line.front()=='#' && line.find_first_of(" \t")==std::string::npos) {
+                inside=line=="#DESIGNNAME";if(inside) {if(found) {throw std::invalid_argument("Repeated DESIGNNAME section");}found=true;}
+            }else if(inside) {
+                if(line.compare(0,9,"#caption ")==0) {text[0]=line.substr(9);}
+                else if(line.front()!='#') {if(!text[1].empty()) {text[1]+='\n';}text[1]+=line;}
+            }
+        }
+        text[2]=labels[102];text[3]=labels[103];
+        for(const auto& item:text) {if(item.empty() || item.size()>256 || item.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop Rename label");}}
+        m_workshop_rename_text=std::move(text);
+    }
+    auto* parent=static_cast<gse::value::Object*>(WorkshopParentText(GSE_CALL));const auto& text=*m_workshop_rename_text;
+    return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+        {"title",VALUE(gse::value::String,,text[0])}, {"label",VALUE(gse::value::String,,text[1])},
+        {"ok",VALUE(gse::value::String,,text[2])}, {"cancel",VALUE(gse::value::String,,text[3])}, {"colors",parent->Get("colors")}
+    });
+}
 gse::Value* Surface::WorkshopAbilityText(GSE_CALLABLE,const std::string& technology) {
     if(!m_workshop_ability_text) {
         const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;

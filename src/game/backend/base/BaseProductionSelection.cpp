@@ -26,6 +26,49 @@ namespace game::backend {
 
 bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
     const gse::value::object_properties_t& args, size_t caller, bool apply ) {
+    if(name=="open_smac_workshop_rename" || name=="answer_smac_workshop_rename") {
+        const bool answer=name=="answer_smac_workshop_rename";
+        const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
+            const auto at=args.find(key);
+            if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop Rename command");}
+            return at->second->Deref();
+        };
+        if(args.size()!=(answer ? 12u:10u)) {THROW("Workshop Rename requires its complete draft/fence and answer text");}
+        const auto integer=[&](const char* key){return static_cast<const gse::value::Int*>(field(key,gse::VT_INT))->value;};
+        const auto text=[&](const char* key)->const std::string& {return static_cast<const gse::value::String*>(field(key,gse::VT_STRING))->value;};
+        const auto* object=static_cast<const gse::value::Object*>(field("base",gse::VT_OBJECT));
+        if(object->object_class!=base::Base::WRAP_CLASS) {THROW("Workshop Rename requires an actual Base");}
+        auto* base=base::Base::Unwrap(args.at("base"));
+        const auto selected=integer("selected_design"),chassis=integer("chassis"),weapon=integer("weapon"),armor=integer("armor"),reactor=integer("reactor"),abilities=integer("abilities"),request=integer("request_id");
+        const auto& retained=text("name");const auto& expected=text("expected_state");
+        const auto displayed=answer ? text("displayed_default"):std::string();const auto submitted=answer ? text("submitted"):std::string();
+        if(!base || base->GetGame()!=this || caller!=m_slot_num || selected<0 || selected>511 || chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9
+            || reactor<1 || reactor>4 || abilities<0 || abilities>0xffffff || request<1 || expected.size()>unit::SmacStartupDesignState::MAX_WIRE_BYTES+89+2*513) {THROW("Invalid Workshop Rename authority or draft");}
+        for(const auto* item:{&retained,&displayed,&submitted}) {
+            if(item->size()>31 || item->find('\0')!=std::string::npos) {THROW("Workshop Rename exceeds31 display bytes");}
+            for(const unsigned char c:*item) {if(c<32 || c>126) {THROW("Workshop Rename requires printable display bytes");}}
+        }
+        base->RequireSmacProductionSelection();const auto owner=base->GetSmacResourceContext().owner_simulation_id;
+        if(selected>=64 && selected/64!=owner) {THROW("Workshop Rename selected a foreign bank");}
+        if(apply) {CheckRW(GSE_CALL);if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Workshop Rename requires its owning accumulation");}}
+        const bool stale=base->SmacWorkshopState()!=expected;bool failed=false;std::string default_name,display_name,result_name=retained;
+        if(!stale) {try {
+            const auto& catalog=GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            const unit::SmacWorkshopDraft draft{int32_t(selected),uint32_t(chassis),uint32_t(weapon),uint32_t(armor),uint32_t(abilities),uint8_t(reactor),retained};
+            auto result=answer ? unit::AnswerSmacWorkshopRename(m_simulation->value.designs,draft,displayed,true,submitted,catalog,owner)
+                :unit::OpenSmacWorkshopRename(m_simulation->value.designs,draft,catalog,owner);
+            default_name=result.default_name;result_name=result.draft.name;
+            display_name=unit::DisplaySmacWorkshopName(*result.state.native_registry,result.draft,catalog,owner);
+            if(apply) {static_assert(std::is_nothrow_swappable_v<unit::SmacStartupDesignState>);std::swap(m_simulation->value.designs,result.state);}
+        }catch(const std::invalid_argument&) {failed=true;}catch(const std::runtime_error&) {failed=true;}}
+        if(apply) {GetState()->TriggerObject(this,"smac_workshop_rename",ARGS_F(this,base,request,answer,stale,failed,default_name,display_name,result_name) {
+            {"base",base->Wrap(GSE_CALL)}, {"request_id",VALUE(gse::value::Int,,request)}, {"answer",VALUE(gse::value::Bool,,answer)},
+            {"stale",VALUE(gse::value::Bool,,stale)}, {"failed",VALUE(gse::value::Bool,,failed)},
+            {"expected_state",VALUE(gse::value::String,,base->SmacWorkshopState())}, {"default_name",VALUE(gse::value::String,,default_name)},
+            {"display_name",VALUE(gse::value::String,,display_name)}, {"name",VALUE(gse::value::String,,result_name)}
+        };});}
+        return true;
+    }
     if(name=="obsolete_smac_workshop") {
         const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
             const auto at=args.find(key);

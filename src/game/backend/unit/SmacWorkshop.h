@@ -107,6 +107,16 @@ void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const Sma
 // Returns the untruncated native buffer; saving owns the31-byte boundary.
 std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,int32_t owner);
+std::string DisplaySmacWorkshopName(const SmacOriginalDesignPool& pool,const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog,int32_t owner);
+struct SmacWorkshopRename {SmacStartupDesignState state;SmacWorkshopDraft draft;std::string default_name;};
+// Action5 clears selected named-bit2 before showing an automatically named
+// default. Cancel preserves that effect; accepted text edits only the draft.
+SmacWorkshopRename OpenSmacWorkshopRename(const SmacStartupDesignState& state,const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog,int32_t owner);
+SmacWorkshopRename AnswerSmacWorkshopRename(const SmacStartupDesignState& state,const SmacWorkshopDraft& draft,
+    const std::string& displayed_default,bool accepted,const std::string& submitted,
+    const SmacPredefinedUnitCatalog& catalog,int32_t owner);
 // Explicit post-capability-refresh inputs. Address keys identify original
 // scalar contracts; no executable or captured Faction buffer is a runtime input.
 // Missing authority is an error, never an implicit zero.

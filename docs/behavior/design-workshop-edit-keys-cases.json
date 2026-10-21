@@ -1,0 +1,700 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Memory-backed logical palettes and quiet message/timer services.",
+  "width_scope": "Each character measures8px in a10000px field; no scrolling needed. Native key/string mutation and original CRT memmove execute. No font/raster/OS keyboard or clipboard claim.",
+  "cases": [
+    {
+      "input": {
+        "id": "type_0_6",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 6,
+        "key": 88,
+        "character": true
+      },
+      "text": "X",
+      "anchor": 1,
+      "caret": 1,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "backspace_0_6",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 6,
+        "key": 8,
+        "character": false
+      },
+      "text": "",
+      "anchor": 0,
+      "caret": 0,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "delete_0_6",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 6,
+        "key": 46,
+        "character": false
+      },
+      "text": "",
+      "anchor": 0,
+      "caret": 0,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "type_6_0",
+        "text": "abcdef",
+        "anchor": 6,
+        "caret": 0,
+        "key": 88,
+        "character": true
+      },
+      "text": "X",
+      "anchor": 1,
+      "caret": 1,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "backspace_6_0",
+        "text": "abcdef",
+        "anchor": 6,
+        "caret": 0,
+        "key": 8,
+        "character": false
+      },
+      "text": "",
+      "anchor": 0,
+      "caret": 0,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "delete_6_0",
+        "text": "abcdef",
+        "anchor": 6,
+        "caret": 0,
+        "key": 46,
+        "character": false
+      },
+      "text": "",
+      "anchor": 0,
+      "caret": 0,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "type_2_4",
+        "text": "abcdef",
+        "anchor": 2,
+        "caret": 4,
+        "key": 88,
+        "character": true
+      },
+      "text": "abXef",
+      "anchor": 3,
+      "caret": 3,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "backspace_2_4",
+        "text": "abcdef",
+        "anchor": 2,
+        "caret": 4,
+        "key": 8,
+        "character": false
+      },
+      "text": "abef",
+      "anchor": 2,
+      "caret": 2,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "delete_2_4",
+        "text": "abcdef",
+        "anchor": 2,
+        "caret": 4,
+        "key": 46,
+        "character": false
+      },
+      "text": "abef",
+      "anchor": 2,
+      "caret": 2,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "left",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 6,
+        "key": 37,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 5,
+      "caret": 5,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "left_shift",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 6,
+        "key": 65573,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 0,
+      "caret": 5,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "right",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 6,
+        "key": 39,
+        "character": false
+      },
+      "text": "abcdef ",
+      "anchor": 7,
+      "caret": 7,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "right_shift",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 6,
+        "key": 65575,
+        "character": false
+      },
+      "text": "abcdef ",
+      "anchor": 0,
+      "caret": 7,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "home",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 6,
+        "key": 36,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 0,
+      "caret": 0,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "home_shift",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 6,
+        "key": 65572,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 0,
+      "caret": 0,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "end",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 6,
+        "key": 35,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 6,
+      "caret": 6,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "end_shift",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 6,
+        "key": 65571,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 0,
+      "caret": 6,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "left_middle",
+        "text": "abcdef",
+        "anchor": 3,
+        "caret": 3,
+        "key": 37,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 2,
+      "caret": 2,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "left_middle_shift",
+        "text": "abcdef",
+        "anchor": 3,
+        "caret": 3,
+        "key": 65573,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 3,
+      "caret": 2,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "right_middle",
+        "text": "abcdef",
+        "anchor": 3,
+        "caret": 3,
+        "key": 39,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 4,
+      "caret": 4,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "right_middle_shift",
+        "text": "abcdef",
+        "anchor": 3,
+        "caret": 3,
+        "key": 65575,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 3,
+      "caret": 4,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "home_middle",
+        "text": "abcdef",
+        "anchor": 3,
+        "caret": 3,
+        "key": 36,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 0,
+      "caret": 0,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "home_middle_shift",
+        "text": "abcdef",
+        "anchor": 3,
+        "caret": 3,
+        "key": 65572,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 3,
+      "caret": 0,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "end_middle",
+        "text": "abcdef",
+        "anchor": 3,
+        "caret": 3,
+        "key": 35,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 6,
+      "caret": 6,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "end_middle_shift",
+        "text": "abcdef",
+        "anchor": 3,
+        "caret": 3,
+        "key": 65571,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 3,
+      "caret": 6,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "backspace_start",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 0,
+        "key": 8,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 0,
+      "caret": 0,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": [
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "delete_end",
+        "text": "abcdef",
+        "anchor": 6,
+        "caret": 6,
+        "key": 46,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 6,
+      "caret": 6,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": [
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "left_start",
+        "text": "abcdef",
+        "anchor": 0,
+        "caret": 0,
+        "key": 37,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 0,
+      "caret": 0,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "right_end",
+        "text": "abcdef",
+        "anchor": 6,
+        "caret": 6,
+        "key": 39,
+        "character": false
+      },
+      "text": "abcdef ",
+      "anchor": 7,
+      "caret": 7,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "backspace_shift",
+        "text": "abcdef",
+        "anchor": 2,
+        "caret": 4,
+        "key": 65544,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 2,
+      "caret": 4,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": [
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "backspace_ctrl",
+        "text": "abcdef",
+        "anchor": 2,
+        "caret": 4,
+        "key": 131080,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 2,
+      "caret": 4,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": [
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "delete_shift",
+        "text": "abcdef",
+        "anchor": 2,
+        "caret": 4,
+        "key": 65582,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 2,
+      "caret": 4,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": [
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "delete_ctrl",
+        "text": "abcdef",
+        "anchor": 2,
+        "caret": 4,
+        "key": 131118,
+        "character": false
+      },
+      "text": "abcdef",
+      "anchor": 2,
+      "caret": 4,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": [
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "insert_31st",
+        "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "anchor": 30,
+        "caret": 30,
+        "key": 88,
+        "character": true
+      },
+      "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAX",
+      "anchor": 31,
+      "caret": 31,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "reject_32nd",
+        "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "anchor": 31,
+        "caret": 31,
+        "key": 88,
+        "character": true
+      },
+      "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "anchor": 31,
+      "caret": 31,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": [
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "replace_at_limit",
+        "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "anchor": 0,
+        "caret": 31,
+        "key": 88,
+        "character": true
+      },
+      "text": "X",
+      "anchor": 1,
+      "caret": 1,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "right_at_limit",
+        "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "anchor": 31,
+        "caret": 31,
+        "key": 39,
+        "character": false
+      },
+      "text": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "anchor": 31,
+      "caret": 32,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": [
+        0
+      ]
+    },
+    {
+      "input": {
+        "id": "ansi_byte",
+        "text": "abc",
+        "anchor": 0,
+        "caret": 3,
+        "key": 233,
+        "character": true
+      },
+      "text": "\u00e9",
+      "anchor": 1,
+      "caret": 1,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 1,
+      "beeps": []
+    },
+    {
+      "input": {
+        "id": "character_control_31",
+        "text": "abc",
+        "anchor": 0,
+        "caret": 3,
+        "key": 31,
+        "character": true
+      },
+      "text": "abc",
+      "anchor": 0,
+      "caret": 3,
+      "scroll": 0,
+      "visible": 1,
+      "return_value": 0,
+      "beeps": []
+    }
+  ],
+  "validation": {
+    "native_calls": 39,
+    "passed": 39,
+    "source_literals": 9,
+    "decoded_key_mappings": {
+      "8": "0x62f591",
+      "35": "0x62f7bf",
+      "36": "0x62f7a7",
+      "37": "0x62f4d1",
+      "39": "0x62f3be",
+      "46": "0x62f6b6"
+    },
+    "production_changes": false
+  }
+}

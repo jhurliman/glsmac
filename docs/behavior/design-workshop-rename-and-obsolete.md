@@ -80,6 +80,40 @@ nonempty cancel/same/new/empty/automatic/case-only paths and later commit.
 
 ## DESIGNNAME modal geometry: measured native generic edit layout
 
+### Main title after accepted Rename: intrinsic same-tuple exception
+
+Source clarification `43f8c0@43fc2e..43fdc7`: selected ID<64 with all five
+draft components equal to its saved tuple always displays the **stored name**,
+even with a nonempty draft name and named bit2. Thus renaming an unchanged
+intrinsic Scout does not immediately replace its main title with the draft.
+If any component differs, or selected ID>=64, use a nonempty draft name only
+when the selected saved record has named bit2. Otherwise generate a name from
+the draft tuple and clear selected named bit2 at `43fda8`. All three branches
+uppercase only the temporary display buffer at `43fdb5`; the stored name and
+draft string retain their own bytes. Do not make title authority uniformly
+draft-first, or uniformly stored-name-first for all intrinsic drafts.
+
+### Initial edit text and logical selection
+
+Generic field manager `62bde0@62c139..62c1ea` sets Edit max length31, calls
+`62ece0(default)`, then explicitly initializes selection anchor `+b40=0` and
+active endpoint `+b44=strlen(text)`. The text setter resets horizontal scroll
+`+b18=0` and initializes the same full-range selection (`62ed71..62ed8a`).
+The whole displayed default is selected, with the active endpoint at its end;
+empty text gives0/0. Typing replaces that selected range through
+`62f180@62f1dc..62f28d`, then collapses both endpoints after the inserted byte.
+The default is copied into Edit text at `+a14`, preserving its case. These
+are source-derived logical defaults, not a new modal input test. The existing
+pre-loop layout does not establish visible caret blink phase or OS input
+timing; do not infer that from the logical selection range.
+The subsequent [native selection/caret packet](design-workshop-edit-selection-and-caret.md)
+pins selected text0/background36, a one-pixel vertical caret in224, final
+inset0 and the500 ms callback configuration with explicit draw/callback checks.
+The [edit-key supplement](design-workshop-edit-keys.md) supplies39 original
+controls for replacement, deletion, navigation/Shift and the31-byte limit.
+The [native DIB exports](design-workshop-edit-native-dibs.md) supply exact
+Edit610x20 PNG targets and separately owned dialog/Name-row surfaces.
+
 Installed SCRIPT section DESIGNNAME has `xs440`, caption
 `What shall we call this unit type?`, body `Name:`. These are localized template
 inputs, not hardcoded action strings. The generic caption painter uppercases
@@ -110,7 +144,9 @@ The edit child retains native max length31 at dialog `+a44`.
 Caption Arial -14 bold: local x227, baseline21, palette index222.
 Name:/edit/final button text use Arial Narrow -16 bold. Name: is x3 baseline17
 on the row DIB (dialog x36, baseline55). Edit text is baseline16 on its DIB
-(dialog baseline55), with measured clip `[4,0,606,20)`.
+(dialog baseline55). The journal's early constructor paint has clip
+`[4,0,606,20)`; final field configuration changes inset to0 and uses the x0
+glyph pass. Use the selection/caret packet for that final resolved state.
 OK final glyph is x153 baseline16 on its button DIB; Cancel x140 baseline16.
 The native journal also retains preliminary default-font paints; those are not
 the final font/placement. Stock body/edit operand is palette224; final button
@@ -196,5 +232,20 @@ all2,100 pixels of the retained native Scout frame at1024x768. Compare via
 A normal live session toggles Scout and advances into the saved Synthmetal
 Garrison. Cancel then reopening retains the changed browse order; a second
 Cancel closes cleanly. These are scoped button/behavior checks, not whole
-Workshop parity. Rename is still pending; the native action5 material above
-is its implementation contract, not a claim that its dialog is connected.
+Workshop parity.
+
+
+Rename now opens through the owned Base event queue. Empty draft names generate
+their default before the selected saved named flag is cleared; Cancel keeps
+that flag effect. Accept updates the actor draft and named flag, while Apply
+remains the separate design commit. The unchanged intrinsic tuple keeps its
+saved main title. Rename does not run the status allocator or require count
+caches. Both commands use the suspended Colony Screen continuation route.
+
+The dialog uses original1024-profile geometry, SCRIPT DESIGNNAME text, native
+frames, palettes and bundled fonts. Its opt-in narrow edit control implements
+selection replacement, Home/End, Left/Right, Backspace/Delete and the original
+31-byte limit behavior.39 original key vectors plus the engine SDL translation
+regression cover these rules. The caret toggles at500 ms without resetting on
+every edit. Ctrl word navigation, drag selection, full ANSI input and the native
+rejection beep remain separate work; this is not a claim of full editor parity.

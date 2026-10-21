@@ -6,6 +6,7 @@ return {
         this.automatic_suggestions = true; // Original fresh preference-store default.
         this.ability_slots = [(0 - 1), (0 - 1)];
         this.ability_dialog = #include('./workshop_abilities'); this.ability_dialog.init(p);
+        this.rename_dialog = #include('./workshop_rename'); this.rename_dialog.init(p);
         this.window = p.ui.root.window({zindex: 0.9, align: 'top left', left: 216, top: 168, width: 623, height: 387, blocker: 'rgba(0, 0, 0, 180)'});
         this.window.surface({left: 0, top: 0, width: 623, height: 368, background: 'deswin.pcx:smacsoftware()'});
         this.components = this.window.surface({left: 0, top: 0, width: 623, height: 368});
@@ -68,6 +69,8 @@ return {
             smac_frame: [[27,0,0,105,20]], _hover: {smac_frame: [[28,0,0,105,20]]}, _active: {smac_frame: [[29,0,0,105,20]]}});
         this.obsolete_button = window.button({class: 'workshop-main-action', left: 243, top: 347, width: 105, height: 20, text: ''});
         this.obsolete_button.on('click', () => { this.obsolete(); return true; });
+        this.rename_button = window.button({class: 'workshop-main-action', left: 135, top: 347, width: 105, height: 20, text: ''});
+        this.rename_button.on('click', () => { workshop.rename_dialog.begin(workshop); return true; });
         this.window.button({class: 'game-popup-button', left: 27, top: 321, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Apply'}).on('click', () => { this.submit(false); return true; });
         this.window.button({class: 'game-popup-button', left: 27, top: 347, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Done'}).on('click', () => { this.submit(true); return true; });
         this.window.button({class: 'game-popup-button', left: 459, top: 347, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Cancel'}).on('click', () => { this.hide_view(); return true; });
@@ -133,6 +136,7 @@ return {
             this.strip_hover = (0 - 1); this.update_labels(); this.update_armor(); this.render_strip();
             this.message.text = e.stale ? 'Game state changed. Please check your design.' : (e.failed ? 'This design cannot be made obsolete.' : '');
         });
+        this.window.listen(p.game, 'smac_workshop_rename', (e) => { this.rename_dialog.reply(e); });
         for (event of ['research_choice', 'colony_choice', 'colony_screen', 'turn', 'smac_ending', 'base_despawn']) {
             this.window.listen(p.game, event, (e) => { this.hide_view(); });
         }
@@ -162,8 +166,9 @@ return {
     open: (base, data) => {
         if (!#is_defined(this.parent_text)) { this.parent_text = this.components.smacworkshopparenttext(); }
         this.mineral_factor = data.mineral_factor;
-        this.base = base; this.selection = data; this.active = true; this.pending = false; this.pending_obsolete = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.overwrite_window.hide();
+        this.base = base; this.selection = data; this.active = true; this.pending = false; this.pending_obsolete = false; this.pending_rename = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.overwrite_window.hide();
         this.obsolete_button.text = #uppercase(this.parent_text.obsolete); this.obsolete_button.color = this.parent_text.colors[65];
+        this.rename_button.text = #uppercase(this.parent_text.rename); this.rename_button.color = this.parent_text.colors[65];
         this.selected_chassis = 0; this.selected_weapon = 0; this.selected_reactor = 1; this.selected_abilities = 0; this.draft_name = '';
         this.ability_slots = [(0 - 1), (0 - 1)];
         if (#is_defined(data.draft)) { this.read_draft(data.draft); this.selected_design = data.draft.selected_design; }
@@ -460,5 +465,5 @@ return {
         if (choice >= 0) { fields = fields + {overwrite: choice}; }
         this.p.game.event('commit_smac_workshop', fields);
     },
-    hide_view: () => { this.picker_active = false; this.ability_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.overwrite_window.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); this.console.hide(); },
+    hide_view: () => { this.picker_active = false; this.ability_dialog.hide(); this.rename_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.overwrite_window.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); this.console.hide(); },
 };

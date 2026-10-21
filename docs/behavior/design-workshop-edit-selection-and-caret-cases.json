@@ -1,0 +1,191 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "One initialized DESIGNNAME control, four explicit edit draw/callback states. Native rectangle/line calls and resolved fields, source-only timer cadence; no OS timing or keyboard matrix.",
+  "validation": {
+    "draw_states": 4,
+    "native_callback_transitions": 2,
+    "source_literals": 8,
+    "scalar_palette_cases": 5
+  },
+  "edit_text": "Scout Patrol",
+  "cases": [
+    {
+      "id": "selected",
+      "state": {
+        "0x980": 224,
+        "0xb14": 31,
+        "0xb18": 0,
+        "0xb1c": 0,
+        "0xb20": 0,
+        "0xb24": 36,
+        "0xb28": 30,
+        "0xb2c": 86,
+        "0xb30": 0,
+        "0xb34": 0,
+        "0xb38": 0,
+        "0xb3c": 1,
+        "0xb40": 0,
+        "0xb44": 12,
+        "0xb48": 0
+      },
+      "events": [
+        {
+          "pc": "0x5fae70",
+          "caller": "0x62f12e",
+          "args": [
+            0,
+            0,
+            84,
+            20,
+            0,
+            37
+          ]
+        },
+        {
+          "pc": "0x5fae70",
+          "caller": "0x62f150",
+          "args": [
+            0,
+            0,
+            84,
+            20,
+            224,
+            0
+          ]
+        },
+        {
+          "pc": "0x5fae70",
+          "caller": "0x62f16c",
+          "args": [
+            0,
+            0,
+            84,
+            20,
+            37,
+            36
+          ]
+        }
+      ]
+    },
+    {
+      "id": "collapsed",
+      "state": {
+        "0x980": 224,
+        "0xb14": 31,
+        "0xb18": 0,
+        "0xb1c": 0,
+        "0xb20": 0,
+        "0xb24": 36,
+        "0xb28": 30,
+        "0xb2c": 86,
+        "0xb30": 0,
+        "0xb34": 0,
+        "0xb38": 0,
+        "0xb3c": 1,
+        "0xb40": 12,
+        "0xb44": 12,
+        "0xb48": 0
+      },
+      "events": []
+    },
+    {
+      "id": "caret_on",
+      "state": {
+        "0x980": 224,
+        "0xb14": 31,
+        "0xb18": 0,
+        "0xb1c": 0,
+        "0xb20": 0,
+        "0xb24": 36,
+        "0xb28": 30,
+        "0xb2c": 86,
+        "0xb30": 0,
+        "0xb34": 0,
+        "0xb38": 0,
+        "0xb3c": 1,
+        "0xb40": 12,
+        "0xb44": 12,
+        "0xb48": 1
+      },
+      "events": [
+        {
+          "pc": "0x5fa9f0",
+          "caller": "0x62ef4d",
+          "args": [
+            84,
+            0,
+            20
+          ]
+        },
+        {
+          "pc": "0x5fa9f0",
+          "caller": "0x62ef4d",
+          "args": [
+            84,
+            0,
+            20
+          ]
+        }
+      ]
+    },
+    {
+      "id": "caret_off",
+      "state": {
+        "0x980": 224,
+        "0xb14": 31,
+        "0xb18": 0,
+        "0xb1c": 0,
+        "0xb20": 0,
+        "0xb24": 36,
+        "0xb28": 30,
+        "0xb2c": 86,
+        "0xb30": 0,
+        "0xb34": 0,
+        "0xb38": 0,
+        "0xb3c": 1,
+        "0xb40": 12,
+        "0xb44": 12,
+        "0xb48": 0
+      },
+      "events": []
+    }
+  ],
+  "resolved_palette": {
+    "normal_foreground": 224,
+    "normal_background": 0,
+    "selected_foreground": 0,
+    "selected_background": 36
+  },
+  "caret": {
+    "shape": "one-pixel vertical line",
+    "color": 224,
+    "request": [
+      84,
+      0,
+      20
+    ],
+    "clipped_y": [
+      0,
+      19
+    ]
+  },
+  "timer": {
+    "interval_ms": 500,
+    "stored_resolution": 5,
+    "api": "SetTimer",
+    "callback": "62f920",
+    "initial_visible": false
+  },
+  "font_metrics": {
+    "id": 129,
+    "LOGFONT_hex": "f0ffffff000000000000000000000000bc0200000000000007000000417269616c204e6172726f7700ec6a001000000000000000d0ec6a0010000000",
+    "height": -16,
+    "weight": 700,
+    "face": "Arial Narrow",
+    "text_height": 20,
+    "ascent": 16,
+    "descent": 4,
+    "internal_leading": 4,
+    "metrics_hex": "14000000100000000400000004000000000000000700000014000000bc0200000000000060000000600000001eff1f200000002700000000"
+  }
+}

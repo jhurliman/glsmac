@@ -1,0 +1,158 @@
+{
+  "scope": "Four original610x20 DESIGNNAME edit DIB paints, private font registered through all paints, no manual surface compositing.",
+  "exe_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "text": "Scout Patrol",
+  "source_layout_receipt_sha256": "0d481ae55d5bba5b1d7c4babc396380532fbfb6beb28bd244ad64cda274b6fb9",
+  "source_retained_selected_off_sha256": "f36963a1f0778ff394f8d4e55dee436a9299eab3cbd8f8442cd7d2dc3bca1b6b",
+  "profile": {
+    "resolution": [
+      1024,
+      768
+    ],
+    "mode": 0,
+    "main_font": 16,
+    "dialog_screen": [
+      148,
+      255,
+      908,
+      555
+    ],
+    "row_dialog": [
+      33,
+      38,
+      693,
+      64
+    ],
+    "edit_row": [
+      53,
+      1,
+      663,
+      21
+    ],
+    "edit_screen_arithmetic": [
+      234,
+      294,
+      844,
+      314
+    ]
+  },
+  "cases": [
+    {
+      "id": "selected-caret-off",
+      "file": "selected-caret-off.png",
+      "width": 610,
+      "height": 20,
+      "pitch": 612,
+      "anchor": 0,
+      "active_endpoint": 12,
+      "visible": false,
+      "visibility_origin": "Declared off0 before original62eda0",
+      "indexed_sha256": "29e42fe70c1e8bf6933c9de156bde17e66aa45cfc51d56d223d8c57d4fc1a33b",
+      "palette_indices": {
+        "0": 10884,
+        "36": 1356
+      },
+      "png_sha256": "f36963a1f0778ff394f8d4e55dee436a9299eab3cbd8f8442cd7d2dc3bca1b6b"
+    },
+    {
+      "id": "selected-caret-on",
+      "file": "selected-caret-on.png",
+      "width": 610,
+      "height": 20,
+      "pitch": 612,
+      "anchor": 0,
+      "active_endpoint": 12,
+      "visible": true,
+      "visibility_origin": "Original62f920 callback from0",
+      "indexed_sha256": "6306d2963ae266bb98786b286096c5bb2ac6282cdcf9de4efa8af1ae5612c15c",
+      "palette_indices": {
+        "0": 10864,
+        "36": 1356,
+        "224": 20
+      },
+      "png_sha256": "6dbfd6c17950c237c15f0c4e02116fec2cee6a6363859fdae086999f03bcce47"
+    },
+    {
+      "id": "collapsed-caret-off",
+      "file": "collapsed-caret-off.png",
+      "width": 610,
+      "height": 20,
+      "pitch": 612,
+      "anchor": 12,
+      "active_endpoint": 12,
+      "visible": false,
+      "visibility_origin": "Declared off0 before original62eda0",
+      "indexed_sha256": "bf80727333f5935c1b7b0a49bb9b2ab83c88bf22aeb731d518099febd91e154b",
+      "palette_indices": {
+        "0": 11916,
+        "224": 324
+      },
+      "png_sha256": "73394f77f1c1e5d94a261ac1c459912604d12c1af7e258392cb4dc269de579d1"
+    },
+    {
+      "id": "collapsed-caret-on",
+      "file": "collapsed-caret-on.png",
+      "width": 610,
+      "height": 20,
+      "pitch": 612,
+      "anchor": 12,
+      "active_endpoint": 12,
+      "visible": true,
+      "visibility_origin": "Original62f920 callback from0",
+      "indexed_sha256": "175b9dac1ca1fefb2b516a54d48c4cb9ba0f40057d5aa344fea7d87399a0f7f4",
+      "palette_indices": {
+        "0": 11896,
+        "224": 344
+      },
+      "png_sha256": "c69ac6710a1c6316e2122b3f9c718dd485a98735cc69d54429005a301af4a56e"
+    }
+  ],
+  "parent_surfaces": [
+    {
+      "file": "dialog-own.png",
+      "width": 760,
+      "height": 300,
+      "source_file": "designname-mode0-console-dib-0x4052e480.png",
+      "scope": "Original owned DIB, excluding separately owned child surfaces."
+    },
+    {
+      "file": "name-row-own.png",
+      "width": 660,
+      "height": 26,
+      "source_file": "designname-mode0-console-dib-0x405347f0.png",
+      "scope": "Original owned DIB, excluding separately owned child surfaces."
+    }
+  ],
+  "limitations": [
+    "No full Window-tree or screen composite. No model or map context is rendered. Parent own DIB does not contain child-owned row/edit/buttons.",
+    "Visibility is held at a declared original callback state; no wall-clock blink phase is claimed.",
+    "Edit extends3px beyond its row-owned rectangle. Screen arithmetic does not establish final ancestor clipping in a full composite."
+  ],
+  "prior_retained_selected_off_sha256": "f36963a1f0778ff394f8d4e55dee436a9299eab3cbd8f8442cd7d2dc3bca1b6b",
+  "private_directory": "tmp/reference/workshop-designname-dibs-v2-private-20261021",
+  "bundled_font_sha256": "e17b243cbf2e194890c561dbb63e515dc34e941ee1a7923748b336199b812f52",
+  "parent_pngs": [
+    {
+      "file": "dialog-own.png",
+      "sha256": "16c5c6bd03e5f83d63e65baf97c832b4ac58b22439b16b908ccf283cec190b2f"
+    },
+    {
+      "file": "name-row-own.png",
+      "sha256": "29ff49a80ef46b9b168444a75701b7769e14a357015a51ce299c9586d5f86860"
+    }
+  ],
+  "validation": {
+    "edit_pngs": 4,
+    "parent_owned_pngs": 2,
+    "self_pixels_per_edit": 12200,
+    "caret_diff_pixels": 20,
+    "caret_diff_bbox": [
+      84,
+      0,
+      85,
+      20
+    ],
+    "retained_selected_off_identical": true
+  },
+  "prior_draw_manifest_sha256": "9c8e3cebb39ce6d13b672d3864cbed0a4705db8389a9b644dce1082a13b1eb63"
+}

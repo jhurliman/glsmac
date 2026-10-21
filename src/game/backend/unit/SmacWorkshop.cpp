@@ -323,7 +323,7 @@ std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t ind
     const auto& chassis=catalog.chassis.chassis.at(draft.chassis);const auto& weapon=catalog.weapons.weapons.at(draft.weapon);
     const auto defense=catalog.defenses.defenses.at(draft.armor).rating;const auto offense=weapon.offense,speed=chassis.speed,mode=int32_t(weapon.mode);
     const auto domain=int32_t(chassis.triad);
-    if(!catalog.workshop_name_labels || owner<1 || owner>7 || index<64 || index>=512 || int32_t(index/64)!=owner
+    if(!catalog.workshop_name_labels || owner<1 || owner>7 || index>=512 || (index>=64 && int32_t(index/64)!=owner)
         || domain<0 || domain>2) {throw std::invalid_argument("Workshop naming requires admitted conventional text and context");}
     const auto& current=pool[index];const auto& labels=*catalog.workshop_name_labels;const auto& names=chassis.names;
     for(size_t i=0;i<8;++i) {const auto& label=labels[i];if(i==7 && label.empty()) {continue;}if(label.empty() || label.size()>128 || label.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop naming text");}}
@@ -690,6 +690,48 @@ SmacWorkshopObsolete PrepareSmacWorkshopObsolete(const SmacStartupDesignState& s
     const auto at=std::find(rebuilt.begin(),rebuilt.end(),selection.draft.selected_design);
     if(at!=rebuilt.end()) {strip_offset=(size_t(at-rebuilt.begin())+rebuilt.size()-5)%rebuilt.size();}
     return {std::move(selection),strip_offset};
+}
+namespace {
+void RequireRename(const SmacStartupDesignState& state,const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog,int32_t owner) {
+    state.Validate(catalog);RequireComponents(draft,catalog);
+    if(owner<1 || owner>7 || !state.native_registry || !state.Find(owner) || draft.selected_design<0 || draft.selected_design>=512
+        || (draft.selected_design>=64 && draft.selected_design/64!=owner) || draft.name.size()>31 || draft.name.find('\0')!=std::string::npos) {
+        throw std::invalid_argument("Invalid Workshop Rename draft or owner");
+    }
+}
+}
+SmacWorkshopRename OpenSmacWorkshopRename(const SmacStartupDesignState& state,const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog,int32_t owner) {
+    RequireRename(state,draft,catalog,owner);SmacWorkshopRename result{state,draft,draft.name};
+    if(result.default_name.empty()) {
+        auto pool=*state.native_registry;result.default_name=NameSmacWorkshopDesign(pool,size_t(draft.selected_design),draft,catalog,owner);
+        pool.at(draft.selected_design)[48]&=uint8_t(~2u);result.state.RetainNativeRegistry(pool,catalog);
+    }
+    result.default_name.resize(std::min(size_t(31),result.default_name.size()));return result;
+}
+std::string DisplaySmacWorkshopName(const SmacOriginalDesignPool& pool,const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog,int32_t owner) {
+    RequireComponents(draft,catalog);
+    if(draft.selected_design<0 || draft.selected_design>=512 || owner<1 || owner>7
+        || (draft.selected_design>=64 && draft.selected_design/64!=owner)) {throw std::invalid_argument("Invalid Workshop title context");}
+    const auto& row=pool.at(draft.selected_design);bool same=row[36]==draft.chassis && row[37]==draft.weapon && row[38]==draft.armor && row[39]==draft.reactor;
+    for(unsigned i=0;i<4;++i) {same=same && row[32+i]==uint8_t(draft.abilities>>(8*i));}
+    if(draft.selected_design<64 && same) {return std::string(row.begin(),std::find(row.begin(),row.begin()+32,uint8_t(0)));}
+    if((row[48]&2) && !draft.name.empty()) {return draft.name;}
+    return NameSmacWorkshopDesign(pool,size_t(draft.selected_design),draft,catalog,owner);
+}
+SmacWorkshopRename AnswerSmacWorkshopRename(const SmacStartupDesignState& state,const SmacWorkshopDraft& draft,
+    const std::string& displayed_default,bool accepted,const std::string& submitted,
+    const SmacPredefinedUnitCatalog& catalog,int32_t owner) {
+    RequireRename(state,draft,catalog,owner);
+    if(displayed_default.size()>31 || submitted.size()>31 || displayed_default.find('\0')!=std::string::npos || submitted.find('\0')!=std::string::npos) {
+        throw std::invalid_argument("Workshop Rename text exceeds its native byte boundary");
+    }
+    SmacWorkshopRename result{state,draft,displayed_default};if(!accepted) {return result;}
+    auto pool=*state.native_registry;auto& flags=pool.at(draft.selected_design)[48];
+    if(submitted.empty()) {result.draft.name.clear();flags&=uint8_t(~2u);}
+    else if(submitted!=displayed_default) {result.draft.name=submitted;flags|=2;}
+    result.state.RetainNativeRegistry(pool,catalog);return result;
 }
 SmacWorkshopSlot ChooseSmacWorkshopSlot(const SmacOriginalDesignPool& pool,const SmacWorkshopDraft& draft,
     const faction::SmacDesignCounts& units,const faction::SmacDesignCounts& production,

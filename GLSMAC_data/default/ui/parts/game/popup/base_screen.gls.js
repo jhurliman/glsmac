@@ -341,7 +341,11 @@ return {
 
     workshop_closed: () => { if (this.is_open && !this.read_only) { this.show_production_selection(); } },
     workshop_open_result: (success, message) => {
-        if (!this.is_open) { return; }
+        if (!this.is_open) {
+            // Global U/HQ shares this editor without displaying a Base screen.
+            if (!success) { this.p.modules.bottom_bar.process_message(message); }
+            return;
+        }
         if (success) { this.hide_production_selection(); }
         else if (this.production_selection != null) { this.production_prompt.text = message; }
     },

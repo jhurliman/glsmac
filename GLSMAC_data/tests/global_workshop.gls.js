@@ -34,3 +34,8 @@ left.init({create: (rows) => { root_entries = rows; }, menu: {menu_width: 139, i
     open: (name, style) => { submenu = name; submenu_width = style.width; }, close: (name) => { test.assert(name == 'left_menu_hq'); }}});
 test.assert(#sizeof(root_entries) == 2 && root_entries[1].label == 'HQ'); root_entries[1].open();
 test.assert(submenu == 'left_menu_hq' && submenu_width == 230); root_entries[1].close();
+
+const original_begin = editor.begin;
+editor.begin = (owner, selection, hint) => { editor.opening = true; throw Error('queue unavailable'); };
+test.assert(controller.open() && !editor.opening && #sizeof(messages) == 2);
+editor.begin = original_begin;

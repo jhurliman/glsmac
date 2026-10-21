@@ -194,7 +194,7 @@ SmacManualSwitchResult Base::PrepareSmacProductionSelection( const int32_t sourc
     const auto target = m_game->MakeSmacProductionItem( m_owner, facility ? ProductionItemKind::Facility : ProductionItemKind::Unit, facility ? -source_id : source_id );
     if (!(facility ? m_game->IsSmacFacilityProductionEligible(*this,target) : m_game->IsSmacUnitProductionEligible(*this,target))) {THROW("Production target is no longer eligible");}
     if(!facility) {(void)m_game->ResolveSmacProductionPresentation( m_owner, source_id );}
-    (void)m_game->GetSmacProductionCost( m_owner, target );
+    (void)m_game->GetSmacProductionCost( m_owner, target, this );
     const auto& rules = *m_game->GetState()->m_settings.global.GetSmacProductionRules();
     SmacProductionSwitchContext context{ rules.retool_strictness, rules.retool_loss_percent, rules.retool_exemption,
         true, unit::SmacStartupDesignState::OriginalDifficulty( m_owner->GetPlayer()->GetDifficultyLevel() ), false, {} };
@@ -223,7 +223,7 @@ std::vector< Base::ProductionChoice > Base::GetSmacProductionChoices() const {
         if ( !m_game->IsSmacUnitProductionEligible( *this, item ) ) { continue; }
         const auto switched = PrepareSmacProductionSelection( id, true );
         const auto* def = m_game->ResolveSmacProductionPresentation( m_owner, id );
-        result.push_back( { id, def->m_name, m_game->GetSmacProductionCost( m_owner, item ), switched.state.minerals, switched.penalty_prompt_required } );
+        result.push_back( { id, def->m_name, m_game->GetSmacProductionCost( m_owner, item, this ), switched.state.minerals, switched.penalty_prompt_required } );
     }
     for(int32_t id=1;id<=33;++id) {
         if(!Game::SupportsSmacFacilityProduction(id)) {continue;}
@@ -231,7 +231,7 @@ std::vector< Base::ProductionChoice > Base::GetSmacProductionChoices() const {
         const auto item=m_game->MakeSmacProductionItem(m_owner,ProductionItemKind::Facility,id);
         if(!m_game->IsSmacFacilityProductionEligible(*this,item)) {continue;}
         const auto switched=PrepareSmacProductionSelection(-id,true);
-        result.push_back({-id,definition->m_name,m_game->GetSmacProductionCost(m_owner,item),switched.state.minerals,switched.penalty_prompt_required});
+        result.push_back({-id,definition->m_name,m_game->GetSmacProductionCost( m_owner, item, this ),switched.state.minerals,switched.penalty_prompt_required});
     }
     return result;
 }

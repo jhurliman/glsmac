@@ -30,6 +30,26 @@ void RequireOwner(const faction::SmacFactionTechnologyState& owner) {
     if(owner.admission.simulation_id<1 || owner.admission.simulation_id>7) {throw std::invalid_argument("Workshop requires a player faction");}
 }
 }
+SmacPrototypePrice SmacDesignProductionRows(const SmacCustomDesign& design,
+    const SmacPredefinedUnitCatalog& catalog,const SmacPrototypePriceContext& context) {
+    if(design.id<0 || design.id>=512) {throw std::invalid_argument("Prototype price requires a canonical design identity");}
+    if(design.id<64 || design.prototyped) {return {design.cost,false};}
+    if(context.owner_difficulty<0 || context.owner_difficulty>5) {throw std::invalid_argument("Prototype price requires stored owner difficulty");}
+    if(context.free_prototype || context.owner_difficulty<=1 || context.queried_base_skunkworks) {return {design.cost,false};}
+    if(!context.percentages) {throw std::runtime_error("Legacy production profile has no prototype percentages");}
+    const auto& chassis=catalog.chassis.chassis.at(design.chassis);
+    const auto domain=static_cast<int32_t>(chassis.triad);
+    if(domain<0 || domain>2) {throw std::invalid_argument("Prototype price requires land/sea/air domain");}
+    const auto percentage=context.percentages->at(domain);
+    if(percentage<0) {throw std::invalid_argument("Negative prototype percentage is outside admitted price domain");}
+    const auto basis=SmacPredefinedUnitCatalog::CalculateCost(chassis,catalog.weapons.weapons.at(design.weapon),
+        catalog.defenses.defenses.at(design.defense),design.reactor,0,catalog.abilities);
+    const int64_t product=int64_t(basis)*percentage;
+    if(basis<0 || product>INT32_MAX-50) {throw std::overflow_error("Prototype surcharge exceeds admitted signed32 arithmetic");}
+    const auto extra=(product+50)/100;
+    if(extra+design.cost>INT32_MAX) {throw std::overflow_error("Prototype rows exceed signed32");}
+    return {int32_t(extra+design.cost),extra!=0};
+}
 std::vector<SmacWorkshopChoice> SmacWorkshopChoices(SmacWorkshopComponent kind,const SmacPredefinedUnitCatalog& catalog,
     const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner) {
     RequireOwner(owner);

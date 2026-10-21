@@ -98,7 +98,7 @@ Base::HurryOffer Base::GetSmacHurryOffer() const {
         // Saved NoProjectsOrdinaryTerrain establishes absent Voice. The actual
         // local ready/Screen controller has no network advance/input lock; the
         // ordinary-local producer and continuation closure are measured in v2.
-        offer.context=SmacHurryContext{m_game->GetSmacProductionCost(m_owner,item),m_game->GetSmacProductionMineralFactor(m_owner),
+        offer.context=SmacHurryContext{m_game->GetSmacProductionCost( m_owner, item, this ),m_game->GetSmacProductionMineralFactor(m_owner),
             rules.retool_exemption,100,false,false,m_resource_context->drone_riots};
         if(m_production->hurry_partial_paid) {offer.reason="A partial Hurry was already used this turn";}
         else if(m_production->minerals<0 || m_production->minerals>=offer.context->total_cost) {offer.reason="Hurry requires positive missing minerals";}

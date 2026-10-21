@@ -654,7 +654,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
                 std::optional<int32_t> cost;
                 // Unsupported cost domains must not hide an otherwise valid
                 // retained target/queue. This projection does not admit building it.
-                try {cost=m_game->GetSmacProductionCost(m_owner,m_production->current_item);}
+                try {cost=m_game->GetSmacProductionCost( m_owner, m_production->current_item, this );}
                 catch(const std::runtime_error&) {}
                 if(cost) {fields.emplace("cost",VALUE(gse::value::Int,,*cost));}
                 bool unbuilt=true;
@@ -952,7 +952,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
                 if(m_owner && m_game->GetPlayer() && m_owner->GetPlayer()==m_game->GetPlayer()) {
                     const auto item=m_game->MakeSmacProductionItem(m_owner,ProductionItemKind::Facility,source);
                     // Optional private providers do not erase registered metadata.
-                    try {const auto cost=m_game->GetSmacProductionCost(m_owner,item);fields.emplace("cost",VALUE(gse::value::Int,,cost));}
+                    try {const auto cost=m_game->GetSmacProductionCost( m_owner, item, this );fields.emplace("cost",VALUE(gse::value::Int,,cost));}
                     catch(const std::runtime_error&) {}
                     try {
                         const auto energy=m_game->GetCanonicalBaseEnergy(*this);

@@ -2,6 +2,7 @@
 #include "game/backend/unit/SmacWorkshop.h"
 #include "loader/txt/SmacRulesTXTLoader.h"
 #include "fixtures/SmacStartupSource.h"
+#include "fixtures/SmacPrototypePrice.h"
 #include "task/gsetests/GSETests.h"
 #include <cstdlib>
 #include <fstream>
@@ -73,6 +74,48 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
         }
         auto invalid=state;invalid.owners[0].designs[0].explicitly_named=true;invalid.owners[0].designs[0].name.reset();
         GT_ASSERT(Rejects([&]{invalid.Serialize(catalog);}),"Custom-name flag without a retained name accepted");GT_OK();
+    });
+    task->AddTest("SMAC Workshop free prototype uses presence beyond generic record budget",GT(){
+        settings::SmacFactionStartupRule faction;
+        const auto technologies=smac_rules_fixture::Technologies();
+        GT_ASSERT(!faction.FreePrototype(),"Absent keyword granted prototype exemption");
+        for(int n=0;n<8;++n) {faction.bonuses.push_back(settings::SmacFactionStartupBonus::Parse("FACILITY","17",technologies));}
+        for(const std::string value:{"0","-4","1","not a number"}) {
+            faction.bonuses.push_back(settings::SmacFactionStartupBonus::Parse("FREEPROTO",value,technologies));
+            GT_ASSERT(faction.FreePrototype() && faction.Records().size()==8,"FREEPROTO used numeric value or consumed a generic slot");
+        }GT_OK();
+    });
+    task->AddTest("SMAC Workshop prototype price guards legacy metadata and ability-free basis",GT(){
+        const auto catalog=smac_startup_fixture::Units().catalog;
+        unit::SmacCustomDesign design;design.id=127;design.defense=1;design.cost=2;
+        unit::SmacPrototypePriceContext context{3,false,false,std::array<int32_t,3>{{50,50,50}}};
+        const auto ordinary=unit::SmacDesignProductionRows(design,catalog,context);
+        GT_ASSERT(ordinary.rows==3 && ordinary.surcharge_present,"First Synthmetal prototype lost surcharge");
+        design.abilities=0xffffffffu;design.cost=20;
+        GT_ASSERT(unit::SmacDesignProductionRows(design,catalog,context).rows==21,"Surcharge used ability-inflated stored cost");
+        context.percentages.reset();GT_ASSERT(Rejects([&]{unit::SmacDesignProductionRows(design,catalog,context);}),"Old profile invented percentages");
+        context.free_prototype=true;GT_ASSERT(unit::SmacDesignProductionRows(design,catalog,context).rows==20,"Free prototype used absent percentages");
+        context.free_prototype=false;design.prototyped=true;
+        GT_ASSERT(!unit::SmacDesignProductionRows(design,catalog,context).surcharge_present,"Completed prototype required new metadata");
+        design.prototyped=false;context.percentages=std::array<int32_t,3>{{-1,50,50}};
+        GT_ASSERT(Rejects([&]{unit::SmacDesignProductionRows(design,catalog,context);}),"Negative percentage admitted");
+        context.percentages=std::array<int32_t,3>{{INT32_MAX,50,50}};
+        GT_ASSERT(Rejects([&]{unit::SmacDesignProductionRows(design,catalog,context);}),"Overflowed native signed32 product admitted");GT_OK();
+    });
+    task->AddTest("SMAC Workshop owned original 927 prototype price receipts",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);
+        if(!input) {throw std::runtime_error("Missing owned alpha.txt for prototype controls");}
+        const std::string source{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
+        const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;
+        size_t ordinal=0;
+        for(const auto& row:smac_prototype_price_fixture::CASES) {
+            unit::SmacCustomDesign design;design.id=row.id;design.chassis=row.chassis;design.weapon=row.weapon;
+            design.defense=row.armor;design.reactor=row.reactor;design.cost=row.cost;design.prototyped=row.prototyped;
+            const auto result=unit::SmacDesignProductionRows(design,catalog,{row.difficulty,row.free,row.skunkworks,row.percentages});
+            GT_ASSERT(result.rows==row.rows && result.surcharge_present==row.surcharge,"Original prototype price differs at receipt "+std::to_string(ordinal));++ordinal;
+        }GT_OK();
     });
     task->AddTest("SMAC Workshop owned original component and commit controls",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}

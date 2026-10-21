@@ -139,7 +139,7 @@ This remains the bounded Infantry / Hand Weapons / No Armor-or-Synthmetal /
 Fission / no-ability path, with automatic naming in the UI. Native Rename,
 existing-custom editing, browsing/categories and other component controls are
 still required. Main and small CVR previews are absent. Saved Workshop designs
-are not yet offered by the production chooser; prototype cost/completion and
+are not yet offered by the production chooser; prototype completion and
 runtime armored-unit identity remain required for the first end-to-end playable
 receipt. The current popup overlays Base management; the original full parent /
 console composition still needs its complete implementation and live reference.
@@ -155,3 +155,19 @@ accepted Done with Enter, reopened and cancelled. Original owned assets were
 loaded normally; no backend gameplay commands were injected by the capture
 harness. That visual run used software graphics and no audio, so it makes no
 hardware performance or audio claim.
+
+### First-prototype production pricing
+
+`Game::GetSmacProductionCost` now quotes saved unprototyped Workshop designs
+using the shared ability-free component basis, stored owner difficulty, frozen
+FREEPROTO presence and the actual queried Base's Skunkworks. The Workshop's
+ordinary displayed cost remains separate. Source RULES 15..17 retain land/sea/air
+percentages in a V2 production profile; V1 profiles retain absence and exact
+bytes, and do not silently acquire stock defaults. This does not yet admit
+armored designs to the production chooser or implement prototype completion.
+
+Validation: 927 independent original executable price receipts with owned
+component data; 26 focused native groups (including three complete-screen
+cases), six affected GSE scripts, targeted correctness analysis of ten production
+translation units, and the same 26 groups with eight relevant translation units
+instrumented under ASan/UBSan. See [the native pricing contract](behavior/design-workshop-first-prototype.md).

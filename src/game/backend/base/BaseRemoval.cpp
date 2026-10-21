@@ -192,7 +192,7 @@ void BaseManager::ValidateSmacAbandonment( const Base& base ) const {
     if (!production || !production->queue || production->current_item.kind!=ProductionItemKind::Unit
         || !production->current_item.smac_source_id) { THROW("Colony abandonment requires its posted production state"); }
     m_game->ValidateSmacProductionState(base.m_owner,*production);
-    if (production->minerals<m_game->GetSmacProductionCost(base.m_owner,production->current_item)) {
+    if (production->minerals<m_game->GetSmacProductionCost(base.m_owner,production->current_item,&base)) {
         THROW("Colony abandonment has not reached the actual completion cost");
     }
     auto* tile=base.GetTile();

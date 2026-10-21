@@ -9,6 +9,7 @@
 #include "map/Map.h"
 #include "map/tile/Tile.h"
 #include "resource/SmacMineralCostFactor.h"
+#include "unit/SmacWorkshop.h"
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -183,7 +184,7 @@ int32_t Game::GetSmacProductionMineralFactor(const slot::Slot* owner) const {
 		false, false, false, size, global.GetSmacProductionRules()->mineral_multiplier, social->current[ 9 ] } );
 }
 
-int32_t Game::GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item ) const {
+int32_t Game::GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item, const base::Base* queried_base ) const {
 	item.Validate();
 	if ( !item.smac_source_id ) { throw std::runtime_error( "Production cost requires an explicit source identity" ); }
 	const auto& participant = RequireSmacProductionOwner( owner );
@@ -191,12 +192,28 @@ int32_t Game::GetSmacProductionCost( const slot::Slot* owner, const base::Produc
 	using namespace resource::smac;
 	const auto factor=GetSmacProductionMineralFactor(owner);
 	const auto& global=m_state->m_settings.global;
+    bool skunkworks=false;
+    if(queried_base) {
+        if(queried_base->GetGame()!=this || m_bm->GetBase(queried_base->m_id)!=queried_base
+            || queried_base->m_owner!=owner) {throw std::runtime_error("Production price requires the actual owned Base");}
+        for(const auto& [id,facility]:queried_base->m_facilities) {
+            if(!facility || m_bm->GetFacilityDef(id)!=facility) {throw std::runtime_error("Production price has an unregistered Base facility");}
+            if(facility->m_smac_source_id==10) {skunkworks=true;}
+        }
+    }
 	int32_t cached_cost;
 	if ( item.kind == base::ProductionItemKind::Unit ) {
 		const auto design = ResolveConventionalDesign( { *item.smac_source_id, participant.simulation_id, 1, 0, 0, false,
 			unit::ConventionalUnitState::Home::None, unit::SmacMoraleMode::Mode0 }, *m_simulation );
-		if ( *item.smac_source_id >= 64 && !design.prototyped ) { throw std::runtime_error( "Unprototyped custom production cost is not admitted" ); }
-		cached_cost = design.cost;
+        bool free_prototype=false;
+        if(design.id>=64 && !design.prototyped) {
+            const auto* faction=global.GetSmacFactionStartupRules()->Find(participant.faction_id);
+            if(!faction) {throw std::runtime_error("Prototype price has no frozen owner definition");}
+            free_prototype=faction->FreePrototype();
+        }
+        cached_cost=unit::SmacDesignProductionRows(design,global.GetSmacPredefinedUnitRules()->catalog,
+            {unit::SmacStartupDesignState::OriginalDifficulty(owner->GetPlayer()->GetDifficultyLevel()),
+             free_prototype,skunkworks,global.GetSmacProductionRules()->prototype_percentages}).rows;
 	}
 	else { cached_cost = global.GetSmacProductionRules()->facilities.at( *item.smac_source_id - 1 ).cost; }
 	const int64_t result = int64_t( cached_cost ) * factor;

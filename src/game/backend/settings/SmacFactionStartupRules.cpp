@@ -96,6 +96,10 @@ bool SmacFactionStartupBonus::operator==( const SmacFactionStartupBonus& other )
 	return keyword == other.keyword && value == other.value && kind == other.kind && parameter == other.parameter && amount == other.amount;
 }
 
+bool SmacFactionStartupRule::FreePrototype() const {
+    for(const auto& bonus:bonuses) {if(bonus.kind==SmacFactionStartupBonus::Kind::FREEPROTO) {return true;}}
+    return false;
+}
 std::vector< SmacFactionStartupBonus > SmacFactionStartupRule::Records() const {
 	std::vector< SmacFactionStartupBonus > result;
 	for ( const auto& bonus : bonuses ) { if ( bonus.ConsumesRecord() && result.size() < 8 ) { result.push_back( bonus ); } }

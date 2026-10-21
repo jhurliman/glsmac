@@ -62,7 +62,7 @@ void Base::ValidateSmacColonyPause( const SmacColonyUpkeepPause& pause ) const {
 	const unit::ConventionalUnitState identity{ *m_production->current_item.smac_source_id, context.owner_simulation_id,
 		1, 0, 0, false, unit::ConventionalUnitState::Home::Base, pause.morale_mode, m_id };
 	if ( m_game->ResolveConventionalUnit( identity, m_owner ).package != unit::ConventionalUnitContext::Package::Colony
-		|| m_production->minerals < m_game->GetSmacProductionCost( m_owner, m_production->current_item ) ) {
+		|| m_production->minerals < m_game->GetSmacProductionCost( m_owner, m_production->current_item, this ) ) {
 		THROW( "Colony continuation lost its completed owned target" );
 	}
 	// A saved question belongs to this exact first pass. Read-only validation
@@ -136,7 +136,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 		if ( resources.minerals.surplus >= 0 && !context.drone_riots ) {
 			production.minerals = Checked( production.minerals + resources.minerals.surplus );
 		}
-		const auto cost = m_game->GetSmacProductionCost( m_owner, production.current_item );
+		const auto cost = m_game->GetSmacProductionCost( m_owner, production.current_item, this );
 		bool complete = production.minerals >= cost;
 		if(production.current_item.kind==ProductionItemKind::Facility) {
 			for(const auto& row:m_facilities) {

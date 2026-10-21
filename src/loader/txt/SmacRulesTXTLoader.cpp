@@ -328,7 +328,7 @@ game::backend::settings::SmacProductionRules SmacRulesTXTLoader::ParseProduction
 		if ( !field.empty() && field.back() == ',' ) { field.pop_back(); field = util::String::TrimCopy( field ); }
 		return ParseField( field, "row " + std::to_string( position ), 1, "RULES" );
 	};
-	game::backend::settings::SmacProductionRules result{ rule( 7 ), rule( 43 ), rule( 44 ), rule( 45 ), {} };
+	game::backend::settings::SmacProductionRules result{ rule( 7 ), rule( 43 ), rule( 44 ), rule( 45 ), {}, std::array<int32_t,3>{{rule(15),rule(16),rule(17)}} };
 	for ( size_t i = 0 ; i < facilities.size() ; ++i ) {
 		// The effect can contain commas; projects append additional AI metadata.
 		// Consume only the fixed prefix, never infer identity from a display name.

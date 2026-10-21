@@ -41,24 +41,26 @@ void SmacProductionRules::Validate() const {
 bool SmacProductionRules::operator==( const SmacProductionRules& other ) const {
 	return mineral_multiplier == other.mineral_multiplier && retool_loss_percent == other.retool_loss_percent
 		&& retool_strictness == other.retool_strictness && retool_exemption == other.retool_exemption
-		&& facilities == other.facilities;
+		&& facilities == other.facilities && prototype_percentages == other.prototype_percentages;
 }
 
 types::Buffer SmacProductionRules::Serialize() const {
 	Validate();
 	types::Buffer buffer;
-	buffer.WriteInt( 1 );
+	buffer.WriteInt( prototype_percentages ? 2 : 1 );
 	for ( const auto value : { mineral_multiplier, retool_loss_percent, retool_strictness, retool_exemption } ) { buffer.WriteInt( value ); }
 	buffer.WriteInt( facilities.size() );
 	for ( const auto& facility : facilities ) {
 		buffer.WriteInt( facility.source_id ); buffer.WriteString( facility.name );
 		buffer.WriteInt( facility.cost ); buffer.WriteInt( facility.maintenance ); buffer.WriteString( facility.prerequisite );
 	}
+	if(prototype_percentages) {for(const auto value:*prototype_percentages) {buffer.WriteInt(value);}}
 	return buffer;
 }
 
 SmacProductionRules SmacProductionRules::Deserialize( types::Buffer buffer ) {
-	if ( buffer.ReadInt() != 1 ) { throw std::runtime_error( "Unsupported SMAC production profile version" ); }
+	const auto version=buffer.ReadInt();
+	if ( version != 1 && version != 2 ) { throw std::runtime_error( "Unsupported SMAC production profile version" ); }
 	SmacProductionRules result;
 	result.mineral_multiplier = ReadInteger( buffer ); result.retool_loss_percent = ReadInteger( buffer );
 	result.retool_strictness = ReadInteger( buffer ); result.retool_exemption = ReadInteger( buffer );
@@ -69,6 +71,7 @@ SmacProductionRules SmacProductionRules::Deserialize( types::Buffer buffer ) {
 		facility.source_id = ReadInteger( buffer ); facility.name = buffer.ReadString();
 		facility.cost = ReadInteger( buffer ); facility.maintenance = ReadInteger( buffer ); facility.prerequisite = buffer.ReadString();
 	}
+	if(version==2) {result.prototype_percentages=std::array<int32_t,3>{{ReadInteger(buffer),ReadInteger(buffer),ReadInteger(buffer)}};}
 	if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC production profile fields" ); }
 	try { result.Validate(); }
 	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }

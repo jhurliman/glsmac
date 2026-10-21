@@ -48,7 +48,7 @@ types::Buffer Wire( const SmacProductionRules& rules, const size_t integer_index
 
 void AddSmacProductionRulesTests( task::gsetests::GSETests* task ) {
 	task->AddTest( "SMAC production parser preserves positional signed metadata without buildability defaults", GT() {
-		const auto expected = fixture::Production();
+		auto expected = fixture::Production(); expected.prototype_percentages=std::array<int32_t,3>{{0,0,0}};
 		auto rules = loader::txt::TXTLoader::ReadUniqueSection( fixture::ProductionSource(), "RULES" );
 		auto facilities = loader::txt::TXTLoader::ReadUniqueSection( fixture::ProductionSource(), "FACILITIES" );
 		GT_ASSERT( SmacRulesTXTLoader::ParseProductionRules( Source( rules, facilities ) ) == expected, "parsed fields differ from source/positions" );
@@ -83,7 +83,7 @@ void AddSmacProductionRulesTests( task::gsetests::GSETests* task ) {
 		}
 		for ( const auto& invalid : { std::string(), std::string( "*" ), std::string( "1x" ), std::string( "1.0" ), std::string( "0x10" ),
 			std::string( "+" ), std::string( "+-1" ), std::string( "2147483648" ), std::string( "-2147483649" ), std::string( "1\0x", 3 ) } ) {
-			for ( const size_t position : { 6, 42, 43, 44 } ) {
+			for ( const size_t position : { 6, 14, 15, 16, 42, 43, 44 } ) {
 				auto rules = original_rules; rules[ position ] = invalid + ", ; annotation";
 				GT_ASSERT( Rejects( [ & ]() { SmacRulesTXTLoader::ParseProductionRules( Source( rules, original_facilities ) ); } ), "bad selected RULES integer accepted" );
 			}
@@ -136,6 +136,22 @@ void AddSmacProductionRulesTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
+	task->AddTest("SMAC production prototype percentages retain source order and versioned absence",GT(){
+        auto source=loader::txt::TXTLoader::ReadUniqueSection(fixture::ProductionSource(),"RULES");
+        const auto facilities=loader::txt::TXTLoader::ReadUniqueSection(fixture::ProductionSource(),"FACILITIES");
+        source[14]="20";source[15]="70";source[16]="110";
+        auto expected=fixture::Production();expected.prototype_percentages=std::array<int32_t,3>{{20,70,110}};
+        GT_ASSERT(SmacRulesTXTLoader::ParseProductionRules(Source(source,facilities))==expected,"Prototype domain order changed");
+        GT_ASSERT(SmacProductionRules::Deserialize(expected.Serialize())==expected,"V2 lost domain percentages");
+        auto legacy=SmacProductionRules::Deserialize(Wire(fixture::Production()));
+        GT_ASSERT(!legacy.prototype_percentages && legacy.Serialize().ToString()==Wire(fixture::Production()).ToString(),"V1 gained invented percentages or changed bytes");
+        const auto bytes=expected.Serialize().ToString();const auto legacy_size=legacy.Serialize().ToString().size();
+        for(size_t n=legacy_size;n<bytes.size();++n) {GT_ASSERT(Rejects([&]{SmacProductionRules::Deserialize(types::Buffer(bytes.substr(0,n)));}),"Truncated V2 accepted");}
+        for(int32_t endpoint:{INT32_MIN,INT32_MAX}) {
+            expected.prototype_percentages=std::array<int32_t,3>{{endpoint,endpoint,endpoint}};
+            GT_ASSERT(SmacProductionRules::Deserialize(expected.Serialize())==expected,"Signed source percentage narrowed");
+        }GT_OK();
+    });
 	task->AddTest( "SMAC production locked settings compare every modeled field", GT() {
 		GlobalSettings settings; settings.Deserialize( fixture::Payload( "smac", true ) );
 		const auto before = settings.Serialize().ToString();

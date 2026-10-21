@@ -216,3 +216,27 @@ temporary dialog construction. No complete Preferences screenshot, actual
 OS-close run, new-launch process run or glyph-perfect UI claim is made.
 
 No production source, GSE script or Git state was changed for this handoff.
+
+## Port assembly status
+
+The shared text catalog now loads the installed SCRIPT templates, exposes
+all67 created control IDs and labels, and retains their native page order.
+It handles the Audio/Visual three-row skip, the warning continuation and
+the nonsequential Advanced/Automation/Map IDs. It rejects incomplete or
+duplicate templates rather than silently assigning translated text to the
+wrong control. The native installed-asset test and an actual SDL UI harness
+both load all67 controls. Loaded ID8 labels retain the existing exact
+10,968-pixel checked/unchecked row comparisons.
+
+The shared GSE checkbox draft model retains edits across page changes,
+supports main-page Up/Down wrapping and Warning More/Back, discards on
+Escape/Cancel and commits on Enter/OK. Reset changes a detached draft;
+write failure keeps it active. Its callbacks accept a preference-store
+adapter; they do not directly perform audio or Gamma previews.
+
+These are assembly components, not a completed user-facing Preferences
+window. Normal menu/shortcut routing, all option bindings and consumers,
+procedural buttons, audio/Gamma controls and whole-window visual acceptance
+remain open. In particular, persisting an option without its live consumer
+does not establish that the option works. The automatic-design Boolean
+store and actual Workshop suggestion consumer are connected separately.

@@ -2,6 +2,7 @@
 
 #include "Area.h"
 #include "loader/cvr/WorkshopPreviewController.h"
+#include "SmacPreferencesText.h"
 #include <memory>
 #include <cstdint>
 #include <vector>
@@ -59,6 +60,7 @@ private:
 
 	void ClearTexture();
     std::shared_ptr<const loader::texture::SmacDialogSource> m_dialog_source;
+    std::optional<SmacPreferencesText> m_preferences_text;
     std::vector<std::array<int,5>> m_dialog_frames;
     std::array<int,2> m_dialog_size{{-1,-1}},m_dialog_phase{{0,0}};
     void UpdateDialogFrames();

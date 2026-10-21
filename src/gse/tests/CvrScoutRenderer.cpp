@@ -1,3 +1,5 @@
+#include "game/frontend/sprite/ConventionalSpriteCache.h"
+#include "fixtures/LiveGroundRender.h"
 #include "CvrScoutRenderer.h"
 #include "CvrSpartanRoverRenderer.h"
 
@@ -221,6 +223,55 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
         const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(directory && *directory) {
             std::ifstream file(std::filesystem::path(directory)/"UNITS.PCX",std::ios::binary);const std::string bytes(std::istreambuf_iterator<char>(file),{});
             const auto owned=CvrActorMaterial::ReadWorkshopWeaponSprites(bytes);for(const auto& row:owned) {GT_ASSERT(row.size()==7500 && std::find(row.begin(),row.end(),6)==row.end() && std::find(row.begin(),row.end(),7)==row.end(),"Owned underlay marker remap changed");}
+        }GT_OK();
+    });
+    task->AddTest("CVR conventional cache separates tuple owner facing and retains published textures",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        try {
+            const auto temporary=std::filesystem::temp_directory_path()/("glsmac-conventional-cache-"+util::UUID::Generate());
+            std::filesystem::create_directories(temporary/"default");util::FinallyGuard cleanup([&]{std::filesystem::remove_all(temporary);});
+            for(const auto& entry:std::filesystem::directory_iterator(directory)) {
+                if(!entry.is_regular_file()) {continue;}auto name=entry.path().filename().string();
+                std::transform(name.begin(),name.end(),name.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if((name.size()>=4 && name.substr(name.size()-4)==".cvr") || name=="palette.pcx" || name=="system.txt" || name=="spartans.pcx" || name=="gaians.pcx") {
+                    std::filesystem::copy_file(entry.path(),temporary/"default"/name);
+                }
+            }
+            resource::ResourceManager resources(temporary.string());std::shared_ptr<types::texture::Texture> held;std::string pixels;
+            {
+                game::frontend::sprite::ConventionalSpriteCache cache;
+                game::ConventionalUnitVisual laser{1,0,1,1,1,4,1,2,0,"spartans.pcx"};const CvrScoutViewInput view{0,0,0,1,{128,128}};
+                held=cache.Get(resources,laser,view).texture;GT_ASSERT(cache.Get(resources,laser,view).texture==held,"Identical live graphics did not reuse texture");
+                auto owner=laser;owner.owner=2;owner.faction_art="gaians.pcx";const auto other=cache.Get(resources,owner,view).texture;
+                GT_ASSERT(other!=held && other->GetBitmapSize()==held->GetBitmapSize() && std::memcmp(other->GetBitmap(),held->GetBitmap(),held->GetBitmapSize())!=0,"Owner materials alias or render identically");
+                auto guard=laser;guard.weapon=0;guard.weapon_power=1;guard.weapon_mode=0;
+                GT_ASSERT(cache.Get(resources,guard,view).texture!=held,"Weapon tuple reused the old design texture");
+                pixels.assign(reinterpret_cast<const char*>(held->GetBitmap()),held->GetBitmapSize());
+                {std::ofstream changed(temporary/"default"/"system.txt");changed<<"invalid replacement";}
+                auto facing=view;facing.facing=2;GT_ASSERT(cache.Get(resources,laser,facing).texture!=held,"Facing change reused pixels or reloaded already owned scene");
+                GT_ASSERT(cache.Get(resources,laser,view).texture==held,"Failed asset replacement invalidated published pixels");
+            }
+            GT_ASSERT(std::string(reinterpret_cast<const char*>(held->GetBitmap()),held->GetBitmapSize())==pixels,"Cache teardown retired a borrowed preview texture");GT_OK();
+        }catch(const std::exception& error) {GT_FAIL(std::string("Conventional cache: ")+error.what());}
+    });
+    task->AddTest("CVR ordinary live designs match nine complete original map and console bodies",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto read=[&](const std::string& name) {
+            for(const auto& entry:std::filesystem::directory_iterator(directory)) {
+                auto candidate=entry.path().filename().string();std::transform(candidate.begin(),candidate.end(),candidate.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if(candidate==name) {std::ifstream stream(entry.path(),std::ios::binary);return std::string(std::istreambuf_iterator<char>(stream),{});}
+            }throw std::runtime_error("Missing ordinary Unit asset: "+name);
+        };
+        const auto source=read("alpha.txt");const auto weapons=loader::txt::UnitRulesTXTLoader::ParseWeapons(source,"smac");
+        const auto armor=loader::txt::UnitRulesTXTLoader::ParseDefenses(source,"smac");
+        const auto digest=[](const auto& bytes) {return util::SHA256(std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));};
+        for(const auto& test:live_ground_render_fixture::Cases) {
+            const auto renderer=CvrScoutRenderer::LoadOrdinaryDesign(read,read(test.owner==2 ? "gaians.pcx":"spartans.pcx"),test.chassis,test.weapon,test.armor,test.reactor,
+                {weapons.weapons.at(test.weapon).offense,int(weapons.weapons.at(test.weapon).mode),armor.defenses.at(test.armor).rating});
+            const auto image=renderer.RenderOrdinaryBody({test.facing,test.zoom,0,1,test.anchor});std::vector<uint8_t> depth;
+            for(const auto value:image.indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
+            GT_ASSERT(digest(image.indexed.color)==test.color && digest(depth)==test.depth && image.target_anchor==test.target && image.draw_count==size_t(test.kernels),
+                "Original ordinary body differs: "+std::string(test.name)+" color="+digest(image.indexed.color)+" depth="+digest(depth));
         }GT_OK();
     });
     task->AddTest("CVR saved strip matches four full native bodies shadows and clipped copies",GT(){

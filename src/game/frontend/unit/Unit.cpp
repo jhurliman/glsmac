@@ -120,6 +120,7 @@ const size_t Unit::GetSelectionWeight() const {
 
 sprite::Sprite* Unit::GetSprite() const {
     if(UsesLowZoomMarker()) {return m_slot_badges->GetLowZoomMarker(m_um->GetNativeBodyZoom());}
+    if(m_visual) {return m_def->GetDesignSprite(*m_visual,m_facing,m_um->GetNativeBodyZoom());}
 	return m_def->GetSprite( m_morale, m_facing, m_um->GetNativeBodyZoom() );
 }
 
@@ -334,8 +335,9 @@ void Unit::Refresh() {
 }
 
 void Unit::PrepareNativeBody(int zoom) const {
-    if(zoom< -8 && m_def->UsesNativeMapPlacement() && m_slot_badges->GetLowZoomMarker(zoom)) {return;}
-    m_def->GetSprite(m_morale,m_facing,zoom);
+    if(zoom< -8 && UsesNativeMapPlacement() && m_slot_badges->GetLowZoomMarker(zoom)) {return;}
+    if(m_visual) {m_def->GetDesignSprite(*m_visual,m_facing,zoom);}
+    else {m_def->GetSprite(m_morale,m_facing,zoom);}
 }
 void Unit::RefreshNativeBody() {
     auto* next=GetSprite();
@@ -344,6 +346,15 @@ void Unit::RefreshNativeBody() {
     m_render.body=next;m_render.instance_id=0;
     UpdateMeshTex(m_render_data.unit,next->instanced_sprite);
     if(visible) {Show();}
+}
+
+bool Unit::UsesNativeMapPlacement() const {
+    return m_visual ? m_def->UsesDesignNativeMapPlacement():m_def->UsesNativeMapPlacement();
+}
+void Unit::SetVisual(std::optional<ConventionalUnitVisual> visual) {
+    if(visual==m_visual) {return;}
+    if(visual) {m_def->GetDesignSprite(*visual,m_facing,m_um->GetNativeBodyZoom());}
+    m_visual=std::move(visual);m_need_refresh=true;RefreshNativeBody();
 }
 
 void Unit::SetFacing(std::optional<uint8_t> facing) {
@@ -429,6 +440,7 @@ const bool Unit::IsMoving() const {
 }
 
 sprite::InstancedSprite* Unit::GetCardSprite( bool roster ) const {
+    if(m_visual) {return m_def->GetDesignCard(*m_visual,m_facing,roster);}
 	return m_def->GetCardSprite( roster, m_facing );
 }
 
@@ -449,11 +461,11 @@ const Unit::render_data_t& Unit::GetRenderData() const {
 }
 
 bool Unit::UsesLowZoomMarker() const {
-    return m_um->GetNativeBodyZoom()< -8 && m_def->UsesNativeMapPlacement() && m_slot_badges->GetLowZoomMarker(m_um->GetNativeBodyZoom());
+    return m_um->GetNativeBodyZoom()< -8 && UsesNativeMapPlacement() && m_slot_badges->GetLowZoomMarker(m_um->GetNativeBodyZoom());
 }
 
 bool Unit::UsesNativeMapOverlay() const {
-    return m_conventional && m_maximum_hit_points>0 && m_def->UsesNativeMapPlacement();
+    return m_conventional && m_maximum_hit_points>0 && UsesNativeMapPlacement();
 }
 
 types::Vec3 Unit::GetRenderedBadgeCoords(bool health) const {

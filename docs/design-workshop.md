@@ -1671,3 +1671,54 @@ and owned spawn/update payloads, then restores through Start. Legacy saves with
 no retained name authority keep their existing presentation names. Generalized
 map/card model composition remains the next rendering integration; this name
 change does not claim custom silhouettes or complete Workshop acceptance.
+
+## 2026-10-21 ordinary live component bodies
+
+Retained components and the actual controller's faction art now drive map and
+selected/roster card bodies. The ordinary compositor and independent view inputs
+replace fixed Scout silhouettes and explicit Former/Colony markers when graphics
+authority is available. Nine full original body controls match indexed/depth
+buffers, target anchors and kernel counts. Live updates, same-ID tuple/material
+changes, cross-role instance counters and retained texture lifetimes are covered.
+Combat Rover admission now uses its actual profile rather than a Spartan startup
+marker. See [the source contract and bounded integration receipt](behavior/live-ground-design-render.md).
+Map/console shadow composition, broader animation/slope views and complete
+Workshop/SMAX/campaign acceptance remain open.
+
+
+## 2026-10-21 named design manufacture and disk round trip
+
+A second unmodified-data SDL session opens Scout from Morgan Industries'
+production chooser, chooses Synthmetal armor, enters `Campaign Guard` through
+Rename, applies and accepts Done. The rebuilt chooser offers the retained
+named design at16 minerals. Selecting it changes the actual Base production
+target without a mineral/completion injection. By Mission Year2106 the Base
+has manufactured Campaign Guard; Forces Supported identifies Unit3 with paid
+support. Selecting that Unit shows its retained name and1-2-1 stats on the map
+console, and an ordinary right-arrow move consumes its movement allowance.
+The initial trial clicks met the unmoved-unit prompt; subsequent turns explicitly
+accepted its normal Yes answer. Capture counters are not world-turn authority.
+
+Menu -> Game -> Save Campaign writes an actual386,079-byte `.glsmac` file
+(SHA256 `e1304a04e14a358831bdeedc44d36660caaa3f3dc9b057b2e0ec33d1a2007ef0`).
+A separate fresh process uses the title screen's Load Game and reaches the
+saved Mission Year2106 map, including the moved Unit outside the Base. Both
+processes exit0 with no tracked OpenGL leaks. Source data, saved campaign and
+raw screenshots remain private; the visual PR includes a rendered example.
+The session used software OpenGL and no audio, so it is not performance or
+native-platform milestone acceptance.
+
+This strengthens the named-design-to-manufactured-Unit and disk-load evidence,
+but does not close the entire Workshop receipt. The second process's selected
+custom-name card and reopened editable design were not verified in this run;
+advanced designs, SMAX, remote commands and full pixel/input/preference
+acceptance remain open. Legacy terrain picking/camera remains visibly distinct
+from the original projection and must be corrected as tracked separately.
+
+The regression suite also exposed an obsolete Early-start failure fixture:
+changing a later owner's startup selection is now valid for an existing Rover.
+Its all-unit atomic-preflight check now removes the actually referenced retained
+record instead, preserving genuine unavailable-design failure and cleanup
+coverage. All eight Early-start groups and three affected Rover groups pass.
+Production code/analysis/sanitizer checks from the component-body slice are
+unchanged by that test-only follow-up.

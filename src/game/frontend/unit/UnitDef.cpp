@@ -94,6 +94,18 @@ bool UnitDef::UsesNativeMapPlacement() const {
     return view.scale_numerator<=0 || view.scale_numerator==view.scale_denominator;
 }
 
+sprite::Sprite* UnitDef::GetDesignSprite(const ConventionalUnitVisual& visual,std::optional<uint8_t> facing,int zoom) {
+    const auto direction=Facing(facing,2);const auto key=visual.Key()+":"+std::to_string(direction)+":"+std::to_string(zoom);
+    auto found=m_design_sprites.find(key);
+    if(found==m_design_sprites.end()) {
+        sprite::Sprite prepared;prepared.instanced_sprite=m_ism->GetConventionalSprite(m_id,visual,{direction,zoom,0,16,{0,0}},m_native_projection);
+        found=m_design_sprites.emplace(key,prepared).first;
+    }return &found->second;
+}
+sprite::InstancedSprite* UnitDef::GetDesignCard(const ConventionalUnitVisual& visual,std::optional<uint8_t> facing,bool roster) {
+    return m_ism->GetConventionalSprite(m_id,visual,{Facing(facing,2),roster ? -8:-4,0,1,{0,0}},false);
+}
+
 sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale, std::optional<uint8_t> facing, std::optional<int> map_zoom ) {
 	ASSERT( m_type == backend::unit::DT_STATIC, "only static units are supported for now" );
 	ASSERT( static_.render.is_sprite, "only sprite unitdefs are supported for now" );

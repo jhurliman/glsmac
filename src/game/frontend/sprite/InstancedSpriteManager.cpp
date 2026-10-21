@@ -1,3 +1,4 @@
+#include "ConventionalSpriteCache.h"
 #include "InstancedSpriteManager.h"
 #include "game/NativeZoom.h"
 #include "game/frontend/NativeActorMarker.h"
@@ -113,6 +114,33 @@ InstancedSprite* InstancedSpriteManager::GetScoutSprite( const std::string& name
 	catch ( ... ) { m_scene->RemoveActor( actor ); m_instanced_sprites.erase( inserted ); throw; }
 	actor_owner.release();
 	return &inserted->second;
+}
+
+InstancedSprite* InstancedSpriteManager::GetConventionalSprite(const std::string& definition,const ConventionalUnitVisual& design,
+    const loader::cvr::CvrScoutViewInput& view,bool native_projection) {
+    // Per-Def Sprite wrappers own their instance counter. Share model/pixels,
+    // but never share an actor across independent counters.
+    const auto key="Conventional:"+std::to_string(definition.size())+":"+definition+":"+ConventionalSpriteCache::ViewKey(design,view)+(native_projection ? ":native":":card");
+    const auto found=m_instanced_sprites.find(key);if(found!=m_instanced_sprites.end()) {return &found->second;}
+    if(!m_conventional_cache) {m_conventional_cache=std::make_unique<ConventionalSpriteCache>();}
+    const auto image=m_conventional_cache->Get(*g_engine->GetResourceManager(),design,view);
+    types::Vec2<float> size{1,1},offset{0,0};
+    if(native_projection) {
+        const int unit=game::native_zoom::Unit(view.zoom);
+        size={256.0f/(8*unit),256.0f/(4*unit)};
+        offset={(image.anchor[0]-4*unit)/float(8*unit),(4*unit-image.anchor[1])/float(4*unit)};
+    }
+    const auto delete_sprite=[](scene::actor::Sprite* value){DELETE(value);};
+    const auto delete_actor=[](scene::actor::Instanced* value){DELETE(value);};
+    NEWV(sprite,scene::actor::Sprite,key,size,image.texture.get(),{{0,0},{1,1}},offset);
+    std::unique_ptr<scene::actor::Sprite,decltype(delete_sprite)> sprite_owner(sprite,delete_sprite);
+    sprite->SetRenderFlags(scene::actor::Actor::RF_IGNORE_LIGHTING);
+    NEWV(actor,scene::actor::Instanced,sprite);sprite_owner.release();
+    std::unique_ptr<scene::actor::Instanced,decltype(delete_actor)> actor_owner(actor,delete_actor);
+    actor->SetZIndex(s_zlevel_map.at(ZL_UNITS));
+    auto inserted=m_instanced_sprites.emplace(key,InstancedSprite{key,key,{0,0},{256,256},{128,128},actor,image.texture}).first;
+    try {m_scene->AddActor(actor);}catch(...) {m_scene->RemoveActor(actor);m_instanced_sprites.erase(inserted);throw;}
+    actor_owner.release();return &inserted->second;
 }
 
 InstancedSprite* InstancedSpriteManager::GetPixelTextSprite(const std::string& name,

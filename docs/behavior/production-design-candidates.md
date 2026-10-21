@@ -159,10 +159,10 @@ campaign or an on-disk save acceptance receipt.
 
 Inactive, owner-excluded and foreign custom rows do not appear. Original
 eligibility and current physical-engine support are separate: the picker also
-withholds profiles the current Unit factory cannot execute. Infantry combat,
-Former and Colony plus retained Spartan Rover provenance are currently
-admitted; general Rover, sea/air, PSI and ability-rich physical Units remain
+withholds profiles the current Unit factory cannot execute. Infantry/Rover combat,
+Former and Colony are currently admitted; sea/air, PSI and ability-rich physical Units remain
 unfinished. These omissions are implementation gaps, not original-game rules.
-The raw candidate sorter still ranks all native profiles. Manufacturing uses
-the existing presentation roles: generalized map sprites and saved-design name
-presentation remain required before full Workshop acceptance.
+The raw candidate sorter still ranks all native profiles. Manufacturing retains
+existing wire roles, while live map/cards resolve the actual tuple and names
+through [the ordinary-body integration](live-ground-design-render.md). Complete
+shadow/animation and Workshop acceptance remain open.

@@ -52,13 +52,14 @@ required before the local conquest milestone can be claimed.
 
 ## Current acceptance dashboard — 2026-10-21
 
-Accepted integration: **`ada16c35630723a4e7a91af40c39bc94326ba1b4`**, through
-[#544](https://github.com/jhurliman/glsmac/pull/544), on `codex/faithful-1.0`.
+Accepted integration: **`be0e5da021437a6cca133231dfcaba8e89337637`**, through
+[#545](https://github.com/jhurliman/glsmac/pull/545), on `codex/faithful-1.0`.
 Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `b762d4947671622c51a19c1b03393ca9550e58c6`. This is an integration
+at head `8e52db718df2621e26719962f5e24703808a9a6f`. This is an integration
 checkpoint, not a release candidate or a statement that all platforms were rerun.
 
-Through#544 saved supported designs appear in original production candidate order
+Through#545 current retained names reach Unit cards, production/queue labels and
+frontend snapshots. Saved supported designs appear in original production candidate order
 with retained names and Base-aware costs, and flow through queued selection and
 manufacture. Normal Workshop opening follows the highlighted production choice
 and rebuilds the picker on return. Fresh/reset air counters preserve explicit

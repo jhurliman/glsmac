@@ -694,6 +694,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         const auto first=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);auto* um=game->GetUM();
             auto* source=base->m_owner;auto* recipient=&game->GetState()->m_slots->GetSlot(6);
+            source->GetPlayer()->GetFaction()->m_bases_render.file="spartans.pcx";recipient->GetPlayer()->GetFaction()->m_bases_render.file="Gaians.pcx";
             // Retire fixture-only entities before publishing the integrated sight authority.
             um->DespawnUnit(GSE_CALL,91);game->GetBM()->DespawnBase(GSE_CALL,base->m_id);
             auto known=KnowledgeValue(true,true,128,64).CopyData();known.units.clear();
@@ -702,10 +703,16 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             auto* rover=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("choice-rover"),source,game->GetMap()->GetTile(8,6),state);
             auto* wrapper=rover->Wrap(GSE_CALL);const auto random=fixture.GameplayRandom();const auto before=rover->QueryStats(unit::SmacMoraleMode::Mode1);
             GT_ASSERT(before.full_allowance==6,"Fixture is not original selected global64 Rover");
+            const auto source_visual=um->GetVisual(*rover);
             state.owner_simulation_id=2;auto transfer=um->PrepareDefectionUnits(GSE_CALL,recipient,{{92,state}});transfer.Commit();
             GT_ASSERT(rover->Conventional().design_id==64 && rover->m_owner==recipient && unit::Unit::Unwrap(wrapper)==rover
                 && rover->QueryStats(unit::SmacMoraleMode::Mode1).full_allowance==6 && fixture.GameplayRandom()==random,
                 "Retained global64 design followed the new controller's custom table or changed identity");
+            const auto recipient_visual=um->GetVisual(*rover);
+            GT_ASSERT(source_visual && recipient_visual && source_visual->chassis==recipient_visual->chassis
+                && source_visual->weapon==recipient_visual->weapon && source_visual->owner==1 && recipient_visual->owner==2
+                && source_visual->faction_art=="spartans.pcx" && recipient_visual->faction_art=="Gaians.pcx",
+                "Controller change kept the old owner's material or rebound the design tuple");
             bool ranked=false;fixture.ResourceState([&](auto& value){
                 value.roster.front().active=false; // supplied consistent retired membership; no design reinitialization
                 const auto& global=game->GetState()->m_settings.global;const auto& owned=*value.technology.Find(2);
@@ -1854,6 +1861,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
             using namespace game::backend::unit;
             auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);auto* manager=game->GetUM();
+            base->m_owner->GetPlayer()->GetFaction()->m_bases_render.file="Gaians.pcx";
             const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
             base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}});
             const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
@@ -1884,7 +1892,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 && static_cast<value::String*>(Call(GSE_CALL,wrapper,"get_name"))->value=="Old Guard","Unit names followed shared presentation role");
             const auto& birth=fixture.Updates();const auto found=std::find_if(birth.begin(),birth.end(),[](const auto& row){return row.type==game::FrontendRequest::FR_UNIT_SPAWN && row.data.unit_spawn.unit_id==92;});
             GT_ASSERT(found!=birth.end() && found->data.unit_spawn.display_name && *found->data.unit_spawn.display_name=="Old Guard","Spawn omitted retained design name");
+            GT_ASSERT(found->data.unit_spawn.visual && found->data.unit_spawn.visual->armor==1
+                && found->data.unit_spawn.visual->weapon==0 && found->data.unit_spawn.visual->owner==1
+                && found->data.unit_spawn.visual->faction_art=="Gaians.pcx","Spawn omitted actual tuple or owner material");
             game::FrontendRequest copy(*found);
+            GT_ASSERT(copy.data.unit_spawn.visual!=found->data.unit_spawn.visual && *copy.data.unit_spawn.visual==*found->data.unit_spawn.visual,"Spawn visual payload borrows backend/request storage");
             GT_ASSERT(copy.data.unit_spawn.display_name!=found->data.unit_spawn.display_name,"Spawn name payload aliases source request");
             auto* initialize=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_conventional_unit_preview"));
             auto* inspect=static_cast<value::Callable*>(initialize->Run(GSE_CALL,{game->Wrap(GSE_CALL)}));
@@ -1903,6 +1915,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto& updates=fixture.Updates();const auto changed=std::find_if(updates.begin(),updates.end(),[](const auto& row){return row.type==game::FrontendRequest::FR_UNIT_UPDATE && row.data.unit_update.unit_id==92;});
             GT_ASSERT(changed!=updates.end() && changed->data.unit_update.display_name && *changed->data.unit_update.display_name=="New Guard"
                 && *copy.data.unit_spawn.display_name=="Old Guard","Rename update missing or altered an earlier owned request");
+            GT_ASSERT(changed->data.unit_update.visual && *changed->data.unit_update.visual==*copy.data.unit_spawn.visual,"Name-only Apply changed the graphics recipe");
             game::FrontendRequest update_copy(*changed);GT_ASSERT(update_copy.data.unit_update.display_name!=changed->data.unit_update.display_name
                 && *update_copy.data.unit_update.display_name=="New Guard","Refresh name payload borrowed source request");
             GT_ASSERT(std::none_of(updates.begin(),updates.end(),[](const auto& row){return row.type==game::FrontendRequest::FR_UNIT_UPDATE && row.data.unit_update.unit_id==93;}),"Renaming one design refreshed unrelated shared-Def Unit");

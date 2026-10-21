@@ -1156,7 +1156,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		"Early conventional claimed queued Start preserves raw order then seals before upkeep",
 		"Early conventional claimed immediate Start preserves raw order then seals before upkeep",
 		"Early conventional missing first turn retires raw identities without publication",
-		"Early conventional all-unit seal preflight rejects incompatible later selection atomically",
+		"Early conventional all-unit seal preflight rejects unavailable later design atomically",
 		"Early conventional Pending Start cancellation creates no raw units",
 		"Early conventional Running reset waits then retires raw identities",
 		"Early conventional throwing raw event cleans identity and frontend ownership",
@@ -1205,7 +1205,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				"saved selected Rover was rebound to current selection or lost exact destination state" ); GT_OK();
 		} );
 	} );
-	task->AddTest( "selected Spartan Rover rejects unsupported selections and mismatched renderers before effects", GT() {
+	task->AddTest( "ground Rover rejects mismatched renderers and admits retained non-starting faction designs", GT() {
 		ConventionalUnitFixture fixture; fixture.Configure( true, 3, false, true );
 		return fixture.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto* game = fixture.Game(); auto* manager = game->GetUM(); Define( manager ); Define( manager, true ); fixture.Updates();
@@ -1214,7 +1214,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 			fixture.CopyRoverDesign( 2, 129 ); fixture.CopyRoverDesign( 3, 192 ); fixture.SelectStartup( 3, 192 );
 			const auto next = Unit::GetNextId(); const auto before = fixture.Snapshot(); size_t hooks = 0;
 			manager->On( GSE_CALL, "unit_spawn", NATIVE_CALL( &hooks ) { ++hooks; return VALUE( value::Undefined ); } ) );
-			for ( int scenario = 0; scenario < 5; ++scenario ) {
+			for ( const int scenario : {0,3} ) {
 				ConventionalUnitState state{ 128, 2, 1, 0, 0, false, ConventionalUnitState::Home::None, SmacMoraleMode::Mode0 };
 				size_t owner = 2; const char* def = "EXPLICIT_ROVER";
 				if ( scenario == 0 ) { def = "EXPLICIT_SCOUT"; }
@@ -1227,8 +1227,13 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 					&& hooks == 0 && fixture.Updates().empty(), "invalid selected Rover produced effects at scenario " + std::to_string( scenario ) );
 			}
 			GT_ASSERT( fixture.Snapshot() == before, "rejected selected Rover changed paired RNG or saved world" );
-			// A genuine retained Spartan source is global identity. A different
-			// current controller may keep128; its own fabricated192 is still rejected.
+            for(const auto& choice:std::array<std::array<int,3>,3>{{{{129,2,2}},{{192,3,6}},{{11,2,2}}}}) {
+                ConventionalUnitState ordinary{choice[0],choice[1],1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
+                auto* admitted=Spawn(GSE_CALL,fixture,ordinary,next+1+size_t(choice[0]),size_t(choice[2]),"EXPLICIT_ROVER");
+                GT_ASSERT(admitted->QueryStats(SmacMoraleMode::Mode0).basic_allowance==6,"Non-starting/faction Rover lost ordinary ground rules");
+            }
+            hooks=0;fixture.Updates();
+            // A retained source remains global identity after controller change.
 			ConventionalUnitState retained{128,3,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
             retained.native_flags=0;retained.retained_state_word=0;retained.facing=2;
 			auto* unit=Spawn(GSE_CALL,fixture,retained,next,6,"EXPLICIT_ROVER");
@@ -1464,7 +1469,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
-	task->AddTest( "conventional selected Rover HQ rejects unmeasured or no-longer-selected contexts", []( GSE*, context::Context* ) -> std::string {
+	task->AddTest( "ground Rover HQ preserves live designs across startup selection and rejects missing authority", []( GSE*, context::Context* ) -> std::string {
 		const auto unit_next = Unit::GetNextId(), base_next = base::Base::GetNextId();
 		util::FinallyGuard restore_ids( [ = ] { Unit::SetNextId( unit_next ); base::Base::SetNextId( base_next ); } );
 		for ( int scenario = 2; scenario < 8; ++scenario ) {
@@ -1490,6 +1495,12 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				fixture.GameplayRandom( { 0, 77 } ); const auto jsf = game->GetRandom()->GetStateString(); const auto members = source->units;
 				const auto before = unit->Conventional(); const auto next = Unit::GetNextId(); bool rejected = false;
 				try { manager->ValidateConventionalMove( unit, destination, 0 ); } catch ( const std::exception& ) { rejected = true; }
+                if(scenario==5 || scenario==6) {
+                    GT_ASSERT(!rejected,"Changing startup selection invalidated an existing Rover");
+                    fixture.MoveEvent(GSE_CALL,unit,destination);
+                    GT_ASSERT(unit->GetTile()==destination && unit->Conventional().design_id==64
+                        && unit->QueryStats(unit::SmacMoraleMode::Mode0).basic_allowance==6,"Existing Rover rebound to a new startup selection");GT_OK();
+                }
 				GT_ASSERT( rejected, "unsupported Rover HQ context admitted at " + std::to_string( scenario ) );
 				fixture.MoveEvent( GSE_CALL, unit, destination );
 				GT_ASSERT( unit->Conventional() == before && unit->GetTile() == source && source->units == members && destination->units.empty()

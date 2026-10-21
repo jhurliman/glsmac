@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <optional>
+#include "game/ConventionalUnitVisual.h"
 #include "game/backend/unit/CvrScoutRender.h"
 
 #include "game/backend/unit/Types.h"
@@ -40,6 +41,9 @@ public:
 
 	sprite::Sprite* GetSprite( const backend::unit::morale_t morale, std::optional<uint8_t> facing = {}, std::optional<int> map_zoom = {} );
     bool UsesNativeMapPlacement() const;
+    bool UsesDesignNativeMapPlacement() const {return m_native_projection;}
+    sprite::Sprite* GetDesignSprite(const ConventionalUnitVisual& visual,std::optional<uint8_t> facing,int zoom);
+    sprite::InstancedSprite* GetDesignCard(const ConventionalUnitVisual& visual,std::optional<uint8_t> facing,bool roster);
 	// Native console zoom is independent of the map; initialized Infantry keeps
 	// its retained presentation facing. Legacy profiles retain their fixture view.
 	sprite::InstancedSprite* GetCardSprite( bool roster, std::optional<uint8_t> facing = {} ) const;
@@ -57,6 +61,7 @@ private:
 	std::optional< backend::unit::CvrScoutRender > m_scout_render;
     const bool m_native_projection;
     std::unordered_map<int32_t,sprite::Sprite> m_facing_sprites;
+    std::unordered_map<std::string,sprite::Sprite> m_design_sprites;
 	bool m_former_marker = false;
 	bool m_colony_marker = false;
 

@@ -503,11 +503,9 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
             }
             origin=source_id;original=*found;
         }
-        const auto source_owner=origin/64;const auto* selected=simulation.value.designs.Find(source_owner);
-        const auto source=std::find_if(simulation.value.roster.begin(),simulation.value.roster.end(),[&](const auto& row){return row.simulation_id==source_owner;});
-        if(origin<64 || source==simulation.value.roster.end() || source->faction_id!="SPARTANS" || !selected || selected->starting_scout!=origin) {
-            throw unit::UnsupportedConventionalDesign("Speeder presentation needs retained Spartan startup or measured riot prototype provenance");
-        }
+        // Movement and component semantics are already checked above. The
+        // renderer now resolves the actual tuple and current owner's material;
+        // a non-starting or non-Spartan Rover is not a different chassis rule.
         result.presentation=unit::ConventionalUnitContext::Presentation::SelectedSpartanRover;
     }
 

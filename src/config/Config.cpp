@@ -50,6 +50,10 @@ Config::Config( const std::string& path )
 
 	m_manager = new util::ConfigManager( path, this );
 
+    m_manager->AddRule("automatic-unit-designs", "true|false", "Enable automatic unit design ability suggestions", AH(this) {
+        if(value!="true" && value!="false") {throw std::runtime_error("automatic-unit-designs requires true or false");}
+    });
+
 	m_manager->AddRule(
 		"benchmark", "Disable VSync and FPS limit", AH( this ) {
 			m_launch_flags |= LF_BENCHMARK;
@@ -426,6 +430,7 @@ Config::Config( const std::string& path )
 }
 
 Config::~Config() {
+    delete m_wrapped_config;
 	delete m_manager;
 }
 

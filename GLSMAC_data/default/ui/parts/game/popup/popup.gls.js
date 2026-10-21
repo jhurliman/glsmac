@@ -121,6 +121,7 @@ return {
 
 		const pp = {
 
+            config: p.glsmac.config,
 			game: p.game,
 			ui: p.ui,
 			modules: p.modules,

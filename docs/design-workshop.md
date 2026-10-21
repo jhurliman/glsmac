@@ -1778,3 +1778,33 @@ persistence and its original Preferences UI, complete advanced/SMAX behavior,
 Help/Datalinks and remote/campaign acceptance remain required. The existing RE
 task is tracing the original preferences control; an invented Workshop-only
 checkbox is not a substitute for the original screen.
+
+
+## 2026-10-21 persisted automatic-design setting
+
+The [original Preferences handoff](behavior/preferences-ui-and-automatic-design.md)
+establishes “Design units automatically.” as page0's second row, ID8, word0
+bit0x4000. Fresh profiles enable it. OK/Enter accepts and saves staged checkbox
+edits; Cancel/Escape discards them. The shared original dialog and actual
+checkbox sprite/font bindings are separate presentation work, not a
+Workshop-only checkbox.
+
+The portable profile now retains the Boolean `automatic-unit-designs` setting
+in its existing config.yml. Dedicated typed getters/setters use the same store,
+report write failure and fence callbacks retained beyond configuration shutdown.
+New configurations reload an explicit false, and every Workshop opening refreshes
+its real ability-suggestion gate from the current setting. The editor continues
+to pass that Boolean into the shared component-edit rules. This does not claim
+original INI import, the full shared Preferences UI or every automatic-design
+consumer outside the editor.
+
+The native lifecycle case checks enabled default, non-Boolean rejection, disabled
+save/reload, unrelated-setting retention, failed-write rollback, re-enable/reload
+and retired callbacks. It passes normally and with five production/one test
+translation units under ASan/UBSan (leak detection disabled). Five production
+files/consumers pass correctness analysis. The two affected Workshop UI scripts
+pass; the Base script also checks preference refresh on successive openings.
+A fresh instrumented process with a portable profile explicitly set false loads
+the saved world, opens Workshop through U and closes to the map, then exits0
+without sanitizer reports or tracked OpenGL leaks. Software GL/no audio is not
+hardware or platform acceptance. No original INI was changed.

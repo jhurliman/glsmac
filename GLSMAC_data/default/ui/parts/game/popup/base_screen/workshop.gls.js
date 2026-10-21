@@ -229,6 +229,7 @@ return {
     },
     begin: (base, data, selected) => {
         if (this.opening || this.active || !#is_defined(data.preset_state)) { return; }
+        if (#is_defined(this.p.config)) { this.automatic_suggestions = this.p.config.get_automatic_unit_designs(); }
         this.base = base; this.opening = true; this.next_request = this.next_request + 1; this.opening_id = this.next_request;
         const request = this.opening_id; const expected = data.preset_state;
         this.p.game.event('open_smac_workshop', {base: base, selected_design: selected, request_id: request, expected_state: expected});

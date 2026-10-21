@@ -22,6 +22,7 @@ SET( SRC ${SRC}
 	${PWD}/Movie.cpp
 	${PWD}/SmacPlanetMap.cpp
 	${PWD}/UIClass.cpp
+    ${PWD}/UserPreferences.cpp
     ${PWD}/SmacDialogFont.cpp
     ${PWD}/SmacDialogFrame.cpp
 	${PWD}/Sound.cpp

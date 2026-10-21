@@ -53,18 +53,16 @@ required before the local conquest milestone can be claimed.
 
 ## Current acceptance dashboard — 2026-10-21
 
-Accepted integration: **`c444f5437a584f7d615928e5c162f384df9130a7`**, through
-[#550](https://github.com/jhurliman/glsmac/pull/550), on `codex/faithful-1.0`.
-Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `1676ca3c42141bd38cc994af3dc22c8900d4aaa9`. This is an integration
-checkpoint, not a release candidate or a statement that all platforms were rerun.
+Accepted integration: **`59e123d11e0b6665d7a06ebf10ea1b0320591690`**, through
+[#551](https://github.com/jhurliman/glsmac/pull/551), on `codex/faithful-1.0`.
+Its selected Linux regression/lifecycle checks passed at head
+`a85bcfc1ba624bce2cb7b8702c9b0f7ab0cc7707`; the preceding owner-command
+correctness-analysis gate also passed. This is an integration checkpoint, not
+a release candidate or a statement that all platforms were rerun. The ordinary
+global U/HQ caller and failed/stale opening feedback are now part of this accepted
+checkpoint. Documentation-only#552 records its remaining limits.
 
-Additional tested candidate [#551](https://github.com/jhurliman/glsmac/pull/551)
-connects the ordinary global U/HQ caller and opening-failure feedback. Its
-saved-world capture and focused UI checks are supporting evidence; this accepted
-checkpoint remains pinned to#550.
-
-Through#550 retained component bodies and current-owner materials reach the map
+Through#551 retained component bodies and current-owner materials reach the map
 and both console cards; bounded original idle-body controls match. Native
 style21/18 console panels and indexed ground shadows have twelve matching
 complete model-plus-panel crops; live map shadows remain open. Workshop queries
@@ -110,7 +108,7 @@ remaining model pixels and whole-parent rendering remain open. #536/#537 add
 filtered preset and PSI-custom recommendation boundaries with521 original
 submission expectations; the later live preset, console-button and normal-entry
 receipts connect those consumers. The shared owner backend and production Workshop/Redesign entry are connected;
-the global U/HQ UI route has the candidate receipt above. The original normal picker has no established separate visible
+the global U/HQ UI route has an accepted caller receipt above. The original normal picker has no established separate visible
 New/Redesign controls; Help/Datalinks and preference persistence remain open.
 These receipts do not establish whole-screen parity or general advanced/remote
 manufacture acceptance. The bounded early-Fission human-played path and its
@@ -135,7 +133,7 @@ equality and complete human-played/remote manufacturing receipt remain open.
 | M2.6: second Base and Pod consumption | Partial | Founding and [colony-choice continuation](smac-colony-choice-continuation.md) have live fixtures. Verify population/ownership/support together in the complete scenario. |
 | M2.7: combat, capture, elimination and valid conquest | Partial | [Hostile movement](smac-live-scout-combat.md), [defended capture](smac-defended-base-combat.md) and the [conquest-controller contract](behavior/conquest-controller.md) cover bounded paths. A legal opponent, full remaining-Unit/Pod disposition and actual match ending remain required. |
 | M2.8: every checkpoint reload, remote repeat and late join | Not run as the complete acceptance | Local restoration fixtures are not the numbered uninterrupted-vs-restored match or its network repeat. Retain this as an explicit M2 exit gate. |
-| WS1: open, browse/New, rename, reselect, Apply/Done/Cancel | Partial | [Custom-edit](behavior/design-workshop-custom-edit.md) and [fresh-draft](behavior/design-workshop-fresh-draft.md) reference contracts exist; queued save/retirement paths pass. Normal-open/browse and fenced reselection/Rename paths are connected; Apply/Done/Cancel and original warnings have live receipts. Zero-Base opening/Apply is merged; global U/HQ has a tested candidate caller receipt. The bounded early-Fission named-design gameplay/disk-reopen scenario is complete; preference persistence, advanced/remote acceptance and the full original input/screen inventory remain open. |
+| WS1: open, browse/New, rename, reselect, Apply/Done/Cancel | Partial | [Custom-edit](behavior/design-workshop-custom-edit.md) and [fresh-draft](behavior/design-workshop-fresh-draft.md) reference contracts exist; queued save/retirement paths pass. Normal-open/browse and fenced reselection/Rename paths are connected; Apply/Done/Cancel and original warnings have live receipts. Zero-Base opening/Apply and the global U/HQ caller are merged. The bounded early-Fission named-design gameplay/disk-reopen scenario is complete; The editor now reads a persisted automatic-design Boolean; the complete shared Preferences UI/store, advanced/remote acceptance and full original input/screen inventory remain open. |
 | WS2: all legal components, previews, costs and abilities | Partial | [Workshop journal](design-workshop.md) separates exact static compositions, card controls, general record construction and live integration. Stock component/ability pickers, cleanup, PSI formatting, DATA/COST and live animation are connected. Ability-dependent model composition, advanced/SMAX cases, preferences and complete pixel/interaction comparisons remain open. |
 | WS3: new named design to usable manufactured Unit | Partial; bounded early-Fission scenario complete | The actual Campaign Guard receipt covers component selection, Rename/Apply/Done, production, a usable manufactured Unit, disk save/load and Workshop/roster reopen. Advanced/SMAX/remote manufacturing and complete interaction acceptance remain open; do not generalize this one supported scenario. |
 | WS4: original full Workshop screen and interaction diff | Not run as the complete acceptance | Exact declared CVR buffers and UI layout previews are supporting evidence only. The ordinary map-opened capture matches43,804 Presets pixels and3,552 opaque DESWIN shell pixels; Scout DATA differs by1/8,232 pixels. Match the complete parent/console, remaining glyph/model/control states and fixed animation phase at logical4:3 before claiming screen parity. |

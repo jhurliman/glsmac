@@ -2,6 +2,7 @@
 #include "Sound.h"
 #include "Flic.h"
 #include "UIClass.h"
+#include "UserPreferences.h"
 #include "SmacDialogFont.h"
 #include "SmacDialogFrame.h"
 #include "SmacOrdinaryLandExploration.h"
@@ -187,6 +188,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		AddSoundTests( task );
 		AddFlicTests( task );
 		AddUIClassTests( task );
+        AddUserPreferencesTests(task);
         AddSmacDialogFontTests(task);
         AddSmacDialogFrameTests(task);
 		tests::AddSmacOrdinaryLandExplorationTests( task );

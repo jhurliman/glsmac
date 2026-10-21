@@ -7,6 +7,7 @@
 #include "fixtures/WorkshopGeneral.h"
 #include "fixtures/WorkshopHuman.h"
 #include "fixtures/WorkshopDomain.h"
+#include "fixtures/WorkshopPicker.h"
 #include "fixtures/WorkshopSavedCommits.h"
 #include "fixtures/WorkshopAllocation.h"
 #include "fixtures/SmacIntrinsicOverlays.h"
@@ -25,6 +26,32 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop accepted picker mutations match fifteen native drafts and two entry guards",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);
+        if(!input) {throw std::runtime_error("Missing owned picker rules");}
+        const std::string source{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
+        const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;auto owner=Owner();owner.owned.fill(true);
+        const auto equal=[](const unit::SmacWorkshopEditor& a,const unit::SmacWorkshopEditor& b) {
+            return a.draft.selected_design==b.draft.selected_design && a.draft.chassis==b.draft.chassis && a.draft.weapon==b.draft.weapon
+                && a.draft.armor==b.draft.armor && a.draft.reactor==b.draft.reactor && a.draft.abilities==b.draft.abilities
+                && a.draft.name==b.draft.name && a.ability_slots==b.ability_slots;
+        };
+        for(const auto& row:workshop_picker_fixture::Cases) {
+            const auto before=row.before;auto context=unit::QuerySmacWorkshopEditContext(catalog,tech,owner,row.automatic);
+            context.second_ability=row.second;auto actual=before;bool admitted=true;
+            if(row.kind==4) {auto result=unit::SetSmacWorkshopAbilitySlot(before,uint32_t(row.slot),row.choice,context,catalog);
+                actual=std::move(result.editor);admitted=result.admitted;}
+            else {actual=unit::ChangeSmacWorkshopComponent(before,static_cast<Kind>(row.kind),uint32_t(row.choice),context,catalog);}
+            GT_ASSERT(equal(actual,row.after) && admitted==row.admitted && equal(before,row.before),"Native picker draft differs: "+std::string(row.name));
+        }GT_OK();
+    });
+    task->AddTest("SMAC Workshop modal return keeps cancellation and reactor rating semantics",GT(){
+        GT_ASSERT(unit::ResolveSmacWorkshopPickerResult(2,-1,true,Kind::Chassis)==2,"Cancellation installed last hover");
+        GT_ASSERT(unit::ResolveSmacWorkshopPickerResult(2,4,false,Kind::Chassis)==2,"Unavailable card replaced original choice");
+        GT_ASSERT(unit::ResolveSmacWorkshopPickerResult(2,2,true,Kind::Reactor)==3,"Reactor ordinal was not converted to rating");GT_OK();
+    });
     task->AddTest("SMAC Workshop domain and PSI names match68 native strings and12 complete saved pools",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         const auto read=[&](const char* name) {std::ifstream file(std::string(assets)+"/"+name,std::ios::binary);if(!file) {throw std::runtime_error("Missing owned domain naming rules");}return std::string(std::istreambuf_iterator<char>(file),{});};

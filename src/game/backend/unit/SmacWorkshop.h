@@ -47,6 +47,33 @@ SmacWorkshopAbilitySelection CleanSmacWorkshopAbilities(const SmacWorkshopDraft&
 SmacWorkshopAbilitySelection CleanSmacWorkshopRetainedAbilities(const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
     const faction::SmacFactionTechnologyState& owner);
+struct SmacWorkshopEditor {
+    SmacWorkshopDraft draft;
+    std::array<int32_t,2> ability_slots{{-1,-1}};
+};
+// The editor preference and current owner capability are explicit authority,
+// not defaults inferred from a tuple or an existing saved record.
+struct SmacWorkshopEditContext {
+    bool automatic_suggestions,second_ability;
+    std::array<bool,24> available_abilities;
+    SmacWorkshopEditContext(bool automatic,bool second,std::array<bool,24> available)
+        : automatic_suggestions(automatic),second_ability(second),available_abilities(std::move(available)) {}
+};
+SmacWorkshopEditContext QuerySmacWorkshopEditContext(const SmacPredefinedUnitCatalog& catalog,
+    const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner,
+    bool automatic_suggestions);
+// Accepted mapped-picker caller bodies, including same-value modal returns.
+// Does not allocate, save, recenter the browse list or alter the selected record.
+SmacWorkshopEditor ChangeSmacWorkshopComponent(const SmacWorkshopEditor& before,SmacWorkshopComponent kind,
+    uint32_t accepted,const SmacWorkshopEditContext& context,const SmacPredefinedUnitCatalog& catalog);
+// Slot-entry guards precede the accepted modal result. >=24 means None.
+// The chooser separately owns technology, compatibility and duplicate filtering.
+struct SmacWorkshopAbilityEdit {SmacWorkshopEditor editor;bool admitted;};
+SmacWorkshopAbilityEdit SetSmacWorkshopAbilitySlot(const SmacWorkshopEditor& before,uint32_t slot,int32_t accepted,
+    const SmacWorkshopEditContext& context,const SmacPredefinedUnitCatalog& catalog);
+// Generic modal return boundary: invalid/cancelled hover preserves old choice;
+// an admitted mapped reactor index becomes a one-based rating.
+int32_t ResolveSmacWorkshopPickerResult(int32_t old_choice,int32_t mapped_hover,bool valid,SmacWorkshopComponent kind);
 // Original custom-record construction. Preserves name, byte47 and prerequisite;
 // technology/picker legality and automatic naming belong to the caller.
 void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,

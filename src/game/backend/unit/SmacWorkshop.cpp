@@ -104,6 +104,97 @@ void ValidateSmacWorkshopEditorAbilities(const SmacWorkshopDraft& draft,const Sm
     }}
     if(CleanSmacWorkshopAbilities(draft,slots,count<2 || known("Neural"),catalog).mask!=draft.abilities) {throw std::invalid_argument("Workshop abilities require editor cleanup");}
 }
+SmacWorkshopEditContext QuerySmacWorkshopEditContext(const SmacPredefinedUnitCatalog& catalog,
+    const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner,bool automatic_suggestions) {
+    RequireOwner(owner);if(catalog.abilities.abilities.size()!=24) {throw std::invalid_argument("Workshop edits require24 ability definitions");}
+    SmacWorkshopEditContext result{automatic_suggestions,Available(Prerequisite(technologies.ResolveToken("Neural")),technologies,owner),{}};
+    for(size_t bit=0;bit<24;++bit) {result.available_abilities[bit]=Available(Prerequisite(technologies.ResolveToken(catalog.abilities.abilities[bit].prerequisite)),technologies,owner);}
+    return result;
+}
+namespace {
+void RequireEditor(const SmacWorkshopEditor& editor,const SmacPredefinedUnitCatalog& catalog) {
+    RequireComponents(editor.draft,catalog);
+    for(const auto slot:editor.ability_slots) {if(slot< -1 || slot>=24) {throw std::invalid_argument("Invalid Workshop ability slot");}}
+}
+std::array<int32_t,2> WorkshopSlots(uint32_t mask) {
+    std::array<int32_t,2> result{-1,-1};size_t next=0;
+    for(int32_t bit=0;bit<24 && next<2;++bit) {if(mask&(1u<<bit)) {result[next++]=bit;}}
+    return result;
+}
+}
+SmacWorkshopEditor ChangeSmacWorkshopComponent(const SmacWorkshopEditor& before,SmacWorkshopComponent kind,
+    uint32_t accepted,const SmacWorkshopEditContext& context,const SmacPredefinedUnitCatalog& catalog) {
+    RequireEditor(before,catalog);auto result=before;auto& draft=result.draft;
+    const auto cleanup=[&]() {const auto value=CleanSmacWorkshopAbilities(draft,result.ability_slots,context.second_ability,catalog);
+        draft.abilities=value.mask;result.ability_slots=value.slots;};
+    const auto suggest=[&](uint32_t bit) {
+        cleanup();if(!context.automatic_suggestions || !context.available_abilities.at(bit) || !SmacWorkshopAbilityCompatible(bit,draft,catalog)) {return;}
+        unsigned count=0;for(auto mask=draft.abilities;mask;mask>>=1) {count+=mask&1;}
+        if(count>1 || (count==1 && !context.second_ability)) {return;}
+        draft.abilities|=1u<<bit;result.ability_slots=WorkshopSlots(draft.abilities);
+    };
+    using Domain=loader::txt::ChassisTriad;
+    const auto weapon=[&]()->const loader::txt::WeaponComponent& {return catalog.weapons.weapons.at(draft.weapon);};
+    switch(kind) {
+        case SmacWorkshopComponent::Chassis: {
+            if(accepted>=catalog.chassis.chassis.size()) {throw std::invalid_argument("Invalid Workshop chassis choice");}
+            const auto old_domain=catalog.chassis.chassis.at(draft.chassis).triad;draft.chassis=accepted;
+            const auto& chassis=catalog.chassis.chassis.at(accepted);
+            if(chassis.missile) {draft.armor=0;if(int32_t(weapon().mode)>=2) {draft.weapon=0;}if(draft.weapon!=13) {draft.weapon=20;}}
+            else if(weapon().offense>=99 || draft.weapon==20) {draft.weapon=0;}
+            if(chassis.triad!=old_domain) {
+                if(chassis.triad!=Domain::Land) {
+                    suggest(1);
+                    if(chassis.triad==Domain::Air && (int32_t(weapon().mode)==11 || (int32_t(weapon().mode)==9 && chassis.range!=0))) {draft.weapon=0;}
+                } else if(draft.abilities&2) {draft.abilities&=~2u;result.ability_slots=WorkshopSlots(draft.abilities);}
+            }break;
+        }
+        case SmacWorkshopComponent::Weapon: {
+            if(accepted>=catalog.weapons.weapons.size()) {throw std::invalid_argument("Invalid Workshop weapon choice");}
+            const auto old=draft.weapon;draft.weapon=accepted;const auto& chassis=catalog.chassis.chassis.at(draft.chassis);
+            if(chassis.triad==Domain::Air) {
+                if(int32_t(weapon().mode)==11 || (int32_t(weapon().mode)==9 && chassis.range!=0)) {draft.weapon=old;}
+                if(chassis.missile) {if(draft.weapon!=13) {draft.weapon=20;}}
+                else if(draft.weapon==13 || draft.weapon==20) {draft.weapon=old;}
+            } else if(draft.weapon==13 || draft.weapon==20) {draft.weapon=old;}
+            if(weapon().offense>=99) {draft.abilities=0;result.ability_slots={-1,-1};}
+            // The source's empty-mask gate is before cleanup, including when
+            // the old mask will subsequently lose every incompatible ability.
+            if(!draft.abilities && draft.weapon!=old) {
+                if(int32_t(weapon().mode)==7) {suggest(19);}
+                if(int32_t(weapon().mode)==9) {suggest(0);suggest(13);}
+                if(int64_t(weapon().offense)>=2*int64_t(catalog.defenses.defenses.at(draft.armor).rating)) {suggest(17);}
+            }break;
+        }
+        case SmacWorkshopComponent::Armor:
+            if(accepted>=catalog.defenses.defenses.size()) {throw std::invalid_argument("Invalid Workshop shielding choice");}
+            draft.armor=accepted;if(catalog.defenses.defenses.at(accepted).rating>1 && weapon().offense<=1) {suggest(9);}break;
+        case SmacWorkshopComponent::Reactor:
+            if(accepted<1 || accepted>4 || accepted>catalog.reactors.reactors.size()) {throw std::invalid_argument("Invalid Workshop reactor choice");}
+            draft.reactor=uint8_t(accepted);break;
+        default: throw std::invalid_argument("Unknown Workshop component edit");
+    }
+    cleanup();return result;
+}
+SmacWorkshopAbilityEdit SetSmacWorkshopAbilitySlot(const SmacWorkshopEditor& before,uint32_t slot,int32_t accepted,
+    const SmacWorkshopEditContext& context,const SmacPredefinedUnitCatalog& catalog) {
+    RequireEditor(before,catalog);if(slot>=2 || accepted< -1) {throw std::invalid_argument("Invalid Workshop ability choice");}
+    SmacWorkshopAbilityEdit result{before,false};
+    if(catalog.chassis.chassis.at(before.draft.chassis).missile || (slot==1 && !context.second_ability)) {return result;}
+    result.admitted=true;result.editor.ability_slots[slot]=accepted<24?accepted:-1;result.editor.draft.abilities=0;
+    for(const auto bit:result.editor.ability_slots) {if(bit>=0) {result.editor.draft.abilities|=1u<<bit;}}
+    return result;
+}
+int32_t ResolveSmacWorkshopPickerResult(int32_t old_choice,int32_t mapped_hover,bool valid,SmacWorkshopComponent kind) {
+    if(old_choice<0 || kind<SmacWorkshopComponent::Chassis || kind>SmacWorkshopComponent::Reactor) {
+        throw std::invalid_argument("Invalid Workshop modal context");
+    }
+    if(mapped_hover<0 || !valid) {return old_choice;}
+    if(kind==SmacWorkshopComponent::Reactor) {
+        if(mapped_hover==INT32_MAX) {throw std::overflow_error("Workshop reactor rating overflows signed32");}
+        return mapped_hover+1;
+    }return mapped_hover;
+}
 void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
     const faction::SmacFactionTechnologyState& owner) {

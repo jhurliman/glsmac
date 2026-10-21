@@ -937,3 +937,33 @@ remaining action controls/console panels, full stat/cost presentation and
 timer-driven preview animation remain required. The raw component stat line
 is not yet the complete original5932d0 formatter. The reference uses a blank
 map fixture; live captures retain the current Base Screen behind Workshop.
+
+### Accepted picker transitions and live query boundary
+
+The editable draft and its two ordered ability slots now have source-backed
+component-change callers. Chassis/domain changes, missile payload coercion,
+weapon rejection, automatic suggestions and subsequent compatibility cleanup
+follow the original order, including same-value returns after modal cancellation.
+Manual ability selection preserves reverse order and empty slots; missile and
+missing-Neural entry guards leave the draft unchanged. Automatic suggestions
+are an explicit preference input, separate from owner technology admission.
+See [interactive editing](behavior/design-workshop-interactive-editing.md).
+
+The owned Base exposes `get_smac_workshop_edit` as a read-only query. It derives
+technology admission from the live owner, carries the complete draft/name and
+ordered slots, rejects foreign banks and validates wide script integers before
+narrowing. Unavailable component choices retain the old choice before running
+the original accepted caller; this query never commits or allocates a design.
+The visible picker buttons still need to call this adapter. Preference
+persistence, the other component grids and manual ability dialogs remain open.
+
+Validation:35 selected native groups pass in both the cached build and focused
+ASan/UBSan run (five production and two test translation units instrumented).
+Controls compare15 complete native draft transitions, two ability-entry guards
+and three modal returns. A real wrapped Base call verifies reactor admission,
+manual slot gaps, wide-integer rejection and complete unchanged world state.
+Correctness analysis passes on the two changed production files and three
+affected consumers. LLVM15 crashed in `bugprone-sizeof-expression` for
+UnitManager; that consumer passes with only that check disabled. No UI source
+changed, so the previous six UI-script successes are reused. This is not new
+whole-screen or platform-matrix acceptance.

@@ -49,6 +49,35 @@ For this font profile, row stride22, painted row height20, row top
 column's glyph starts columnX+3. Stats after `|` retain the caller's existing
 right-aligned field within that cell.
 
+### Unprototyped target marker in a chooser row
+
+Action7 `442dfa..442e3f` appends the literal at **6a6fac**, exactly
+**one ASCII space followed by `*`** (`20 2a`), when the selected stored
+source has flag4 set and this target has flag4 clear. A target with flag4
+set bypasses it; a source with flag4 clear also bypasses it.
+
+The row builder has already appended the name, `|`, and5932d0 stats before
+testing these flags. The marker therefore belongs to the **right stats
+column**, after the complete stat/reactor notation. Native bounded receipt:
+
+```
+Upgrade Target 65|2-3-1 *
+```
+
+The620600 row value remains65. This marker does not enter the stored name,
+does not precede the stats, and is not an ability token. It is separate
+from an attack `*` or reactor `*2`. It also participates in the whole-row
+width measurement described below. This is the chooser's5932d0 row path,
+not the5935c0 economic-prompt string path.
+
+[Marker receipt](design-workshop-upgrade-row-marker-cases.json) records the
+one native row fragment and its declared source/target flag values.
+It passes seven source literals and the exact two-byte marker check.
+Private additive freeze: `tmp/reference/independent-workshop-upgrade-row-marker-evidence-20261021/`,
+six payloads; manifest
+`17734c25df2c2b60a0fa19ffd6518821020a42f19a1836bef65871a0c211ad11`.
+This marker provenance paragraph was added after freezing.
+
 Width is text dependent. `627740@6279df..627aac` first takes the maximum
 native measured text width M, adds padding3 and gap3, and expands the
 minimum660px allocation when necessary:

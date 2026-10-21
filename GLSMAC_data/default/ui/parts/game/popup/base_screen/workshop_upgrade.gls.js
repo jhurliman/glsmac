@@ -63,7 +63,7 @@ view = {
         if (chooser) {
             const count = #sizeof(e.choices); columns = count <= 12 ? 1 : count / 12 + 1; rows_per_column = (count + columns - 1) / columns;
             let measured = 0;
-            for (choice of e.choices) { view.probe.text = choice.stored_name + '|' + choice.stat_line; measured = #max(measured, view.probe.measure().width); }
+            for (choice of e.choices) { view.probe.text = choice.stored_name + '|' + choice.stat_line + (choice.prototype ? ' *' : ''); measured = #max(measured, view.probe.measure().width); }
             allocation = #max(660, columns * (measured + 6));
         }
         const width = chooser ? allocation + 97 : (confirm ? 755 : 758); const inner = width - 92; const wrap = chooser ? allocation - 3 : width - 306; const x = chooser ? 33 : 239;
@@ -88,7 +88,7 @@ view = {
         }
         const lines = (baseline - 50) / 20 + 1; const list_top = chooser ? 44 + 20 * lines : #max(164, 44 + 20 * lines);
         view.options = [];
-        if (chooser) { for (choice of e.choices) { view.options :+ {value: choice.id, text: choice.stored_name, stats: choice.stat_line}; } }
+        if (chooser) { for (choice of e.choices) { view.options :+ {value: choice.id, text: choice.stored_name, stats: choice.stat_line + (choice.prototype ? ' *' : '')}; } }
         else { let value = 0; for (row of words.rows) { view.options :+ {value: value, text: row, stats: ''}; value++; } }
         view.selected = 0; view.hovered = (0 - 1); view.list_top = list_top; view.row_width = chooser ? allocation / columns - 3 : 655;
         const height = chooser ? #max(300, 22 * rows_per_column + 20 * lines + 120) : 300;

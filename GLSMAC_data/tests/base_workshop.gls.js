@@ -451,8 +451,9 @@ test.assert(dialog.pending && #sizeof(commands) == upgrade_commands && commands[
 let upgrade_reply = {base: base, request_id: dialog.pending_id, expected_state: 'upgrade-quote', stale: false, failed: false, declined: false, upgraded: false,
     confirmation: false, affordable: true, unprototyped: false, count: 2, total: 100, available: 2000, target_design: (0 - 1),
     source_name: 'Stored Scout', source_text: {name: 'Stored Scout', stats: '1-1-1', domain: 0, reactor: 1, abilities: 0, ability_tokens: ''}, target_text: {name: 'Guard', stats: '2-3-1', domain: 0, reactor: 1, abilities: 0, ability_tokens: ''}, illustration: 'unit_sm.pcx',
-    choices: [{id: 65, stored_name: 'Guard', stat_line: '2-3-1', prototype: false}, {id: 66, stored_name: 'Better Guard', stat_line: '4-3-1', prototype: false}]};
+    choices: [{id: 65, stored_name: 'Guard', stat_line: '2-3-1', prototype: true}, {id: 66, stored_name: 'Better Guard', stat_line: '4-3-1', prototype: false}]};
 listeners.smac_workshop_upgrade(upgrade_reply);
+test.assert(upgrade.rows[0].stats.text == '2-3-1 *' && upgrade.rows[1].stats.text == '4-3-1');
 test.assert(upgrade.active && upgrade.kind == 0 && !dialog.pending && upgrade.window.width == 757 && upgrade.answers[0].left == 34 && upgrade.answers[1].left == 365);
 test.assert(upgrade.rows[1].button.handlers.mousedown({button: 'left'}) == true && upgrade.selected == 1);
 test.assert(upgrade.window.handlers.keydown({modifiers: {}, code: 'ESCAPE'}) == true && !upgrade.active && !dialog.pending && #sizeof(commands) == upgrade_commands);

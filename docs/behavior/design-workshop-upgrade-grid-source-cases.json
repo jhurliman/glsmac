@@ -1,0 +1,54 @@
+{
+  "scope": "Source-only clarification reusing retained13/63 native objects, glyph/font receipts and original executable. No new layout, font or input runs.",
+  "validation": {
+    "retained_layouts": 2,
+    "retained_font_records": 1,
+    "source_literals": 13,
+    "pipe_jump_entry": true
+  },
+  "measurement": {
+    "font_address": "0x94f0c8",
+    "font_id": 129,
+    "face": "Arial Narrow",
+    "height": -16,
+    "weight": 700,
+    "literal_pipe_included": true,
+    "call_chain": [
+      "0x62798e",
+      "0x5f5590",
+      "0x5f55c0",
+      "0x630870",
+      "GetTextExtentPoint32A"
+    ]
+  },
+  "cases": [
+    {
+      "count": 13,
+      "rows": 7,
+      "body_height": 20,
+      "height": 300,
+      "rect": [
+        149,
+        255,
+        906,
+        555
+      ],
+      "bottom_padding": 56,
+      "measurement_font": "0x94f0c8"
+    },
+    {
+      "count": 63,
+      "rows": 11,
+      "body_height": 20,
+      "height": 382,
+      "rect": [
+        -60,
+        173,
+        1117,
+        555
+      ],
+      "bottom_padding": 50,
+      "measurement_font": "0x94f0c8"
+    }
+  ]
+}

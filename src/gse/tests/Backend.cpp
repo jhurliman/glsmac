@@ -7046,6 +7046,8 @@ public:
 			void Receive( const types::Packet& packet ) { network::Event event; event.type = network::Event::ET_PACKET; event.data.packet_data = packet.Serialize().ToString(); ProcessEvent( event ); }
 			const std::string& ErrorReason() const { return m_disconnect_reason; }
 		};
+		// Preserve the malformed-download snapshots on the heap while the real
+		// Client/Start path nests its own simulation validation on a 1 MiB stack.
 		EnableWorldSnapshot();
 		const auto setup = WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 			m_state->SetConnection( new RecordingConnection( gc_space ) );
@@ -7055,10 +7057,10 @@ public:
 			SetSnapshotTurn( 37 ); GT_OK();
 		} );
 		GT_ASSERT( setup.empty(), "rejected runtime source: " + setup );
-		const auto expected = m_game.m_simulation->value;
+		const auto expected_storage=std::make_unique<faction::SmacSimulationState>(m_game.m_simulation->value); const auto& expected=*expected_storage;
 		const auto& settings = m_state->m_settings.global;
 		for ( int scenario = knowledge_only ? 71 : 0; scenario < ( knowledge_only ? 75 : 71 ); ++scenario ) {
-			BackendFixture destination; destination.EnableWorldSnapshot(); Client* client = nullptr;
+			auto destination_storage=std::make_unique<BackendFixture>(); auto& destination=*destination_storage; destination.EnableWorldSnapshot(); Client* client = nullptr;
 			size_t callbacks = 0;
 			const auto configured = destination.WithScriptValues( [ & ]( GSE_CALLABLE ) -> std::string {
 				auto* state = destination.m_state; state->m_slots->Clear();
@@ -7073,12 +7075,12 @@ public:
 				GT_OK();
 			} );
 			GT_ASSERT( configured.empty(), "invalid runtime configure: " + configured );
-			std::optional< faction::SmacSimulationState > prior_simulation;
+			std::unique_ptr<faction::SmacSimulationState> prior_simulation;
 			if ( scenario >= 63 ) {
-				auto prior = expected; prior.movement_history = SmacMovementHistory::NewGeneratedWorld( 8, 8 ); prior.movement_history->RetainNearest( 23 );
-				destination.m_game.m_simulation = destination.m_game.BindSimulation( prior ); prior_simulation = prior;
+				auto prior_storage=std::make_unique<faction::SmacSimulationState>(expected); auto& prior=*prior_storage; prior.movement_history = SmacMovementHistory::NewGeneratedWorld( 8, 8 ); prior.movement_history->RetainNearest( 23 );
+				destination.m_game.m_simulation = destination.m_game.BindSimulation( prior ); prior_simulation=std::make_unique<faction::SmacSimulationState>(prior);
 			}
-			auto value = expected;
+			auto value_storage=std::make_unique<faction::SmacSimulationState>(expected); auto& value=*value_storage;
 			if ( scenario == 0 ) { value.roster[ 2 ].simulation_id = 1; }
 			if ( scenario == 1 ) { value.roster[ 2 ].slot = 2; }
 			if ( scenario == 2 ) { value.roster[ 2 ].gsid = "another-controller"; }

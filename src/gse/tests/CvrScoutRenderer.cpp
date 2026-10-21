@@ -7,6 +7,9 @@
 #include "loader/cvr/ScoutArithmetic.h"
 #include "loader/cvr/ScoutLighting.h"
 #include "loader/cvr/ScoutView.h"
+#include "loader/cvr/WorkshopPreviewController.h"
+#include "ui/SmacWorkshopCachedPreview.h"
+#include "util/SHA256.h"
 #include "task/gsetests/GSETests.h"
 #include "types/texture/Texture.h"
 #include "fixtures/CvrScoutMatrix.h"
@@ -268,7 +271,49 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
         target=before;image.Composite(target,4,3,4,lookup,{-1,-1},{0,0,4,3});
         GT_ASSERT(target[0]==11 && std::count(target.begin(),target.end(),1)==11,"Negative-origin clip changed");GT_OK();
     });
-    task->AddTest("CVR Workshop nonzero yaw and shared model phase match four native frames",GT(){
+    task->AddTest("CVR Workshop cached sprite matches isolated original initialized shadow blit",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto read=[&](const std::string& name) {
+            for(const auto& entry:std::filesystem::directory_iterator(directory)) {
+                auto candidate=entry.path().filename().string();std::transform(candidate.begin(),candidate.end(),candidate.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if(candidate==name) {std::ifstream stream(entry.path(),std::ios::binary);return std::string(std::istreambuf_iterator<char>(stream),{});}
+            }throw std::runtime_error("Missing owned cached Workshop asset: "+name);
+        };
+        const auto atlas=CvrActorMaterial::ReadWorkshopUnitSprites(read("units.pcx"));const auto& sprite=atlas[0][0];
+        const auto sha=[](const auto& bytes){return util::SHA256(std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));};
+        GT_ASSERT((sprite.width==87 && sprite.height==67 && sprite.offset==std::array<int32_t,2>({8,0})),"Native trimmed sprite bounds differ");
+        GT_ASSERT(sha(sprite.pixels)=="9c784a21e0e3f0d902d93dcfc39eaee66238e2cb70127a33570736992bd55c42","Native trimmed source differs");
+        const auto colors=CvrActorMaterial::ReadWorkshop(read("palette.pcx"),read("vbp.cvr"),read("system.txt")).colors;
+        const auto lookup=game::frontend::smac_developed_overlay::ShadowLookup(colors,game::frontend::smac_developed_overlay::ShadowPrecision::Extended64);
+        GT_ASSERT(sha(lookup)=="0229080d2b3b2e56a39523f3ced54fcbcbe8bc8dea8a8548d5fbe75820cd6ef3","Initialized native shadow lookup differs");
+        const auto renderer=::ui::SmacWorkshopCachedPreview::Load(read);const auto image=renderer.Render(0,0);
+        GT_ASSERT(sha(image.indexed)=="b0a21c378fd7b95920ecdf4d2b67d60e4a648c7ddab3ac926a2b6842d7e95d20","Native initialized sprite/background differs: "+sha(image.indexed));
+        for(int icon=0;icon<10;++icon) {for(int variant=0;variant<(icon==3 ? 7:1);++variant) {
+            const auto rendered=renderer.Render(icon,variant);GT_ASSERT(rendered.indexed.size()==311*311 && rendered.rgba.size()==311*311*4,"Cached sprite plane extent differs");
+        }}
+        GT_ASSERT(Rejects([&]{renderer.Render(3,7);}) && Rejects([&]{renderer.Render(10,0);}),"Invalid cached variant or icon admitted");GT_OK();
+    });
+
+    task->AddTest("CVR Workshop controller coalesces notifications and preserves native per-paint yaw",GT(){
+        WorkshopPreviewController state;
+        state.Start(100);GT_ASSERT(!state.Due(139) && state.Due(140) && !state.Due(140),"Initial notification or duplicate dispatch differs");
+        GT_ASSERT(state.BeginPaint(false)==0 && state.Yaw()==0x3d4ccccd && state.PaintCount()==1,"First paint must draw old yaw");
+        state.Start(155);GT_ASSERT(state.Due(180),"Refresh reset the existing timer epoch");
+        GT_ASSERT(state.BeginPaint(true)==0x3d4ccccd && state.Yaw()==0x3d4ccccd && state.PaintCount()==2,"Cached paint advanced yaw");
+        GT_ASSERT(state.Due(4122) && !state.Due(4122) && !state.Due(4139) && state.Due(4140),"Missed periods caught up or shifted the timer epoch");
+        GT_ASSERT(state.BeginPaint(false)==0x3d4ccccd && state.Yaw()==0x3dcccccd,"Delayed dispatch multiplied yaw by elapsed time");
+        state.Stop();GT_ASSERT(!state.Due(8000) && state.Yaw()==0x3dcccccd && state.PaintCount()==3,"Stop reset paint state or admitted a notification");
+        state.Reset();GT_ASSERT(state.Yaw()==0 && state.PaintCount()==0 && !state.Due(9000),"Reset retained timer or paint state");
+        GT_ASSERT(WorkshopPreviewController::AdvanceYaw(0x40c90fdb)==0x40caa975,"Native yaw crossed2pi with wrapping or different rounding");
+        GT_ASSERT(WorkshopPreviewController::AdvanceYaw(0x49800000)==0x49800000,"Native binary32 plateau was not retained");
+        for(const auto& row:workshop_animation_fixture::ROTATIONS) {
+            const auto view=scout::MakeWorkshopView({0,0,0},row.yaw);
+            GT_ASSERT(view.orientation[0]==row.cosine && view.orientation[3]==row.sine,"Reachable native yaw helper differs at "+std::to_string(row.yaw));
+        }
+        GT_OK();
+    });
+
+    task->AddTest("CVR Workshop nonzero yaw and shared model phase match five native frames",GT(){
         const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
         size_t reads=0;
         const auto read=[&](const std::string& name) {

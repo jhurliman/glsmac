@@ -1,8 +1,11 @@
 const dialog = #include('../default/ui/parts/game/popup/base_screen/workshop');
 let windows = []; let commands = []; let listeners = {}; let edits = []; let classes = {};
 const node = (data) => {
+    data.preview_paints = 0; data.cached_paints = 0;
+    data.smacworkshopclock = (operation) => { data.clock_operation = operation; };
+    data.smacworkshopcachedpreview = (icon, variant) => { data.cached_icon = icon; data.cached_variant = variant; data.cached_paints = data.cached_paints + 1; };
     data.hidden = false; data.removed = false; data.handlers = {}; data.children = [];
-    data.is_hidden = () => { return data.hidden; };
+    data.is_visible = () => { return !data.hidden; };
     data.hide = () => { data.hidden = true; }; data.show = () => { data.hidden = false; }; data.remove = () => { data.removed = true; };
     data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi'}; };
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
@@ -38,7 +41,7 @@ const node = (data) => {
     data.smacworkshopcomponents = (armor, only_armor) => { test.assert(only_armor); data.components_armor = armor; };
     data.smacworkshopstrip = (rows, faction, selected, hovered) => { data.strip_rows = rows; data.strip_faction = faction; data.strip_selected = selected; data.strip_hovered = hovered;
         return {normal: 'rgb(1,2,3)', unused: 'rgb(4,5,6)', obsolete: 'rgb(7,8,9)', empty_label: 'Empty Slot', obsolete_label: 'Obsolete'}; };
-    data.smacworkshopdesign = (chassis, weapon, armor, reactor, kind, faction, yaw, power, mode, strength) => { data.preview_chassis = chassis; data.preview_weapon = weapon; data.preview_reactor = reactor; data.preview_strength = strength; data.preview_power = power; data.preview_mode = mode; data.preview_armor = armor; data.preview_yaw = yaw; data.preview_faction = faction; };
+    data.smacworkshopdesign = (chassis, weapon, armor, reactor, kind, faction, yaw, power, mode, strength, visible) => { data.preview_visible = visible; data.preview_paints = data.preview_paints + 1; data.preview_chassis = chassis; data.preview_weapon = weapon; data.preview_reactor = reactor; data.preview_strength = strength; data.preview_power = power; data.preview_mode = mode; data.preview_armor = armor; data.preview_yaw = yaw; data.preview_faction = faction; };
     data.on = (event, cb) => { data.handlers[event] = cb; };
     data.listen = (target, event, cb) => { listeners[event] = cb; };
     const child = (properties) => { const value = node(properties); data.children :+ value; return value; };
@@ -50,7 +53,7 @@ dialog.init({ui: {class: (name) => { return {set: (properties) => { test.assert(
     game: {event: (name, data) => { commands :+ {name: name, data: data}; }}});
 const base = {id: 701};
 const release_card = (index) => { return dialog.picker_canvas.handlers.mouseup({button: 'left', x: 79 + (index % 5) * 108, y: 49 + #floor(#to_float(index) / 5.0) * 94}); };
-const selection = {expected_state: 'before', mineral_factor: 10, weapon_cost: 1, movement: 1, chassis: 'Infantry', weapon: 'Hand Weapons', reactor: 'Fission', scout_name: 'Scout', faction_art: 'morgan.pcx', speed: 1, offense: 1, weapon_mode: 0, power: 1,
+const selection = {preview_icon: (0 - 1), preview_variant: 0, expected_state: 'before', mineral_factor: 10, weapon_cost: 1, movement: 1, chassis: 'Infantry', weapon: 'Hand Weapons', reactor: 'Fission', scout_name: 'Scout', faction_art: 'morgan.pcx', speed: 1, offense: 1, weapon_mode: 0, power: 1,
     ability_names: ['Super Former', 'Deep Radar', '', '', '', '', '', '', '', 'Polymorphic', '', '', '', '', '', '', '', '', 'Trance', '', '', '', '', ''],
     chassis_choices: [{id: 0, name: 'Infantry', domain: 0, value: 1, technology_available: true}, {id: 3, name: 'Foil', domain: 1, value: 4, technology_available: false}],
     reactor_choices: [{id: 1, name: 'Fission', value: 1, technology_available: true}, {id: 2, name: 'Fusion', value: 2, technology_available: true}],
@@ -75,6 +78,7 @@ test.assert(dialog.stats.baseline == 261);
 let stat_geometry = false; for (child of windows[0].children) { if (child.left == 140 && child.top == 9 && child.height == 311) { stat_geometry = true; } }
 test.assert(stat_geometry);
 dialog.open(base, selection); test.assert(dialog.active && !windows[0].hidden && dialog.selected_armor == 0);
+test.assert(!dialog.model.preview_visible && !dialog.component_models[0].model.preview_visible);
 test.assert(dialog.model.preview_armor == 0 && dialog.model.preview_yaw == 0.0 && dialog.model.preview_faction == 'morgan.pcx');
 dialog.open_picker(); test.assert(!windows[1].hidden && #sizeof(dialog.cards) == 3 && dialog.picker_canvas.picker_selected == 0 && #sizeof(dialog.picker_canvas.picker_rows) == 3 && #sizeof(dialog.cards[2].children) == 0);
 test.assert(release_card(2) == true && dialog.selected_armor == 0 && windows[1].hidden);
@@ -521,7 +525,7 @@ listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selec
     intrinsic_name_warning: true, intrinsic_notice: 2, intrinsic_notice_name: 'Scout Patrol', done: true});
 test.assert(dialog.active && dialog.confirming && dialog.intrinsic_message);
 test.assert(dialog.redesign_dialog.kind == 2);
-test.assert(dialog.redesign_dialog.rows[0].button.is_hidden() && dialog.redesign_dialog.rows[1].button.is_hidden());
+test.assert(!dialog.redesign_dialog.rows[0].button.is_visible() && !dialog.redesign_dialog.rows[1].button.is_visible());
 test.assert(dialog.redesign_dialog.ok.top == 167);
 test.assert(dialog.draft_name == '');
 const notice_commands = #sizeof(commands); dialog.answer_overwrite(true); test.assert(#sizeof(commands) == notice_commands && dialog.confirming);
@@ -558,3 +562,12 @@ test.assert(dialog.apply_button.left == 27 && dialog.apply_button.top == 321 && 
 dialog.hide_view(); test.assert(dialog.window.hidden && dialog.console.hidden && dialog.strip.hidden);
 
 test.assert(classes['workshop-main-action'].smac_frame == [[27,0,0,105,20]] && classes['workshop-main-action']._hover.smac_frame == [[29,0,0,105,20]] && classes['workshop-main-action']._active.smac_frame == [[29,0,0,105,20]]);
+
+// Timer delivery paints only the main preview. Close fences later deliveries.
+dialog.open(base, selection); test.assert(dialog.model.clock_operation == 1);
+const paints = dialog.model.preview_paints; const old_component = dialog.component_models[0].model.preview_paints;
+dialog.model.handlers.workshopframe({}); test.assert(dialog.component_models[0].model.preview_paints == old_component && dialog.model.preview_paints == paints + 1 && dialog.model.preview_visible);
+selection.preview_icon = 3; selection.preview_variant = 2;
+dialog.model.handlers.workshopframe({}); test.assert(dialog.model.cached_icon == 3 && dialog.model.cached_variant == 2 && dialog.model.width == 311);
+selection.preview_icon = (0 - 1); dialog.model.handlers.workshopframe({}); test.assert(dialog.model.width == 256);
+const closed_paints = dialog.model.preview_paints; dialog.hide_view(); test.assert(dialog.model.clock_operation == 0 && dialog.model.handlers.workshopframe({}) && dialog.model.preview_paints == closed_paints);

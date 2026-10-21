@@ -1,0 +1,1684 @@
+{
+  "scope": "Complete original scratch initializer/effective-rank/56fd50 row12 controls.\nSprite painting is supplied; actual rank, variant and sprite address execute.\n",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "alpha_sha256": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4",
+  "flagged_installed_techs": [
+    {
+      "id": 22,
+      "key": "Poly",
+      "name": "Polymorphic Software",
+      "flags": 2,
+      "prerequisites": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": 30,
+      "key": "Algor",
+      "name": "Pre-Sentient Algorithms",
+      "flags": 2,
+      "prerequisites": [
+        17,
+        53
+      ]
+    },
+    {
+      "id": 33,
+      "key": "DigSent",
+      "name": "Digital Sentience",
+      "flags": 2,
+      "prerequisites": [
+        73,
+        41
+      ]
+    },
+    {
+      "id": 34,
+      "key": "HAL9000",
+      "name": "Self-Aware Machines",
+      "flags": 2,
+      "prerequisites": [
+        66,
+        33
+      ]
+    },
+    {
+      "id": 41,
+      "key": "MindMac",
+      "name": "Mind/Machine Interface",
+      "flags": 2,
+      "prerequisites": [
+        39,
+        52
+      ]
+    }
+  ],
+  "project": {
+    "source_id": 69,
+    "name": "The Telepathic Matrix",
+    "location_address": "95a094",
+    "array_base": "95a01c",
+    "array_first_id": 39
+  },
+  "profiles": [
+    {
+      "filename": "gaians.txt",
+      "sha256": "6c25fe3492f83a9ac3a8da7c7e2ddc0a62134c46e244f8872e1e9067b2564cf2",
+      "bonus_pairs": [
+        [
+          "TECH",
+          "Ecology"
+        ],
+        [
+          "SOCIAL",
+          "-MORALE"
+        ],
+        [
+          "SOCIAL",
+          "-POLICE"
+        ],
+        [
+          "SOCIAL",
+          "++EFFIC"
+        ],
+        [
+          "SOCIAL",
+          "+PLANET"
+        ],
+        [
+          "FUNGNUTRIENT",
+          "1"
+        ]
+      ],
+      "direct_morale": 0,
+      "unit_negative_morale_immunity": false
+    },
+    {
+      "filename": "hive.txt",
+      "sha256": "7b00d22b632aba0c61c4f85520278743ec170086f6970a2275159a9ec5cbfbba",
+      "bonus_pairs": [
+        [
+          "TECH",
+          "DocLoy"
+        ],
+        [
+          "FACILITY",
+          "4"
+        ],
+        [
+          "SOCIAL",
+          "+GROWTH"
+        ],
+        [
+          "SOCIAL",
+          "+INDUSTRY"
+        ],
+        [
+          "SOCIAL",
+          "--ECONOMY"
+        ],
+        [
+          "IMMUNITY",
+          "EFFIC"
+        ]
+      ],
+      "direct_morale": 0,
+      "unit_negative_morale_immunity": false
+    },
+    {
+      "filename": "univ.txt",
+      "sha256": "c24b19d31e33343c8c4b1890b555dd071e2e2933f76fa747d9d41a32cfc8692d",
+      "bonus_pairs": [
+        [
+          "TECH",
+          "InfNet"
+        ],
+        [
+          "TECH",
+          "1"
+        ],
+        [
+          "SOCIAL",
+          "++RESEARCH"
+        ],
+        [
+          "SOCIAL",
+          "--PROBE"
+        ],
+        [
+          "DRONE",
+          "4"
+        ],
+        [
+          "FACILITY",
+          "8"
+        ]
+      ],
+      "direct_morale": 0,
+      "unit_negative_morale_immunity": false
+    },
+    {
+      "filename": "morgan.txt",
+      "sha256": "35342313a8112db4692bcba87d63311aaaa6379ed866f0e3817b6fc15eb2c9ea",
+      "bonus_pairs": [
+        [
+          "TECH",
+          "Indust"
+        ],
+        [
+          "ENERGY",
+          "100"
+        ],
+        [
+          "SOCIAL",
+          "+ECONOMY"
+        ],
+        [
+          "POPULATION",
+          "3"
+        ],
+        [
+          "COMMERCE",
+          "1"
+        ],
+        [
+          "SOCIAL",
+          "-SUPPORT"
+        ]
+      ],
+      "direct_morale": 0,
+      "unit_negative_morale_immunity": false
+    },
+    {
+      "filename": "spartans.txt",
+      "sha256": "0b3c264cb177682dbe71cd30b074e5c142b032256993d375106d8efdbae4b361",
+      "bonus_pairs": [
+        [
+          "TECH",
+          "Mobile"
+        ],
+        [
+          "FREEPROTO",
+          "0"
+        ],
+        [
+          "SOCIAL",
+          "++MORALE"
+        ],
+        [
+          "SOCIAL",
+          "+POLICE"
+        ],
+        [
+          "SOCIAL",
+          "-INDUSTRY"
+        ]
+      ],
+      "direct_morale": 0,
+      "unit_negative_morale_immunity": false
+    },
+    {
+      "filename": "believe.txt",
+      "sha256": "fa788143fc33cb05fe4f0584cbaa191d9efaa555b960cafc9f3c6aaf6c51e483",
+      "bonus_pairs": [
+        [
+          "TECH",
+          "Psych"
+        ],
+        [
+          "SOCIAL",
+          "--RESEARCH"
+        ],
+        [
+          "SOCIAL",
+          "+PROBE"
+        ],
+        [
+          "SOCIAL",
+          "++SUPPORT"
+        ],
+        [
+          "SOCIAL",
+          "-PLANET"
+        ],
+        [
+          "FANATIC",
+          "0"
+        ]
+      ],
+      "direct_morale": 0,
+      "unit_negative_morale_immunity": false
+    },
+    {
+      "filename": "peace.txt",
+      "sha256": "59ab1affd288805da2aff9583e7aa94e3ca999f50c1056157e88d8548d3430a9",
+      "bonus_pairs": [
+        [
+          "TECH",
+          "Biogen"
+        ],
+        [
+          "TALENT",
+          "4"
+        ],
+        [
+          "SOCIAL",
+          "-EFFIC"
+        ],
+        [
+          "POPULATION",
+          "-2"
+        ],
+        [
+          "VOTES",
+          "2"
+        ]
+      ],
+      "direct_morale": 0,
+      "unit_negative_morale_immunity": false
+    }
+  ],
+  "cases": [
+    {
+      "input": {
+        "id": "neutral"
+      },
+      "stored_morale": 1,
+      "owned_admitted_flag2_count": 0,
+      "rank": 2,
+      "row12_variant": 2,
+      "sprite": "0x780bb8",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "retained_negative",
+        "probe": -4
+      },
+      "stored_morale": 1,
+      "owned_admitted_flag2_count": 0,
+      "rank": 2,
+      "row12_variant": 2,
+      "sprite": "0x780bb8",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "retained_one",
+        "probe": 1
+      },
+      "stored_morale": 1,
+      "owned_admitted_flag2_count": 0,
+      "rank": 2,
+      "row12_variant": 2,
+      "sprite": "0x780bb8",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "retained_two",
+        "probe": 2
+      },
+      "stored_morale": 1,
+      "owned_admitted_flag2_count": 0,
+      "rank": 3,
+      "row12_variant": 3,
+      "sprite": "0x780be4",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "retained_three",
+        "probe": 3
+      },
+      "stored_morale": 1,
+      "owned_admitted_flag2_count": 0,
+      "rank": 4,
+      "row12_variant": 4,
+      "sprite": "0x780c10",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "retained_above_cap",
+        "probe": 20
+      },
+      "stored_morale": 1,
+      "owned_admitted_flag2_count": 0,
+      "rank": 4,
+      "row12_variant": 4,
+      "sprite": "0x780c10",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "project_own",
+        "project": "own"
+      },
+      "stored_morale": 1,
+      "owned_admitted_flag2_count": 0,
+      "rank": 3,
+      "row12_variant": 3,
+      "sprite": "0x780be4",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "project_foreign",
+        "project": "foreign"
+      },
+      "stored_morale": 1,
+      "owned_admitted_flag2_count": 0,
+      "rank": 2,
+      "row12_variant": 2,
+      "sprite": "0x780bb8",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "project_other_negative",
+        "project": "negative2"
+      },
+      "stored_morale": 1,
+      "owned_admitted_flag2_count": 0,
+      "rank": 2,
+      "row12_variant": 2,
+      "sprite": "0x780bb8",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "all_probe_techs",
+        "known": [
+          22,
+          30,
+          33,
+          34,
+          41
+        ]
+      },
+      "stored_morale": 1,
+      "owned_admitted_flag2_count": 5,
+      "rank": 6,
+      "row12_variant": 6,
+      "sprite": "0x780c68",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "unflagged_known",
+        "direct": 1,
+        "known": [
+          0
+        ]
+      },
+      "stored_morale": 2,
+      "owned_admitted_flag2_count": 0,
+      "rank": 2,
+      "row12_variant": 2,
+      "sprite": "0x780bb8",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "foreign_tech_ownership",
+        "direct": 1,
+        "foreign_known": [
+          22
+        ]
+      },
+      "stored_morale": 2,
+      "owned_admitted_flag2_count": 0,
+      "rank": 2,
+      "row12_variant": 2,
+      "sprite": "0x780bb8",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "combined_cap",
+        "probe": 3,
+        "project": "own",
+        "known": [
+          22,
+          30,
+          33,
+          34,
+          41
+        ]
+      },
+      "stored_morale": 1,
+      "owned_admitted_flag2_count": 5,
+      "rank": 6,
+      "row12_variant": 6,
+      "sprite": "0x780c68",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "direct_minus_two_wrap",
+        "direct": -2
+      },
+      "stored_morale": 255,
+      "owned_admitted_flag2_count": 0,
+      "rank": 6,
+      "row12_variant": 6,
+      "sprite": "0x780c68",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "direct_plus_two",
+        "direct": 2
+      },
+      "stored_morale": 3,
+      "owned_admitted_flag2_count": 0,
+      "rank": 3,
+      "row12_variant": 3,
+      "sprite": "0x780be4",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "direct_zero_immunity_does_not_change",
+        "flags": 32768
+      },
+      "stored_morale": 1,
+      "owned_admitted_flag2_count": 0,
+      "rank": 2,
+      "row12_variant": 2,
+      "sprite": "0x780bb8",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "tech88_rejected",
+        "direct": 1,
+        "known": [
+          88
+        ],
+        "flag_override": {
+          "88": 2
+        }
+      },
+      "stored_morale": 2,
+      "owned_admitted_flag2_count": 0,
+      "rank": 2,
+      "row12_variant": 2,
+      "sprite": "0x780bb8",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          88,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          88,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "flagged_disabled_first",
+        "direct": 1,
+        "known": [
+          22
+        ],
+        "prereq_override": {
+          "22": [
+            -2,
+            0
+          ]
+        }
+      },
+      "stored_morale": 2,
+      "owned_admitted_flag2_count": 0,
+      "rank": 2,
+      "row12_variant": 2,
+      "sprite": "0x780bb8",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "flagged_disabled_second",
+        "direct": 1,
+        "known": [
+          22
+        ],
+        "prereq_override": {
+          "22": [
+            0,
+            -2
+          ]
+        }
+      },
+      "stored_morale": 2,
+      "owned_admitted_flag2_count": 0,
+      "rank": 2,
+      "row12_variant": 2,
+      "sprite": "0x780bb8",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "flagged_none_first_disabled_second",
+        "direct": 1,
+        "known": [
+          22
+        ],
+        "prereq_override": {
+          "22": [
+            -1,
+            -2
+          ]
+        }
+      },
+      "stored_morale": 2,
+      "owned_admitted_flag2_count": 1,
+      "rank": 3,
+      "row12_variant": 3,
+      "sprite": "0x780be4",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "single_probe_tech_22",
+        "direct": 1,
+        "known": [
+          22
+        ]
+      },
+      "stored_morale": 2,
+      "owned_admitted_flag2_count": 1,
+      "rank": 3,
+      "row12_variant": 3,
+      "sprite": "0x780be4",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "single_probe_tech_30",
+        "direct": 1,
+        "known": [
+          30
+        ]
+      },
+      "stored_morale": 2,
+      "owned_admitted_flag2_count": 1,
+      "rank": 3,
+      "row12_variant": 3,
+      "sprite": "0x780be4",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "single_probe_tech_33",
+        "direct": 1,
+        "known": [
+          33
+        ]
+      },
+      "stored_morale": 2,
+      "owned_admitted_flag2_count": 1,
+      "rank": 3,
+      "row12_variant": 3,
+      "sprite": "0x780be4",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "single_probe_tech_34",
+        "direct": 1,
+        "known": [
+          34
+        ]
+      },
+      "stored_morale": 2,
+      "owned_admitted_flag2_count": 1,
+      "rank": 3,
+      "row12_variant": 3,
+      "sprite": "0x780be4",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    },
+    {
+      "input": {
+        "id": "single_probe_tech_41",
+        "direct": 1,
+        "known": [
+          41
+        ]
+      },
+      "stored_morale": 2,
+      "owned_admitted_flag2_count": 1,
+      "rank": 3,
+      "row12_variant": 3,
+      "sprite": "0x780be4",
+      "technology_predicate_calls": [
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ],
+        [
+          22,
+          1
+        ],
+        [
+          30,
+          1
+        ],
+        [
+          33,
+          1
+        ],
+        [
+          34,
+          1
+        ],
+        [
+          41,
+          1
+        ]
+      ]
+    }
+  ]
+}

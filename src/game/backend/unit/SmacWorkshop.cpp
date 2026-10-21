@@ -1,12 +1,43 @@
 #include "SmacWorkshop.h"
 #include "SmacWorkshopUpgrade.h"
 #include "SmacPredefinedDesigns.h"
+#include "SmacConventionalStats.h"
 #include "game/backend/faction/SmacTechnologyQuery.h"
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
 
 namespace game::backend::unit {
+int32_t SmacWorkshopPreviewRank(const SmacWorkshopPreviewMorale& input) {
+    const auto stored=uint8_t(uint32_t(input.direct_morale)+1u);
+    if(input.scratch_plan==11) {
+        if(input.probe_technologies<0 || input.probe_technologies>88) {throw std::invalid_argument("Invalid admitted Probe technology count");}
+        return std::clamp(int32_t(stored)+std::clamp(input.retained_probe,0,3)+(input.telepathic_matrix ? 2:0)+input.probe_technologies,2,6);
+    }
+    if(input.weapon_power<0) {return std::clamp(int32_t(stored),0,6);}
+    return SmacConventionalMorale({stored,input.retained_morale,input.direct_morale,input.negative_morale_immunity,std::nullopt,SmacMoraleMode::Mode0});
+}
+
+int32_t SmacWorkshopPreviewIcon(const SmacStartupDesignState& state,const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog) {
+    if(draft.selected_design<0 || draft.selected_design>511 || draft.weapon>=catalog.weapons.weapons.size()) {throw std::invalid_argument("Invalid Workshop preview identity");}
+    int icon=-1;bool matches=false;
+    if(state.native_registry) {
+        const auto& raw=state.native_registry->at(size_t(draft.selected_design));icon=int8_t(raw[46]);
+        const auto abilities=uint32_t(raw[32])|(uint32_t(raw[33])<<8)|(uint32_t(raw[34])<<16)|(uint32_t(raw[35])<<24);
+        matches=raw[36]==draft.chassis && raw[37]==draft.weapon && raw[38]==draft.armor && raw[39]==draft.reactor && abilities==draft.abilities;
+    } else if(size_t(draft.selected_design)<catalog.units.size()) {
+        const auto selected=state.EffectiveIntrinsic(catalog.units.at(size_t(draft.selected_design)));icon=int8_t(selected.icon);
+        matches=selected.chassis_id==draft.chassis && selected.weapon_id==draft.weapon && selected.defense_id==draft.armor && selected.reactor==draft.reactor && selected.abilities==draft.abilities;
+    }
+    const int weapon_icon=int8_t(uint8_t(catalog.weapons.weapons.at(draft.weapon).icon));
+    if(!(icon>=0 && matches) && !(draft.chassis==0 && weapon_icon>=0)) {return -1;}
+    // Native scratch63 clears its icon before reading the aliased selected row.
+    if(draft.selected_design==63) {icon=-1;}
+    if(icon>=0) {return icon;}
+    return draft.chassis==0 && weapon_icon>=0 ? weapon_icon:-2;
+}
+
 namespace {
 using Reference = settings::SmacTechnologyReference;
 int32_t Prerequisite(const Reference& reference) {
@@ -31,6 +62,11 @@ bool Available(int32_t id,const settings::SmacTechnologyRules& technologies,cons
 void RequireOwner(const faction::SmacFactionTechnologyState& owner) {
     if(owner.admission.simulation_id<1 || owner.admission.simulation_id>7) {throw std::invalid_argument("Workshop requires a player faction");}
 }
+}
+int32_t SmacWorkshopProbeTechnologyCount(const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner) {
+    RequireOwner(owner);int32_t count=0;
+    for(int32_t id=0;id<89;++id) {if((technologies.technologies.at(id).flags&2) && Available(id,technologies,owner)) {++count;}}
+    return count;
 }
 namespace {
 void RequireComponents(const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog) {

@@ -145,6 +145,18 @@ gse::Value* const Object::Wrap( GSE_CALLABLE ) {
 		WRAPIMPL_PROPS
 		WRAPIMPL_TRIGGERS
 			{
+                "is_visible",
+                NATIVE_CALL(this) {
+                    N_EXPECT_ARGS(0);
+                    const Object* node=this;
+                    while(node) {
+                        if(!node->m_is_visible) {return VALUE(gse::value::Bool,,false);}
+                        node=node->m_parent;
+                    }
+                    return VALUE(gse::value::Bool,,true);
+                }),
+            },
+			{
 				"show",
 				NATIVE_CALL( this ) {
 					N_EXPECT_ARGS( 0 );

@@ -40,6 +40,7 @@ return {
         this.armor_name = caption(30, 195, 99, 85, 73, 10, false);
         this.armor_stat = caption(30, 195, 99, 85, 83, 10, false);
         this.model = window.surface({left: 167, top: 36, width: 256, height: 256});
+        this.model.on('workshopframe', () => { if (this.active) { this.paint_main_preview(); } return true; });
         this.title = caption(140, 9, 311, 311, 44, 16, true);
         // Native layout rectangle is y256..272; clipping remains the whole
         // preview, so glyph descenders below that layout rectangle survive.
@@ -184,6 +185,7 @@ return {
         button.color = this.parent_text.colors[65];
     },
     open: (base, data) => {
+        if (!this.active) { this.model.smacworkshopclock(2); }
         if (!#is_defined(this.parent_text)) { this.parent_text = this.components.smacworkshopparenttext(); }
         this.mineral_factor = data.mineral_factor;
         this.base = base; this.selection = data; this.active = true; this.pending = false; this.pending_obsolete = false; this.pending_rename = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide();
@@ -198,7 +200,7 @@ return {
         this.ability_slots = [(0 - 1), (0 - 1)];
         if (#is_defined(data.draft)) { this.read_draft(data.draft); this.selected_design = data.draft.selected_design; }
         this.strip_hover = (0 - 1); this.recenter_strip(this.selected_design);
-        this.update_labels(); this.title.text = #uppercase(data.scout_name); this.message.text = ''; this.update_armor(); this.window.show(); this.render_strip();
+        this.update_labels(); this.title.text = #uppercase(data.scout_name); this.message.text = ''; this.update_armor(); this.window.show(); this.render_strip(); this.model.smacworkshopclock(1);
     },
     render_strip: () => {
         for (card of this.strip_cards) { card.remove(); } this.strip_cards = [];
@@ -318,14 +320,24 @@ return {
         this.console.show();
         if (previous != this.selected_design && #is_defined(this.visible_designs) && #is_defined(this.selection.designs)) { this.paint_strip(); }
     },
+    paint_main_preview: () => {
+        if (this.selection.preview_icon >= 0) {
+            this.model.left = 140; this.model.top = 9; this.model.width = 311; this.model.height = 311;
+            this.model.smacworkshopcachedpreview(this.selection.preview_icon, this.selection.preview_variant);
+        } else {
+            this.model.left = 167; this.model.top = 36; this.model.width = 256; this.model.height = 256;
+            this.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor,
+                (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, this.preview_strength, this.window.is_visible());
+        }
+    },
     armor_strength: (strength) => { return strength < 0 ? 'Psi' : #to_string(strength); },
     update_armor: () => {
         this.components.smacworkshopcomponents(this.selected_armor, true);
         for (row of this.selection.armor) { if (row.id == this.selected_armor) {
             for (component of this.component_models) {
-                component.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor, component.kind, this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating);
+                component.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor, component.kind, this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating, this.window.is_visible());
             }
-            this.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor, (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating);
+            this.preview_strength = row.rating; this.paint_main_preview();
             this.armor_name.text = row.id == 0 ? 'NONE' : #uppercase(row.short_name); this.armor_stat.text = 'Level ' + this.armor_strength(row.rating);
             if (row.design_name != '') { this.title.text = #uppercase(row.design_name); }
             const rows = row.cost_rows < this.selected_reactor ? this.selected_reactor : row.cost_rows;
@@ -482,5 +494,5 @@ return {
         if (choice >= 0) { fields = fields + {overwrite: choice}; }
         this.p.game.event('commit_smac_workshop', fields);
     },
-    hide_view: () => { this.picker_active = false; this.ability_dialog.hide(); this.rename_dialog.hide(); this.retire_dialog.hide(); this.upgrade_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); this.console.hide(); },
+    hide_view: () => { this.model.smacworkshopclock(0); this.picker_active = false; this.ability_dialog.hide(); this.rename_dialog.hide(); this.retire_dialog.hide(); this.upgrade_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); this.console.hide(); },
 };

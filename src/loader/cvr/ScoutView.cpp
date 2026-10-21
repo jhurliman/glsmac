@@ -181,7 +181,6 @@ WorkshopBounds WorkshopObjectBounds(const WorkshopBoundsInput& input) {
 View MakeWorkshopView(const Vector& position,const uint32_t yaw_bits,const uint32_t scale_bits,const std::array<int32_t,2> anchor) {
     RequireNearestRounding();
     const auto yaw=Decode(yaw_bits);
-    if(std::abs(ToDouble(yaw))>64.0) {throw std::invalid_argument("Workshop yaw outside bounded preview domain");}
     const auto c=Trig(yaw_bits,true),s=Trig(yaw_bits,false);
     View result;result.orientation={c,s^0x80000000u,0,s,c,0,0,0,0x3f800000};
     // Original Workshop constructor camera, not the map's tilt/scale defaults.

@@ -1270,9 +1270,56 @@ Workshop/strip/component checks remain green. Fifteen affected production
 translation units pass targeted correctness analysis. Six production rendering
 files and the renderer tests pass focused ASan/UBSan.
 
-This is the model-composition layer. The live Workshop still paints its main
-model at yaw0 without a timer; original cached-unit branch admission, shared
-phase ownership and the coalesced40ms controller must be wired together before
-claiming live animation. No elapsed-clock or unconditional Scout rotation is
-introduced by this layer. Negative signed phases remain outside the admitted
-raster domain; the original overflow producer alone does not prove safe pixels.
+The model-composition layer is now connected to the live controller described
+below. Negative signed phases remain outside the admitted raster domain; the
+original overflow producer alone does not prove safe pixels.
+
+### Live Workshop preview controller and cached sprites
+
+Opening the Workshop resets its local yaw and paint count, paints its initial
+component/main previews while hidden, then starts the original coalesced 40 ms
+notification cadence. Each delivered notification repaints only the main
+preview. Three-dimensional paints use the old binary32 yaw and then add 0.05f;
+there is no artificial wrap at 2 pi or 64 radians. Selection refresh keeps the
+clock epoch; close stops delivery and a fresh reopen resets local state.
+Accepted Rename repaints the main preview once. The graphics-lifetime model
+phase is separate and survives reopening. Visible Copter paints advance it;
+the initial hidden compositions preserve it. The DOM exposes actual ancestor
+visibility to the script instead of relying on a mock-only visibility method.
+
+Cached previews follow the original signed icon and complete component/ability
+tuple admission, with the Infantry weapon-icon fallback and selected-icon
+precedence. The installed ordinary Scout has icon -1 and uses the rotating
+model. Admitted cached sprites use their native trimmed source, 30/16 scaling,
+311x311 clipping and destination-dependent indexed shadows. Ranked sprites use
+the retained scratch plan, social ratings and admitted owned Probe technologies.
+Decoded models and sprites are reused between notifications.
+
+Evidence includes five complete original color/depth frames (including yaw65),
+eight native rotation-helper cases, the complete 96,721-byte cached preview,
+38 rank cases and 25 Probe technology cases. Both 256-entry shadow precision
+profiles match their native receipts. The ordinary 53-significand runtime
+profile remains the default; the explicit 64-significand harness profile does
+not establish a different production initialization path.
+
+Validation: 69 selected native groups and three affected UI scripts pass.
+Focused ASan/UBSan instruments 27 production and three test translation units;
+the same native groups and scripts pass. Targeted correctness analysis covers
+43 production translation units and known consumers. The actual
+instrumented SDL session verifies changing main-preview pixels, 192 timer
+deliveries, no delivery after Cancel, fresh delivery after reopening, and a
+clean exit with no tracked OpenGL leaks.
+
+[Cached admission](behavior/design-workshop-cached-preview.md),
+[blitting](behavior/design-workshop-cached-blit.md),
+[rank and lifecycle](behavior/design-workshop-cached-rank-and-lifecycle.md),
+[Probe rank](behavior/design-workshop-probe-rank.md),
+[yaw range](behavior/design-workshop-yaw-range.md) and
+[shadow precision](behavior/design-workshop-shadow-precision-lifetime.md)
+record the original-game sources and private evidence hashes.
+
+This does not establish whole-screen Workshop parity. Reserved scratch63's
+cached-idle alias remains explicitly unsupported, ranked legacy states require
+retained scratch metadata, and the admitted Probe profile requires explicit
+no-project authority until project ownership is implemented. Special-ability
+model artwork and remaining complete UI/gameplay behavior still need work.

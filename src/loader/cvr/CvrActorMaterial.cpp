@@ -78,6 +78,25 @@ std::array<std::vector<uint8_t>,10> CvrActorMaterial::ReadWorkshopWeaponSprites(
         }}
     }return result;
 }
+std::array<std::vector<CvrActorMaterial::WorkshopSprite>,10> CvrActorMaterial::ReadWorkshopUnitSprites(std::string_view units_pcx) {
+    const auto image=ReadPcx(units_pcx);std::array<std::vector<WorkshopSprite>,10> result;
+    if(image.width<816 || image.height<693) {throw std::invalid_argument("Incomplete Workshop unit sprite sheet");}
+    for(size_t icon=0;icon<10;++icon) {for(size_t variant=0;variant<(icon==3 ? 7u:1u);++variant) {
+        const size_t left=icon==9 ? 716:2+102*variant,top=icon==9 ? 233:2+77*icon;
+        std::vector<uint8_t> cell(7500);int l=100,t=75,r=0,b=0;
+        for(int y=0;y<75;++y) {for(int x=0;x<100;++x) {
+            auto pixel=uint8_t(image.pixels[(top+size_t(y))*image.width+left+size_t(x)]+10);
+            if(pixel==6 || pixel==7) {pixel=9;}cell[size_t(y)*100+x]=pixel;
+            if(pixel!=9) {l=std::min(l,x);r=std::max(r,x+1);t=std::min(t,y);b=std::max(b,y+1);}
+        }}
+        WorkshopSprite sprite;
+        if(l<r && t<b) {
+            sprite.width=r-l;sprite.height=b-t;sprite.offset={l,t};sprite.pixels.reserve(size_t(sprite.width)*sprite.height);
+            for(int y=t;y<b;++y) {sprite.pixels.insert(sprite.pixels.end(),cell.begin()+y*100+l,cell.begin()+y*100+r);}
+        }
+        result[icon].push_back(std::move(sprite));
+    }}return result;
+}
 void CvrActorMaterial::PaintWorkshopWeaponSprite(std::vector<uint8_t>& dst,size_t width,size_t height,
     const std::vector<uint8_t>& sprite,int ordinal) {
     if(&dst==&sprite || width==0 || height==0 || width>2048 || height>2048 || dst.size()!=width*height

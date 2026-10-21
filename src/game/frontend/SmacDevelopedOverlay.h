@@ -15,5 +15,8 @@ struct Sprite {smac_terrain_raster::Bitmap bitmap;smac_terrain_raster::Point off
 // Input already uses the original loaded index rebase (+10 modulo256).
 Sprite Decode(const smac_terrain_raster::Bitmap& atlas,const Crop& crop);
 bool ReplacesLegacySprite(std::string_view name);
-std::array<uint8_t,256> ShadowLookup(const Palette& active_palette);
+enum class ShadowPrecision {Binary64,Extended64};
+// Native initialization inherits x87 precision. Keep both measured profiles;
+// the ordinary initialized-strip caller currently declares027f (binary64).
+std::array<uint8_t,256> ShadowLookup(const Palette& active_palette,ShadowPrecision precision=ShadowPrecision::Binary64);
 }

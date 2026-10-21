@@ -1,0 +1,122 @@
+{
+  "scope": "Check cached Scout call/state receipts and independently decode/trim its PCX sprite.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "input_scope": "Installed Scout slot2 tuple with explicit design icon0 override. Installed icon is255 (-1). Complete original art initialization and two complete main paints; no port code or idle-render sink.",
+  "sprite_source": {
+    "asset": "UNITS.PCX",
+    "asset_sha256": "1da9f262b4a90c6d26378e1421cc7bcc9dc561491337c1d8c111793a82b8285d",
+    "cell": [
+      2,
+      2,
+      100,
+      75
+    ],
+    "load_index_offset": 10,
+    "replace_loaded_indices": [
+      6,
+      7
+    ],
+    "replace_with": 9,
+    "trim": [
+      8,
+      0,
+      95,
+      67
+    ],
+    "width": 87,
+    "height": 67,
+    "offset": [
+      8,
+      0
+    ],
+    "indexed_sha256": "9c784a21e0e3f0d902d93dcfc39eaee66238e2cb70127a33570736992bd55c42",
+    "all_native_source_bytes_match": true
+  },
+  "cases": [
+    {
+      "id": "cached_scout_icon0_paint0",
+      "before": {
+        "yaw_bits": "0x3f800000",
+        "phase": 14,
+        "paint_count": 0
+      },
+      "after": {
+        "yaw_bits": "0x3f800000",
+        "phase": 14,
+        "paint_count": 1
+      },
+      "cached_call": {
+        "canvas": "Workshop+444",
+        "unit": 2048,
+        "x": 202,
+        "y": 94,
+        "zoom": 14,
+        "flags": "0x44",
+        "terrain": 0
+      },
+      "sprite_call": {
+        "bank": "780740",
+        "key": 9,
+        "x": 202,
+        "y": 94,
+        "scale": [
+          30,
+          16
+        ],
+        "clip": [
+          140,
+          9,
+          451,
+          320
+        ],
+        "shadow_map": "71db18"
+      },
+      "output_surface_sha256": "ae002cf1f175713a45028d4f124d6601af6b18cb2ed9ca419e826c801d8c1a79",
+      "scratch_facing": 2,
+      "scratch_design": 63
+    },
+    {
+      "id": "cached_scout_icon0_paint1",
+      "before": {
+        "yaw_bits": "0x3f800000",
+        "phase": 14,
+        "paint_count": 1
+      },
+      "after": {
+        "yaw_bits": "0x3f800000",
+        "phase": 14,
+        "paint_count": 2
+      },
+      "cached_call": {
+        "canvas": "Workshop+444",
+        "unit": 2048,
+        "x": 202,
+        "y": 94,
+        "zoom": 14,
+        "flags": "0x44",
+        "terrain": 0
+      },
+      "sprite_call": {
+        "bank": "780740",
+        "key": 9,
+        "x": 202,
+        "y": 94,
+        "scale": [
+          30,
+          16
+        ],
+        "clip": [
+          140,
+          9,
+          451,
+          320
+        ],
+        "shadow_map": "71db18"
+      },
+      "output_surface_sha256": "ae002cf1f175713a45028d4f124d6601af6b18cb2ed9ca419e826c801d8c1a79",
+      "scratch_facing": 2,
+      "scratch_design": 63
+    }
+  ],
+  "scope_limit": "Native output-surface hashes; independently reproduced sprite source/trim and call/state rules. No independent replay of scaled/shadow sprite compositing is claimed."
+}

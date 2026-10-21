@@ -11,6 +11,7 @@
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/SmacWorkshop.h"
 #include "game/backend/unit/SmacWorkshopUpgrade.h"
+#include "game/backend/unit/SmacConventionalStats.h"
 #include "game/backend/State.h"
 #include "game/backend/faction/Faction.h"
 #include "gc/Space.h"
@@ -544,6 +545,22 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
         draft.selected_design=result.selected;
         status=VALUE(gse::value::Int,,int32_t(result.kind));
     }
+    const auto preview_icon=unit::SmacWorkshopPreviewIcon(registry,draft,catalog);int preview_variant=0;
+    if(preview_icon==-2) {throw std::invalid_argument("Reserved scratch cached-idle preview is outside the ordinary Workshop profile");}
+    if(preview_icon==3) {
+        if(!registry.native_registry) {throw std::invalid_argument("Ranked Workshop preview requires retained scratch metadata");}
+        // The admitted startup faction profile has no direct MORALE scalar or
+        // direct unit-immunity flag. SOCIAL/IMMUNITY axes are not those fields.
+        const auto* social=m_game->m_simulation->value.social.Find(technology.admission.simulation_id);
+        if(!social || !social->retained) {throw std::invalid_argument("Ranked Workshop preview requires owned retained social ratings");}
+        const auto plan=registry.native_registry->at(63)[42];int32_t probe_technologies=0;
+        if(plan==11) {
+            if(m_game->m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {throw std::invalid_argument("Probe preview requires explicit Telepathic Matrix authority");}
+            probe_technologies=unit::SmacWorkshopProbeTechnologyCount(*settings.GetSmacTechnologyRules(),technology);
+        }
+        preview_variant=unit::SmacWorkshopPreviewRank({plan,int8_t(uint8_t(catalog.weapons.weapons.at(draft.weapon).offense)),0,
+            social->retained->at(4),social->retained->at(8),false,false,probe_technologies});
+    }
     const auto component_choices=[&](unit::SmacWorkshopComponent kind) {
         gse::value::array_elements_t rows;
         for(const auto& choice:unit::SmacWorkshopChoices(kind,catalog,*settings.GetSmacTechnologyRules(),technology)) {
@@ -695,6 +712,7 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
         {"weapon",VALUE(gse::value::String,,catalog.weapons.weapons.at(draft.weapon).name)},
         {"offense",VALUE(gse::value::Int,,catalog.weapons.weapons.at(draft.weapon).offense)},
         {"weapon_mode",VALUE(gse::value::Int,,int32_t(catalog.weapons.weapons.at(draft.weapon).mode))},
+        {"preview_icon",VALUE(gse::value::Int,,preview_icon)}, {"preview_variant",VALUE(gse::value::Int,,preview_variant)},
         {"reactor",VALUE(gse::value::String,,catalog.reactors.reactors.at(draft.reactor-1).name)},
         {"power",VALUE(gse::value::Int,,catalog.reactors.reactors.at(draft.reactor-1).power)},
         {"scout_name",VALUE(gse::value::String,,catalog.source.units.at(2).name)},

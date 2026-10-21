@@ -1,0 +1,175 @@
+{
+  "scope": "Original CRT precision setter and cache-hit/miss palette prefix controls.\nFile mapping returns read-only-owned input bytes in private guest buffers;\nno installation cache is modified. Prefixes stop before unrelated color setup.\n",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "cache_inputs": [
+    {
+      "name": "palcheck.tmp",
+      "bytes": 1024,
+      "sha256": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6"
+    },
+    {
+      "name": "shadow.tmp",
+      "bytes": 256,
+      "sha256": "70b3ab988991323661c52a73dd8459d6b06202a9e8c6fec329e4f12b0fb7aa49"
+    },
+    {
+      "name": "spotlight.tmp",
+      "bytes": 256,
+      "sha256": "17a63da45d5dbeaaa9fd372f874f702ac9b4979ed47acfedc0df3e13fbc735da"
+    },
+    {
+      "name": "reddish.tmp",
+      "bytes": 256,
+      "sha256": "80704f8fd9bc507ea05c0481b37d1cdc2435d9ec097d48c0e741eaa067f7fe42"
+    },
+    {
+      "name": "bluetint.tmp",
+      "bytes": 256,
+      "sha256": "bfab4aa716a2f99136786f25efeb1ea33de7978a88e4bb739b9289d7232719e6"
+    },
+    {
+      "name": "fade.tmp",
+      "bytes": 2048,
+      "sha256": "e38d0e2ea2cb399bc8b34ccc1a56c4d616351004a57bb208d92b78fd0246f789"
+    }
+  ],
+  "cases": [
+    {
+      "id": "hit_crt_default",
+      "seed_control_word": "0x37f",
+      "original_crt_precision_setter": true,
+      "entry_control_word": "0x23f",
+      "exit_control_word": "0x23f",
+      "prefix_entry": "429e30",
+      "prefix_stop": "0x42a1b2",
+      "events": [
+        {
+          "kind": "mapped_input",
+          "name": "palcheck.tmp",
+          "bytes": 1024
+        },
+        {
+          "kind": "mapped_input",
+          "name": "shadow.tmp",
+          "bytes": 256
+        },
+        {
+          "kind": "mapped_input",
+          "name": "spotlight.tmp",
+          "bytes": 256
+        },
+        {
+          "kind": "mapped_input",
+          "name": "reddish.tmp",
+          "bytes": 256
+        },
+        {
+          "kind": "mapped_input",
+          "name": "bluetint.tmp",
+          "bytes": 256
+        },
+        {
+          "kind": "mapped_input",
+          "name": "fade.tmp",
+          "bytes": 2048
+        }
+      ],
+      "shadow_sha256": "70b3ab988991323661c52a73dd8459d6b06202a9e8c6fec329e4f12b0fb7aa49",
+      "index6": 177
+    },
+    {
+      "id": "hit_extended_ambient",
+      "seed_control_word": "0x37f",
+      "original_crt_precision_setter": false,
+      "entry_control_word": "0x37f",
+      "exit_control_word": "0x37f",
+      "prefix_entry": "429e30",
+      "prefix_stop": "0x42a1b2",
+      "events": [
+        {
+          "kind": "mapped_input",
+          "name": "palcheck.tmp",
+          "bytes": 1024
+        },
+        {
+          "kind": "mapped_input",
+          "name": "shadow.tmp",
+          "bytes": 256
+        },
+        {
+          "kind": "mapped_input",
+          "name": "spotlight.tmp",
+          "bytes": 256
+        },
+        {
+          "kind": "mapped_input",
+          "name": "reddish.tmp",
+          "bytes": 256
+        },
+        {
+          "kind": "mapped_input",
+          "name": "bluetint.tmp",
+          "bytes": 256
+        },
+        {
+          "kind": "mapped_input",
+          "name": "fade.tmp",
+          "bytes": 2048
+        }
+      ],
+      "shadow_sha256": "70b3ab988991323661c52a73dd8459d6b06202a9e8c6fec329e4f12b0fb7aa49",
+      "index6": 177
+    },
+    {
+      "id": "miss_crt_default",
+      "seed_control_word": "0x37f",
+      "original_crt_precision_setter": true,
+      "entry_control_word": "0x23f",
+      "exit_control_word": "0x23f",
+      "prefix_entry": "429e30",
+      "prefix_stop": "0x42a05a",
+      "events": [
+        {
+          "kind": "mapped_input",
+          "name": "palcheck.tmp",
+          "bytes": 1024
+        },
+        {
+          "kind": "shadow_producer",
+          "cw": "0x23f"
+        }
+      ],
+      "shadow_sha256": "70b3ab988991323661c52a73dd8459d6b06202a9e8c6fec329e4f12b0fb7aa49",
+      "index6": 177
+    },
+    {
+      "id": "miss_extended_ambient",
+      "seed_control_word": "0x37f",
+      "original_crt_precision_setter": false,
+      "entry_control_word": "0x37f",
+      "exit_control_word": "0x37f",
+      "prefix_entry": "429e30",
+      "prefix_stop": "0x42a05a",
+      "events": [
+        {
+          "kind": "mapped_input",
+          "name": "palcheck.tmp",
+          "bytes": 1024
+        },
+        {
+          "kind": "shadow_producer",
+          "cw": "0x37f"
+        }
+      ],
+      "shadow_sha256": "0229080d2b3b2e56a39523f3ced54fcbcbe8bc8dea8a8548d5fbe75820cd6ef3",
+      "index6": 178
+    }
+  ],
+  "graphics_reset_fragment": {
+    "pc": "634204",
+    "instruction": "fninit",
+    "before_cw": "027f",
+    "after_cw": "037f"
+  },
+  "limitation": "No full WinMain/OS/DLL/title-to-graphics startup execution or universal cold-cache caller CW is claimed. Actual CRT setter, palette prefix and cache-hit lifetime are proved at declared stages."
+}

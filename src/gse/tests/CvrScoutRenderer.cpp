@@ -16,6 +16,7 @@
 #include "fixtures/WorkshopGeneralVisual.h"
 #include "fixtures/WorkshopStockVisual.h"
 #include "fixtures/WorkshopStrip.h"
+#include "fixtures/WorkshopAnimation.h"
 #include "game/frontend/SmacDevelopedOverlay.h"
 #include "loader/txt/UnitRulesTXTLoader.h"
 #include <cstdlib>
@@ -267,6 +268,50 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
         target=before;image.Composite(target,4,3,4,lookup,{-1,-1},{0,0,4,3});
         GT_ASSERT(target[0]==11 && std::count(target.begin(),target.end(),1)==11,"Negative-origin clip changed");GT_OK();
     });
+    task->AddTest("CVR Workshop nonzero yaw and shared model phase match four native frames",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        size_t reads=0;
+        const auto read=[&](const std::string& name) {
+            ++reads;
+            for(const auto& entry:std::filesystem::directory_iterator(directory)) {
+                auto candidate=entry.path().filename().string();std::transform(candidate.begin(),candidate.end(),candidate.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if(candidate==name) {std::ifstream stream(entry.path(),std::ios::binary);return std::string(std::istreambuf_iterator<char>(stream),{});}
+            }throw std::runtime_error("Missing owned animated Workshop asset: "+name);
+        };
+        const auto digest=[](const auto& bytes) {uint64_t h=UINT64_C(14695981039346656037);for(const auto byte:bytes) {h=(h^byte)*UINT64_C(1099511628211);}return h;};
+        const auto source=read("alpha.txt");
+        const auto weapons=loader::txt::UnitRulesTXTLoader::ParseWeapons(source,"smac");
+        const auto armor=loader::txt::UnitRulesTXTLoader::ParseDefenses(source,"smac");
+        for(const auto& row:workshop_animation_fixture::FRAMES) {
+            const auto renderer=CvrScoutRenderer::LoadWorkshopDesign(read,read("spartans.pcx"),row.chassis,1,1,1,-1,{weapons.weapons.at(1).offense,int(weapons.weapons.at(1).mode),armor.defenses.at(1).rating});
+            const auto loaded=reads;CvrScoutRenderer::WorkshopAnimation animation{row.phase,true};
+            const auto image=renderer.RenderWorkshop(row.yaw,&animation);
+            std::vector<uint8_t> depth;for(const auto value:image.indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
+            GT_ASSERT(animation.phase==row.next && reads==loaded,"Animation counter or decoded-asset reuse differs");
+            GT_ASSERT(digest(image.indexed.color)==row.color && digest(depth)==row.depth,
+                "Animated frame "+std::string(row.name)+" color="+std::to_string(digest(image.indexed.color))+" depth="+std::to_string(digest(depth)));
+            if(const auto* output=std::getenv("GLSMAC_WORKSHOP_CAPTURE_DIR")) {
+                std::filesystem::create_directories(output);std::ofstream file(std::filesystem::path(output)/(std::string(row.name)+".rgba"),std::ios::binary);
+                file.write(reinterpret_cast<const char*>(image.rgba.data()),image.rgba.size());
+            }
+            CvrScoutRenderer::WorkshopAnimation hidden{row.phase,false};
+            const auto repeated=renderer.RenderWorkshop(row.yaw,&hidden);
+            GT_ASSERT(hidden.phase==row.phase && repeated.indexed.color==image.indexed.color && repeated.indexed.depth==image.indexed.depth,
+                "Hidden Workshop advanced shared phase or changed fixed-armored test frame");
+        }
+        const auto copter=CvrScoutRenderer::LoadWorkshopDesign(read,read("spartans.pcx"),6,1,1,1,-1,{weapons.weapons.at(1).offense,int(weapons.weapons.at(1).mode),armor.defenses.at(1).rating});
+        const auto card=CvrScoutRenderer::LoadWorkshopDesign(read,read("spartans.pcx"),6,1,1,1,0,{weapons.weapons.at(1).offense,int(weapons.weapons.at(1).mode),armor.defenses.at(1).rating});
+        CvrScoutRenderer::WorkshopAnimation shared{14,true};std::array<uint32_t,3> position{};
+        card.RenderWorkshopCard(0,position,&shared);GT_ASSERT(shared.phase==15,"Copter chassis card did not advance shared phase");
+        const auto next=copter.RenderWorkshop(0x3d4ccccd,&shared);
+        GT_ASSERT(shared.phase==16 && digest(next.indexed.color)==workshop_animation_fixture::FRAMES[3].color,"Card-to-main phase ordering differs");
+        shared={14,true};
+        GT_ASSERT(Rejects([&]{copter.RenderWorkshop(0x7f800000,&shared);}) && shared.phase==14,"Failed paint changed caller phase");
+        shared={0x80000000u,true};
+        GT_ASSERT(Rejects([&]{copter.RenderWorkshop(0,&shared);}) && shared.phase==0x80000000u,"Negative signed raster phase admitted or mutated");
+        GT_OK();
+    });
+
     task->AddTest("CVR general Workshop compositions match fifteen full native frames",GT(){
         const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
         const auto read=[&](const std::string& name) {

@@ -1,0 +1,193 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Four complete native main previews. Independently decoded owned-asset frames, attachment offsets, bounds, center, yaw rotation, view and object transforms; declared established constructor camera/material inputs. Full indexed/depth replay is independently implemented at the native kernel-entry boundary, not a complete independent asset-to-kernel renderer.",
+  "cases": [
+    {
+      "id": "inf_yaw_first_main",
+      "phase_in": 1,
+      "phase_out": 1,
+      "yaw_in": "0x3d4ccccd",
+      "yaw_out": "0x3dcccccd",
+      "assembled_objects": 64,
+      "minimum": [
+        -174.3957061767578,
+        -231.46441650390625,
+        -4.7022705078125
+      ],
+      "maximum": [
+        176.60426330566406,
+        561.0173950195312,
+        526.3294067382812
+      ],
+      "center": [
+        -1.104278564453125,
+        -164.7764892578125,
+        -260.8135681152344
+      ],
+      "projection": [
+        0.1398250311613083,
+        -0.006997083779424429,
+        0.0,
+        0.0049496544525027275,
+        0.09891058504581451,
+        -0.09895552694797516,
+        -0.017663268372416496,
+        -0.3529709279537201,
+        -0.3536941111087799
+      ],
+      "translation": [
+        128.34539794921875,
+        137.9904327392578,
+        37917.98046875
+      ],
+      "asset_frames_bounds_view_draws_match": true,
+      "indexed_sha256": "d80af25d2df928f46097c9a69e658b4b51caa3b0acccde02b9d71c45353e7071",
+      "depth_sha256": "43871efd53ec3dbf57613546368d7d91ff4b4f568c043752ef8959359f470a8b"
+    },
+    {
+      "id": "inf_yaw_next_main",
+      "phase_in": 1,
+      "phase_out": 1,
+      "yaw_in": "0x3dcccccd",
+      "yaw_out": "0x3e19999a",
+      "assembled_objects": 64,
+      "minimum": [
+        -174.3957061767578,
+        -231.46441650390625,
+        -4.7022705078125
+      ],
+      "maximum": [
+        176.60426330566406,
+        561.0173950195312,
+        526.3294067382812
+      ],
+      "center": [
+        -1.104278564453125,
+        -164.7764892578125,
+        -260.8135681152344
+      ],
+      "projection": [
+        0.13930058479309082,
+        -0.013976679183542728,
+        0.0,
+        0.009886938147246838,
+        0.09853959828615189,
+        -0.09895552694797516,
+        -0.03528238832950592,
+        -0.3516470193862915,
+        -0.3536941111087799
+      ],
+      "translation": [
+        128.34539794921875,
+        137.9904327392578,
+        37917.98046875
+      ],
+      "asset_frames_bounds_view_draws_match": true,
+      "indexed_sha256": "09fd462c04512ead41d6729740deed8afd1acb9e6fc6feb2fde0fc39d161992c",
+      "depth_sha256": "b6a9a3ce467584e64258ee6d3bee4534d4d4130e6246b212c480892ed893374d"
+    },
+    {
+      "id": "copter_phase14_main",
+      "phase_in": 14,
+      "phase_out": 15,
+      "yaw_in": "0x3d4ccccd",
+      "yaw_out": "0x3dcccccd",
+      "assembled_objects": 13,
+      "minimum": [
+        -644.80908203125,
+        -632.901611328125,
+        -50.18896484375
+      ],
+      "maximum": [
+        646.62841796875,
+        433.81488037109375,
+        445.8652648925781
+      ],
+      "center": [
+        -0.90966796875,
+        99.54336547851562,
+        -197.83815002441406
+      ],
+      "projection": [
+        0.1398250311613083,
+        -0.006997083779424429,
+        0.0,
+        0.0049496544525027275,
+        0.09891058504581451,
+        -0.09895552694797516,
+        -0.017663268372416496,
+        -0.3529709279537201,
+        -0.3536941111087799
+      ],
+      "translation": [
+        128.37265014648438,
+        157.93544006347656,
+        37802.29296875
+      ],
+      "asset_frames_bounds_view_draws_match": true,
+      "indexed_sha256": "5a2493cbdbabab3e6a48a10ccd2161080d41add20d36469a38a94e52f6d32f2f",
+      "depth_sha256": "c7685ce0a415973c6bbaf12d02800f062081ea26323a853fc46d52e9555f7642"
+    },
+    {
+      "id": "copter_phase15_main",
+      "phase_in": 15,
+      "phase_out": 16,
+      "yaw_in": "0x3d4ccccd",
+      "yaw_out": "0x3dcccccd",
+      "assembled_objects": 13,
+      "minimum": [
+        -621.0001220703125,
+        -632.901611328125,
+        -50.18896484375
+      ],
+      "maximum": [
+        623.9998779296875,
+        432.6392822265625,
+        445.8652648925781
+      ],
+      "center": [
+        -1.4998779296875,
+        100.13116455078125,
+        -197.83815002441406
+      ],
+      "projection": [
+        0.1398250311613083,
+        -0.006997083779424429,
+        0.0,
+        0.0049496544525027275,
+        0.09891058504581451,
+        -0.09895552694797516,
+        -0.017663268372416496,
+        -0.3529709279537201,
+        -0.3536941111087799
+      ],
+      "translation": [
+        128.29002380371094,
+        157.99365234375,
+        37802.0859375
+      ],
+      "asset_frames_bounds_view_draws_match": true,
+      "indexed_sha256": "3d3859e45cfb48c4000f6b05165e0314b3402b8c7bed84944b480f3d15f54a89",
+      "depth_sha256": "d613ef5880398b698b613bc93c7513bddcdbfa37211669b8424c80308c10edf6"
+    }
+  ],
+  "differences": [
+    {
+      "first": "inf_yaw_first_main",
+      "second": "inf_yaw_next_main",
+      "different_indexed_pixels": 2351,
+      "different_depth_cells": 2415
+    },
+    {
+      "first": "copter_phase14_main",
+      "second": "copter_phase15_main",
+      "different_indexed_pixels": 3364,
+      "different_depth_cells": 4115
+    }
+  ],
+  "checks": {
+    "full_color_depth_frames": 4,
+    "asset_derived_objects": 154,
+    "kernel_calls": 214
+  }
+}

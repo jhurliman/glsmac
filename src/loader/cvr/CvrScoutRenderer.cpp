@@ -26,6 +26,7 @@ struct CvrScoutRenderer::Assets {
 	std::vector< std::vector< Geometry > > geometry;
 	std::vector< CvrPalette > palettes;
     std::vector<CvrFrameSelection> selections;
+    std::vector<std::pair<WorkshopFramePhase,bool>> animation;
     int workshop_weapon_mode=0;
     int picker_weapon=-1;
 	std::optional< std::array< CvrPalette::Color, 256 > > software_colors;
@@ -106,9 +107,10 @@ CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::st
     faction.shades=CvrActorMaterial::Tint(faction.colors,shades,faction.tint_index);
     std::vector<std::string> bytes;std::vector<WorkshopAttachment> attachments;
     const std::array<float,3> infantry{-400,200,0},zero{};
+    using Phase=WorkshopFramePhase;
     const auto append=[&](const std::string& file,const std::array<uint8_t,24*256>* tint=nullptr,
-        std::array<float,3> offset={},bool direct=true) {
-        bytes.push_back(read(file));attachments.push_back({offset,direct,tint ? std::optional<std::array<uint8_t,24*256>>(*tint):std::nullopt});
+        std::array<float,3> offset={},bool direct=true,Phase phase=Phase::Fixed,bool advance=false) {
+        bytes.push_back(read(file));attachments.push_back({offset,direct,tint ? std::optional<std::array<uint8_t,24*256>>(*tint):std::nullopt,phase,advance});
     };
     const auto mount=[&](const std::string& name) {
         const auto marker=CvrSceneReader::Read(CvrContainerReader::Read(read(name)));
@@ -128,10 +130,10 @@ CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::st
     const auto body=[&] {
         switch(chassis) {
         case 0:
-            if(definition.weapon_mode<3) {if(weapon!=14) {append("vi.cvr",nullptr,infantry,false);}}
-            else if(weapon==18) {append("vpt.cvr",nullptr,infantry,false);}
+            if(definition.weapon_mode<3) {if(weapon!=14) {append("vi.cvr",nullptr,infantry,false,Phase::Modulo15);}}
+            else if(weapon==18) {append("vpt.cvr",nullptr,infantry,false,Phase::Modulo15);}
             else if(weapon!=19) {base();append("vcl.cvr");append("vclt00.cvr");append("vlights.cvr");}break;
-        case 1:powerbase();gunbase();base();append("vsp.cvr");append("vsptb.cvr");append("vsptf.cvr");append("vlights.cvr");break;
+        case 1:powerbase();gunbase();base();append("vsp.cvr");append("vsptb.cvr",nullptr,zero,true,Phase::Raw);append("vsptf.cvr",nullptr,zero,true,Phase::Raw);append("vlights.cvr");break;
         case 2:
             append("vb.cvr");for(const auto* name:{"vht-vbp.cvr","vhtp.cvr","vhttp.cvr"}) {append(name,&faction.shades);}
             if(!body_armored) {append("vhta00.cvr");append("vhtta00.cvr");}
@@ -139,7 +141,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::st
         case 3:powerbase();gunbase();base();append("vfl.cvr");break;
         case 4:base();gunbase();append("vcu.cvr");append("vcup.cvr",&faction.shades);append("vcuw.cvr");if(!body_armored) {append("vcua00.cvr");}break;
         case 5:powerbase();base();gunbase();append("vjtp.cvr",&faction.shades);if(!body_armored) {append("vjt00.cvr");}break;
-        case 6:powerbase();base();gunbase();append("vct.cvr");append("vctp.cvr",&faction.shades);append("vctb.cvr");if(!body_armored) {append("vct00.cvr",&faction.shades);}break;
+        case 6:powerbase();base();gunbase();append("vct.cvr");append("vctp.cvr",&faction.shades);append("vctb.cvr",nullptr,zero,true,Phase::Modulo15,true);if(!body_armored) {append("vct00.cvr",&faction.shades);}break;
         case 7:powerbase();base();gunbase();append("vgs.cvr");append("vgsp.cvr",&faction.shades);break;
         case 8:append(weapon==13 ? "vw13.cvr":"vm.cvr");base();break;
         }
@@ -171,11 +173,11 @@ CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::st
         const bool structure=armor==4 || armor==8 || armor==9 || armor==5;
         const auto* tint=armor==2 ? &materials.armor[0]:armor==3 ? &materials.armor[1]:armor==6 ? &materials.armor[2]:armor==7 ? &materials.armor[3]:nullptr;
         if(armor==4 || armor==8 || armor==9) {
-            if(infantry_actor) {append(armor==4 ? "viptawal.cvr":armor==8 ? "viptasgn.cvr":"viptapsi.cvr",nullptr,infantry,false);}
+            if(infantry_actor) {append(armor==4 ? "viptawal.cvr":armor==8 ? "viptasgn.cvr":"viptapsi.cvr",nullptr,infantry,false,Phase::Raw);}
             else {append("a.cvr");append(armor==4 ? "apwall.cvr":armor==8 ? "asgen.cvr":"apsid.cvr");}
         }
         switch(chassis) {
-        case 0:if(ordinary) {append(infantry_actor ? "vipta00.cvr":"va01.cvr",tint,infantry_actor ? infantry:zero,!infantry_actor);}break;
+        case 0:if(ordinary) {append(infantry_actor ? "vipta00.cvr":"va01.cvr",tint,infantry_actor ? infantry:zero,!infantry_actor,infantry_actor ? Phase::Modulo15:Phase::Fixed);}break;
         case 1:if(ordinary) {append("va01.cvr",tint);append("vspa01.cvr",tint);}break;
         case 2:if(structure) {append("vhta00.cvr");append("vhtta00.cvr");}else if(ordinary) {append("vhta01.cvr",tint);append("vhtta01.cvr",tint);}break;
         case 3:case 7:if(ordinary) {append("va01.cvr",tint);}break;
@@ -218,13 +220,16 @@ CvrStripImage CvrScoutRenderer::RenderStrip() const {
     return {RenderView(view),RenderShadow(scene)};
 }
 
-CvrScoutImage CvrScoutRenderer::RenderWorkshopCard(int kind,std::array<uint32_t,3>& position) const {
+CvrScoutImage CvrScoutRenderer::RenderWorkshopCard(int kind,std::array<uint32_t,3>& position,WorkshopAnimation* animation) const {
     if(kind<0 || kind>3 || m_assets->profile!=Profile::WorkshopPart) {throw std::invalid_argument("Workshop card requires its component scene");}
     const std::array<uint32_t,4> scale{0x3d4ccccd,m_assets->workshop_weapon_mode<3 ? 0x3e19999au:m_assets->workshop_weapon_mode==9 ? 0x3d75c28fu:0x3da3d70au,0x3d8f5c29,0x3e4ccccd};
     const std::array<std::array<int32_t,2>,4> anchor{{{79,47},{79,143},{79,235},{511,45}}};
+    auto next=animation ? *animation:WorkshopAnimation{};
+    const auto frames=animation ? WorkshopFrames(next):CvrFrameAssembler::Assemble(m_assets->frames,m_assets->selections);
     auto view=scout::MakeWorkshopView(position,0x3f05f92d,scale[kind],anchor[kind]);
-    if(kind!=0) {position=WorkshopPosition(view.orientation,position);view=scout::MakeWorkshopView(position,0x3f05f92d,scale[kind],anchor[kind]);}
-    return RenderView(view,9,false,kind==1 ? std::optional<std::array<int32_t,4>>({79,86,178,171}):std::nullopt);
+    if(kind!=0) {position=WorkshopPosition(view.orientation,position,&frames);view=scout::MakeWorkshopView(position,0x3f05f92d,scale[kind],anchor[kind]);}
+    auto result=RenderView(view,9,false,kind==1 ? std::optional<std::array<int32_t,4>>({79,86,178,171}):std::nullopt,&frames);
+    if(animation) {*animation=next;}return result;
 }
 
 CvrScoutImage CvrScoutRenderer::RenderWorkshopPicker(int kind,int ordinal,bool available,std::array<uint32_t,3>& position) const {
@@ -260,6 +265,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_vie
 	for ( const auto bytes : parts ) {
 		const auto index = scenes.size();
         const auto* attachment=attachments ? &attachments->at(index):nullptr;
+        owned->animation.emplace_back(attachment ? attachment->phase:WorkshopFramePhase::Fixed,attachment && attachment->advance_phase);
         const bool direct=attachment ? attachment->direct:profile==Profile::SpartanSpeeder || profile==Profile::WorkshopWeapon;
         owned->selections.push_back({index,0,attachment ? attachment->offset:direct ? std::array<float,3>{0,0,0}:std::array<float,3>{-400,200,0},attachment && direct});
 		const auto container = CvrContainerReader::Read( bytes );
@@ -330,16 +336,34 @@ CvrScoutImage CvrScoutRenderer::Render( const CvrScoutViewInput& input ) const {
     return RenderView(MakeView(input,profile));
 }
 
-CvrScoutImage CvrScoutRenderer::RenderWorkshop(const uint32_t yaw_bits) const {
+CvrFrameAssembly CvrScoutRenderer::WorkshopFrames(WorkshopAnimation& animation) const {
+    if(animation.phase>uint32_t(INT32_MAX)) {throw std::invalid_argument("Workshop animation requires a nonnegative signed phase");}
+    auto selections=m_assets->selections;
+    for(size_t i=0;i<selections.size();++i) {
+        const auto [mode,advance]=m_assets->animation.at(i);
+        if(mode!=WorkshopFramePhase::Fixed) {
+            if(animation.phase>uint32_t(INT32_MAX)) {throw std::invalid_argument("Workshop animation phase exceeds admitted raster domain");}
+            selections[i].frame=int32_t(mode==WorkshopFramePhase::Modulo15 ? animation.phase%15:animation.phase);
+        }
+        if(advance && animation.visible) {++animation.phase;}
+    }
+    return CvrFrameAssembler::Assemble(m_assets->frames,selections);
+}
+
+CvrScoutImage CvrScoutRenderer::RenderWorkshop(const uint32_t yaw_bits,WorkshopAnimation* animation) const {
     using namespace scout;
     if(m_assets->profile!=Profile::Workshop) {throw std::invalid_argument("Workshop preview requires its assembled assets");}
     const Matrix identity{0x3f800000,0,0,0,0x3f800000,0,0,0,0x3f800000};
-    return RenderView(MakeWorkshopView(WorkshopPosition(identity),yaw_bits));
+    auto next=animation ? *animation:WorkshopAnimation{};
+    const auto frames=animation ? WorkshopFrames(next):CvrFrameAssembler::Assemble(m_assets->frames,m_assets->selections);
+    auto result=RenderView(MakeWorkshopView(WorkshopPosition(identity,{0,0,0},&frames),yaw_bits),9,false,std::nullopt,&frames);
+    if(animation) {*animation=next;}return result;
 }
 
-std::array<uint32_t,3> CvrScoutRenderer::WorkshopPosition(const std::array<uint32_t,9>& rotation,const std::array<uint32_t,3>& previous) const {
+std::array<uint32_t,3> CvrScoutRenderer::WorkshopPosition(const std::array<uint32_t,9>& rotation,const std::array<uint32_t,3>& previous,const CvrFrameAssembly* assembly) const {
     using namespace scout;
-    const auto frames=CvrFrameAssembler::Assemble(m_assets->frames,m_assets->selections);
+    const auto prepared=assembly ? CvrFrameAssembly{}:CvrFrameAssembler::Assemble(m_assets->frames,m_assets->selections);
+    const auto& frames=assembly ? *assembly:prepared;
     if(frames.first_omitted) {throw std::invalid_argument("Workshop preview has incomplete frames");}
     if(frames.records.empty()) {return previous;}
     std::optional<WorkshopBounds> scene;
@@ -372,9 +396,10 @@ CvrScoutImage CvrScoutRenderer::RenderWorkshopPart(uint32_t scale,bool centered,
     return RenderView(view,translucent && !unavailable ? 24:9,unavailable);
 }
 
-CvrScoutImage CvrScoutRenderer::RenderView(const scout::View& view,const uint8_t clear,const bool unavailable,const std::optional<std::array<int32_t,4>> clip) const {
+CvrScoutImage CvrScoutRenderer::RenderView(const scout::View& view,const uint8_t clear,const bool unavailable,const std::optional<std::array<int32_t,4>> clip,const CvrFrameAssembly* assembly) const {
     using namespace scout;
-    const auto frames = CvrFrameAssembler::Assemble( m_assets->frames, m_assets->selections );
+    const auto prepared=assembly ? CvrFrameAssembly{}:CvrFrameAssembler::Assemble(m_assets->frames,m_assets->selections);
+    const auto& frames=assembly ? *assembly:prepared;
 	if ( frames.first_omitted ) { throw std::invalid_argument( "CVR Scout: incomplete frame assembly" ); }
 	CvrScoutImage result{ { 256, 256, 256, std::vector< uint8_t >( 256 * 256, clear ),
 		std::vector< uint16_t >( 256 * 256, 65535 ) }, {}, view.target_anchor, 0, 0, 0 };

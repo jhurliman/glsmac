@@ -1637,3 +1637,14 @@ rows, while turn-zero owner initialization clears the two own-air counters.
 [The fresh-image handoff and live integration](behavior/air-summary-fresh-image.md)
 record this separately from recount, restore and nonzero restart. Normal-open
 recommendations remain the next caller integration.
+
+
+## 2026-10-21 queued normal entry
+
+Normal opening now distinguishes active reopen from inactive initializeFresh.
+It preserves the original entry/reactor/selected-slot rules and capability
+refresh phases, and connects the production picker to its actual highlighted
+Unit argument. Manual closing rebuilds production choices without changing the
+queue. See the [live integration scope](behavior/workshop-normal-open-integration.md)
+and [source caller audit](behavior/design-workshop-open-callers.md). Global U,
+New/Redesign actions and complete Workshop/manufacturing acceptance remain open.

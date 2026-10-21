@@ -734,6 +734,44 @@ SmacWorkshopReselection PrepareSmacWorkshopReselection(const SmacStartupDesignSt
     result.state.RetainNativeRegistry(pool,catalog);return result;
 }
 
+SmacWorkshopReselection PrepareSmacWorkshopEntry(const SmacStartupDesignState& state,int32_t requested,
+    const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner) {
+    RequireOwner(owner);state.Validate(catalog);const auto id=owner.admission.simulation_id;
+    if(!state.native_registry || requested< -1 || requested>=512 || requested==63 || (requested>=64 && requested/64!=id)) {
+        throw std::invalid_argument("Workshop entry requires retained records and an owned selection");
+    }
+    const auto& pool=*state.native_registry;
+    if(requested<0) {
+        requested=id*64;
+        for(int32_t slot=id*64;slot<(id+1)*64;++slot) {
+            if(!(pool[slot][48]&1)) {requested=slot;break;}
+            if(pool[slot][44]&(1u<<id)) {requested=slot;}
+        }
+    }
+    auto result=PrepareSmacWorkshopReselection(state,requested,"",catalog,id);
+    if(pool.at(result.draft.selected_design)[48]&1) {return result;}
+    auto& draft=result.draft;
+    for(const auto& row:SmacWorkshopChoices(SmacWorkshopComponent::Reactor,catalog,technologies,owner)) {
+        if(row.technology_available) {draft.reactor=uint8_t(row.component_id);}
+    }
+    int speed=0,power=0,strength=0;
+    for(const auto& choice:SmacWorkshopChoices(SmacWorkshopComponent::Chassis,catalog,technologies,owner)) {
+        const auto& row=catalog.chassis.chassis.at(choice.component_id);const auto value=uint8_t(row.speed);
+        if(choice.technology_available && row.triad==loader::txt::ChassisTriad::Land && value>=speed) {speed=value;draft.chassis=choice.component_id;}
+    }
+    const auto signed_byte=[](int32_t raw){const auto bits=uint32_t(raw)&255u;return bits<128 ? int32_t(bits):int32_t(bits)-256;};
+    for(const auto& choice:SmacWorkshopChoices(SmacWorkshopComponent::Weapon,catalog,technologies,owner)) {
+        const auto value=signed_byte(catalog.weapons.weapons.at(choice.component_id).offense);
+        if(choice.technology_available && value<99 && value>=power) {power=value;draft.weapon=choice.component_id;}
+    }
+    for(const auto& choice:SmacWorkshopChoices(SmacWorkshopComponent::Armor,catalog,technologies,owner)) {
+        const auto value=signed_byte(catalog.defenses.defenses.at(choice.component_id).rating);
+        if(choice.technology_available && value>=strength) {strength=value;draft.armor=choice.component_id;}
+    }
+    return result;
+}
+
 SmacWorkshopObsolete PrepareSmacWorkshopObsolete(const SmacStartupDesignState& state,int32_t selected,
     const std::string& retained_name,const std::vector<int32_t>& old_list,size_t strip_offset,const SmacPredefinedUnitCatalog& catalog,
     const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner,

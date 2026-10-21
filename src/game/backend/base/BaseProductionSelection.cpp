@@ -121,6 +121,54 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         }
         removal.emplace(manager->PrepareWorldUnitRemoval(GSE_CALL,ids));
     };
+    if(name=="open_smac_workshop") {
+        const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
+            const auto at=args.find(key);if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop opening");}
+            return at->second->Deref();
+        };
+        if(args.size()!=4) {THROW("Workshop opening requires Base, selection, request and fence");}
+        const auto* object=static_cast<const gse::value::Object*>(field("base",gse::VT_OBJECT));
+        if(object->object_class!=base::Base::WRAP_CLASS) {THROW("Workshop opening requires an actual Base");}
+        auto* base=base::Base::Unwrap(args.at("base"));
+        const auto selected=static_cast<const gse::value::Int*>(field("selected_design",gse::VT_INT))->value;
+        const auto request=static_cast<const gse::value::Int*>(field("request_id",gse::VT_INT))->value;
+        const auto& expected=static_cast<const gse::value::String*>(field("expected_state",gse::VT_STRING))->value;
+        if(!base || base->GetGame()!=this || caller!=m_slot_num || selected< -1 || selected>=512 || selected==63 || request<1 || expected.size()!=64) {THROW("Invalid Workshop opening authority");}
+        base->RequireSmacProductionSelection();const auto owner=base->GetSmacResourceContext().owner_simulation_id;
+        if(selected>=64 && selected/64!=owner) {THROW("Workshop opening selected a foreign bank");}
+        if(apply) {CheckRW(GSE_CALL);if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Workshop opening requires its owning accumulation");}}
+        const auto& settings=GetState()->m_settings.global;
+        const bool stale=WorkshopPresetState(base->SmacWorkshopState(),m_simulation->value,settings,owner)!=expected;
+        bool failed=false;unit::SmacWorkshopDraft draft;
+        if(!stale) {try {
+            if(!settings.GetSmacCombatRules() || (!settings.GetSmacCampaignRules() && !settings.IsOrdinarySmacCampaign())) {throw std::invalid_argument("Workshop opening requires retained campaign rules");}
+            const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;auto next=m_simulation->value;
+            const auto refresh=[&] {next.RefreshCapabilities(owner,*settings.GetSmacTechnologyRules(),*settings.GetSmacPredefinedUnitRules(),*settings.GetSmacCombatRules(),
+                settings.GetSmacCampaignRules() && (settings.GetSmacCampaignRules()->primary&0x00400000u)!=0);};
+            refresh(); //4496fe, before mineral-factor capture and selector entry
+            (void)GetSmacProductionMineralFactor(base->m_owner);
+            auto entry=unit::PrepareSmacWorkshopEntry(next.designs,int32_t(selected),catalog,*settings.GetSmacTechnologyRules(),*next.technology.Find(owner));
+            draft=entry.draft;next.designs=std::move(entry.state);
+            if(!(next.designs.native_registry->at(draft.selected_design)[48]&1)) {
+                const auto chosen=draft.selected_design;const auto reactor=draft.reactor;
+                refresh(); //597ede, only the initializeFresh inactive branch
+                const auto context=WorkshopHumanContext(next,owner);const auto& economy=next.economy.at(owner);
+                if(!economy.design_counts || !economy.production_reference_counts) {throw std::invalid_argument("Workshop opening requires retained allocation counts");}
+                auto result=unit::PrepareSmacWorkshopHumanPreview(next.designs,draft,catalog,*settings.GetSmacTechnologyRules(),*next.technology.Find(owner),
+                    context,*economy.design_counts,*economy.production_reference_counts);
+                draft=result.draft;draft.selected_design=chosen;draft.reactor=reactor;draft.name.clear();
+                auto pool=*result.state.native_registry;pool.at(chosen)[48]&=uint8_t(~0x80u);result.state.RetainNativeRegistry(pool,catalog);
+                next.designs=std::move(result.state);
+            }
+            if(apply) {static_assert(std::is_nothrow_swappable_v<unit::SmacStartupDesignState> && std::is_nothrow_swappable_v<decltype(next.capabilities)>);
+                std::swap(m_simulation->value.designs,next.designs);m_simulation->value.capabilities.swap(next.capabilities);}
+        }catch(const std::invalid_argument&) {failed=true;}catch(const std::runtime_error&) {failed=true;}}
+        if(apply) {GetState()->TriggerObject(this,"smac_workshop_open",_ARGS_F(this,base,request,stale,failed,draft) {
+            out_args={{"base",base->Wrap(GSE_CALL)},{"request_id",VALUE(gse::value::Int,,request)},
+                {"stale",VALUE(gse::value::Bool,,stale)},{"failed",VALUE(gse::value::Bool,,failed)},
+                {"selection",!stale && !failed ? base->CopySmacWorkshop(GSE_CALL,&draft):VALUE(gse::value::Undefined)}};
+        });}return true;
+    }
     if(name=="preset_smac_workshop") {
         const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
             const auto at=args.find(key);if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop preset command");}

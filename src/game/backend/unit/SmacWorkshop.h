@@ -188,6 +188,13 @@ struct SmacWorkshopReselection {
 };
 SmacWorkshopReselection PrepareSmacWorkshopReselection(const SmacStartupDesignState& state,int32_t requested,
     const std::string& retained_name,const SmacPredefinedUnitCatalog& catalog,int32_t owner);
+// Normal449630 negative bank scan and4490b0(id,1) provisional selection.
+// Caller refreshes capabilities before entry, runs the human producer only
+// for inactive records, then clears selected flag80 after its tuple readback.
+SmacWorkshopReselection PrepareSmacWorkshopEntry(const SmacStartupDesignState& state,int32_t requested,
+    const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner);
+
 struct SmacWorkshopObsolete {SmacWorkshopReselection selection;size_t strip_offset;};
 // Direct595ac0 design/history portion. Unit removal and custom Base queue
 // surgery must be staged by the live caller before publishing this state.

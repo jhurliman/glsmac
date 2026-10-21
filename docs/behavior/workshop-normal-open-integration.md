@@ -1,0 +1,62 @@
+# Live normal Workshop opening
+
+`open_smac_workshop` stages original entry through an authenticated queued Base
+command and the opaque faction/design fence. It refreshes capabilities once,
+reads the mineral factor, then runs the actual positive/negative selection path.
+An inactive selection receives technology-based provisional components and best
+reactor, a second capability refresh and the retained human recommendation
+controller with filter-1. Active reopen takes no recommendation pass.
+
+New readback preserves the inactive selected ID and entry reactor while copying
+the generated weapon/armor/chassis/full mask. Clear only selected flag80 after
+the controller; keep its named bit, stored name and opaque metadata. Active
+entry retains the existing reselect/name-normalization behavior. Design and
+capability results publish together; failure/stale requests publish neither.
+No Unit, Base queue, allocation ID, air-history recount or RNG change is added.
+
+The production picker's literal Workshop action sends the highlighted raw Unit
+design. Without a changed highlight it uses the current Unit target. A facility
+routes to the still-unimplemented help path, not a fabricated New draft. See
+[the original caller distinction](design-workshop-open-callers.md). The picker
+stays visible until a successful matching response. Manual close returns to a
+fresh production-choice query; turn/teardown hides Workshop without reopening
+that picker. Saving a design does not select it into the Base queue.
+
+## Validation scope
+
+The owned-rules live command covers basic and advanced New, active Scout with
+missing fresh-only authority, exact single/double capability refresh output,
+selected flag80 and unchanged whole simulation outside the declared result.
+New keeps slot64 even when the controller aliases intrinsic2. Advanced result
+0/1/8/4 with mask512 matches the existing native control. Opaque byte47 and flags
+other than80 survive. Replay is stale; Base serialization, IDs and RNG remain
+unchanged. An asset-free CI case checks active reopen without Fight/rank/air
+inputs. The existing producer retains521 native submission/pool expectations;
+these live compositions are not nine newly captured original full openings.
+
+All24 selected native groups pass normally and under focused ASan/UBSan with10
+production/two test translation units instrumented (leak detection disabled).
+Seven production translation units/known consumers pass correctness analysis.
+The UI script checks request/owner matching, pending/cancelled openings,
+highlighted/current Unit choice, facility separation and manual versus teardown
+return. Cached build; no repeated platform matrix.
+
+## Remaining work
+
+The command supports ordinary-1 selection, but the global owner-based menu/U
+caller (including no-Base cases), separate production New/Redesign actions and
+facility Help/Datalinks remain unconnected. The production list still projects
+its existing restricted unit set; exposing all supported saved custom designs
+and completing their usable manufacturing receipt is an immediate next task. Tutorial-2 entry is excluded. Full
+Workshop pixel/input/preference acceptance, SMAX coverage and the complete
+human-played named-design-to-manufactured-Unit/save/remote receipt remain open.
+
+
+The instrumented ordinary session highlights Colony Pod while the Base is
+producing Scout Patrol, opens the Colony Pod Workshop through the queued entry,
+then Escape returns to a freshly rebuilt production picker still producing
+Scout Patrol. No modified UI/data/technology injection is used. The process
+exits0 without sanitizer reports or tracked OpenGL leaks. Four affected UI
+scripts pass normally; the live Workshop UI script also passes under the same
+focused sanitizer binary. This is a caller/session receipt, not a complete
+original full-screen visual comparison.

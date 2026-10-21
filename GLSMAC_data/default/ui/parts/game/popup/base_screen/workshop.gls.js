@@ -1,6 +1,6 @@
 return {
     init: (p) => {
-        this.p = p; this.active = false; this.pending = false; this.next_request = 0;
+        this.p = p; this.opening = false; this.active = false; this.pending = false; this.next_request = 0;
         this.picker_active = false; this.picker_input = #include('./workshop_picker_input');
         this.data_formatter = #include('./workshop_data');
         this.automatic_suggestions = true; // Original fresh preference-store default.
@@ -91,8 +91,8 @@ return {
         this.done_button = this.window.button({class: 'workshop-main-action', left: 27, top: 347, width: 105, height: 20, text: ''});
         this.done_button.on('click', () => { this.submit(true); return true; });
         this.cancel_button = this.window.button({class: 'workshop-main-action', left: 459, top: 347, width: 105, height: 20, text: ''});
-        this.cancel_button.on('click', () => { this.hide_view(); return true; });
-        this.window.on('keydown', (e) => { if (e.modifiers == {} && e.code == 'ESCAPE') { this.hide_view(); } if (e.modifiers == {} && e.code == 'ENTER') { this.submit(true); } return true; });
+        this.cancel_button.on('click', () => { this.close_view(); return true; });
+        this.window.on('keydown', (e) => { if (e.modifiers == {} && e.code == 'ESCAPE') { this.close_view(); } if (e.modifiers == {} && e.code == 'ENTER') { this.submit(true); } return true; });
         this.picker = p.ui.root.window({zindex: 0.95, align: 'top left', left: 216, top: 168, width: 623, height: 387, background: 'rgb(0,0,0)', blocker: 'rgba(0, 0, 0, 180)'});
         this.picker_canvas = this.picker.surface({left: 0, top: 0, width: 623, height: 387});
         this.picker_scroll = this.picker.scrollbar({class: 'default-scroll-v', left: 580, top: 21, width: 24, height: 246,
@@ -109,6 +109,15 @@ return {
         this.picker.on('keydown', (e) => { this.picker_key(e); return true; });
         this.picker_canvas.on('mousemove', (e) => { this.picker_pointer(e, false); return true; });
         this.picker_canvas.on('mouseup', (e) => { if (e.button == 'left') { this.picker_pointer(e, true); } return true; });
+        this.window.listen(p.game, 'smac_workshop_open', (e) => {
+            if (!this.opening || e.base.id != this.base.id || e.request_id != this.opening_id) { return; }
+            this.opening = false;
+            const success = !e.stale && !e.failed;
+            if (#is_defined(this.p.utils) && #is_defined(this.p.utils.workshop_open_result)) {
+                this.p.utils.workshop_open_result(success, e.stale ? 'Game state changed. Please reopen Workshop.' : 'Workshop inputs are unavailable for this save.');
+            }
+            if (success) { this.open(this.base, e.selection); }
+        });
         this.window.listen(p.game, 'smac_workshop_commit', (e) => {
             if (!this.active || !this.pending || e.base.id != this.base.id || e.request_id != this.pending_id) { return; }
             const selecting = this.pending_selection;
@@ -145,7 +154,7 @@ return {
             if (!#is_defined(this.selection.status)) { this.selected_design = e.design_id; }
             if (e.intrinsic_name_warning) { this.draft_name = ''; this.message.text = 'The original unit name is retained.'; }
             else { this.message.text = ''; }
-            if (e.done) { this.hide_view(); }
+            if (e.done) { this.close_view(); }
         });
         this.window.listen(p.game, 'smac_workshop_obsolete', (e) => {
             if (!this.active || !this.pending || !this.pending_obsolete || e.base.id != this.base.id || e.request_id != this.pending_id) { return; }
@@ -217,6 +226,12 @@ return {
         // Native main controls truncate the centered advance to an integer.
         button.text = text; button.textleft = 3 + (99 - this.action_probe.measure().width) / 2;
         button.color = this.parent_text.colors[65];
+    },
+    begin: (base, data, selected) => {
+        if (this.opening || this.active || !#is_defined(data.preset_state)) { return; }
+        this.base = base; this.opening = true; this.next_request = this.next_request + 1; this.opening_id = this.next_request;
+        const request = this.opening_id; const expected = data.preset_state;
+        this.p.game.event('open_smac_workshop', {base: base, selected_design: selected, request_id: request, expected_state: expected});
     },
     open: (base, data) => {
         if (!this.active) { this.model.smacworkshopclock(2); }
@@ -613,7 +628,7 @@ return {
     answer_intrinsic: () => {
         if (!this.active || this.pending || !this.confirming || !this.intrinsic_message) { return; }
         const done = this.notice_done; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide();
-        if (done) { this.hide_view(); }
+        if (done) { this.close_view(); }
     },
     answer_overwrite: (accept) => {
         if (!this.active || this.pending || !this.confirming || this.intrinsic_message) { return; }
@@ -632,5 +647,9 @@ return {
         if (choice >= 0) { fields = fields + {overwrite: choice}; }
         this.p.game.event('commit_smac_workshop', fields);
     },
-    hide_view: () => { this.preset_notice.hide(); this.model.smacworkshopclock(0); this.picker_active = false; this.ability_dialog.hide(); this.rename_dialog.hide(); this.retire_dialog.hide(); this.upgrade_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); this.console.hide(); },
+    close_view: () => {
+        this.hide_view();
+        if (#is_defined(this.p.utils) && #is_defined(this.p.utils.workshop_closed)) { this.p.utils.workshop_closed(); }
+    },
+    hide_view: () => { this.opening = false; this.preset_notice.hide(); this.model.smacworkshopclock(0); this.picker_active = false; this.ability_dialog.hide(); this.rename_dialog.hide(); this.retire_dialog.hide(); this.upgrade_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); this.console.hide(); },
 };

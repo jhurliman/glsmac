@@ -747,7 +747,7 @@ bool Game::HandleSmacColonyScreenClose(GSE_CALLABLE,const std::string& name,
 bool Game::QueueCanonicalColonyScreenEdit(GSE_CALLABLE,const std::string& name,
 	const gse::value::object_properties_t& args) {
 	if(!m_canonical_continuation || m_canonical_continuation->stage!=CanonicalTurnContinuation::Stage::Screen) {return false;}
-	if(name!="work_base_tile" && name!="unwork_base_tile" && name!="select_smac_production" && name!="commit_smac_workshop" && name!="select_smac_workshop" && name!="preset_smac_workshop" && name!="retire_smac_workshop" && name!="upgrade_smac_workshop" && name!="obsolete_smac_workshop" && name!="open_smac_workshop_rename" && name!="answer_smac_workshop_rename" && name!="open_smac_specialist" && name!="select_smac_specialist" && name!="cancel_smac_specialist" && name!="open_smac_rename" && name!="commit_smac_rename" && name!="cancel_smac_rename" && name!="edit_smac_queue" && name!="hurry_smac_production" && name!="apply_smac_governor") {return false;}
+	if(name!="work_base_tile" && name!="unwork_base_tile" && name!="select_smac_production" && name!="commit_smac_workshop" && name!="select_smac_workshop" && name!="open_smac_workshop" && name!="preset_smac_workshop" && name!="retire_smac_workshop" && name!="upgrade_smac_workshop" && name!="obsolete_smac_workshop" && name!="open_smac_workshop_rename" && name!="answer_smac_workshop_rename" && name!="open_smac_specialist" && name!="select_smac_specialist" && name!="cancel_smac_specialist" && name!="open_smac_rename" && name!="commit_smac_rename" && name!="cancel_smac_rename" && name!="edit_smac_queue" && name!="hurry_smac_production" && name!="apply_smac_governor") {return false;}
 	ValidateCanonicalColonyScreen();
     if(m_canonical_continuation->screen_after_transfer) {throw std::runtime_error("Close this screen to continue after the Base changed faction");}
 	const gse::value::object_properties_t stamped{
@@ -789,7 +789,7 @@ bool Game::HandleCanonicalColonyScreenEdit(GSE_CALLABLE,const gse::value::object
 	util::FinallyGuard finish([&]{if(apply) {m_canonical_screen_edit_in_progress=false;}});
 	if(command=="work_base_tile" || command=="unwork_base_tile") {
 		if(HandleSmacWorkerEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
-	} else if((command=="select_smac_production" || command=="commit_smac_workshop" || command=="select_smac_workshop" || command=="preset_smac_workshop" || command=="retire_smac_workshop" || command=="upgrade_smac_workshop" || command=="obsolete_smac_workshop" || command=="open_smac_workshop_rename" || command=="answer_smac_workshop_rename") && HandleSmacProductionEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
+	} else if((command=="select_smac_production" || command=="commit_smac_workshop" || command=="select_smac_workshop" || command=="open_smac_workshop" || command=="preset_smac_workshop" || command=="retire_smac_workshop" || command=="upgrade_smac_workshop" || command=="obsolete_smac_workshop" || command=="open_smac_workshop_rename" || command=="answer_smac_workshop_rename") && HandleSmacProductionEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	if((command=="open_smac_specialist" || command=="select_smac_specialist" || command=="cancel_smac_specialist") && HandleSmacSpecialistEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	if(command=="apply_smac_governor" && HandleSmacGovernorEvent(GSE_CALL,command,payload,caller,apply)) {return true;}
 	if(command=="hurry_smac_production" && HandleSmacHurryEvent(GSE_CALL,command,payload,caller,apply)) {return true;}

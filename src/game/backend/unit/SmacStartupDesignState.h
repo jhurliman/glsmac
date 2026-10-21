@@ -21,6 +21,7 @@ struct SmacCustomDesign {
 	uint32_t abilities = 0, faction_exclusion = 0;
 	bool active = true, prototyped = false;
 	std::optional<std::string> name; // absent until an actual naming producer owns it
+	bool explicitly_named = false; // original custom-name flag, not inferred from localized text
 	std::optional<SmacRiotPrototypeMetadata> riot;
 	bool operator==( const SmacCustomDesign& other ) const;
 };

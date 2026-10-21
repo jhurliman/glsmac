@@ -8,7 +8,7 @@
 namespace game::backend::unit {
 namespace {
 constexpr int64_t MAGIC = 0x534d5344; // SMSD
-constexpr int64_t VERSION = 2;
+constexpr int64_t VERSION = 3;
 
 void RequireDifficulty( int32_t difficulty ) {
 	if ( difficulty < 0 || difficulty > 5 ) { throw std::runtime_error( "SMAC startup requires original difficulty 0..5" ); }
@@ -26,7 +26,8 @@ void ValidateOwner( const SmacDesignOwner& owner, const SmacPredefinedUnitCatalo
 			|| design.chassis >= catalog.chassis.chassis.size() || design.weapon >= catalog.weapons.weapons.size()
 			|| design.defense >= catalog.defenses.defenses.size() || design.reactor < 1 || design.reactor > catalog.reactors.reactors.size()
 			|| design.abilities > 0xffffff ) { throw std::runtime_error( "Invalid SMAC custom design record" ); }
-        if((design.name && (design.name->size()>31 || design.name->find('\0')!=std::string::npos))
+        if((design.explicitly_named && (!design.name || design.name->empty()))
+            || (design.name && (design.name->size()>31 || design.name->find('\0')!=std::string::npos))
             || (design.riot && (design.riot->source_design<64 || design.riot->source_design>511 || design.riot->source_design==design.id))) {
             throw std::runtime_error("Invalid retained prototype metadata");
         }
@@ -104,7 +105,7 @@ uint32_t ReadUnsigned( types::Buffer& buffer, uint32_t maximum ) {
 bool SmacCustomDesign::operator==( const SmacCustomDesign& other ) const {
 	return id == other.id && chassis == other.chassis && weapon == other.weapon && defense == other.defense && reactor == other.reactor
 		&& cost == other.cost && plan == other.plan && carry == other.carry && abilities == other.abilities && faction_exclusion == other.faction_exclusion
-		&& active == other.active && prototyped == other.prototyped && name==other.name && riot==other.riot;
+		&& active == other.active && prototyped == other.prototyped && name==other.name && explicitly_named==other.explicitly_named && riot==other.riot;
 }
 bool SmacDesignOwner::operator==( const SmacDesignOwner& other ) const { return simulation_id == other.simulation_id && designs == other.designs && starting_scout == other.starting_scout; }
 bool SmacStartupDesignState::operator==( const SmacStartupDesignState& other ) const { return global_difficulty == other.global_difficulty && owners == other.owners; }
@@ -229,7 +230,8 @@ types::Buffer SmacStartupDesignState::Serialize( const SmacPredefinedUnitCatalog
 	Validate( catalog );
 	types::Buffer buffer;
     bool metadata=false;for(const auto& owner:owners) {for(const auto& design:owner.designs) {metadata=metadata || design.name || design.riot;}}
-    const auto version=metadata ? VERSION:1;
+    bool named=false;for(const auto& owner:owners) {for(const auto& design:owner.designs) {named=named || design.explicitly_named;}}
+    const auto version=named ? VERSION:metadata ? 2:1;
 	buffer.WriteInt( MAGIC ); buffer.WriteInt( version ); buffer.WriteInt( global_difficulty ); buffer.WriteInt( owners.size() );
 	for ( const auto& owner : owners ) {
 		buffer.WriteInt( owner.simulation_id ); buffer.WriteInt( owner.starting_scout ); buffer.WriteInt( owner.designs.size() );
@@ -244,6 +246,7 @@ types::Buffer SmacStartupDesignState::Serialize( const SmacPredefinedUnitCatalog
                     for(const auto byte:d.riot->auxiliary) {buffer.WriteInt(byte);}
                 }
             }
+			if(version>=3) {buffer.WriteBool(d.explicitly_named);}
 		}
 	}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC custom design state exceeds wire budget" ); }
@@ -254,7 +257,7 @@ SmacStartupDesignState SmacStartupDesignState::Deserialize( const std::string& w
 	if ( wire.size() > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC custom design state exceeds wire budget" ); }
 	types::Buffer buffer( wire );
     if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC custom design state format");}
-    const auto version=buffer.ReadInt();if(version!=1 && version!=VERSION) {throw std::runtime_error("Unsupported SMAC custom design state format");}
+    const auto version=buffer.ReadInt();if(version!=1 && version!=2 && version!=VERSION) {throw std::runtime_error("Unsupported SMAC custom design state format");}
 	SmacStartupDesignState result;
 	result.global_difficulty = static_cast< int32_t >( ReadUnsigned( buffer, 5 ) );
 	const auto owners = ReadUnsigned( buffer, 7 );
@@ -280,6 +283,7 @@ SmacStartupDesignState SmacStartupDesignState::Deserialize( const std::string& w
                     for(auto& byte:metadata.auxiliary) {byte=static_cast<uint8_t>(ReadUnsigned(buffer,255));}d.riot=metadata;
                 }
             }
+            if(version>=3) {d.explicitly_named=buffer.ReadBool();}
             owner.designs.push_back( d );
 		}
 		result.owners.push_back( std::move( owner ) );

@@ -3,6 +3,7 @@
 #include "fixtures/SmacRegionalBaseFlags.h"
 
 #include "game/backend/faction/SmacSimulationState.h"
+#include "game/backend/unit/SmacWorkshop.h"
 #include "game/backend/base/SmacBaseResourceContext.h"
 #include "game/backend/faction/SmacRankOrder.h"
 #include "game/backend/faction/SmacRankingScore.h"
@@ -1164,6 +1165,14 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( Rejects( [ & ]() { large.ReadString( SmacGameplayRandomState::WIRE_SIZE ); } ) && large.dr == cursor && large.lenr == 0, "over-budget pair was copied/consumed before admission" );
 		GT_OK();
 	} );
+    task->AddTest("SMAC simulation retains named Workshop commit through enclosing save codec",GT(){
+        auto expected=State();const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();
+        const auto units=smac_startup_fixture::Units();unit::SmacWorkshopDraft draft;draft.armor=1;draft.name="Test Guard";
+        const auto result=unit::CommitSmacWorkshopFirstDesign(expected.designs,draft,units.catalog,technologies,*expected.technology.Find(7));
+        const auto decoded=SmacSimulationState::Deserialize(expected.Serialize(technologies,profiles,units).ToString(),technologies,profiles,units);
+        GT_ASSERT(result.design_id==511 && decoded==expected && decoded.designs.Find(7)->designs[0].explicitly_named,
+            "Enclosing save dropped the committed owner, name or explicit-name flag");GT_OK();
+    });
 	task->AddTest( "SMAC simulation codec owns explicit non-dense identities and exact technology continuation", GT() {
 		const auto expected = State();
 		const auto technologies = smac_rules_fixture::Technologies(); const auto profiles = smac_startup_fixture::Factions();

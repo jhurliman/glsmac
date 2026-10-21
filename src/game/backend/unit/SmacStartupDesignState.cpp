@@ -8,7 +8,7 @@
 namespace game::backend::unit {
 namespace {
 constexpr int64_t MAGIC = 0x534d5344; // SMSD
-constexpr int64_t VERSION = 4;
+constexpr int64_t VERSION = 5;
 
 void RequireDifficulty( int32_t difficulty ) {
 	if ( difficulty < 0 || difficulty > 5 ) { throw std::runtime_error( "SMAC startup requires original difficulty 0..5" ); }
@@ -102,13 +102,26 @@ uint32_t ReadUnsigned( types::Buffer& buffer, uint32_t maximum ) {
 }
 }
 
+SmacRetirementTuple SmacDesignRetirementTuple(const SmacCustomDesign& design) {
+    if(design.chassis>255 || design.weapon>255 || design.defense>255) {throw std::invalid_argument("Retirement tuple component exceeds native byte");}
+    SmacRetirementTuple tuple{};for(unsigned i=0;i<4;++i) {tuple[i]=uint8_t(design.abilities>>(8*i));}
+    tuple[4]=uint8_t(design.chassis);tuple[5]=uint8_t(design.weapon);tuple[6]=uint8_t(design.defense);tuple[7]=design.reactor;return tuple;
+}
+SmacRetirementHistory SmacRetirementHistory::NewWorld() {SmacRetirementHistory result;result.Clear();return result;}
+void SmacRetirementHistory::Clear() noexcept {for(auto& slot:slots) {slot.fill(255);}}
+void SmacRetirementHistory::Validate() const {if(cursor<0 || cursor>=64) {throw std::invalid_argument("Retirement history cursor outside native ring");}}
+void SmacRetirementHistory::Record(const SmacRetirementTuple& tuple) {Validate();slots.at(cursor)=tuple;cursor=(cursor+1)%64;}
+bool SmacRetirementHistory::Contains(const SmacRetirementTuple& tuple,bool human) const {
+    return human && std::find(slots.begin(),slots.end(),tuple)!=slots.end();
+}
+
 bool SmacCustomDesign::operator==( const SmacCustomDesign& other ) const {
 	return id == other.id && chassis == other.chassis && weapon == other.weapon && defense == other.defense && reactor == other.reactor
 		&& cost == other.cost && plan == other.plan && carry == other.carry && abilities == other.abilities && faction_exclusion == other.faction_exclusion
 		&& active == other.active && prototyped == other.prototyped && name==other.name && explicitly_named==other.explicitly_named && riot==other.riot && auxiliary_flags==other.auxiliary_flags;
 }
 bool SmacDesignOwner::operator==( const SmacDesignOwner& other ) const { return simulation_id == other.simulation_id && designs == other.designs && starting_scout == other.starting_scout; }
-bool SmacStartupDesignState::operator==( const SmacStartupDesignState& other ) const { return global_difficulty == other.global_difficulty && owners == other.owners; }
+bool SmacStartupDesignState::operator==( const SmacStartupDesignState& other ) const { return global_difficulty == other.global_difficulty && owners == other.owners && retirement_history==other.retirement_history; }
 
 int32_t SmacStartupDesignState::OriginalDifficulty( const std::string& canonical_name ) {
 	static const std::array< const char*, 6 > names{ "Citizen", "Specialist", "Talent", "Librarian", "Thinker", "Transcend" };
@@ -148,6 +161,7 @@ SmacStartupDesignState SmacStartupDesignState::NewWorld( const faction::SmacTech
 	SmacStartupDesignState result; result.global_difficulty = difficulty;
 	for ( const auto& faction : technology.factions ) {
 		if(before_generate) {before_generate(faction);}
+        result.retirement_history.at(faction.admission.simulation_id)=SmacRetirementHistory::NewWorld();
 		auto owner = GenerateEmptyOwner( faction, technologies, units.catalog, difficulty );
 		MarkAndSelect( owner, units.catalog ); result.owners.push_back( std::move( owner ) );
 	}
@@ -157,6 +171,7 @@ SmacStartupDesignState SmacStartupDesignState::NewWorld( const faction::SmacTech
 
 void SmacStartupDesignState::Validate( const SmacPredefinedUnitCatalog& catalog ) const {
 	RequireDifficulty( global_difficulty );
+    for(const auto& history:retirement_history) {if(history) {history->Validate();}}
 	if ( owners.empty() || owners.size() > 7 ) { throw std::runtime_error( "SMAC custom design state requires 1..7 owners" ); }
 	std::array< bool, 8 > seen{};
 	for ( const auto& owner : owners ) {
@@ -176,7 +191,7 @@ void SmacStartupDesignState::Validate( const SmacPredefinedUnitCatalog& catalog 
     }}
 }
 
-int32_t SmacStartupDesignState::RequestHumanRiotPrototype(int32_t source,int32_t recipient,bool morgan,const SmacPredefinedUnitCatalog& catalog) {
+int32_t SmacStartupDesignState::RequestRiotPrototype(int32_t source,int32_t recipient,bool morgan,const SmacPredefinedUnitCatalog& catalog,bool human) {
     Validate(catalog);
     if(source<=64 || source>511 || recipient<1 || recipient>7 || !Find(recipient)) {throw std::runtime_error("Riot prototype request has no admitted source or recipient");}
     const auto* source_owner=Find(source/64);
@@ -184,6 +199,11 @@ int32_t SmacStartupDesignState::RequestHumanRiotPrototype(int32_t source,int32_t
     const auto found=std::find_if(source_owner->designs.begin(),source_owner->designs.end(),[&](const auto& row){return row.id==source;});
     if(found==source_owner->designs.end()) {throw std::runtime_error("Riot prototype source definition is unavailable");}
     const auto original=*found;const auto* target=Find(recipient);
+    if(human) {
+        const auto& history=retirement_history.at(recipient);
+        if(!history) {throw std::runtime_error("Human riot prototype requires retained retirement history");}
+        if(history->Contains(SmacDesignRetirementTuple(original),true)) {return -1;}
+    }
     if(original.chassis==0 && original.weapon==0 && original.defense==0 && original.reactor==1 && original.abilities==0) {return 2;}
     const bool rover=original.chassis==1 && original.defense==0 && original.plan==3;
     const bool armored=original.chassis==0 && original.defense==1 && original.plan==2;
@@ -193,8 +213,9 @@ int32_t SmacStartupDesignState::RequestHumanRiotPrototype(int32_t source,int32_t
     }
     for(const auto& row:target->designs) {
         if(row.active && row.chassis==original.chassis && row.weapon==original.weapon && row.defense==original.defense
-            && row.reactor==original.reactor && row.abilities==original.abilities) {return -1;}
+            && row.reactor==original.reactor && row.abilities==original.abilities) {return human ? -1:row.id;}
     }
+    if(!human) {throw std::runtime_error("AI riot prototype allocation requires its measured constructor path");}
     const bool empty=target->designs.empty();
     const auto is_morgan=[&] {
         if(!morgan || target->designs.size()!=1) {return false;}const auto& row=target->designs[0];
@@ -232,7 +253,8 @@ types::Buffer SmacStartupDesignState::Serialize( const SmacPredefinedUnitCatalog
     bool metadata=false;for(const auto& owner:owners) {for(const auto& design:owner.designs) {metadata=metadata || design.name || design.riot;}}
     bool named=false;for(const auto& owner:owners) {for(const auto& design:owner.designs) {named=named || design.explicitly_named;}}
     bool auxiliary=false;for(const auto& owner:owners) {for(const auto& design:owner.designs) {auxiliary=auxiliary || design.auxiliary_flags!=0;}}
-    const auto version=auxiliary ? VERSION:named ? 3:metadata ? 2:1;
+    const bool history=std::any_of(retirement_history.begin(),retirement_history.end(),[](const auto& row){return row.has_value();});
+    const auto version=history ? VERSION:auxiliary ? 4:named ? 3:metadata ? 2:1;
 	buffer.WriteInt( MAGIC ); buffer.WriteInt( version ); buffer.WriteInt( global_difficulty ); buffer.WriteInt( owners.size() );
 	for ( const auto& owner : owners ) {
 		buffer.WriteInt( owner.simulation_id ); buffer.WriteInt( owner.starting_scout ); buffer.WriteInt( owner.designs.size() );
@@ -251,6 +273,12 @@ types::Buffer SmacStartupDesignState::Serialize( const SmacPredefinedUnitCatalog
             if(version>=4) {buffer.WriteInt(d.auxiliary_flags);}
 		}
 	}
+    if(version>=5) {for(const auto& row:retirement_history) {
+        buffer.WriteBool(row.has_value());if(row) {
+            buffer.WriteInt(row->cursor);std::string bytes;bytes.reserve(512);
+            for(const auto& slot:row->slots) {for(const auto byte:slot) {bytes.push_back(static_cast<char>(byte));}}buffer.WriteString(bytes);
+        }
+    }}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC custom design state exceeds wire budget" ); }
 	return buffer;
 }
@@ -259,7 +287,7 @@ SmacStartupDesignState SmacStartupDesignState::Deserialize( const std::string& w
 	if ( wire.size() > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC custom design state exceeds wire budget" ); }
 	types::Buffer buffer( wire );
     if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC custom design state format");}
-    const auto version=buffer.ReadInt();if(version!=1 && version!=2 && version!=3 && version!=VERSION) {throw std::runtime_error("Unsupported SMAC custom design state format");}
+    const auto version=buffer.ReadInt();if(version!=1 && version!=2 && version!=3 && version!=4 && version!=VERSION) {throw std::runtime_error("Unsupported SMAC custom design state format");}
 	SmacStartupDesignState result;
 	result.global_difficulty = static_cast< int32_t >( ReadUnsigned( buffer, 5 ) );
 	const auto owners = ReadUnsigned( buffer, 7 );
@@ -291,6 +319,11 @@ SmacStartupDesignState SmacStartupDesignState::Deserialize( const std::string& w
 		}
 		result.owners.push_back( std::move( owner ) );
 	}
+    if(version>=5) {for(auto& row:result.retirement_history) {if(buffer.ReadBool()) {
+        SmacRetirementHistory history;history.cursor=static_cast<int32_t>(ReadUnsigned(buffer,63));
+        const auto bytes=buffer.ReadString(512);if(bytes.size()!=512) {throw std::runtime_error("Retirement history requires 512 bytes");}
+        for(size_t i=0;i<512;++i) {history.slots[i/8][i%8]=static_cast<uint8_t>(bytes[i]);}row=history;
+    }}}
 	if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC custom design trailing fields" ); }
 	result.Validate( catalog ); return result;
 }

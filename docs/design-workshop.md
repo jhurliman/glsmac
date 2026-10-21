@@ -391,3 +391,34 @@ the 32 renderer groups also pass focused ASan/UBSan. Correctness analysis is
 clean for seven production translation units, including affected consumers.
 An actual hidden software-rendered session opened Workshop, selected Synthmetal,
 used Apply/Done and returned to the Base screen before exiting cleanly.
+
+## Retained retirement tuple history
+
+The design registry now retains all eight optional native retirement-history
+rows: 64 eight-byte component tuples plus the next-write cursor per owner.
+Fresh admitted factions receive FF-filled rows and cursor zero. The explicit
+clear helper leaves the cursor unchanged; writes use the old cursor and wrap
+63 to zero; human lookup scans every slot without consulting the cursor.
+These rules come from the [registry/history handoff](behavior/design-workshop-retained-registry-and-history.md).
+
+The existing human riot-prototype caller now checks this retained history
+before allocation, returning its native negative result without changing design
+authority when a retired tuple is found. The caller passes actual saved human
+membership; temporary recipient calculation permission does not make an AI
+human. The measured AI exact-match path reuses its record without consulting
+human history. General AI prototype allocation remains unfinished.
+Legacy frames with unknown history
+cannot silently treat it as empty. The selective V5 design codec preserves
+all known rows, including nonparticipating owners and untouched slots/cursors;
+absent history keeps the existing V1–V4 encoding. Nonzero faction restart and
+actual Start restore preserve it. The bounded design frame now accommodates
+all seven full custom banks rather than stopping at the old 16 KiB budget.
+
+Validation: eight independent native clear/append/lookup controls match all
+4096 history bytes and eight cursors. Tests cover fresh and absent history,
+cursor/extent rejection, complete codec restore, full custom banks, actual riot
+lookup, and actual nonzero restart/save/Start retention. All 71 selected native
+groups pass, with targeted correctness analysis of seven production files and
+focused ASan/UBSan. Workshop's live overwrite transaction still needs to invoke
+the history writer alongside Unit retirement and queue surgery; raw retained
+record fields and intrinsic overlays also remain to be connected.

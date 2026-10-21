@@ -3,6 +3,7 @@
 #include "game/backend/faction/SmacTechnologyState.h"
 #include "game/backend/settings/SmacPredefinedUnitRules.h"
 #include <functional>
+#include <array>
 
 namespace game::backend::unit {
 
@@ -34,12 +35,28 @@ struct SmacDesignOwner {
 	bool operator==( const SmacDesignOwner& other ) const;
 };
 
+using SmacRetirementTuple=std::array<uint8_t,8>;
+SmacRetirementTuple SmacDesignRetirementTuple(const SmacCustomDesign& design);
+struct SmacRetirementHistory {
+    int32_t cursor=0; // next write; only valid native indices 0..63 are admitted
+    std::array<SmacRetirementTuple,64> slots{};
+    static SmacRetirementHistory NewWorld();
+    void Clear() noexcept; // native helper fills FF without resetting cursor
+    void Validate() const;
+    void Record(const SmacRetirementTuple& tuple);
+    bool Contains(const SmacRetirementTuple& tuple,bool human) const;
+    bool operator==(const SmacRetirementHistory& other) const {return cursor==other.cursor && slots==other.slots;}
+};
+
 // Mutable owned designs; component indices refer to the frozen unit catalog.
 // Generation is a bounded human startup producer, not a workshop/AI classifier.
 struct SmacStartupDesignState {
-	static constexpr size_t MAX_WIRE_BYTES = 16 * 1024;
+	static constexpr size_t MAX_WIRE_BYTES = 256 * 1024; // all seven full custom banks plus retained metadata
 	int32_t global_difficulty = 0; // original semantic index, independent of port encoding
 	std::vector< SmacDesignOwner > owners;
+    // Native global history has eight rows, including nonparticipating owners.
+    // Absence marks old port frames; restore never invents a cleared history.
+    std::array<std::optional<SmacRetirementHistory>,8> retirement_history;
 	static int32_t OriginalDifficulty( const std::string& canonical_name );
 	static SmacDesignOwner GenerateEmptyOwner( const faction::SmacFactionTechnologyState& technology,
 		const settings::SmacTechnologyRules& technologies, const SmacPredefinedUnitCatalog& catalog, int32_t global_difficulty );
@@ -48,9 +65,10 @@ struct SmacStartupDesignState {
 	static SmacStartupDesignState NewWorld( const faction::SmacTechnologyState& technology,
 		const settings::SmacTechnologyRules& technologies, const settings::SmacPredefinedUnitRules& units, int32_t global_difficulty,
 		const std::function<void(const faction::SmacFactionTechnologyState&)>& before_generate = {});
-    // Raw helper result: a negative human duplicate result retains the source.
+    // Raw helper result: human duplicates retain the source; AI exact matches
+    // reuse their recipient record. Human history uses actual saved control.
     // Bounded measured starting packages; no generic workshop policy.
-    int32_t RequestHumanRiotPrototype(int32_t source,int32_t recipient,bool morgan,const SmacPredefinedUnitCatalog& catalog);
+    int32_t RequestRiotPrototype(int32_t source,int32_t recipient,bool morgan,const SmacPredefinedUnitCatalog& catalog,bool human);
 	void Validate( const SmacPredefinedUnitCatalog& catalog ) const;
 	const SmacDesignOwner* Find( int32_t simulation_id ) const;
 	bool operator==( const SmacStartupDesignState& other ) const;

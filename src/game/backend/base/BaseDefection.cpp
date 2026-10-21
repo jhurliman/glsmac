@@ -83,8 +83,8 @@ Base::SmacProductionResult Base::CompleteSmacRiotDefection(GSE_CALLABLE,SmacProd
                 if(index<=8 && next.owner_simulation_id==old_owner) {
                     const auto resolved=m_game->ResolveConventionalDesign(next,*m_game->m_simulation);
                     if(next.design_id>64) {
-                        const auto requested=designs.RequestHumanRiotPrototype(next.design_id,new_owner,participant->faction_id=="MORGANITES",
-                            m_game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog);
+                        const auto requested=designs.RequestRiotPrototype(next.design_id,new_owner,participant->faction_id=="MORGANITES",
+                            m_game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog,simulation.IsHuman(new_owner));
                         if(requested>=0) {next.design_id=requested;}
                     }
                     if(resolved.chassis!=0 && next.work_progress) {THROW("Riot work progress needs the measured chassis auxiliary byte");}

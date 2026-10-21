@@ -1,6 +1,7 @@
 #include "SmacStartupDesignState.h"
 #include "game/backend/unit/SmacStartupDesignState.h"
 #include "fixtures/SmacStartupSource.h"
+#include "fixtures/SmacRetirementHistory.h"
 #include "task/gsetests/GSETests.h"
 
 #include <functional>
@@ -16,6 +17,7 @@ faction::SmacTechnologyState Technologies( const std::vector< faction::SmacSimul
 }
 State Saved() {
 	auto result = State::NewWorld( Technologies( { { 7, "MORGANITES" }, { 2, "SPARTANS" } } ), smac_rules_fixture::Technologies(), smac_startup_fixture::Units(), 5 );
+    result.retirement_history={}; // explicit V1 fixture has no retained history authority
 	auto& d = result.owners[ 0 ].designs[ 0 ]; d.active = false; d.prototyped = false; d.cost = 255; d.plan = 255; d.carry = 254; d.abilities = 0xffffff; d.faction_exclusion = UINT32_MAX;
 	result.owners[ 0 ].starting_scout = d.id;
 	result.owners[ 1 ].designs[ 0 ].cost = 0;
@@ -37,6 +39,72 @@ std::string Wire( const State& value, size_t index = SIZE_MAX, int64_t replaceme
 }
 
 void AddSmacStartupDesignStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC retirement history matches eight original complete row and cursor controls",GT(){
+        for(const auto& row:retirement_history_fixture::FRAMES) {
+            std::array<unit::SmacRetirementHistory,8> histories;std::array<uint8_t,4096> input;
+            for(size_t i=0;i<input.size();++i) {input[i]=uint8_t(row.start+row.step*i);}
+            for(const auto& patch:row.patches) {input.at(patch.first)=patch.second;}
+            for(size_t owner=0;owner<8;++owner) {histories[owner].cursor=row.before_cursor[owner];
+                for(size_t i=0;i<512;++i) {histories[owner].slots[i/8][i%8]=input[owner*512+i];}}
+            if(row.kind==0) {histories.at(row.owner).Clear();}
+            else if(row.kind==1) {histories.at(row.owner).Record(row.tuple);}
+            else {GT_ASSERT(histories.at(row.owner).Contains(row.tuple,row.human)==row.found,"native complete history lookup differs");}
+            uint64_t digest=UINT64_C(14695981039346656037);
+            for(size_t owner=0;owner<8;++owner) {GT_ASSERT(histories[owner].cursor==row.after_cursor[owner],"native retirement cursor changed");
+                for(const auto& slot:histories[owner].slots) {for(const auto byte:slot) {digest=(digest^byte)*UINT64_C(1099511628211);}}}
+            GT_ASSERT(digest==row.after,"complete 4096-byte native history differs");
+        }GT_OK();
+    });
+    task->AddTest("SMAC retirement history startup codec preserves all owners and absent legacy authority",GT(){
+        const auto units=smac_startup_fixture::Units();const auto tech=smac_rules_fixture::Technologies();
+        auto state=State::NewWorld(Technologies({{1,"GAIANS"},{7,"SPARTANS"}}),tech,units,3);
+        GT_ASSERT(state.retirement_history[1] && state.retirement_history[7] && !state.retirement_history[0] && !state.retirement_history[2],"startup invented inactive history authority");
+        for(const auto owner:{1,7}) {GT_ASSERT(state.retirement_history[owner]->cursor==0,"startup failed to reset cursor");
+            for(const auto& slot:state.retirement_history[owner]->slots) {for(const auto byte:slot) {GT_ASSERT(byte==255,"startup history is not FF");}}}
+        for(size_t owner=0;owner<8;++owner) {auto history=unit::SmacRetirementHistory::NewWorld();history.cursor=int32_t(owner*9);
+            for(size_t i=0;i<512;++i) {history.slots[i/8][i%8]=uint8_t(i*37+owner*19);}state.retirement_history[owner]=history;}
+        const auto wire=state.Serialize(units.catalog).ToString();
+        GT_ASSERT(State::Deserialize(wire,units.catalog)==state && State::Deserialize(wire,units.catalog).Serialize(units.catalog).ToString()==wire,"history/cursors changed during restore");
+        for(const int cursor:{-1,64,INT32_MAX}) {auto bad=state;bad.retirement_history[7]->cursor=cursor;
+            GT_ASSERT(Rejects([&]{bad.Serialize(units.catalog);}) && Rejects([&]{bad.retirement_history[7]->Record({});}),"invalid native cursor accepted");}
+        auto legacy=state;legacy.retirement_history={};const auto old=legacy.Serialize(units.catalog).ToString();
+        GT_ASSERT(State::Deserialize(old,units.catalog)==legacy && State::Deserialize(old,units.catalog).Serialize(units.catalog).ToString()==old,"legacy load invented or reset retirement history");
+        // V4's design layout is unchanged in V5; append independently framed
+        // history fields to exercise reader admission separately from writer.
+        legacy.owners.back().designs.front().auxiliary_flags=8;const auto v4=legacy.Serialize(units.catalog).ToString();types::Buffer input(v4);
+        input.ReadInt();GT_ASSERT(input.ReadInt()==4,"legacy control did not select V4");types::Buffer header;header.WriteInt(0x534d5344);header.WriteInt(5);
+        const auto candidate=[&](int64_t cursor,size_t extent) {types::Buffer tail;
+            for(int owner=0;owner<8;++owner) {tail.WriteBool(owner==7);if(owner==7) {tail.WriteInt(cursor);tail.WriteString(std::string(extent,'x'));}}
+            return header.ToString()+v4.substr(input.lenr)+tail.ToString();};
+        GT_ASSERT(State::Deserialize(candidate(63,512),units.catalog).retirement_history[7]->cursor==63,"valid boundary history rejected");
+        for(const int64_t cursor:{int64_t(-1),int64_t(64),INT64_MAX}) {GT_ASSERT(Rejects([&]{State::Deserialize(candidate(cursor,512),units.catalog);}),"invalid history cursor decoded");}
+        for(const size_t extent:{0,511,513}) {GT_ASSERT(Rejects([&]{State::Deserialize(candidate(0,extent),units.catalog);}),"invalid history extent decoded");}GT_OK();
+    });
+    task->AddTest("SMAC full custom banks and retained history fit the bounded design codec",GT(){
+        const auto catalog=smac_startup_fixture::Units().catalog;State full;full.global_difficulty=3;
+        for(int owner=1;owner<8;++owner) {unit::SmacDesignOwner bank;bank.simulation_id=owner;
+            for(int index=0;index<64;++index) {unit::SmacCustomDesign row;row.id=64*owner+index;row.name=std::string(31,'X');
+                row.explicitly_named=true;row.auxiliary_flags=0xfff8;row.active=index%2!=0;bank.designs.push_back(row);}full.owners.push_back(bank);}
+        for(auto& row:full.retirement_history) {row=unit::SmacRetirementHistory::NewWorld();}
+        const auto wire=full.Serialize(catalog).ToString();
+        GT_ASSERT(wire.size()>16*1024 && wire.size()<State::MAX_WIRE_BYTES && State::Deserialize(wire,catalog)==full,"full custom banks exceed budget or lose records");GT_OK();
+    });
+    task->AddTest("SMAC human riot prototype honors retained retired tuples without changing design authority",GT(){
+        const auto catalog=smac_startup_fixture::Units().catalog;
+        auto state=State::NewWorld(Technologies({{1,"GAIANS"},{2,"SPARTANS"}}),smac_rules_fixture::Technologies(),smac_startup_fixture::Units(),5);
+        const auto tuple=unit::SmacDesignRetirementTuple(state.Find(2)->designs.front());
+        state.retirement_history[1]->slots[3]=tuple;state.retirement_history[1]->cursor=42;
+        const auto before=state.Serialize(catalog).ToString();
+        GT_ASSERT(state.RequestRiotPrototype(128,1,false,catalog,true)==-1 && state.Serialize(catalog).ToString()==before,"retired human tuple was recreated or changed state");
+        auto computer=State::NewWorld(Technologies({{1,"SPARTANS"},{2,"SPARTANS"}}),smac_rules_fixture::Technologies(),smac_startup_fixture::Units(),5);
+        computer.retirement_history[1]->slots[3]=tuple;computer.retirement_history[1]->cursor=42;
+        const auto ai_before=computer.Serialize(catalog).ToString();
+        GT_ASSERT(computer.RequestRiotPrototype(128,1,false,catalog,false)==64 && computer.Serialize(catalog).ToString()==ai_before,"AI existing design was blocked by human retirement history");
+        computer.retirement_history[1].reset();
+        GT_ASSERT(computer.RequestRiotPrototype(128,1,false,catalog,false)==64,"AI reuse required human history authority");
+        state.retirement_history[1].reset();const auto legacy=state.Serialize(catalog).ToString();
+        GT_ASSERT(Rejects([&]{state.RequestRiotPrototype(128,1,false,catalog,true);}) && state.Serialize(catalog).ToString()==legacy,"missing history became an empty history");GT_OK();
+    });
     task->AddTest("SMAC human riot Morgan armor prototypes retain their distinct measured payload",GT(){
         const auto catalog=smac_startup_fixture::Units().catalog;
         const std::array<uint8_t,5> expected_aux{2,0,2,255,0};
@@ -45,7 +113,7 @@ void AddSmacStartupDesignStateTests( task::gsetests::GSETests* task ) {
             const auto source=state.Find(2)->designs[0];const auto before=state.Find(1)->designs;
             const bool exact=std::string(recipient)=="MORGANITES";const int32_t expected=exact ? -1:std::string(recipient)=="SPARTANS" ? 65:64;
             GT_ASSERT(state.Find(2)->starting_scout==2,"Armored custom source was incorrectly treated as the Morgan starting Unit");
-            GT_ASSERT(state.RequestHumanRiotPrototype(128,1,exact,catalog)==expected && state.Find(2)->designs[0]==source,
+            GT_ASSERT(state.RequestRiotPrototype(128,1,exact,catalog,true)==expected && state.Find(2)->designs[0]==source,
                 "Morgan source allocation branch or retained source changed");
             if(exact) {GT_ASSERT(state.Find(1)->designs==before,"Negative human match modified recipient block");}
             else {
@@ -65,16 +133,16 @@ void AddSmacStartupDesignStateTests( task::gsetests::GSETests* task ) {
         const std::array<uint8_t,5> expected_aux{10,0,2,255,0};
         const auto create=[&](const char* recipient) {return State::NewWorld(Technologies({{1,recipient},{2,"SPARTANS"}}),smac_rules_fixture::Technologies(),smac_startup_fixture::Units(),5);};
         auto empty=create("GAIANS");const auto source=empty.owners[1].designs[0];
-        GT_ASSERT(empty.RequestHumanRiotPrototype(128,1,false,catalog)==64,"Empty human block did not allocate measured global64");
+        GT_ASSERT(empty.RequestRiotPrototype(128,1,false,catalog,true)==64,"Empty human block did not allocate measured global64");
         const auto& allocated=empty.Find(1)->designs[0];
         GT_ASSERT(allocated.riot && allocated.riot->source_design==128 && allocated.riot->flags==197 && allocated.riot->prerequisite==0
             && allocated.riot->auxiliary==expected_aux && !allocated.name && empty.Find(2)->designs[0]==source,
             "Allocated definition dropped known result bytes, invented a name or changed the source");
         const auto retained=empty;
-        GT_ASSERT(empty.RequestHumanRiotPrototype(128,1,false,catalog)==-1 && empty==retained,"Exact human prototype was incorrectly reused or changed");
+        GT_ASSERT(empty.RequestRiotPrototype(128,1,false,catalog,true)==-1 && empty==retained,"Exact human prototype was incorrectly reused or changed");
         auto morgan=create("MORGANITES");morgan.owners[0].designs[0].name="Startup design";morgan.owners[1].designs[0].name="Startup design";
         const auto old_morgan=morgan.owners[0].designs[0],old_source=morgan.owners[1].designs[0];
-        GT_ASSERT(morgan.RequestHumanRiotPrototype(128,1,true,catalog)==65 && morgan.Find(1)->designs[0]==old_morgan
+        GT_ASSERT(morgan.RequestRiotPrototype(128,1,true,catalog,true)==65 && morgan.Find(1)->designs[0]==old_morgan
             && morgan.Find(2)->designs[0]==old_source && morgan.Find(1)->designs[1].name==std::optional<std::string>("Startup design*"),
             "Measured Morgan block allocation/name collision changed retained definitions");
         for(const auto& state:{empty,morgan}) {
@@ -82,7 +150,7 @@ void AddSmacStartupDesignStateTests( task::gsetests::GSETests* task ) {
             for(size_t n=0;n<wire.size();++n) {GT_ASSERT(Rejects([&]{State::Deserialize(wire.substr(0,n),catalog);}),"Truncated prototype metadata accepted");}
             GT_ASSERT(Rejects([&]{State::Deserialize(wire+"x",catalog);}),"Trailing prototype metadata accepted");
         }
-        const auto legacy=create("GAIANS");GT_ASSERT(legacy.Serialize(catalog).ToString()==Wire(legacy) && State::Deserialize(Wire(legacy),catalog)==legacy,
+        auto legacy=create("GAIANS");legacy.retirement_history={};GT_ASSERT(legacy.Serialize(catalog).ToString()==Wire(legacy) && State::Deserialize(Wire(legacy),catalog)==legacy,
             "Legacy design frame changed or gained invented metadata");
         auto bad=empty;bad.owners[0].designs[0].riot->source_design=64;
         GT_ASSERT(Rejects([&]{bad.Serialize(catalog);}),"Cyclic prototype source accepted");GT_OK();

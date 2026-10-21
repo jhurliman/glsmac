@@ -1,0 +1,286 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "validation": {
+    "native_apply_calls": 1,
+    "native_wrapper_layouts": 1,
+    "source_literals": 14,
+    "reused_conditional_cases": 4
+  },
+  "caller": {
+    "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+    "scope": "One complete native Apply action1 using retained apply_live_cancel arrays/draft; original441e20 generates prompt. Prompt return0 supplied; no rebuild/retirement. Existing UI redraw boundaries supplied.",
+    "input": {
+      "owner": 1,
+      "selected": 64,
+      "cached_units": 1,
+      "cached_production": 4
+    },
+    "prompt": {
+      "tag": "OVERWRITEPROTO",
+      "flags": 0,
+      "illustration": "unit_sm.pcx",
+      "callback": "0x54e8e0",
+      "strings": [
+        "Existing Guard"
+      ],
+      "numbers": [
+        1
+      ]
+    },
+    "unchanged_game_arrays": true
+  },
+  "layout": {
+    "scope": "One original499b70 wrapper for caller-captured OVERWRITEPROTO, including unit_sm lookup/load and native layout. Stops before modal loop. Existing font/palette setup; no DIB export or new OK/background claim; reuse initialized OK sprite contract.",
+    "input": {
+      "tag": "OVERWRITEPROTO",
+      "flags": 0,
+      "illustration": "unit_sm.pcx",
+      "callback": "0x54e8e0",
+      "strings": [
+        "Existing Guard"
+      ],
+      "numbers": [
+        1
+      ]
+    },
+    "geometry": {
+      "client": [
+        0,
+        0,
+        755,
+        300
+      ],
+      "screen": [
+        150,
+        255,
+        905,
+        555
+      ],
+      "frames": [
+        [
+          23,
+          0,
+          700,
+          305
+        ],
+        [
+          27,
+          4,
+          696,
+          28
+        ],
+        [
+          30,
+          7,
+          693,
+          25
+        ],
+        [
+          236,
+          35,
+          693,
+          98
+        ],
+        [
+          233,
+          32,
+          696,
+          101
+        ]
+      ],
+      "button": [
+        33,
+        217,
+        688,
+        237
+      ],
+      "list_rect": [
+        33,
+        164,
+        688,
+        208
+      ],
+      "rows": [
+        [
+          0,
+          1,
+          655,
+          21
+        ],
+        [
+          0,
+          23,
+          655,
+          43
+        ]
+      ],
+      "text_x": 239,
+      "body_baselines": [
+        50,
+        70,
+        90
+      ]
+    },
+    "frames": [
+      {
+        "rect": [
+          23,
+          0,
+          700,
+          305
+        ],
+        "style": "0x7b01c0"
+      },
+      {
+        "rect": [
+          27,
+          4,
+          696,
+          28
+        ],
+        "style": "0x7b00d0"
+      },
+      {
+        "rect": [
+          30,
+          7,
+          693,
+          25
+        ],
+        "style": "0x7b0148"
+      },
+      {
+        "rect": [
+          236,
+          35,
+          693,
+          98
+        ],
+        "style": "0x7b0058"
+      },
+      {
+        "rect": [
+          233,
+          32,
+          696,
+          101
+        ],
+        "style": "0x7b00d0"
+      }
+    ],
+    "glyphs": [
+      {
+        "text": "OPERATIONS DIRECTOR",
+        "x": 278,
+        "baseline": 21,
+        "font": 149,
+        "color": 285147362,
+        "clip": null,
+        "dib": 1079164784
+      },
+      {
+        "text": "We have no empty design slots. If we create this design, all ",
+        "x": 239,
+        "baseline": 50,
+        "font": 129,
+        "color": 285147362,
+        "clip": null,
+        "dib": 1079164784
+      },
+      {
+        "text": "units of our old \"Existing Guard\" type (1 units) will be ",
+        "x": 239,
+        "baseline": 70,
+        "font": 129,
+        "color": 285147362,
+        "clip": null,
+        "dib": 1079164784
+      },
+      {
+        "text": "disbanded.",
+        "x": 239,
+        "baseline": 90,
+        "font": 129,
+        "color": 285147362,
+        "clip": null,
+        "dib": 1079164784
+      },
+      {
+        "text": "Never mind.",
+        "x": 3,
+        "baseline": 17,
+        "font": 129,
+        "color": 285147136,
+        "clip": null,
+        "dib": 1079239936
+      },
+      {
+        "text": "Proceed with redesign.",
+        "x": 3,
+        "baseline": 39,
+        "font": 129,
+        "color": 285147136,
+        "clip": null,
+        "dib": 1079239936
+      },
+      {
+        "text": "OK",
+        "x": 318,
+        "baseline": 14,
+        "font": 100,
+        "color": 285147136,
+        "clip": null,
+        "dib": 1079260192
+      },
+      {
+        "text": "OK",
+        "x": 317,
+        "baseline": 16,
+        "font": 129,
+        "color": 285147136,
+        "clip": null,
+        "dib": 1079260192
+      },
+      {
+        "text": "Never mind.",
+        "x": 3,
+        "baseline": 17,
+        "font": 129,
+        "color": 285147136,
+        "clip": null,
+        "dib": 1079239936
+      },
+      {
+        "text": "Proceed with redesign.",
+        "x": 3,
+        "baseline": 39,
+        "font": 129,
+        "color": 285147136,
+        "clip": null,
+        "dib": 1079239936
+      }
+    ]
+  },
+  "prior_conditional_checks": [
+    {
+      "id": "custom_queued_in_place",
+      "tags": []
+    },
+    {
+      "id": "custom_live_free_slot",
+      "tags": []
+    },
+    {
+      "id": "builtin_full_failure",
+      "tags": [
+        "INTRINSICTYPE"
+      ]
+    },
+    {
+      "id": "match_builtin_name_warning",
+      "tags": [
+        "INTRINSICNAME"
+      ]
+    }
+  ]
+}

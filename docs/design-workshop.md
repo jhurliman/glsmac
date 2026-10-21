@@ -1170,3 +1170,26 @@ caption,13,096 opaque initialized OK pixels and26,200 choice-row pixels with
 glyphs. Four OK corners are transparent. The body contains different live
 names/count/credits and is excluded from this pixel claim. This software,
 no-audio run makes no hardware-performance or audio claim.
+
+### Original occupied-design replacement confirmation
+
+The temporary two-button English overwrite popup is replaced with the original
+[OVERWRITEPROTO modal](behavior/design-workshop-redesign-confirmation.md).
+Installed text supplies the stored replacement name and cached unit-count byte;
+prototype-name tokens substitute once, preserving dollar signs inside names.
+The always-land illustration,755x300 frame, Arial Narrow body, two native choice
+rows and initialized OK button share the existing modal rendering contracts.
+Flags0 means Escape accepts the selected row; default row0 declines, while
+selected row1 accepts. Existing queued request fencing and Apply/Done semantics
+remain authoritative. The original literal count1 wording is preserved.
+
+Five selected native groups and three Workshop scripts pass. Six UI production
+translation units pass targeted correctness analysis. Five native groups and
+the UI script pass with six production and one test translation units under
+ASan/UBSan. An instrumented copied-data presentation harness reproduces all
+three original body strings at baselines50/70/90 and accepts selected-row Escape,
+then exits0. Its supplied name/count do not claim a live full-bank campaign;
+the existing occupied-bank native fixture covers the actual transaction.
+All53,152 compared illustration/caption/opaque OK pixels match existing original
+surfaces. Body/choice glyph pixels are not part of that regional pixel gate.
+Separate INTRINSICTYPE/INTRINSICNAME informational dialogs remain to be connected.

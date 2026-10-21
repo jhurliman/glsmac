@@ -2,6 +2,11 @@
 #include "game/backend/unit/SmacStartupDesignState.h"
 #include "fixtures/SmacStartupSource.h"
 #include "fixtures/SmacRetirementHistory.h"
+#include "fixtures/SmacNativeRegistry.h"
+#include "loader/txt/SmacRulesTXTLoader.h"
+#include <cstdlib>
+#include <fstream>
+#include <iterator>
 #include "task/gsetests/GSETests.h"
 
 #include <functional>
@@ -39,6 +44,42 @@ std::string Wire( const State& value, size_t index = SIZE_MAX, int64_t replaceme
 }
 
 void AddSmacStartupDesignStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC native registry matches twenty-eight complete original startup pools",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        const auto read=[&](const char* name) {std::ifstream file(std::string(assets)+"/"+name,std::ios::binary);if(!file) {throw std::runtime_error("Missing owned registry source");}return std::string(std::istreambuf_iterator<char>(file),{});};
+        const auto source=read("alpha.txt");const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        auto rules=settings::SmacPredefinedUnitRules::Parse(source,tech);rules.catalog.workshop_name_labels=unit::ReadSmacWorkshopNameLabels(read("labels.txt"));
+        const std::array<const char*,7> ids{"GAIANS","HIVE","UNIVERSITY","MORGANITES","SPARTANS","BELIEVERS","PEACEKEEPERS"};
+        const std::array<int,7> grants{6,43,2,1,5,4,0};
+        for(const auto& test:native_registry_fixture::CASES) {
+            faction::SmacTechnologyState ownership;faction::SmacFactionTechnologyState owner;
+            owner.admission={test.owner,ids.at(test.owner-1)};owner.owned.at(grants.at(test.owner-1))=true;ownership.factions.push_back(owner);
+            const auto state=State::NewWorld(ownership,tech,rules,test.difficulty);
+            GT_ASSERT(state.native_registry && state.Find(test.owner)->starting_scout==test.scout,"Startup omitted native pool or changed Scout selection");
+            uint64_t hash=UINT64_C(14695981039346656037);for(const auto& row:*state.native_registry) {for(const auto byte:row) {hash=(hash^byte)*UINT64_C(1099511628211);}}
+            GT_ASSERT(hash==test.pool,"Whole native startup registry differs: owner="+std::to_string(test.owner)+" difficulty="+std::to_string(test.difficulty)+" hash="+std::to_string(hash));
+            const auto wire=state.Serialize(rules.catalog).ToString();GT_ASSERT(State::Deserialize(wire,rules.catalog)==state,"Native startup pool or typed views changed on restore");
+        }GT_OK();
+    });
+    task->AddTest("SMAC native registry preserves inactive slots tails and opaque fields through typed edits",GT(){
+        const auto catalog=smac_startup_fixture::Units().catalog;State state;state.owners={{1,{},2}};
+        unit::SmacOriginalDesignPool pool{};
+        for(size_t id=0;id<512;++id) {for(size_t i=0;i<52;++i) {pool[id][i]=uint8_t(id*31+i*17);}pool[id][48]&=uint8_t(~1u);}
+        auto& row=pool[65];std::fill_n(row.begin(),32,0);const std::string name="Retained";std::copy(name.begin(),name.end(),row.begin());row[31]=0xa5;
+        std::fill(row.begin()+32,row.begin()+43,0);row[39]=1;row[41]=1;row[42]=3;row[44]=0;row[48]=5;row[49]=0;
+        row[43]=0x31;row[45]=0x20;row[46]=0xff;row[47]=0xa5;row[50]=0x34;row[51]=0x12;
+        state.RetainNativeRegistry(pool,catalog);const auto original=state;
+        const auto wire=state.Serialize(catalog).ToString();types::Buffer header(wire);header.ReadInt();GT_ASSERT(header.ReadInt()==7,"Retained registry omitted V7 framing");
+        GT_ASSERT(State::Deserialize(wire,catalog)==state,"Inactive/global record bytes changed on restore");
+        state.owners[0].designs[0].cost=7;
+        GT_ASSERT(Rejects([&]{state.Validate(catalog);}),"Stale typed/record mirror passed validation");state.SynchronizeNativeRegistry();state.Validate(catalog);
+        auto expected=pool;expected[65][41]=7;
+        GT_ASSERT(state.native_registry==std::optional<unit::SmacOriginalDesignPool>(expected),"Typed edit touched name tail, inactive slot or unmodeled field");
+        auto bad=pool;bad[65][37]=255;
+        GT_ASSERT(Rejects([&]{state.RetainNativeRegistry(bad,catalog);}) && state.native_registry==std::optional<unit::SmacOriginalDesignPool>(expected),"Invalid imported record partially replaced authority");
+        for(const auto& badwire:{wire.substr(0,wire.size()-1),wire+"x"}) {GT_ASSERT(Rejects([&]{State::Deserialize(badwire,catalog);}),"Malformed native pool frame accepted");}
+        auto missing=original;missing.intrinsic_overrides[2].reset();GT_ASSERT(Rejects([&]{missing.Validate(catalog);}),"Missing intrinsic mirror silently used frozen definitions");GT_OK();
+    });
     task->AddTest("SMAC intrinsic overlays preserve V6 words bytes and legacy catalog authority",GT(){
         const auto catalog=smac_startup_fixture::Units().catalog;auto state=Saved();const auto legacy=state.Serialize(catalog).ToString();
         GT_ASSERT(State::Deserialize(legacy,catalog)==state && State::Deserialize(legacy,catalog).Serialize(catalog).ToString()==legacy,"legacy design wire changed without overlays");
@@ -103,7 +144,11 @@ void AddSmacStartupDesignStateTests( task::gsetests::GSETests* task ) {
                 row.explicitly_named=true;row.auxiliary_flags=0xfff8;row.active=index%2!=0;bank.designs.push_back(row);}full.owners.push_back(bank);}
         for(auto& row:full.retirement_history) {row=unit::SmacRetirementHistory::NewWorld();}
         const auto wire=full.Serialize(catalog).ToString();
-        GT_ASSERT(wire.size()>16*1024 && wire.size()<State::MAX_WIRE_BYTES && State::Deserialize(wire,catalog)==full,"full custom banks exceed budget or lose records");GT_OK();
+        GT_ASSERT(wire.size()>16*1024 && wire.size()<State::MAX_WIRE_BYTES && State::Deserialize(wire,catalog)==full,"full custom banks exceed budget or lose records");
+        full.native_registry.emplace();for(auto& row:full.intrinsic_overrides) {row=unit::SmacIntrinsicDesignState{};}full.SynchronizeNativeRegistry();
+        const auto native=full.Serialize(catalog).ToString();
+        GT_ASSERT(native.size()>wire.size()+512*52 && native.size()<State::MAX_WIRE_BYTES && State::Deserialize(native,catalog)==full,
+            "Full V7 registry, maximum custom banks and history exceed budget or lose data");GT_OK();
     });
     task->AddTest("SMAC human riot prototype honors retained retired tuples without changing design authority",GT(){
         const auto catalog=smac_startup_fixture::Units().catalog;

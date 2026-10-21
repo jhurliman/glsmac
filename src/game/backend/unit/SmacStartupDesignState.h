@@ -2,6 +2,7 @@
 
 #include "game/backend/faction/SmacTechnologyState.h"
 #include "game/backend/settings/SmacPredefinedUnitRules.h"
+#include "SmacOpeningDesigns.h"
 #include <functional>
 #include <array>
 
@@ -66,6 +67,13 @@ struct SmacStartupDesignState {
     // Sparse global overrides of the frozen predefined records, shared by
     // every owner. Absence keeps the legacy immutable-catalog behavior.
     std::array<std::optional<SmacIntrinsicDesignState>,64> intrinsic_overrides;
+    // Exact native storage, including inactive/nonparticipating slots. Absence
+    // identifies legacy port saves; it never implies a fabricated zero pool.
+    std::optional<SmacOriginalDesignPool> native_registry;
+    void RetainNativeRegistry(const SmacOriginalDesignPool& pool,const SmacPredefinedUnitCatalog& catalog);
+    // Existing typed writers explicitly publish their modeled changes into
+    // retained storage. Untouched names/tails and unmodeled bytes survive.
+    void SynchronizeNativeRegistry();
     SmacIntrinsicDesignState IntrinsicState(const SmacPredefinedUnit& definition) const;
     SmacPredefinedUnit EffectiveIntrinsic(const SmacPredefinedUnit& definition) const;
 	static int32_t OriginalDifficulty( const std::string& canonical_name );

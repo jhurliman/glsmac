@@ -1479,6 +1479,28 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_OK();
         });GT_ASSERT(run.empty(),"Live Workshop command: "+run);GT_OK();
     });
+    task->AddTest("SMAC live Workshop status projects cached provisional slots without publishing designs",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;
+                for(size_t id=64;id<128;++id) {pool[id]=pool[2];pool[id][48]=1;pool[id][44]=0;}
+                pool[66][44]=2;pool[68][44]=2;state.designs.RetainNativeRegistry(pool,catalog);state.technology.factions[0].owned.fill(true);
+                faction::SmacDesignCounts units{},production{};units.fill(1);units[66]=0;units[68]=0;production[66]=1;production[68]=1;
+                state.economy.at(1).design_counts=units;state.economy.at(1).production_reference_counts=production;});
+            const auto before=fixture.Snapshot();const unit::SmacWorkshopDraft draft{64,0,0,1,0,1,"Retained Name"};
+            auto* menu=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL,&draft));
+            auto* projected=static_cast<value::Object*>(menu->Get("draft"));
+            GT_ASSERT(static_cast<value::Int*>(menu->Get("status"))->value==int32_t(unit::SmacWorkshopStatusKind::BasedOnOld)
+                && static_cast<value::Int*>(projected->Get("selected_design"))->value==66
+                && static_cast<value::Int*>(projected->Get("armor"))->value==1
+                && static_cast<value::String*>(projected->Get("name"))->value=="Retained Name","Live status lost draft or ignored cached queued-role candidate");
+            GT_ASSERT(fixture.Snapshot()==before && draft.selected_design==64,"Status projection published a record or mutated its caller draft");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Workshop main cost recomputes draft rows instead of retained alias bytes",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {

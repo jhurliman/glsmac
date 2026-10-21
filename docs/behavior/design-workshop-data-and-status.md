@@ -112,9 +112,27 @@ map size, so COST 30 versus the live Tiny COST 24 is expected. The separate
 opaque shell gate matches all 3,552 selected pixels. Models, other text,
 controls and the console are outside those two pixel gates.
 
-The status transition and console layout below remain pending port integration.
-They must be implemented together: rendering a static status caption would
-miss the selected-slot mutation.
+The status transition and console layout below are now connected. The backend
+projects the provisional selection without changing the saved registry, count
+caches or supplied draft. The UI adopts that selection for subsequent edits
+and Apply/Done, updates the strip highlight without recentering, and renders
+the status in an independent original-size console above the modal dimmer.
+The console clears unrelated Base-screen content, uses the native198/65
+scanline backing and restores the blank left panel at `[7,59,242,189)` with
+style3 then style0 inset3 (native callers448908/448949). Presets and the
+remaining main actions are still pending.
+
+The `status` pixel gate covers the complete `[266,581,759,679)` screen panel,
+including border gaps and both text rows: **48,314/48,314 pixels match** the
+retained native Scout reference at1024x768. No shift, resize, tolerance or
+foreground-only mask is applied. Centering explicitly truncates integer
+coordinates; fractional UI centering otherwise moves both native glyph runs
+one pixel right. The live Colony edit changes the message to NEW DESIGN
+BASED ON OLD; Apply restores EXAMINING BASIC UNIT and again matches the same
+complete panel. Done removes the console and the process exits cleanly.
+This gate does not cover the remaining console/preset controls or prove a
+whole Workshop match. Multi-line layout has source/metric and UI-test
+coverage, not a new native multi-line image.
 
 `43d730` compares only chassis/weapon/armor/reactor/mask against the selected
 record. Draft name, ordered ability slots, named flag and cost do not enter
@@ -156,6 +174,20 @@ Body uses `5f5160` wrapped height to bottom-align its rectangle, then
 `5f68b0` centers/wraps it. Retained EXAMINING BASIC UNIT is x407 baseline154.
 Do not fix every status string's x coordinate to407 or ignore wrapping.
 It invalidates the console region and restores its full clip afterward.
+
+For multi-line status bodies, the effective text width is **481**: outer
+493 minus the two three-pixel insets on each side, text x272..753.
+`630450` leaves the local font's first word -1 and stores TEXTMETRIC
+height plus external leading at font+0c (`6305ae..6305c0`). The retained
+Arial -18 bold metrics are height21, external leading1, ascent17,
+internal leading3, so effective wrap line height is **22**, not21.
+Both height measurement `5f5160@5f51c6..5f51e8` and actual wrapped drawing
+`5f68b0@5f6969..5f6989` use that same height. With N measured lines,
+the first text origin is innerBottom162 minus22*N; glyph baseline adds14.
+Thus two body baselines are132/154; three are110/132/154. Each line is centered
+independently. This is a source/retained-metric derivation, not a new captured
+multi-line frame. Status role is record byte43 (`9b0213`); do not confuse it
+with the explicit Upgrade target scan's separate plan byte42.
 
 ## Exact palette operands for COST and DATA
 

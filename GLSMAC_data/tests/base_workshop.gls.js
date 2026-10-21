@@ -7,7 +7,9 @@ const node = (data) => {
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
     data.smacworkshopparenttext = () => { let colors = []; let index = 0; while (index < 256) { colors :+ ('color' + #to_string(index)); index++; }
         return {labels: ['Vehicle Design','Moves:','Type:','Power:','Prototype Cost:','Cost:','Data','Presets','W:','A:','C:','R:','SP1:','SP2:','E:','P:'],
-            minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment'}; };
+            minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', status_title: 'Design Workshop', slot: 'Slot',
+            status_labels: ['Examining Basic Unit','New Design Based On Old','Examining Previous Design','Designing New Unit','Modifying Previous Design']}; };
+    data.smacworkshopconsolebacking = () => { data.console_tiled = true; };
     data.smacworkshopabilitytext = (technology) => { return {title: 'Select Special Ability', none: 'No special ability', ok: 'OK', cancel: 'Cancel', cost: 'Cost', attack: 'Attack', defense: 'Defense', speed: 'Speed', domains: ['Land', 'Sea', 'Air'], second_title: 'Chief Engineer', second_body: 'Research ' + technology + '.', missile_title: 'Chief Engineer', missile_body: 'Missiles cannot have special abilities.'}; };
     data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
     data.smacworkshopcomponents = (armor, only_armor) => { test.assert(only_armor); data.components_armor = armor; };
@@ -126,6 +128,27 @@ test.assert(dialog.selected_armor == 9 && dialog.model.preview_armor == 9 && dia
     && dialog.model.preview_power == 1 && dialog.model.preview_mode == 0 && dialog.components.components_armor == 9);
 dialog.submit(false); test.assert(commands[#sizeof(commands) - 1].data.armor == 9);
 dialog.hide_view();
+
+// The native status projection changes only editor selection. It must reach
+// the next Apply command, while a reply's older design_id must not undo it.
+const status_view = selection + {status: 1};
+status_view.draft = {selected_design: 67, chassis: 0, weapon: 0, armor: 0, reactor: 1, abilities: 0, name: ''};
+dialog.open(base, status_view);
+test.assert(dialog.selected_design == 67 && !dialog.console.hidden && dialog.console.zindex > dialog.window.zindex && dialog.console.zindex < dialog.strip.zindex);
+test.assert(dialog.status_title.text == 'DESIGN WORKSHOP' && dialog.status_title.baseline == 18);
+test.assert(dialog.status_lines[0].text == 'NEW DESIGN BASED ON OLD' && dialog.status_lines[0].baseline == 78);
+dialog.submit(false); const status_request = commands[#sizeof(commands) - 1];
+test.assert(status_request.data.selected_design == 67);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: status_view, design_id: 64, stale: false, failed: false, intrinsic_name_warning: false, done: false});
+test.assert(dialog.selected_design == 67);
+status_view.status = 3; status_view.draft.selected_design = 127; dialog.selection = status_view; dialog.update_labels();
+test.assert(dialog.status_lines[0].text == 'DESIGNING NEW UNIT (SLOT #64)');
+const modifying = dialog.parent_text.status_labels[4];
+dialog.parent_text.status_labels[4] = 'one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen';
+status_view.status = 4; dialog.update_labels();
+test.assert(#sizeof(dialog.status_lines) == 2 && dialog.status_lines[0].baseline == 56 && dialog.status_lines[1].baseline == 78);
+dialog.parent_text.status_labels[4] = modifying;
+dialog.hide_view(); test.assert(dialog.console.hidden);
 
 // Component-strength captions use Psi; the full stat line uses a question mark.
 for (row of [{value: (0 - 128), text: 'Psi'}, {value: (0 - 2), text: 'Psi'}, {value: (0 - 1), text: 'Psi'}, {value: 0, text: '0'}, {value: 12, text: '12'}]) {

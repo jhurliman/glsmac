@@ -104,6 +104,32 @@ void ValidateSmacWorkshopEditorAbilities(const SmacWorkshopDraft& draft,const Sm
     }}
     if(CleanSmacWorkshopAbilities(draft,slots,count<2 || known("Neural"),catalog).mask!=draft.abilities) {throw std::invalid_argument("Workshop abilities require editor cleanup");}
 }
+SmacWorkshopStatus QuerySmacWorkshopStatus(const SmacOriginalDesignPool& pool,const SmacWorkshopDraft& draft,
+    int32_t owner,const std::optional<faction::SmacDesignCounts>& units,
+    const std::optional<faction::SmacDesignCounts>& production) {
+    if(owner<1 || owner>7 || draft.selected_design<0 || draft.selected_design>=512
+        || (draft.selected_design>=64 && draft.selected_design/64!=owner)) {throw std::invalid_argument("Invalid Workshop status selection");}
+    const auto& current=pool.at(draft.selected_design);
+    bool same=current[36]==draft.chassis && current[37]==draft.weapon && current[38]==draft.armor && current[39]==draft.reactor;
+    for(unsigned i=0;i<4;++i) {same=same && current[32+i]==uint8_t(draft.abilities>>(8*i));}
+    using Kind=SmacWorkshopStatusKind;
+    if(draft.selected_design<64) {return {draft.selected_design,same ? Kind::Basic:Kind::BasedOnOld};}
+    const auto excluded=[&](int32_t id){return (pool.at(id)[44]&(1u<<owner))!=0;};
+    if(!(current[48]&1) || excluded(draft.selected_design)) {return {draft.selected_design,Kind::New};}
+    if(same) {return {draft.selected_design,Kind::Previous};}
+    int32_t selected=draft.selected_design;bool accepted=false;
+    for(int32_t id=owner*64;id<(owner+1)*64;++id) {
+        const auto& row=pool.at(id);
+        if(!(row[48]&1)) {return {id,Kind::BasedOnOld};}
+        if(!excluded(id)) {continue;}
+        if(!units) {throw std::invalid_argument("Workshop status requires retained Unit counts");}
+        if(units->at(id)!=0) {continue;}
+        if(!production) {throw std::invalid_argument("Workshop status requires retained production counts");}
+        if(production->at(id)!=0 && (accepted || row[43]!=pool.at(selected)[43])) {continue;}
+        selected=id;accepted=true;
+    }
+    return {selected,accepted ? Kind::BasedOnOld:Kind::Modifying};
+}
 int32_t SmacWorkshopMovement(const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog) {
     RequireComponents(draft,catalog);
     const auto& chassis=catalog.chassis.chassis.at(draft.chassis);const auto& weapon=catalog.weapons.weapons.at(draft.weapon);

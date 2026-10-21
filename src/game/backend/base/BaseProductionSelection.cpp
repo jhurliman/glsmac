@@ -236,7 +236,7 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
     const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;
     const auto& technology=*m_game->m_simulation->value.technology.Find(GetSmacResourceContext().owner_simulation_id);
     auto choices=unit::SmacWorkshopChoices(unit::SmacWorkshopComponent::Armor,catalog,*settings.GetSmacTechnologyRules(),technology);
-    const unit::SmacWorkshopDraft draft=supplied ? *supplied:unit::SmacWorkshopDraft{};
+    unit::SmacWorkshopDraft draft=supplied ? *supplied:unit::SmacWorkshopDraft{};
     if(draft.selected_design<0 || draft.selected_design>511 || (draft.selected_design>=64 && draft.selected_design/64!=technology.admission.simulation_id)
         || draft.chassis>=catalog.chassis.chassis.size() || draft.weapon>=catalog.weapons.weapons.size() || draft.armor>=catalog.defenses.defenses.size()
         || draft.reactor<1 || draft.reactor>catalog.reactors.reactors.size() || draft.abilities>0xffffff || draft.name.size()>31 || draft.name.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop preview draft");}
@@ -245,6 +245,14 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
     }
     const auto mineral_factor=m_game->GetSmacProductionMineralFactor(m_owner);
     const auto& registry=m_game->m_simulation->value.designs;
+    gse::Value* status=VALUE(gse::value::Undefined);
+    if(registry.native_registry) {
+        const auto& economy=m_game->m_simulation->value.economy.at(technology.admission.simulation_id);
+        const auto result=unit::QuerySmacWorkshopStatus(*registry.native_registry,draft,technology.admission.simulation_id,
+            economy.design_counts,economy.production_reference_counts);
+        draft.selected_design=result.selected;
+        status=VALUE(gse::value::Int,,int32_t(result.kind));
+    }
     const auto component_choices=[&](unit::SmacWorkshopComponent kind) {
         gse::value::array_elements_t rows;
         for(const auto& choice:unit::SmacWorkshopChoices(kind,catalog,*settings.GetSmacTechnologyRules(),technology)) {
@@ -385,7 +393,7 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
         {"weapon_choices",component_choices(unit::SmacWorkshopComponent::Weapon)},
         {"reactor_choices",component_choices(unit::SmacWorkshopComponent::Reactor)},
         {"ability_names",VALUE(gse::value::Array,,ability_names)},
-        {"designs",designs},
+        {"designs",designs}, {"status",status},
         {"draft",VALUE(gse::value::Object,,GSE_CALL_NOGC,{
             {"selected_design",VALUE(gse::value::Int,,draft.selected_design)}, {"chassis",VALUE(gse::value::Int,,draft.chassis)},
             {"weapon",VALUE(gse::value::Int,,draft.weapon)}, {"armor",VALUE(gse::value::Int,,draft.armor)},

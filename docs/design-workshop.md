@@ -1582,3 +1582,13 @@ normal-open selected-record flag clear. See the [scope and native receipt](behav
 Live recommendations/presets still need retained summary and current AI-policy
 inputs. Admitting PSI here closes a backend restriction; it does not claim the
 buttons or the complete normal-open path are connected.
+
+
+## 2026-10-21 current fight authority
+
+Current AI aggression now has its own optional signed32 strategy field,
+initialized by fresh campaign setup and preserved by simulation V35. Legacy
+saves retain absence; research priorities and social ratings do not replace it.
+The [current-fight contract](behavior/faction-current-fight.md) records source
+authority, random-personality limits and focused codec/live-restore evidence.
+Air-summary lifecycle and live recommendations/preset commands remain open.

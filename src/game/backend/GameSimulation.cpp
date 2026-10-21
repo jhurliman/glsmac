@@ -201,7 +201,9 @@ void Game::PrepareNewSimulation() {
 		const auto& resources = settings.GetSmacResourceRules();
 		const auto* profile = settings.GetSmacFactionStartupRules()->Find( participant.faction_id );
 		if ( !resources || !profile ) { throw std::runtime_error( "New-world economy requires frozen resource and faction inputs" ); }
-		value.strategy->emplace(participant.simulation_id,faction::SmacFactionStrategy::NewWorld(*profile));
+		const auto& campaign=settings.GetSmacCampaignRules();
+        value.strategy->emplace(participant.simulation_id,faction::SmacFactionStrategy::NewWorld(*profile,
+            campaign ? campaign->primary:0,campaign ? campaign->secondary:0));
 		int32_t bonus = 0;
 		// ENERGY is a scalar assignment, independent of the shared eight-record
 		// list (original definition+4e8); later supported entries replace it.

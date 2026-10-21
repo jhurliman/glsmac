@@ -92,7 +92,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=34,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=35,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -189,6 +189,9 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=34,bool
     if(version>=32) {suffix.WriteBool(value.dominance_native_keys.has_value());if(value.dominance_native_keys) {for(const auto& key:*value.dominance_native_keys) {suffix.WriteString(key);}}}
     if(version>=33) {suffix.WriteBool(value.conquest_winner.has_value());if(value.conquest_winner) {suffix.WriteInt(*value.conquest_winner);}}
     if(version>=34) {suffix.WriteBool(value.faction_turn.has_value());if(value.faction_turn) {suffix.WriteString(value.faction_turn->Serialize().ToString());}}
+    if(version>=35 && value.strategy) {for(const auto& entry:*value.strategy) {
+        suffix.WriteBool(entry.second.fight.has_value());if(entry.second.fight) {suffix.WriteInt(*entry.second.fight);}
+    }}
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -760,17 +763,41 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
         profile.worker_priorities={-3,2,-1,4,INT32_MAX};
         auto strategy=faction::SmacFactionStrategy::NewWorld(profile);
         const std::array<int32_t,4> original{2,-1,4,INT32_MAX};
-        GT_ASSERT(strategy.priorities==original,"startup strategy lost semantic header order or signed values");
+        GT_ASSERT(strategy.priorities==original && strategy.fight==-3,"startup strategy lost semantic header order or signed values");
         strategy.ApplyResearchPriorities({});
-        GT_ASSERT(strategy.priorities==original,"cancel normalized retained priorities");
+        GT_ASSERT(strategy.priorities==original && strategy.fight==-3,"cancel normalized retained priorities/fight");
         for(uint8_t mask=0;mask<16;++mask) {
             strategy.ApplyResearchPriorities(mask);
+            GT_ASSERT(strategy.fight==-3,"Research priorities overwrote current fight policy");
             for(size_t axis=0;axis<4;++axis) {GT_ASSERT(strategy.priorities[axis]==((mask>>axis)&1),"accepted checkbox mask changed axis");}
         }
         const auto before=strategy;
         GT_ASSERT(Rejects([&]{strategy.ApplyResearchPriorities(16);}) && strategy==before,"invalid priority answer changed state");
         GT_ASSERT(profile.worker_priorities[1]==2,"mutable strategy changed frozen personality");
         GT_OK();
+    });
+    task->AddTest("SMAC current fight V35 preserves independent signed policy and legacy absence",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        const auto& profile=profiles.factions[0];
+        for(const int32_t fight:{-1,0,1,INT32_MIN,INT32_MAX}) {
+            auto definition=profile;definition.worker_priorities[0]=fight;
+            const auto fresh=faction::SmacFactionStrategy::NewWorld(definition);
+            GT_ASSERT(fresh.fight==fight,"Current fight was clamped or derived from a social/research axis");
+            GT_ASSERT(!faction::SmacFactionStrategy::NewWorld(definition,0,0x00800000u).fight,"Missing random draw became immutable header authority");
+            GT_ASSERT(faction::SmacFactionStrategy::NewWorld(definition,0x40u,0x00800000u).fight==1,"Aggressive rule did not follow the random draw boundary");
+            auto value=State();value.strategy.emplace();
+            value.strategy->emplace(2,fresh);value.strategy->emplace(7,faction::SmacFactionStrategy{{2,-1,3,4},{}});
+            const auto wire=value.Serialize(technologies,profiles,units).ToString();
+            GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"V35 changed signed fight, peer absence or other authority");
+            auto legacy=value;for(auto& entry:*legacy.strategy) {entry.second.fight.reset();}
+            GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(value,34),technologies,profiles,units)==legacy,"V34 inferred missing fight from frozen personality");
+            GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);})
+                && Rejects([&]{SmacSimulationState::Deserialize(wire+"x",technologies,profiles,units);}),"Truncated/trailing V35 fight accepted");
+        }
+        auto value=State();value.strategy.emplace();
+        value.strategy->emplace(2,faction::SmacFactionStrategy{{}});value.strategy->emplace(7,faction::SmacFactionStrategy{{}});
+        types::Buffer bad;bad.WriteBool(true);bad.WriteInt(int64_t(INT32_MAX)+1);bad.WriteBool(false);
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(Wire(value,1,35)+CurrentWire(value,34).substr(Wire(value,1,34).size())+bad.ToString(),technologies,profiles,units);}),"Out-of-range fight survived signed32 admission");GT_OK();
     });
     task->AddTest("SMAC saved faction strategy restores full priorities without replaying startup",GT(){
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();

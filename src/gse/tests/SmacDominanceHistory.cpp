@@ -53,8 +53,13 @@ void AddSmacDominanceHistoryTests(task::gsetests::GSETests* task) {
                 tail.WriteBool(state.dominance_native_keys.has_value());if(state.dominance_native_keys) {for(const auto& key:*state.dominance_native_keys) {tail.WriteString(key);}}
                 tail.WriteBool(state.conquest_winner.has_value());if(state.conquest_winner) {tail.WriteInt(*state.conquest_winner);}
                 tail.WriteBool(state.faction_turn.has_value());if(state.faction_turn) {tail.WriteString(state.faction_turn->Serialize().ToString());}
+                if(state.strategy) {for(const auto& entry:*state.strategy) {
+                    tail.WriteBool(entry.second.fight.has_value());if(entry.second.fight) {tail.WriteInt(*entry.second.fight);}
+                }}
                 const auto old=old_header.ToString()+wire.substr(header.lenr,wire.size()-header.lenr-tail.lenw);
-                exact=exact && !restore(old).dominance_history;
+                const auto legacy=restore(old);bool missing_fight=legacy.strategy.has_value();
+                if(legacy.strategy) {for(const auto& entry:*legacy.strategy) {missing_fight=missing_fight && !entry.second.fight;}}
+                exact=exact && !legacy.dominance_history && missing_fight;
                 bool rejected=false;try {restore(wire.substr(0,wire.size()-1));}catch(const std::exception&) {rejected=true;}
                 exact=exact && rejected;
             });

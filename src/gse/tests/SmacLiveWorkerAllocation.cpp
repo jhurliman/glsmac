@@ -6149,6 +6149,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             std::map<size_t,std::string> expected_units;
             fixture.ResourceState([&](auto& state){
                 state.do_or_die=scenario==3;state.roster[0].restart_prohibited=scenario==4;
+                state.strategy->at(1).fight=-17;state.strategy->at(1).priorities={7,-3,11,0};
                 state.capabilities.emplace();
                 state.capabilities->factions[0].available.fill(70000);
                 state.capabilities->factions[0].foreign.fill(-73);
@@ -6195,7 +6196,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                         "restart factory lost package order, common site or fresh state");
                 }
                 bool exact=false;fixture.ResourceState([&](auto& state){const auto& e=state.economy.at(1);const auto& t=state.technology.factions[0];
-                    exact=state.roster[0].active==restarted && state.human_defeat_request==(restarted ? std::nullopt : std::optional<int32_t>(1))
+                    const std::array<int32_t,4> priorities{{7,-3,11,0}};
+                    exact=state.strategy->at(1).fight==-17 && state.strategy->at(1).priorities==priorities
+                        && state.roster[0].active==restarted && state.human_defeat_request==(restarted ? std::nullopt : std::optional<int32_t>(1))
                         && state.capabilities && state.capabilities->factions[0]==faction::SmacCapabilityState::Faction{}
                         && state.capabilities->factions[1].available[0]==12345
                         && state.roster[0].restart_prohibited==(scenario==4) && e.credits==110
@@ -6207,7 +6210,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 // a restarted owner with surviving Units does not initialize again.
                 fixture.ResourceState([&](auto& state){state.capabilities->factions[0].available.fill(70000);});
                 fixture.SettleEconomy(1);
-                fixture.ResourceState([&](auto& state){exact=state.economy.at(1).credits==(restarted ? 110 : 120)
+                fixture.ResourceState([&](auto& state){exact=state.strategy->at(1).fight==-17
+                    && state.economy.at(1).credits==(restarted ? 110 : 120)
                     && state.capabilities->factions[0].available[0]==(restarted ? 70000 : 0)
                     && state.capabilities->factions[1].available[0]==12345;});
                 GT_ASSERT(exact,"empty-faction tail omitted or duplicated its second initialization");
@@ -6797,6 +6801,13 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 		std::string saved, knowledge, result; auto pair = source.GameplayRandom();
 		const auto error = source.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			auto* game = source.Game(); auto* base = Populate( GSE_CALL, source, false ); game->PublishSmacWorkerKnowledge( GSE_CALL, KnowledgeValue() );
+            bool current_fight=false;
+            source.ResourceState([&](auto& state) {
+                const auto* definition=game->GetState()->m_settings.global.GetSmacFactionStartupRules()->Find("GAIANS");
+                current_fight=definition && state.strategy && state.strategy->at(1).fight==definition->worker_priorities[0];
+                state.strategy->at(1).fight=-17; // retained diagnostic differs from immutable header
+            });
+            GT_ASSERT(current_fight,"Live new world omitted current fight or used a social/research rating");
 			saved = source.Snapshot(); knowledge = game->GetMap()->GetSmacWorkerKnowledge()->Serialize(); pair = source.GameplayRandom();
 			base->RecalculateSmacWorkers( GSE_CALL, Roles() ); result = Base::Serialize( base ).ToString(); GT_OK();
 		} ); GT_ASSERT( error.empty(), "source continuation failed: " + error );
@@ -6805,6 +6816,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 		ConventionalUnitFixture destination; destination.ConfigureResources( Source, "GAIANS" );
 		return destination.Run( [ & ]( GSE_CALLABLE ) -> std::string {
 			destination.Restore( GSE_CALL, saved, true ); auto* game = destination.Game(); auto* base = game->GetBM()->GetBase( 701 );
+            bool retained_fight=false;
+            destination.ResourceState([&](auto& state) {retained_fight=state.strategy && state.strategy->at(1).fight==-17;});
+            GT_ASSERT(retained_fight,"Actual saved-world restore replayed the fight initializer or lost V35 policy");
 			GT_ASSERT( base->GetSmacAllocation()->selected == 3 && game->GetMap()->GetSmacWorkerKnowledge()->Serialize() == knowledge, "restore replayed allocation or knowledge producers" );
 			RecalculateViaWrapper( GSE_CALL, base );
 			GT_ASSERT( Base::Serialize( base ).ToString() == result && destination.GameplayRandom() == pair, "restored next live allocation differs" ); GT_OK();

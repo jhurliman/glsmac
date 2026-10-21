@@ -212,7 +212,7 @@ void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t wi
 }
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 34;
+constexpr int64_t VERSION = 35;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -346,9 +346,14 @@ bool SmacSimulationParticipant::operator==( const SmacSimulationParticipant& oth
 		&& active == other.active && restart_prohibited == other.restart_prohibited;
 }
 
-SmacFactionStrategy SmacFactionStrategy::NewWorld(const settings::SmacFactionStartupRule& profile) noexcept {
+SmacFactionStrategy SmacFactionStrategy::NewWorld(const settings::SmacFactionStartupRule& profile,uint32_t primary_rules,uint32_t secondary_rules) noexcept {
 	const auto& p=profile.worker_priorities; // already frozen in semantic A/E/D/B/C order
-	return {{p[1],p[2],p[3],p[4]}};
+	SmacFactionStrategy result{{p[1],p[2],p[3],p[4]},p[0]};
+    // Original5c8c54 draws before5c8cc8's unconditional aggressive override.
+    // Until that RNG caller is live, preserve missing random fight authority.
+    if(secondary_rules&0x00800000u) {result.fight.reset();}
+    if(primary_rules&0x40u) {result.fight=1;}
+    return result;
 }
 
 void SmacFactionStrategy::ApplyResearchPriorities(std::optional<uint8_t> accepted_mask) {
@@ -595,6 +600,11 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
     if(dominance_native_keys) {for(const auto& key:*dominance_native_keys) {buffer.WriteString(key);}}
     buffer.WriteBool(conquest_winner.has_value());if(conquest_winner) {buffer.WriteInt(*conquest_winner);}
     buffer.WriteBool(faction_turn.has_value());if(faction_turn) {buffer.WriteString(faction_turn->Serialize().ToString());}
+    // V35 tail follows the already validated/sorted strategy owner records.
+    // Earlier frames keep each fight optional absent; never replay startup.
+    if(strategy) {for(const auto& entry:*strategy) {
+        buffer.WriteBool(entry.second.fight.has_value());if(entry.second.fight) {buffer.WriteInt(*entry.second.fight);}
+    }}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -606,7 +616,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		types::Buffer buffer( wire );
 		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto version=buffer.ReadInt();
-		if(version!=VERSION && version!=33 && version!=32 && version!=31 && version!=30 && version!=29 && version!=28 && version!=27 && version!=26 && version!=25 && version!=24 && version!=23 && version!=22 && version!=21 && version!=20 && version!=19 && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
+		if(version!=VERSION && version!=34 && version!=33 && version!=32 && version!=31 && version!=30 && version!=29 && version!=28 && version!=27 && version!=26 && version!=25 && version!=24 && version!=23 && version!=22 && version!=21 && version!=20 && version!=19 && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC simulation roster requires 1..7 participants" ); }
 		std::vector< SmacSimulationParticipant > roster;
@@ -741,6 +751,9 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
         }
         if(version>=33 && buffer.ReadBool()) {result.conquest_winner=ReadInt32(buffer);}
         if(version>=34 && buffer.ReadBool()) {result.faction_turn=SmacFactionTurn::Deserialize(buffer.ReadString(SmacFactionTurn::MAX_WIRE_BYTES));}
+        if(version>=35 && result.strategy) {for(auto& entry:*result.strategy) {
+            if(buffer.ReadBool()) {entry.second.fight=ReadInt32(buffer);}
+        }}
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );
 		result.Validate( technologies, profiles, units );

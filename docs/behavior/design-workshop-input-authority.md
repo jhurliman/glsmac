@@ -52,9 +52,8 @@ random-personality/rules mutations. Installed definition offsets are570 fight,
 574 wealth,578 power,57c growth and580 tech; native59d1d0 loads those header
 integers at59d387..59d3b8. Current copies are the3dc..3ec fields above. Use the
 current values if later policy changes/randomization apply, rather than
-re-reading immutable header defaults on every open. See
-[worker priorities](worker-allocation-priorities.md) for the distinct effective
-worker-scoring adaptation.
+re-reading immutable header defaults on every open. Automatic worker allocation has a distinct effective-priority adaptation;
+those governor-derived weights are not the current AI fields read here.
 
 The MORALE bonus is a different parser branch. `#BONUSNAMES` puts TECH then
 MORALE at token buffers96d788/96d7a0. Native59d1d0 initializes definition+4d8

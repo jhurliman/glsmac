@@ -1709,16 +1709,19 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
             const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;std::string stored;
             fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;pool[64][44]|=2;
+                pool[64][39]=2;pool[64][32]=0;pool[64][33]=1;pool[64][34]=0;pool[64][35]=0;
                 stored=std::string(pool[64].begin(),std::find(pool[64].begin(),pool[64].begin()+32,uint8_t(0)));
                 const std::string stale="Do not display New storage";std::copy(stale.begin(),stale.end(),pool[65].begin());pool[65][stale.size()]=0;pool[65][48]=0x82;
                 state.designs.RetainNativeRegistry(pool,catalog);state.economy.at(1).design_counts=faction::SmacDesignCounts{};state.economy.at(1).design_counts->at(64)=7;});
             const auto before=fixture.Snapshot();auto* menu=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL));auto* rows=static_cast<value::Array*>(menu->Get("designs"));
             int scout_index=-1,new_index=-1,obsolete_index=-1;bool metadata=false;
             for(size_t i=0;i<rows->value.size();++i) {auto* row=static_cast<value::Object*>(rows->value[i]);const auto id=static_cast<value::Int*>(row->Get("id"))->value;
-                if(id==2) {scout_index=int(i);}if(id==65) {new_index=int(i);GT_ASSERT(!static_cast<value::Bool*>(row->Get("active"))->value
+                if(id==2) {scout_index=int(i);GT_ASSERT(static_cast<value::String*>(static_cast<value::Object*>(row->Get("components"))->Get("stat_line"))->value=="1-1-1","Intrinsic Scout stat projection differs");}
+                if(id==65) {new_index=int(i);GT_ASSERT(!static_cast<value::Bool*>(row->Get("active"))->value
                     && static_cast<value::String*>(row->Get("stored_name"))->value.empty() && static_cast<value::Int*>(row->Get("flags"))->value==0x82,"Inactive raw name leaked as a New caption or flags were normalized");}
                 if(id==64) {obsolete_index=int(i);metadata=static_cast<value::Bool*>(row->Get("active"))->value && static_cast<value::Bool*>(row->Get("excluded"))->value
-                    && static_cast<value::String*>(row->Get("stored_name"))->value==stored && static_cast<value::Int*>(row->Get("unit_count"))->value==7;}
+                    && static_cast<value::String*>(row->Get("stored_name"))->value==stored && static_cast<value::Int*>(row->Get("unit_count"))->value==7;
+                    GT_ASSERT(static_cast<value::String*>(static_cast<value::Object*>(row->Get("components"))->Get("stat_line"))->value=="1-<2>-1*2","Saved stat projection lost reactor or ability mask");}
             }
             GT_ASSERT(scout_index>=0 && new_index>scout_index && obsolete_index>new_index && metadata && fixture.Snapshot()==before,"Live browse misordered rows, recounted stale counts or mutated world state");
             fixture.ResourceState([](auto& state){state.economy.at(1).design_counts.reset();});const auto missing=fixture.Snapshot();

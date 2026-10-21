@@ -967,3 +967,35 @@ affected consumers. LLVM15 crashed in `bugprone-sizeof-expression` for
 UnitManager; that consumer passes with only that check disabled. No UI source
 changed, so the previous six UI-script successes are reused. This is not new
 whole-screen or platform-matrix acceptance.
+
+### Native stat formatting and main placement
+
+The main preview and saved browser now share the original5932d0 stat grammar.
+PSI uses question marks, noncombat equipment uses zero, abilities decorate
+attack/defense in source order, sea/artillery attacks retain parentheses, and
+aircraft movement applies transport/SAM/Antigrav/Slow adjustments before the
+1..99 clamp. Advanced reactors append their rating. Main captions additionally
+append installed ability abbreviations in ascending bit order, including the
+original trailing space for no abilities. Saved rows read their own retained
+mask and reactor rather than the currently editable tuple.
+
+The main stat baseline moves from canvas302 to270. The source layout rectangle
+is y256..272, but the clip remains the whole preview rectangle; clipping the
+glyphs to that layout line would cut descenders. See the additive
+[presentation handoff](behavior/design-workshop-main-presentation.md), its
+[native scalar receipts](behavior/design-workshop-main-presentation-cases.json)
+and [preference/picker contracts](behavior/design-workshop-preference-and-picker-layout.md).
+The cost warnings, cached-factor lifetime, component/ability controls and timer
+contracts in that handoff remain follow-up work, not acceptance claims here.
+
+Validation:24 native stat strings and four main captions match;36 selected
+native groups and six UI scripts pass. The live browse projection checks a
+saved reactor/ability-mask combination and unchanged complete world state.
+The36 groups also pass focused ASan/UBSan with five production and two test
+translation units instrumented. Correctness analysis passes on three
+production files/consumers. A fresh instrumented SDL/OpenGL capture opens the
+Workshop and selects the saved Synthmetal Garrison, showing the corrected
+baseline; it exits0 with no sanitizer or tracked GL leaks. Software graphics,
+no audio. An earlier capture remained in the production dialog and is excluded;
+the successful retry waits for the button to settle and checks the Workshop
+backdrop. No whole-screen pixel-parity or platform release claim is made.

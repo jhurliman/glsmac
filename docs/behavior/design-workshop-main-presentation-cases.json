@@ -1,0 +1,656 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "cases": [
+    {
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 0,
+      "text": "1-1-1",
+      "offense": 1,
+      "defense": 1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "1-1-1"
+    },
+    {
+      "chassis": 0,
+      "weapon": 15,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 0,
+      "text": "0-1-1",
+      "offense": 0,
+      "defense": 1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 9,
+      "expected": "0-1-1"
+    },
+    {
+      "chassis": 0,
+      "weapon": 12,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 0,
+      "text": "?-1-1",
+      "offense": -1,
+      "defense": 1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 2,
+      "expected": "?-1-1"
+    },
+    {
+      "chassis": 0,
+      "weapon": 13,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 0,
+      "text": "*-1-1",
+      "offense": 99,
+      "defense": 1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "*-1-1"
+    },
+    {
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 9,
+      "reactor": 1,
+      "mask": 0,
+      "text": "1-?-1",
+      "offense": 1,
+      "defense": -1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "1-?-1"
+    },
+    {
+      "chassis": 0,
+      "weapon": 12,
+      "armor": 9,
+      "reactor": 1,
+      "mask": 0,
+      "text": "?-?-1",
+      "offense": -1,
+      "defense": -1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 2,
+      "expected": "?-?-1"
+    },
+    {
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 2,
+      "mask": 0,
+      "text": "1-1-1*2",
+      "offense": 1,
+      "defense": 1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "1-1-1*2"
+    },
+    {
+      "chassis": 5,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 0,
+      "text": "1-1-10",
+      "offense": 1,
+      "defense": 1,
+      "speed": 8,
+      "triad": 2,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "1-1-10"
+    },
+    {
+      "chassis": 5,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 2,
+      "mask": 0,
+      "text": "1-1-12*2",
+      "offense": 1,
+      "defense": 1,
+      "speed": 8,
+      "triad": 2,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "1-1-12*2"
+    },
+    {
+      "chassis": 5,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 4,
+      "mask": 0,
+      "text": "1-1-16*4",
+      "offense": 1,
+      "defense": 1,
+      "speed": 8,
+      "triad": 2,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "1-1-16*4"
+    },
+    {
+      "chassis": 5,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 2,
+      "mask": 32,
+      "text": "<1>-1-9*2",
+      "offense": 1,
+      "defense": 1,
+      "speed": 8,
+      "triad": 2,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "<1>-1-9*2"
+    },
+    {
+      "chassis": 3,
+      "weapon": 16,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 0,
+      "text": "0-1-3",
+      "offense": 0,
+      "defense": 1,
+      "speed": 4,
+      "triad": 1,
+      "special_chassis": 0,
+      "weapon_mode": 7,
+      "expected": "0-1-3"
+    },
+    {
+      "chassis": 5,
+      "weapon": 16,
+      "armor": 0,
+      "reactor": 2,
+      "mask": 0,
+      "text": "0-1-5*2",
+      "offense": 0,
+      "defense": 1,
+      "speed": 8,
+      "triad": 2,
+      "special_chassis": 0,
+      "weapon_mode": 7,
+      "expected": "0-1-5*2"
+    },
+    {
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 32768,
+      "text": "(1)-1-1",
+      "offense": 1,
+      "defense": 1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "(1)-1-1"
+    },
+    {
+      "chassis": 3,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 0,
+      "text": "(1)-1-4",
+      "offense": 1,
+      "defense": 1,
+      "speed": 4,
+      "triad": 1,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "(1)-1-4"
+    },
+    {
+      "chassis": 3,
+      "weapon": 0,
+      "armor": 9,
+      "reactor": 1,
+      "mask": 0,
+      "text": "1-?-4",
+      "offense": 1,
+      "defense": -1,
+      "speed": 4,
+      "triad": 1,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "1-?-4"
+    },
+    {
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 16,
+      "text": "1^-1-1",
+      "offense": 1,
+      "defense": 1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "1^-1-1"
+    },
+    {
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 1181736,
+      "text": "<1~xe!>-1-1",
+      "offense": 1,
+      "defense": 1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "<1~xe!>-1-1"
+    },
+    {
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 262912,
+      "text": "1-<1+t>-1",
+      "offense": 1,
+      "defense": 1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "1-<1+t>-1"
+    },
+    {
+      "chassis": 0,
+      "weapon": 12,
+      "armor": 9,
+      "reactor": 1,
+      "mask": 2097151,
+      "text": "?-?-2",
+      "offense": -1,
+      "defense": -1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 2,
+      "expected": "?-?-2"
+    },
+    {
+      "chassis": 5,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 2,
+      "mask": 1024,
+      "text": "1-1-16*2",
+      "offense": 1,
+      "defense": 1,
+      "speed": 8,
+      "triad": 2,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "1-1-16*2"
+    },
+    {
+      "chassis": 5,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 2,
+      "mask": 8388608,
+      "text": "1-1-11*2",
+      "offense": 1,
+      "defense": 1,
+      "speed": 8,
+      "triad": 2,
+      "special_chassis": 0,
+      "weapon_mode": 0,
+      "expected": "1-1-11*2"
+    },
+    {
+      "chassis": 8,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 0,
+      "text": "1-1-14",
+      "offense": 1,
+      "defense": 1,
+      "speed": 12,
+      "triad": 2,
+      "special_chassis": 1,
+      "weapon_mode": 0,
+      "expected": "1-1-14"
+    },
+    {
+      "chassis": 0,
+      "weapon": 18,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 0,
+      "text": "0-1-1",
+      "offense": 0,
+      "defense": 1,
+      "speed": 1,
+      "triad": 0,
+      "special_chassis": 0,
+      "weapon_mode": 11,
+      "expected": "0-1-1"
+    }
+  ],
+  "append_text": "prefix: 0-1-1",
+  "factors": [
+    {
+      "world": 2,
+      "industry": -8,
+      "difficulty": 3,
+      "actual": 5,
+      "expected": 5
+    },
+    {
+      "world": 2,
+      "industry": -7,
+      "difficulty": 3,
+      "actual": 13,
+      "expected": 13
+    },
+    {
+      "world": 2,
+      "industry": -3,
+      "difficulty": 3,
+      "actual": 13,
+      "expected": 13
+    },
+    {
+      "world": 2,
+      "industry": -2,
+      "difficulty": 3,
+      "actual": 12,
+      "expected": 12
+    },
+    {
+      "world": 2,
+      "industry": -1,
+      "difficulty": 3,
+      "actual": 11,
+      "expected": 11
+    },
+    {
+      "world": 2,
+      "industry": 0,
+      "difficulty": 3,
+      "actual": 10,
+      "expected": 10
+    },
+    {
+      "world": 2,
+      "industry": 1,
+      "difficulty": 3,
+      "actual": 9,
+      "expected": 9
+    },
+    {
+      "world": 2,
+      "industry": 2,
+      "difficulty": 3,
+      "actual": 8,
+      "expected": 8
+    },
+    {
+      "world": 2,
+      "industry": 3,
+      "difficulty": 3,
+      "actual": 7,
+      "expected": 7
+    },
+    {
+      "world": 2,
+      "industry": 4,
+      "difficulty": 3,
+      "actual": 6,
+      "expected": 6
+    },
+    {
+      "world": 2,
+      "industry": 5,
+      "difficulty": 3,
+      "actual": 5,
+      "expected": 5
+    },
+    {
+      "world": 0,
+      "industry": 0,
+      "difficulty": 0,
+      "actual": 8,
+      "expected": 8
+    },
+    {
+      "world": 0,
+      "industry": 0,
+      "difficulty": 5,
+      "actual": 8,
+      "expected": 8
+    },
+    {
+      "world": 0,
+      "industry": 2,
+      "difficulty": 0,
+      "actual": 7,
+      "expected": 7
+    },
+    {
+      "world": 0,
+      "industry": 2,
+      "difficulty": 5,
+      "actual": 7,
+      "expected": 7
+    },
+    {
+      "world": 1,
+      "industry": 0,
+      "difficulty": 0,
+      "actual": 9,
+      "expected": 9
+    },
+    {
+      "world": 1,
+      "industry": 0,
+      "difficulty": 5,
+      "actual": 9,
+      "expected": 9
+    },
+    {
+      "world": 1,
+      "industry": 2,
+      "difficulty": 0,
+      "actual": 8,
+      "expected": 8
+    },
+    {
+      "world": 1,
+      "industry": 2,
+      "difficulty": 5,
+      "actual": 8,
+      "expected": 8
+    },
+    {
+      "world": 2,
+      "industry": 0,
+      "difficulty": 0,
+      "actual": 10,
+      "expected": 10
+    },
+    {
+      "world": 2,
+      "industry": 0,
+      "difficulty": 5,
+      "actual": 10,
+      "expected": 10
+    },
+    {
+      "world": 2,
+      "industry": 2,
+      "difficulty": 0,
+      "actual": 8,
+      "expected": 8
+    },
+    {
+      "world": 2,
+      "industry": 2,
+      "difficulty": 5,
+      "actual": 8,
+      "expected": 8
+    }
+  ],
+  "costs": [
+    {
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 1,
+      "cached_factor": 10,
+      "current_industry": 2,
+      "raw_rows": 1,
+      "text": "{Cost:  }10",
+      "adds_penalty_marker": false
+    },
+    {
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 1,
+      "cached_factor": 8,
+      "current_industry": 2,
+      "raw_rows": 1,
+      "text": "{Cost:  }8",
+      "adds_penalty_marker": false
+    },
+    {
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 2,
+      "cached_factor": 8,
+      "current_industry": 2,
+      "raw_rows": 3,
+      "text": "{Cost:  }24",
+      "adds_penalty_marker": false
+    },
+    {
+      "chassis": 1,
+      "weapon": 2,
+      "armor": 1,
+      "reactor": 1,
+      "cached_factor": 10,
+      "current_industry": 2,
+      "raw_rows": 6,
+      "text": "{Cost:  }60",
+      "adds_penalty_marker": true
+    },
+    {
+      "chassis": 3,
+      "weapon": 16,
+      "armor": 0,
+      "reactor": 1,
+      "cached_factor": 10,
+      "current_industry": 2,
+      "raw_rows": 3,
+      "text": "{Cost:  }30",
+      "adds_penalty_marker": false
+    }
+  ],
+  "minimum_branch": {
+    "scope": "Declared raw-row EAX=1 at440576, reactor2, cached factor8; this isolates presentation branch, not a claim that stock rows1/reactor2 is constructible.",
+    "text": "{Cost:  }(Min Cost: 16)"
+  },
+  "placements": [
+    {
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 0,
+      "text": "1-1-1 ",
+      "rect": [
+        140,
+        256,
+        451,
+        272
+      ]
+    },
+    {
+      "chassis": 0,
+      "weapon": 12,
+      "armor": 9,
+      "reactor": 2,
+      "mask": 0,
+      "text": "?-?-1*2 ",
+      "rect": [
+        140,
+        256,
+        451,
+        272
+      ]
+    },
+    {
+      "chassis": 5,
+      "weapon": 0,
+      "armor": 0,
+      "reactor": 2,
+      "mask": 32,
+      "text": "<1>-1-9*2 SAM",
+      "rect": [
+        140,
+        256,
+        451,
+        272
+      ]
+    },
+    {
+      "chassis": 3,
+      "weapon": 16,
+      "armor": 0,
+      "reactor": 1,
+      "mask": 0,
+      "text": "0-1-3 ",
+      "rect": [
+        140,
+        256,
+        451,
+        272
+      ]
+    }
+  ],
+  "placement_scope": "Original43fdcc..43fff8; supplied preview140,9,451,320 and Arial-16 bold metrics: font first4, ascent15/internal-leading3 =>field+10=12. Stops before draw; actual initialized-parent glyph receipt independently establishes Scout baseline270.",
+  "literals": {
+    "0x6a7a00": "^",
+    "0x6ac84c": "?",
+    "0x6aea90": "t",
+    "0x6a67e4": ", "
+  },
+  "movement_quantum": 3
+}

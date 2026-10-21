@@ -20,16 +20,19 @@ dialog.init({ui: {class: (name) => { return {set: (properties) => { test.assert(
     game: {event: (name, data) => { commands :+ {name: name, data: data}; }}});
 const base = {id: 701};
 const selection = {expected_state: 'before', chassis: 'Infantry', weapon: 'Hand Weapons', reactor: 'Fission', scout_name: 'Scout', faction_art: 'morgan.pcx', speed: 1, offense: 1, weapon_mode: 0, power: 1,
-    armor: [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, design_name: 'Scout', cost: 10, technology_available: true, available: true}, {id: 1, name: 'Synthmetal', short_name: 'Synthmetal', rating: 2, design_name: 'Synthmetal Garrison', cost: 20, technology_available: true, available: true}, {id: 2, name: 'Unknown', short_name: 'Unknown', rating: 3, design_name: '', cost: 0, technology_available: false, available: false}]};
+    armor: [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, stat_line: '1-1-1 ', design_name: 'Scout', cost: 10, technology_available: true, available: true}, {id: 1, name: 'Synthmetal', short_name: 'Synthmetal', rating: 2, stat_line: '1-2-1 ', design_name: 'Synthmetal Garrison', cost: 20, technology_available: true, available: true}, {id: 2, name: 'Unknown', short_name: 'Unknown', rating: 3, stat_line: '1-3-1 ', design_name: '', cost: 0, technology_available: false, available: false}]};
 test.assert(windows[0].left == 216 && windows[0].top == 168 && windows[0].width == 623 && windows[0].height == 387 && windows[0].children[0].background == 'deswin.pcx:smacsoftware()');
 test.assert(dialog.component_models[0].model.top == (0 - 88) && dialog.component_models[1].model.top == (0 - 86) && dialog.component_models[2].model.top == (0 - 90));
+test.assert(dialog.stats.baseline == 261);
+let stat_geometry = false; for (child of windows[0].children) { if (child.left == 140 && child.top == 9 && child.height == 311) { stat_geometry = true; } }
+test.assert(stat_geometry);
 dialog.open(base, selection); test.assert(dialog.active && !windows[0].hidden && dialog.selected_armor == 0);
 test.assert(dialog.model.preview_armor == 0 && dialog.model.preview_yaw == 0.0 && dialog.model.preview_faction == 'morgan.pcx');
 dialog.open_picker(); test.assert(!windows[1].hidden && #sizeof(dialog.cards) == 3 && dialog.picker_canvas.picker_selected == 0 && #sizeof(dialog.picker_canvas.picker_rows) == 3 && #sizeof(dialog.cards[2].children) == 0);
 test.assert(dialog.cards[2].handlers.click({}) == true && dialog.selected_armor == 0 && !windows[1].hidden);
 test.assert(dialog.cards[1].handlers.click({}) == true && dialog.selected_armor == 1 && windows[1].hidden);
 test.assert(dialog.model.preview_armor == 1 && dialog.model.preview_yaw == 0.0 && dialog.components.components_armor == 1);
-test.assert(dialog.title.text == 'SYNTHMETAL GARRISON' && dialog.stats.text == '1-2-1' && dialog.cost.text == 'COST:  20' && dialog.chassis.text == 'INFANTRY' && dialog.armor_name.text == 'SYNTHMETAL' && dialog.armor_stat.text == 'Level 2');
+test.assert(dialog.title.text == 'SYNTHMETAL GARRISON' && dialog.stats.text == '1-2-1 ' && dialog.cost.text == 'COST:  20' && dialog.chassis.text == 'INFANTRY' && dialog.armor_name.text == 'SYNTHMETAL' && dialog.armor_stat.text == 'Level 2');
 dialog.submit(false); dialog.submit(false);
 test.assert(dialog.pending && #sizeof(commands) == 1 && commands[0].name == 'commit_smac_workshop'
     && commands[0].data.base == base && commands[0].data.selected_design == 2 && commands[0].data.armor == 1 && commands[0].data.name == ''
@@ -91,8 +94,8 @@ test.assert(!dialog.active && windows[2].hidden && #sizeof(commands) == after_cl
 
 // Researched advanced/PSI shielding keeps source identities through preview and Apply.
 const advanced = selection + {unused: true};
-advanced.armor = [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, design_name: 'Scout', cost: 10, technology_available: true, available: true},
-    {id: 9, name: 'Psi Defense', short_name: 'PSI', rating: (0 - 1), design_name: 'Psi Infantry', cost: 60, technology_available: true, available: true}];
+advanced.armor = [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, stat_line: '1-1-1 ', design_name: 'Scout', cost: 10, technology_available: true, available: true},
+    {id: 9, name: 'Psi Defense', short_name: 'PSI', rating: (0 - 1), stat_line: '1-?-1 ', design_name: 'Psi Infantry', cost: 60, technology_available: true, available: true}];
 dialog.open(base, advanced); dialog.open_picker(); test.assert(#sizeof(dialog.cards) == 2);
 dialog.cards[1].handlers.click({});
 test.assert(dialog.selected_armor == 9 && dialog.model.preview_armor == 9 && dialog.model.preview_strength == (0 - 1)
@@ -100,7 +103,7 @@ test.assert(dialog.selected_armor == 9 && dialog.model.preview_armor == 9 && dia
 dialog.submit(false); test.assert(commands[#sizeof(commands) - 1].data.armor == 9);
 dialog.hide_view();
 
-// Original signed-byte armor labels: all negative strengths are Psi on all three surfaces.
+// Component-strength captions use Psi; the full stat line uses a question mark.
 for (row of [{value: (0 - 128), text: 'Psi'}, {value: (0 - 2), text: 'Psi'}, {value: (0 - 1), text: 'Psi'}, {value: 0, text: '0'}, {value: 12, text: '12'}]) {
     test.assert(dialog.armor_strength(row.value) == row.text);
 }
@@ -109,7 +112,7 @@ let psi_number = false;
 for (child of dialog.cards[1].children) { if (child.text == 'Psi') { psi_number = true; } }
 test.assert(psi_number);
 dialog.cards[1].handlers.click({});
-test.assert(dialog.armor_stat.text == 'Level Psi' && dialog.stats.text == '1-Psi-1');
+test.assert(dialog.armor_stat.text == 'Level Psi' && dialog.stats.text == '1-?-1 ');
 dialog.hide_view();
 
 // Apply reselection is consumed before displaying a failed-edit message; Done keeps its draft.
@@ -141,7 +144,7 @@ dialog.hide_view();
 let saved_rows = []; let saved_index = 0;
 while (saved_index < 14) {
     saved_rows :+ {id: 64 + saved_index, active: saved_index != 1, excluded: false, flags: 1, stored_name: 'Retained Rover', unit_count: 0,
-        components: {chassis: 1, weapon: 0, armor: 0, reactor: 1, offense: 1, weapon_mode: 0, strength: 1, speed: 2}};
+        components: {chassis: 1, weapon: 0, armor: 0, reactor: 1, offense: 1, weapon_mode: 0, strength: 1, speed: 2, stat_line: '1-1-2'}};
     saved_index++;
 }
 const browser = selection + {designs: saved_rows, draft: {selected_design: 64, chassis: 1, weapon: 0, armor: 0, reactor: 1, abilities: 0, name: ''}};

@@ -31,7 +31,9 @@ return {
         this.armor_stat = caption(30, 195, 99, 85, 83, 10, false);
         this.model = window.surface({left: 167, top: 36, width: 256, height: 256});
         this.title = caption(140, 9, 311, 311, 44, 16, true);
-        this.stats = caption(140, 9, 311, 311, 293, 16, true);
+        // Native layout rectangle is y256..272; clipping remains the whole
+        // preview, so glyph descenders below that layout rectangle survive.
+        this.stats = caption(140, 9, 311, 311, 261, 16, true);
         this.cost = caption(140, 9, 311, 311, 60, 12, true);
         this.message = caption(140, 260, 311, 40, 13, 12, true); this.message.text = '';
         this.draft_name = '';
@@ -131,9 +133,7 @@ return {
                 const words = #split(title.text, ' '); if (#sizeof(words) > 2) { title.text = words[0] + ' ' + words[1]; }
                 const stats_box = card.panel({left: 2, top: 35, width: 66, height: 13, overflow: 'hidden'});
                 const components = row.components;
-                const offense = components.offense < 0 ? '?' : #to_string(components.offense);
-                const defense = components.strength < 0 ? '?' : #to_string(components.strength);
-                stats_box.text({align: 'top center', baseline: 10, font: 'arial.ttf:10:mono', color: color, text: offense + '-' + defense + '-' + #to_string(components.speed)});
+                stats_box.text({align: 'top center', baseline: 10, font: 'arial.ttf:10:mono', color: color, text: components.stat_line});
             } else {
                 title.text = colors.empty_label;
                 const slot_box = card.panel({left: 2, top: 15, width: 66, height: 13, overflow: 'hidden'});
@@ -188,7 +188,7 @@ return {
             this.armor_name.text = row.id == 0 ? 'NONE' : #uppercase(row.short_name); this.armor_stat.text = 'Level ' + this.armor_strength(row.rating);
             if (row.design_name != '') { this.title.text = #uppercase(row.design_name); }
             this.cost.text = 'COST:  ' + #to_string(row.cost);
-            this.stats.text = #to_string(this.selection.offense) + '-' + this.armor_strength(row.rating) + '-' + #to_string(this.selection.speed); } }
+            this.stats.text = row.stat_line; } }
     },
     open_picker: () => {
         if (!this.active || this.pending || this.confirming) { return; }

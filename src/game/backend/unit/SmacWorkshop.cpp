@@ -104,6 +104,41 @@ void ValidateSmacWorkshopEditorAbilities(const SmacWorkshopDraft& draft,const Sm
     }}
     if(CleanSmacWorkshopAbilities(draft,slots,count<2 || known("Neural"),catalog).mask!=draft.abilities) {throw std::invalid_argument("Workshop abilities require editor cleanup");}
 }
+std::string FormatSmacWorkshopStats(const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog,bool main_caption) {
+    RequireComponents(draft,catalog);
+    const auto& chassis=catalog.chassis.chassis.at(draft.chassis);const auto& weapon=catalog.weapons.weapons.at(draft.weapon);
+    const auto strength=catalog.defenses.defenses.at(draft.armor).rating;const auto mask=draft.abilities;
+    using Domain=loader::txt::ChassisTriad;
+    std::string attack;
+    if(weapon.offense<0) {attack="?";}
+    else if(weapon.offense>=99) {attack="*";}
+    else {
+        attack=std::to_string(chassis.missile ? int64_t(weapon.offense)*3/2:weapon.offense);
+        for(const auto& decoration:std::array<std::pair<uint32_t,char>,5>{{{0x10,'^'},{8,'~'},{0x100000,'x'},{0x800,'e'},{0x20000,'!'}}}) {
+            if(mask&decoration.first) {attack+=decoration.second;}
+        }
+        if(weapon.offense>0 && strength>=0 && (chassis.triad==Domain::Sea || (chassis.triad==Domain::Land && (mask&0x8000)))) {attack='('+attack+')';}
+        if(mask&0x20) {attack='<'+attack+'>';}
+    }
+    std::string armor="?";
+    if(strength>=0) {
+        armor=std::to_string(std::clamp(strength,1,9999));
+        if(mask&0x200) {armor+='+';}if(mask&0x40000) {armor+='t';}if(mask&0x100) {armor='<'+armor+'>';}
+    }
+    const bool air=chassis.triad==Domain::Air,transport=weapon.mode==loader::txt::WeaponMode::Transport;
+    int64_t movement=int64_t(chassis.speed)+(air ? 2*int64_t(draft.reactor):0);
+    if(transport) {--movement;}if(mask&0x800000) {--movement;}
+    if(mask&0x400) {movement+=air ? 2*int64_t(draft.reactor):1;}
+    if(air && (mask&0x20)) {movement=4*movement/5;}if(air && transport) {movement/=2;}
+    std::string result=attack+'-'+armor+'-'+std::to_string(std::clamp<int64_t>(movement,1,99));
+    if(draft.reactor>1) {result+='*'+std::to_string(draft.reactor);}
+    if(main_caption) {
+        result+=' ';bool first=true;
+        for(size_t bit=0;bit<24;++bit) {const auto& label=catalog.abilities.abilities[bit].abbreviation;
+            if((mask&(1u<<bit)) && !label.empty()) {if(!first) {result+=", ";}result+=label;first=false;}
+        }
+    }return result;
+}
 SmacWorkshopEditContext QuerySmacWorkshopEditContext(const SmacPredefinedUnitCatalog& catalog,
     const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner,bool automatic_suggestions) {
     RequireOwner(owner);if(catalog.abilities.abilities.size()!=24) {throw std::invalid_argument("Workshop edits require24 ability definitions");}

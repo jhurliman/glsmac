@@ -1,0 +1,3882 @@
+{
+  "scope": "Three original native whole-parent captures and six-card journals per state. Empty whole frame reproduces prior original Morgan Scout exactly. Independent checks verify hashes/PNG expansion, native restore operands, 1020 owned DESWIN margin pixels per frame, unchanged component glyphs and equality of each card region between native parent canvas and final composite. No independent whole new UI/model renderer or new port pixel comparison.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "asset_hashes": {
+    "deswin.pcx": "ad1eebc6ac5de170a18c4aaf2fee86e7bfc9938d9257a12e66cf9c9b272e6ab9",
+    "text.pcx": "7beca9cc3440dc8bef187dfc676152a5fe057f3e7f1b1f158b74f9ff0814bff8",
+    "alpha.txt": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4",
+    "labels.txt": "b6b7057a9f96a29a77e89da143d38e34bec5d93d651ac798b3c27d4efdab2009"
+  },
+  "fonts": [
+    {
+      "id": 158,
+      "resolved_face": "Arial",
+      "sfnt_bytes": 1045720,
+      "sfnt_sha256": "b3658eadae55e682b5f69eb64c439c1ecc8f196c0bb8d4756d145d13bc86476a",
+      "request": {
+        "id": 158,
+        "LOGFONT_hex": "f6ffffff000000000000000000000000000000000000000007000000417269616c005f0070cbce40d607630070a9ca409009750038e273008d694400",
+        "height": -10,
+        "weight": 0,
+        "face": "Arial",
+        "text_height": 13,
+        "ascent": 10,
+        "descent": 3,
+        "internal_leading": 3,
+        "metrics_hex": "0d0000000a000000030000000300000000000000040000001b000000900100000000000060000000600000001eff1f200000002700000000"
+      }
+    },
+    {
+      "id": 159,
+      "resolved_face": "Arial",
+      "sfnt_bytes": 989780,
+      "sfnt_sha256": "e8f4e3baf6cc35fed6fcce3a540e8b39e8f6cda1d22a28f2ec8f526fef7a43f5",
+      "request": {
+        "id": 159,
+        "LOGFONT_hex": "f4ffffff000000000000000000000000bc0200000000000007000000417269616c005f0070cbce40d607630070a9ca409009750038e273008d694400",
+        "height": -12,
+        "weight": 700,
+        "face": "Arial",
+        "text_height": 15,
+        "ascent": 12,
+        "descent": 3,
+        "internal_leading": 3,
+        "metrics_hex": "0f0000000c0000000300000003000000000000000600000020000000bc0200000000000060000000600000001eff1f200000002700000000"
+      }
+    }
+  ],
+  "font_files": {
+    "C:\\Windows\\Fonts\\arial.ttf": {
+      "bytes": 1045720,
+      "sha256": "b3658eadae55e682b5f69eb64c439c1ecc8f196c0bb8d4756d145d13bc86476a"
+    },
+    "C:\\Windows\\Fonts\\arialbd.ttf": {
+      "bytes": 989780,
+      "sha256": "e8f4e3baf6cc35fed6fcce3a540e8b39e8f6cda1d22a28f2ec8f526fef7a43f5"
+    },
+    "C:\\Program Files (x86)\\GOG Galaxy\\Games\\Alpha Centauri\\arialn.ttf": {
+      "bytes": 123976,
+      "sha256": "e17b243cbf2e194890c561dbb63e515dc34e941ee1a7923748b336199b812f52"
+    }
+  },
+  "material": {
+    "file": "morgan.pcx",
+    "sample": [
+      435,
+      745
+    ],
+    "loaded_index": 251,
+    "rgb": [
+      255,
+      255,
+      0
+    ],
+    "table_sha256": "d4830e6cfad32f510d2b06322065665ac85d36e1cf5c7ab8ac5dc0a7c4d8254d",
+    "scope": "Independently derived declared material-stage row for owner1. Original sample/PCX loader; prior checked material algebra. Not a new full faction cache or Morgan campaign startup."
+  },
+  "cases": [
+    {
+      "id": "scout_empty",
+      "mask": 0,
+      "slots": [
+        -1,
+        -1
+      ],
+      "frame_sha256": "7750d8fc97a3efa82f48886c0ac51320d53e5ec01e033a7d46c5504dec598e3a",
+      "parent_sha256": "4545d6f20451e979c3300f0e8e7575a94bb762a890fc398be3735aa693317ec7",
+      "card_crops": [
+        {
+          "rect": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "sha256": "5492869fc55fb123b611f23f9650143d303a1b8495be748f9a77ec96cac6e835"
+        },
+        {
+          "rect": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "sha256": "1a704b0abf4f162be42d22ab238c9eece8103a0b27ef706e91b36600ccfe6ab6"
+        },
+        {
+          "rect": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "sha256": "ab47ccd7337a5d9cbcea4fdb1643810119073986b58aa7644752bafbef092d17"
+        },
+        {
+          "rect": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "sha256": "96f0154a0b24361aa6f4612908c924d57b40d9a5d5480f59de35a197382dcaf3"
+        },
+        {
+          "rect": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "sha256": "fa3dd210e5d68956e08b11fdcce73edf7dab9037dd876d22534b11bc57d37d17"
+        },
+        {
+          "rect": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "sha256": "0ca5ff59e9f8cbaf9194f34d1243cbe7d8630e9e79d9114441fc468fc2cb7b15"
+        }
+      ],
+      "card_glyphs": [
+        {
+          "text": "CHASSIS",
+          "x": 54,
+          "baseline": 18,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "INFANTRY",
+          "x": 54,
+          "baseline": 80,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Land 1",
+          "x": 63,
+          "baseline": 90,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "WEAPON",
+          "x": 53,
+          "baseline": 112,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "HAND WEAPONS",
+          "x": 38,
+          "baseline": 174,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Weapon 1",
+          "x": 55,
+          "baseline": 184,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "SHIELDING",
+          "x": 49,
+          "baseline": 206,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "NONE",
+          "x": 65,
+          "baseline": 268,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Level 1",
+          "x": 62,
+          "baseline": 278,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "REACTOR",
+          "x": 484,
+          "baseline": 18,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "FISSION PLANT",
+          "x": 472,
+          "baseline": 77,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Power 1",
+          "x": 492,
+          "baseline": 87,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "SPECIAL ",
+          "x": 485,
+          "baseline": 112,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "ABILITY 1",
+          "x": 485,
+          "baseline": 126,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "NONE",
+          "x": 497,
+          "baseline": 162,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "SPECIAL ",
+          "x": 485,
+          "baseline": 206,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "ABILITY 2",
+          "x": 485,
+          "baseline": 220,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "NONE",
+          "x": 497,
+          "baseline": 256,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "dib": 1098223728
+        }
+      ],
+      "card_operations": [
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43df64",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4520",
+          "caller": "0x43df8e",
+          "args": [
+            7677856,
+            10226568,
+            536932216,
+            7
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "text": "CHASSIS",
+          "rect": [
+            30,
+            7,
+            129,
+            21
+          ],
+          "returned": 105
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x5f4565",
+          "args": [
+            10226568,
+            536932216,
+            7
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "text": "CHASSIS",
+          "rect": [
+            30,
+            7,
+            129,
+            21
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43e040",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e06d",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43e16a",
+          "args": [
+            10226568,
+            536932200,
+            8
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "text": "INFANTRY",
+          "rect": [
+            30,
+            73,
+            129,
+            80
+          ],
+          "returned": 105
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e19f",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43e29a",
+          "args": [
+            10226568,
+            536932200,
+            6
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "text": "Land 1",
+          "rect": [
+            30,
+            83,
+            129,
+            90
+          ],
+          "returned": 96
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e3d3",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4520",
+          "caller": "0x43e3fd",
+          "args": [
+            7677856,
+            10226568,
+            536932216,
+            6
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "text": "WEAPON",
+          "rect": [
+            30,
+            101,
+            129,
+            115
+          ],
+          "returned": 105
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x5f4565",
+          "args": [
+            10226568,
+            536932216,
+            6
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "text": "WEAPON",
+          "rect": [
+            30,
+            101,
+            129,
+            115
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43e51f",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e54c",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43e644",
+          "args": [
+            10226568,
+            536932200,
+            12
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "text": "HAND WEAPONS",
+          "rect": [
+            30,
+            167,
+            129,
+            174
+          ],
+          "returned": 121
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e67b",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43e838",
+          "args": [
+            10226568,
+            536932200,
+            8
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "text": "Weapon 1",
+          "rect": [
+            30,
+            177,
+            129,
+            184
+          ],
+          "returned": 103
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e954",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4520",
+          "caller": "0x43e97e",
+          "args": [
+            7677856,
+            10226568,
+            536932216,
+            9
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "text": "SHIELDING",
+          "rect": [
+            30,
+            195,
+            129,
+            209
+          ],
+          "returned": 109
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x5f4565",
+          "args": [
+            10226568,
+            536932216,
+            9
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "text": "SHIELDING",
+          "rect": [
+            30,
+            195,
+            129,
+            209
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43ea7b",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43eaa7",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43ebaf",
+          "args": [
+            10226568,
+            536932200,
+            4
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "text": "NONE",
+          "rect": [
+            30,
+            261,
+            129,
+            268
+          ],
+          "returned": 94
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43ebe4",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43ed00",
+          "args": [
+            10226568,
+            536932200,
+            7
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "text": "Level 1",
+          "rect": [
+            30,
+            271,
+            129,
+            278
+          ],
+          "returned": 97
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43ee14",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4520",
+          "caller": "0x43ee3e",
+          "args": [
+            7677856,
+            10226568,
+            536932216,
+            7
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "REACTOR",
+          "rect": [
+            462,
+            7,
+            561,
+            21
+          ],
+          "returned": 539
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x5f4565",
+          "args": [
+            10226568,
+            536932216,
+            7
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "REACTOR",
+          "rect": [
+            462,
+            7,
+            561,
+            21
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43ee52",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f5160",
+          "caller": "0x43ef37",
+          "args": [
+            10226568,
+            99
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "FISSION PLANT",
+          "width": 99,
+          "returned": 10
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43efff",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f68b0",
+          "caller": "0x43f010",
+          "args": [
+            10226568,
+            536932200
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "FISSION PLANT",
+          "rect": [
+            462,
+            70,
+            561,
+            77
+          ],
+          "returned": 80
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f038",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43f115",
+          "args": [
+            10226568,
+            536932200,
+            7
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "Power 1",
+          "rect": [
+            462,
+            80,
+            561,
+            87
+          ],
+          "returned": 530
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f283",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4a00",
+          "caller": "0x43f29b",
+          "args": [
+            7677856,
+            10226568,
+            536932296
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "text": "SPECIAL ABILITY 1",
+          "rect": [
+            467,
+            103,
+            556,
+            115
+          ],
+          "returned": 131
+        },
+        {
+          "pc": "0x5f68b0",
+          "caller": "0x5f4a40",
+          "args": [
+            10226568,
+            536932296
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "text": "SPECIAL ABILITY 1",
+          "rect": [
+            467,
+            103,
+            556,
+            115
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43f2b3",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f2cc",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43f345",
+          "args": [
+            10226568,
+            536932280,
+            4
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "text": "NONE",
+          "rect": [
+            462,
+            131,
+            561,
+            186
+          ],
+          "returned": 526
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f653",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4a00",
+          "caller": "0x43f66b",
+          "args": [
+            7677856,
+            10226568,
+            536932296
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "text": "SPECIAL ABILITY 2",
+          "rect": [
+            467,
+            197,
+            556,
+            209
+          ],
+          "returned": 225
+        },
+        {
+          "pc": "0x5f68b0",
+          "caller": "0x5f4a40",
+          "args": [
+            10226568,
+            536932296
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "text": "SPECIAL ABILITY 2",
+          "rect": [
+            467,
+            197,
+            556,
+            209
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43f683",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f69c",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43f715",
+          "args": [
+            10226568,
+            536932280,
+            4
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "text": "NONE",
+          "rect": [
+            462,
+            225,
+            561,
+            280
+          ],
+          "returned": 526
+        }
+      ],
+      "backing_margin_pixels_matched": 1020,
+      "card_regions_equal_final_parent_composite": true
+    },
+    {
+      "id": "scout_one_sam",
+      "mask": 32,
+      "slots": [
+        5,
+        -1
+      ],
+      "frame_sha256": "6b4990ce3eaae045e007c4c22abb926ec724613cf6e6a31663f2a778511467eb",
+      "parent_sha256": "b2e55eab3b769174811a162aabab79d8e8021ac889de924a1c31bbe2e5af3850",
+      "card_crops": [
+        {
+          "rect": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "sha256": "5492869fc55fb123b611f23f9650143d303a1b8495be748f9a77ec96cac6e835"
+        },
+        {
+          "rect": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "sha256": "1a704b0abf4f162be42d22ab238c9eece8103a0b27ef706e91b36600ccfe6ab6"
+        },
+        {
+          "rect": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "sha256": "ab47ccd7337a5d9cbcea4fdb1643810119073986b58aa7644752bafbef092d17"
+        },
+        {
+          "rect": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "sha256": "96f0154a0b24361aa6f4612908c924d57b40d9a5d5480f59de35a197382dcaf3"
+        },
+        {
+          "rect": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "sha256": "1323caa203308ca177c2c11cda14d5c82448a3ea8f5de210b90de2e55035ffac"
+        },
+        {
+          "rect": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "sha256": "0ca5ff59e9f8cbaf9194f34d1243cbe7d8630e9e79d9114441fc468fc2cb7b15"
+        }
+      ],
+      "card_glyphs": [
+        {
+          "text": "CHASSIS",
+          "x": 54,
+          "baseline": 18,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "INFANTRY",
+          "x": 54,
+          "baseline": 80,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Land 1",
+          "x": 63,
+          "baseline": 90,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "WEAPON",
+          "x": 53,
+          "baseline": 112,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "HAND WEAPONS",
+          "x": 38,
+          "baseline": 174,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Weapon 1",
+          "x": 55,
+          "baseline": 184,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "SHIELDING",
+          "x": 49,
+          "baseline": 206,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "NONE",
+          "x": 65,
+          "baseline": 268,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Level 1",
+          "x": 62,
+          "baseline": 278,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "REACTOR",
+          "x": 484,
+          "baseline": 18,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "FISSION PLANT",
+          "x": 472,
+          "baseline": 77,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Power 1",
+          "x": 492,
+          "baseline": 87,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "SPECIAL ",
+          "x": 485,
+          "baseline": 112,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "ABILITY 1",
+          "x": 485,
+          "baseline": 126,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Air Superiority:  ",
+          "x": 473,
+          "baseline": 173,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Attacks air units",
+          "x": 475,
+          "baseline": 183,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "SPECIAL ",
+          "x": 485,
+          "baseline": 206,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "ABILITY 2",
+          "x": 485,
+          "baseline": 220,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "NONE",
+          "x": 497,
+          "baseline": 256,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "dib": 1098223728
+        }
+      ],
+      "card_operations": [
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43df64",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4520",
+          "caller": "0x43df8e",
+          "args": [
+            7677856,
+            10226568,
+            536932216,
+            7
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "text": "CHASSIS",
+          "rect": [
+            30,
+            7,
+            129,
+            21
+          ],
+          "returned": 105
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x5f4565",
+          "args": [
+            10226568,
+            536932216,
+            7
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "text": "CHASSIS",
+          "rect": [
+            30,
+            7,
+            129,
+            21
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43e040",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e06d",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43e16a",
+          "args": [
+            10226568,
+            536932200,
+            8
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "text": "INFANTRY",
+          "rect": [
+            30,
+            73,
+            129,
+            80
+          ],
+          "returned": 105
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e19f",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43e29a",
+          "args": [
+            10226568,
+            536932200,
+            6
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "text": "Land 1",
+          "rect": [
+            30,
+            83,
+            129,
+            90
+          ],
+          "returned": 96
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e3d3",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4520",
+          "caller": "0x43e3fd",
+          "args": [
+            7677856,
+            10226568,
+            536932216,
+            6
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "text": "WEAPON",
+          "rect": [
+            30,
+            101,
+            129,
+            115
+          ],
+          "returned": 105
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x5f4565",
+          "args": [
+            10226568,
+            536932216,
+            6
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "text": "WEAPON",
+          "rect": [
+            30,
+            101,
+            129,
+            115
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43e51f",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e54c",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43e644",
+          "args": [
+            10226568,
+            536932200,
+            12
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "text": "HAND WEAPONS",
+          "rect": [
+            30,
+            167,
+            129,
+            174
+          ],
+          "returned": 121
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e67b",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43e838",
+          "args": [
+            10226568,
+            536932200,
+            8
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "text": "Weapon 1",
+          "rect": [
+            30,
+            177,
+            129,
+            184
+          ],
+          "returned": 103
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e954",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4520",
+          "caller": "0x43e97e",
+          "args": [
+            7677856,
+            10226568,
+            536932216,
+            9
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "text": "SHIELDING",
+          "rect": [
+            30,
+            195,
+            129,
+            209
+          ],
+          "returned": 109
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x5f4565",
+          "args": [
+            10226568,
+            536932216,
+            9
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "text": "SHIELDING",
+          "rect": [
+            30,
+            195,
+            129,
+            209
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43ea7b",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43eaa7",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43ebaf",
+          "args": [
+            10226568,
+            536932200,
+            4
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "text": "NONE",
+          "rect": [
+            30,
+            261,
+            129,
+            268
+          ],
+          "returned": 94
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43ebe4",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43ed00",
+          "args": [
+            10226568,
+            536932200,
+            7
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "text": "Level 1",
+          "rect": [
+            30,
+            271,
+            129,
+            278
+          ],
+          "returned": 97
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43ee14",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4520",
+          "caller": "0x43ee3e",
+          "args": [
+            7677856,
+            10226568,
+            536932216,
+            7
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "REACTOR",
+          "rect": [
+            462,
+            7,
+            561,
+            21
+          ],
+          "returned": 539
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x5f4565",
+          "args": [
+            10226568,
+            536932216,
+            7
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "REACTOR",
+          "rect": [
+            462,
+            7,
+            561,
+            21
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43ee52",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f5160",
+          "caller": "0x43ef37",
+          "args": [
+            10226568,
+            99
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "FISSION PLANT",
+          "width": 99,
+          "returned": 10
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43efff",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f68b0",
+          "caller": "0x43f010",
+          "args": [
+            10226568,
+            536932200
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "FISSION PLANT",
+          "rect": [
+            462,
+            70,
+            561,
+            77
+          ],
+          "returned": 80
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f038",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43f115",
+          "args": [
+            10226568,
+            536932200,
+            7
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "Power 1",
+          "rect": [
+            462,
+            80,
+            561,
+            87
+          ],
+          "returned": 530
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f283",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4a00",
+          "caller": "0x43f29b",
+          "args": [
+            7677856,
+            10226568,
+            536932296
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "text": "SPECIAL ABILITY 1",
+          "rect": [
+            467,
+            103,
+            556,
+            115
+          ],
+          "returned": 131
+        },
+        {
+          "pc": "0x5f68b0",
+          "caller": "0x5f4a40",
+          "args": [
+            10226568,
+            536932296
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "text": "SPECIAL ABILITY 1",
+          "rect": [
+            467,
+            103,
+            556,
+            115
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43f2b3",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f2cc",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f367",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5160",
+          "caller": "0x43f4c9",
+          "args": [
+            10226568,
+            99
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "text": "{Air Superiority:  }Attacks air units",
+          "width": 99,
+          "returned": 20
+        },
+        {
+          "pc": "0x5f68b0",
+          "caller": "0x43f4e4",
+          "args": [
+            10226568,
+            536932280
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "text": "{Air Superiority:  }Attacks air units",
+          "rect": [
+            462,
+            166,
+            561,
+            186
+          ],
+          "returned": 186
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f653",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4a00",
+          "caller": "0x43f66b",
+          "args": [
+            7677856,
+            10226568,
+            536932296
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "text": "SPECIAL ABILITY 2",
+          "rect": [
+            467,
+            197,
+            556,
+            209
+          ],
+          "returned": 225
+        },
+        {
+          "pc": "0x5f68b0",
+          "caller": "0x5f4a40",
+          "args": [
+            10226568,
+            536932296
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "text": "SPECIAL ABILITY 2",
+          "rect": [
+            467,
+            197,
+            556,
+            209
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43f683",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f69c",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43f715",
+          "args": [
+            10226568,
+            536932280,
+            4
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "text": "NONE",
+          "rect": [
+            462,
+            225,
+            561,
+            280
+          ],
+          "returned": 526
+        }
+      ],
+      "backing_margin_pixels_matched": 1020,
+      "card_regions_equal_final_parent_composite": true
+    },
+    {
+      "id": "scout_two_drop_sam",
+      "mask": 48,
+      "slots": [
+        4,
+        5
+      ],
+      "frame_sha256": "cde1fe689b0bade567b5cf27380814f529b6699fc5dc02c20eee282d699e26b5",
+      "parent_sha256": "787d80afdfa208a6c1e71a4e043acd1b1a7cacc6199e177bd4f842c2235a58ce",
+      "card_crops": [
+        {
+          "rect": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "sha256": "1f8c16ed76b5e011aee2af19c30b6eaf4fc66dc0b7dbfdb927e47876e0d271e5"
+        },
+        {
+          "rect": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "sha256": "1a704b0abf4f162be42d22ab238c9eece8103a0b27ef706e91b36600ccfe6ab6"
+        },
+        {
+          "rect": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "sha256": "ab47ccd7337a5d9cbcea4fdb1643810119073986b58aa7644752bafbef092d17"
+        },
+        {
+          "rect": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "sha256": "96f0154a0b24361aa6f4612908c924d57b40d9a5d5480f59de35a197382dcaf3"
+        },
+        {
+          "rect": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "sha256": "d6b9568f5d92aa73de068f578e4a0f8d47f8ae724a0dd8071d7143cee1d0f396"
+        },
+        {
+          "rect": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "sha256": "1a9b19b2a48c4ad663e48a810625c2a73ce93f51e1ecbad3af5759323de0aa02"
+        }
+      ],
+      "card_glyphs": [
+        {
+          "text": "CHASSIS",
+          "x": 54,
+          "baseline": 18,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "INFANTRY",
+          "x": 54,
+          "baseline": 80,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Land 1",
+          "x": 63,
+          "baseline": 90,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "WEAPON",
+          "x": 53,
+          "baseline": 112,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "HAND WEAPONS",
+          "x": 38,
+          "baseline": 174,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Weapon 1",
+          "x": 55,
+          "baseline": 184,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "SHIELDING",
+          "x": 49,
+          "baseline": 206,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "NONE",
+          "x": 65,
+          "baseline": 268,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Level 1",
+          "x": 62,
+          "baseline": 278,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "REACTOR",
+          "x": 484,
+          "baseline": 18,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "FISSION PLANT",
+          "x": 472,
+          "baseline": 77,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Power 1",
+          "x": 492,
+          "baseline": 87,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "SPECIAL ",
+          "x": 485,
+          "baseline": 112,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "ABILITY 1",
+          "x": 485,
+          "baseline": 126,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Drop Pods:  ",
+          "x": 467,
+          "baseline": 173,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Makes ",
+          "x": 524,
+          "baseline": 173,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "air drops",
+          "x": 491,
+          "baseline": 183,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "SPECIAL ",
+          "x": 485,
+          "baseline": 206,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "ABILITY 2",
+          "x": 485,
+          "baseline": 220,
+          "font": 159,
+          "color": 285147360,
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Air Superiority:  ",
+          "x": 473,
+          "baseline": 267,
+          "font": 158,
+          "color": 285147360,
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "dib": 1098223728
+        },
+        {
+          "text": "Attacks air units",
+          "x": 475,
+          "baseline": 277,
+          "font": 158,
+          "color": 285147358,
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "dib": 1098223728
+        }
+      ],
+      "card_operations": [
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43df64",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4520",
+          "caller": "0x43df8e",
+          "args": [
+            7677856,
+            10226568,
+            536932216,
+            7
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "text": "CHASSIS",
+          "rect": [
+            30,
+            7,
+            129,
+            21
+          ],
+          "returned": 105
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x5f4565",
+          "args": [
+            10226568,
+            536932216,
+            7
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "text": "CHASSIS",
+          "rect": [
+            30,
+            7,
+            129,
+            21
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43e040",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e06d",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43e16a",
+          "args": [
+            10226568,
+            536932200,
+            8
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "text": "INFANTRY",
+          "rect": [
+            30,
+            73,
+            129,
+            80
+          ],
+          "returned": 105
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e19f",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43e29a",
+          "args": [
+            10226568,
+            536932200,
+            6
+          ],
+          "clip": [
+            30,
+            7,
+            129,
+            92
+          ],
+          "text": "Land 1",
+          "rect": [
+            30,
+            83,
+            129,
+            90
+          ],
+          "returned": 96
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e3d3",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4520",
+          "caller": "0x43e3fd",
+          "args": [
+            7677856,
+            10226568,
+            536932216,
+            6
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "text": "WEAPON",
+          "rect": [
+            30,
+            101,
+            129,
+            115
+          ],
+          "returned": 105
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x5f4565",
+          "args": [
+            10226568,
+            536932216,
+            6
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "text": "WEAPON",
+          "rect": [
+            30,
+            101,
+            129,
+            115
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43e51f",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e54c",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43e644",
+          "args": [
+            10226568,
+            536932200,
+            12
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "text": "HAND WEAPONS",
+          "rect": [
+            30,
+            167,
+            129,
+            174
+          ],
+          "returned": 121
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e67b",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43e838",
+          "args": [
+            10226568,
+            536932200,
+            8
+          ],
+          "clip": [
+            30,
+            101,
+            129,
+            186
+          ],
+          "text": "Weapon 1",
+          "rect": [
+            30,
+            177,
+            129,
+            184
+          ],
+          "returned": 103
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43e954",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4520",
+          "caller": "0x43e97e",
+          "args": [
+            7677856,
+            10226568,
+            536932216,
+            9
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "text": "SHIELDING",
+          "rect": [
+            30,
+            195,
+            129,
+            209
+          ],
+          "returned": 109
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x5f4565",
+          "args": [
+            10226568,
+            536932216,
+            9
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "text": "SHIELDING",
+          "rect": [
+            30,
+            195,
+            129,
+            209
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43ea7b",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43eaa7",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43ebaf",
+          "args": [
+            10226568,
+            536932200,
+            4
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "text": "NONE",
+          "rect": [
+            30,
+            261,
+            129,
+            268
+          ],
+          "returned": 94
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43ebe4",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43ed00",
+          "args": [
+            10226568,
+            536932200,
+            7
+          ],
+          "clip": [
+            30,
+            195,
+            129,
+            280
+          ],
+          "text": "Level 1",
+          "rect": [
+            30,
+            271,
+            129,
+            278
+          ],
+          "returned": 97
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43ee14",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4520",
+          "caller": "0x43ee3e",
+          "args": [
+            7677856,
+            10226568,
+            536932216,
+            7
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "REACTOR",
+          "rect": [
+            462,
+            7,
+            561,
+            21
+          ],
+          "returned": 539
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x5f4565",
+          "args": [
+            10226568,
+            536932216,
+            7
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "REACTOR",
+          "rect": [
+            462,
+            7,
+            561,
+            21
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43ee52",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f5160",
+          "caller": "0x43ef37",
+          "args": [
+            10226568,
+            99
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "FISSION PLANT",
+          "width": 99,
+          "returned": 10
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43efff",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f68b0",
+          "caller": "0x43f010",
+          "args": [
+            10226568,
+            536932200
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "FISSION PLANT",
+          "rect": [
+            462,
+            70,
+            561,
+            77
+          ],
+          "returned": 80
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f038",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5f30",
+          "caller": "0x43f115",
+          "args": [
+            10226568,
+            536932200,
+            7
+          ],
+          "clip": [
+            462,
+            7,
+            561,
+            92
+          ],
+          "text": "Power 1",
+          "rect": [
+            462,
+            80,
+            561,
+            87
+          ],
+          "returned": 530
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f283",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4a00",
+          "caller": "0x43f29b",
+          "args": [
+            7677856,
+            10226568,
+            536932296
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "text": "SPECIAL ABILITY 1",
+          "rect": [
+            467,
+            103,
+            556,
+            115
+          ],
+          "returned": 131
+        },
+        {
+          "pc": "0x5f68b0",
+          "caller": "0x5f4a40",
+          "args": [
+            10226568,
+            536932296
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "text": "SPECIAL ABILITY 1",
+          "rect": [
+            467,
+            103,
+            556,
+            115
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43f2b3",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f2cc",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f367",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5160",
+          "caller": "0x43f4c9",
+          "args": [
+            10226568,
+            99
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "text": "{Drop Pods:  }Makes air drops",
+          "width": 99,
+          "returned": 20
+        },
+        {
+          "pc": "0x5f68b0",
+          "caller": "0x43f4e4",
+          "args": [
+            10226568,
+            536932280
+          ],
+          "clip": [
+            462,
+            101,
+            561,
+            186
+          ],
+          "text": "{Drop Pods:  }Makes air drops",
+          "rect": [
+            462,
+            166,
+            561,
+            186
+          ],
+          "returned": 186
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f653",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f4a00",
+          "caller": "0x43f66b",
+          "args": [
+            7677856,
+            10226568,
+            536932296
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "text": "SPECIAL ABILITY 2",
+          "rect": [
+            467,
+            197,
+            556,
+            209
+          ],
+          "returned": 225
+        },
+        {
+          "pc": "0x5f68b0",
+          "caller": "0x5f4a40",
+          "args": [
+            10226568,
+            536932296
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "text": "SPECIAL ABILITY 2",
+          "rect": [
+            467,
+            197,
+            556,
+            209
+          ]
+        },
+        {
+          "pc": "0x5f3a70",
+          "caller": "0x43f683",
+          "args": [
+            7677816,
+            0,
+            0,
+            0
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "returned": 0
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f69c",
+          "args": [
+            224,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f3ab0",
+          "caller": "0x43f737",
+          "args": [
+            222,
+            4294967295,
+            1,
+            1
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "returned": 1
+        },
+        {
+          "pc": "0x5f5160",
+          "caller": "0x43f899",
+          "args": [
+            10226568,
+            99
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "text": "{Air Superiority:  }Attacks air units",
+          "width": 99,
+          "returned": 20
+        },
+        {
+          "pc": "0x5f68b0",
+          "caller": "0x43f8b4",
+          "args": [
+            10226568,
+            536932280
+          ],
+          "clip": [
+            462,
+            195,
+            561,
+            280
+          ],
+          "text": "{Air Superiority:  }Attacks air units",
+          "rect": [
+            462,
+            260,
+            561,
+            280
+          ],
+          "returned": 280
+        }
+      ],
+      "backing_margin_pixels_matched": 1020,
+      "card_regions_equal_final_parent_composite": true
+    }
+  ]
+}

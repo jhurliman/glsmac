@@ -1,8 +1,23 @@
 #pragma once
 #include "FontLoader.h"
 #include <array>
+#include <cstdint>
 #include <string_view>
 namespace loader::font::smac {
+// Owned-host GDI Arial10 ASCII advances. Mono FreeType raster hints move c's
+// advance to6 although the matching GDI face uses5. Keep raster masks separate.
+inline const std::array<uint8_t,95>* AsciiAdvances(std::string_view sha,unsigned size) {
+    if(size!=10 || sha!="b3658eadae55e682b5f69eb64c439c1ecc8f196c0bb8d4756d145d13bc86476a") {return nullptr;}
+    static constexpr std::array<uint8_t,95> advances{{
+        3,3,4,6,6,9,7,2,3,3,4,6,3,3,3,3,
+        6,6,6,6,6,6,6,6,6,6,3,3,6,6,6,6,
+        10,7,7,7,7,7,6,8,7,3,5,7,6,9,7,8,
+        7,8,7,7,7,7,7,9,7,7,6,3,3,3,5,6,
+        3,6,6,5,6,6,3,6,6,3,3,4,3,9,6,6,
+        6,6,3,4,3,6,5,7,5,5,5,3,3,3,6,
+    }};
+    return &advances;
+}
 // Frozen GDI layout measurements. Font bytes/glyphs are not embedded.
 inline std::optional<NativeLayout> Layout(std::string_view sha,unsigned size) {
     if(size<1 || size>80) {return {};}

@@ -1,5 +1,7 @@
 #include "SmacDialogFont.h"
 #include "fixtures/SmacDialogFont.h"
+#include "fixtures/WorkshopCardFont.h"
+#include "util/SHA256.h"
 #include "task/gsetests/GSETests.h"
 #include "loader/font/FreeType.h"
 #include "types/Font.h"
@@ -49,6 +51,26 @@ std::string Check(const char* env,unsigned char size,loader::font::RasterMode mo
 }
 }
 void AddSmacDialogFontTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop Arial10 matches95 native glyph advances bearings and complete masks",GT(){
+        const auto* path=std::getenv("GLSMAC_WORKSHOP_REGULAR_FONT");if(!path || !*path) {return {};}
+        std::ifstream stream(path,std::ios::binary);const std::vector<unsigned char> bytes{std::istreambuf_iterator<char>(stream),std::istreambuf_iterator<char>()};
+        GT_ASSERT(util::SHA256(std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()))=="b3658eadae55e682b5f69eb64c439c1ecc8f196c0bb8d4756d145d13bc86476a","Workshop font does not match the native receipt");
+        Fonts loader;loader.Start();util::FinallyGuard stop([&]{loader.Stop();});
+        std::unique_ptr<types::Font> font(loader.Raster(path,bytes,10,loader::font::RasterMode::MONOCHROME));
+        for(unsigned ch=32;ch<=126;++ch) {
+            const auto& glyph=font->m_symbols[ch];const auto& expected=workshop_card_font_fixture::REGULAR10[ch-32];
+            GT_ASSERT(glyph.ax==expected.advance && (!expected.ink || (glyph.left==expected.left && glyph.top==expected.top)),"Workshop GDI glyph metrics differ at ASCII"+std::to_string(ch));
+            std::array<char,4096> cell{};
+            for(unsigned y=0;y<glyph.height;++y) {for(unsigned x=0;x<glyph.width;++x) {
+                const int dx=16+glyph.left+int(x),dy=48-glyph.top+int(y);
+                GT_ASSERT(dx>=0 && dx<64 && dy>=0 && dy<64,"Workshop glyph exceeds native cell");
+                cell[size_t(dy)*64+size_t(dx)]=glyph.data[size_t(y)*glyph.width+x]!=0;
+            }}
+            GT_ASSERT(util::SHA256(std::string_view(cell.data(),cell.size()))==expected.sha,"Workshop GDI glyph mask differs at ASCII"+std::to_string(ch));
+        }
+        GT_ASSERT(font->GetTextWidth("Attacks air units")==72 && font->GetTextWidth("Attacks ")==35
+            && font->GetTextWidth("air ")==15 && font->GetTextWidth("ck")==9,"Workshop additive string extents differ");GT_OK();
+    });
     task->AddTest("SMAC dialog synthetic body font measured GDI glyphs advances and bearings",GT(){
         return Check("GLSMAC_DIALOG_BODY_FONT",16,loader::font::RasterMode::MONOCHROME_BOLD,smac_dialog_font_fixture::BODY,true);
     });

@@ -691,8 +691,11 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
             {"available",VALUE(gse::value::Bool,,supported)}
         }));
     }
-    gse::value::array_elements_t ability_names;
-    for(const auto& row:catalog.abilities.abilities) {ability_names.push_back(VALUE(gse::value::String,,row.name));}
+    gse::value::array_elements_t ability_names,ability_descriptions;
+    for(const auto& row:catalog.abilities.abilities) {
+        ability_names.push_back(VALUE(gse::value::String,,row.name));
+        ability_descriptions.push_back(VALUE(gse::value::String,,row.description));
+    }
     return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
         {"expected_state",VALUE(gse::value::String,,expected)}, {"armor",VALUE(gse::value::Array,,armor)},
         {"mineral_factor",VALUE(gse::value::Int,,mineral_factor)},
@@ -702,6 +705,7 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
         {"weapon_choices",component_choices(unit::SmacWorkshopComponent::Weapon)},
         {"reactor_choices",component_choices(unit::SmacWorkshopComponent::Reactor)},
         {"ability_names",VALUE(gse::value::Array,,ability_names)},
+        {"ability_descriptions",VALUE(gse::value::Array,,ability_descriptions)},
         {"designs",designs}, {"status",status},
         {"draft",VALUE(gse::value::Object,,GSE_CALL_NOGC,{
             {"selected_design",VALUE(gse::value::Int,,draft.selected_design)}, {"chassis",VALUE(gse::value::Int,,draft.chassis)},

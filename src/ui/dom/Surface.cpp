@@ -54,6 +54,25 @@ Surface::Surface( DOM_ARGS_T )
     Method(GSE_CALL,"smacworkshopparenttext",NATIVE_CALL(this) {
         N_EXPECT_ARGS(0);return WorkshopParentText(GSE_CALL);
     }));
+    Method(GSE_CALL,"smacworkshopabilitycardtext",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(2);N_GETVALUE(name,0,String);N_GETVALUE(description,1,String);
+        if(name.size()>256 || description.size()>4096 || name.find('\0')!=std::string::npos || description.find('\0')!=std::string::npos) {
+            throw std::invalid_argument("Workshop ability card text exceeds bounds");
+        }
+        gse::value::array_elements_t tokens;
+        for(const auto& word:SmacWorkshopModalWords("{"+name+":  }"+description)) {
+            gse::value::array_elements_t spans;
+            for(const auto& span:word.spans) {
+                spans.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                    {"text",VALUE(gse::value::String,,span.text)}, {"color",VALUE(gse::value::Int,,span.emphasis ? 224:222)}
+                }));
+            }
+            tokens.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                {"text",VALUE(gse::value::String,,word.text)}, {"spans",VALUE(gse::value::Array,,spans)}
+            }));
+        }
+        return VALUE(gse::value::Array,,tokens);
+    }));
     Method(GSE_CALL,"smacworkshoprenametext",NATIVE_CALL(this) {
         N_EXPECT_ARGS(0);return WorkshopRenameText(GSE_CALL);
     }));
@@ -640,10 +659,12 @@ Surface::Surface( DOM_ARGS_T )
 
 					const auto f_expect_args_fromto = [ &ctx, &si, &ep, &f, &args, &it ]( const uint8_t args_min, const uint8_t args_max ) {
 						if ( args.size() < args_min || args.size() > args_max ) {
-							GSE_ERROR( gse::EC.UI_ERROR, "Texture filter '" + f + "' expects " + ( args_min == args_max
-								? std::to_string( args_min )
-								: std::to_string( args_min ) + " to " + std::to_string( args_max )
-							) + " parameters, got " + std::to_string( args.size() ) + ": " + *it );
+                            // LLVM15's analyzer crashes on the nested rvalue concatenation here.
+                            auto range=std::to_string(args_min);
+                            if(args_min!=args_max) {range+=" to ";range+=std::to_string(args_max);}
+                            std::string message="Texture filter '";message+=f;message+="' expects ";message+=range;
+                            message+=" parameters, got ";message+=std::to_string(args.size());message+=": ";message+=*it;
+                            GSE_ERROR(gse::EC.UI_ERROR,message);
 						}
 					};
 					const auto f_expect_args = [ & f_expect_args_fromto ]( const uint8_t args ) {
@@ -859,8 +880,11 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         const auto design=loader::txt::TXTLoader::ReadUniqueSection(source,"DESIGNLABELS");
         const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
         if(design.size()!=16 || labels.size()<=926) {throw std::invalid_argument("Incomplete Workshop parent text source");}
-        std::array<std::string,31> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];text[24]=labels[757];text[25]=labels[126];text[26]=labels[926];text[27]=labels[758];
+        std::array<std::string,38> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];text[24]=labels[757];text[25]=labels[126];text[26]=labels[926];text[27]=labels[758];
         text[28]=labels[919];text[29]=labels[271];text[30]=labels[103];
+        const std::array<size_t,7> card_indices{81,127,80,139,26,668,122};
+        for(size_t i=0;i<card_indices.size();++i) {text[31+i]=labels[card_indices[i]];}
+
         // LABELS includes its count at index0; offsets are four-byte entries.
         const std::array<size_t,7> status_indices{916,914,918,917,782,783,915};
         for(size_t i=0;i<status_indices.size();++i) {text[17+i]=labels[status_indices[i]];}
@@ -888,6 +912,13 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         {"apply",VALUE(gse::value::String,,m_workshop_parent_text->at(28))},
         {"done",VALUE(gse::value::String,,m_workshop_parent_text->at(29))},
         {"cancel",VALUE(gse::value::String,,m_workshop_parent_text->at(30))},
+        {"chassis",VALUE(gse::value::String,,m_workshop_parent_text->at(31))},
+        {"shielding",VALUE(gse::value::String,,m_workshop_parent_text->at(32))},
+        {"reactor",VALUE(gse::value::String,,m_workshop_parent_text->at(33))},
+        {"special_ability",VALUE(gse::value::String,,m_workshop_parent_text->at(34))},
+        {"none",VALUE(gse::value::String,,m_workshop_parent_text->at(35))},
+        {"level",VALUE(gse::value::String,,m_workshop_parent_text->at(36))},
+        {"power",VALUE(gse::value::String,,m_workshop_parent_text->at(37))}, {"domains",picker->Get("domains")},
         {"weapon",picker->Get("weapon")}, {"equipment",picker->Get("equipment")}, {"psi",picker->Get("psi")}
     });
 }

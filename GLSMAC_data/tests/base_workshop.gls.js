@@ -10,7 +10,7 @@ const node = (data) => {
     data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi'}; };
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
     data.smacworkshopparenttext = () => { let colors = []; let index = 0; while (index < 256) { colors :+ ('color' + #to_string(index)); index++; }
-        return {labels: ['Vehicle Design','Moves:','Type:','Power:','Prototype Cost:','Cost:','Data','Presets','W:','A:','C:','R:','SP1:','SP2:','E:','P:'],
+        return {chassis: 'Chassis', shielding: 'Shielding', reactor: 'Reactor', special_ability: 'Special Ability', none: 'NONE', level: 'Level', power: 'Power', domains: ['Land','Sea','Air'], labels: ['Vehicle Design','Moves:','Type:','Power:','Prototype Cost:','Cost:','Data','Presets','W:','A:','C:','R:','SP1:','SP2:','E:','P:'],
             apply: 'Apply', done: 'Done', cancel: 'Cancel', minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', obsolete: 'Obsolete', rename: 'Rename', retire: 'Retire', upgrade: 'Upgrade', status_title: 'Design Workshop', slot: 'Slot',
             status_labels: ['Examining Basic Unit','New Design Based On Old','Examining Previous Design','Designing New Unit','Modifying Previous Design']}; };
     data.smacworkshopconsolebacking = () => { data.console_tiled = true; };
@@ -37,7 +37,10 @@ const node = (data) => {
     };
     data.focus = () => { data.focused = true; }; data.select_all = () => { data.all_selected = true; };
     data.smacworkshopabilitytext = (technology) => { return {title: 'Select Special Ability', none: 'No special ability', ok: 'OK', cancel: 'Cancel', cost: 'Cost', attack: 'Attack', defense: 'Defense', speed: 'Speed', domains: ['Land', 'Sea', 'Air'], second_title: 'Chief Engineer', second_body: 'Research ' + technology + '.', missile_title: 'Chief Engineer', missile_body: 'Missiles cannot have special abilities.'}; };
-    data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
+    data.measure = () => { let width = #sizeof(#split(data.text, ' ')) * 40; if (data.text == 'SPECIAL ') { width = 52; } if (data.text == 'SPECIAL ABILITY ') { width = 102; } if (data.text == 'ABILITY 1' || data.text == 'ABILITY 2') { width = 54; } return {width: width}; };
+    data.smacworkshopabilitycardtext = (name, description) => {
+        return [{text: name + ':  ', spans: [{text: name + ':  ', color: 224}]}, {text: description, spans: [{text: description, color: 222}]}];
+    };
     data.smacworkshopcomponents = (armor, only_armor) => { test.assert(only_armor); data.components_armor = armor; };
     data.smacworkshopstrip = (rows, faction, selected, hovered) => { data.strip_rows = rows; data.strip_faction = faction; data.strip_selected = selected; data.strip_hovered = hovered;
         return {normal: 'rgb(1,2,3)', unused: 'rgb(4,5,6)', obsolete: 'rgb(7,8,9)', empty_label: 'Empty Slot', obsolete_label: 'Obsolete'}; };
@@ -55,6 +58,7 @@ const base = {id: 701};
 const release_card = (index) => { return dialog.picker_canvas.handlers.mouseup({button: 'left', x: 79 + (index % 5) * 108, y: 49 + #floor(#to_float(index) / 5.0) * 94}); };
 const selection = {preview_icon: (0 - 1), preview_variant: 0, expected_state: 'before', mineral_factor: 10, weapon_cost: 1, movement: 1, chassis: 'Infantry', weapon: 'Hand Weapons', reactor: 'Fission', scout_name: 'Scout', faction_art: 'morgan.pcx', speed: 1, offense: 1, weapon_mode: 0, power: 1,
     ability_names: ['Super Former', 'Deep Radar', '', '', '', '', '', '', '', 'Polymorphic', '', '', '', '', '', '', '', '', 'Trance', '', '', '', '', ''],
+    ability_descriptions: ['Works faster', 'Extends vision', '', '', '', '', '', '', '', 'Defends', '', '', '', '', '', '', '', '', 'Psi defense', '', '', '', '', ''],
     chassis_choices: [{id: 0, name: 'Infantry', domain: 0, value: 1, technology_available: true}, {id: 3, name: 'Foil', domain: 1, value: 4, technology_available: false}],
     reactor_choices: [{id: 1, name: 'Fission', value: 1, technology_available: true}, {id: 2, name: 'Fusion', value: 2, technology_available: true}],
     armor: [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, armor_class: 0, stat_line: '1-1-1 ', design_name: 'Scout', cost: 10, cost_rows: 1, fast_land_warning: false, technology_available: true, available: true}, {id: 1, name: 'Synthmetal', short_name: 'Synthmetal', rating: 2, armor_class: 0, stat_line: '1-2-1 ', design_name: 'Synthmetal Garrison', cost: 20, cost_rows: 2, fast_land_warning: false, technology_available: true, available: true}, {id: 2, name: 'Unknown', short_name: 'Unknown', rating: 3, armor_class: 0, stat_line: '1-3-1 ', design_name: '', cost: 0, cost_rows: 0, fast_land_warning: false, technology_available: false, available: false}]};
@@ -78,6 +82,35 @@ test.assert(dialog.stats.baseline == 261);
 let stat_geometry = false; for (child of windows[0].children) { if (child.left == 140 && child.top == 9 && child.height == 311) { stat_geometry = true; } }
 test.assert(stat_geometry);
 dialog.open(base, selection); test.assert(dialog.active && !windows[0].hidden && dialog.selected_armor == 0);
+test.assert(dialog.chassis_stat.color == dialog.parent_text.colors[224] && dialog.reactor_stat.color == dialog.parent_text.colors[224]);
+test.assert(dialog.ability_labels[0].baseline == 61 && dialog.ability_labels[0].color == dialog.parent_text.colors[224]);
+dialog.ability_slots = [0, (0 - 1)]; dialog.update_labels();
+test.assert(dialog.ability_labels[0].hidden && !dialog.ability_labels[1].hidden && #sizeof(dialog.ability_body) == 2);
+test.assert(dialog.ability_body[0].text == 'Super Former:  ' && dialog.ability_body[0].color == dialog.parent_text.colors[224]);
+test.assert(dialog.ability_body[1].text == 'Works faster' && dialog.ability_body[1].color == dialog.parent_text.colors[222] && dialog.ability_body[1].baseline == 82);
+const old_ability_body = dialog.ability_body; dialog.ability_slots = [(0 - 1), (0 - 1)]; dialog.update_labels();
+test.assert(#sizeof(dialog.ability_body) == 0 && !dialog.ability_labels[0].hidden);
+for (label of old_ability_body) { test.assert(label.removed); }
+const probe = dialog.ability_probe; const ordinary_measure = probe.measure;
+probe.measure = () => {
+    const text = probe.text;
+    if (text == 'EXACT') { return {width: 99}; }
+    if (text == 'ALPHA ' || text == 'BETA ' || text == 'GAMMA') { return {width: 60}; }
+    return {width: 180};
+};
+const long_label = node({text: '', baseline: 73}); const name_frame = node({});
+test.assert(dialog.paint_component_name(long_label, name_frame, 'EXACT', 73, false) == 1 && !long_label.hidden);
+test.assert(dialog.paint_component_name(long_label, name_frame, 'ALPHA BETA GAMMA', 73, false) == 3 && long_label.hidden);
+test.assert(name_frame.children[0].baseline == 63 && name_frame.children[1].baseline == 73 && name_frame.children[2].baseline == 83);
+const reactor_frame = node({});
+test.assert(dialog.paint_component_name(long_label, reactor_frame, 'ALPHA BETA GAMMA', 70, true) == 3);
+test.assert(reactor_frame.children[0].baseline == 50 && reactor_frame.children[1].baseline == 60 && reactor_frame.children[2].baseline == 70);
+const old_reactor_name = dialog.selection.reactor; dialog.selection.reactor = 'ALPHA BETA GAMMA'; dialog.paint_component_names();
+for (part of dialog.component_models) { if (part.kind == 3) { test.assert(part.model.top == (0 - 100)); } }
+dialog.selection.reactor = old_reactor_name;
+probe.measure = ordinary_measure; dialog.paint_component_names();
+for (part of dialog.component_models) { if (part.kind == 3) { test.assert(part.model.top == (0 - 90)); } }
+
 test.assert(!dialog.model.preview_visible && !dialog.component_models[0].model.preview_visible);
 test.assert(dialog.model.preview_armor == 0 && dialog.model.preview_yaw == 0.0 && dialog.model.preview_faction == 'morgan.pcx');
 dialog.open_picker(); test.assert(!windows[1].hidden && #sizeof(dialog.cards) == 3 && dialog.picker_canvas.picker_selected == 0 && #sizeof(dialog.picker_canvas.picker_rows) == 3 && #sizeof(dialog.cards[2].children) == 0);
@@ -193,6 +226,8 @@ for (child of dialog.cards[1].children) { if (child.text == 'Psi') { psi_number 
 test.assert(psi_number);
 release_card(1);
 test.assert(dialog.armor_stat.text == 'Level Psi' && dialog.stats.text == '1-?-1 ');
+dialog.selection.armor[1].armor_class = 3; dialog.update_armor(); test.assert(dialog.armor_stat.text == '');
+dialog.selection.armor[1].armor_class = 2; dialog.update_armor(); test.assert(dialog.armor_stat.text == 'Level Psi');
 dialog.hide_view();
 
 // Apply reselection is consumed before displaying a failed-edit message; Done keeps its draft.
@@ -378,7 +413,7 @@ dialog.selection.mineral_factor = 10; dialog.update_armor(); test.assert(dialog.
 dialog.selected_reactor = 2; dialog.update_armor(); test.assert(dialog.cost.text == 'COST:  (MIN COST: 16)');
 price_view.armor[0].cost_rows = 6; price_view.armor[0].fast_land_warning = true; dialog.update_armor();
 test.assert(dialog.cost.text == 'COST:  48!' && dialog.cost.color == 'color249');
-dialog.selection.weapon_mode = 8; dialog.selection.weapon_cost = 10; dialog.update_labels();
+dialog.selection.weapon_mode = 8; dialog.selection.offense = 0; dialog.selection.weapon_cost = 10; dialog.update_labels();
 test.assert(dialog.weapon_heading.text == 'EQUIPMENT' && dialog.weapon_stat.text == 'Equipment 10');
 dialog.hide_view(); dialog.open(base, price_view); test.assert(dialog.mineral_factor == 10); dialog.hide_view();
 

@@ -1378,7 +1378,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"commit_smac_workshop",args);}) && fixture.Snapshot()==applied,"Invalid armor reached the registry");
             args["armor"]=VALUE(value::Int,,1);args["request_id"]=VALUE(value::Int,,0);
             GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"commit_smac_workshop",args);}) && fixture.Snapshot()==applied,"Invalid UI request changed the registry");
-            fixture.ResourceState([](auto& state){state.designs.intrinsic_overrides[2]=unit::SmacIntrinsicDesignState{0x205,0x86};});
+            fixture.ResourceState([](auto& state){state.designs.intrinsic_overrides[2]=unit::SmacIntrinsicDesignState{0x205,0x86};state.designs.SynchronizeNativeRegistry();});
             GT_ASSERT(!game->IsSmacUnitProductionEligible(*base,production.current_item),"production ignored owner's intrinsic exclusion");
             auto* existing=game->GetUM()->GetUnit(91);game->GetUM()->UpdateConventionalUnit(GSE_CALL,existing,existing->Conventional());
             args["request_id"]=VALUE(value::Int,,3);args["selected_design"]=VALUE(value::Int,,127);args["armor"]=VALUE(value::Int,,0);
@@ -1390,16 +1390,17 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_OK();
         });GT_ASSERT(run.empty(),"Live Workshop command: "+run);GT_OK();
     });
-    task->AddTest("SMAC live Workshop reuses and reactivates actual unnamed Morgan startup design with restore",[](GSE*,context::Context*)->std::string {
-        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"MORGANITES");std::string saved;
+    task->AddTest("SMAC live Workshop reuses and reactivates actual named Morgan startup design with restore",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"MORGANITES");std::string saved,startup_name;
         const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
             const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
             base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{scout}});
             const auto production=base->GetProductionState();const auto random=fixture.GameplayRandom();
             bool startup=false;fixture.ResourceState([&](auto& state){const auto& rows=state.designs.owners.front().designs;
-                startup=rows.size()==1 && rows[0].id==64 && rows[0].defense==1 && !rows[0].name;});
-            GT_ASSERT(startup,"Morgan fixture did not use its actual unnamed startup producer");
+                startup=rows.size()==1 && rows[0].id==64 && rows[0].defense==1 && rows[0].name && !rows[0].explicitly_named;
+                if(startup) {startup_name=*rows[0].name;}});
+            GT_ASSERT(startup,"Morgan fixture did not use its actual localized startup producer");
             const auto before=fixture.Snapshot();auto* menu=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL));bool offered=false;
             for(auto* value:static_cast<value::Array*>(menu->Get("armor"))->value) {
                 auto* row=static_cast<gse::value::Object*>(value);
@@ -1410,18 +1411,18 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 {"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"armor",VALUE(value::Int,,1)},
                 {"name",VALUE(value::String,,"")},{"done",VALUE(value::Bool,,false)},{"request_id",VALUE(value::Int,,1)}};
             game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
-            GT_ASSERT(fixture.Snapshot()==before,"Reusing unnamed startup tuple allocated or renamed a design");
-            fixture.ResourceState([](auto& state){auto& row=state.designs.owners.front().designs.front();row.faction_exclusion=2;row.auxiliary_flags=0xa500;});
+            GT_ASSERT(fixture.Snapshot()==before,"Reusing automatic startup tuple allocated or renamed a design");
+            fixture.ResourceState([](auto& state){auto& row=state.designs.owners.front().designs.front();row.faction_exclusion=2;row.auxiliary_flags=0xa500;state.designs.SynchronizeNativeRegistry();});
             args["expected_state"]=VALUE(value::String,,base->SmacWorkshopState());args["request_id"]=VALUE(value::Int,,2);
             game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();bool reactivated=false;
-            fixture.ResourceState([&](auto& state){const auto& rows=state.designs.owners.front().designs;reactivated=rows.size()==1 && rows[0].faction_exclusion==0 && rows[0].auxiliary_flags==0xa508 && !rows[0].name;});
+            fixture.ResourceState([&](auto& state){const auto& rows=state.designs.owners.front().designs;reactivated=rows.size()==1 && rows[0].faction_exclusion==0 && rows[0].auxiliary_flags==0xa508 && rows[0].name==startup_name;});
             GT_ASSERT(reactivated && base->GetProductionState()==production && fixture.GameplayRandom()==random,"Alias reactivation lost flags or changed queue/RNG");
             saved=fixture.Snapshot();GT_OK();
         });GT_ASSERT(run.empty(),"Live Morgan Workshop alias: "+run);
         ConventionalUnitFixture restored;restored.ConfigureProduction(TanksSource,"MORGANITES");
         return restored.Run([&](GSE_CALLABLE)->std::string {
             restored.Restore(GSE_CALL,saved,true);bool retained=false;
-            restored.ResourceState([&](auto& state){const auto& row=state.designs.owners.front().designs.front();retained=row.id==64 && row.auxiliary_flags==0xa508 && row.faction_exclusion==0 && !row.name;});
+            restored.ResourceState([&](auto& state){const auto& row=state.designs.owners.front().designs.front();retained=row.id==64 && row.auxiliary_flags==0xa508 && row.faction_exclusion==0 && row.name==startup_name;});
             GT_ASSERT(retained,"Whole-world restore lost Workshop reactivation metadata");GT_OK();
         });
     });

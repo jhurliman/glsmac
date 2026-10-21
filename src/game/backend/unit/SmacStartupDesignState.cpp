@@ -1,4 +1,5 @@
 #include "SmacStartupDesignState.h"
+#include "SmacPredefinedDesigns.h"
 
 #include <array>
 #include <algorithm>
@@ -8,7 +9,7 @@
 namespace game::backend::unit {
 namespace {
 constexpr int64_t MAGIC = 0x534d5344; // SMSD
-constexpr int64_t VERSION = 6;
+constexpr int64_t VERSION = 7;
 
 void RequireDifficulty( int32_t difficulty ) {
 	if ( difficulty < 0 || difficulty > 5 ) { throw std::runtime_error( "SMAC startup requires original difficulty 0..5" ); }
@@ -102,6 +103,80 @@ uint32_t ReadUnsigned( types::Buffer& buffer, uint32_t maximum ) {
 }
 }
 
+namespace {
+uint16_t RecordFlags(const SmacOriginalDesign& row) {return uint16_t(row[48])|(uint16_t(row[49])<<8);}
+std::string RecordName(const SmacOriginalDesign& row) {
+    const auto end=std::find(row.begin(),row.begin()+32,uint8_t(0));
+    return std::string(row.begin(),end);
+}
+SmacCustomDesign DecodeRegistryDesign(const SmacOriginalDesign& row,int id) {
+    SmacCustomDesign d;d.id=id;d.chassis=row[36];d.weapon=row[37];d.defense=row[38];d.reactor=row[39];
+    d.carry=row[40];d.cost=row[41];d.plan=row[42];d.faction_exclusion=row[44];
+    for(unsigned i=0;i<4;++i) {d.abilities|=uint32_t(row[32+i])<<(8*i);}
+    const auto flags=RecordFlags(row);d.active=(flags&1)!=0;d.explicitly_named=(flags&2)!=0;d.prototyped=(flags&4)!=0;
+    d.auxiliary_flags=uint16_t(flags&~7u);d.name=RecordName(row);return d;
+}
+void EncodeRegistryDesign(SmacOriginalDesign& row,const SmacCustomDesign& d) {
+    if(d.chassis>255 || d.weapon>255 || d.defense>255 || d.faction_exclusion>255) {throw std::invalid_argument("Native design field exceeds byte");}
+    if(d.name && *d.name!=RecordName(row)) {std::fill_n(row.begin(),32,0);std::copy(d.name->begin(),d.name->end(),row.begin());}
+    for(unsigned i=0;i<4;++i) {row[32+i]=uint8_t(d.abilities>>(8*i));}
+    row[36]=uint8_t(d.chassis);row[37]=uint8_t(d.weapon);row[38]=uint8_t(d.defense);row[39]=d.reactor;
+    row[40]=d.carry;row[41]=d.cost;row[42]=d.plan;row[44]=uint8_t(d.faction_exclusion);
+    const auto flags=uint16_t(d.auxiliary_flags|(d.active?1:0)|(d.explicitly_named?2:0)|(d.prototyped?4:0));row[48]=uint8_t(flags);row[49]=uint8_t(flags>>8);
+}
+SmacDesignComponents RegistryComponents(const SmacPredefinedUnitCatalog& catalog) {
+    SmacDesignComponents c{};
+    if(catalog.chassis.chassis.size()!=9 || catalog.weapons.weapons.size()!=21 || catalog.defenses.defenses.size()!=10 || catalog.abilities.abilities.size()!=24) {throw std::invalid_argument("Native registry requires stock component counts");}
+    for(size_t i=0;i<9;++i) {const auto& r=catalog.chassis.chassis[i];c.chassis[i]={r.speed,int32_t(r.triad),r.missile,r.cargo,r.cost};}
+    for(size_t i=0;i<21;++i) {const auto& r=catalog.weapons.weapons[i];c.weapons[i]={r.offense,int32_t(r.mode),r.cost};}
+    for(size_t i=0;i<10;++i) {const auto& r=catalog.defenses.defenses[i];c.armor[i]={r.rating,r.cost};}
+    for(size_t i=0;i<24;++i) {
+        const auto& r=catalog.abilities.abilities[i];uint32_t bits=0;
+        if(r.flags.empty() || r.flags.size()>32 || r.flags.find_first_not_of("01")!=std::string::npos) {throw std::invalid_argument("Invalid registry ability flags");}
+        for(const auto ch:r.flags) {bits=(bits<<1)|uint32_t(ch-'0');}c.abilities[i]={r.cost,bits};
+    }return c;
+}
+int RegistryPrerequisite(const settings::SmacTechnologyReference& r) {
+    using K=settings::SmacTechnologyReference::Kind;
+    if(r.kind==K::NONE) {return -1;}if(r.kind==K::DISABLED) {return -2;}
+    if(r.kind==K::TECHNOLOGY_ID && r.technology_id && *r.technology_id>=0 && *r.technology_id<89) {return *r.technology_id;}
+    throw std::invalid_argument("Registry prerequisite is unresolved");
+}
+}
+void SmacStartupDesignState::RetainNativeRegistry(const SmacOriginalDesignPool& pool,const SmacPredefinedUnitCatalog& catalog) {
+    auto next=*this;next.native_registry=pool;
+    for(size_t i=0;i<64;++i) {next.intrinsic_overrides[i]=SmacIntrinsicDesignState{RecordFlags(pool[i]),pool[i][44]};}
+    for(auto& owner:next.owners) {
+        std::vector<SmacCustomDesign> rows;
+        for(int id=64*owner.simulation_id;id<64*(owner.simulation_id+1);++id) {
+            if(!(RecordFlags(pool.at(id))&1)) {continue;}
+            auto row=DecodeRegistryDesign(pool[id],id);
+            const auto prior=std::find_if(owner.designs.begin(),owner.designs.end(),[&](const auto& d){return d.id==id;});
+            if(prior!=owner.designs.end()) {row.riot=prior->riot;}
+            rows.push_back(std::move(row));
+        }owner.designs=std::move(rows);
+    }
+    next.Validate(catalog);*this=std::move(next);
+}
+void SmacStartupDesignState::SynchronizeNativeRegistry() {
+    if(!native_registry) {return;}
+    auto pool=*native_registry;
+    for(size_t i=0;i<64;++i) {if(intrinsic_overrides[i]) {
+        const auto value=*intrinsic_overrides[i];pool[i][48]=uint8_t(value.flags);pool[i][49]=uint8_t(value.flags>>8);pool[i][44]=value.exclusion;
+    }}
+    for(const auto& owner:owners) {
+        if(owner.simulation_id<1 || owner.simulation_id>7) {throw std::invalid_argument("Registry owner outside native bank");}
+        for(int id=64*owner.simulation_id;id<64*(owner.simulation_id+1);++id) {
+            const auto row=std::find_if(owner.designs.begin(),owner.designs.end(),[&](const auto& d){return d.id==id;});
+            if(row==owner.designs.end()) {pool[id][48]&=uint8_t(~1u);}
+            else {
+                if(row->name && (row->name->size()>31 || row->name->find('\0')!=std::string::npos)) {throw std::invalid_argument("Invalid registry design name");}
+                EncodeRegistryDesign(pool[id],*row);
+            }
+        }
+    }native_registry=std::move(pool);
+}
+
 SmacIntrinsicDesignState SmacStartupDesignState::IntrinsicState(const SmacPredefinedUnit& definition) const {
     if(definition.source_id>=64 || definition.faction_exclusion>255) {throw std::invalid_argument("Intrinsic state requires a native predefined identity and exclusion byte");}
     const auto& retained=intrinsic_overrides.at(definition.source_id);if(retained) {return *retained;}
@@ -131,7 +206,7 @@ bool SmacCustomDesign::operator==( const SmacCustomDesign& other ) const {
 		&& active == other.active && prototyped == other.prototyped && name==other.name && explicitly_named==other.explicitly_named && riot==other.riot && auxiliary_flags==other.auxiliary_flags;
 }
 bool SmacDesignOwner::operator==( const SmacDesignOwner& other ) const { return simulation_id == other.simulation_id && designs == other.designs && starting_scout == other.starting_scout; }
-bool SmacStartupDesignState::operator==( const SmacStartupDesignState& other ) const { return global_difficulty == other.global_difficulty && owners == other.owners && retirement_history==other.retirement_history && intrinsic_overrides==other.intrinsic_overrides; }
+bool SmacStartupDesignState::operator==( const SmacStartupDesignState& other ) const { return global_difficulty == other.global_difficulty && owners == other.owners && retirement_history==other.retirement_history && intrinsic_overrides==other.intrinsic_overrides && native_registry==other.native_registry; }
 
 int32_t SmacStartupDesignState::OriginalDifficulty( const std::string& canonical_name ) {
 	static const std::array< const char*, 6 > names{ "Citizen", "Specialist", "Talent", "Librarian", "Thinker", "Transcend" };
@@ -175,6 +250,23 @@ SmacStartupDesignState SmacStartupDesignState::NewWorld( const faction::SmacTech
 		auto owner = GenerateEmptyOwner( faction, technologies, units.catalog, difficulty );
 		MarkAndSelect( owner, units.catalog ); result.owners.push_back( std::move( owner ) );
 	}
+    if(units.catalog.workshop_name_labels) {
+        const auto& catalog=units.catalog;const auto components=RegistryComponents(catalog);SmacOriginalDesignPool pool{};
+        std::vector<SmacPredefinedDesign> rows;
+        for(size_t i=0;i<catalog.units.size();++i) {
+            const auto& r=catalog.source.units.at(i);const auto& d=catalog.units[i];
+            rows.push_back({r.name,int32_t(d.chassis_id),int32_t(d.weapon_id),int32_t(d.defense_id),int32_t(r.plan),r.cost,r.carry,RegistryPrerequisite(d.prerequisite),r.icon,d.abilities});
+        }LoadSmacPredefinedDesigns(pool,components,rows);
+        const auto& armor=catalog.defenses.defenses.at(1);const auto& infantry=catalog.chassis.chassis.at(0);
+        const SmacEarlyDesignNames names{armor.short_name,infantry.names[2].name,infantry.names[3].name,
+            catalog.workshop_name_labels->at(0),catalog.chassis.chassis.at(1).names[1].name,armor.rating};
+        for(auto& owner:result.owners) {
+            int32_t first=-1;
+            for(const auto& design:owner.designs) {ConstructSmacOpeningDesign(pool,owner.simulation_id,int32_t(design.chassis),int32_t(design.defense),difficulty,
+                NameSmacOpeningDesign(names,owner.simulation_id,int32_t(design.chassis),int32_t(design.defense)),first,true,{},&components);}
+            owner.starting_scout=MarkAndSelectSmacStartingScout(pool,owner.simulation_id);
+        }result.RetainNativeRegistry(pool,catalog);
+    }
 	result.Validate( units.catalog );
 	return result;
 }
@@ -183,6 +275,14 @@ void SmacStartupDesignState::Validate( const SmacPredefinedUnitCatalog& catalog 
 	RequireDifficulty( global_difficulty );
     for(const auto& history:retirement_history) {if(history) {history->Validate();}}
 	if ( owners.empty() || owners.size() > 7 ) { throw std::runtime_error( "SMAC custom design state requires 1..7 owners" ); }
+    if(native_registry) {
+        for(size_t i=0;i<64;++i) {if(!intrinsic_overrides[i]) {throw std::runtime_error("Retained registry requires every intrinsic flag/exclusion view");}}
+        auto projected=*this;projected.SynchronizeNativeRegistry();
+        if(projected.native_registry!=native_registry) {throw std::runtime_error("Typed design state differs from retained native registry");}
+        for(const auto& owner:owners) {for(const auto& row:owner.designs) {
+            if(!row.name || *row.name!=RecordName(native_registry->at(row.id))) {throw std::runtime_error("Retained registry design name is unavailable");}
+        }}
+    }
 	std::array< bool, 8 > seen{};
 	for ( const auto& owner : owners ) {
 		ValidateOwner( owner, catalog );
@@ -249,7 +349,13 @@ int32_t SmacStartupDesignState::RequestRiotPrototype(int32_t source,int32_t reci
         }
     }
     auto next=*this;auto owner=std::find_if(next.owners.begin(),next.owners.end(),[&](const auto& row){return row.simulation_id==recipient;});
-    owner->designs.push_back(allocated);next.Validate(catalog);owners.swap(next.owners);return allocated.id;
+    owner->designs.push_back(allocated);
+    if(next.native_registry) {
+        const auto components=RegistryComponents(catalog);
+        BuildSmacFissionDesign(*next.native_registry,size_t(allocated.id),components,int32_t(allocated.chassis),0,int32_t(allocated.defense),0,uint8_t(1u<<recipient));
+        allocated.auxiliary_flags=0xc0;owner->designs.back().auxiliary_flags=0xc0;
+    }
+    next.SynchronizeNativeRegistry();next.Validate(catalog);*this=std::move(next);return allocated.id;
 }
 
 const SmacDesignOwner* SmacStartupDesignState::Find( int32_t id ) const {
@@ -265,7 +371,7 @@ types::Buffer SmacStartupDesignState::Serialize( const SmacPredefinedUnitCatalog
     bool auxiliary=false;for(const auto& owner:owners) {for(const auto& design:owner.designs) {auxiliary=auxiliary || design.auxiliary_flags!=0;}}
     const bool history=std::any_of(retirement_history.begin(),retirement_history.end(),[](const auto& row){return row.has_value();});
     const bool overrides=std::any_of(intrinsic_overrides.begin(),intrinsic_overrides.end(),[](const auto& row){return row.has_value();});
-    const auto version=overrides ? VERSION:history ? 5:auxiliary ? 4:named ? 3:metadata ? 2:1;
+    const auto version=native_registry ? VERSION:overrides ? 6:history ? 5:auxiliary ? 4:named ? 3:metadata ? 2:1;
 	buffer.WriteInt( MAGIC ); buffer.WriteInt( version ); buffer.WriteInt( global_difficulty ); buffer.WriteInt( owners.size() );
 	for ( const auto& owner : owners ) {
 		buffer.WriteInt( owner.simulation_id ); buffer.WriteInt( owner.starting_scout ); buffer.WriteInt( owner.designs.size() );
@@ -293,6 +399,9 @@ types::Buffer SmacStartupDesignState::Serialize( const SmacPredefinedUnitCatalog
     if(version>=6) {for(const auto& row:intrinsic_overrides) {
         buffer.WriteBool(row.has_value());if(row) {buffer.WriteInt(row->flags);buffer.WriteInt(row->exclusion);}
     }}
+    if(version>=7) {
+        std::string bytes;bytes.reserve(512*52);for(const auto& row:*native_registry) {for(const auto byte:row) {bytes.push_back(static_cast<char>(byte));}}buffer.WriteString(bytes);
+    }
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC custom design state exceeds wire budget" ); }
 	return buffer;
 }
@@ -301,7 +410,7 @@ SmacStartupDesignState SmacStartupDesignState::Deserialize( const std::string& w
 	if ( wire.size() > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC custom design state exceeds wire budget" ); }
 	types::Buffer buffer( wire );
     if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC custom design state format");}
-    const auto version=buffer.ReadInt();if(version!=1 && version!=2 && version!=3 && version!=4 && version!=5 && version!=VERSION) {throw std::runtime_error("Unsupported SMAC custom design state format");}
+    const auto version=buffer.ReadInt();if(version!=1 && version!=2 && version!=3 && version!=4 && version!=5 && version!=6 && version!=VERSION) {throw std::runtime_error("Unsupported SMAC custom design state format");}
 	SmacStartupDesignState result;
 	result.global_difficulty = static_cast< int32_t >( ReadUnsigned( buffer, 5 ) );
 	const auto owners = ReadUnsigned( buffer, 7 );
@@ -342,6 +451,10 @@ SmacStartupDesignState SmacStartupDesignState::Deserialize( const std::string& w
         const auto flags=static_cast<uint16_t>(ReadUnsigned(buffer,65535));const auto exclusion=static_cast<uint8_t>(ReadUnsigned(buffer,255));
         row=SmacIntrinsicDesignState{flags,exclusion};
     }}}
+    if(version>=7) {
+        const auto bytes=buffer.ReadString(512*52);if(bytes.size()!=512*52) {throw std::runtime_error("Native registry requires all 512 records");}
+        result.native_registry.emplace();for(size_t i=0;i<bytes.size();++i) {(*result.native_registry)[i/52][i%52]=uint8_t(bytes[i]);}
+    }
 	if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC custom design trailing fields" ); }
 	result.Validate( catalog ); return result;
 }

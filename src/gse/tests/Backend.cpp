@@ -6848,6 +6848,7 @@ public:
 				tech.labs = -123 - static_cast< int32_t >( i ); tech.score = INT32_MAX; tech.future_count = 4;
 				tech.target = 88; tech.cached_threshold = INT32_MIN;
 			}
+            value.designs.SynchronizeNativeRegistry(); // fixture explicitly remaps design IDs and fields
 			if ( early ) { for ( auto& owner : value.social.factions ) { faction::SmacSocialState::ResetForStartup( owner ); } }
 			source.SetSnapshotTurn( early ? 0 : 37 ); source.m_state->m_slots->GetSlot( 6 ).GetPlayer()->CompleteTurn();
 			GT_OK();

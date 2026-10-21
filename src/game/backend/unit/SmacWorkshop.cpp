@@ -298,7 +298,7 @@ std::optional<SmacWorkshopCommit> ReuseSmacWorkshopDesign(SmacStartupDesignState
             && Available(Prerequisite(design.prerequisite),technologies,owner)) {
             if(int32_t(design.source_id)!=draft.selected_design && (design.faction_exclusion&(1u<<owner.admission.simulation_id))) {
                 auto next=state;auto overlay=state.IntrinsicState(source);overlay.flags|=8;overlay.exclusion&=uint8_t(~(1u<<owner.admission.simulation_id));
-                next.intrinsic_overrides.at(design.source_id)=overlay;next.Validate(catalog);state.intrinsic_overrides.swap(next.intrinsic_overrides);
+                next.intrinsic_overrides.at(design.source_id)=overlay;next.SynchronizeNativeRegistry();next.Validate(catalog);state=std::move(next);
             }
             return SmacWorkshopCommit{int32_t(design.source_id),!draft.name.empty() && draft.name!=catalog.source.units.at(design.source_id).name};
         }
@@ -316,7 +316,7 @@ std::optional<SmacWorkshopCommit> ReuseSmacWorkshopDesign(SmacStartupDesignState
         }
         if(selected_named && !draft.name.empty()) {design.name=draft.name;design.explicitly_named=true;}
     }}
-    next.Validate(catalog);state.owners.swap(next.owners);return SmacWorkshopCommit{id,false};
+    next.SynchronizeNativeRegistry();next.Validate(catalog);state=std::move(next);return SmacWorkshopCommit{id,false};
 }
 
 SmacWorkshopCommit CommitSmacWorkshopFirstDesign(SmacStartupDesignState& state,const SmacWorkshopDraft& draft,
@@ -338,13 +338,14 @@ SmacWorkshopCommit CommitSmacWorkshopFirstDesign(SmacStartupDesignState& state,c
     require(SmacWorkshopComponent::Armor,draft.armor);require(SmacWorkshopComponent::Reactor,draft.reactor);
     if(const auto reused=ReuseSmacWorkshopDesign(state,draft,catalog,technologies,owner)) {return *reused;}
     if(draft.selected_design!=2 || !bank->designs.empty() || draft.armor!=1) {throw std::runtime_error("Workshop occupied-bank allocation requires its replacement policy");}
-    SmacOriginalDesignPool pool{};
-    for(const auto& builtin:catalog.units) {
+    SmacOriginalDesignPool pool=state.native_registry.value_or(SmacOriginalDesignPool{});
+    if(!state.native_registry) {for(const auto& builtin:catalog.units) {
         auto& row=pool.at(builtin.source_id);const auto& name=catalog.source.units.at(builtin.source_id).name;
         std::copy_n(name.begin(),std::min<size_t>(31,name.size()),row.begin());row[36]=uint8_t(builtin.chassis_id);row[37]=uint8_t(builtin.weapon_id);row[38]=uint8_t(builtin.defense_id);
         const auto intrinsic=state.IntrinsicState(builtin);row[39]=builtin.reactor;row[44]=intrinsic.exclusion;row[48]=uint8_t(intrinsic.flags);row[49]=uint8_t(intrinsic.flags>>8);
         for(unsigned i=0;i<4;++i) {row[32+i]=uint8_t(builtin.abilities>>(8*i));}const auto prerequisite=uint16_t(Prerequisite(builtin.prerequisite));
         row[50]=uint8_t(prerequisite);row[51]=uint8_t(prerequisite>>8);
+    }
     }
     const faction::SmacDesignCounts zero{};
     const auto allocation=ChooseSmacWorkshopSlot(pool,draft,zero,zero,technologies,owner);
@@ -361,7 +362,8 @@ SmacWorkshopCommit CommitSmacWorkshopFirstDesign(SmacStartupDesignState& state,c
     design.name=draft.name.empty()?automatic:draft.name;design.explicitly_named=*design.name!=automatic;
     auto next=state;
     for(auto& target:next.owners) {if(target.simulation_id==owner.admission.simulation_id) {target.designs.push_back(design);}}
-    next.Validate(catalog);state.owners.swap(next.owners);
+    if(next.native_registry) {next.native_registry=std::move(pool);}
+    next.SynchronizeNativeRegistry();next.Validate(catalog);state=std::move(next);
     return {design.id,false};
 }
 }

@@ -130,7 +130,7 @@ Base::SmacProductionResult Base::CompleteSmacRiotDefection(GSE_CALLABLE,SmacProd
         if(!active) {return;}
         m_game->CommitBaseTerritoryTopology(previous_topology);
         simulation.economy.at(old_owner).production_reference_counts.swap(query_references);
-        simulation.retained_base_totals.swap(query_totals);simulation.victory_history.swap(query_victory);simulation.designs.owners.swap(query_designs.owners);
+        simulation.retained_base_totals.swap(query_totals);simulation.victory_history.swap(query_victory);std::swap(simulation.designs,query_designs);
         m_resource_context.swap(query_context);m_facilities.swap(query_facilities);m_production.swap(query_production);
         for(auto& change:other_facilities) {change.first->m_facilities.swap(change.second);}
         m_owner=old_slot;m_faction=old_faction;
@@ -140,7 +140,7 @@ Base::SmacProductionResult Base::CompleteSmacRiotDefection(GSE_CALLABLE,SmacProd
         simulation.economy.at(old_owner).production_reference_counts.swap(query_references);
         m_resource_context.swap(query_context);m_facilities.swap(query_facilities);m_production.swap(query_production);
         for(auto& change:other_facilities) {change.first->m_facilities.swap(change.second);}
-        simulation.retained_base_totals.swap(query_totals);simulation.victory_history.swap(query_victory);simulation.designs.owners.swap(query_designs.owners);
+        simulation.retained_base_totals.swap(query_totals);simulation.victory_history.swap(query_victory);std::swap(simulation.designs,query_designs);
         transfer.emplace(um->PrepareDefectionUnitsForQuery(recipient,changes,attempt.created,&removal));
         transfer->Query([&] {
             auto view=m_game->GetMap()->GetSmacWorkerKnowledge()->CopyData();const auto bit=uint8_t(1u<<new_owner);
@@ -171,7 +171,7 @@ Base::SmacProductionResult Base::CompleteSmacRiotDefection(GSE_CALLABLE,SmacProd
     // Restore the old authority before preparing its authenticated transition.
     m_game->CommitBaseTerritoryTopology(previous_topology);
     simulation.economy.at(old_owner).production_reference_counts.swap(query_references);
-    simulation.retained_base_totals.swap(query_totals);simulation.victory_history.swap(query_victory);simulation.designs.owners.swap(query_designs.owners);
+    simulation.retained_base_totals.swap(query_totals);simulation.victory_history.swap(query_victory);std::swap(simulation.designs,query_designs);
     for(auto& change:other_facilities) {change.first->m_facilities.swap(change.second);}
     m_resource_context.swap(query_context);m_facilities.swap(query_facilities);m_production.swap(query_production);m_owner=old_slot;m_faction=old_faction;active=false;
     auto facility_changes=attempt.facility_changes;
@@ -185,7 +185,7 @@ Base::SmacProductionResult Base::CompleteSmacRiotDefection(GSE_CALLABLE,SmacProd
     removal.Commit();transfer->Commit();accounting->Commit();worker.Commit();m_smac_upkeep_cache.swap(cache);
     simulation.economy.at(old_owner).production_reference_counts.swap(references);
     simulation.retained_base_totals.swap(totals);simulation.victory_history.swap(victory);simulation.battle_plan_target.swap(targets);
-    simulation.designs.owners.swap(designs.owners);
+    std::swap(simulation.designs,designs);
     simulation.gameplay_random=attempt.random;m_game->CommitBaseTerritory(knowledge,topology);worker.Finish();
     result.removed_units=std::move(all_removed);result.final_calculation=m_smac_upkeep_cache->calculation;result.retained_energy.reset();result.ownership_changed=true;
     m_game->Message(m_name+": joins "+m_faction->m_name+" after drone riots.");

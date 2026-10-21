@@ -485,3 +485,36 @@ Scout/Synthmetal slice; broader selection/commit controls, ability decorations,
 nonzero animation and complete screen matching remain unfinished. Special
 Probability armor card translucency remains with the existing dedicated card
 renderer rather than this phase-zero composition entry.
+
+
+### Retained full design registry
+
+New worlds with installed naming labels now retain all 512 native records,
+including inactive slots and global/nonparticipating banks. Initialization calls
+the verified installed loader and opening constructors, then their native
+mark/select pass. Typed custom designs and intrinsic flag/exclusion views are
+checked against retained storage. Legacy port frames without raw authority stay
+absent; no restore invents a zero-filled replacement.
+
+The selective V7 design codec stores every 52-byte record. Unchanged name tails,
+category byte43, claim/marker bytes45/46, opaque byte47 and signed prerequisite
+bytes50/51 survive typed edits. Explicit synchronization patches modeled fields
+before validation/publication. Workshop allocation uses the retained pool;
+Workshop reactivation, bounded riot construction and Base defection publish the
+whole design authority rather than swapping only owner vectors.
+
+Whole-pool output hashes match 28 original marked startup controls: seven stock
+owner/faction slots at four difficulties, including real automatic names. Tests
+cover exact inactive/global bytes, name tails, opaque fields, atomic invalid
+imports, stale mirror rejection, framing failures and maximum448 custom slots
+plus the complete registry/history within the existing wire budget. Live command,
+riot and serialized-restore regressions pass. There are 127 distinct relevant
+native groups passing across the initial and focused fixture runs; 28 focused
+groups pass ASan/UBSan with eleven production and six test files instrumented.
+Targeted correctness analysis is clean for nine production files/consumers.
+
+This establishes record authority for occupied-slot editing; it does not yet
+implement its retirement prompts/queue surgery or full component controls.
+The [animation controller](behavior/design-workshop-animation-controller.md)
+also now has 24 native controls for the next animation integration. Nonzero-frame
+pixel matching remains separate from the already-exact static compositions.

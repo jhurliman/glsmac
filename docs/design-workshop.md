@@ -628,3 +628,23 @@ and save/restore are separate live fixtures. Its preview is not a full-bank
 interactive save or native whole-screen pixel comparison. Other component
 pickers, normal-open/browse/reselect, PSI text formatting, general production
 admission and full Workshop screen parity remain required.
+
+
+### PSI armor display text
+
+The live shielding picker, side-card Level line and central stats now use `Psi`
+for negative armor strength; the side card reads `Level Psi` without a colon.
+This follows the [original text controls](behavior/design-workshop-strength-text.md)
+for -128,-2,-1,0 and12 on all three armor surfaces. Positive strengths remain
+ordinary decimal and are not multiplied by reactor power. These strings share
+the current editor's installed-English presentation boundary; general localized
+UI label loading remains future work rather than being claimed by this change.
+
+Validation: the actual Workshop GSE script checks all five signed-byte controls,
+UI label data for the PSI picker card, and `Level Psi` / `1-Psi-1` after
+selection. All six affected UI scripts pass. C++ source is unchanged from the
+shielding slice, so its successful build/analysis/sanitizer evidence is reused.
+Weapon/noncombat formatting and original full-screen glyph/layout matching
+remain open. The completed interactive-editing and normal-open handoffs are
+retained for the next selection/component implementation; their references do
+not themselves implement the live UI.

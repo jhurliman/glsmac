@@ -1249,3 +1249,30 @@ controls are not introduced into ordinary play. The conditional AUTO OFF
 caption does not establish a reachable distinct ordinary action; no new effect
 is inferred from its label. Main preview animation, recommendations and
 remaining complete-screen presentation are still outstanding.
+
+
+### Explicit nonzero model frames
+
+The decoded Workshop renderer now accepts an explicit shared phase. Infantry
+and Probe bodies, ordinary Infantry shielding and the Copter rotor use phase
+modulo15. Speeder wheels and structural Infantry shielding pass the raw phase
+to the asset frame selector, which retains its own frame count. Weapon and
+reactor stages retain frame0. A visible Copter body increments the shared
+counter after copying its rotor; a chassis-card paint and following main paint
+therefore advance it separately. Hidden hierarchy inputs preserve the counter.
+Selected frame bounds are recomputed before centering and projection; decoded
+assets are reused. Rejected paints preserve the caller's phase.
+
+Four complete color/depth frames match the new original-game
+[nonzero receipts](behavior/design-workshop-nonzero-animation.md), covering two
+consecutive yaw values and Copter entry phases14/15. The existing phase-zero
+Workshop/strip/component checks remain green. Fifteen affected production
+translation units pass targeted correctness analysis. Six production rendering
+files and the renderer tests pass focused ASan/UBSan.
+
+This is the model-composition layer. The live Workshop still paints its main
+model at yaw0 without a timer; original cached-unit branch admission, shared
+phase ownership and the coalesced40ms controller must be wired together before
+claiming live animation. No elapsed-clock or unconditional Scout rotation is
+introduced by this layer. Negative signed phases remain outside the admitted
+raster domain; the original overflow producer alone does not prove safe pixels.

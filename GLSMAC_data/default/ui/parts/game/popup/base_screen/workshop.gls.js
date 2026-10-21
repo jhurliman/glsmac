@@ -39,12 +39,29 @@ return {
         this.picker = p.ui.root.window({zindex: 0.95, align: 'top left', left: 216, top: 168, width: 623, height: 387, background: 'rgb(0,0,0)', blocker: 'rgba(0, 0, 0, 180)'});
         this.picker_canvas = this.picker.surface({left: 0, top: 0, width: 623, height: 387});
         this.picker.hide(); this.cards = [];
+        this.confirming = false;
+        this.overwrite_window = p.ui.root.window({class: 'game-popup', zindex: 0.98, width: 440, height: 188, blocker: 'rgba(0, 0, 0, 180)'});
+        this.overwrite_window.text({class: 'game-popup-text', top: 12, left: 12, text: 'Operations Director'});
+        this.overwrite_body = this.overwrite_window.panel({top: 40, left: 12, right: 12, height: 96, overflow: 'hidden'}); this.overwrite_lines = [];
+        this.overwrite_window.button({class: 'game-popup-button', align: 'bottom left', left: 12, width: 200, bottom: 12, height: 28, text: 'Never mind.'}).on('click', () => { this.answer_overwrite(false); return true; });
+        this.overwrite_window.button({class: 'game-popup-button', align: 'bottom right', right: 12, width: 200, bottom: 12, height: 28, text: 'Proceed with redesign.'}).on('click', () => { this.answer_overwrite(true); return true; });
+        this.overwrite_window.on('keydown', (e) => { if (e.modifiers == {} && (e.code == 'ESCAPE' || e.code == 'ENTER')) { this.answer_overwrite(false); } return true; });
+        this.overwrite_window.hide();
         this.picker.on('keydown', (e) => { if (e.modifiers == {} && e.code == 'ESCAPE') { this.picker.hide(); } return true; });
         this.window.listen(p.game, 'smac_workshop_commit', (e) => {
             if (!this.active || !this.pending || e.base.id != this.base.id || e.request_id != this.pending_id) { return; }
             this.pending = false; this.selection = e.selection; this.update_armor();
             if (e.stale) { this.message.text = 'Game state changed. Please check your design.'; return; }
             if (e.failed) { this.message.text = 'This design cannot be saved.'; return; }
+            if (#is_defined(e.confirmation) && e.confirmation) {
+                this.confirming = true; this.confirm_done = this.pending_done; this.confirm_expected = e.selection.expected_state;
+                this.render_overwrite(e.overwrite_name, e.overwrite_count);
+                this.overwrite_window.show(); return;
+            }
+            if (#is_defined(e.declined) && e.declined) {
+                if (#is_defined(e.restore_draft) && e.restore_draft) { this.selected_design = e.design_id; this.selected_armor = e.restored_armor; this.draft_name = e.restored_name; this.update_armor(); }
+                this.message.text = ''; return;
+            }
             this.selected_design = e.design_id;
             if (e.intrinsic_name_warning) { this.draft_name = ''; this.message.text = 'The original unit name is retained.'; }
             else { this.message.text = ''; }
@@ -57,7 +74,7 @@ return {
         return this.window;
     },
     open: (base, data) => {
-        this.base = base; this.selection = data; this.active = true; this.pending = false; this.selected_armor = 0; this.selected_design = 2;
+        this.base = base; this.selection = data; this.active = true; this.pending = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.overwrite_window.hide();
         this.chassis.text = #uppercase(data.chassis); this.weapon.text = #uppercase(data.weapon); this.reactor.text = #uppercase(data.reactor);
         this.chassis_stat.text = 'Land ' + #to_string(data.speed); this.weapon_stat.text = 'Weapon ' + #to_string(data.offense); this.reactor_stat.text = 'Power ' + #to_string(data.power);
         this.title.text = #uppercase(data.scout_name); this.draft_name = ''; this.message.text = ''; this.update_armor(); this.window.show();
@@ -71,7 +88,7 @@ return {
             this.stats.text = #to_string(this.selection.offense) + '-' + #to_string(row.rating) + '-' + #to_string(this.selection.speed); } }
     },
     open_picker: () => {
-        if (!this.active || this.pending) { return; }
+        if (!this.active || this.pending || this.confirming) { return; }
         for (card of this.cards) { card.remove(); } this.cards = [];
         this.picker_canvas.smacworkshoparmorpicker(this.selected_armor, this.selection.armor);
         let i = 0;
@@ -97,12 +114,37 @@ return {
         this.picker.show();
     },
     submit: (done) => {
+        if (!this.active || this.pending || this.confirming) { return; }
+        this.submit_choice(done, (0 - 1));
+    },
+    render_overwrite: (name, count) => {
+        for (line of this.overwrite_lines) { line.remove(); } this.overwrite_lines = [];
+        const text = 'We have no empty design slots. If we create this design, all units of our old "' + name + '" type (' + #to_string(count) + ' units) will be disbanded.';
+        const body = this.overwrite_body;
+        const probe = body.text({class: 'game-popup-text', left: 0, top: 0, font: 'arial.ttf:14:mono', text: ''});
+        let lines = []; let line = '';
+        for (word of #split(text, ' ')) {
+            const candidate = line == '' ? word : line + ' ' + word; probe.text = candidate;
+            if (line != '' && probe.measure().width > 410) { lines :+ line; line = word; }
+            else { line = candidate; }
+        }
+        lines :+ line; probe.remove(); let top = 0;
+        for (text of lines) { this.overwrite_lines :+ body.text({class: 'game-popup-text', left: 0, top: top, font: 'arial.ttf:14:mono', text: text}); top += 18; }
+    },
+    answer_overwrite: (accept) => {
+        if (!this.active || this.pending || !this.confirming) { return; }
+        this.confirming = false; this.overwrite_window.hide(); this.submit_choice(this.confirm_done, accept ? 1 : 0);
+    },
+    submit_choice: (done, choice) => {
         if (!this.active || this.pending) { return; }
+        this.pending_done = done;
         this.pending = true; this.next_request = this.next_request + 1; this.pending_id = this.next_request;
         const request = this.pending_id;
-        const base = this.base; const expected = this.selection.expected_state;
+        const base = this.base; const expected = choice < 0 ? this.selection.expected_state : this.confirm_expected;
         const armor = this.selected_armor; const name = this.draft_name; const selected = this.selected_design;
-        this.p.game.event('commit_smac_workshop', {base: base, selected_design: selected, expected_state: expected, armor: armor, name: name, done: done, request_id: request});
+        let fields = {base: base, selected_design: selected, expected_state: expected, armor: armor, name: name, done: done, request_id: request};
+        if (choice >= 0) { fields = fields + {overwrite: choice}; }
+        this.p.game.event('commit_smac_workshop', fields);
     },
-    hide_view: () => { this.active = false; this.pending = false; this.base = null; this.picker.hide(); this.window.hide(); },
+    hide_view: () => { this.active = false; this.pending = false; this.base = null; this.confirming = false; this.overwrite_window.hide(); this.picker.hide(); this.window.hide(); },
 };

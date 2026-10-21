@@ -7,6 +7,8 @@
 #include "game/backend/Player.h"
 #include "game/backend/slot/Slot.h"
 #include "game/backend/unit/Def.h"
+#include "game/backend/unit/Unit.h"
+#include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/SmacWorkshop.h"
 #include "game/backend/State.h"
 #include "game/backend/faction/Faction.h"
@@ -29,7 +31,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
             if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop command");}
             return at->second->Deref();
         };
-        if(args.size()!=7) {THROW("Workshop command requires Base, selected design, expected state, armor, name, Done flag and UI request");}
+        if(args.size()!=7 && args.size()!=8) {THROW("Workshop command requires its draft/fence and optional overwrite answer");}
         const auto* object=static_cast<const gse::value::Object*>(field("base",gse::VT_OBJECT));
         if(object->object_class!=base::Base::WRAP_CLASS) {THROW("Workshop requires an actual Base");}
         auto* base=base::Base::Unwrap(args.at("base"));
@@ -38,6 +40,8 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         const auto selected=static_cast<const gse::value::Int*>(field("selected_design",gse::VT_INT))->value;
         const auto& supplied=static_cast<const gse::value::String*>(field("name",gse::VT_STRING))->value;
         const auto done=static_cast<const gse::value::Bool*>(field("done",gse::VT_BOOL))->value;
+        const auto overwrite=args.size()==8 ? static_cast<const gse::value::Int*>(field("overwrite",gse::VT_INT))->value:-1;
+        if(overwrite< -1 || overwrite>1 || (args.size()==8 && overwrite<0)) {THROW("Invalid Workshop overwrite answer");}
         // Client correlation only: ownership and the complete saved-state fence
         // below authorize the edit. Old acknowledgements must not close a new UI.
         const auto request=static_cast<const gse::value::Int*>(field("request_id",gse::VT_INT))->value;
@@ -52,7 +56,10 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
             if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Workshop requires its owning accumulation");}
         }
         const bool stale=base->SmacWorkshopState()!=expected;
-        bool warning=false,failed=false;int32_t design_id=2;
+        bool warning=false,failed=false,confirmation=false,declined=false;int32_t design_id=2,overwrite_count=0;std::string overwrite_name;
+        std::optional<unit::UnitManager::PreparedConventionalRemoval> removal;
+        std::vector<std::pair<base::Base*,std::optional<base::ProductionState>>> queues;
+        std::optional<decltype(GetBM()->m_base_updates)> base_updates;
         if(!stale) {
             auto next=m_simulation->value.designs;
             unit::SmacWorkshopDraft draft;draft.selected_design=static_cast<int32_t>(selected);draft.armor=uint32_t(armor);draft.name=supplied;
@@ -74,23 +81,80 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
                         if((!economy.design_counts || !economy.production_reference_counts) && !independent) {throw std::runtime_error("Workshop allocation requires retained unit and production counts");}
                         const faction::SmacDesignCounts zero{};
                         auto prepared=unit::PrepareSmacWorkshopCommit(next,draft,catalog,*settings.GetSmacTechnologyRules(),*owner,
-                            economy.design_counts.value_or(zero),economy.production_reference_counts.value_or(zero));
-                        if(!prepared.success || prepared.retirement) {throw std::runtime_error("Workshop overwrite requires its live confirmation transaction");}
-                        result=prepared.result;next=std::move(prepared.state);
+                            economy.design_counts.value_or(zero),economy.production_reference_counts.value_or(zero),overwrite==1);
+                        result=prepared.result;
+                        if(prepared.confirmation && !prepared.success) {
+                            confirmation=overwrite<0;declined=overwrite==0;
+                            const auto& old=next.native_registry->at(result.design_id);
+                            overwrite_name=std::string(old.begin(),std::find(old.begin(),old.begin()+32,uint8_t(0)));
+                            overwrite_count=economy.design_counts->at(result.design_id);
+                        } else if(!prepared.success) {throw std::runtime_error("Workshop allocation failed");}
+                        if(apply && prepared.retirement) {
+                            const auto retired=*prepared.retirement;auto* manager=GetUM();std::vector<size_t> ids;
+                            base_updates=GetBM()->m_base_updates;
+                            // 595ac0 removes raw-design matches in descending physical order.
+                            const auto& order=manager->GetUnitRecordOrder();
+                            for(auto it=order.rbegin();it!=order.rend();++it) {
+                                const auto* actor=manager->GetUnit(*it);
+                                if(!actor || (!actor->IsConventional() && !actor->IsNative())) {throw std::runtime_error("Workshop retirement requires canonical Unit identities");}
+                                const auto design=actor->IsConventional() ? actor->Conventional().design_id:actor->Native().design;
+                                if(design==retired) {
+                                    ids.push_back(*it);
+                                    if(actor->IsConventional() && actor->Conventional().home_base_id) {
+                                        auto* home=GetBM()->GetBase(*actor->Conventional().home_base_id);
+                                        if(!home) {throw std::runtime_error("Retiring Unit has no registered home");}
+                                        base::BaseManager::QueueBaseUpdateInto(*base_updates,home,base::BaseManager::BUO_REFRESH);
+                                    }
+                                }
+                            }
+                            // No Base-owner filter, no queue promotion, and no cache recount.
+                            for(const auto& entry:GetBM()->GetBases()) {
+                                auto* affected=entry.second;if(!affected->m_production) {continue;}
+                                auto production=affected->m_production;
+                                const auto matches=[&](const base::ProductionItem& item) {
+                                    if(item.kind!=base::ProductionItemKind::Unit) {return false;}
+                                    if(!item.smac_source_id) {throw std::runtime_error("Workshop retirement requires canonical queue identities");}
+                                    return *item.smac_source_id==retired;
+                                };
+                                if(matches(production->current_item)) {production->current_item=MakeSmacProductionItem(affected->m_owner,base::ProductionItemKind::Stockpile,38);}
+                                if(production->queue) {auto& pending=*production->queue;pending.erase(std::remove_if(pending.begin(),pending.end(),matches),pending.end());}
+                                production->Validate();
+                                if(!(*production==*affected->m_production)) {
+                                    queues.emplace_back(affected,std::move(production));
+                                    base::BaseManager::QueueBaseUpdateInto(*base_updates,affected,base::BaseManager::BUO_REFRESH);
+                                }
+                            }
+                            removal.emplace(manager->PrepareWorldUnitRemoval(GSE_CALL,ids));
+                        }
+                        next=std::move(prepared.state);
                     }
                 } else {result=unit::CommitSmacWorkshopFirstDesign(next,draft,settings.GetSmacPredefinedUnitRules()->catalog,*settings.GetSmacTechnologyRules(),*owner);}
                 warning=result.intrinsic_name_warning;design_id=result.design_id;
             } catch(const std::invalid_argument&) {failed=true;}
             catch(const std::runtime_error&) {failed=true;}
-            if(apply && !failed) {
+            if(apply && !failed && !confirmation && !declined) {
+                static_assert(std::is_nothrow_swappable_v<unit::SmacStartupDesignState> && std::is_nothrow_swappable_v<std::optional<base::ProductionState>>);
+                if(removal) {removal->Commit();}
+                for(auto& change:queues) {change.first->m_production.swap(change.second);}
+                if(base_updates) {GetBM()->m_base_updates.swap(*base_updates);}
                 std::swap(m_simulation->value.designs,next);
             }
         }
         if(apply) {
-            GetState()->TriggerObject(this,"smac_workshop_commit",ARGS_F(this,base,done,stale,warning,design_id,failed,request) {
+            if(removal && !failed) {removal->Notify(GSE_CALL);}
+            int32_t restored_armor=0;std::string restored_name;
+            if(!failed && !stale && declined && !done && m_simulation->value.designs.native_registry) {
+                const auto& row=m_simulation->value.designs.native_registry->at(design_id);restored_armor=row[38];
+                if(row[48]&2) {restored_name=std::string(row.begin(),std::find(row.begin(),row.begin()+32,uint8_t(0)));}
+            }
+            GetState()->TriggerObject(this,"smac_workshop_commit",ARGS_F(this,base,done,stale,warning,design_id,failed,request,confirmation,declined,overwrite_count,overwrite_name,restored_armor,restored_name) {
                 {"base",base->Wrap(GSE_CALL)}, {"selection",base->CopySmacWorkshop(GSE_CALL)},
-                {"done",VALUE(gse::value::Bool,,done && !stale && !failed)}, {"stale",VALUE(gse::value::Bool,,stale)},
+                {"done",VALUE(gse::value::Bool,,done && !stale && !failed && !confirmation && !declined)}, {"stale",VALUE(gse::value::Bool,,stale)},
                 {"failed",VALUE(gse::value::Bool,,failed)},
+                {"confirmation",VALUE(gse::value::Bool,,confirmation)}, {"declined",VALUE(gse::value::Bool,,declined)},
+                {"overwrite_name",VALUE(gse::value::String,,overwrite_name)}, {"overwrite_count",VALUE(gse::value::Int,,overwrite_count)},
+                {"restore_draft",VALUE(gse::value::Bool,,declined && !done && !stale && !failed)},
+                {"restored_armor",VALUE(gse::value::Int,,restored_armor)}, {"restored_name",VALUE(gse::value::String,,restored_name)},
                 {"request_id",VALUE(gse::value::Int,,request)},
                 {"intrinsic_name_warning",VALUE(gse::value::Bool,,warning)}, {"design_id",VALUE(gse::value::Int,,design_id)}
             };});

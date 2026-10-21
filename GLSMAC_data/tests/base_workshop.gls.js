@@ -4,7 +4,7 @@ const node = (data) => {
     data.hidden = false; data.handlers = {}; data.children = [];
     data.hide = () => { data.hidden = true; }; data.show = () => { data.hidden = false; }; data.remove = () => {};
     data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; };
-    data.measure = () => { return {width: 100}; };
+    data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
     data.smacworkshopcomponents = (armor) => { data.components_armor = armor; };
     data.smacworkshopdesign = (chassis, weapon, armor, reactor, kind, faction, yaw) => { data.preview_armor = armor; data.preview_yaw = yaw; data.preview_faction = faction; };
     data.on = (event, cb) => { data.handlers[event] = cb; };
@@ -58,3 +58,30 @@ test.assert(windows[0].handlers.keydown({modifiers: {shift: true}, code: 'ENTER'
 test.assert(windows[0].handlers.keydown({modifiers: {}, code: 'ENTER'}) == true && dialog.pending && #sizeof(commands) == before_keys + 1 && commands[before_keys].data.done);
 listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 127, stale: false, failed: false, intrinsic_name_warning: false, done: true});
 test.assert(!dialog.active && windows[0].hidden);
+
+// Overwrite answers are explicit, fenced, single-use and keep the original Done/Apply intent.
+dialog.open(base, selection); dialog.selected_design = 64; dialog.selected_armor = 1; dialog.submit(true);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: false, confirmation: true, overwrite_name: 'Old Guard', overwrite_count: 3});
+test.assert(dialog.active && dialog.confirming && !dialog.pending && !windows[2].hidden);
+test.assert(#sizeof(dialog.overwrite_lines) >= 3 && #sizeof(dialog.overwrite_lines) <= 5);
+for (line of dialog.overwrite_lines) { test.assert(line.measure().width <= 410); }
+const before_modal = #sizeof(commands); dialog.submit(false); dialog.open_picker(); test.assert(#sizeof(commands) == before_modal && windows[1].hidden);
+test.assert(windows[2].handlers.keydown({modifiers: {}, code: 'ENTER'}) == true && dialog.pending && !dialog.confirming && windows[2].hidden);
+test.assert(commands[before_modal].data.overwrite == 0 && commands[before_modal].data.done && commands[before_modal].data.expected_state == 'before');
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: false, declined: true, restore_draft: false, done: false});
+test.assert(dialog.active && !dialog.pending && dialog.selected_armor == 1);
+dialog.submit(false);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: false, confirmation: true, overwrite_name: 'Old Guard', overwrite_count: 3});
+dialog.answer_overwrite(false);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: false, declined: true, restore_draft: true, restored_armor: 0, restored_name: '', done: false});
+test.assert(dialog.active && dialog.selected_armor == 0 && dialog.selected_design == 64);
+dialog.selected_armor = 1; dialog.submit(true);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: false, confirmation: true, overwrite_name: 'Old Guard', overwrite_count: 3});
+const before_accept = #sizeof(commands); dialog.answer_overwrite(true); dialog.answer_overwrite(true);
+test.assert(#sizeof(commands) == before_accept + 1 && commands[before_accept].data.overwrite == 1 && commands[before_accept].data.done);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: false, intrinsic_name_warning: false, done: true});
+test.assert(!dialog.active && windows[2].hidden);
+dialog.open(base, selection); dialog.submit(false);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: false, confirmation: true, overwrite_name: 'Old Guard', overwrite_count: 3});
+listeners.turn_status({status: 'please_wait'}); const after_close = #sizeof(commands); dialog.answer_overwrite(true);
+test.assert(!dialog.active && windows[2].hidden && #sizeof(commands) == after_close);

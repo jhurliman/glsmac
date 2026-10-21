@@ -216,7 +216,7 @@ void UnitManager::ValidateConventionalCreation( size_t id, const Def* def, const
 	const bool colony = context.chassis == Ground::Infantry && context.presentation == Profile::ColonyMarker
 		&& presentation->m_render->m_type == Render::RT_PORT_COLONY_MARKER
 		&& dynamic_cast< const ColonyMarkerRender* >( presentation->m_render );
-	if ( context.reactor != 1 || presentation->m_movement_type != MT_LAND || ( !scout && !rover && !former && !colony ) ) {
+	if ( presentation->m_movement_type != MT_LAND || ( !scout && !rover && !former && !colony ) ) {
 		THROW( "Conventional design has no compatible explicit presentation" );
 	}
 }

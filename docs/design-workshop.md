@@ -1134,3 +1134,31 @@ intrinsic sources/quotes, owner exclusion and retained ability/reactor changes.
 The cached Linux build and affected native groups pass; targeted correctness
 analysis of the changed production translation unit is clean. These checks do
 not establish live conversion, affordability or complete Workshop parity.
+
+The queued `upgrade_smac_workshop` transaction is now connected to the actual
+local human Base caller and suspended Colony Screen dispatch. It quotes from
+saved counts, supports target enumeration/selection, decline, affordability and
+zero-charge bypass, and stages Unit states, owned queues, refreshes, target
+reselection and treasury before publication. Existing Unit transfer publication
+owns the wrapping count deltas; production-reference caches and history are
+preserved. The current ordinary no-project campaign capability explicitly owns
+Nano Factory absence; missing project authority is not treated as false.
+
+Thirteen actual-world scenarios cover custom/intrinsic sources, cached-zero and
+stale-three counts, no own Units, prototype surcharge, High Morale gain/loss,
+multiple targets, insufficient funds, late-animation failure, duplicate queues,
+foreign records and all four reactor health limits. Every scenario saves and
+restores the resulting world. The prior live identity binding was Scout-only;
+it now resolves retained positive Projectile/Energy ground combat weapons,
+positive armor and reactor1..4 plus the passive High Morale bit. A foreign Unit
+can still resolve its globally indexed inactive source after another owner
+upgrades it. This does not remove the separate narrow tactical combat, Speeder
+provenance, native/PSI, other ability or component-rendering restrictions.
+
+Validation:46 affected native groups pass, including conventional/factory and
+startup rejection consumers; four focused groups pass ASan/UBSan with19
+production and two test translation units instrumented. Targeted correctness
+analysis is clean for seven production/consumer translation units. No new save
+format is introduced. This branch still needs the original Upgrade dialogs,
+full prompt formatting, native/other component bindings and visual validation
+before claiming the complete user-facing action.

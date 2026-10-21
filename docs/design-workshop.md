@@ -687,3 +687,37 @@ design browsing. Normal opening passes argument1 and still needs the general
 recommendation controller. The full component/UI projection, browser strip,
 Rename, compatibility refresh and full-screen pixel acceptance remain open.
 No new rendering or native-platform matrix was needed for this state transition.
+
+
+### Native ordered browse data reaches the live query
+
+The owned Base Workshop projection now exposes the original5bdb60 ordered raw
+IDs and active/excluded/flag/stored-name metadata. Included active designs come
+first; all64 own slots remain represented, with inactive records ordered by ID
+before obsolete designs. Excluded own records with a nonzero retained Unit
+count precede excluded own records with zero; excluded intrinsics come last.
+Intrinsics require activity, effective prerequisite admission and nonnegative
+weapon power. Custom records do not gain a new component-technology filter,
+and foreign banks never participate.
+
+The query reads retained counts rather than recounting live Units. Missing
+counts stay undefined. If an excluded active own record needs missing count
+authority, the browse projection itself is undefined; independent included/New
+order can still be returned without inventing a row of zeros. Inactive stored
+names are not exposed as a New caption or editable draft. Raw IDs/flags survive,
+and no selection bookkeeping or prototype allocation runs in this read path.
+
+Validation:31 selected native groups pass. The added policy fixture covers all
+five ordering classes, unsigned count255, disabled/PSI intrinsic admission,
+unknown custom technologies, missing authority and foreign-bank exclusion.
+The live query fixture checks deliberately stale cached count7, inactive flag82
+with poisoned stored text, exact read-only world state and absent count handling.
+Twenty-eight relevant groups pass focused ASan/UBSan with nine production and
+three test files instrumented. Targeted analysis is clean for four production
+files/consumers. The unchanged UI script evidence from the preceding reselect
+slice is reused; no rendering or platform matrix was repeated.
+
+This supplies the ordered data for the browser; its visible strip, scrolling,
+card hit/selection routing, full draft projection and normal-open controller
+are still required. The prior41 original browse-list controls are reference
+evidence, not claimed as41 new C++ whole-list replays by this change.

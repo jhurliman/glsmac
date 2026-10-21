@@ -23,6 +23,27 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop browse keeps native raw IDs and retained-count ordering",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);if(!file) {throw std::runtime_error("Missing owned Workshop browse rules");}
+        const std::string source{std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>()};const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;auto owner=Owner();owner.owned.fill(false);
+        auto pool=workshop_general_fixture::BasePool();pool[64]=pool[2];pool[66]=pool[2];pool[67]=pool[2];pool[128]=pool[2];
+        pool[66][38]=1;pool[66][44]=2;pool[67][44]=2;pool[68][44]=2;pool[2][44]=2;
+        auto state=Empty();state.RetainNativeRegistry(pool,catalog);const auto before=state;
+        std::optional<faction::SmacDesignCounts> counts=faction::SmacDesignCounts{};counts->at(66)=1;
+        std::vector<int32_t> expected{0,64};for(int id=65;id<128;++id) {if(id!=66 && id!=67) {expected.push_back(id);}}expected.insert(expected.end(),{66,67,2});
+        GT_ASSERT(unit::BrowseSmacWorkshopDesigns(state,catalog,tech,owner,counts)==expected && state==before,"Browse changed inactive/excluded/intrinsic order, consulted custom technology or mutated registry");
+        counts->at(66)=0;counts->at(67)=255;expected[expected.size()-3]=67;expected[expected.size()-2]=66;
+        GT_ASSERT(unit::BrowseSmacWorkshopDesigns(state,catalog,tech,owner,counts)==expected,"Unsigned retained count did not determine excluded-own priority");
+        GT_ASSERT(Rejects([&]{unit::BrowseSmacWorkshopDesigns(state,catalog,tech,owner,std::nullopt);}) && state==before,"Missing count authority was silently recounted or fabricated");
+        pool[66][44]=0;pool[67][44]=0;state.RetainNativeRegistry(pool,catalog);
+        const auto independent=unit::BrowseSmacWorkshopDesigns(state,catalog,tech,owner,std::nullopt);
+        GT_ASSERT(independent[0]==0 && independent[1]==64 && independent[2]==66 && independent[3]==67 && independent.back()==2
+            && std::find(independent.begin(),independent.end(),128)==independent.end(),"Included custom rows depended on cache/technology or admitted a foreign bank");
+        owner.owned.fill(true);const auto all=unit::BrowseSmacWorkshopDesigns(state,catalog,tech,owner,std::nullopt);
+        for(int id:{8,9,10}) {GT_ASSERT(std::find(all.begin(),all.end(),id)==all.end(),"PSI intrinsic entered conventional browse list");}GT_OK();
+    });
     task->AddTest("SMAC Workshop active and New reselection preserves the original draft and raw-record rules",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         const auto read=[&](const char* name) {std::ifstream file(std::string(assets)+"/"+name,std::ios::binary);if(!file) {throw std::runtime_error("Missing owned Workshop selection rules");}return std::string(std::istreambuf_iterator<char>(file),{});};

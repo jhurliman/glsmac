@@ -1540,6 +1540,33 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         return restored.Run([&](GSE_CALLABLE)->std::string {restored.Restore(GSE_CALL,saved,true);
             const auto snapshot=restored.Snapshot();GT_ASSERT(ResearchSnapshot(restored.Game(),snapshot)==ResearchSnapshot(restored.Game(),saved),"Saved shielding designs changed on whole-world restore");GT_OK();});
     });
+    task->AddTest("SMAC live Workshop browse projection preserves cache authority and inactive metadata boundaries",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"MORGANITES");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;std::string stored;
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;pool[64][44]|=2;
+                stored=std::string(pool[64].begin(),std::find(pool[64].begin(),pool[64].begin()+32,uint8_t(0)));
+                const std::string stale="Do not display New storage";std::copy(stale.begin(),stale.end(),pool[65].begin());pool[65][stale.size()]=0;pool[65][48]=0x82;
+                state.designs.RetainNativeRegistry(pool,catalog);state.economy.at(1).design_counts=faction::SmacDesignCounts{};state.economy.at(1).design_counts->at(64)=7;});
+            const auto before=fixture.Snapshot();auto* menu=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL));auto* rows=static_cast<value::Array*>(menu->Get("designs"));
+            int scout_index=-1,new_index=-1,obsolete_index=-1;bool metadata=false;
+            for(size_t i=0;i<rows->value.size();++i) {auto* row=static_cast<value::Object*>(rows->value[i]);const auto id=static_cast<value::Int*>(row->Get("id"))->value;
+                if(id==2) {scout_index=int(i);}if(id==65) {new_index=int(i);GT_ASSERT(!static_cast<value::Bool*>(row->Get("active"))->value
+                    && static_cast<value::String*>(row->Get("stored_name"))->value.empty() && static_cast<value::Int*>(row->Get("flags"))->value==0x82,"Inactive raw name leaked as a New caption or flags were normalized");}
+                if(id==64) {obsolete_index=int(i);metadata=static_cast<value::Bool*>(row->Get("active"))->value && static_cast<value::Bool*>(row->Get("excluded"))->value
+                    && static_cast<value::String*>(row->Get("stored_name"))->value==stored && static_cast<value::Int*>(row->Get("unit_count"))->value==7;}
+            }
+            GT_ASSERT(scout_index>=0 && new_index>scout_index && obsolete_index>new_index && metadata && fixture.Snapshot()==before,"Live browse misordered rows, recounted stale counts or mutated world state");
+            fixture.ResourceState([](auto& state){state.economy.at(1).design_counts.reset();});const auto missing=fixture.Snapshot();
+            menu=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL));GT_ASSERT(menu->Get("designs")->type==VT_UNDEFINED && fixture.Snapshot()==missing,"Unknown count authority produced a fabricated excluded-own order");
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;pool[64][44]&=uint8_t(~2u);state.designs.RetainNativeRegistry(pool,catalog);});
+            menu=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL));rows=static_cast<value::Array*>(menu->Get("designs"));bool absent=false;
+            for(auto* value:rows->value) {auto* row=static_cast<value::Object*>(value);if(static_cast<value::Int*>(row->Get("id"))->value==64) {absent=row->Get("unit_count")->type==VT_UNDEFINED;}}
+            GT_ASSERT(absent,"Count-independent browse replaced an absent cache with zero");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Workshop failed Apply reselects saved and New drafts while failed Done preserves them",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {

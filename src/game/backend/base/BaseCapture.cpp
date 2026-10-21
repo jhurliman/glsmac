@@ -112,6 +112,11 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 		|| defender_economy.credits<0 || simulation.economy.at(new_owner).credits<0) {THROW("Capture needs the defender's saved population summary and ordinary treasuries");}
 	auto data=std::make_unique<PreparedSmacCapture::Data>(simulation.gameplay_random,simulation.hostility,simulation.economy.at(new_owner),defender_economy);
 	data->raze=raze;
+	if(!raze && data->defender_economy.production_reference_counts) {
+		const auto targets=SmacProductionReferenceTargets(captured->GetProductionState());
+		if(targets) {data->defender_economy.production_reference_counts=faction::ChangeSmacProductionReferences(*data->defender_economy.production_reference_counts,*targets,{});}
+		else {data->defender_economy.production_reference_counts.reset();}
+	}
 	data->totals=faction::AdjustSmacBaseTotal(simulation.retained_base_totals,old_owner,-1);
 	if(!raze) {data->totals=faction::AdjustSmacBaseTotal(data->totals,new_owner,1);}
 	data->victory=simulation.victory_history;
@@ -422,6 +427,9 @@ void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 	for(const auto& entry:data.units) {entry.first->CommitConventionalMove(entry.second,entry.first==data.actor ? data.base->GetTile() : entry.first->GetTile());}
 	data.source->units.swap(source);data.base->GetTile()->units.swap(destination);
 	um->CommitPlacementHistory(placement);
+	// Surviving capture detaches the old queue without crediting the recipient.
+	// Publish before a possible faction reinitialization, whose clear wins.
+	m_game->m_simulation->value.economy.at(data.old_owner).production_reference_counts=data.defender_economy.production_reference_counts;
 	if(data.faction_units) {data.faction_units->Commit();}else{um->m_unit_updates.swap(updates);}
 	m_game->CommitBaseTerritory(data.knowledge,data.topology);
     um->CommitUnitDisclosures(data.disclosed_to_humans);
@@ -429,6 +437,8 @@ void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 	simulation.hostility.owners.swap(data.history.owners);simulation.gameplay_random=data.random;
 	data.actor_economy.design_counts=simulation.economy.at(data.new_owner).design_counts;
 	data.defender_economy.design_counts=simulation.economy.at(data.old_owner).design_counts;
+	data.actor_economy.production_reference_counts=simulation.economy.at(data.new_owner).production_reference_counts;
+	data.defender_economy.production_reference_counts=simulation.economy.at(data.old_owner).production_reference_counts;
 	simulation.economy.at(data.new_owner)=data.actor_economy;simulation.economy.at(data.old_owner)=data.defender_economy;
 	simulation.victory_history=data.victory;
 	simulation.retained_base_totals=data.totals;

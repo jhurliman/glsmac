@@ -282,11 +282,18 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
 	std::optional<std::vector<bool>> coastal_sea;
 	std::optional<faction::SmacEconomyState::RegionalBaseCounts> counts;
 	if(topology) {counts=faction::SmacEconomyState::RegionalBaseCounts{};}
+    std::optional<faction::SmacDesignCounts> production_references{faction::SmacDesignCounts{}};
 	std::set<size_t> base_records;
 	for(const auto id:m_bm->GetBaseRecordOrder()) {
 		const auto* base=m_bm->GetBase(id);
 		if(!base || base->m_id!=id || !base_records.insert(id).second) {throw std::runtime_error("Population refresh found an invalid Base record");}
 		if(base->GetSmacResourceContext().owner_simulation_id==owner) {
+            if(production_references) {
+                const auto targets=game::backend::base::SmacProductionReferenceTargets(base->GetProductionState());
+                if(targets) {*production_references=faction::ChangeSmacProductionReferences(*production_references,{},*targets);}
+                else {production_references.reset();}
+            }
+
 			if(base->GetPopulation()>static_cast<uint64_t>(INT32_MAX-population)) {throw std::overflow_error("Population aggregate exceeds signed32");}
 			population+=static_cast<int64_t>(base->GetPopulation());
 			if(++base_total>INT32_MAX) {throw std::overflow_error("Base total exceeds signed32");}
@@ -353,13 +360,14 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
     // every peer's retained row. Prepare it before publishing any summary.
     capability_candidate.regional_military=std::move(military);
     auto& economy=capability_candidate.economy.at(owner);
-    economy.design_counts=design_counts;economy.population_aggregate=static_cast<int32_t>(population);economy.regional_base_counts=counts;
+    economy.production_reference_counts=production_references;economy.design_counts=design_counts;economy.population_aggregate=static_cast<int32_t>(population);economy.regional_base_counts=counts;
     if(capability_candidate.retained_base_totals) {capability_candidate.retained_base_totals->at(owner)=static_cast<int32_t>(base_total);}
     const auto regional=PrepareCanonicalRegionalStrategy(owner,capability_candidate);
     if(regional) {capability_candidate.regional_strategy->at(owner)=*regional;}
     m_simulation->value.capabilities.swap(capability_candidate.capabilities);
     m_simulation->value.regional_military.swap(capability_candidate.regional_military);
     m_simulation->value.regional_strategy.swap(capability_candidate.regional_strategy);
+    m_simulation->value.economy.at(owner).production_reference_counts=economy.production_reference_counts;
     m_simulation->value.economy.at(owner).design_counts=economy.design_counts;
     m_simulation->value.economy.at(owner).population_aggregate=economy.population_aggregate;
     m_simulation->value.economy.at(owner).regional_base_counts=economy.regional_base_counts;

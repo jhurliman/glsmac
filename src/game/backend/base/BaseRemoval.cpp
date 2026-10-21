@@ -137,6 +137,7 @@ void BaseManager::CommitSmacFactionDisposition(SmacDispositionPlan& plan) noexce
     static_assert(std::is_nothrow_copy_assignable_v<faction::SmacEconomyState> && std::is_nothrow_copy_assignable_v<SmacGameplayRandomState>);
     if(state.retained_base_totals) {state.retained_base_totals->at(owner)=0;} // no-Base disposition, before nonzero initialization
     plan.economy.design_counts=state.economy.at(owner).design_counts;
+    plan.economy.production_reference_counts=state.economy.at(owner).production_reference_counts;
     state.economy.at(owner)=plan.economy;state.technology.factions[plan.technology].cached_threshold.reset();
     if(state.capabilities) {state.capabilities->factions[owner-1]={};}
 	if(state.victory_history && plan.initialization_history_turn) {

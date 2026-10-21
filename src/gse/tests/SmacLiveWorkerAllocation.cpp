@@ -854,6 +854,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 base->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{screen ? 5u:255u,{{},0}},Roles());
                 fixture.ResourceState([&](auto& state){std::array<int32_t,7> scores{};scores[old_owner-1]=10;scores[recipient-1]=1;
                     state.rank_order=faction::SmacRankOrder::Update(scores,6);
+                    state.economy.at(old_owner).production_reference_counts=faction::SmacDesignCounts{};
+                    state.economy.at(recipient).production_reference_counts=faction::SmacDesignCounts{};state.economy.at(recipient).production_reference_counts->fill(41);
                     if(inactive) {for(auto& row:state.roster) {if(row.simulation_id==recipient) {row.active=false;}}if(scenario==6) {state.human_membership&=~(1u<<recipient);}state.retained_base_totals->at(recipient)=0;state.economy.at(recipient).credits=217;state.economy.at(recipient).pending_debit=11;state.economy.at(recipient).research_fraction=37;}
                     state.battle_plan_target[0]=701;state.battle_plan_target[1]=701;state.battle_plan_target[2]=702;state.battle_plan_target[3]=701;
                     for(size_t i=0;i<2;++i) {state.technology.factions[i].target=5;state.technology.factions[i].cached_threshold=100000;}
@@ -872,6 +874,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     GT_ASSERT(pending->type==VT_OBJECT && base->GetSmacResourceContext().owner_simulation_id==recipient
                         && static_cast<value::Bool*>(static_cast<value::Object*>(pending)->Get("read_only"))->value,
                         "Accepted Colony Screen did not retain the transferred stable Base as read-only");
+                    bool exact_references=false;fixture.ResourceState([&](const auto& state){auto old=faction::SmacDesignCounts{};old[0]=255;auto next=faction::SmacDesignCounts{};next.fill(41);
+                        exact_references=state.economy.at(old_owner).production_reference_counts==std::optional<faction::SmacDesignCounts>(old)
+                            && state.economy.at(recipient).production_reference_counts==std::optional<faction::SmacDesignCounts>(next);});
+                    GT_ASSERT(exact_references,"riot transfer attached recipient queue or lost old-owner wrapping debit before summary");
                     if(inactive) {auto* calculation=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_resource_calculation"));
                         GT_ASSERT(static_cast<value::Bool*>(calculation->Get("retained_only"))->value,"Inactive Screen did not distinguish its retained resource display");}
                     bool research_untouched=false;fixture.ResourceState([&](auto& state){research_untouched=state.technology.factions[old_owner-1].labs==labs;});
@@ -1345,6 +1351,15 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,expected)},
                 {"armor",VALUE(value::Int,,1)},{"selected_design",VALUE(value::Int,,2)},{"name",VALUE(value::String,,"Test Guard")},{"done",VALUE(value::Bool,,false)},
                 {"request_id",VALUE(value::Int,,1)}};
+            for(const bool production_cache:{false,true}) {
+                std::optional<faction::SmacDesignCounts> original;
+                fixture.ResourceState([&](auto& state){auto& row=state.economy.at(1);auto& cache=production_cache ? row.production_reference_counts:row.design_counts;
+                    original=cache;if(!cache) {cache=faction::SmacDesignCounts{};}++cache->at(127);});
+                GT_ASSERT(base->SmacWorkshopState()!=expected,"Workshop fence omitted retained usage counts");
+                const auto stale=fixture.Snapshot();game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+                GT_ASSERT(fixture.Snapshot()==stale,"obsolete count prompt allocated a design");
+                fixture.ResourceState([&](auto& state){auto& row=state.economy.at(1);(production_cache ? row.production_reference_counts:row.design_counts)=original;});
+            }
             game->Event(GSE_CALL,"commit_smac_workshop",args);
             GT_ASSERT(fixture.Snapshot()==before,"Workshop bypassed the event queue");fixture.DrainEvents();
             bool retained=false;fixture.ResourceState([&](auto& state){const auto& row=state.designs.Find(1)->designs.at(0);
@@ -2409,6 +2424,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 fixture.ResourceState([&](auto& state) {
                     state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;
                     state.economy.at(1).credits=100;state.economy.at(2).credits=paid ? 1200 : 200;
+                    state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts->fill(17);
+                    state.economy.at(2).production_reference_counts=faction::SmacDesignCounts{};state.economy.at(2).production_reference_counts->fill(0);
                     state.economy.at(1).population_aggregate=raze ? 1:111;state.economy.at(2).population_aggregate=static_cast<int32_t>(population+1);
 					state.victory_history->last_base_expansion_or_advice_turn[1]=raze ? 2:777;state.victory_history->last_base_expansion_or_advice_turn[2]=raze ? 2:888;
                     state.retained_base_totals->at(1)=raze ? 1:10;state.retained_base_totals->at(2)=raze ? 2:20;
@@ -2484,6 +2501,12 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     bm->Off(GSE_CALL,"base_despawn",handler);
                     GT_ASSERT(rejected && notified,"raze did not exercise the postcommit notification boundary");
                 } else {fixture.MoveEvent(GSE_CALL,actor,target->GetTile());}
+                bool reference_counts=false;fixture.ResourceState([&](const auto& state){
+                    auto expected=faction::SmacDesignCounts{};if(!raze) {expected[1]=254;}
+                    auto recipient=faction::SmacDesignCounts{};recipient.fill(17);
+                    reference_counts=state.economy.at(2).production_reference_counts==std::optional<faction::SmacDesignCounts>(expected)
+                        && state.economy.at(1).production_reference_counts==std::optional<faction::SmacDesignCounts>(recipient);
+                });GT_ASSERT(reference_counts,"capture/raze moved reference credits to recipient or repaired stale bytes");
                 if(raze) {
                     GT_ASSERT(!bm->GetBase(702) && game->GetMap()->GetTile(20,16)->base==nullptr && !static_cast<value::Object*>(base_wrapper)->wrapobj
                         && retained->type==VT_UNDEFINED && um->GetUnit(91)==actor && actor->GetTile()==game->GetMap()->GetTile(20,16)
@@ -4664,12 +4687,16 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});base->SetAccumulatedNutrients(20);
 			fixture.ResourceState([](auto& state){state.economy.at(1).population_aggregate=111;state.economy.at(2).population_aggregate=777;
 				state.economy.at(1).regional_base_counts->fill(77);state.economy.at(2).regional_base_counts->fill(88);
+                state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts->fill(199);
+                state.economy.at(2).production_reference_counts=faction::SmacDesignCounts{};state.economy.at(2).production_reference_counts->fill(201);
 				auto& tech=state.technology.factions[0];tech.target=5;tech.cached_threshold=10000;});
 			const auto resolver=[&](int32_t){return game->GetUM()->GetUnitDef("live-scout");};
 			base->ProcessSmacUpkeep(GSE_CALL,roles,resolver,SmacMoraleMode::Mode0);
 			GT_ASSERT(base->m_pops.size()==2 && game->GetCanonicalEconomy(base->m_owner).population_aggregate==111,"Base growth prematurely refreshed owner population");
 			fixture.RefreshPopulation(1);
 			GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).population_aggregate==2,"post-Base owner refresh omitted growth");
+            auto expected_references=faction::SmacDesignCounts{};expected_references[2]=1;
+            GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).production_reference_counts==std::optional<faction::SmacDesignCounts>(expected_references),"owner summary did not clear and recount queue");
 			const auto& counts=game->GetCanonicalEconomy(base->m_owner).regional_base_counts;
 			GT_ASSERT(counts && counts->at(1)==1 && counts->at(63)==0 && counts->at(127)==0,"owner summary did not clear and rebuild regional counts");
 			base->ProcessSmacUpkeep(GSE_CALL,roles,resolver,SmacMoraleMode::Mode0);
@@ -4684,6 +4711,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);
 			GT_ASSERT(base && base->m_pops.size()==1 && game->GetCanonicalEconomy(base->m_owner).population_aggregate==2,"Start derived aggregate from current Base populations");
 			GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).regional_base_counts->at(1)==1,"Start lost the owned regional summary");
+            auto expected_references=faction::SmacDesignCounts{};expected_references[2]=1;
+            GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).production_reference_counts==std::optional<faction::SmacDesignCounts>(expected_references),"Start recounted retained production row");
+            bool reference_canary=false;restored.ResourceState([&](const auto& state){reference_canary=state.economy.at(2).production_reference_counts->at(511)==201;});
+            GT_ASSERT(reference_canary,"Start lost foreign stale production cache");
 			bool untouched=false;restored.ResourceState([&](auto& state){untouched=state.economy.at(2).population_aggregate==777;});GT_ASSERT(untouched,"Start reset foreign population history");
 			game->Event(GSE_CALL,"complete_turn",{});restored.DrainEvents();
 			GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).population_aggregate==static_cast<int32_t>(base->m_pops.size()),"actual turn controller omitted post-Base population refresh");GT_OK();
@@ -5088,10 +5119,14 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));fixture.Updates();
                 const auto first=Unit::GetNextId();const auto pair=fixture.GameplayRandom();const auto random=game->GetRandom()->GetStateString();
                 auto* wrapper=static_cast<value::Object*>(base->Wrap(GSE_CALL));
+                fixture.ResourceState([](auto& state){state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts->fill(199);});
                 if(accept) {bm->AbandonSmacBase(GSE_CALL,*base,um->GetUnitDef("choice-colony"),SmacMoraleMode::Mode0);}
                 else {const auto result=base->ProcessSmacUpkeep(GSE_CALL,Roles(),[&](int32_t){return um->GetUnitDef("choice-scout");},SmacMoraleMode::Mode0);
                     GT_ASSERT(result.removed_base && !result.completed_unit,"starvation manufactured before faction disposition");}
                 const bool restarted=scenario<2;const size_t count=restarted ? scenario==1 ? 7 : 4 : 0;
+                auto expected_references=faction::SmacDesignCounts{};expected_references.fill(restarted ? 0:199);
+                bool exact_references=false;fixture.ResourceState([&](const auto& state){exact_references=state.economy.at(1).production_reference_counts==std::optional<faction::SmacDesignCounts>(expected_references);});
+                GT_ASSERT(exact_references,"deletion debited references or restart failed to clear the full row");
                 GT_ASSERT(bm->GetBases().empty() && !wrapper->wrapobj && !um->GetUnit(91) && um->GetUnits().size()==count,
                     "last Base or old roster survived disposition, or replacement count differs: bases="+std::to_string(bm->GetBases().size())
                     +" units="+std::to_string(um->GetUnits().size())+" expected="+std::to_string(count)+" CRT="+std::to_string(fixture.GameplayRandom().Crt()));
@@ -5578,7 +5613,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 			const auto resolver = [ & ]( int32_t id ) { return um->GetUnitDef( id == 1 ? "live-former" : "live-scout" ); };
 			const auto pair = fixture.GameplayRandom(); const auto jsf = game->GetRandom()->GetStateString(); auto* pop = &base->m_pops.at( 19 );
 			base->SetProductionState( GSE_CALL, ProductionState{ scout, game->GetSmacProductionCost( base->m_owner, scout ) - 3, scout, 71, std::vector< ProductionItem >{ former } } );
-			const auto first = base->ProcessSmacProduction( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+			fixture.ResourceState([](auto& state){state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};});
+            const auto first = base->ProcessSmacProduction( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
+            GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).production_reference_counts->at(2)==255
+                && game->GetCanonicalEconomy(base->m_owner).production_reference_counts->at(1)==0,"queue advance credited already-counted promotion or clamped blind debit");
 			GT_ASSERT( first.completed_unit && first.queue_advanced && first.first_calculation.minerals.surplus == 3, "actual first pass did not repair and complete at equality" );
 			auto* newborn = um->GetUnit( *first.completed_unit );
 			GT_ASSERT( newborn->Conventional().design_id == 2 && newborn->Conventional().home_base_id == base->m_id && newborn->GetTile() == base->GetTile()
@@ -5590,6 +5628,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 				auto state = *base->GetProductionState(); state.minerals = game->GetSmacProductionCost( base->m_owner, state.current_item ) - 3; base->SetProductionState( GSE_CALL, state );
 				const auto made = base->ProcessSmacProduction( GSE_CALL, Roles(), resolver, SmacMoraleMode::Mode0 );
 				GT_ASSERT( made.completed_unit && um->GetUnit( *made.completed_unit )->Conventional().design_id == 1, "empty queue did not repeat Former" );
+                GT_ASSERT(game->GetCanonicalEconomy(base->m_owner).production_reference_counts->at(1)==0
+                    && game->GetCanonicalEconomy(base->m_owner).production_reference_counts->at(2)==255,"repeating current target changed references");
 			}
 			const auto second = base->PrepareSmacResourceCalculation( SmacBaseResourcePhase::Upkeep );
 			GT_ASSERT( second.minerals.demand == 1 && second.minerals.surplus == 2 && base->GetProductionState()->minerals == 0, "third home support or read-only second pass differs" );

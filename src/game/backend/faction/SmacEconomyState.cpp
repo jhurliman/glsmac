@@ -6,7 +6,7 @@
 namespace game::backend::faction {
 namespace {
 constexpr int64_t MAGIC = 0x534d4543; // SMEC
-constexpr int64_t VERSION = 4;
+constexpr int64_t VERSION = 5;
 int32_t ReadInteger( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
 	if ( value < INT32_MIN || value > INT32_MAX ) { throw std::runtime_error( "SMAC economy integer outside signed32" ); }
@@ -18,9 +18,25 @@ int32_t Checked( int64_t value ) {
 }
 }
 
+SmacDesignCounts ChangeSmacProductionReferences(const SmacDesignCounts& initial,
+    const std::vector<int32_t>& removed,const std::vector<int32_t>& added) {
+    for(const auto* targets:{&removed,&added}) {for(const auto id:*targets) {if(id>=512) {throw std::invalid_argument("Production reference exceeds raw design range");}}}
+    auto counts=initial;for(const auto id:removed) {if(id>=0) {--counts.at(id);}}for(const auto id:added) {if(id>=0) {++counts.at(id);}}return counts;
+}
+SmacDesignCounts RecountSmacProductionReferences(int32_t owner,const std::vector<SmacProductionReferenceQueue>& bases) {
+    if(owner<0 || owner>7) {throw std::invalid_argument("Production recount owner exceeds faction range");}
+    SmacDesignCounts counts{};
+    for(const auto& base:bases) {
+        if(base.owner!=owner || base.pending_count<0) {continue;}
+        const auto used=uint64_t(base.pending_count)+1;
+        if(used>base.targets.size()) {throw std::invalid_argument("Production queue omits declared targets");}
+        for(size_t i=0;i<used;++i) {const auto id=base.targets[i];if(id>=512) {throw std::invalid_argument("Production reference exceeds raw design range");}if(id>=0) {++counts.at(id);}}
+    }return counts;
+}
+
 SmacEconomyState SmacEconomyState::NewWorld( base::SmacEnergyRates rates, int32_t credits, int32_t fraction ) {
 	SmacEconomyState result{ rates, credits, 0, fraction, 0 };
-	result.design_counts=SmacDesignCounts{};result.regional_base_counts=RegionalBaseCounts{};result.Validate();return result;
+	result.production_reference_counts=SmacDesignCounts{};result.design_counts=SmacDesignCounts{};result.regional_base_counts=RegionalBaseCounts{};result.Validate();return result;
 }
 
 void SmacEconomyState::Validate() const {
@@ -31,12 +47,12 @@ void SmacEconomyState::Validate() const {
 bool SmacEconomyState::operator==( const SmacEconomyState& other ) const {
 	return rates.psych == other.rates.psych && rates.labs == other.rates.labs && credits == other.credits
 		&& pending_debit == other.pending_debit && research_fraction == other.research_fraction && treaty_partners == other.treaty_partners
-		&& population_aggregate == other.population_aggregate && regional_base_counts == other.regional_base_counts && design_counts == other.design_counts;
+		&& population_aggregate == other.population_aggregate && regional_base_counts == other.regional_base_counts && design_counts == other.design_counts && production_reference_counts == other.production_reference_counts;
 }
 
 types::Buffer SmacEconomyState::Serialize() const {
 	Validate(); types::Buffer buffer;
-	buffer.WriteInt( MAGIC ); buffer.WriteInt( VERSION ); buffer.WriteInt( rates.psych ); buffer.WriteInt( rates.labs );
+	buffer.WriteInt( MAGIC ); buffer.WriteInt( production_reference_counts ? VERSION:4 ); buffer.WriteInt( rates.psych ); buffer.WriteInt( rates.labs );
 	buffer.WriteInt( credits ); buffer.WriteInt( pending_debit );
 	buffer.WriteInt( research_fraction ); buffer.WriteInt( treaty_partners );
 	buffer.WriteBool(population_aggregate.has_value());if(population_aggregate) {buffer.WriteInt(*population_aggregate);}
@@ -50,6 +66,9 @@ types::Buffer SmacEconomyState::Serialize() const {
         std::string counts;counts.reserve(512);for(const auto count:*design_counts) {counts.push_back(static_cast<char>(count));}
         buffer.WriteString(counts);
     }
+    if(production_reference_counts) {
+        buffer.WriteBool(true);std::string counts;counts.reserve(512);for(const auto count:*production_reference_counts) {counts.push_back(static_cast<char>(count));}buffer.WriteString(counts);
+    }
 	return buffer;
 }
 
@@ -58,7 +77,7 @@ SmacEconomyState SmacEconomyState::Deserialize( const std::string& wire ) {
 	try {
 		types::Buffer buffer( wire );
 		if ( buffer.ReadInt() != MAGIC ) { throw std::runtime_error( "Unsupported SMAC economy format" ); }
-		const auto version=buffer.ReadInt();if(version!=VERSION && version!=3 && version!=2 && version!=1) {throw std::runtime_error("Unsupported SMAC economy format");}
+		const auto version=buffer.ReadInt();if(version!=VERSION && version!=4 && version!=3 && version!=2 && version!=1) {throw std::runtime_error("Unsupported SMAC economy format");}
 		const auto psych = ReadInteger( buffer ), labs = ReadInteger( buffer ), credits = ReadInteger( buffer ), debit = ReadInteger( buffer );
 		const auto fraction = ReadInteger( buffer ), treaties = ReadInteger( buffer );
 		if ( treaties < 0 || treaties > UINT8_MAX ) { throw std::runtime_error( "SMAC treaty bits outside unsigned byte" ); }
@@ -74,6 +93,11 @@ SmacEconomyState SmacEconomyState::Deserialize( const std::string& wire ) {
             const auto counts=buffer.ReadString(512);if(counts.size()!=512) {throw std::runtime_error("SMAC design counts require 512 bytes");}
             result.design_counts=SmacDesignCounts{};
             for(size_t i=0;i<512;++i) {(*result.design_counts)[i]=static_cast<uint8_t>(counts[i]);}
+        }
+        if(version>=5) {
+            if(!buffer.ReadBool()) {throw std::runtime_error("V5 production cache must be present");}
+            const auto counts=buffer.ReadString(512);if(counts.size()!=512) {throw std::runtime_error("Production references require 512 bytes");}
+            result.production_reference_counts=SmacDesignCounts{};for(size_t i=0;i<512;++i) {(*result.production_reference_counts)[i]=static_cast<uint8_t>(counts[i]);}
         }
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC economy fields" ); }
 		result.Validate(); return result;

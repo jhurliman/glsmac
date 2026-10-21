@@ -334,3 +334,33 @@ UI scripts pass. Targeted analysis of the selector and both production consumers
 is clean; the 28 groups pass with the changed builder and test consumer under
 focused ASan/UBSan. These checks establish allocation decisions, not completed
 live retirement or occupied-bank UI behavior.
+
+## Retained production-reference counts
+
+The separate 512-byte owner production-reference cache is now saved with
+economy state. New factions start with zero bytes. Normal owner summaries
+rebuild current and pending references, including duplicates; queue edits and
+advancement apply wrapping byte deltas between summaries. Workshop open and
+Apply do not recount it. Older economy V4 frames retain absent cache authority
+and their existing wire encoding; V5 carries the new row, including stale values.
+
+The [Base lifecycle contract](behavior/production-reference-base-lifecycle.md)
+is connected too: surviving capture and riot transfer debit the old queue
+without crediting the recipient; razing and ordinary deletion retain stale
+bytes; actual faction reinitialization clears the row. Founding remains a direct
+uncounted initial assignment. Joined worker publications compose queue deltas
+instead of replacing another Base's changes. Workshop command fences now include
+both active-unit and production-reference cache presence and bytes.
+
+Validation: all 13 independent native summary/manual controls match, including
+duplicate entries, negative queue length, unused tail, foreign owners and byte
+wraparound. The compact fixture projects negative-length manual loops as no
+effective entries; the summary controls independently exercise that length guard.
+The 158 relevant native groups pass across the original run and focused fixture
+reruns, as do six affected UI scripts. Changed production translation units pass
+targeted correctness analysis. Focused ASan/UBSan covers all changed production
+files and the economy, live gameplay and simulation test consumers.
+
+This supplies retained inputs for occupied-slot allocation. General occupied-bank
+publication, retirement/history handling and the broader component editor remain
+unfinished; the live editor still admits its existing Scout/Synthmetal slice.

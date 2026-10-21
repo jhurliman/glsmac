@@ -1,4 +1,5 @@
 #pragma once
+#include "game/backend/faction/SmacDesignCounts.h"
 
 #include <vector>
 #include <string>
@@ -92,6 +93,7 @@ public:
 	gse::Value* CopySmacWorkshop( GSE_CALLABLE ) const;
 	std::string SmacWorkshopState() const;
 	void SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production );
+
 	bool HasSmacResourceContext() const;
 	SmacBaseResourceContext GetSmacResourceContext() const;
 	// Explicit state replacement; cannot adopt a legacy Base or change ownership.
@@ -175,6 +177,8 @@ public:
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 private:
+    std::optional<faction::SmacDesignCounts>* SmacProductionReferencesTarget() const noexcept;
+    std::optional<faction::SmacDesignCounts> PrepareSmacProductionReferences(const std::optional<ProductionState>& replacement) const;
 	friend class backend::Game;
 	friend class unit::UnitManager;
 	struct ProductionChoice { int32_t source_id; std::string name; int32_t cost; int64_t minerals; bool confirmation; };

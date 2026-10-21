@@ -1099,8 +1099,8 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT(result.code==0 && result.written==native::Point({{c[offset],c[offset+1]}}),"Original equal-q terrain pick differs");
             }
         }
-        game::native_terrain::World small(16,12);for(auto& tile:small.tiles) {tile.band=3;}
-        native::ViewGeometry geometry(small);const auto view=native::Layout(8,6,0,true,{{16,12}});
+        game::native_terrain::World compact_world(16,12);for(auto& tile:compact_world.tiles) {tile.band=3;}
+        native::ViewGeometry geometry(compact_world);const auto view=native::Layout(8,6,0,true,{{16,12}});
         const auto left=geometry.Pick(view,0,25,{{0,255}});
         GT_ASSERT(left.code==1 && !left.written,"Early centered-viewport miss overwrote native outputs");
         const auto right=geometry.Pick(view,0,25,{{1023,255}});
@@ -1170,7 +1170,7 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         context.active=0;GT_ASSERT(!session.Prepare(world,context),"Inactive view prepared terrain");
         context.active=1;world.tiles[0].band=5;
         GT_ASSERT(!session.Prepare(world,context),"Changed geometry reused old session");
-        bool rejected=false;try {World small(16,12);native::Session unsupported(small);}
+        bool rejected=false;try {World compact_world(16,12);native::Session unsupported(compact_world);}
         catch(const std::invalid_argument&) {rejected=true;}
         GT_ASSERT(rejected,"Unsupported world reached fixed-size session storage");
         GT_OK();

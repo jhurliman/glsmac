@@ -747,7 +747,7 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         const auto design=loader::txt::TXTLoader::ReadUniqueSection(source,"DESIGNLABELS");
         const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
         if(design.size()!=16 || labels.size()<=918) {throw std::invalid_argument("Incomplete Workshop parent text source");}
-        std::array<std::string,24> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];
+        std::array<std::string,25> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];text[24]=labels[757];
         // LABELS includes its count at index0; offsets are four-byte entries.
         const std::array<size_t,7> status_indices{916,914,918,917,782,783,915};
         for(size_t i=0;i<status_indices.size();++i) {text[17+i]=labels[status_indices[i]];}
@@ -768,6 +768,7 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         {"minimum",VALUE(gse::value::String,,m_workshop_parent_text->at(16))},
         {"status_title",VALUE(gse::value::String,,m_workshop_parent_text->at(17))},
         {"status_labels",VALUE(gse::value::Array,,status)}, {"slot",VALUE(gse::value::String,,m_workshop_parent_text->at(23))},
+        {"obsolete",VALUE(gse::value::String,,m_workshop_parent_text->at(24))},
         {"weapon",picker->Get("weapon")}, {"equipment",picker->Get("equipment")}, {"psi",picker->Get("psi")}
     });
 }

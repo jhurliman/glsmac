@@ -7,7 +7,7 @@ const node = (data) => {
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
     data.smacworkshopparenttext = () => { let colors = []; let index = 0; while (index < 256) { colors :+ ('color' + #to_string(index)); index++; }
         return {labels: ['Vehicle Design','Moves:','Type:','Power:','Prototype Cost:','Cost:','Data','Presets','W:','A:','C:','R:','SP1:','SP2:','E:','P:'],
-            minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', status_title: 'Design Workshop', slot: 'Slot',
+            minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', obsolete: 'Obsolete', status_title: 'Design Workshop', slot: 'Slot',
             status_labels: ['Examining Basic Unit','New Design Based On Old','Examining Previous Design','Designing New Unit','Modifying Previous Design']}; };
     data.smacworkshopconsolebacking = () => { data.console_tiled = true; };
     data.smacworkshopabilitytext = (technology) => { return {title: 'Select Special Ability', none: 'No special ability', ok: 'OK', cancel: 'Cancel', cost: 'Cost', attack: 'Attack', defense: 'Defense', speed: 'Speed', domains: ['Land', 'Sea', 'Air'], second_title: 'Chief Engineer', second_body: 'Research ' + technology + '.', missile_title: 'Chief Engineer', missile_body: 'Missiles cannot have special abilities.'}; };
@@ -353,3 +353,20 @@ test.assert(dialog.data_heading.text == 'DATA' && dialog.data_rows[0].text == 'W
 test.assert(dialog.data_rows[0].baseline == 122 && dialog.data_rows[5].baseline == 192);
 dialog.ability_slots = [(0 - 1),1]; dialog.update_armor(); test.assert(dialog.data_rows[4].text == 'SP1: -' && dialog.data_rows[5].text == 'SP2:R');
 dialog.hide_view();
+
+// Obsolete publishes selected saved identity and the old list, without saving
+// draft components or waiting for Apply. Duplicate clicks wait for the reply.
+const obsolete_view = selection + {};
+obsolete_view.designs = [{id: 2, active: true, excluded: false, flags: 1, stored_name: 'Scout', components: {chassis: 0, weapon: 0, armor: 0, reactor: 1, offense: 1, weapon_mode: 0, strength: 1, speed: 1, stat_line: '1-1-1'}},
+    {id: 64, active: false, excluded: false, flags: 0, stored_name: '', components: undefined}];
+dialog.open(base, obsolete_view); dialog.selected_armor = 1; dialog.draft_name = 'Unsaved Guard'; dialog.strip_offset = 1;
+const obsolete_count = #sizeof(commands); dialog.obsolete(); dialog.obsolete();
+test.assert(dialog.pending && dialog.pending_obsolete && #sizeof(commands) == obsolete_count + 1);
+const obsolete_command = commands[obsolete_count];
+test.assert(obsolete_command.name == 'obsolete_smac_workshop' && obsolete_command.data.old_list == [2,64]
+    && obsolete_command.data.selected_design == 2 && obsolete_command.data.name == 'Unsaved Guard' && obsolete_command.data.strip_offset == 1);
+const obsolete_reply = obsolete_view + {draft: {selected_design: 64, chassis: 0, weapon: 0, armor: 0, reactor: 1, abilities: 0, name: 'Unsaved Guard'}};
+listeners.smac_workshop_obsolete({base: base, request_id: dialog.pending_id + 1}); test.assert(dialog.pending);
+listeners.smac_workshop_obsolete({base: base, request_id: dialog.pending_id, selection: obsolete_reply, strip_offset: 1, stale: false, failed: false});
+test.assert(!dialog.pending && dialog.active && dialog.selected_design == 64 && dialog.selected_armor == 0 && dialog.draft_name == 'Unsaved Guard' && dialog.strip_offset == 1);
+dialog.hide_view(); test.assert(#sizeof(commands) == obsolete_count + 1);

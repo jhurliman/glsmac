@@ -63,6 +63,11 @@ return {
             const button = this.window.button({left: 462, top: 101 + 94 * slot, width: 99, height: 85, background: 'transparent'});
             button.on('click', () => { this.ability_dialog.open(workshop, index); return true; }); this.ability_buttons :+ button;
         }
+        window.surface({left: 0, top: 0, width: 623, height: 387, smac_frame: [[3,24,344,567,370]]});
+        p.ui.class('workshop-main-action').set({font: 'arialbd.ttf:14:mono', color: 'rgb(0,0,0)', textalign: 'top center', textbaseline: 15,
+            smac_frame: [[27,0,0,105,20]], _hover: {smac_frame: [[28,0,0,105,20]]}, _active: {smac_frame: [[29,0,0,105,20]]}});
+        this.obsolete_button = window.button({class: 'workshop-main-action', left: 243, top: 347, width: 105, height: 20, text: ''});
+        this.obsolete_button.on('click', () => { this.obsolete(); return true; });
         this.window.button({class: 'game-popup-button', left: 27, top: 321, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Apply'}).on('click', () => { this.submit(false); return true; });
         this.window.button({class: 'game-popup-button', left: 27, top: 347, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Done'}).on('click', () => { this.submit(true); return true; });
         this.window.button({class: 'game-popup-button', left: 459, top: 347, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Cancel'}).on('click', () => { this.hide_view(); return true; });
@@ -119,6 +124,15 @@ return {
             else { this.message.text = ''; }
             if (e.done) { this.hide_view(); }
         });
+        this.window.listen(p.game, 'smac_workshop_obsolete', (e) => {
+            if (!this.active || !this.pending || !this.pending_obsolete || e.base.id != this.base.id || e.request_id != this.pending_id) { return; }
+            this.pending = false; this.pending_obsolete = false; this.selection = e.selection;
+            if (#is_defined(e.selection.draft)) { this.read_draft(e.selection.draft); this.selected_design = e.selection.draft.selected_design; }
+            if (!e.stale && !e.failed) { this.strip_offset = e.strip_offset; }
+            else { this.recenter_strip(this.selected_design); }
+            this.strip_hover = (0 - 1); this.update_labels(); this.update_armor(); this.render_strip();
+            this.message.text = e.stale ? 'Game state changed. Please check your design.' : (e.failed ? 'This design cannot be made obsolete.' : '');
+        });
         for (event of ['research_choice', 'colony_choice', 'colony_screen', 'turn', 'smac_ending', 'base_despawn']) {
             this.window.listen(p.game, event, (e) => { this.hide_view(); });
         }
@@ -148,7 +162,8 @@ return {
     open: (base, data) => {
         if (!#is_defined(this.parent_text)) { this.parent_text = this.components.smacworkshopparenttext(); }
         this.mineral_factor = data.mineral_factor;
-        this.base = base; this.selection = data; this.active = true; this.pending = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.overwrite_window.hide();
+        this.base = base; this.selection = data; this.active = true; this.pending = false; this.pending_obsolete = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.overwrite_window.hide();
+        this.obsolete_button.text = #uppercase(this.parent_text.obsolete); this.obsolete_button.color = this.parent_text.colors[65];
         this.selected_chassis = 0; this.selected_weapon = 0; this.selected_reactor = 1; this.selected_abilities = 0; this.draft_name = '';
         this.ability_slots = [(0 - 1), (0 - 1)];
         if (#is_defined(data.draft)) { this.read_draft(data.draft); this.selected_design = data.draft.selected_design; }
@@ -213,6 +228,14 @@ return {
         this.pending_done = false; this.pending_selection = true; this.pending = true; this.next_request = this.next_request + 1; this.pending_id = this.next_request;
         const request = this.pending_id; const base = this.base; const expected = this.selection.expected_state; const name = this.draft_name;
         this.p.game.event('select_smac_workshop', {base: base, selected_design: id, expected_state: expected, name: name, request_id: request});
+    },
+    obsolete: () => {
+        if (!this.active || this.pending || this.confirming || this.picker_active || this.ability_dialog.active) { return; }
+        this.pending = true; this.pending_obsolete = true; this.next_request = this.next_request + 1; this.pending_id = this.next_request;
+        const base = this.base; const selected = this.selected_design; const name = this.draft_name;
+        const offset = this.strip_offset; const expected = this.selection.expected_state; const request = this.pending_id;
+        let list = []; if (#is_defined(this.selection.designs)) { for (row of this.selection.designs) { list :+ row.id; } }
+        this.p.game.event('obsolete_smac_workshop', {base: base, selected_design: selected, name: name, old_list: list, strip_offset: offset, expected_state: expected, request_id: request});
     },
     read_draft: (draft) => {
         this.selected_chassis = draft.chassis; this.selected_weapon = draft.weapon; this.selected_reactor = draft.reactor; this.selected_abilities = draft.abilities;

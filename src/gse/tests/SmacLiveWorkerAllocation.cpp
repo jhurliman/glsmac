@@ -1416,6 +1416,45 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto mismatch=std::mismatch(actual.begin(),actual.end(),expected.begin(),expected.end());
             GT_ASSERT(actual==expected && restored.Game()->GetUM()->GetUnits().size()==2,"Retired world restore differs at normalized byte "+std::to_string(std::distance(actual.begin(),mismatch.first))+" sizes "+std::to_string(actual.size())+"/"+std::to_string(expected.size()));GT_OK();});
     });
+    task->AddTest("SMAC live Workshop Obsolete toggles through fenced events without retiring units or queues",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            unit::SmacStartupDesignState designs;
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;pool[64]=pool[2];pool[64][38]=1;pool[64][48]=0xb;pool[64][49]=2;pool[64][44]=0;
+                for(size_t id=65;id<128;++id) {pool[id][48]&=uint8_t(~1u);}
+                state.designs.RetainNativeRegistry(pool,catalog);state.technology.factions[0].owned.fill(true);
+                faction::SmacDesignCounts units{},production{};units[64]=7;production[64]=3;
+                state.economy.at(1).design_counts=units;state.economy.at(1).production_reference_counts=production;designs=state.designs;});
+            auto* menu=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL));value::array_elements_t ids;
+            for(auto* entry:static_cast<value::Array*>(menu->Get("designs"))->value) {ids.push_back(static_cast<value::Object*>(entry)->Get("id"));}
+            bool failed=true,stale=false;int64_t chosen=-1,armor=-1;std::string draft_name;
+            game->On(GSE_CALL,"smac_workshop_obsolete",NATIVE_CALL(&){N_EXPECT_ARGS(1);N_GET(view,0,Object);
+                failed=static_cast<value::Bool*>(view->Get("failed"))->value;stale=static_cast<value::Bool*>(view->Get("stale"))->value;
+                auto* draft=static_cast<value::Object*>(static_cast<value::Object*>(view->Get("selection"))->Get("draft"));
+                chosen=static_cast<value::Int*>(draft->Get("selected_design"))->value;armor=static_cast<value::Int*>(draft->Get("armor"))->value;
+                draft_name=static_cast<value::String*>(draft->Get("name"))->value;return VALUE(value::Undefined);}));
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,64)},
+                {"name",VALUE(value::String,,"Unsaved Guard")},{"old_list",VALUE(value::Array,,ids)},{"strip_offset",VALUE(value::Int,,0)},
+                {"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"request_id",VALUE(value::Int,,1)}};
+            game->Event(GSE_CALL,"obsolete_smac_workshop",args);GT_ASSERT(fixture.Snapshot()==before,"Obsolete bypassed queue");fixture.DrainEvents();
+            GT_ASSERT(!failed && !stale && chosen==65 && armor==0 && draft_name=="Unsaved Guard","Obsolete failed native inactive reselection");
+            bool retained=false;fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;const auto row=pool[64];pool[64]=designs.native_registry->at(64);
+                retained=row[44]==2 && row[48]==3 && row[49]==0 && pool==*designs.native_registry
+                    && state.economy.at(1).design_counts->at(64)==7 && state.economy.at(1).production_reference_counts->at(64)==3;});
+            GT_ASSERT(retained && fixture.GameplayRandom()==random,"Obsolete altered other records or rebuilt retained counts/RNG");
+            const auto toggled=fixture.Snapshot();game->Event(GSE_CALL,"obsolete_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(stale && fixture.Snapshot()==toggled,"Replayed old Obsolete toggled the record again");
+            args["selected_design"]=VALUE(value::Int,,128);
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"obsolete_smac_workshop",args);}) && fixture.Snapshot()==toggled,"Obsolete admitted foreign selection");
+            fixture.ResourceState([&](auto& state){state.designs=designs;});
+            GT_ASSERT(fixture.Snapshot()==before,"Obsolete changed Units, queues, currency or non-design state");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Workshop commits through owned Base commands without altering production",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction([](const std::string& filename) {
             auto source=TanksSource(filename);if(filename!="alpha.txt") {return source;}
@@ -5057,6 +5096,23 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"edit_smac_queue",{{"base",second->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,second->SmacSpecialistSelectionState())},{"entries",VALUE(value::Array,,entries)}});}),"Screen queue admitted another Base");
             game->Event(GSE_CALL,"edit_smac_queue",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacSpecialistSelectionState())},{"entries",VALUE(value::Array,,entries)}});GT_OK();
         });GT_ASSERT(queue_edit.empty(),"Screen queue edit: "+queue_edit);fixture.DrainEvents();
+        const auto workshop_obsolete=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
+            auto* menu=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL));value::array_elements_t list;
+            for(auto* row:static_cast<value::Array*>(menu->Get("designs"))->value) {list.push_back(static_cast<value::Object*>(row)->Get("id"));}
+            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,64)},
+                {"name",VALUE(value::String,,"Screen Draft")},{"old_list",VALUE(value::Array,,list)},{"strip_offset",VALUE(value::Int,,0)},
+                {"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"request_id",VALUE(value::Int,,1)}};
+            args["base"]=second->Wrap(GSE_CALL);
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"obsolete_smac_workshop",args);}),"Screen Obsolete admitted another Base");
+            args["base"]=base->Wrap(GSE_CALL);game->Event(GSE_CALL,"obsolete_smac_workshop",args);GT_OK();
+        });GT_ASSERT(workshop_obsolete.empty(),"Screen Workshop Obsolete: "+workshop_obsolete);fixture.DrainEvents();
+        const auto workshop_check=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);bool excluded=false;
+            fixture.ResourceState([&](const auto& state){excluded=(state.designs.native_registry->at(64)[44]&2)!=0;});
+            GT_ASSERT(excluded && base->GetProductionState()->minerals==30 && base->GetAccumulatedNutrients()==1
+                && game->GetCanonicalEconomy(base->m_owner).credits==101,"Screen Obsolete bypassed continuation or reposted income");GT_OK();
+        });GT_ASSERT(workshop_check.empty(),"Screen Workshop Obsolete result: "+workshop_check);
         const auto queue_check=fixture.Run([&](GSE_CALLABLE)->std::string {auto* base=fixture.Game()->GetBM()->GetBase(701);
             GT_ASSERT(base->GetProductionState()->queue->size()==1 && base->GetProductionState()->queue->front().smac_source_id==2
                 && base->GetProductionState()->minerals==30 && base->GetAccumulatedNutrients()==1,"Screen queue edit failed or reposted upkeep");GT_OK();

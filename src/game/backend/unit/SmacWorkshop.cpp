@@ -660,6 +660,37 @@ SmacWorkshopReselection PrepareSmacWorkshopReselection(const SmacStartupDesignSt
     result.state.RetainNativeRegistry(pool,catalog);return result;
 }
 
+SmacWorkshopObsolete PrepareSmacWorkshopObsolete(const SmacStartupDesignState& state,int32_t selected,
+    const std::string& retained_name,const std::vector<int32_t>& old_list,size_t strip_offset,const SmacPredefinedUnitCatalog& catalog,
+    const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner,
+    const std::optional<faction::SmacDesignCounts>& units) {
+    RequireOwner(owner);const int32_t faction=owner.admission.simulation_id;
+    if(!state.native_registry || selected<0 || selected>=512 || (selected>=64 && selected/64!=faction) || strip_offset>512) {
+        throw std::invalid_argument("Invalid Workshop Obsolete selection or strip offset");
+    }
+    if(old_list.size()>128) {throw std::invalid_argument("Workshop Obsolete old list exceeds its owner domain");}
+    std::array<bool,512> seen{};
+    for(const auto id:old_list) {
+        if(id<0 || id>=512 || (id>=64 && id/64!=faction) || seen.at(id)) {throw std::invalid_argument("Invalid Workshop Obsolete old browse identity");}
+        seen[id]=true;
+    }
+    auto next=state;auto pool=*state.native_registry;auto& row=pool.at(selected);
+    uint16_t flags=uint16_t(row[48])|(uint16_t(row[49])<<8);const uint8_t bit=uint8_t(1u<<faction);
+    if(row[44]&bit) {if(flags&8) {flags|=0x200;}flags|=8;}
+    else {flags&=0xfdf7;}
+    row[48]=uint8_t(flags);row[49]=uint8_t(flags>>8);row[44]^=bit;
+    next.RetainNativeRegistry(pool,catalog);
+    int32_t chosen=selected;
+    for(size_t scanned=0;scanned<old_list.size();++scanned) {
+        const auto index=(strip_offset+scanned)%old_list.size();
+        if(old_list[index]==selected) {chosen=old_list[(index+1)%old_list.size()];break;}
+    }
+    auto selection=PrepareSmacWorkshopReselection(next,chosen,retained_name,catalog,faction);
+    const auto rebuilt=BrowseSmacWorkshopDesigns(selection.state,catalog,technologies,owner,units);
+    const auto at=std::find(rebuilt.begin(),rebuilt.end(),selection.draft.selected_design);
+    if(at!=rebuilt.end()) {strip_offset=(size_t(at-rebuilt.begin())+rebuilt.size()-5)%rebuilt.size();}
+    return {std::move(selection),strip_offset};
+}
 SmacWorkshopSlot ChooseSmacWorkshopSlot(const SmacOriginalDesignPool& pool,const SmacWorkshopDraft& draft,
     const faction::SmacDesignCounts& units,const faction::SmacDesignCounts& production,
     const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner) {

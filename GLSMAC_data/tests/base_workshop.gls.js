@@ -1,5 +1,5 @@
 const dialog = #include('../default/ui/parts/game/popup/base_screen/workshop');
-let windows = []; let commands = []; let listeners = {}; let edits = [];
+let windows = []; let commands = []; let listeners = {}; let edits = []; let classes = {};
 const node = (data) => {
     data.hidden = false; data.removed = false; data.handlers = {}; data.children = [];
     data.is_hidden = () => { return data.hidden; };
@@ -8,7 +8,7 @@ const node = (data) => {
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
     data.smacworkshopparenttext = () => { let colors = []; let index = 0; while (index < 256) { colors :+ ('color' + #to_string(index)); index++; }
         return {labels: ['Vehicle Design','Moves:','Type:','Power:','Prototype Cost:','Cost:','Data','Presets','W:','A:','C:','R:','SP1:','SP2:','E:','P:'],
-            minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', obsolete: 'Obsolete', rename: 'Rename', retire: 'Retire', upgrade: 'Upgrade', status_title: 'Design Workshop', slot: 'Slot',
+            apply: 'Apply', done: 'Done', cancel: 'Cancel', minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', obsolete: 'Obsolete', rename: 'Rename', retire: 'Retire', upgrade: 'Upgrade', status_title: 'Design Workshop', slot: 'Slot',
             status_labels: ['Examining Basic Unit','New Design Based On Old','Examining Previous Design','Designing New Unit','Modifying Previous Design']}; };
     data.smacworkshopconsolebacking = () => { data.console_tiled = true; };
     data.smacworkshoprenametext = () => { const words = data.smacworkshopparenttext(); return {title: 'What shall we call this unit type?', label: 'Name:', ok: 'OK', cancel: 'Cancel', colors: words.colors}; };
@@ -46,7 +46,7 @@ const node = (data) => {
     if (!#is_defined(data.text)) { data.text = (properties) => { test.assert(!#is_defined(properties.width)); return child(properties); }; }
     return data;
 };
-dialog.init({ui: {class: (name) => { return {set: (properties) => { test.assert(#is_defined(properties._hover) && #is_defined(properties._active)); }}; }, root: {window: (data) => { const result = node(data); windows :+ result; return result; }}},
+dialog.init({ui: {class: (name) => { return {set: (properties) => { test.assert(#is_defined(properties._hover) && #is_defined(properties._active)); classes[name] = properties; }}; }, root: {window: (data) => { const result = node(data); windows :+ result; return result; }}},
     game: {event: (name, data) => { commands :+ {name: name, data: data}; }}});
 const base = {id: 701};
 const release_card = (index) => { return dialog.picker_canvas.handlers.mouseup({button: 'left', x: 79 + (index % 5) * 108, y: 49 + #floor(#to_float(index) / 5.0) * 94}); };
@@ -545,3 +545,16 @@ listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selec
     intrinsic_name_warning: true, intrinsic_notice: 2, intrinsic_notice_name: 'Scout Patrol', done: true});
 listeners.turn_status({status: 'please_wait'}); const after_notice_teardown = #sizeof(commands); dialog.answer_intrinsic();
 test.assert(!dialog.active && !dialog.redesign_dialog.active && #sizeof(commands) == after_notice_teardown);
+
+// Ordinary action captions use installed labels and native button geometry.
+dialog.open(base, selection);
+test.assert(!dialog.window.hidden);
+test.assert(dialog.done_button.textleft == 32);
+// An odd advance also lands at the native integer origin.
+dialog.action_probe.measure = () => { return {width: 41}; };
+dialog.set_action_caption(dialog.done_button, 'Done'); test.assert(dialog.done_button.textleft == 32);
+test.assert(dialog.apply_button.text == 'APPLY' && dialog.done_button.text == 'DONE' && dialog.cancel_button.text == 'CANCEL');
+test.assert(dialog.apply_button.left == 27 && dialog.apply_button.top == 321 && dialog.done_button.top == 347 && dialog.cancel_button.left == 459);
+dialog.hide_view(); test.assert(dialog.window.hidden && dialog.console.hidden && dialog.strip.hidden);
+
+test.assert(classes['workshop-main-action'].smac_frame == [[27,0,0,105,20]] && classes['workshop-main-action']._hover.smac_frame == [[29,0,0,105,20]] && classes['workshop-main-action']._active.smac_frame == [[29,0,0,105,20]]);

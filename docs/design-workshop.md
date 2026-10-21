@@ -1221,3 +1221,31 @@ original-name warning and closes to the Base screen only after Escape; exit0,
 no tracked GL leaks. All53,152 compared illustration/caption/opaque OK pixels
 match the existing original surfaces; no full informational-body pixel parity
 or full-bank desktop capture is claimed. No save-format change is introduced.
+
+
+### Ordinary Workshop main-button fidelity
+
+All seven ordinary actions share the native Arial-14 bold monochrome caption,
+baseline15, installed palette foreground65 and 105x20 indexed frames. Apply,
+Done and Cancel now read LABELS919/271/103, including their original uppercase
+presentation. Hover and press both select frame29; normal uses frame27.
+Caption placement follows the original integer advance calculation, with a
+three-pixel inset and99-pixel available width, instead of rounding a half-pixel
+center. This stays local to Workshop main controls.
+
+The instrumented live session opens Workshop from the real starting base,
+previews hover/press, applies the draft, selects a saved strip design and
+cancels back to Base; clean exit0. All14,700 pixels across the seven normal
+105x20 control regions equal the retained original full-parent capture. This
+is button-region equality, not whole-Workshop parity. Three affected UI scripts
+pass; targeted analysis covers six UI production consumers, with Surface alone
+rechecked after the label fix. Focused ASan/UBSan covers the same six UI files
+and the main Workshop script; unchanged backend checks are reused.
+
+[Native button visibility and centering](behavior/design-workshop-button-visibility.md)
+and [editor-only action contract](behavior/design-workshop-editor-prototype-reset.md)
+separate ordinary controls from Scenario Editor PROTO/RETIRE ALL. Those editor
+controls are not introduced into ordinary play. The conditional AUTO OFF
+caption does not establish a reachable distinct ordinary action; no new effect
+is inferred from its label. Main preview animation, recommendations and
+remaining complete-screen presentation are still outstanding.

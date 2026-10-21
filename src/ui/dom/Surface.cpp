@@ -808,7 +808,8 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         const auto design=loader::txt::TXTLoader::ReadUniqueSection(source,"DESIGNLABELS");
         const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
         if(design.size()!=16 || labels.size()<=926) {throw std::invalid_argument("Incomplete Workshop parent text source");}
-        std::array<std::string,28> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];text[24]=labels[757];text[25]=labels[126];text[26]=labels[926];text[27]=labels[758];
+        std::array<std::string,31> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];text[24]=labels[757];text[25]=labels[126];text[26]=labels[926];text[27]=labels[758];
+        text[28]=labels[919];text[29]=labels[271];text[30]=labels[103];
         // LABELS includes its count at index0; offsets are four-byte entries.
         const std::array<size_t,7> status_indices{916,914,918,917,782,783,915};
         for(size_t i=0;i<status_indices.size();++i) {text[17+i]=labels[status_indices[i]];}
@@ -833,6 +834,9 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         {"rename",VALUE(gse::value::String,,m_workshop_parent_text->at(25))},
         {"retire",VALUE(gse::value::String,,m_workshop_parent_text->at(26))},
         {"upgrade",VALUE(gse::value::String,,m_workshop_parent_text->at(27))},
+        {"apply",VALUE(gse::value::String,,m_workshop_parent_text->at(28))},
+        {"done",VALUE(gse::value::String,,m_workshop_parent_text->at(29))},
+        {"cancel",VALUE(gse::value::String,,m_workshop_parent_text->at(30))},
         {"weapon",picker->Get("weapon")}, {"equipment",picker->Get("equipment")}, {"psi",picker->Get("psi")}
     });
 }

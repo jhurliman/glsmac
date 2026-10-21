@@ -68,7 +68,7 @@ private:
     gse::Value* WorkshopUpgradeText(GSE_CALLABLE,int32_t kind,const std::array<std::string,2>& names,const std::array<int32_t,3>& numbers);
     gse::Value* WorkshopAbilityText(GSE_CALLABLE,const std::string& technology);
     std::optional<std::array<std::string,8>> m_workshop_picker_text;
-    std::optional<std::array<std::string,28>> m_workshop_parent_text;
+    std::optional<std::array<std::string,31>> m_workshop_parent_text;
     std::optional<std::array<std::string,9>> m_workshop_retire_text;
     std::optional<std::array<std::string,42>> m_workshop_upgrade_text;
     std::optional<std::array<std::string,4>> m_workshop_rename_text;

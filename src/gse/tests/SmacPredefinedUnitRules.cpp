@@ -32,14 +32,19 @@ std::vector< size_t > Integers( const std::string& bytes ) {
 }
 
 void AddSmacPredefinedUnitRulesTests( task::gsetests::GSETests* task ) {
-    task->AddTest("SMAC predefined V2 naming text survives transport and retains legacy V1 bytes",GT(){
+    task->AddTest("SMAC predefined V3 naming text preserves V2 unknown Sea and legacy V1 bytes",GT(){
         const auto tech=fixture::Technologies();const auto legacy=fixture::LegacyPredefinedUnits();const auto before=legacy.Serialize(tech).ToString();
         auto named=legacy;named.catalog.workshop_name_labels=game::backend::unit::ReadSmacWorkshopNameLabels(fixture::WorkshopLabelsSource());
         const auto wire=named.Serialize(tech).ToString();const auto restored=Profile::Deserialize(wire,tech);
         GT_ASSERT(restored==named && !(restored==legacy),"Naming text lost on transport or omitted from equality");
+        types::Buffer sea;sea.WriteString(named.catalog.workshop_name_labels->at(7));
+        auto v2=wire.substr(0,wire.size()-sea.lenw);v2=ChangeInteger(v2,0,2);
+        const auto old_named=Profile::Deserialize(v2,tech);
+        GT_ASSERT(old_named.catalog.workshop_name_labels->at(7).empty() && old_named.Serialize(tech).ToString()==v2,"V2 acquired guessed Sea text or changed bytes");
+        GT_ASSERT(named.catalog.workshop_name_labels->at(7)=="Sea","Installed Sea label omitted");
         auto clear=restored;clear.catalog.workshop_name_labels.reset();
         GT_ASSERT(clear.Serialize(tech).ToString()==before,"Optional naming changed legacy V1 encoding");
-        for(size_t i=0;i<7;++i) {auto changed=named;changed.catalog.workshop_name_labels->at(i)+=" translated";
+        for(size_t i=0;i<8;++i) {auto changed=named;changed.catalog.workshop_name_labels->at(i)+=" translated";
             GT_ASSERT(!(changed==named) && Profile::Deserialize(changed.Serialize(tech).ToString(),tech)==changed,"Translated naming field lost");}
         for(size_t size=before.size();size<wire.size();++size) {GT_ASSERT(Rejects([&]{Profile::Deserialize(wire.substr(0,size),tech);}),"Truncated V2 naming fields accepted");}
         GlobalSettings old_host;old_host.Deserialize(fixture::Payload("smac",true,{17,INT32_MIN,INT32_MAX,-2,300,0,-7,8,9},{},{},{},{},before));
@@ -125,7 +130,7 @@ void AddSmacPredefinedUnitRulesTests( task::gsetests::GSETests* task ) {
         GlobalSettings host;host.SelectRuleset("smac");host.InitializeHostRules(fixture::Source);
         GT_ASSERT(host.GetSmacPredefinedUnitRules()->catalog.workshop_name_labels==game::backend::unit::ReadSmacWorkshopNameLabels(fixture::WorkshopLabelsSource()),"Host omitted installed naming fields");
         const auto before=host.Serialize().ToString();
-        for(size_t i=0;i<7;++i) {auto changed=*host.GetSmacPredefinedUnitRules();changed.catalog.workshop_name_labels->at(i)+=" translated";
+        for(size_t i=0;i<8;++i) {auto changed=*host.GetSmacPredefinedUnitRules();changed.catalog.workshop_name_labels->at(i)+=" translated";
             const auto wire=changed.Serialize(fixture::Technologies()).ToString();
             GT_ASSERT(Rejects([&]{host.Deserialize(fixture::Payload("smac",true,{17,INT32_MIN,INT32_MAX,-2,300,0,-7,8,9},{},{},{},{},wire));}) && host.Serialize().ToString()==before,"Late naming replacement changed frozen session");
         }

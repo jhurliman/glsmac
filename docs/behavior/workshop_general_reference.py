@@ -80,44 +80,71 @@ def build(designs,index,job,rules,tables,ownership):
  raw[a+40]=carry&255;raw[a+42:a+44]=bytes(classification(ch,we,ar,mask,rules));raw[a+44]=0;raw[a+45]=255 if index<64 else (1<<owner)&255;raw[a+46]=255;struct.pack_into('<H',raw,a+48,flags)
  return raw
 
-def land_name_variants(job,owner,index,rules):
- """Conventional physical land and admitted ordinary noncombat naming branches.
+def name_variants(job,owner,index,rules,designs=None):
+ """Land/sea/air/missile naming, including signed PSI component strengths.
 
- Higher-reactor disambiguation scan is false for these post-build records,
- whose own active record has the target reactor. Collision handling is separate.
+ The retained-record reactor scan is relevant to draft callers. Post-build
+ records normally clear it through their own active matching record.
+ Collision handling is separate. Strength comparisons use signed rule values.
  """
- ch,we,ar,re,mask=[job[k] for k in ['chassis','weapon','armor','reactor','mask']];c=rules['chassis'][ch];w=rules['weapons'][we];a=rules['armor'][ar];txt=rules['text'];f=txt['chassis_fields'][ch];labels=txt['labels'];speed=c['speed'];assert c['domain']==0 and not c['special'] and w['offense']>=0
+ ch,we,ar,re,mask=[job[k] for k in ['chassis','weapon','armor','reactor','mask']];c=rules['chassis'][ch];w=rules['weapons'][we];a=rules['armor'][ar];txt=rules['text'];f=txt['chassis_fields'][ch];labels=txt['labels'];speed=c['speed'];domain=c['domain']
  prefix=''
  for bit in range(24):
-  if not mask&(1<<bit) or not txt['ability'][bit] or bit==15:continue
+  if not mask&(1<<bit) or not txt['ability'][bit] or bit==15 or bit==5 and domain==2:continue
   if bit==3 and speed==1 and w['offense']>=a and not mask&0x8000:continue
   prefix=txt['ability'][bit]+' ';break
  full=short=prefix;compact=False;elite=False;variant=((re-1)^owner)&1
  if w['mode']<3:
-  threshold=3 if a<=w['offense'] else 6;elite=min(a,w['offense'])>threshold and bool(f['elite']) and bool(f['elite_defense'])
- if speed>=max(w['offense'],a) and w['mode']<3:
+  threshold=3 if a<=w['offense'] else 6
+  if domain==1:threshold+=1
+  elif domain==2:threshold+=threshold//2
+  elite=min(a,w['offense'])>threshold and bool(f['elite']) and bool(f['elite_defense'])
+ if domain==0 and w['offense']>=0 and speed>=max(w['offense'],a) and w['mode']<3:
   compact=True;variant=int(speed>1)
   if mask&0x400000:
    full=full[:-1] if full else full;short=short[:max(0,len(full)-1)]
   else:
    label=labels['0x2d8'] if w['offense']>=2 else labels['0x248'];full+=label;short+=label
- if a>w['offense'] and w['mode']<3 and not mask&0x8000:
-  if not compact:full+=txt['armor'][ar];short+=txt['armor'][ar];variant^=a&1
+ reactor_prefix=False
+ if not compact and designs is not None:
+  selected=index*52;plan=designs[selected+42];selected_ch=designs[selected+36];selected_re=designs[selected+39]
+  for i in [*range(64),*range(owner*64,(owner+1)*64)]:
+   at=i*52
+   if not designs[at+48]&1 or designs[at+42]!=plan or designs[at+36]!=selected_ch:continue
+   if designs[at+39]>=selected_re:reactor_prefix=False;break
+   reactor_prefix=True
+ interceptor=domain==2 and mask&32 and w['mode']<3 and w['offense']>=0
+ defense=a>w['offense'] and w['mode']<3 and not mask&0x8000 and w['offense']>=0
+ if defense or interceptor:
+  if not compact:
+   stem=txt['reactor'][re-1] if reactor_prefix else txt['armor'][ar] if defense else txt['weapon'][we]
+   full+=stem;short+=stem
+   if defense:variant^=a&1
   full+=' '+f['defense']
-  short+=' '+(f['elite_defense'] if elite else f['defense']) if compact and index&1 else ' '+f['defense_alternate']
+  short+=' '+((f['elite_defense'] if elite and domain!=1 else f['defense']) if compact and index&1 else (f['elite_defense'] if elite and domain==1 else f['defense_alternate']))
+ elif c['special'] and w['offense']>=99:
+  full+=txt['reactor'][re-1]+' '+txt['weapon'][we];short+=txt['reactor'][re-1]+' '+txt['weapon'][we]
  else:
   if w['mode']>=3 and ch!=0:
    if re>1:full+=txt['reactor'][re-1]+' ';short+=txt['reactor'][re-1]+' '
-   full+=f['name']+' ';short+=f['ordinary']+' '
+   if not (w['mode']==7 and ch==3) and not (w['mode']==9 and domain==0 and ' ' in full):
+    if w['mode'] in [8,9] and ch==3:full+=labels['0x28c']+' ';short+=labels['0x28c']+' '
+    else:full+=f['name']+' ';short+=f['ordinary']+' '
   if not compact:full+=txt['weapon'][we];short+=txt['weapon'][we];variant^=w['offense']&1
   if w['mode']<3:
    if mask&0x8000:full+=' '+labels['0x87c'];short+=' '+labels['0x880']
    elif mask&8 and speed==1 and w['offense']>a:full+=' '+labels['0x998'];short+=' '+labels['0x99c']
-   else:full+=' '+(f['elite'] if elite else f['name']);short+=' '+f['ordinary']
+   elif reactor_prefix:full+=' '+txt['reactor'][re-1];short+=' '+txt['reactor'][re-1]
+   else:full+=' '+(f['elite'] if elite and domain!=1 else f['name']);short+=' '+(f['elite'] if elite and domain==1 else f['ordinary'])
  return full,short,variant
 
+def land_name_variants(job,owner,index,rules):
+ """Compatibility entry point for the original bounded land reference."""
+ assert rules['chassis'][job['chassis']]['domain']==0
+ return name_variants(job,owner,index,rules)
+
 def automatic_name(designs,index,job,owner,rules):
- full,short,variant=land_name_variants(job,owner,index,rules);same=full==short;marker=rules['text']['labels']['0xe5c'];wanted=struct.pack('<I4B',job['mask'],job['chassis'],job['weapon'],job['armor'],job['reactor'])
+ full,short,variant=name_variants(job,owner,index,rules,designs);same=full==short;marker=rules['text']['labels']['0xe5c'];wanted=struct.pack('<I4B',job['mask'],job['chassis'],job['weapon'],job['armor'],job['reactor'])
  def bump(s):
   pos=s.rfind(marker)
   if pos>=0 and len(s)-pos<=len(marker)+1 and s[-1:] in '2345678':return s[:-1]+str(int(s[-1])+1)

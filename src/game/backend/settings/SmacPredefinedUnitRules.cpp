@@ -61,7 +61,8 @@ void Source( const Catalog& c ) {
 }
 
 types::Buffer Encode( const Catalog& c ) {
-	types::Buffer b; b.WriteInt( c.workshop_name_labels ? 2:1 );
+	const int version=!c.workshop_name_labels ? 1:c.workshop_name_labels->at(7).empty() ? 2:3;
+	types::Buffer b; b.WriteInt(version);
 	b.WriteString( c.chassis.ruleset_id ); b.WriteInt( c.chassis.chassis.size() );
 	for ( const auto& r : c.chassis.chassis ) {
 		for ( const auto& n : r.names ) { b.WriteString( n.name ); b.WriteString( n.grammar ); }
@@ -97,7 +98,7 @@ types::Buffer Encode( const Catalog& c ) {
 		if ( r.prerequisite.technology_id ) { b.WriteInt( *r.prerequisite.technology_id ); }
 		b.WriteBool( r.active ); b.WriteBool( r.prototyped ); b.WriteInt( r.faction_exclusion );
 	}
-	if(c.workshop_name_labels) {for(const auto& label:*c.workshop_name_labels) {Text(label);b.WriteString(label);}}
+	if(c.workshop_name_labels) {for(size_t i=0;i<(version==3 ? 8u:7u);++i) {const auto& label=c.workshop_name_labels->at(i);Text(label);b.WriteString(label);}}
 	return b;
 }
 
@@ -114,7 +115,7 @@ void Table( types::Buffer& b, std::string& id, const int32_t count ) {
 }
 
 Catalog Decode( types::Buffer& b ) {
-	const auto version=Integer(b,1,2);Catalog c;
+	const auto version=Integer(b,1,3);Catalog c;
 	Table( b, c.chassis.ruleset_id, 9 );
 	for ( size_t i = 0; i < 9; ++i ) {
 		ChassisComponent r{}; for ( auto& n : r.names ) { n.name = String( b ); n.grammar = String( b, false, 2 ); }
@@ -159,7 +160,7 @@ Catalog Decode( types::Buffer& b ) {
 		if ( b.ReadBool() ) { r.prerequisite.technology_id = Integer( b, 0, 88 ); }
 		r.active = b.ReadBool(); r.prototyped = b.ReadBool(); r.faction_exclusion = Integer( b, 0, 0 ); c.units.push_back( r );
 	}
-	if(version==2) {unit::SmacWorkshopNameLabels labels;for(auto& label:labels) {label=String(b);}c.workshop_name_labels=std::move(labels);}
+	if(version>=2) {unit::SmacWorkshopNameLabels labels;for(size_t i=0;i<(version==3 ? 8u:7u);++i) {labels[i]=String(b);}c.workshop_name_labels=std::move(labels);}
 	Require( b.lenr == b.lenw, "Unexpected predefined unit profile fields" ); return c;
 }
 }

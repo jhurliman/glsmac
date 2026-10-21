@@ -802,3 +802,47 @@ saved-strip selection, broader naming and the normal-open host adapter remain
 required. This transport change does not claim pixel acceptance or completed
 ability rendering. No new screenshot or full platform matrix was appropriate
 for this protocol change; component/browser presentation follows separately.
+
+
+### General domain and PSI automatic naming
+
+The shared original594320 naming path now covers land, sea, air, missile and
+PSI components. It preserves interceptor precedence, signed strength gates and
+parity, domain-specific elite thresholds, sea utility wording, missile reactor
+prefixes, inactive-name collisions and retained selected plan/chassis/reactor
+inputs. Naming a draft does not require the selected retained record to match
+the proposed tuple or be active. Commit allocation, stored-name truncation and
+exact-tuple aliases keep their existing ownership.
+
+The twelve native commit comparisons include both-PSI Infantry reusing intrinsic
+Mind Worms with its stored name and unchanged complete pool. A generated name
+is not substituted for an existing alias. Negative weapon strength skips compact,
+defensive and interceptor wording; negative armor does not. A controlled -2
+strength case verifies signed parity rather than an absolute-value shortcut.
+See [domain naming](behavior/design-workshop-domain-naming.md) and
+[PSI naming](behavior/design-workshop-psi-naming.md).
+
+The installed Sea label is now frozen with the other naming text. Predefined
+profile V3 transports eight labels; retained V2 profiles preserve their original
+seven labels and byte encoding with Sea explicitly unknown. V1 remains unchanged.
+A legacy profile does not acquire current English text during restore; branches
+that need its missing Sea label reject rather than invent it. Translation/equality,
+late host replacement, truncation and transport-budget tests cover the extension.
+
+Validation:42 selected native groups pass, including all68 original naming
+controls, twelve complete native commit-pool digests, signed override controls,
+retained/inactive selection, collisions, and V1/V2/V3 profile transport. Thirty-nine
+relevant groups pass focused ASan/UBSan with thirteen production and five test
+files instrumented. Correctness analysis is clean for ten production files and
+affected consumers; the changed namer and live quote consumer were reanalyzed
+after the PSI extension, reusing the other unchanged results. The six unchanged
+UI script checks from the complete-draft transport slice remain applicable.
+
+This removes the land-only naming blocker for the general draft pipeline, not
+the remaining screen work. The human recommendation producer still has its
+separate PSI-custom strategic-evaluation boundary; naming support does not close
+that gap. Browser selection, all component/ability pickers, suggestions, general
+side-card art, normal-open host inputs and whole-screen pixel acceptance remain
+required. The separately frozen [strip raster](behavior/design-workshop-strip-raster.md)
+provides the next thumbnail implementation evidence; this PR does not claim new
+model pixels or repeat a platform matrix.

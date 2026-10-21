@@ -6,6 +6,7 @@
 #include "fixtures/WorkshopAlias.h"
 #include "fixtures/WorkshopGeneral.h"
 #include "fixtures/WorkshopHuman.h"
+#include "fixtures/WorkshopDomain.h"
 #include "fixtures/WorkshopSavedCommits.h"
 #include "fixtures/WorkshopAllocation.h"
 #include "fixtures/SmacIntrinsicOverlays.h"
@@ -24,6 +25,32 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop domain and PSI names match68 native strings and12 complete saved pools",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        const auto read=[&](const char* name) {std::ifstream file(std::string(assets)+"/"+name,std::ios::binary);if(!file) {throw std::runtime_error("Missing owned domain naming rules");}return std::string(std::istreambuf_iterator<char>(file),{});};
+        const auto source=read("alpha.txt");const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;catalog.workshop_name_labels=unit::ReadSmacWorkshopNameLabels(read("labels.txt"));
+        const auto pool_for=[](const auto& groups) {auto pool=workshop_general_fixture::BasePool();for(const auto& group:groups) {for(const auto id:group.first) {pool.at(id)=group.second;}}return pool;};
+        for(const auto& test:workshop_domain_fixture::Names()) {const auto pool=pool_for(test.records);auto inputs=catalog;
+            if(test.weapon_strength!=INT32_MIN) {inputs.weapons.weapons.at(test.draft.weapon).offense=test.weapon_strength;}
+            if(test.armor_strength!=INT32_MIN) {inputs.defenses.defenses.at(test.draft.armor).rating=test.armor_strength;}
+            GT_ASSERT(unit::NameSmacWorkshopDesign(pool,test.draft.selected_design,test.draft,inputs,test.owner)==test.expected,"Native domain name differs: "+std::string(test.id));}
+        auto owner=Owner();owner.owned.fill(true);faction::SmacDesignCounts counts{};
+        for(const auto& test:workshop_domain_fixture::Commits()) {
+            auto state=Empty();state.RetainNativeRegistry(pool_for(test.records),catalog);const auto before=state;
+            const auto result=unit::PrepareSmacWorkshopCommit(state,test.draft,catalog,tech,owner,counts,counts);
+            GT_ASSERT(result.success && !result.confirmation && !result.retirement && result.result.design_id==test.selected && state==before,"Native domain commit changed selection/authority");
+            const auto& pool=*result.state.native_registry;const auto& row=pool.at(test.selected);
+            const std::string name(row.begin(),std::find(row.begin(),row.begin()+32,uint8_t(0)));
+            uint64_t digest=UINT64_C(14695981039346656037);for(const auto& record:pool) {for(const auto byte:record) {digest=(digest^byte)*UINT64_C(1099511628211);}}
+            GT_ASSERT(name==test.expected && digest==test.digest,"Native domain saved pool differs: "+std::string(test.id));
+        }
+        auto legacy=catalog;legacy.workshop_name_labels->at(7).clear();bool sea_checked=false;
+        for(const auto& test:workshop_domain_fixture::Names()) {if(std::string(test.id)=="foil_former") {
+            GT_ASSERT(Rejects([&]{unit::NameSmacWorkshopDesign(pool_for(test.records),test.draft.selected_design,test.draft,legacy,test.owner);}),"Legacy profile guessed a missing Sea label");sea_checked=true;}}
+        GT_ASSERT(sea_checked,"Missing native Sea Former control");
+        GT_OK();
+    });
     task->AddTest("SMAC Workshop human proposal producer matches414 original submissions and all policy transitions",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);if(!file) {throw std::runtime_error("Missing owned human Workshop rules");}

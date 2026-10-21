@@ -1,0 +1,687 @@
+{
+  "scope": "Case index only; retained design pools and resolved language inputs are in the frozen private bundle. Names are expectations, not algorithm inputs.",
+  "cases": [
+    {
+      "input": {
+        "id": "ch3_attack",
+        "chassis": 3,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Skimship",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch3_defense",
+        "chassis": 3,
+        "weapon": 0,
+        "armor": 3,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Silksteel Coastal",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch3_elite",
+        "chassis": 3,
+        "weapon": 6,
+        "armor": 4,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Fusion Foil",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch4_attack",
+        "chassis": 4,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Destroyer",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch4_defense",
+        "chassis": 4,
+        "weapon": 0,
+        "armor": 3,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Silksteel Gunboat",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch4_elite",
+        "chassis": 4,
+        "weapon": 6,
+        "armor": 4,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Fusion Cruiser",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch5_attack",
+        "chassis": 5,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Penetrator",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch5_defense",
+        "chassis": 5,
+        "weapon": 0,
+        "armor": 3,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Silksteel Tactical",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch5_elite",
+        "chassis": 5,
+        "weapon": 6,
+        "armor": 4,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Fusion Thunderbolt",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch6_attack",
+        "chassis": 6,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Chopper",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch6_defense",
+        "chassis": 6,
+        "weapon": 0,
+        "armor": 3,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Silksteel Lifter",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch6_elite",
+        "chassis": 6,
+        "weapon": 6,
+        "armor": 4,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Fusion Gunship",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch7_attack",
+        "chassis": 7,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Skybase",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch7_defense",
+        "chassis": 7,
+        "weapon": 0,
+        "armor": 3,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Silksteel Skyfort",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch7_elite",
+        "chassis": 7,
+        "weapon": 6,
+        "armor": 4,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Fusion Deathsphere",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch8_attack",
+        "chassis": 8,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Missile",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch8_defense",
+        "chassis": 8,
+        "weapon": 0,
+        "armor": 3,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Silksteel Missile",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "ch8_elite",
+        "chassis": 8,
+        "weapon": 6,
+        "armor": 4,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Fusion Missile",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "jet_intercept",
+        "chassis": 5,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 32
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Tactical",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "jet_clean_intercept",
+        "chassis": 5,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 65568
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Clean Impact Tactical",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "jet_intercept_defense",
+        "chassis": 5,
+        "weapon": 0,
+        "armor": 3,
+        "reactor": 1,
+        "mask": 32
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Silksteel Tactical",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "jet_intercept_elite",
+        "chassis": 5,
+        "weapon": 6,
+        "armor": 4,
+        "reactor": 2,
+        "mask": 32
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Fusion Interceptor",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "foil_transport",
+        "chassis": 3,
+        "weapon": 16,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Transport",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "cruiser_transport_fusion",
+        "chassis": 4,
+        "weapon": 16,
+        "armor": 0,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Fusion Cruiser Transport",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "foil_former",
+        "chassis": 3,
+        "weapon": 15,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Sea Formers",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "foil_colony",
+        "chassis": 3,
+        "weapon": 14,
+        "armor": 0,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Fusion Sea Colony Pod",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "jet_former",
+        "chassis": 5,
+        "weapon": 15,
+        "armor": 0,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Fusion Needlejet Formers",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "missile_payload",
+        "chassis": 8,
+        "weapon": 4,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Missile Missile",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "missile_payload_fusion",
+        "chassis": 8,
+        "weapon": 4,
+        "armor": 0,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Missile Missile",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "missile_planetbuster",
+        "chassis": 8,
+        "weapon": 13,
+        "armor": 0,
+        "reactor": 3,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Quantum Planet Buster",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "foil_artillery",
+        "chassis": 3,
+        "weapon": 2,
+        "armor": 2,
+        "reactor": 1,
+        "mask": 32768
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Battery",
+      "retained_pool_authority": "workshop-domain-names-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "sea_elite_short",
+        "chassis": 3,
+        "weapon": 5,
+        "armor": 5,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Chaos Megafoil",
+      "retained_pool_authority": "workshop-domain-edges-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "sea_elite_defense",
+        "chassis": 3,
+        "weapon": 5,
+        "armor": 7,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Antimatter Superfoil",
+      "retained_pool_authority": "workshop-domain-edges-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "air_elite_defense",
+        "chassis": 5,
+        "weapon": 6,
+        "armor": 8,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Stasis Tactical",
+      "retained_pool_authority": "workshop-domain-edges-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "air_threshold_equal",
+        "chassis": 5,
+        "weapon": 2,
+        "armor": 3,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Penetrator",
+      "retained_pool_authority": "workshop-domain-edges-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "sea_threshold_equal",
+        "chassis": 3,
+        "weapon": 2,
+        "armor": 3,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Skimship",
+      "retained_pool_authority": "workshop-domain-edges-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "air_elite_intercept",
+        "chassis": 5,
+        "weapon": 5,
+        "armor": 5,
+        "reactor": 1,
+        "mask": 32
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Chaos Tactical",
+      "retained_pool_authority": "workshop-domain-edges-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "missile_clean",
+        "chassis": 8,
+        "weapon": 4,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 65536
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Clean Missile Missile",
+      "retained_pool_authority": "workshop-domain-edges-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "sea_retained_reactor",
+        "chassis": 3,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Fusion",
+      "retained_pool_authority": "workshop-domain-edges-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "sea_retained_reactor_defense",
+        "chassis": 3,
+        "weapon": 0,
+        "armor": 3,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Fusion Hoverboat",
+      "retained_pool_authority": "workshop-domain-edges-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "sea_collision_both",
+        "chassis": 3,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Foil Mk2",
+      "retained_pool_authority": "workshop-domain-edges-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "air_collision_inactive",
+        "chassis": 5,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "expected_name": "Impact Needlejet",
+      "retained_pool_authority": "workshop-domain-edges-private-20261021/controls.json"
+    },
+    {
+      "input": {
+        "id": "sea_owner2",
+        "chassis": 3,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 2,
+      "selected": 191,
+      "expected_name": "Impact Foil",
+      "retained_pool_authority": "workshop-domain-edges-private-20261021/controls.json"
+    }
+  ],
+  "commits": [
+    {
+      "input": {
+        "id": "commit_foil",
+        "chassis": 3,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 0
+      },
+      "selected": 127,
+      "expected_saved_name": "Impact Skimship",
+      "complete_pool_match": true
+    },
+    {
+      "input": {
+        "id": "commit_cruiser",
+        "chassis": 4,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 2,
+        "mask": 0
+      },
+      "selected": 127,
+      "expected_saved_name": "Impact Cruiser",
+      "complete_pool_match": true
+    },
+    {
+      "input": {
+        "id": "commit_jet",
+        "chassis": 5,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 32
+      },
+      "selected": 127,
+      "expected_saved_name": "Impact Tactical",
+      "complete_pool_match": true
+    },
+    {
+      "input": {
+        "id": "commit_chopper",
+        "chassis": 6,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 0
+      },
+      "selected": 127,
+      "expected_saved_name": "Impact Chopper",
+      "complete_pool_match": true
+    },
+    {
+      "input": {
+        "id": "commit_gravship",
+        "chassis": 7,
+        "weapon": 2,
+        "armor": 1,
+        "reactor": 1,
+        "mask": 0
+      },
+      "selected": 127,
+      "expected_saved_name": "Impact Skybase",
+      "complete_pool_match": true
+    },
+    {
+      "input": {
+        "id": "commit_missile",
+        "chassis": 8,
+        "weapon": 4,
+        "armor": 0,
+        "reactor": 2,
+        "mask": 0
+      },
+      "selected": 127,
+      "expected_saved_name": "Missile Missile",
+      "complete_pool_match": true
+    }
+  ]
+}

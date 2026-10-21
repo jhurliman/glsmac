@@ -189,8 +189,8 @@ inline game::backend::settings::SmacPredefinedUnitRules LegacyPredefinedUnits( c
 }
 
 inline std::string WorkshopLabelsSource() {
-    std::string source="#LABELS\n920\n";const std::array<size_t,7> slots{147,183,544,545,615,616,920};
-    const std::array<const char*,7> words{"Scout","Recon","Artillery","Battery","Marines","Invaders","Mk"};
+    std::string source="#LABELS\n920\n";const std::array<size_t,8> slots{147,183,544,545,615,616,920,164};
+    const std::array<const char*,8> words{"Scout","Recon","Artillery","Battery","Marines","Invaders","Mk","Sea"};
     for(size_t row=1;row<=920;++row) {std::string text="Fixture label";for(size_t i=0;i<slots.size();++i) {if(row==slots[i]) {text=words[i];}}source+=text+'\n';}return source;
 }
 inline game::backend::settings::SmacPredefinedUnitRules PredefinedUnits(const game::backend::settings::SmacTechnologyRules& technologies=Technologies()) {

@@ -131,41 +131,60 @@ std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t ind
     RequireComponents(draft,catalog);
     const auto& chassis=catalog.chassis.chassis.at(draft.chassis);const auto& weapon=catalog.weapons.weapons.at(draft.weapon);
     const auto defense=catalog.defenses.defenses.at(draft.armor).rating;const auto offense=weapon.offense,speed=chassis.speed,mode=int32_t(weapon.mode);
+    const auto domain=int32_t(chassis.triad);
     if(!catalog.workshop_name_labels || owner<1 || owner>7 || index<64 || index>=512 || int32_t(index/64)!=owner
-        || chassis.triad!=loader::txt::ChassisTriad::Land || chassis.missile || offense<0) {throw std::invalid_argument("Workshop naming requires initialized conventional land text and context");}
-    const auto& current=pool[index];bool same_tuple=(current[48]&1) && current[36]==draft.chassis && current[37]==draft.weapon && current[38]==draft.armor && current[39]==draft.reactor;
-    for(unsigned i=0;i<4;++i) {same_tuple=same_tuple && current[32+i]==uint8_t(draft.abilities>>(8*i));}
-    if(!same_tuple) {throw std::invalid_argument("Workshop naming requires its completed design record");}
-    for(const auto& label:*catalog.workshop_name_labels) {if(label.empty() || label.size()>128 || label.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop naming text");}}
-    const auto& labels=*catalog.workshop_name_labels;const auto& names=chassis.names;
+        || domain<0 || domain>2) {throw std::invalid_argument("Workshop naming requires admitted conventional text and context");}
+    const auto& current=pool[index];const auto& labels=*catalog.workshop_name_labels;const auto& names=chassis.names;
+    for(size_t i=0;i<8;++i) {const auto& label=labels[i];if(i==7 && label.empty()) {continue;}if(label.empty() || label.size()>128 || label.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop naming text");}}
     std::string prefix;for(unsigned bit=0;bit<24;++bit) {
         const auto& text=catalog.abilities.abilities.at(bit).abbreviation;
-        if(!(draft.abilities&(1u<<bit)) || text.empty() || bit==15) {continue;}
+        if(!(draft.abilities&(1u<<bit)) || text.empty() || bit==15 || (bit==5 && domain==2)) {continue;}
         if(bit==3 && speed==1 && offense>=defense && !(draft.abilities&0x8000)) {continue;}
         prefix=text+' ';break;
     }
     std::string full=prefix,short_name=prefix;bool compact=false,elite=false;unsigned variant=((draft.reactor-1)^owner)&1;
-    if(mode<3) {const auto threshold=defense<=offense ? 3:6;elite=std::min(defense,offense)>threshold && !names[4].name.empty() && !names[5].name.empty();}
-    if(speed>=std::max(offense,defense) && mode<3) {
+    if(mode<3) {int threshold=defense<=offense ? 3:6;if(domain==1) {++threshold;}else if(domain==2) {threshold+=threshold/2;}
+        elite=std::min(defense,offense)>threshold && !names[4].name.empty() && !names[5].name.empty();}
+    if(domain==0 && offense>=0 && speed>=std::max(offense,defense) && mode<3) {
         compact=true;variant=speed>1;
         if(draft.abilities&0x400000) {
             if(!full.empty()) {full.pop_back();}short_name.resize(std::min(short_name.size(),full.empty()?size_t(0):full.size()-1));
         }else {const auto& label=labels[offense>=2?1:0];full+=label;short_name+=label;}
     }
-    if(defense>offense && mode<3 && !(draft.abilities&0x8000)) {
-        if(!compact) {const auto& text=catalog.defenses.defenses.at(draft.armor).short_name;full+=text;short_name+=text;variant^=unsigned(defense)&1;}
+    // This scan reads retained selected metadata, not the proposed tuple. A
+    // completed active record normally clears the flag itself; draft callers
+    // can legitimately select inactive rows with older plan/chassis/reactor.
+    bool reactor_prefix=false;
+    if(!compact) {for(size_t i=0;i<512;++i) {
+        if(i>=64 && (i<size_t(owner)*64 || i>=size_t(owner+1)*64)) {continue;}const auto& row=pool[i];
+        if(!(row[48]&1) || row[42]!=current[42] || row[36]!=current[36]) {continue;}
+        if(row[39]>=current[39]) {reactor_prefix=false;break;}reactor_prefix=true;
+    }}
+    const auto& reactor=catalog.reactors.reactors.at(draft.reactor-1).short_name;
+    const bool defensive=offense>=0 && defense>offense && mode<3 && !(draft.abilities&0x8000),interceptor=offense>=0 && domain==2 && (draft.abilities&32) && mode<3;
+    if(defensive || interceptor) {
+        if(!compact) {const auto& text=reactor_prefix ? reactor:defensive ? catalog.defenses.defenses.at(draft.armor).short_name:weapon.short_name;
+            full+=text;short_name+=text;if(defensive) {variant^=unsigned(defense)&1;}}
         full+=' '+names[2].name;
-        short_name+=' '+(compact && (index&1) ? names[elite?5:2].name:names[3].name);
+        short_name+=' '+(compact && (index&1) ? names[elite && domain!=1 ? 5:2].name:names[elite && domain==1 ? 5:3].name);
+    } else if(chassis.missile && offense>=99) {
+        full+=reactor+' '+weapon.short_name;short_name+=reactor+' '+weapon.short_name;
     } else {
         if(mode>=3 && draft.chassis!=0) {
-            if(draft.reactor>1) {const auto& text=catalog.reactors.reactors.at(draft.reactor-1).short_name;full+=text+' ';short_name+=text+' ';}
-            full+=names[0].name+' ';short_name+=names[1].name+' ';
+            if(draft.reactor>1) {full+=reactor+' ';short_name+=reactor+' ';}
+            if(!(mode==7 && draft.chassis==3) && !(mode==9 && domain==0 && full.find(' ')!=std::string::npos)) {
+                if((mode==8 || mode==9) && draft.chassis==3) {
+                    if(labels[7].empty()) {throw std::runtime_error("Retained Workshop profile has no Sea naming label");}
+                    full+=labels[7]+' ';short_name+=labels[7]+' ';
+                }else {full+=names[0].name+' ';short_name+=names[1].name+' ';}
+            }
         }
         if(!compact) {full+=weapon.short_name;short_name+=weapon.short_name;variant^=unsigned(offense)&1;}
         if(mode<3) {
             if(draft.abilities&0x8000) {full+=' '+labels[2];short_name+=' '+labels[3];}
             else if((draft.abilities&8) && speed==1 && offense>defense) {full+=' '+labels[4];short_name+=' '+labels[5];}
-            else {full+=' '+names[elite?4:0].name;short_name+=' '+names[1].name;}
+            else if(reactor_prefix) {full+=' '+reactor;short_name+=' '+reactor;}
+            else {full+=' '+names[elite && domain!=1 ? 4:0].name;short_name+=' '+names[elite && domain==1 ? 4:1].name;}
         }
     }
     const bool identical=full==short_name;const auto& marker=labels[6];
@@ -178,7 +197,8 @@ std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t ind
         bool changed=false;
         for(size_t i=0;i<512;++i) {
             if(i==index || (i>=64 && (i<size_t(owner)*64 || i>=size_t(owner+1)*64))) {continue;}
-            const auto& row=pool[i];if(std::equal(current.begin()+32,current.begin()+40,row.begin()+32)) {continue;}
+            const auto& row=pool[i];bool same=row[36]==draft.chassis && row[37]==draft.weapon && row[38]==draft.armor && row[39]==draft.reactor;
+            for(unsigned k=0;k<4;++k) {same=same && row[32+k]==uint8_t(draft.abilities>>(8*k));}if(same) {continue;}
             const std::string name(row.begin(),std::find(row.begin(),row.begin()+32,0));
             if(name==full) {if(!identical) {variant=1;}bump(full);changed=true;break;}
             if(!identical && name==short_name) {variant=0;bump(short_name);changed=true;break;}

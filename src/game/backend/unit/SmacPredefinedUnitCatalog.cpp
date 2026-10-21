@@ -16,7 +16,7 @@ SmacWorkshopNameLabels ReadSmacWorkshopNameLabels(const std::string& source) {
     if(rows.empty()) {throw std::invalid_argument("Missing Workshop label count");}
     size_t count=0;const auto parsed=std::from_chars(rows[0].data(),rows[0].data()+rows[0].size(),count);
     if(parsed.ec!=std::errc{} || parsed.ptr!=rows[0].data()+rows[0].size() || count<920 || count>8192 || rows.size()<count+1) {throw std::invalid_argument("Incomplete Workshop label table");}
-    SmacWorkshopNameLabels result;const std::array<size_t,7> slots{147,183,544,545,615,616,920};
+    SmacWorkshopNameLabels result;const std::array<size_t,8> slots{147,183,544,545,615,616,920,164};
     for(size_t i=0;i<slots.size();++i) {
         result[i]=rows[slots[i]];if(result[i].empty() || result[i].size()>128 || result[i].find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop name label");}
     }return result;

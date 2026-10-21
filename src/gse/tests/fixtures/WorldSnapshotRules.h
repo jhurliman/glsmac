@@ -261,7 +261,7 @@ inline std::vector< std::pair< std::string, std::string > > InvalidPredefinedHea
 	add( "oversized predefined payload", std::string( game::backend::settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES + 1, 'x' ) );
 	add( "oversized downloaded predefined payload", std::string( game::backend::settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES * 4, 'x' ) );
 	const auto derived_end=smac_rules_fixture::LegacyPredefinedUnits().Serialize(technologies).lenw;
-	types::Buffer bad_version; bad_version.WriteInt( 3 );
+	types::Buffer bad_version; bad_version.WriteInt( 4 );
 	add( "unknown predefined version", bad_version.ToString() + bytes.substr( bad_version.lenw ) );
 	for ( const auto value : { int64_t( 1 ), INT64_MAX } ) {
 		types::Buffer bad; bad.WriteInt( value ); add( "forged last derived exclusion", bytes.substr( 0, derived_end - bad.lenw ) + bad.ToString()+bytes.substr(derived_end) );

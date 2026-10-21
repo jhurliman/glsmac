@@ -760,3 +760,45 @@ this receipt does not claim that behavior is fixed. The separately completed
 [saved-strip contract](behavior/design-workshop-saved-strip.md) supplies the
 next visible browser geometry, captions, navigation and raw-ID selection path;
 original thumbnail model pixels and full-parent screen acceptance remain open.
+
+
+### Complete draft transport and live preview
+
+The live Workshop command now accepts chassis, weapon, armor, reactor, the full
+24-bit ability mask and name, together with selected raw ID, state fence,
+request correlation and optional overwrite answer. The four newly transported
+fields form an all-or-nothing group. Legacy armor-only commands retain their
+old basic tuple; malformed groups, out-of-range values before narrowing, foreign
+banks and invalid names are rejected before queueing.
+
+`get_smac_workshop()` retains its opening query. Its seven-argument form accepts
+selected ID, chassis, weapon, armor, reactor, abilities and name to quote that
+complete draft. Read-only quotes and Apply acknowledgements carry a `draft`
+object and matching component metadata. Armor alternatives are priced/named
+against the complete supplied tuple. Aliases bypass new-component admission;
+a new tuple requires available, compatible abilities and legal capacity. Unknown
+retained counts remain unknown whenever the allocation decision needs them.
+
+Apply restores the complete saved tuple after success or failure, rather than
+only armor/name. Failed Done retains the edited tuple. The actual UI consumes
+that response, preserves all fields in later submissions, and passes the restored
+chassis/weapon/reactor to its main preview. Existing correlated-response and
+overwrite fencing remain in place.
+
+Validation:33 selected native groups and all six affected GSE UI scripts pass.
+A new live synthetic-catalog control quotes/saves an armed Speeder tuple with a
+nondefault reactor and ability, verifies exact world state outside the design
+bank, exercises the actual wrapped query, rejects partial/invalid/foreign input,
+checks failed Apply and aliases after technology loss, and restores a whole-world
+save. These are live adapter controls, not new original-executable observations;
+previous independent construction/commit/reselection evidence remains applicable.
+Thirty relevant groups pass focused ASan/UBSan with ten production and three
+test files instrumented, including the Base wrapper. Correctness analysis is
+clean for seven production files and affected consumers.
+
+The visible picker set is still armor-only and ordinary opening still uses the
+basic tuple. General side-card art, compatibility/suggestion transitions,
+saved-strip selection, broader naming and the normal-open host adapter remain
+required. This transport change does not claim pixel acceptance or completed
+ability rendering. No new screenshot or full platform matrix was appropriate
+for this protocol change; component/browser presentation follows separately.

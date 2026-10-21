@@ -36,7 +36,7 @@ class Game;
 namespace slot {
 class Slot;
 }
-namespace unit { class Unit; class UnitManager; class Def; enum class SmacMoraleMode : uint8_t; }
+namespace unit { struct SmacWorkshopDraft; class Unit; class UnitManager; class Def; enum class SmacMoraleMode : uint8_t; }
 namespace faction {
 class Faction;
 }
@@ -90,7 +90,7 @@ public:
 	const std::optional< ProductionState >& GetProductionState() const;
 	// Detached chooser projection; execution rechecks the complete saved state.
 	gse::Value* CopySmacProductionChoices( GSE_CALLABLE ) const;
-	gse::Value* CopySmacWorkshop( GSE_CALLABLE ) const;
+	gse::Value* CopySmacWorkshop( GSE_CALLABLE, const unit::SmacWorkshopDraft* draft=nullptr ) const;
 	std::string SmacWorkshopState() const;
 	void SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production );
 

@@ -32,6 +32,10 @@ struct SmacWorkshopDraft {
     uint8_t reactor = 1;
     std::string name; // empty requests the installed-language automatic name
 };
+// Live editor ability admission for a new tuple; saved aliases/reselection retain their
+// separate technology-loss semantics. Throws without changing the draft.
+void ValidateSmacWorkshopEditorAbilities(const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog,
+    const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner);
 // Original compatibility is independent of technology admission.
 bool SmacWorkshopAbilityCompatible(uint32_t ability,const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog);
 struct SmacWorkshopAbilitySelection {uint32_t mask;std::array<int32_t,2> slots;};

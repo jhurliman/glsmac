@@ -32,7 +32,9 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
             if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop command");}
             return at->second->Deref();
         };
-        if(args.size()!=7 && args.size()!=8) {THROW("Workshop command requires its draft/fence and optional overwrite answer");}
+        const bool complete=args.find("chassis")!=args.end() || args.find("weapon")!=args.end() || args.find("reactor")!=args.end() || args.find("abilities")!=args.end();
+        const bool answered=args.find("overwrite")!=args.end();
+        if(args.size()!=(complete ? 11u:7u)+(answered ? 1u:0u)) {THROW("Workshop command requires its complete draft/fence and optional overwrite answer");}
         const auto* object=static_cast<const gse::value::Object*>(field("base",gse::VT_OBJECT));
         if(object->object_class!=base::Base::WRAP_CLASS) {THROW("Workshop requires an actual Base");}
         auto* base=base::Base::Unwrap(args.at("base"));
@@ -41,17 +43,23 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         const auto selected=static_cast<const gse::value::Int*>(field("selected_design",gse::VT_INT))->value;
         const auto& supplied=static_cast<const gse::value::String*>(field("name",gse::VT_STRING))->value;
         const auto done=static_cast<const gse::value::Bool*>(field("done",gse::VT_BOOL))->value;
-        const auto overwrite=args.size()==8 ? static_cast<const gse::value::Int*>(field("overwrite",gse::VT_INT))->value:-1;
-        if(overwrite< -1 || overwrite>1 || (args.size()==8 && overwrite<0)) {THROW("Invalid Workshop overwrite answer");}
+        const auto chassis=complete ? static_cast<const gse::value::Int*>(field("chassis",gse::VT_INT))->value:0;
+        const auto weapon=complete ? static_cast<const gse::value::Int*>(field("weapon",gse::VT_INT))->value:0;
+        const auto reactor=complete ? static_cast<const gse::value::Int*>(field("reactor",gse::VT_INT))->value:1;
+        const auto abilities=complete ? static_cast<const gse::value::Int*>(field("abilities",gse::VT_INT))->value:0;
+        const auto overwrite=answered ? static_cast<const gse::value::Int*>(field("overwrite",gse::VT_INT))->value:-1;
+        if(overwrite< -1 || overwrite>1 || (answered && overwrite<0)) {THROW("Invalid Workshop overwrite answer");}
         // Client correlation only: ownership and the complete saved-state fence
         // below authorize the edit. Old acknowledgements must not close a new UI.
         const auto request=static_cast<const gse::value::Int*>(field("request_id",gse::VT_INT))->value;
         if(!base || base->GetGame()!=this || caller!=m_slot_num || expected.size()>unit::SmacStartupDesignState::MAX_WIRE_BYTES+89+2*513
-            || selected<0 || selected>511 || request<1 || armor<0 || armor>9 || supplied.size()>31 || supplied.find('\0')!=std::string::npos) {THROW("Invalid Workshop command authority or draft");}
+            || selected<0 || selected>511 || request<1 || armor<0 || armor>9 || chassis<0 || chassis>8 || weapon<0 || weapon>20
+            || reactor<1 || reactor>4 || abilities<0 || abilities>0xffffff || supplied.size()>31 || supplied.find('\0')!=std::string::npos) {THROW("Invalid Workshop command authority or draft");}
         // Current narrow UI has the same printable-byte rendering boundary as
         // Base Rename. Do not install a name that its renderer cannot display.
         for(const unsigned char c:supplied) {if(c<32 || c>126) {THROW("Workshop name requires printable display bytes");}}
         base->RequireSmacProductionSelection();
+        if(selected>=64 && selected/64!=base->GetSmacResourceContext().owner_simulation_id) {THROW("Workshop selected a foreign bank");}
         if(apply) {
             CheckRW(GSE_CALL);
             if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Workshop requires its owning accumulation");}
@@ -59,12 +67,13 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         const bool stale=base->SmacWorkshopState()!=expected;
         bool warning=false,failed=false,confirmation=false,declined=false,reselected=false,retired=false;
         int32_t design_id=int32_t(selected),overwrite_count=0,restored_armor=0;std::string overwrite_name,restored_name;
+        unit::SmacWorkshopDraft response_draft{int32_t(selected),uint32_t(chassis),uint32_t(weapon),uint32_t(armor),uint32_t(abilities),uint8_t(reactor),supplied};
         std::optional<unit::UnitManager::PreparedConventionalRemoval> removal;
         std::vector<std::pair<base::Base*,std::optional<base::ProductionState>>> queues;
         std::optional<decltype(GetBM()->m_base_updates)> base_updates;
         if(!stale) {
             auto next=m_simulation->value.designs;
-            unit::SmacWorkshopDraft draft;draft.selected_design=static_cast<int32_t>(selected);draft.armor=uint32_t(armor);draft.name=supplied;
+            const auto draft=response_draft;
             const auto& settings=GetState()->m_settings.global;
             const auto* owner=m_simulation->value.technology.Find(base->GetSmacResourceContext().owner_simulation_id);
             try {
@@ -74,6 +83,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
                     const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;
                     if(const auto alias=unit::ReuseSmacWorkshopDesign(next,draft,catalog,*settings.GetSmacTechnologyRules(),*owner)) {result=*alias;}
                     else {
+                        unit::ValidateSmacWorkshopEditorAbilities(draft,catalog,*settings.GetSmacTechnologyRules(),*owner);
                         // A wholly inactive, included bank makes both cached rows
                         // irrelevant to the original provisional-slot scan. Do
                         // not initialize missing saved caches as a side effect.
@@ -142,7 +152,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
                     const auto& source=failed || declined ? m_simulation->value.designs:next;
                     auto selection=unit::PrepareSmacWorkshopReselection(source,design_id,supplied,settings.GetSmacPredefinedUnitRules()->catalog,owner->admission.simulation_id);
                     next=std::move(selection.state);design_id=selection.draft.selected_design;
-                    restored_armor=int32_t(selection.draft.armor);restored_name=std::move(selection.draft.name);reselected=true;
+                    response_draft=selection.draft;restored_armor=int32_t(selection.draft.armor);restored_name=std::move(selection.draft.name);reselected=true;
                 } catch(const std::exception&) {failed=true;}
             }
             if(apply && !confirmation && ((!failed && !declined) || reselected)) {
@@ -157,8 +167,8 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         }
         if(apply) {
             if(retired) {removal->Notify(GSE_CALL);}
-            GetState()->TriggerObject(this,"smac_workshop_commit",ARGS_F(this,base,done,stale,warning,design_id,failed,request,confirmation,declined,overwrite_count,overwrite_name,restored_armor,restored_name,reselected) {
-                {"base",base->Wrap(GSE_CALL)}, {"selection",base->CopySmacWorkshop(GSE_CALL)},
+            GetState()->TriggerObject(this,"smac_workshop_commit",ARGS_F(this,base,done,stale,warning,design_id,failed,request,confirmation,declined,overwrite_count,overwrite_name,restored_armor,restored_name,reselected,response_draft) {
+                {"base",base->Wrap(GSE_CALL)}, {"selection",base->CopySmacWorkshop(GSE_CALL,&response_draft)},
                 {"done",VALUE(gse::value::Bool,,done && !stale && !failed && !confirmation && !declined)}, {"stale",VALUE(gse::value::Bool,,stale)},
                 {"failed",VALUE(gse::value::Bool,,failed)},
                 {"confirmation",VALUE(gse::value::Bool,,confirmation)}, {"declined",VALUE(gse::value::Bool,,declined)},
@@ -215,12 +225,16 @@ std::string Base::SmacWorkshopState() const {
     }
     return state;
 }
-gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE) const {
+gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* supplied) const {
     const auto expected=SmacWorkshopState();
     const auto& settings=m_game->GetState()->m_settings.global;
     const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;
     const auto& technology=*m_game->m_simulation->value.technology.Find(GetSmacResourceContext().owner_simulation_id);
     const auto choices=unit::SmacWorkshopChoices(unit::SmacWorkshopComponent::Armor,catalog,*settings.GetSmacTechnologyRules(),technology);
+    const unit::SmacWorkshopDraft draft=supplied ? *supplied:unit::SmacWorkshopDraft{};
+    if(draft.selected_design<0 || draft.selected_design>511 || (draft.selected_design>=64 && draft.selected_design/64!=technology.admission.simulation_id)
+        || draft.chassis>=catalog.chassis.chassis.size() || draft.weapon>=catalog.weapons.weapons.size() || draft.armor>=catalog.defenses.defenses.size()
+        || draft.reactor<1 || draft.reactor>catalog.reactors.reactors.size() || draft.abilities>0xffffff || draft.name.size()>31 || draft.name.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop preview draft");}
     const auto mineral_factor=m_game->GetSmacProductionMineralFactor(m_owner);
     gse::Value* designs=VALUE(gse::value::Undefined);
     const auto& registry=m_game->m_simulation->value.designs;
@@ -251,24 +265,32 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE) const {
         std::string design_name;
         int32_t cost_rows=0;
         if(supported) {
-            auto probe=m_game->m_simulation->value.designs;unit::SmacWorkshopDraft draft;draft.armor=choice.component_id;
+            auto probe=m_game->m_simulation->value.designs;auto candidate=draft;candidate.armor=choice.component_id;
             try {
                 unit::SmacWorkshopCommit result;
                 if(probe.native_registry) {
-                    const auto& economy=m_game->m_simulation->value.economy.at(technology.admission.simulation_id);
-                    auto prepared=unit::PrepareSmacWorkshopCommit(probe,draft,catalog,*settings.GetSmacTechnologyRules(),technology,
-                        economy.design_counts.value_or(faction::SmacDesignCounts{}),economy.production_reference_counts.value_or(faction::SmacDesignCounts{}));
-                    result=prepared.result;
-                    if(!prepared.success && !prepared.confirmation) {throw std::runtime_error("Workshop preview allocation failed");}
-                    if(prepared.confirmation) {
-                        // Preview the replacement without retiring anything or
-                        // consuming the saved history. The live command owns consent.
-                        auto pool=*probe.native_registry;pool.at(result.design_id)[48]&=uint8_t(~1u);
-                        unit::BuildSmacWorkshopRecord(pool,size_t(result.design_id),draft,catalog,*settings.GetSmacTechnologyRules(),technology);
-                        design_name=unit::NameSmacWorkshopDesign(pool,size_t(result.design_id),draft,catalog,technology.admission.simulation_id);
-                        cost_rows=pool.at(result.design_id)[41];
-                    } else {probe=std::move(prepared.state);}
-                } else {result=unit::CommitSmacWorkshopFirstDesign(probe,draft,catalog,*settings.GetSmacTechnologyRules(),technology);}
+                    if(const auto alias=unit::ReuseSmacWorkshopDesign(probe,candidate,catalog,*settings.GetSmacTechnologyRules(),technology)) {result=*alias;}
+                    else {
+                        unit::ValidateSmacWorkshopEditorAbilities(candidate,catalog,*settings.GetSmacTechnologyRules(),technology);
+                        const auto& economy=m_game->m_simulation->value.economy.at(technology.admission.simulation_id);
+                        bool independent=true;for(int id=64*technology.admission.simulation_id;id<64*(technology.admission.simulation_id+1);++id) {const auto& row=probe.native_registry->at(id);
+                            independent=independent && !(row[48]&1) && !(row[44]&(1u<<technology.admission.simulation_id));}
+                        if((!economy.design_counts || !economy.production_reference_counts) && !independent) {throw std::runtime_error("Workshop quote requires retained counts");}
+                        const faction::SmacDesignCounts zero{};
+                        auto prepared=unit::PrepareSmacWorkshopCommit(probe,candidate,catalog,*settings.GetSmacTechnologyRules(),technology,
+                            economy.design_counts.value_or(zero),economy.production_reference_counts.value_or(zero));
+                        result=prepared.result;
+                        if(!prepared.success && !prepared.confirmation) {throw std::runtime_error("Workshop preview allocation failed");}
+                        if(prepared.confirmation) {
+                            // Quote the replacement without retiring it or
+                            // consuming saved history; the live command owns consent.
+                            auto pool=*probe.native_registry;pool.at(result.design_id)[48]&=uint8_t(~1u);
+                            unit::BuildSmacWorkshopRecord(pool,size_t(result.design_id),candidate,catalog,*settings.GetSmacTechnologyRules(),technology);
+                            design_name=unit::NameSmacWorkshopDesign(pool,size_t(result.design_id),candidate,catalog,technology.admission.simulation_id);
+                            cost_rows=pool.at(result.design_id)[41];
+                        } else {probe=std::move(prepared.state);}
+                    }
+                } else {result=unit::CommitSmacWorkshopFirstDesign(probe,candidate,catalog,*settings.GetSmacTechnologyRules(),technology);}
                 if(result.design_id<64) {design_name=catalog.source.units.at(result.design_id).name;cost_rows=catalog.units.at(result.design_id).cost;}
                 else if(design_name.empty()) {
                     const auto* bank=probe.Find(technology.admission.simulation_id);
@@ -299,13 +321,18 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE) const {
     return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
         {"expected_state",VALUE(gse::value::String,,expected)}, {"armor",VALUE(gse::value::Array,,armor)},
         {"designs",designs},
-        {"chassis",VALUE(gse::value::String,,catalog.chassis.chassis.at(0).names[0].name)},
-        {"speed",VALUE(gse::value::Int,,catalog.chassis.chassis.at(0).speed)},
-        {"weapon",VALUE(gse::value::String,,catalog.weapons.weapons.at(0).name)},
-        {"offense",VALUE(gse::value::Int,,catalog.weapons.weapons.at(0).offense)},
-        {"weapon_mode",VALUE(gse::value::Int,,int32_t(catalog.weapons.weapons.at(0).mode))},
-        {"reactor",VALUE(gse::value::String,,catalog.reactors.reactors.at(0).name)},
-        {"power",VALUE(gse::value::Int,,catalog.reactors.reactors.at(0).power)},
+        {"draft",VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+            {"selected_design",VALUE(gse::value::Int,,draft.selected_design)}, {"chassis",VALUE(gse::value::Int,,draft.chassis)},
+            {"weapon",VALUE(gse::value::Int,,draft.weapon)}, {"armor",VALUE(gse::value::Int,,draft.armor)},
+            {"reactor",VALUE(gse::value::Int,,draft.reactor)}, {"abilities",VALUE(gse::value::Int,,draft.abilities)}, {"name",VALUE(gse::value::String,,draft.name)}
+        })},
+        {"chassis",VALUE(gse::value::String,,catalog.chassis.chassis.at(draft.chassis).names[0].name)},
+        {"speed",VALUE(gse::value::Int,,catalog.chassis.chassis.at(draft.chassis).speed)},
+        {"weapon",VALUE(gse::value::String,,catalog.weapons.weapons.at(draft.weapon).name)},
+        {"offense",VALUE(gse::value::Int,,catalog.weapons.weapons.at(draft.weapon).offense)},
+        {"weapon_mode",VALUE(gse::value::Int,,int32_t(catalog.weapons.weapons.at(draft.weapon).mode))},
+        {"reactor",VALUE(gse::value::String,,catalog.reactors.reactors.at(draft.reactor-1).name)},
+        {"power",VALUE(gse::value::Int,,catalog.reactors.reactors.at(draft.reactor-1).power)},
         {"scout_name",VALUE(gse::value::String,,catalog.source.units.at(2).name)},
         {"faction_art",VALUE(gse::value::String,,m_faction->m_bases_render.file)}
     });

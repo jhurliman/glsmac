@@ -51,8 +51,11 @@ return {
         this.window.listen(p.game, 'smac_workshop_commit', (e) => {
             if (!this.active || !this.pending || e.base.id != this.base.id || e.request_id != this.pending_id) { return; }
             this.pending = false; this.selection = e.selection;
-            if (#is_defined(e.restore_draft) && e.restore_draft) { this.selected_design = e.design_id; this.selected_armor = e.restored_armor; this.draft_name = e.restored_name; }
-            this.update_armor();
+            if (#is_defined(e.restore_draft) && e.restore_draft) {
+                this.selected_design = e.design_id; this.selected_armor = e.restored_armor; this.draft_name = e.restored_name;
+                if (#is_defined(e.selection.draft)) { this.read_draft(e.selection.draft); }
+            }
+            this.update_labels(); this.update_armor();
             if (e.stale) { this.message.text = 'Game state changed. Please check your design.'; return; }
             if (e.failed) { this.message.text = 'This design cannot be saved.'; return; }
             if (#is_defined(e.confirmation) && e.confirmation) {
@@ -76,15 +79,23 @@ return {
     },
     open: (base, data) => {
         this.base = base; this.selection = data; this.active = true; this.pending = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.overwrite_window.hide();
-        this.chassis.text = #uppercase(data.chassis); this.weapon.text = #uppercase(data.weapon); this.reactor.text = #uppercase(data.reactor);
-        this.chassis_stat.text = 'Land ' + #to_string(data.speed); this.weapon_stat.text = 'Weapon ' + #to_string(data.offense); this.reactor_stat.text = 'Power ' + #to_string(data.power);
-        this.title.text = #uppercase(data.scout_name); this.draft_name = ''; this.message.text = ''; this.update_armor(); this.window.show();
+        this.selected_chassis = 0; this.selected_weapon = 0; this.selected_reactor = 1; this.selected_abilities = 0; this.draft_name = '';
+        if (#is_defined(data.draft)) { this.read_draft(data.draft); this.selected_design = data.draft.selected_design; }
+        this.update_labels(); this.title.text = #uppercase(data.scout_name); this.message.text = ''; this.update_armor(); this.window.show();
+    },
+    read_draft: (draft) => {
+        this.selected_chassis = draft.chassis; this.selected_weapon = draft.weapon; this.selected_reactor = draft.reactor; this.selected_abilities = draft.abilities;
+        this.selected_armor = draft.armor; this.draft_name = draft.name;
+    },
+    update_labels: () => {
+        this.chassis.text = #uppercase(this.selection.chassis); this.weapon.text = #uppercase(this.selection.weapon); this.reactor.text = #uppercase(this.selection.reactor);
+        this.chassis_stat.text = 'Land ' + #to_string(this.selection.speed); this.weapon_stat.text = 'Weapon ' + #to_string(this.selection.offense); this.reactor_stat.text = 'Power ' + #to_string(this.selection.power);
     },
     armor_strength: (strength) => { return strength < 0 ? 'Psi' : #to_string(strength); },
     update_armor: () => {
         this.components.smacworkshopcomponents(this.selected_armor);
         for (row of this.selection.armor) { if (row.id == this.selected_armor) {
-            this.model.smacworkshopdesign(0, 0, this.selected_armor, 1, (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating);
+            this.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor, (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating);
             this.armor_name.text = row.id == 0 ? 'NONE' : #uppercase(row.short_name); this.armor_stat.text = 'Level ' + this.armor_strength(row.rating);
             if (row.design_name != '') { this.title.text = #uppercase(row.design_name); }
             this.cost.text = 'COST:  ' + #to_string(row.cost);
@@ -145,7 +156,8 @@ return {
         const request = this.pending_id;
         const base = this.base; const expected = choice < 0 ? this.selection.expected_state : this.confirm_expected;
         const armor = this.selected_armor; const name = this.draft_name; const selected = this.selected_design;
-        let fields = {base: base, selected_design: selected, expected_state: expected, armor: armor, name: name, done: done, request_id: request};
+        const chassis = this.selected_chassis; const weapon = this.selected_weapon; const reactor = this.selected_reactor; const abilities = this.selected_abilities;
+        let fields = {base: base, selected_design: selected, expected_state: expected, armor: armor, chassis: chassis, weapon: weapon, reactor: reactor, abilities: abilities, name: name, done: done, request_id: request};
         if (choice >= 0) { fields = fields + {overwrite: choice}; }
         this.p.game.event('commit_smac_workshop', fields);
     },

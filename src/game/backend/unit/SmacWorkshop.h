@@ -66,6 +66,20 @@ std::optional<SmacWorkshopCommit> ReuseSmacWorkshopDesign(SmacStartupDesignState
 // Read-only installed-language label for admitted unnamed legacy opening rows.
 std::string SmacWorkshopDesignName(const SmacCustomDesign& design,const SmacPredefinedUnitCatalog& catalog,int32_t owner);
 
+// Detached common commit. A confirmation result preserves the input state.
+// Accepting it prepares the old tuple's history and identifies the retirement
+// whose Units/queues the live caller must stage before publishing this state.
+struct SmacWorkshopPreparation {
+    SmacStartupDesignState state;
+    SmacWorkshopCommit result;
+    bool success=false,confirmation=false;
+    std::optional<int32_t> retirement;
+};
+SmacWorkshopPreparation PrepareSmacWorkshopCommit(const SmacStartupDesignState& state,const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner,const faction::SmacDesignCounts& units,
+    const faction::SmacDesignCounts& production,bool confirm=false);
+
 // Original 441e20 first path: Scout or its Infantry/Synthmetal edit, no
 // abilities, Fission. Reuses intrinsic tuples before allocating the last slot
 // of an empty owner bank. Existing tuples use the matching pass above.

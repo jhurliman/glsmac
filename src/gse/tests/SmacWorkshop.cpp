@@ -5,6 +5,7 @@
 #include "fixtures/SmacPrototypePrice.h"
 #include "fixtures/WorkshopAlias.h"
 #include "fixtures/WorkshopGeneral.h"
+#include "fixtures/WorkshopSavedCommits.h"
 #include "fixtures/WorkshopAllocation.h"
 #include "fixtures/SmacIntrinsicOverlays.h"
 #include "task/gsetests/GSETests.h"
@@ -22,6 +23,52 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop retained common commits match seven complete native saved pools",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        const auto read=[&](const char* name) {std::ifstream file(std::string(assets)+"/"+name,std::ios::binary);if(!file) {throw std::runtime_error("Missing owned Workshop rules");}return std::string(std::istreambuf_iterator<char>(file),{});};
+        const auto source=read("alpha.txt");const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;catalog.workshop_name_labels=unit::ReadSmacWorkshopNameLabels(read("labels.txt"));
+        auto owner=Owner();owner.owned.fill(true);faction::SmacDesignCounts counts{};
+        auto pool=workshop_general_fixture::BasePool();pool[127]={};pool[128]={70,111,114,101,105,103,110,32,71,117,97,114,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,2,2,2,0,4,255,0,3,0,0,0};
+        auto state=Empty();state.RetainNativeRegistry(pool,catalog);const auto original=state;
+        for(const auto& test:workshop_commit_fixture::CASES) {
+            const auto result=unit::PrepareSmacWorkshopCommit(state,test.draft,catalog,tech,owner,counts,counts);
+            GT_ASSERT(result.success && !result.confirmation && !result.retirement && result.result.design_id==test.selected && state==original,"Native slot decision or detached authority changed");
+            uint64_t hash=UINT64_C(14695981039346656037);for(const auto& row:*result.state.native_registry) {for(const auto byte:row) {hash=(hash^byte)*UINT64_C(1099511628211);}}
+            GT_ASSERT(hash==test.digest,"Native saved pool differs: "+std::string(test.name)+" hash="+std::to_string(hash));
+            GT_ASSERT(unit::SmacStartupDesignState::Deserialize(result.state.Serialize(catalog).ToString(),catalog)==result.state,"Prepared general commit lost state on restore");
+        }
+        // Full own bank: the cached live count, not queue references alone, gates retirement.
+        for(size_t id=64;id<128;++id) {pool[id]=pool[128];}state=Empty();state.retirement_history[1]=unit::SmacRetirementHistory::NewWorld();state.RetainNativeRegistry(pool,catalog);
+        unit::SmacWorkshopDraft draft;draft.selected_design=64;draft.armor=2;counts[64]=1;const auto full=state;
+        const auto pending=unit::PrepareSmacWorkshopCommit(state,draft,catalog,tech,owner,counts,counts);
+        GT_ASSERT(!pending.success && pending.confirmation && !pending.retirement && pending.state==full && state==full,"Pending overwrite changed saved records/history");
+        const auto accepted=unit::PrepareSmacWorkshopCommit(state,draft,catalog,tech,owner,counts,counts,true);
+        unit::SmacRetirementTuple old{};std::copy_n(pool[64].begin()+32,8,old.begin());
+        GT_ASSERT(accepted.success && accepted.retirement==64 && accepted.state.retirement_history[1]->cursor==1 && accepted.state.retirement_history[1]->slots[0]==old
+            && accepted.state.native_registry->at(128)==pool[128] && state==full,"Accepted retirement omitted old tuple or changed foreign/source authority");
+        auto prototyped=state;prototyped.owners[0].designs[0].prototyped=true;prototyped.SynchronizeNativeRegistry();
+        auto reactor_edit=draft;reactor_edit.armor=1;reactor_edit.reactor=2;
+        const auto replacement=unit::PrepareSmacWorkshopCommit(prototyped,reactor_edit,catalog,tech,owner,counts,counts,true);
+        GT_ASSERT(replacement.retirement==64 && !replacement.state.owners[0].designs[0].prototyped,
+            "Retired source remained active during the new prototype-coverage scan");
+        counts[64]=0;faction::SmacDesignCounts queued{};queued[64]=9;
+        const auto silent=unit::PrepareSmacWorkshopCommit(state,draft,catalog,tech,owner,counts,queued);
+        GT_ASSERT(silent.success && !silent.confirmation && !silent.retirement && silent.state.retirement_history==state.retirement_history,"Queue-only silent edit incorrectly retired/history-recorded a design");
+        // Matching a custom tuple copies only the source-controlled name and NUL.
+        auto rename_pool=pool;rename_pool[65][38]=2;state=Empty();state.RetainNativeRegistry(rename_pool,catalog);draft.name="X";owner.owned.fill(false); // existing own aliases do not require component technologies
+        const auto alias=unit::PrepareSmacWorkshopCommit(state,draft,catalog,tech,owner,counts,queued);
+        auto expected=rename_pool[65];expected[0]='X';expected[1]=0;
+        GT_ASSERT(alias.success && alias.result.design_id==65 && alias.state.native_registry->at(65)==expected && alias.state.native_registry->at(64)==rename_pool[64],"Short alias rename erased its native name tail or source");
+        // Fresh prototype construction has its own full-name clear policy.
+        auto riot_pool=workshop_general_fixture::BasePool();riot_pool[127]={};riot_pool[128]=pool[128];riot_pool[128][48]=7;
+        riot_pool[64].fill(0xa5);riot_pool[64][48]=0;riot_pool[64][49]=0;
+        state=Empty();state.retirement_history[1]=unit::SmacRetirementHistory::NewWorld();state.RetainNativeRegistry(riot_pool,catalog);
+        GT_ASSERT(state.RequestRiotPrototype(128,1,false,catalog,true)==64,"Fresh retained riot prototype selected another slot");
+        std::array<uint8_t,32> cleared{};std::copy_n(riot_pool[128].begin(),13,cleared.begin());
+        GT_ASSERT(std::equal(cleared.begin(),cleared.end(),state.native_registry->at(64).begin()) && state.native_registry->at(64)[47]==0xa5
+            && state.native_registry->at(64)[50]==0xa5 && state.native_registry->at(64)[51]==0xa5,"Fresh constructor did not clear name or lost destination opaque/prerequisite bytes");GT_OK();
+    });
     task->AddTest("SMAC Workshop intrinsic reactivation matches four native shared-record controls",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);if(!input) {throw std::runtime_error("Missing owned alpha for intrinsic controls");}

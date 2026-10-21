@@ -520,3 +520,38 @@ also now has 24 native controls for the next animation integration. Nonzero-fram
 pixel matching remains separate from the already-exact static compositions.
 
 CI follow-up: three additional fixtures (selected Rover admission, production presentation, and founding selection) now synchronize their explicitly authored records and names. All three focused reruns pass; production code is unchanged by this follow-up.
+
+
+### Common retained commit preparation
+
+The common detached commit now combines tuple reuse, the original two-stage
+allocator, cached Unit/production counts, general record construction and
+post-build naming. Existing own aliases bypass new-component technology gates.
+Inactive own selections retain their raw named flag as the source gate. The
+live Base command uses this path for saves needing no retirement. Missing
+caches are left absent: aliases need no allocation counts, and a wholly inactive,
+included bank makes the provisional allocation independent of both count rows.
+Other allocation paths require retained count authority.
+
+Pending overwrite confirmation returns the original saved state. An accepted
+preparation records the old eight-byte tuple, deactivates that record before
+the replacement's prototype-coverage scan (`595d99`), and identifies the raw
+design ID whose world retirement the caller must stage. Queue-only silent
+in-place edits do not invoke retirement/history. Live Unit removal, global Base
+queue surgery and the overwrite modal remain the next transaction integration;
+the current command never publishes an unperformed retirement.
+
+Ordinary saved-name copies now write text plus NUL while preserving the tail.
+The fresh riot prototype constructor separately clears all32 name bytes, while
+preserving its destination opaque byte/prerequisite. The seven complete native
+saved pools match, including Infantry/Rover, Fusion, abilities and long names.
+Tests distinguish pending/accepted retirement, prototype-coverage ordering,
+queue-only silent edits, aliases lacking technology, short rename tails and
+fresh-constructor name clearing.
+
+Validation: 25 selected native groups pass, including the three regression
+fixtures found by registry CI. The22 Workshop/registry/codec groups also pass
+ASan/UBSan with six production and three test files instrumented. Targeted
+correctness analysis is clean for five production files/consumers; changed
+producer/caller follow-ups reused unchanged successful checks. No UI source or
+pixels changed in this slice.

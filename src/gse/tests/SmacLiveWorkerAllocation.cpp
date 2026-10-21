@@ -1479,6 +1479,45 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_OK();
         });GT_ASSERT(run.empty(),"Live Workshop command: "+run);GT_OK();
     });
+    task->AddTest("SMAC live Workshop weapon cards expose raw stats and retained intrinsic Probe sprite",[](GSE*,context::Context*)->std::string {
+        const auto source=[](const std::string& filename) {
+            const auto text=TanksSource(filename);if(filename!="alpha.txt") {return text;}
+            std::istringstream lines(text);std::string line,section,result;size_t row=0;
+            while(std::getline(lines,line)) {
+                if(!line.empty() && line.front()=='#') {section=line;row=0;}
+                else if(section=="#WEAPONS") {
+                    std::vector<std::string> fields;std::istringstream input(line);std::string field;
+                    while(std::getline(input,field,',')) {fields.push_back(field);}
+                    fields.at(6)=row==19?"Disable":row==0 || row==14?"None":row==15?"Tech6":"Tech1";
+                    if(row==11) {fields.at(2)="-2";}if(row==12) {fields.at(2)="-1";}
+                    if(row==18) {fields.at(3)="11";fields.at(5)="3";}
+                    line.clear();for(const auto& field:fields) {if(!line.empty()) {line+=',';}line+=field;}++row;
+                }result+=line+'\n';
+            }return result;
+        };
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;pool[6][46]=9;
+                state.designs.RetainNativeRegistry(pool,catalog);});
+            const auto before=fixture.Snapshot();auto* menu=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL));
+            const auto& rows=static_cast<value::Array*>(menu->Get("weapon_choices"))->value;
+            GT_ASSERT(rows.size()==20,"Disabled Artifact consumed a card or unknown technology removed one");
+            for(size_t ordinal=0;ordinal<rows.size();++ordinal) {
+                auto* row=static_cast<value::Object*>(rows[ordinal]);const int id=int(static_cast<value::Int*>(row->Get("id"))->value);
+                const auto& weapon=catalog.weapons.weapons.at(id);
+                GT_ASSERT(id==int(ordinal<19?ordinal:20) && static_cast<value::String*>(row->Get("name"))->value==weapon.name
+                    && static_cast<value::Int*>(row->Get("value"))->value==uint8_t(int(weapon.mode)<3?weapon.offense:weapon.cost)
+                    && static_cast<value::Bool*>(row->Get("psi"))->value==(id==12),"Weapon card lost raw-byte value/Psi precedence or source order");
+                if(id==18) {GT_ASSERT(static_cast<value::Int*>(row->Get("sprite"))->value==9 && weapon.icon==3,"Probe sprite followed weapon icon instead of intrinsic6 byte46");}
+                if(id==11) {GT_ASSERT(static_cast<value::Int*>(row->Get("value"))->value==254 && static_cast<value::Int*>(row->Get("power"))->value==-2,"Unsigned caption corrupted signed model power");}
+            }
+            GT_ASSERT(fixture.Snapshot()==before,"Weapon card query mutated world");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Workshop read-only edit adapter derives owner admission and carries slot state",[](GSE*,context::Context*)->std::string {
         const auto source=[](const std::string& filename) {
             auto text=TanksSource(filename);size_t at=0;

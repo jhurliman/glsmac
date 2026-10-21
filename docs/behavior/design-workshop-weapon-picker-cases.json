@@ -1,0 +1,587 @@
+{
+  "scope": "Source-derived stock card plans, retained native model pointer identity and scalar ordinal/layout checks. No new native executions or raster comparisons.",
+  "cards": [
+    {
+      "id": 0,
+      "name": "Hand Weapons",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "1",
+      "selectable": true
+    },
+    {
+      "id": 1,
+      "name": "Laser",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw01.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "2",
+      "selectable": true
+    },
+    {
+      "id": 2,
+      "name": "Particle Impactor",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw02.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "4",
+      "selectable": true
+    },
+    {
+      "id": 3,
+      "name": "Gatling Laser",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw04.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "5",
+      "selectable": true
+    },
+    {
+      "id": 4,
+      "name": "Missile Launcher",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw03.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "6",
+      "selectable": true
+    },
+    {
+      "id": 5,
+      "name": "Chaos Gun",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw05.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "8",
+      "selectable": true
+    },
+    {
+      "id": 6,
+      "name": "Fusion Laser",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw06.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "10",
+      "selectable": true
+    },
+    {
+      "id": 7,
+      "name": "Tachyon Bolt",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw07.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "12",
+      "selectable": true
+    },
+    {
+      "id": 8,
+      "name": "Plasma Shard",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw08.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "13",
+      "selectable": true
+    },
+    {
+      "id": 9,
+      "name": "Quantum Laser",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw09.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "16",
+      "selectable": true
+    },
+    {
+      "id": 10,
+      "name": "Graviton Gun",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw10.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "20",
+      "selectable": true
+    },
+    {
+      "id": 11,
+      "name": "Singularity Laser",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw11.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "24",
+      "selectable": true
+    },
+    {
+      "id": 12,
+      "name": "Psi Attack",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw12.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "Psi",
+      "selectable": true
+    },
+    {
+      "id": 13,
+      "name": "Planet Buster",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vw13.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1031127695,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "99",
+      "selectable": true
+    },
+    {
+      "id": 14,
+      "name": "Colony Module",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "droplet.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "colony"
+        }
+      ],
+      "scale_bits": 1036831949,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 512,
+      "value": "10",
+      "selectable": true
+    },
+    {
+      "id": 15,
+      "name": "Terraforming Unit",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vwntu.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1034147594,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 512,
+      "value": "6",
+      "selectable": true
+    },
+    {
+      "id": 16,
+      "name": "Troop Transport",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vwntt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1036831949,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 512,
+      "value": "4",
+      "selectable": true
+    },
+    {
+      "id": 17,
+      "name": "Supply Transport",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vwnst.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1036831949,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 512,
+      "value": "8",
+      "selectable": true
+    },
+    {
+      "id": 18,
+      "name": "Probe Team",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "ptmod.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1045220557,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 512,
+      "value": "4",
+      "selectable": true
+    },
+    {
+      "id": 19,
+      "name": "Alien Artifact",
+      "admitted": false,
+      "scene": [
+        {
+          "asset": "vwnaa.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1036831949,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 512,
+      "value": "36",
+      "selectable": true
+    },
+    {
+      "id": 20,
+      "name": "Conventional Payload",
+      "admitted": true,
+      "scene": [
+        {
+          "asset": "vm.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "scale_bits": 1031127695,
+      "underlay": null,
+      "anchor": [
+        79,
+        49
+      ],
+      "draw": "normal",
+      "flags": 6,
+      "silhouette_index": null,
+      "label_offset": 516,
+      "value": "12",
+      "selectable": true
+    }
+  ],
+  "configured_21_initial": {
+    "initial": 20,
+    "first": 5,
+    "outer": [
+      27,
+      286,
+      132,
+      377
+    ]
+  },
+  "stock_filtered_current_19": {
+    "initial": 20,
+    "first": 5,
+    "selected_card": null
+  },
+  "scrollbar_constructor": {
+    "x": "W-43",
+    "y": 21,
+    "width": 24,
+    "height": 246,
+    "default_end_buttons": [
+      [
+        0,
+        0,
+        24,
+        24
+      ],
+      [
+        0,
+        222,
+        24,
+        246
+      ]
+    ],
+    "immediately_hidden": true
+  }
+}

@@ -244,21 +244,36 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
         choices.erase(std::remove_if(choices.begin(),choices.end(),[](const auto& row){return row.component_id!=0;}),choices.end());
     }
     const auto mineral_factor=m_game->GetSmacProductionMineralFactor(m_owner);
+    const auto& registry=m_game->m_simulation->value.designs;
     const auto component_choices=[&](unit::SmacWorkshopComponent kind) {
         gse::value::array_elements_t rows;
         for(const auto& choice:unit::SmacWorkshopChoices(kind,catalog,*settings.GetSmacTechnologyRules(),technology)) {
             const bool chassis=kind==unit::SmacWorkshopComponent::Chassis;
+            const bool weapon=kind==unit::SmacWorkshopComponent::Weapon;
             const auto id=choice.component_id;
+            const auto* equipment=weapon?&catalog.weapons.weapons.at(id):nullptr;
+            int sprite=-1;
+            if(weapon) {
+                sprite=int8_t(uint8_t(equipment->icon));
+                if(equipment->mode==loader::txt::WeaponMode::InfoWar) {
+                    // Retained intrinsic Probe6 wins; V1 has only its checked
+                    // predefined initializer, with no mutable raw registry.
+                    sprite=int8_t(registry.native_registry ? registry.native_registry->at(6)[46]:catalog.units.at(6).icon);
+                }
+            }
             rows.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
                 {"id",VALUE(gse::value::Int,,id)}, {"technology_available",VALUE(gse::value::Bool,,choice.technology_available)},
-                {"name",VALUE(gse::value::String,,chassis ? catalog.chassis.chassis.at(id).names[0].name:catalog.reactors.reactors.at(id-1).name)},
-                {"value",VALUE(gse::value::Int,,chassis ? catalog.chassis.chassis.at(id).speed:int32_t(id))},
-                {"domain",VALUE(gse::value::Int,,chassis ? int(catalog.chassis.chassis.at(id).triad):-1)}
+                {"name",VALUE(gse::value::String,,chassis ? catalog.chassis.chassis.at(id).names[0].name:weapon ? equipment->name:catalog.reactors.reactors.at(id-1).name)},
+                {"value",VALUE(gse::value::Int,,chassis ? catalog.chassis.chassis.at(id).speed:weapon ? uint8_t(int(equipment->mode)<3?equipment->offense:equipment->cost):int32_t(id))},
+                {"domain",VALUE(gse::value::Int,,chassis ? int(catalog.chassis.chassis.at(id).triad):-1)},
+                {"power",VALUE(gse::value::Int,,weapon ? int8_t(uint8_t(equipment->offense)):0)},
+                {"mode",VALUE(gse::value::Int,,weapon ? int(equipment->mode):0)},
+                {"psi",VALUE(gse::value::Bool,,weapon && uint8_t(equipment->offense)==255)},
+                {"sprite",VALUE(gse::value::Int,,sprite)}
             }));
         }return VALUE(gse::value::Array,,rows);
     };
     gse::Value* designs=VALUE(gse::value::Undefined);
-    const auto& registry=m_game->m_simulation->value.designs;
     const auto& counts=m_game->m_simulation->value.economy.at(technology.admission.simulation_id).design_counts;
     if(registry.native_registry) {
         const auto first=64*technology.admission.simulation_id;bool ready=true;
@@ -358,6 +373,7 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
     return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
         {"expected_state",VALUE(gse::value::String,,expected)}, {"armor",VALUE(gse::value::Array,,armor)},
         {"chassis_choices",component_choices(unit::SmacWorkshopComponent::Chassis)},
+        {"weapon_choices",component_choices(unit::SmacWorkshopComponent::Weapon)},
         {"reactor_choices",component_choices(unit::SmacWorkshopComponent::Reactor)},
         {"ability_names",VALUE(gse::value::Array,,ability_names)},
         {"designs",designs},

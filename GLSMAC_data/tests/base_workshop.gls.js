@@ -4,7 +4,7 @@ const node = (data) => {
     data.hidden = false; data.handlers = {}; data.children = [];
     data.hide = () => { data.hidden = true; }; data.show = () => { data.hidden = false; }; data.remove = () => {};
     data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi'}; };
-    data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi'}; };
+    data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
     data.smacworkshopabilitytext = (technology) => { return {title: 'Select Special Ability', none: 'No special ability', ok: 'OK', cancel: 'Cancel', cost: 'Cost', attack: 'Attack', defense: 'Defense', speed: 'Speed', domains: ['Land', 'Sea', 'Air'], second_title: 'Chief Engineer', second_body: 'Research ' + technology + '.', missile_title: 'Chief Engineer', missile_body: 'Missiles cannot have special abilities.'}; };
     data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
     data.smacworkshopcomponents = (armor, only_armor) => { test.assert(only_armor); data.components_armor = armor; };
@@ -30,7 +30,7 @@ let ability_menu = {guard: '', required_technology: 'Neural', rows: [{id: 24, na
 base.get_smac_workshop_abilities = (selected, chassis, weapon, armor, reactor, abilities, name, first, second, slot) => { return ability_menu; };
 base.get_smac_workshop_edit = (selected, chassis, weapon, armor, reactor, abilities, name, first, second, kind, choice, automatic) => {
     edits :+ {kind: kind, choice: choice, automatic: automatic, first: first, second: second};
-    if (choice >= 0) { if (kind == 0) { chassis = choice; } if (kind == 2) { armor = choice; } if (kind == 3) { reactor = choice; } }
+    if (choice >= 0) { if (kind == 0) { chassis = choice; } if (kind == 1) { weapon = choice; } if (kind == 2) { armor = choice; } if (kind == 3) { reactor = choice; } }
     if (kind >= 4) {
         if (kind == 4) { first = choice >= 24 ? (0 - 1) : choice; } else { second = choice >= 24 ? (0 - 1) : choice; }
         abilities = 0; let bit = 0; let value = 1;
@@ -240,4 +240,38 @@ ability_menu = {guard: 'second_technology', required_technology: 'Neural', rows:
 const before_guard = #sizeof(edits); dialog.ability_buttons[1].handlers.click({});
 test.assert(ability.notice && ability.title.text == 'CHIEF ENGINEER' && ability.cancel.hidden && ability.lines[0].text == 'Research Neural.');
 ability.finish(true); test.assert(!ability.active && #sizeof(edits) == before_guard);
+dialog.hide_view();
+
+// Weapon windows overlap by one row; unknown technology keeps its slot.
+let weapons = []; let weapon_id = 0;
+while (weapon_id < 21) {
+    weapons :+ {id: weapon_id, name: 'Weapon ' + #to_string(weapon_id), value: weapon_id == 13 ? 99 : 10,
+        mode: weapon_id < 14 ? 0 : 8, psi: weapon_id == 12, technology_available: weapon_id != 1};
+    weapon_id++;
+}
+const weapon_view = selection + {weapon_choices: weapons};
+dialog.open(base, weapon_view); dialog.selected_weapon = 20; dialog.weapon_button.handlers.click({});
+test.assert(dialog.picker_canvas.picker_kind == 1 && dialog.picker_first == 5 && #sizeof(dialog.cards) == 16 && !dialog.picker_scroll.hidden && dialog.picker_scroll.max == 2.0);
+test.assert(dialog.picker_canvas.picker_rows[0].id == 5 && dialog.picker_canvas.picker_rows[15].id == 20);
+let equipment_label = false; for (child of dialog.cards[15].children) { if (child.text == 'Equipment') { equipment_label = true; } }
+test.assert(equipment_label);
+test.assert(dialog.picker_scroll.handlers.change({value: 2.0}) == true && dialog.picker_first == 10 && #sizeof(dialog.cards) == 11 && dialog.picker_canvas.picker_rows[10].id == 20);
+dialog.cards[10].handlers.click({}); test.assert(dialog.picker.hidden && edits[#sizeof(edits) - 1].kind == 1 && edits[#sizeof(edits) - 1].choice == 20);
+dialog.weapon_button.handlers.click({}); dialog.picker_scroll.handlers.change({value: 0.0});
+const weapon_edits = #sizeof(edits); dialog.cards[1].handlers.click({});
+test.assert(#sizeof(edits) == weapon_edits && #sizeof(dialog.cards[1].children) == 0);
+let psi_weapon = false; let buster_value = false;
+for (child of dialog.cards[12].children) { if (child.text == 'Psi') { psi_weapon = true; } }
+for (child of dialog.cards[13].children) { if (child.text == '99') { buster_value = true; } }
+test.assert(psi_weapon && buster_value);
+dialog.cards[14].handlers.click({}); test.assert(dialog.selected_weapon == 14 && dialog.picker.hidden);
+dialog.hide_view();
+let stock_weapons = []; for (row of weapons) { if (row.id != 19) { stock_weapons :+ row + {}; } }
+const stock_weapon_view = selection + {weapon_choices: stock_weapons};
+dialog.open(base, stock_weapon_view); dialog.selected_weapon = 20; dialog.weapon_button.handlers.click({});
+test.assert(dialog.picker_first == 0 && #sizeof(dialog.cards) == 20 && dialog.picker_canvas.picker_rows[19].id == 20 && dialog.picker_scroll.hidden);
+dialog.picker.handlers.keydown({code: 'ESCAPE', modifiers: {}}); test.assert(dialog.picker.hidden && dialog.selected_weapon == 20);
+// A filtered current ID scans past the entire admitted list, not just lower IDs.
+dialog.selected_weapon = 19; dialog.weapon_button.handlers.click({});
+test.assert(dialog.picker_first == 5 && #sizeof(dialog.cards) == 15 && dialog.picker_canvas.picker_selected == 19 && dialog.picker_canvas.picker_rows[14].id == 20);
 dialog.hide_view();

@@ -152,6 +152,72 @@ std::string MakeScoutTestAssetWithGeometry( const std::vector< uint8_t >& geomet
 }
 
 void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
+    task->AddTest("CVR Workshop weapon picker uses independent source recipes and native scales",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        std::vector<std::string> reads;
+        const auto read=[&](const std::string& name) {
+            reads.push_back(name);
+            for(const auto& entry:std::filesystem::directory_iterator(directory)) {
+                auto candidate=entry.path().filename().string();std::transform(candidate.begin(),candidate.end(),candidate.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if(candidate==name) {std::ifstream stream(entry.path(),std::ios::binary);return std::string(std::istreambuf_iterator<char>(stream),{});}
+            }throw std::runtime_error("Missing owned weapon picker asset: "+name);
+        };
+        const auto source=read("alpha.txt"),palette=read("palette.pcx"),system=read("system.txt"),faction=read("spartans.pcx");
+        const auto weapons=loader::txt::UnitRulesTXTLoader::ParseWeapons(source,"smac");
+        // Source-derived recipes, not new original-executable raster controls.
+        constexpr std::array<const char*,21> files{"vw00.cvr","vw01.cvr","vw02.cvr","vw04.cvr","vw03.cvr","vw05.cvr","vw06.cvr","vw07.cvr","vw08.cvr","vw09.cvr","vw10.cvr","vw11.cvr","vw12.cvr","vw13.cvr",nullptr,"vwntu.cvr","vwntt.cvr","vwnst.cvr","ptmod.cvr","vwnaa.cvr","vm.cvr"};
+        for(int id=0;id<21;++id) {
+            const auto& weapon=weapons.weapons.at(id);reads.clear();
+            const auto renderer=CvrScoutRenderer::LoadWorkshopPickerWeapon(read,faction,id,{weapon.offense,int(weapon.mode),1});
+            GT_ASSERT(std::find(reads.begin(),reads.end(),"vi.cvr")==reads.end() && std::find(reads.begin(),reads.end(),"vgmt.cvr")==reads.end()
+                && std::find(reads.begin(),reads.end(),"vt.cvr")==reads.end() && std::find(reads.begin(),reads.end(),"vpt.cvr")==reads.end(),"Picker leaked draft Infantry or mounting assets");
+            if(id==14) {
+                GT_ASSERT(std::find(reads.begin(),reads.end(),"adroper.cvr")!=reads.end() && std::find(reads.begin(),reads.end(),"droplet.cvr")!=reads.end(),"Independent Colony omitted its marker displacement");
+                std::array<uint32_t,3> position{};GT_ASSERT(renderer.RenderWorkshopPicker(1,0,true,position).draw_count>0,"Colony picker scene missing");continue;
+            }
+            const auto expected=CvrScoutRenderer::LoadWorkshopPart(read(files[id]),palette,system,nullptr,true);
+            const uint32_t scale=id==13 || id==20 ? 0x3d75c28f:int(weapon.mode)<3 || int(weapon.mode)==11 ? 0x3e4ccccd:int(weapon.mode)==9 ? 0x3da3d70a:0x3dcccccd;
+            for(bool known:{false,true}) {
+                std::array<uint32_t,3> actual_position{},expected_position{};
+                const auto actual=renderer.RenderWorkshopPicker(1,7,known,actual_position);
+                const auto control=expected.RenderWorkshopPart(scale,true,{295,143},!known,false,expected_position);
+                GT_ASSERT(actual.indexed.color==control.indexed.color && actual.indexed.depth==control.indexed.depth && actual_position==expected_position
+                    && actual.target_anchor==control.target_anchor,"Weapon picker differs from independent scene/scale recipe for ID"+std::to_string(id));
+                std::array<uint32_t,3> other_position{};const auto other=renderer.RenderWorkshopPicker(1,0,known,other_position);
+                GT_ASSERT(other.indexed.color==actual.indexed.color && other.indexed.depth==actual.indexed.depth && other_position==actual_position,"Destination ordinal changed cached source planes");
+            }
+        }
+        const auto direct=CvrScoutRenderer::LoadWorkshopPickerWeapon(read,faction,0,{0,8,1});std::array<uint32_t,3> p{},q{};
+        const auto normal=direct.RenderWorkshopPicker(1,0,true,p);
+        const auto control=CvrScoutRenderer::LoadWorkshopPart(read("vw00.cvr"),palette,system,nullptr,true).RenderWorkshopPart(0x3e4ccccd,true,{79,49},false,false,q);
+        GT_ASSERT(normal.indexed.color==control.indexed.color,"Direct ID0 scale incorrectly followed configured mode");GT_OK();
+    });
+    task->AddTest("CVR Workshop weapon underlays retain crop offsets keys and outer cell clip",GT(){
+        // Synthetic indexed UNITS layout exercises loaded-index remapping and
+        // the special tenth crop without embedding original asset pixels.
+        constexpr size_t width=816,height=693;std::string pcx(128,0);
+        pcx[0]=10;pcx[1]=5;pcx[2]=1;pcx[3]=8;pcx[65]=1;
+        const auto word=[&](size_t at,size_t value){pcx[at]=char(value);pcx[at+1]=char(value>>8);};word(8,width-1);word(10,height-1);word(66,width);
+        std::vector<uint8_t> pixels(width*height,255);
+        for(size_t id=0;id<10;++id) {const size_t x=id==9?716:2,y=id==9?233:2+77*id;
+            pixels[y*width+x]=252;pixels[y*width+x+1]=253;pixels[(y+4)*width+x+99]=uint8_t(30+id);
+        }
+        for(auto value:pixels) {if(value>=192) {pcx.push_back(char(193));}pcx.push_back(char(value));}
+        pcx.push_back(12);pcx.append(768,0);const auto sprites=CvrActorMaterial::ReadWorkshopWeaponSprites(pcx);
+        for(size_t id=0;id<10;++id) {GT_ASSERT(sprites[id].size()==7500 && sprites[id][0]==9 && sprites[id][1]==9 && sprites[id][499]==40+id,"Wrong sprite crop or loaded key remap");}
+        auto sprite=sprites[0];std::vector<uint8_t> dst(623*387,77);const auto before=dst;
+        CvrActorMaterial::PaintWorkshopWeaponSprite(dst,623,387,sprite,0);
+        GT_ASSERT(dst[16*623+129]==40 && std::count(dst.begin(),dst.end(),40)==1 && dst[12*623+30]==77,"Sprite trim was recentered, x129 clipped or key copied");
+        dst=before;CvrActorMaterial::PaintWorkshopWeaponSprite(dst,623,387,sprite,19);
+        GT_ASSERT(dst[(16+282)*623+129+432]==40,"Last cell underlay used wrong row/column");
+        dst=before;sprite.pop_back();GT_ASSERT(Rejects([&]{CvrActorMaterial::PaintWorkshopWeaponSprite(dst,623,387,sprite,0);}) && dst==before,"Truncated sprite mutated destination");
+        sprite=sprites[0];GT_ASSERT(Rejects([&]{CvrActorMaterial::PaintWorkshopWeaponSprite(dst,623,387,sprite,20);}) && dst==before,"Invalid ordinal mutated destination");
+        GT_ASSERT(Rejects([&]{CvrActorMaterial::PaintWorkshopWeaponSprite(sprite,100,75,sprite,0);}),"Aliased underlay accepted");
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(directory && *directory) {
+            std::ifstream file(std::filesystem::path(directory)/"UNITS.PCX",std::ios::binary);const std::string bytes(std::istreambuf_iterator<char>(file),{});
+            const auto owned=CvrActorMaterial::ReadWorkshopWeaponSprites(bytes);for(const auto& row:owned) {GT_ASSERT(row.size()==7500 && std::find(row.begin(),row.end(),6)==row.end() && std::find(row.begin(),row.end(),7)==row.end(),"Owned underlay marker remap changed");}
+        }GT_OK();
+    });
     task->AddTest("CVR saved strip matches four full native bodies shadows and clipped copies",GT(){
         const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
         const auto read=[&](const std::string& name) {

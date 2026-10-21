@@ -30,6 +30,10 @@ struct CvrActorMaterial {
         const std::array<uint8_t,24*256>& source,uint8_t tint);
     // Original623x368 deswin.pcx pixels installed at palette offset10.
     static std::vector<uint8_t> ReadWorkshopBackdrop(std::string_view deswin_pcx);
+    // UNITS frame0 bank used only for configured nonnegative weapon selectors.
+    static std::array<std::vector<uint8_t>,10> ReadWorkshopWeaponSprites(std::string_view units_pcx);
+    static void PaintWorkshopWeaponSprite(std::vector<uint8_t>& destination,size_t width,size_t height,
+        const std::vector<uint8_t>& sprite,int ordinal);
     static CvrWorkshopMaterials ReadWorkshop(std::string_view palette_pcx,std::string_view vbp,std::string_view system);
 	static CvrActorMaterial Read( std::string_view palette_pcx, std::string_view faction_pcx,
 		const std::array< uint8_t, 24 * 256 >& body_shades );

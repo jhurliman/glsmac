@@ -48,6 +48,8 @@ return {
         this.chassis_button.on('click', () => { this.open_component_picker(0); return true; });
         this.reactor_button = this.window.button({left: 462, top: 7, width: 99, height: 85, background: 'transparent'});
         this.reactor_button.on('click', () => { this.open_component_picker(3); return true; });
+        this.weapon_button = this.window.button({left: 30, top: 101, width: 99, height: 85, background: 'transparent'});
+        this.weapon_button.on('click', () => { this.open_component_picker(1); return true; });
         this.ability_buttons = [];
         const workshop = this;
         for (slot of [0, 1]) {
@@ -61,6 +63,11 @@ return {
         this.window.on('keydown', (e) => { if (e.modifiers == {} && e.code == 'ESCAPE') { this.hide_view(); } if (e.modifiers == {} && e.code == 'ENTER') { this.submit(true); } return true; });
         this.picker = p.ui.root.window({zindex: 0.95, align: 'top left', left: 216, top: 168, width: 623, height: 387, background: 'rgb(0,0,0)', blocker: 'rgba(0, 0, 0, 180)'});
         this.picker_canvas = this.picker.surface({left: 0, top: 0, width: 623, height: 387});
+        this.picker_scroll = this.picker.scrollbar({class: 'default-scroll-v', left: 580, top: 21, width: 24, height: 246,
+            fromto_size: 24, slider_size: 24, min: 0.0, max: 2.0, value: 0.0});
+        this.picker_scroll.left = 580; this.picker_scroll.width = 24; this.picker_scroll.top = 21; this.picker_scroll.height = 246;
+        this.picker_scroll.on('change', (e) => { this.picker_first = 5 * #floor(e.value + 0.5); this.paint_picker(); return true; });
+        this.picker_scroll.hide();
         this.picker.hide(); this.cards = [];
         this.confirming = false;
         this.overwrite_window = p.ui.root.window({class: 'game-popup', zindex: 0.98, width: 440, height: 188, blocker: 'rgba(0, 0, 0, 180)'});
@@ -232,13 +239,34 @@ return {
     },
     open_component_picker: (kind) => {
         if (!this.active || this.pending || this.confirming) { return; }
-        this.picker_kind = kind;
+        this.picker_kind = kind; this.picker_first = 0; this.picker_rows = this.selection.armor; this.picker_selected = this.selected_armor;
+        if (kind == 0) { this.picker_rows = this.selection.chassis_choices; this.picker_selected = this.selected_chassis; }
+        if (kind == 1) { this.picker_rows = this.selection.weapon_choices; this.picker_selected = this.selected_weapon; }
+        if (kind == 3) { this.picker_rows = this.selection.reactor_choices; this.picker_selected = this.selected_reactor; }
+        if (kind == 1) {
+            let initial = 0; for (row of this.picker_rows) { if (row.id == this.picker_selected) { break; } initial++; }
+            while (initial >= this.picker_first + 20) { this.picker_first = this.picker_first + 5; }
+        }
+        const count = #sizeof(this.picker_rows);
+        if (count > 18) {
+            const range = #floor(#to_float(count) / 5.0) - 2;
+            this.picker_scroll.max = #to_float(range); this.picker_scroll.value = #to_float(this.picker_first) / 5.0;
+            this.picker_scroll.speed = 50.0 / #to_float(range);
+            // The count>18 constructor hides the control. Only the separate
+            // overflow attachment for count>20 shows it.
+            if (count > 20) { this.picker_scroll.height = 313; this.picker_scroll.show(); }
+            else { this.picker_scroll.height = 246; this.picker_scroll.hide(); }
+        } else { this.picker_scroll.hide(); }
+        this.paint_picker(); this.picker.show();
+    },
+    paint_picker: () => {
+        const kind = this.picker_kind;
         for (card of this.cards) { card.remove(); } this.cards = [];
-        let rows = this.selection.armor;
-        if (kind == 2) { this.picker_text = this.picker_canvas.smacworkshoparmorpicker(this.selected_armor, rows); }
+        let rows = []; let ordinal = this.picker_first;
+        while (ordinal < #sizeof(this.picker_rows) && ordinal < this.picker_first + 20) { rows :+ this.picker_rows[ordinal] + {}; ordinal++; }
+        if (kind == 2) { this.picker_text = this.picker_canvas.smacworkshoparmorpicker(this.picker_selected, rows); }
         else {
-            rows = kind == 0 ? this.selection.chassis_choices : this.selection.reactor_choices;
-            const selected = kind == 0 ? this.selected_chassis : this.selected_reactor;
+            const selected = this.picker_selected;
             const chassis = this.selected_chassis; const weapon = this.selected_weapon; const reactor = this.selected_reactor;
             const faction = this.selection.faction_art; const power = this.selection.offense; const mode = this.selection.weapon_mode;
             let strength = 1; for (row of this.selection.armor) { if (row.id == this.selected_armor) { strength = row.rating; } }
@@ -247,7 +275,9 @@ return {
         let i = 0;
         for (row of rows) {
             const id = row.id; const available = row.technology_available;
-            const strength = kind == 2 ? (row.rating < 0 ? this.picker_text.psi : #to_string(row.rating)) : #to_string(row.value);
+            let strength = '';
+            if (kind == 2) { strength = row.rating < 0 ? this.picker_text.psi : #to_string(row.rating); }
+            else { strength = kind == 1 && row.psi ? this.picker_text.psi : #to_string(row.value); }
             const card = this.picker.button({background: 'transparent', overflow: 'hidden', left: 27 + (i % 5) * 108, top: 4 + #floor(#to_float(i) / 5.0) * 94, width: 105, height: 91});
             if (row.technology_available) {
                 const name = card.text({align: 'top center', baseline: 10, font: 'arial.ttf:10:mono', color: 'rgb(176,212,235)', text: ''});
@@ -259,14 +289,16 @@ return {
                 }
                 lines :+ line; name.remove(); let baseline = 10;
                 for (text of lines) { card.text({align: 'top center', baseline: baseline, font: 'arial.ttf:10:mono', color: 'rgb(176,212,235)', text: text}); baseline += 13; }
-                const description = kind == 2 ? this.picker_text.shielding : (kind == 3 ? this.picker_text.power : this.picker_text.domains[row.domain]);
+                let description = this.picker_text.power;
+                if (kind == 0) { description = this.picker_text.domains[row.domain]; }
+                if (kind == 1) { description = row.mode < 3 ? this.picker_text.weapon : this.picker_text.equipment; }
+                if (kind == 2) { description = this.picker_text.shielding; }
                 card.text({align: 'top left', left: 3, baseline: 85, font: 'arial.ttf:10:mono', color: 'rgb(176,212,235)', text: description});
                 card.text({align: 'top right', right: 3, baseline: 86, font: 'arialbd.ttf:12:mono', color: 'rgb(176,212,235)', text: strength});
             }
             card.on('click', () => { if (available) { this.accept_component(kind, id); } return true; });
             this.cards :+ card; i++;
         }
-        this.picker.show();
     },
     submit: (done) => {
         if (!this.active || this.pending || this.confirming) { return; }

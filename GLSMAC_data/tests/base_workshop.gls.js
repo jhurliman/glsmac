@@ -6,7 +6,7 @@ const node = (data) => {
     data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; };
     data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
     data.smacworkshopcomponents = (armor) => { data.components_armor = armor; };
-    data.smacworkshopdesign = (chassis, weapon, armor, reactor, kind, faction, yaw, power, mode, strength) => { data.preview_strength = strength; data.preview_power = power; data.preview_mode = mode; data.preview_armor = armor; data.preview_yaw = yaw; data.preview_faction = faction; };
+    data.smacworkshopdesign = (chassis, weapon, armor, reactor, kind, faction, yaw, power, mode, strength) => { data.preview_chassis = chassis; data.preview_weapon = weapon; data.preview_reactor = reactor; data.preview_strength = strength; data.preview_power = power; data.preview_mode = mode; data.preview_armor = armor; data.preview_yaw = yaw; data.preview_faction = faction; };
     data.on = (event, cb) => { data.handlers[event] = cb; };
     data.listen = (target, event, cb) => { listeners[event] = cb; };
     const child = (properties) => { const value = node(properties); data.children :+ value; return value; };
@@ -117,3 +117,19 @@ test.assert(dialog.active && !dialog.pending && dialog.selected_design == 64 && 
 dialog.selected_armor = 0; dialog.draft_name = 'Edited'; dialog.submit(true);
 listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: true, done: false, restore_draft: false});
 test.assert(dialog.active && dialog.selected_armor == 0 && dialog.draft_name == 'Edited'); dialog.hide_view();
+
+// The complete live protocol preserves non-Scout chassis/weapon/reactor/abilities.
+const full = selection + {draft: {selected_design: 64, chassis: 1, weapon: 1, armor: 1, reactor: 2, abilities: 512, name: 'Saved Rover'}};
+full.chassis = 'Speeder'; full.weapon = 'Laser'; full.reactor = 'Fusion'; full.power = 2; full.offense = 2; full.speed = 2;
+dialog.open(base, full);
+test.assert(dialog.selected_design == 64 && dialog.selected_chassis == 1 && dialog.selected_weapon == 1 && dialog.selected_reactor == 2 && dialog.selected_abilities == 512 && dialog.draft_name == 'Saved Rover');
+test.assert(dialog.model.preview_chassis == 1 && dialog.model.preview_weapon == 1 && dialog.model.preview_reactor == 2);
+dialog.submit(false); const full_command = commands[#sizeof(commands) - 1].data;
+test.assert(full_command.chassis == 1 && full_command.weapon == 1 && full_command.reactor == 2 && full_command.abilities == 512 && full_command.armor == 1);
+const restored_full = full + {unused: true};
+restored_full.draft = {selected_design: 65, chassis: 2, weapon: 2, armor: 0, reactor: 3, abilities: 262144, name: 'Retained Hover'};
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: restored_full, design_id: 65, stale: false, failed: true, done: false,
+    restore_draft: true, restored_armor: 0, restored_name: 'Retained Hover'});
+test.assert(dialog.selected_design == 65 && dialog.selected_chassis == 2 && dialog.selected_weapon == 2 && dialog.selected_reactor == 3 && dialog.selected_abilities == 262144 && dialog.draft_name == 'Retained Hover');
+test.assert(dialog.model.preview_chassis == 2 && dialog.model.preview_weapon == 2 && dialog.model.preview_reactor == 3);
+dialog.hide_view();

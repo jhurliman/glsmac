@@ -29,6 +29,7 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/SmacWorkshop.h"
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/MoraleSet.h"
 #include "game/backend/unit/CvrScoutRender.h"
@@ -1477,6 +1478,83 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             game->GetUM()->UpdateConventionalUnit(GSE_CALL,existing,existing->Conventional());
             GT_OK();
         });GT_ASSERT(run.empty(),"Live Workshop command: "+run);GT_OK();
+    });
+    task->AddTest("SMAC live Workshop transports complete drafts through quotes Apply and restore",[](GSE*,context::Context*)->std::string {
+        const auto source=[](const std::string& filename) {
+            const auto original=TanksSource(filename);if(filename!="alpha.txt") {return original;}
+            std::istringstream lines(original);std::string line,section,result;size_t index=0;
+            while(std::getline(lines,line)) {
+                if(!line.empty() && line.front()=='#') {section=line;index=0;}
+                else if(section=="#WEAPONS" || section=="#REACTORS" || section=="#ABILITIES") {
+                    std::istringstream columns(line);std::vector<std::string> fields;std::string field;while(std::getline(columns,field,',')) {fields.push_back(field);}
+                    if(section=="#WEAPONS" && index==1) {fields.at(2)="3";fields.at(4)="3";fields.at(6)="Tech1";}
+                    if(section=="#REACTORS" && index==1) {fields.at(3)="Tech1";}
+                    if(section=="#ABILITIES" && index==9) {fields.at(2)="Tech1";fields.at(4)="00000001001";}
+                    line.clear();for(const auto& value:fields) {if(!line.empty()) {line+=',';}line+=value;}++index;
+                }
+                result+=line+'\n';
+            }return result;
+        };
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS");std::string saved;
+        const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned.fill(true);
+                state.economy.at(1).design_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};});
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            unit::SmacWorkshopDraft draft{2,1,1,1,512,2,"Full Tuple"};
+            unit::SmacStartupDesignState original;fixture.ResourceState([&](const auto& state){original=state.designs;});
+            const auto before=fixture.Snapshot();auto* menu=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL,&draft));
+            auto* shown=static_cast<value::Object*>(menu->Get("draft"));
+            GT_ASSERT(static_cast<value::Int*>(shown->Get("chassis"))->value==1 && static_cast<value::Int*>(shown->Get("weapon"))->value==1
+                && static_cast<value::Int*>(shown->Get("reactor"))->value==2 && static_cast<value::Int*>(shown->Get("abilities"))->value==512,"Read query reconstructed a Scout tuple");
+            const auto factor=game->GetSmacProductionMineralFactor(base->m_owner);const auto cost=unit::SmacPredefinedUnitCatalog::CalculateCost(catalog.chassis.chassis[1],catalog.weapons.weapons[1],catalog.defenses.defenses[1],2,512,catalog.abilities);
+            bool offered=false;for(auto* item:static_cast<value::Array*>(menu->Get("armor"))->value) {auto* row=static_cast<value::Object*>(item);
+                if(static_cast<value::Int*>(row->Get("id"))->value==1) {offered=static_cast<value::Bool*>(row->Get("available"))->value && static_cast<value::Int*>(row->Get("cost"))->value==int64_t(cost)*factor;}}
+            GT_ASSERT(offered && fixture.Snapshot()==before,"General quote lost components/price or changed the world");
+            auto* read=static_cast<value::Callable*>(static_cast<value::Object*>(base->Wrap(GSE_CALL))->Get("get_smac_workshop"));
+            value::function_arguments_t preview{VALUE(value::Int,,2),VALUE(value::Int,,1),VALUE(value::Int,,1),VALUE(value::Int,,1),VALUE(value::Int,,2),VALUE(value::Int,,512),VALUE(value::String,,draft.name)};
+            auto* wrapped=static_cast<value::Object*>(read->Run(GSE_CALL,preview));
+            GT_ASSERT(static_cast<value::Int*>(static_cast<value::Object*>(wrapped->Get("draft"))->Get("reactor"))->value==2 && fixture.Snapshot()==before,"Wrapped preview did not expose the complete draft");
+            auto invalid_preview=preview;invalid_preview[4]=VALUE(value::Int,,257);
+            GT_ASSERT(Rejects([&]{read->Run(GSE_CALL,invalid_preview);}) && Rejects([&]{read->Run(GSE_CALL,{VALUE(value::Int,,2)});}) && fixture.Snapshot()==before,"Wrapped preview narrowed an invalid reactor or admitted a partial tuple");
+            bool failed=true,restored=false;int32_t selected=-1;unit::SmacWorkshopDraft returned;
+            game->On(GSE_CALL,"smac_workshop_commit",NATIVE_CALL(&failed,&restored,&selected,&returned){N_EXPECT_ARGS(1);N_GET(data,0,Object);
+                failed=static_cast<value::Bool*>(data->Get("failed"))->value;restored=static_cast<value::Bool*>(data->Get("restore_draft"))->value;
+                selected=int32_t(static_cast<value::Int*>(data->Get("design_id"))->value);
+                auto* draft=static_cast<value::Object*>(static_cast<value::Object*>(data->Get("selection"))->Get("draft"));
+                returned.chassis=uint32_t(static_cast<value::Int*>(draft->Get("chassis"))->value);returned.weapon=uint32_t(static_cast<value::Int*>(draft->Get("weapon"))->value);
+                returned.armor=uint32_t(static_cast<value::Int*>(draft->Get("armor"))->value);returned.reactor=uint8_t(static_cast<value::Int*>(draft->Get("reactor"))->value);
+                returned.abilities=uint32_t(static_cast<value::Int*>(draft->Get("abilities"))->value);return VALUE(value::Undefined);}));
+            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},
+                {"chassis",VALUE(value::Int,,1)},{"weapon",VALUE(value::Int,,1)},{"armor",VALUE(value::Int,,1)},{"reactor",VALUE(value::Int,,2)},{"abilities",VALUE(value::Int,,512)},
+                {"selected_design",VALUE(value::Int,,2)},{"name",VALUE(value::String,,draft.name)},{"done",VALUE(value::Bool,,false)},{"request_id",VALUE(value::Int,,1)}};
+            game->Event(GSE_CALL,"commit_smac_workshop",args);GT_ASSERT(fixture.Snapshot()==before,"Complete draft bypassed event queue");fixture.DrainEvents();
+            GT_ASSERT(!failed && restored && selected>=64 && returned.chassis==1 && returned.weapon==1 && returned.armor==1 && returned.reactor==2 && returned.abilities==512,"Apply acknowledgement dropped complete saved draft");
+            unit::SmacStartupDesignState edited;fixture.ResourceState([&](auto& state){edited=state.designs;const auto& row=state.designs.native_registry->at(selected);
+                if(row[36]!=1 || row[37]!=1 || row[38]!=1 || row[39]!=2 || row[32]!=0 || row[33]!=2 || row[41]!=cost) {throw std::runtime_error("Commit saved Scout instead of full tuple");}state.designs=original;});
+            GT_ASSERT(fixture.Snapshot()==before,"Full tuple changed world outside design registry");
+            fixture.ResourceState([&](auto& state){state.designs=edited;});
+            saved=fixture.Snapshot();
+            auto incomplete=args;incomplete.erase("abilities");GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"commit_smac_workshop",incomplete);}) && fixture.Snapshot()==saved,"Partial tuple reached the queue");
+            for(const auto& value:std::vector<std::pair<const char*,int64_t>>{{"chassis",9},{"weapon",21},{"reactor",0},{"reactor",257},{"abilities",-1},{"abilities",0x1000000},{"selected_design",128}}) {
+                auto invalid=args;invalid[value.first]=VALUE(value::Int,,value.second);GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"commit_smac_workshop",invalid);}) && fixture.Snapshot()==saved,"Invalid full tuple changed world");}
+            // Editing to a new unavailable ability fails before building, then Apply
+            // restores the entire selected tuple rather than only its armor.
+            args["selected_design"]=VALUE(value::Int,,selected);args["abilities"]=VALUE(value::Int,,1024);args["request_id"]=VALUE(value::Int,,2);
+            args["expected_state"]=VALUE(value::String,,base->SmacWorkshopState());game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(failed && restored && returned.chassis==1 && returned.weapon==1 && returned.armor==1 && returned.reactor==2 && returned.abilities==512 && fixture.Snapshot()==saved,"Failed Apply lost components or published unavailable ability");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[1]=false;});
+            const auto lost=fixture.Snapshot();args["abilities"]=VALUE(value::Int,,512);args["expected_state"]=VALUE(value::String,,base->SmacWorkshopState());args["request_id"]=VALUE(value::Int,,3);
+            game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(!failed && restored && returned.chassis==1 && returned.weapon==1 && returned.reactor==2 && returned.abilities==512 && fixture.Snapshot()==lost,"Existing full-tuple alias was downgraded after technology loss");
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[1]=true;});
+            GT_OK();
+        });GT_ASSERT(run.empty(),"Live full Workshop tuple: "+run);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(source,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string {restored.Restore(GSE_CALL,saved,true);
+            GT_ASSERT(ResearchSnapshot(restored.Game(),restored.Snapshot())==ResearchSnapshot(restored.Game(),saved),"Full Workshop tuple lost on world restore");GT_OK();});
     });
     task->AddTest("SMAC live Workshop researched shielding remains available in occupied banks and saves all stock armor",[](GSE*,context::Context*)->std::string {
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}

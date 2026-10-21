@@ -25,6 +25,7 @@
 #include "game/backend/faction/SmacEconomyState.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/SmacWorkshop.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/Def.h"
 #include "Pop.h"
@@ -614,11 +615,18 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"get_smac_workshop",
 		NATIVE_CALL( this ) {
-			N_EXPECT_ARGS(0);
+			N_EXPECT_ARGS_MAX(7);
+            if(!arguments.empty() && arguments.size()!=7) {THROW("Workshop preview requires the complete draft tuple");}
 			const auto& rules=m_game->GetState()->m_settings.global.GetSmacPredefinedUnitRules();
 			if(!m_resource_context || !m_allocation || !m_production || !m_owner || m_owner->GetPlayer()!=m_game->GetPlayer()
 				|| !rules || rules->catalog.source.ruleset_id!="smac") {return VALUE(gse::value::Undefined);}
-			return CopySmacWorkshop(GSE_CALL);
+			if(arguments.empty()) {return CopySmacWorkshop(GSE_CALL);}
+            N_GETVALUE(selected,0,Int);N_GETVALUE(chassis,1,Int);N_GETVALUE(weapon,2,Int);N_GETVALUE(armor,3,Int);
+            N_GETVALUE(reactor,4,Int);N_GETVALUE(abilities,5,Int);N_GETVALUE(name,6,String);
+            if(selected<0 || selected>511 || chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9
+                || reactor<1 || reactor>4 || abilities<0 || abilities>0xffffff) {THROW("Invalid Workshop preview tuple");}
+            const unit::SmacWorkshopDraft draft{int32_t(selected),uint32_t(chassis),uint32_t(weapon),uint32_t(armor),uint32_t(abilities),uint8_t(reactor),name};
+            return CopySmacWorkshop(GSE_CALL,&draft);
 		} )
 	},
 	{

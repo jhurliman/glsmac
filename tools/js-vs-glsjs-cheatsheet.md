@@ -33,3 +33,14 @@ against real usage — only `:+` / `[]=` push are confirmed
 DOM `.on` callbacks must return a Boolean, including `change` and `input`. A missing return is Undefined and fails when the real event fires; assert this contract in UI doubles. Game-object listeners have a separate return contract.
 
 Ranges use `::`, not `:`. String slicing operates on an expression (for example, concatenate an empty string before taking `[0::24]`); a bare variable range follows the array-reference path. `#sizeof` currently accepts arrays only, not strings or objects (`src/gse/builtins/Common.cpp`).
+
+## Literal and append traps confirmed by the native runner
+
+- Strings use single quotes (`src/gse/parser/JS.h`, `CHARS_QUOTES`); object keys
+  are bare identifiers. JSON cannot be pasted directly as GSE source.
+- An object literal establishes its own `this`. Capture outer object fields in
+  locals before using them in property expressions, including `#sizeof` calls.
+- Parenthesize a conditional value appended with `:+`: `rows :+ (known ? 1 : 0)`.
+  Without those parentheses the append can store the predicate instead.
+
+The Workshop picker input and live-widget tests exercise these boundaries.

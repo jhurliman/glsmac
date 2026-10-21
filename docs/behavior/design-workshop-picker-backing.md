@@ -100,7 +100,9 @@ silhouette index 185, and `43c100` returns before name/stats: there are **no
 unavailable glyph baselines**. For available cards, c626 records No Armor name
 baseline `(51,14)`, Shielding `(30,89)`, defense `(122,90)`; Synthmetal name
 lines `(150,14)` and `(168,27)`, Shielding `(138,89)`, defense `(230,90)`.
-Model clipping remains the outer cell rectangle inset 3.
+The later [weapon-picker outer-clip trace](design-workshop-weapon-picker.md#underlay-source-crop-key-and-clip)
+clarifies that model clipping uses the outer cell rectangle. The inset3 rectangle
+is the callback layout argument.
 
 ## Receipts
 

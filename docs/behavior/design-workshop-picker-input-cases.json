@@ -1,0 +1,349 @@
+{
+  "scope": "12 source-derived keyboard scalar comparisons,3 hover/release boundaries and initial-A0 Enter/same-hover/release assertions. No new native input executions or OS event delivery.",
+  "keyboard_cases": [
+    {
+      "id": "down_cross_unknown",
+      "before": {
+        "count": 21,
+        "selected": 15,
+        "first": 0,
+        "position": 0,
+        "availability": 1
+      },
+      "key": 40,
+      "after": {
+        "count": 21,
+        "selected": 20,
+        "first": 5,
+        "position": 1,
+        "availability": 1
+      },
+      "events": [
+        [
+          "scroll_position",
+          1
+        ],
+        [
+          "full_repaint"
+        ],
+        [
+          "invalidate"
+        ]
+      ]
+    },
+    {
+      "id": "down_last_row_scroll",
+      "before": {
+        "count": 21,
+        "selected": 20,
+        "first": 5,
+        "position": 1,
+        "availability": 1
+      },
+      "key": 40,
+      "after": {
+        "count": 21,
+        "selected": 20,
+        "first": 10,
+        "position": 2,
+        "availability": 1
+      },
+      "events": [
+        [
+          "scroll_position",
+          2
+        ],
+        [
+          "full_repaint"
+        ],
+        [
+          "invalidate"
+        ]
+      ]
+    },
+    {
+      "id": "down_last_limit",
+      "before": {
+        "count": 21,
+        "selected": 20,
+        "first": 10,
+        "position": 2,
+        "availability": 1
+      },
+      "key": 40,
+      "after": {
+        "count": 21,
+        "selected": 20,
+        "first": 10,
+        "position": 2,
+        "availability": 1
+      },
+      "events": [
+        [
+          "scroll_position",
+          2
+        ],
+        [
+          "invalidate"
+        ]
+      ]
+    },
+    {
+      "id": "up_scroll",
+      "before": {
+        "count": 21,
+        "selected": 5,
+        "first": 5,
+        "position": 1,
+        "availability": 0
+      },
+      "key": 38,
+      "after": {
+        "count": 21,
+        "selected": 0,
+        "first": 0,
+        "position": 0,
+        "availability": 0
+      },
+      "events": [
+        [
+          "scroll_position",
+          0
+        ],
+        [
+          "full_repaint"
+        ],
+        [
+          "invalidate"
+        ]
+      ]
+    },
+    {
+      "id": "short_left",
+      "before": {
+        "count": 21,
+        "selected": 20,
+        "first": 5,
+        "position": 1,
+        "availability": 1
+      },
+      "key": 37,
+      "after": {
+        "count": 21,
+        "selected": 20,
+        "first": 5,
+        "position": 1,
+        "availability": 1
+      },
+      "events": [
+        [
+          "invalidate"
+        ]
+      ]
+    },
+    {
+      "id": "short_right",
+      "before": {
+        "count": 21,
+        "selected": 20,
+        "first": 5,
+        "position": 1,
+        "availability": 1
+      },
+      "key": 39,
+      "after": {
+        "count": 21,
+        "selected": 20,
+        "first": 5,
+        "position": 1,
+        "availability": 1
+      },
+      "events": [
+        [
+          "invalidate"
+        ]
+      ]
+    },
+    {
+      "id": "page_offscreen",
+      "before": {
+        "count": 21,
+        "selected": 0,
+        "first": 0,
+        "position": 0,
+        "availability": 1
+      },
+      "key": 34,
+      "after": {
+        "count": 21,
+        "selected": 0,
+        "first": 10,
+        "position": 2,
+        "availability": 1
+      },
+      "events": [
+        [
+          "scroll_position",
+          2
+        ],
+        [
+          "full_repaint"
+        ],
+        [
+          "invalidate"
+        ]
+      ]
+    },
+    {
+      "id": "home_stale_scroll",
+      "before": {
+        "count": 21,
+        "selected": 20,
+        "first": 10,
+        "position": 2,
+        "availability": 1
+      },
+      "key": 36,
+      "after": {
+        "count": 21,
+        "selected": 0,
+        "first": 0,
+        "position": 2,
+        "availability": 1
+      },
+      "events": [
+        [
+          "full_repaint"
+        ],
+        [
+          "invalidate"
+        ]
+      ]
+    },
+    {
+      "id": "end_stale_scroll",
+      "before": {
+        "count": 21,
+        "selected": 0,
+        "first": 0,
+        "position": 0,
+        "availability": 0
+      },
+      "key": 35,
+      "after": {
+        "count": 21,
+        "selected": 20,
+        "first": 5,
+        "position": 0,
+        "availability": 0
+      },
+      "events": [
+        [
+          "full_repaint"
+        ],
+        [
+          "invalidate"
+        ]
+      ]
+    },
+    {
+      "id": "selection_only_unknown",
+      "before": {
+        "count": 21,
+        "selected": 15,
+        "first": 5,
+        "position": 1,
+        "availability": 1
+      },
+      "key": 40,
+      "after": {
+        "count": 21,
+        "selected": 20,
+        "first": 5,
+        "position": 1,
+        "availability": 0
+      },
+      "events": [
+        [
+          "paint",
+          15,
+          false
+        ],
+        [
+          "paint",
+          20,
+          true
+        ],
+        [
+          "invalidate"
+        ]
+      ]
+    },
+    {
+      "id": "escape_repaint_blank",
+      "before": {
+        "count": 21,
+        "selected": 15,
+        "first": 5,
+        "position": 1,
+        "availability": 0
+      },
+      "key": 27,
+      "after": {
+        "count": 21,
+        "selected": -1,
+        "first": 5,
+        "position": 1,
+        "availability": 1
+      },
+      "events": [
+        [
+          "close"
+        ],
+        [
+          "paint",
+          15,
+          false
+        ],
+        [
+          "paint",
+          -1,
+          true
+        ],
+        [
+          "invalidate"
+        ]
+      ]
+    },
+    {
+      "id": "extended_enter_no_close",
+      "before": {
+        "count": 21,
+        "selected": 15,
+        "first": 5,
+        "position": 1,
+        "availability": 1
+      },
+      "key": 65549,
+      "after": {
+        "count": 21,
+        "selected": 15,
+        "first": 5,
+        "position": 1,
+        "availability": 1
+      },
+      "events": [
+        [
+          "invalidate"
+        ]
+      ]
+    }
+  ],
+  "hover_release_boundary_checks": 3,
+  "initial_a0": {
+    "enter_result": 3,
+    "same_hover_preserves_a0": true,
+    "release_selection": -1,
+    "release_result": 3
+  }
+}

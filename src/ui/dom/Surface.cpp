@@ -162,7 +162,7 @@ Surface::Surface( DOM_ARGS_T )
 
     Method(GSE_CALL,"smacworkshoparmorpicker",NATIVE_CALL(this) {
         N_EXPECT_ARGS(2);N_GETVALUE(selected,0,Int);N_GET(rows,1,Array);
-        if(selected<0 || selected>9 || rows->value.size()>20) {throw std::invalid_argument("Unsupported Workshop armor picker page");}
+        if(selected< -1 || selected>9 || rows->value.size()>20) {throw std::invalid_argument("Unsupported Workshop armor picker page");}
         std::vector<std::pair<int,bool>> choices;std::array<bool,256> seen{};
         for(const auto* value:rows->value) {
             if(!value || value->type!=gse::VT_OBJECT) {throw std::invalid_argument("Invalid Workshop armor card");}
@@ -182,11 +182,20 @@ Surface::Surface( DOM_ARGS_T )
             loader::texture::smac_dialog_frame::Paint(indexed,623,387,*m_dialog_source,{id==selected?2:0,x,y,x+105,y+91},{0,0,623,387});
             // Expansion-only models await their own native composition controls.
             if(id>9) {continue;}
-            const auto image=m_workshop_components->Render(2,id,true,known,position,int(ordinal));
-            if(!image) {continue;}
+            if(id==0) {continue;}
+            const std::array<int,8> key{2,id,0,0,0,0,0,0};const auto before=position;
+            const auto found=std::find_if(m_workshop_picker_images.begin(),m_workshop_picker_images.end(),[&](const auto& entry){return entry.key==key && entry.known==known && entry.before==before;});
+            std::shared_ptr<const std::vector<uint8_t>> colors;
+            if(found!=m_workshop_picker_images.end()) {colors=found->colors;position=found->after;}
+            else {
+                auto image=m_workshop_components->Render(2,id,true,known,position,int(ordinal));
+                colors=std::make_shared<const std::vector<uint8_t>>(std::move(image->indexed.color));
+                if(m_workshop_picker_images.size()==64) {m_workshop_picker_images.erase(m_workshop_picker_images.begin());}
+                m_workshop_picker_images.push_back({key,known,before,position,colors});
+            }
             for(int py=y;py<y+91;++py) {for(int px=x;px<x+105;++px) {
-                const int sx=px-image->target_anchor[0]+128,sy=py-image->target_anchor[1]+128;
-                const auto source=image->indexed.color[size_t(sy)*256+sx];auto& destination=indexed[size_t(py)*623+px];
+                const int sx=px-(x+52)+128,sy=py-(y+45)+128;
+                const auto source=colors->at(size_t(sy)*256+sx);auto& destination=indexed[size_t(py)*623+px];
                 if(id==5 && known) {destination=m_workshop_components->Composite(source,destination);}
                 else if(source!=9) {destination=source;}
             }}
@@ -202,7 +211,7 @@ Surface::Surface( DOM_ARGS_T )
         N_GETVALUE(chassis,3,Int);N_GETVALUE(weapon,4,Int);N_GETVALUE(reactor,5,Int);N_GETVALUE(faction,6,String);
         N_GETVALUE(power,7,Int);N_GETVALUE(mode,8,Int);N_GETVALUE(strength,9,Int);
         const int maximum=kind==0?8:kind==1?20:4;
-        if((kind!=0 && kind!=1 && kind!=3) || selected<(kind==3?1:0) || selected>maximum || rows->value.size()>size_t(kind==0?9:kind==1?20:4)
+        if((kind!=0 && kind!=1 && kind!=3) || (selected!=-1 && selected<(kind==3?1:0)) || selected>maximum || rows->value.size()>size_t(kind==0?9:kind==1?20:4)
             || chassis<0 || chassis>8 || weapon<0 || weapon>20 || reactor<1 || reactor>4
             || power< -127 || power>127 || mode<0 || mode>12 || strength< -127 || strength>127
             || faction.empty() || faction.size()>256 || faction.find_first_of("/\\:\0",0,4)!=std::string::npos) {throw std::invalid_argument("Invalid Workshop component picker request");}

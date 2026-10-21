@@ -134,6 +134,8 @@ return {
 					open_specialist_selection: parent.parent.open_specialist_selection,
 					open_rename: parent.parent.open_rename,
                     open_workshop: parent.parent.open_workshop,
+                    workshop_open_result: parent.parent.workshop_open_result,
+                    workshop_closed: parent.parent.workshop_closed,
 					open_queue_editor: parent.parent.open_queue_editor,
 					open_hurry: parent.parent.open_hurry,
 					can_edit_queue: parent.parent.can_edit_queue,
@@ -326,8 +328,24 @@ return {
         if (!this.is_open || this.read_only) { return; }
         const data = this.base.get_smac_workshop();
         if (!#is_defined(data)) { return; }
-        this.hide_production_selection();
-        this.sections.workshop.open(this.base, data);
+        let selected = (0 - 1);
+        if (#is_defined(this.production_choice)) { selected = #max((0 - 1), this.production_choice.source_id); }
+        else {
+            const production = this.base.get_production_state();
+            if (#is_defined(production) && production.current_item.kind == 'unit' && #is_defined(production.current_item.smac_source_id)) { selected = production.current_item.smac_source_id; }
+        }
+        if (selected < 0) {
+            // Native action1 routes facilities to help, not a New design.
+            if (this.production_selection != null) { this.production_prompt.text = 'Facility help is unavailable.'; } return;
+        }
+        this.sections.workshop.begin(this.base, data, selected);
+    },
+
+    workshop_closed: () => { if (this.is_open && !this.read_only) { this.show_production_selection(); } },
+    workshop_open_result: (success, message) => {
+        if (!this.is_open) { return; }
+        if (success) { this.hide_production_selection(); }
+        else if (this.production_selection != null) { this.production_prompt.text = message; }
     },
 
 	open_rename: () => {

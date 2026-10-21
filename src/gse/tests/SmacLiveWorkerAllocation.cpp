@@ -2130,6 +2130,69 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(rejected && fixture.Snapshot()==before,"Foreign editor request passed authority checks");GT_OK();
         });
     });
+    task->AddTest("SMAC live Workshop normal opening retains New selection reactor and entry phase effects",[](GSE*,context::Context*)->std::string {
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        const auto source=[&](const std::string& filename) {std::ifstream file(std::string(assets)+"/"+filename,std::ios::binary);
+            if(!file) {throw std::runtime_error("Missing owned Workshop entry source");}return std::string(std::istreambuf_iterator<char>(file),{});};
+        for(int scenario=0;scenario<3;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS");
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+                const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+                base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+                const auto& settings=game->GetState()->m_settings.global;const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;
+                fixture.ResourceState([&](auto& state) {
+                    state.rank_order=faction::SmacRankOrder::Update({1,0,0,0,0,0,0},2);
+                    state.economy.at(1).design_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};
+                    state.technology.factions[0].owned.fill(scenario==1);if(scenario!=1) {state.technology.factions[0].owned[6]=true;}
+                    if(scenario==1) {state.strategy->at(1).priorities={0,0,1,0};}
+                    auto pool=*state.designs.native_registry;for(size_t i=64;i<128;++i) {pool[i]={};}
+                    pool[64][48]=0x82;pool[64][49]=2;pool[64][47]=0xa5;pool[64][50]=0x34;pool[64][51]=0x12;
+                    if(scenario==2) {pool[2][48]|=0x80;state.strategy->at(1).fight.reset();state.air_summary[1].reset();}
+                    state.designs.RetainNativeRegistry(pool,catalog);
+                });
+                bool stale=false,failed=false;value::Object* selection=nullptr;
+                game->On(GSE_CALL,"smac_workshop_open",NATIVE_CALL(&){N_EXPECT_ARGS(1);N_GET(view,0,Object);
+                    stale=static_cast<value::Bool*>(view->Get("stale"))->value;failed=static_cast<value::Bool*>(view->Get("failed"))->value;
+                    selection=view->Get("selection")->type==VT_OBJECT ? static_cast<value::Object*>(view->Get("selection")):nullptr;return VALUE(value::Undefined);}));
+                const auto fence=[&] {return static_cast<value::String*>(static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL))->Get("preset_state"))->value;};
+                value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,scenario==2 ? 2:-1)},
+                    {"request_id",VALUE(value::Int,,1)},{"expected_state",VALUE(value::String,,fence())}};
+                std::optional<faction::SmacSimulationState> expected;
+                fixture.ResourceState([&](auto& state){expected=state;for(int n=0;n<(scenario==2 ? 1:2);++n) {
+                    expected->RefreshCapabilities(1,*settings.GetSmacTechnologyRules(),*settings.GetSmacPredefinedUnitRules(),*settings.GetSmacCombatRules(),false);}
+                    auto pool=*expected->designs.native_registry;pool[scenario==2 ? 2:64][48]&=uint8_t(~0x80u);expected->designs.RetainNativeRegistry(pool,catalog);});
+                const auto base_before=Base::Serialize(base).ToString();const auto jsf=game->GetRandom()->GetStateString();const auto next=game::backend::unit::Unit::GetNextId();
+                game->Event(GSE_CALL,"open_smac_workshop",args);fixture.DrainEvents();bool exact=false;
+                fixture.ResourceState([&](auto& state){exact=state==*expected;});
+                GT_ASSERT(!stale && !failed && selection && exact,"Normal entry lost its phase-specific refresh or changed another registry field");
+                auto* draft=static_cast<value::Object*>(selection->Get("draft"));
+                const auto value=[&](const char* key){return static_cast<gse::value::Int*>(draft->Get(key))->value;};
+                GT_ASSERT(value("selected_design")== (scenario==2 ? 2:64) && value("chassis")==0 && value("weapon")== (scenario==1 ? 1:0)
+                    && value("armor")== (scenario==1 ? 8:0) && value("reactor")== (scenario==1 ? 4:1) && value("abilities")== (scenario==1 ? 512:0),
+                    "Normal New entry selected the alias or lost the native recommended tuple/reactor");
+                GT_ASSERT(Base::Serialize(base).ToString()==base_before && game->GetRandom()->GetStateString()==jsf && game::backend::unit::Unit::GetNextId()==next,
+                    "Opening changed production, allocations or RNG");
+                const auto before=fixture.Snapshot();game->Event(GSE_CALL,"open_smac_workshop",args);fixture.DrainEvents();
+                GT_ASSERT(stale && !selection && fixture.Snapshot()==before,"Old opening fence replayed initialization");GT_OK();
+            });if(!error.empty()) {return "scenario "+std::to_string(scenario)+": "+error;}
+        }GT_OK();
+    });
+    task->AddTest("SMAC Workshop active entry does not require fresh recommendation authority",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+            fixture.ResourceState([](auto& state){state.strategy->at(1).fight.reset();state.rank_order.reset();state.air_summary[1].reset();});
+            bool failed=true,received=false;
+            game->On(GSE_CALL,"smac_workshop_open",NATIVE_CALL(&){N_EXPECT_ARGS(1);N_GET(view,0,Object);received=true;
+                failed=static_cast<value::Bool*>(view->Get("failed"))->value;return VALUE(value::Undefined);}));
+            auto* data=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL));
+            game->Event(GSE_CALL,"open_smac_workshop",{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,2)},
+                {"request_id",VALUE(value::Int,,1)},{"expected_state",VALUE(value::String,,static_cast<value::String*>(data->Get("preset_state"))->value)}});fixture.DrainEvents();
+            GT_ASSERT(received && !failed,"Active open incorrectly required inactive recommendation inputs");GT_OK();
+        });
+    });
     task->AddTest("SMAC preset command rejects stale missing and foreign authority without installed assets",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {

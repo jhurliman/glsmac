@@ -641,3 +641,25 @@ test.assert(dialog.preset_notice.window.handlers.keydown({modifiers: {shift: tru
 for (key of ['ESCAPE','ENTER']) { dialog.preset_notice.open(dialog); test.assert(dialog.preset_notice.window.handlers.keydown({modifiers: {}, code: key}) && !dialog.preset_notice.active); }
 dialog.preset_notice.open(dialog); test.assert(dialog.preset_notice.ok.handlers.click({}) && !dialog.preset_notice.active);
 dialog.preset_notice.open(dialog); dialog.hide_view(); test.assert(!dialog.preset_notice.active && dialog.preset_notice.window.hidden);
+
+// Opening waits for the real command response, including both request fences.
+const opening_start = #sizeof(commands); dialog.begin(base, selection, (0 - 1));
+test.assert(dialog.opening && !dialog.active && commands[opening_start].name == 'open_smac_workshop' && commands[opening_start].data.selected_design == (0 - 1));
+dialog.begin(base, selection, 2); test.assert(#sizeof(commands) == opening_start + 1);
+listeners.smac_workshop_open({base: {id: 999}, request_id: dialog.opening_id, stale: false, failed: false}); test.assert(dialog.opening);
+listeners.smac_workshop_open({base: base, request_id: dialog.opening_id + 1, stale: false, failed: false}); test.assert(dialog.opening);
+listeners.smac_workshop_open({base: base, request_id: dialog.opening_id, stale: false, failed: true}); test.assert(!dialog.opening && !dialog.active);
+dialog.begin(base, selection, 2); listeners.smac_workshop_open({base: base, request_id: dialog.opening_id, stale: false, failed: false, selection: selection});
+test.assert(dialog.active && !dialog.opening); dialog.hide_view();
+dialog.begin(base, selection, 2); dialog.hide_view(); listeners.smac_workshop_open({base: base, request_id: dialog.opening_id, stale: false, failed: false, selection: selection}); test.assert(!dialog.active);
+const entry_screen = #include('../default/ui/parts/game/popup/base_screen');
+entry_screen.is_open = true; entry_screen.base = base; entry_screen.read_only = false; entry_screen.sections = {workshop: dialog};
+base.get_smac_workshop = () => { return selection; }; base.get_production_state = () => { return {current_item: {kind: 'unit', smac_source_id: 2}}; };
+entry_screen.open_workshop(); test.assert(commands[#sizeof(commands) - 1].data.selected_design == 2); dialog.hide_view();
+entry_screen.production_choice = {source_id: 65}; entry_screen.open_workshop(); test.assert(commands[#sizeof(commands) - 1].data.selected_design == 65); dialog.hide_view();
+const before_facility_workshop = #sizeof(commands); entry_screen.production_selection = null;
+entry_screen.production_choice = {source_id: (0 - 3)}; entry_screen.open_workshop(); test.assert(#sizeof(commands) == before_facility_workshop && !dialog.opening);
+
+let returned_to_picker = 0; dialog.p.utils = {workshop_closed: () => { returned_to_picker++; }};
+dialog.open(base, selection); test.assert(dialog.cancel_button.handlers.click({}) && returned_to_picker == 1 && !dialog.active);
+dialog.open(base, selection); listeners.turn_status({status: 'please_wait'}); test.assert(returned_to_picker == 1 && !dialog.active);

@@ -1627,3 +1627,13 @@ uses unbound43 immediately. See the [UI audit](behavior/design-workshop-presets-
 [live integration scope](behavior/workshop-live-presets.md).
 Normal-open recommendations, tooltip display and broader Workshop acceptance
 remain open. No complete screen or golden release gate is closed by this slice.
+
+
+## 2026-10-21 fresh-session preset authority
+
+Cold Game storage supplies the original known-zero air counters before the
+first owner summary. Reset/New Game retains foreign history and missing legacy
+rows, while turn-zero owner initialization clears the two own-air counters.
+[The fresh-image handoff and live integration](behavior/air-summary-fresh-image.md)
+record this separately from recount, restore and nonzero restart. Normal-open
+recommendations remain the next caller integration.

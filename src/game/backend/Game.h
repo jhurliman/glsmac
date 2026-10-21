@@ -692,6 +692,12 @@ private:
 	// not clear these retained rows; ordinary restore supplies its saved words.
 	std::optional<std::array<faction::SmacRegionalStrategyRow,8>> m_smac_cross_world_strategy{std::in_place};
 	std::optional<std::array<int32_t,8>> m_smac_cross_world_scores{std::in_place};
+    // Fresh executable storage is zero, including slot0. Reset retains foreign
+    // air history; turn-zero owner initialization clears only its own counters.
+    std::array<std::optional<faction::SmacAirSummary>,8> m_smac_cross_world_air=[] {
+        std::array<std::optional<faction::SmacAirSummary>,8> rows;
+        for(auto& row:rows) {row.emplace();}return rows;
+    }();
     faction::SmacSocialSnapshotStorage m_smac_cross_world_social=faction::SmacSocialState::FreshImageSnapshots();
 	// Explicit cold-engine zero storage; later world preparation retains these
 	// words until actual per-owner initialization. An absent old save stays absent.

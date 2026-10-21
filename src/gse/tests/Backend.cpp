@@ -475,7 +475,12 @@ public:
                 && m_game.m_simulation->value.ecology_warming_count==0
                 && m_game.m_simulation->value.regional_strategy==std::optional<Rows>{Rows{}}
                 && m_game.m_simulation->value.ranking_scores==std::optional<Scores>{Scores{}},"Cold engine storage was not zero");
+            for(const auto& air:m_game.m_simulation->value.air_summary) {GT_ASSERT(air && *air==faction::SmacAirSummary{},"Cold first session lacks native zero air authority");}
             for(const bool present:{true,false}) {
+                std::array<std::optional<faction::SmacAirSummary>,8> air;
+                if(present) {for(size_t i=0;i<air.size();++i) {air[i]=faction::SmacAirSummary{int32_t(31+i),int32_t(101+i),int32_t(201+i)};}}
+                // Keep one unknown peer even when the remaining rows are known.
+                air[7].reset();m_game.m_simulation->value.air_summary=air;
                 std::optional<Rows> rows;std::optional<Scores> scores;
                 if(present) {
                     rows.emplace();for(size_t owner=0;owner<8;++owner) {for(size_t region=0;region<128;++region) {rows->at(owner)[region]=static_cast<uint8_t>(17*owner+3*region);}}
@@ -510,6 +515,10 @@ public:
                 for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<8;x+=2) {map->GetTile(x,y)->Update();}}
                 m_game.m_bm=new base::BaseManager(&m_game);EnableWorldSnapshot();
                 m_game.PrepareNewSimulation();
+                for(const auto& participant:m_game.m_simulation->value.roster) {
+                    if(air.at(participant.simulation_id)) {air.at(participant.simulation_id)->own_plan0=0;air.at(participant.simulation_id)->own_plan4=0;}
+                }
+                GT_ASSERT(m_game.m_simulation->value.air_summary==air,"Real Reset/new world recounted foreign air, reset peers or invented missing authority");
                 GT_ASSERT(m_game.m_smac_cross_world_social==snapshots,"Real reset changed unrelated or unknown snapshot authority");
                 for(const auto& social:m_game.m_simulation->value.social.factions) {
                     const auto& previous=snapshots.at(social.admission.simulation_id);

@@ -1,0 +1,183 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "PE virtual section tail zero-fill for all24 addresses; not a repeated-New-Game or restart reset.",
+  "section_rva": "0x2a6000",
+  "virtual_size": "0x3247f8",
+  "raw_size": "0x21000",
+  "rows": [
+    {
+      "owner": 0,
+      "field": "foreign_air",
+      "address": "0x95d9ec",
+      "section_relative": "0x2b79ec",
+      "initial_s32": 0
+    },
+    {
+      "owner": 0,
+      "field": "own_air_plan0",
+      "address": "0x95f22c",
+      "section_relative": "0x2b922c",
+      "initial_s32": 0
+    },
+    {
+      "owner": 0,
+      "field": "own_air_plan4",
+      "address": "0x95f230",
+      "section_relative": "0x2b9230",
+      "initial_s32": 0
+    },
+    {
+      "owner": 1,
+      "field": "foreign_air",
+      "address": "0x95faa8",
+      "section_relative": "0x2b9aa8",
+      "initial_s32": 0
+    },
+    {
+      "owner": 1,
+      "field": "own_air_plan0",
+      "address": "0x9612e8",
+      "section_relative": "0x2bb2e8",
+      "initial_s32": 0
+    },
+    {
+      "owner": 1,
+      "field": "own_air_plan4",
+      "address": "0x9612ec",
+      "section_relative": "0x2bb2ec",
+      "initial_s32": 0
+    },
+    {
+      "owner": 2,
+      "field": "foreign_air",
+      "address": "0x961b64",
+      "section_relative": "0x2bbb64",
+      "initial_s32": 0
+    },
+    {
+      "owner": 2,
+      "field": "own_air_plan0",
+      "address": "0x9633a4",
+      "section_relative": "0x2bd3a4",
+      "initial_s32": 0
+    },
+    {
+      "owner": 2,
+      "field": "own_air_plan4",
+      "address": "0x9633a8",
+      "section_relative": "0x2bd3a8",
+      "initial_s32": 0
+    },
+    {
+      "owner": 3,
+      "field": "foreign_air",
+      "address": "0x963c20",
+      "section_relative": "0x2bdc20",
+      "initial_s32": 0
+    },
+    {
+      "owner": 3,
+      "field": "own_air_plan0",
+      "address": "0x965460",
+      "section_relative": "0x2bf460",
+      "initial_s32": 0
+    },
+    {
+      "owner": 3,
+      "field": "own_air_plan4",
+      "address": "0x965464",
+      "section_relative": "0x2bf464",
+      "initial_s32": 0
+    },
+    {
+      "owner": 4,
+      "field": "foreign_air",
+      "address": "0x965cdc",
+      "section_relative": "0x2bfcdc",
+      "initial_s32": 0
+    },
+    {
+      "owner": 4,
+      "field": "own_air_plan0",
+      "address": "0x96751c",
+      "section_relative": "0x2c151c",
+      "initial_s32": 0
+    },
+    {
+      "owner": 4,
+      "field": "own_air_plan4",
+      "address": "0x967520",
+      "section_relative": "0x2c1520",
+      "initial_s32": 0
+    },
+    {
+      "owner": 5,
+      "field": "foreign_air",
+      "address": "0x967d98",
+      "section_relative": "0x2c1d98",
+      "initial_s32": 0
+    },
+    {
+      "owner": 5,
+      "field": "own_air_plan0",
+      "address": "0x9695d8",
+      "section_relative": "0x2c35d8",
+      "initial_s32": 0
+    },
+    {
+      "owner": 5,
+      "field": "own_air_plan4",
+      "address": "0x9695dc",
+      "section_relative": "0x2c35dc",
+      "initial_s32": 0
+    },
+    {
+      "owner": 6,
+      "field": "foreign_air",
+      "address": "0x969e54",
+      "section_relative": "0x2c3e54",
+      "initial_s32": 0
+    },
+    {
+      "owner": 6,
+      "field": "own_air_plan0",
+      "address": "0x96b694",
+      "section_relative": "0x2c5694",
+      "initial_s32": 0
+    },
+    {
+      "owner": 6,
+      "field": "own_air_plan4",
+      "address": "0x96b698",
+      "section_relative": "0x2c5698",
+      "initial_s32": 0
+    },
+    {
+      "owner": 7,
+      "field": "foreign_air",
+      "address": "0x96bf10",
+      "section_relative": "0x2c5f10",
+      "initial_s32": 0
+    },
+    {
+      "owner": 7,
+      "field": "own_air_plan0",
+      "address": "0x96d750",
+      "section_relative": "0x2c7750",
+      "initial_s32": 0
+    },
+    {
+      "owner": 7,
+      "field": "own_air_plan4",
+      "address": "0x96d754",
+      "section_relative": "0x2c7754",
+      "initial_s32": 0
+    }
+  ],
+  "turn_zero_initializer_own_clear": [
+    "0x5c8d5e",
+    "0x5c8d6e"
+  ],
+  "nonzero_skip": "0x5c89ef -> 0x5c8da5",
+  "explicit_foreign_initializer_clear": false
+}

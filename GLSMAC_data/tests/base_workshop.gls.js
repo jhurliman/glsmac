@@ -108,3 +108,12 @@ test.assert(psi_number);
 dialog.cards[1].handlers.click({});
 test.assert(dialog.armor_stat.text == 'Level Psi' && dialog.stats.text == '1-Psi-1');
 dialog.hide_view();
+
+// Apply reselection is consumed before displaying a failed-edit message; Done keeps its draft.
+dialog.open(base, selection); dialog.selected_design = 64; dialog.selected_armor = 0; dialog.draft_name = 'Unsaved'; dialog.submit(false);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: true, done: false,
+    restore_draft: true, restored_armor: 1, restored_name: 'Retained Guard'});
+test.assert(dialog.active && !dialog.pending && dialog.selected_design == 64 && dialog.selected_armor == 1 && dialog.draft_name == 'Retained Guard');
+dialog.selected_armor = 0; dialog.draft_name = 'Edited'; dialog.submit(true);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: true, done: false, restore_draft: false});
+test.assert(dialog.active && dialog.selected_armor == 0 && dialog.draft_name == 'Edited'); dialog.hide_view();

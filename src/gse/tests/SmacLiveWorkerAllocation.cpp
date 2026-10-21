@@ -1540,6 +1540,33 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         return restored.Run([&](GSE_CALLABLE)->std::string {restored.Restore(GSE_CALL,saved,true);
             const auto snapshot=restored.Snapshot();GT_ASSERT(ResearchSnapshot(restored.Game(),snapshot)==ResearchSnapshot(restored.Game(),saved),"Saved shielding designs changed on whole-world restore");GT_OK();});
     });
+    task->AddTest("SMAC live Workshop failed Apply reselects saved and New drafts while failed Done preserves them",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;pool[64]=pool[2];pool[64][38]=1;pool[64][48]=0x83;
+                const std::string name="Retained Guard";std::fill_n(pool[64].begin(),32,0);std::copy(name.begin(),name.end(),pool[64].begin());state.designs.RetainNativeRegistry(pool,catalog);
+                state.technology.factions[0].owned[1]=false;state.economy.at(1).design_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};});
+            bool failed=false,restore=false,closed=false;int32_t selected=-1,armor=-1;std::string name;
+            game->On(GSE_CALL,"smac_workshop_commit",NATIVE_CALL(&){N_EXPECT_ARGS(1);N_GET(view,0,Object);
+                failed=static_cast<value::Bool*>(view->Get("failed"))->value;restore=static_cast<value::Bool*>(view->Get("restore_draft"))->value;closed=static_cast<value::Bool*>(view->Get("done"))->value;
+                selected=int32_t(static_cast<value::Int*>(view->Get("design_id"))->value);armor=int32_t(static_cast<value::Int*>(view->Get("restored_armor"))->value);name=static_cast<value::String*>(view->Get("restored_name"))->value;return VALUE(value::Undefined);}));
+            const auto before=fixture.Snapshot();
+            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},
+                {"selected_design",VALUE(value::Int,,64)},{"armor",VALUE(value::Int,,2)},{"name",VALUE(value::String,,"Unsaved")},{"done",VALUE(value::Bool,,false)},{"request_id",VALUE(value::Int,,1)}};
+            game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(failed && restore && !closed && selected==64 && armor==1 && name=="Retained Guard","Failed Apply did not reselect the saved draft without current technology");
+            bool cleared=false;fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;cleared=pool[64][48]==3;pool[64][48]|=0x80;state.designs.RetainNativeRegistry(pool,catalog);});
+            GT_ASSERT(cleared && fixture.Snapshot()==before,"Failed Apply changed state beyond original selection bookkeeping");
+            args["done"]=VALUE(value::Bool,,true);args["request_id"]=VALUE(value::Int,,2);game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(failed && !restore && !closed && fixture.Snapshot()==before,"Failed Done reselected or changed the world");
+            args["done"]=VALUE(value::Bool,,false);args["selected_design"]=VALUE(value::Int,,127);args["request_id"]=VALUE(value::Int,,3);
+            game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(failed && restore && !closed && selected==65 && armor==0 && name=="Unsaved" && fixture.Snapshot()==before,"Failed New Apply lost retained name, basic reset or first-inactive fallback");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Workshop reuses and reactivates actual named Morgan startup design with restore",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"MORGANITES");std::string saved,startup_name;
         const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {
@@ -1561,7 +1588,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 {"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"armor",VALUE(value::Int,,1)},
                 {"name",VALUE(value::String,,"")},{"done",VALUE(value::Bool,,false)},{"request_id",VALUE(value::Int,,1)}};
             game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
-            GT_ASSERT(fixture.Snapshot()==before,"Reusing automatic startup tuple allocated or renamed a design");
+            bool cleared=false;fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;cleared=(pool[64][48]&0x80)==0;
+                pool[64][48]|=0x80;state.designs.RetainNativeRegistry(pool,game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog);});
+            GT_ASSERT(cleared && fixture.Snapshot()==before,"Startup Apply changed state beyond clearing its original selection flag");
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;pool[64][48]&=uint8_t(~0x80u);
+                state.designs.RetainNativeRegistry(pool,game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog);});
             fixture.ResourceState([](auto& state){auto& row=state.designs.owners.front().designs.front();row.faction_exclusion=2;row.auxiliary_flags=0xa500;state.designs.SynchronizeNativeRegistry();});
             args["expected_state"]=VALUE(value::String,,base->SmacWorkshopState());args["request_id"]=VALUE(value::Int,,2);
             game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();bool reactivated=false;

@@ -40,7 +40,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         // Client correlation only: ownership and the complete saved-state fence
         // below authorize the edit. Old acknowledgements must not close a new UI.
         const auto request=static_cast<const gse::value::Int*>(field("request_id",gse::VT_INT))->value;
-        if(!base || base->GetGame()!=this || caller!=m_slot_num || expected.size()>unit::SmacStartupDesignState::MAX_WIRE_BYTES+89
+        if(!base || base->GetGame()!=this || caller!=m_slot_num || expected.size()>unit::SmacStartupDesignState::MAX_WIRE_BYTES+89+2*513
             || selected<0 || selected>511 || request<1 || armor<0 || armor>1 || supplied.size()>31 || supplied.find('\0')!=std::string::npos) {THROW("Invalid Workshop command authority or draft");}
         // Current narrow UI has the same printable-byte rendering boundary as
         // Base Rename. Do not install a name that its renderer cannot display.
@@ -114,6 +114,11 @@ std::string Base::SmacWorkshopState() const {
     if(!technologies || !rules || rules->catalog.source.ruleset_id!="smac") {THROW("Workshop requires an owned SMAC catalog and technologies");}
     auto state=m_game->m_simulation->value.designs.Serialize(rules->catalog).ToString();
     for(const auto owned:technologies->owned) {state.push_back(owned ? '1':'0');}
+    const auto& economy=m_game->m_simulation->value.economy.at(GetSmacResourceContext().owner_simulation_id);
+    for(const auto* counts:{&economy.design_counts,&economy.production_reference_counts}) {
+        state.push_back(*counts ? '1':'0');
+        if(*counts) {for(const auto count:**counts) {state.push_back(static_cast<char>(count));}}
+    }
     return state;
 }
 gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE) const {
@@ -276,6 +281,7 @@ void Base::SelectSmacProduction( GSE_CALLABLE, const int32_t source_id, const st
     static_assert( std::is_nothrow_copy_assignable_v< decltype( context ) > );
     if ( result.state == *m_production ) { *m_resource_context = context; return; }
     std::optional< ProductionState > replacement = result.state;
+    auto references=PrepareSmacProductionReferences(replacement);auto* reference_target=SmacProductionReferencesTarget();
     auto updates = bm->m_base_updates;
     BaseManager::QueueBaseUpdateInto( updates, this, BaseManager::BUO_REFRESH );
     std::unique_lock lock( bm->m_updated_bases_mutex );
@@ -284,7 +290,7 @@ void Base::SelectSmacProduction( GSE_CALLABLE, const int32_t source_id, const st
     // GetSmacResourceContext authenticated the engaged record before staging.
     // Assign that record directly; libc++ does not annotate optional assignment noexcept.
     static_assert( std::is_nothrow_copy_assignable_v< decltype(context) > );
-    m_production.swap( replacement ); *m_resource_context = context; bm->m_base_updates.swap( updates ); bm->m_updated_bases.swap( triggers );
+    m_production.swap( replacement );if(reference_target) {reference_target->swap(references);} *m_resource_context = context; bm->m_base_updates.swap( updates ); bm->m_updated_bases.swap( triggers );
 }
 }
 }

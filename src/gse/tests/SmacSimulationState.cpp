@@ -818,6 +818,9 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
     task->AddTest("SMAC saved design byte counts and retained ranks restore independently of current entities",GT(){
         auto value=State();auto& counts=*value.economy.at(7).design_counts;
         counts[0]=255;counts[2]=251;counts[128]=201;counts[511]=17;
+        value.economy.at(2).production_reference_counts->at(2)=251;
+        value.economy.at(7).production_reference_counts->at(128)=201;
+        value.economy.at(7).production_reference_counts->at(511)=17;
         value.rank_order=faction::SmacRankOrder{};value.rank_order->faction_at_rank[7]=2;value.rank_order->faction_at_rank[4]=7;
         value.roster[1].active=false; // retained leaders can identify an eliminated faction
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
@@ -938,7 +941,7 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
 		const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
 		auto value=State();
 		const auto migrated=SmacSimulationState::Deserialize(Wire(value,SIZE_MAX,0,nullptr,nullptr,nullptr,nullptr,nullptr,true),technologies,profiles,units);
-		auto expected=value;for(auto& entry:expected.economy) {entry.second.population_aggregate.reset();entry.second.regional_base_counts.reset();entry.second.design_counts.reset();}
+		auto expected=value;for(auto& entry:expected.economy) {entry.second.population_aggregate.reset();entry.second.regional_base_counts.reset();entry.second.design_counts.reset();entry.second.production_reference_counts.reset();}
 		GT_ASSERT(migrated==expected,"V11 migration changed existing campaign state or invented missing history");
 		for(auto& entry:value.hostility.owners) {
 			for(size_t i=0;i<8;++i) {entry.second.directions[i]={UINT32_MAX-static_cast<uint32_t>(i),static_cast<uint32_t>(i+1),INT32_MIN+static_cast<int32_t>(i),UINT32_MAX,static_cast<uint32_t>(i)};}

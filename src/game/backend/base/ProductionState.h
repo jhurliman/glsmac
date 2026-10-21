@@ -40,6 +40,9 @@ struct ProductionState {
 	bool operator==( const ProductionState& other ) const;
 };
 
+// Complete canonical queue contributions; absence means unresolved port authority.
+std::optional<std::vector<int32_t>> SmacProductionReferenceTargets(const std::optional<ProductionState>& state);
+
 // An absent record means unconfigured, not zero minerals or Stockpile.
 // Signed64 is a port storage domain; future arithmetic must validate its inputs.
 // This codec neither resolves definitions nor makes a target buildable.

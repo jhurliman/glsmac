@@ -57,10 +57,11 @@ bool Game::HandleSmacQueueEvent(GSE_CALLABLE,const std::string& name,
     }
     ValidateSmacProductionState(base->m_owner,*replacement);
     if(!apply || replacement==base->m_production) {return true;}
+    auto references=base->PrepareSmacProductionReferences(replacement);auto* reference_target=base->SmacProductionReferencesTarget();
     auto updates=m_bm->m_base_updates; base::BaseManager::QueueBaseUpdateInto(updates,base,base::BaseManager::BUO_REFRESH);
     std::unique_lock lock(m_bm->m_updated_bases_mutex);auto triggers=m_bm->m_updated_bases;triggers.insert(base);
     static_assert(std::is_nothrow_swappable_v<decltype(replacement)>);
-    base->m_production.swap(replacement);m_bm->m_base_updates.swap(updates);m_bm->m_updated_bases.swap(triggers);
+    base->m_production.swap(replacement);if(reference_target) {reference_target->swap(references);}m_bm->m_base_updates.swap(updates);m_bm->m_updated_bases.swap(triggers);
     return true;
 }
 namespace base {

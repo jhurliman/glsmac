@@ -24,7 +24,9 @@ struct SmacEconomyState {
 	// Saved byte cache: factory/removal deltas between owner-summary rebuilds.
     // Absence migrates older port frames without inventing retained counts.
     std::optional<SmacDesignCounts> design_counts;
-    static constexpr size_t MAX_WIRE_BYTES = 9 * 14 + 7 + 7 + 6 + 128 + 7 + 6 + 512;
+    // Separate retained queue-reference bytes; never reconstruct on restore.
+    std::optional<SmacDesignCounts> production_reference_counts;
+    static constexpr size_t MAX_WIRE_BYTES = 9 * 14 + 7 + 7 + 6 + 128 + 7 + 6 + 512 + 7 + 6 + 512;
 	// All startup inputs are supplied explicitly. Restore never calls this.
 	static SmacEconomyState NewWorld( base::SmacEnergyRates rates, int32_t credits, int32_t research_fraction );
 	void Validate() const;

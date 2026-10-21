@@ -231,6 +231,19 @@ const std::optional< ProductionState >& Base::GetProductionState() const {
 	return m_production;
 }
 
+std::optional<faction::SmacDesignCounts>* Base::SmacProductionReferencesTarget() const noexcept {
+    if(!m_resource_context || !m_game->m_simulation) {return nullptr;}
+    const auto row=m_game->m_simulation->value.economy.find(m_resource_context->owner_simulation_id);
+    return row==m_game->m_simulation->value.economy.end() ? nullptr:&row->second.production_reference_counts;
+}
+std::optional<faction::SmacDesignCounts> Base::PrepareSmacProductionReferences(const std::optional<ProductionState>& replacement) const {
+    const auto* target=SmacProductionReferencesTarget();if(!target || !*target) {return std::nullopt;}
+    const auto before=SmacProductionReferenceTargets(m_production),after=SmacProductionReferenceTargets(replacement);
+    if(before==after) {return **target;}
+    if(!before || !after) {return std::nullopt;}
+    return faction::ChangeSmacProductionReferences(**target,*before,*after);
+}
+
 void Base::SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production ) {
 	m_game->RequireSmacGameplayActive();
 	if(m_resource_context) {m_game->RequireSmacProductionOwner(m_owner);}
@@ -240,7 +253,8 @@ void Base::SetProductionState( GSE_CALLABLE, const std::optional< ProductionStat
 	// prior record. Neither switching nor baseline arithmetic belongs here.
 	if ( m_production == production ) { return; }
 	auto replacement = production;
-	m_production.swap( replacement );
+    auto references=PrepareSmacProductionReferences(replacement);auto* target=SmacProductionReferencesTarget();
+	m_production.swap( replacement );if(target) {target->swap(references);}
 	if(m_resource_context && m_production) {m_resource_context->SyncKnownHurryBit(m_production->hurry_partial_paid);}
 	TriggerUpdate();
 }

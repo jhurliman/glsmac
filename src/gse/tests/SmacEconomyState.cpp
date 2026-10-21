@@ -3,6 +3,8 @@
 #include "task/gsetests/GSETests.h"
 #include <stdexcept>
 #include "fixtures/SmacResearchSubmission.h"
+#include "fixtures/SmacProductionReferences.h"
+#include "game/backend/base/ProductionState.h"
 
 namespace gse::tests {
 using game::backend::faction::SmacEconomyState;
@@ -16,6 +18,8 @@ std::string CheckSmacEconomyRestore() {
 	for(size_t i=0;i<128;++i) {(*value.regional_base_counts)[i]=static_cast<uint8_t>(i*2+1);}
     value.design_counts=game::backend::faction::SmacDesignCounts{};
     for(size_t i=0;i<512;++i) {(*value.design_counts)[i]=static_cast<uint8_t>(i*3+1);}
+    value.production_reference_counts=game::backend::faction::SmacDesignCounts{};
+    for(size_t i=0;i<512;++i) {(*value.production_reference_counts)[i]=static_cast<uint8_t>(i*5+3);}
 	const auto wire = value.Serialize().ToString();
 	const auto restored = SmacEconomyState::Deserialize( wire );
 	if ( wire.size() != SmacEconomyState::MAX_WIRE_BYTES || !( restored == value ) || restored.Serialize().ToString() != wire ) {
@@ -81,6 +85,50 @@ std::string CheckSmacResearchSubmission() {
 }
 
 void AddSmacEconomyStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC production references match 13 original summary and manual queue controls",GT(){
+        using namespace game::backend::faction;
+        for(const auto& row:production_cache_fixture::summaries) {
+            GT_ASSERT(RecountSmacProductionReferences(row.owner,row.bases)==row.expected.Expand(),"original summary: "+std::string(row.name));
+        }
+        for(const auto& row:production_cache_fixture::manual) {
+            const auto detached=ChangeSmacProductionReferences(row.before.Expand(),row.old_queue,{});
+            GT_ASSERT(detached==row.detached.Expand(),"original detach: "+std::string(row.name));
+            GT_ASSERT(ChangeSmacProductionReferences(detached,{},row.new_queue)==row.after.Expand(),"original attach: "+std::string(row.name));
+        }
+        GT_ASSERT(Rejects([]{RecountSmacProductionReferences(8,{});})
+            && Rejects([]{RecountSmacProductionReferences(1,{{1,1,{64}}});})
+            && Rejects([]{ChangeSmacProductionReferences({}, {}, {512});}),"invalid reference extent accepted");GT_OK();
+    });
+    task->AddTest("SMAC production references preserve stale bytes and absent V4 authority",GT(){
+        using namespace game::backend::faction;
+        auto value=SmacEconomyState::NewWorld({0,5},100,0);
+        GT_ASSERT(value.production_reference_counts==std::optional<SmacDesignCounts>(SmacDesignCounts{}),"new faction did not clear cache");
+        value.production_reference_counts.reset();const auto legacy=value.Serialize().ToString();types::Buffer header(legacy);header.ReadInt();
+        GT_ASSERT(header.ReadInt()==4,"absent cache changed legacy wire version");
+        auto restored=SmacEconomyState::Deserialize(legacy);
+        GT_ASSERT(!restored.production_reference_counts && restored.Serialize().ToString()==legacy,"legacy load recounted production");
+        restored.production_reference_counts=SmacDesignCounts{};
+        restored.production_reference_counts->at(0)=255;restored.production_reference_counts->at(2)=251;
+        restored.production_reference_counts->at(128)=201;restored.production_reference_counts->at(511)=17;
+        const auto wire=restored.Serialize().ToString();
+        GT_ASSERT(SmacEconomyState::Deserialize(wire)==restored && SmacEconomyState::Deserialize(wire).Serialize().ToString()==wire,"stale production cache changed on load");
+        for(const size_t size:{0,511,513}) {
+            types::Buffer malformed;malformed.WriteInt(0x534d4543);malformed.WriteInt(5);
+            for(const int n:{0,5,100,0,0,0}) {malformed.WriteInt(n);}
+            malformed.WriteBool(false);malformed.WriteBool(false);malformed.WriteBool(false);
+            malformed.WriteBool(true);malformed.WriteString(std::string(size,'x'));
+            GT_ASSERT(Rejects([&]{SmacEconomyState::Deserialize(malformed.ToString());}),"wrong-sized production row accepted");
+        }GT_OK();
+    });
+    task->AddTest("SMAC production references project current pending duplicates without baseline",GT(){
+        using namespace game::backend::base;
+        const ProductionItem scout{ProductionItemKind::Unit,"scout",2},former{ProductionItemKind::Unit,"former",1},stockpile{ProductionItemKind::Stockpile,"",38};
+        std::optional<ProductionState> state=ProductionState{scout,0,former,0,std::vector<ProductionItem>{scout,former,stockpile}};
+        GT_ASSERT(SmacProductionReferenceTargets(state)==std::optional<std::vector<int32_t>>({2,2,1}),"baseline counted or queue duplicates lost");
+        state->queue.reset();GT_ASSERT(!SmacProductionReferenceTargets(state),"unknown queue invented empty authority");
+        state->queue=std::vector<ProductionItem>{};state->current_item.smac_source_id.reset();
+        GT_ASSERT(!SmacProductionReferenceTargets(state) && !SmacProductionReferenceTargets(std::nullopt),"unresolved target fabricated identity");GT_OK();
+    });
 	task->AddTest("SMAC regional Base byte counts preserve stale values and migrate absent V2 history",GT(){
 		auto fresh=SmacEconomyState::NewWorld({0,5},100,0);
 		GT_ASSERT(fresh.regional_base_counts && *fresh.regional_base_counts==SmacEconomyState::RegionalBaseCounts{},"fresh faction did not clear all 128 counts");

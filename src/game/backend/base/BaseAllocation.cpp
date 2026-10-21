@@ -122,6 +122,10 @@ struct Base::PreparedSmacWorkerState::Data {
 	int64_t nutrients;
 	std::vector<std::pair<Base*,facilities_t>> facility_changes;
 	slot::Slot* captured_owner=nullptr;
+    std::optional<faction::SmacDesignCounts>* reference_target=nullptr;
+    bool reference_unknown=false;
+    std::array<int16_t,512> reference_delta{};
+
 };
 Base::PreparedSmacWorkerState::PreparedSmacWorkerState( std::unique_ptr< Data > data ) : m_data( std::move( data ) ) {}
 Base::PreparedSmacWorkerState::~PreparedSmacWorkerState() = default;
@@ -139,6 +143,11 @@ void Base::PreparedSmacWorkerState::Commit() noexcept {
 	data.base->m_allocation.swap( data.allocation );
 	data.base->m_resource_context.swap( data.context );
 	data.base->m_production.swap( data.production );
+    if(data.reference_target) {
+        if(data.reference_unknown) {data.reference_target->reset();}
+        else if(*data.reference_target) {for(size_t i=0;i<512;++i) {(**data.reference_target)[i]=uint8_t(int((**data.reference_target)[i])+data.reference_delta[i]);}}
+    }
+
 	data.base->m_accumulated_nutrients = data.nutrients;
 	static_assert(std::is_nothrow_swappable_v<facilities_t>);
 	for(auto& change:data.facility_changes) {change.first->m_facilities.swap(change.second);}
@@ -313,6 +322,18 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	data->allocation = allocation; data->context = published_context; data->production = production; data->nutrients = nutrients;
 	data->facility_changes=std::move(facility_changes);
 	data->captured_owner=captured_owner;
+    if(!captured_owner) {
+        const auto before=SmacProductionReferenceTargets(m_production),after=SmacProductionReferenceTargets(production);
+        if(before!=after) {
+            data->reference_target=SmacProductionReferencesTarget();
+            data->reference_unknown=!before || !after;
+            if(!data->reference_unknown) {
+                for(const auto id:*before) {--data->reference_delta.at(id);}
+                for(const auto id:*after) {++data->reference_delta.at(id);}
+            }
+        }
+    }
+
 	if(previous) {data->lock=std::move(previous->m_data->lock);data->previous=std::move(previous->m_data);}
 	static_assert( std::is_nothrow_swappable_v< decltype( data->production ) > );
 	return PreparedSmacWorkerState( std::move( data ) );

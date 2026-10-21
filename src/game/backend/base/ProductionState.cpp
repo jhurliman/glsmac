@@ -4,6 +4,19 @@
 #include <utility>
 
 namespace game::backend::base {
+std::optional<std::vector<int32_t>> SmacProductionReferenceTargets(const std::optional<ProductionState>& state) {
+    if(!state || !state->queue) {return std::nullopt;}
+    std::vector<int32_t> targets;
+    const auto append=[&](const ProductionItem& item) {
+        if(item.kind!=ProductionItemKind::Unit) {return true;}
+        if(!item.smac_source_id || *item.smac_source_id<0 || *item.smac_source_id>=512) {return false;}
+        targets.push_back(*item.smac_source_id);return true;
+    };
+    if(!append(state->current_item)) {return std::nullopt;}
+    for(const auto& item:*state->queue) {if(!append(item)) {return std::nullopt;}}
+    return targets;
+}
+
 
 void ProductionItem::Validate() const {
 	switch ( kind ) {

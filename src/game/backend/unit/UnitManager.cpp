@@ -912,6 +912,7 @@ void UnitManager::PreparedFactionUnits::Commit() noexcept {
         auto& economy=d.manager->m_game->m_simulation->value.economy;
         auto found=economy.find(d.owner);
         if(found!=economy.end() && found->second.design_counts) {found->second.design_counts->fill(0);}
+        if(found!=economy.end()) {found->second.production_reference_counts=faction::SmacDesignCounts{};}
     }
     for(const auto& unit:d.candidates) {d.manager->AdjustDesignCount(*unit,1);}
     d.manager->m_units.swap(d.units);d.manager->m_unit_order.swap(d.order);d.manager->m_unit_updates.swap(d.updates);

@@ -41,10 +41,14 @@ struct SmacSimulationParticipant {
 // signed integers until an accepted research-priority question normalizes them.
 struct SmacFactionStrategy {
 	std::array<int32_t,4> priorities; // Explore/Discover/Build/Conquer
-	static SmacFactionStrategy NewWorld(const settings::SmacFactionStartupRule& profile) noexcept;
+    // Current95d584 AI policy, independent of research choices/social ratings.
+    // Pre-V35 frames and an unimplemented random-personality draw stay unknown.
+    std::optional<int32_t> fight={};
+	static SmacFactionStrategy NewWorld(const settings::SmacFactionStartupRule& profile,
+        uint32_t primary_rules=0,uint32_t secondary_rules=0) noexcept;
 	// Absence means cancel: retain every prior integer. Mask0 is a valid answer.
 	void ApplyResearchPriorities(std::optional<uint8_t> accepted_mask);
-	bool operator==(const SmacFactionStrategy& other) const noexcept {return priorities==other.priorities;}
+	bool operator==(const SmacFactionStrategy& other) const noexcept {return priorities==other.priorities && fight==other.fight;}
 };
 
 // Native retained signed32 fields, not live Unit strengths. All seven positive

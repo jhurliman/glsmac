@@ -52,10 +52,10 @@ required before the local conquest milestone can be claimed.
 
 ## Current acceptance dashboard — 2026-10-21
 
-Accepted integration: **`8979d2a80e49a61865d43d593e60e155ba90718d`**, through
-[#534](https://github.com/jhurliman/glsmac/pull/534), on `codex/faithful-1.0`.
+Accepted integration: **`6c7855a23a52ccca0fc93ceacec0ab23853c21d1`**, through
+[#537](https://github.com/jhurliman/glsmac/pull/537), on `codex/faithful-1.0`.
 Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `2fa515fbed939855e35884c5a9d56b5175d56fc9`. This is an integration
+at head `8e09e5a07cf0e541d53066426fdd2a366ed56e1a`. This is an integration
 checkpoint, not a release candidate or a statement that all platforms were rerun.
 
 **Current focus: the complete Design Workshop (M3/M6). M0–M7 remain open.**
@@ -84,6 +84,10 @@ controller now have implementation receipts in the [Workshop journal](design-wor
 The ordinary action buttons match all 14,700 compared native pixels. Live
 rotation, stop and reopen pass an actual instrumented SDL session; five declared
 model frames and the bounded cached-sprite output match complete native buffers.
+#535 adds exact ability-card text regions at the declared native states;
+remaining model pixels and whole-parent rendering remain open. #536/#537 add
+filtered preset and PSI-custom recommendation boundaries with521 original
+submission expectations; the live normal-open/preset commands remain unconnected.
 These receipts do not establish whole-screen parity or the complete human-played
 manufactured Unit path. First custom prototype completion is now integrated
 in#531: a queued saved design is manufactured with its one-time morale bonus

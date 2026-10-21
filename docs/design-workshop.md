@@ -1114,3 +1114,23 @@ the real instrumented dialog. See the
 [Retire integration evidence](behavior/design-workshop-explicit-upgrade-and-retire.md).
 Upgrade, automatic family controls, persistent preferences, animated preview
 and complete screen parity remain open; this does not complete the Workshop.
+
+### Upgrade implementation in progress
+
+The Upgrade branch now owns the original action7 candidate scan,504eb0 quote
+and detached design flags of504cc0 in `SmacWorkshopUpgrade.h`. This is not yet
+a live action. The next implementation must stage owned Unit conversion with
+morale clamping and cached-byte deltas, preserve own production queue order,
+minerals/retool state and foreign queues, charge energy and publish the target
+selection atomically. Then connect the measured chooser, affordability,
+confirmation and zero-cache informational dialogs. Keep unsaved draft components
+out of this stored-source action; do not route it through Retire/history.
+
+Twenty-five compact original dispatcher inputs/results verify the candidate
+and per-unit quote rules; four original quote scalars verify prototype and Nano
+rounding. Detached accepted cases verify exact flag-only registry changes,
+unchanged history, cached-zero behavior and save/restore. Additional tests cover
+intrinsic sources/quotes, owner exclusion and retained ability/reactor changes.
+The cached Linux build and affected native groups pass; targeted correctness
+analysis of the changed production translation unit is clean. These checks do
+not establish live conversion, affordability or complete Workshop parity.

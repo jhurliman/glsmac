@@ -45,6 +45,7 @@ struct WorkshopBounds {Vector minimum,maximum;};
 WorkshopBounds WorkshopObjectBounds(const WorkshopBoundsInput& input);
 
 // Position is derived from decoded object bounds with identity rotation.
-View MakeWorkshopView(const Vector& position,uint32_t yaw_bits);
+View MakeWorkshopView(const Vector& position,uint32_t yaw_bits,uint32_t scale_bits=0x3e0f5c29,
+    std::array<int32_t,2> anchor={295,164});
 
 }

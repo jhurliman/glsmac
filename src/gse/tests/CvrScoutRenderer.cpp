@@ -12,6 +12,7 @@
 #include "fixtures/CvrScoutMatrix.h"
 #include "fixtures/ScoutShadow.h"
 #include "fixtures/WorkshopRender.h"
+#include "fixtures/WorkshopComponents.h"
 #include <cstdlib>
 #include "game/backend/unit/CvrScoutRender.h"
 #include "game/frontend/sprite/ScoutSpriteCache.h"
@@ -147,6 +148,38 @@ std::string MakeScoutTestAssetWithGeometry( const std::vector< uint8_t >& geomet
 
 void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("CVR Workshop components match thirty-four complete original frames",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto read=[&](const std::string& name) {
+            for(const auto& entry:std::filesystem::directory_iterator(directory)) {
+                auto candidate=entry.path().filename().string();std::transform(candidate.begin(),candidate.end(),candidate.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if(candidate==name) {std::ifstream stream(entry.path(),std::ios::binary);return std::string(std::istreambuf_iterator<char>(stream),{});}
+            }throw std::runtime_error("Missing owned Workshop component asset: "+name);
+        };
+        const auto bank=loader::cvr::CvrWorkshopComponents::Load(read);
+        const auto digest=[](const auto& bytes) {uint64_t h=UINT64_C(14695981039346656037);for(const auto byte:bytes) {h=(h^byte)*UINT64_C(1099511628211);}return h;};
+        const auto materials=loader::cvr::CvrActorMaterial::ReadWorkshop(read("palette.pcx"),read("vbp.cvr"),read("system.txt"));
+        const std::array<uint64_t,4> tints{UINT64_C(0x4cc3558cd35dd0b7),UINT64_C(0xe1855ce959acfb12),UINT64_C(0x824ebd72a307f943),UINT64_C(0xa830f0f3e43736b1)};
+        for(size_t i=0;i<4;++i) {GT_ASSERT(digest(materials.armor[i])==tints[i],"Armor tint " + std::to_string(i));}
+        std::vector<uint8_t> colors;for(const auto& color:materials.colors) {colors.insert(colors.end(),color.begin(),color.end());}
+        GT_ASSERT(digest(colors)==UINT64_C(0xe9d6447d42ab4db8),"Gamma100 palette differs from original");
+        GT_ASSERT(digest(materials.translucency)==UINT64_C(0xa20c92e6694d3ba0),"Complete translucent lookup differs from original");
+        for(int source=0;source<24;++source) {for(int destination=0;destination<256;++destination) {
+            GT_ASSERT(bank.Composite(uint8_t(source),uint8_t(destination))==materials.translucency[source*256+destination],"Indexed composite uses wrong lookup");
+        }}
+        for(int destination=0;destination<256;++destination) {GT_ASSERT(bank.Composite(24,uint8_t(destination))==destination,"Transparent key changed destination");}
+        std::array<uint32_t,3> empty_position{1,2,3};
+        GT_ASSERT(!bank.Render(2,0,false,true,empty_position) && (empty_position==std::array<uint32_t,3>({1,2,3})),"No Armor drew or changed shared scene state");
+        GT_ASSERT(Rejects([&]{bank.Composite(25,0);}) && Rejects([&]{bank.Render(4,0,false,true,empty_position);}),"Unsupported component input accepted");
+        std::array<uint32_t,3> position{};
+        for(const auto& row:workshop_component_fixture::FRAMES) {
+            if(row.reset) {position={};}
+            const auto image=bank.Render(row.kind,row.id,row.picker,row.available,position);
+            GT_ASSERT(image.has_value(),"Frame " + std::string(row.name));std::vector<uint8_t> depth;
+            for(const auto value:image->indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
+            GT_ASSERT(digest(image->indexed.color)==row.indexed && digest(depth)==row.depth && image->draw_count==row.draws && image->processed_records==row.records,"Frame " + std::string(row.name) + " indexed=" + std::to_string(digest(image->indexed.color)) + " depth=" + std::to_string(digest(depth)) + " draws=" + std::to_string(image->draw_count) + " records=" + std::to_string(image->processed_records));
+        }GT_OK();
+    });
     task->AddTest("CVR Workshop bounds match fourteen complete native corner walks",GT(){
         for(const auto& row:workshop_render_fixture::BOUNDS) {
             const auto result=loader::cvr::scout::WorkshopObjectBounds(row.input);

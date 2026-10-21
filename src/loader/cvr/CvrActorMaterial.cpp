@@ -1,4 +1,7 @@
 #include "CvrActorMaterial.h"
+#include "loader/txt/TXTLoader.h"
+#include "util/String.h"
+#include <charconv>
 
 #include <algorithm>
 #include <limits>
@@ -81,27 +84,75 @@ CvrActorMaterial CvrActorMaterial::Read( const std::string_view palette_pcx, con
 	const auto faction = ReadPcx( faction_pcx );
 	if ( faction.width <= 435 || faction.height <= 745 ) { throw std::invalid_argument( "CVR actor PCX: tint sample unavailable" ); }
 	result.tint_index = static_cast< uint8_t >( uint32_t( faction.pixels[ 745 * faction.width + 435 ] ) + 10 );
-	const auto& tint = result.colors[ result.tint_index ];
+    result.shades=Tint(result.colors,body_shades,result.tint_index);
+	return result;
+}
+
+
+std::array<uint8_t,24*256> CvrActorMaterial::Tint(const std::array<CvrPalette::Color,256>& colors,
+    const std::array<uint8_t,24*256>& source,const uint8_t tint_index) {
+    std::array<uint8_t,24*256> result;
+	const auto& tint = colors[tint_index];
 	std::array< uint8_t, 256 > nearest{};
 	for ( size_t i = 0; i < 256; ++i ) {
 		std::array< int32_t, 3 > mixed;
 		for ( size_t channel = 0; channel < 3; ++channel ) {
 			// The binary32 1/255 constant is exactly representable as this double;
 			// the uint8 products and product with it are exact (at most40 bits).
-			mixed[ channel ] = static_cast< int32_t >( int32_t( result.colors[ i ][ channel ] ) * tint[ channel ] * 0.0039215688593685626983642578125 );
+			mixed[ channel ] = static_cast< int32_t >( int32_t( colors[ i ][ channel ] ) * tint[ channel ] * 0.0039215688593685626983642578125 );
 		}
 		int32_t best = std::numeric_limits< int32_t >::max();
 		for ( size_t candidate = 0; candidate < 256; ++candidate ) {
 			int32_t distance = 0;
 			for ( size_t channel = 0; channel < 3; ++channel ) {
-				const int32_t difference = mixed[ channel ] - result.colors[ candidate ][ channel ];
+				const int32_t difference = mixed[ channel ] - colors[ candidate ][ channel ];
 				distance += difference * difference;
 			}
 			if ( distance < best ) { best = distance; nearest[ i ] = static_cast< uint8_t >( candidate ); }
 		}
 	}
-	for ( size_t i = 0; i < body_shades.size(); ++i ) { result.shades[ i ] = nearest[ body_shades[ i ] ]; }
-	return result;
+	for ( size_t i = 0; i < source.size(); ++i ) { result[ i ] = nearest[ source[ i ] ]; }
+    return result;
+}
+std::array<CvrPalette::Color,256> CvrActorMaterial::ReadGamma100Colors(std::string_view palette_pcx) {
+    auto colors=ReadSoftwareColors(palette_pcx);
+    for(size_t i=10;i<246;++i) {for(auto& channel:colors[i]) {channel=std::min<uint8_t>(channel,235);}}
+    return colors;
+}
+CvrWorkshopMaterials CvrActorMaterial::ReadWorkshop(std::string_view palette_pcx,std::string_view vbp,std::string_view system) {
+    const auto armor=txt::TXTLoader::ReadUniqueSection(std::string(system),"ARMORCOLORING");
+    const auto transparent=txt::TXTLoader::ReadUniqueSection(std::string(system),"ARMORCOLORING_TRANS");
+    if(armor.size()!=4 || transparent.size()!=1) {throw std::invalid_argument("Workshop armor coloring requires four tints and one composite rule");}
+    const auto integer=[](std::string_view field) {
+        const auto text=util::String::TrimCopy(std::string(field));int32_t value;
+        const auto parsed=std::from_chars(text.data(),text.data()+text.size(),value);
+        if(parsed.ec!=std::errc{} || parsed.ptr!=text.data()+text.size()) {throw std::invalid_argument("Invalid Workshop armor color integer");}return value;
+    };
+    CvrWorkshopMaterials result{};result.colors=ReadGamma100Colors(palette_pcx);
+    const auto source=CvrPaletteReader::Read(CvrContainerReader::Read(vbp)).shades;
+    for(size_t i=0;i<4;++i) {
+        const auto value=integer(std::string_view(armor[i]).substr(0,armor[i].find(',')));
+        if(value<0 || value>245) {throw std::invalid_argument("Workshop armor tint outside admitted relative palette");}
+        result.armor[i]=Tint(result.colors,source,uint8_t(value+10));
+    }
+    std::array<int32_t,3> rule;std::string_view text=transparent[0];
+    for(auto& value:rule) {const auto end=text.find(',');if(end==std::string_view::npos) {throw std::invalid_argument("Incomplete Workshop translucency rule");}
+        value=integer(text.substr(0,end));text.remove_prefix(end+1);}
+    if(rule[0]<0 || rule[0]>245 || rule[1]<0 || rule[1]>100 || rule[2]<0 || rule[2]>100) {throw std::invalid_argument("Workshop translucency outside admitted color/percentage domain");}
+    for(int row=0;row<24;++row) {
+        const auto weight=(24*rule[1]+(rule[2]-rule[1])*row)/24;
+        for(int destination=0;destination<256;++destination) {
+            int chosen=destination;
+            if(destination>=10 && destination<=245) {
+                std::array<int,3> mixed;for(size_t channel=0;channel<3;++channel) {mixed[channel]=((100-weight)*result.colors[destination][channel]+weight*result.colors[rule[0]+10][channel])/100;}
+                int best=INT32_MAX;for(int candidate=10;candidate<=245;++candidate) {
+                    int distance=0;for(size_t channel=0;channel<3;++channel) {const int d=mixed[channel]-result.colors[candidate][channel];distance+=d*d;}
+                    if(distance<best) {best=distance;chosen=candidate;}
+                }
+            }
+            result.translucency[row*256+destination]=uint8_t(chosen);
+        }
+    }return result;
 }
 
 }

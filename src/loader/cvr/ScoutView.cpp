@@ -177,7 +177,7 @@ WorkshopBounds WorkshopObjectBounds(const WorkshopBoundsInput& input) {
     return result;
 }
 
-View MakeWorkshopView(const Vector& position,const uint32_t yaw_bits) {
+View MakeWorkshopView(const Vector& position,const uint32_t yaw_bits,const uint32_t scale_bits,const std::array<int32_t,2> anchor) {
     RequireNearestRounding();
     const auto yaw=Decode(yaw_bits);
     if(std::abs(ToDouble(yaw))>64.0) {throw std::invalid_argument("Workshop yaw outside bounded preview domain");}
@@ -192,10 +192,10 @@ View MakeWorkshopView(const Vector& position,const uint32_t yaw_bits) {
     }
     const auto transformed=MultiplyVector(result.auxiliary,relative);
     const auto depth_scale=Store(Divide(Integer(65535),Integer(131070)));
-    result.scales={0x3e0f5c29,depth_scale};
+    result.scales={scale_bits,depth_scale};
     result.projection=MultiplyMatrix(result.auxiliary,result.orientation);
     for(size_t i=0;i<9;++i) {result.projection[i]=Store(Multiply(Decode(result.projection[i]),Decode(result.scales[i<6?0:1])));}
-    for(size_t i=0;i<2;++i) {result.translation[i]=Store(Add(Multiply(Decode(transformed[i]),Decode(result.scales[0])),Decode(0x43008000)));}
+    for(size_t i=0;i<2;++i) {result.translation[i]=Store(Add(Decode(Store(Multiply(Decode(transformed[i]),Decode(result.scales[0])))),Decode(0x43008000)));}
     const auto depth=Store(Subtract(Decode(transformed[2]),Integer(-65535)));
     result.translation[2]=Store(Multiply(Decode(depth),Decode(depth_scale)));
     const float inverse_length=static_cast<float>(1.0/std::sqrt(277.0));
@@ -203,7 +203,7 @@ View MakeWorkshopView(const Vector& position,const uint32_t yaw_bits) {
         const float component=static_cast<float>((i==0?6.0:i==1?4.0:15.0)*inverse_length);
         std::memcpy(&result.light[i],&component,sizeof(component));
     }
-    result.target_anchor={295,164};return result;
+    result.target_anchor=anchor;return result;
 }
 
 ShadowScene FlatScoutShadowScene(const CvrScoutViewInput& input) {

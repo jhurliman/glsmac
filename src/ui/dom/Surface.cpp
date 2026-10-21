@@ -121,6 +121,65 @@ Surface::Surface( DOM_ARGS_T )
 		N_EXPECT_ARGS( 0 );StopMovie();return VALUE(gse::value::Undefined);
 	} ) );
 
+    Method(GSE_CALL,"smacworkshopcomponents",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(1);N_GETVALUE(armor,0,Int);
+        if(armor<0 || armor>1) {throw std::invalid_argument("Unsupported Workshop side-card draft");}
+        EnsureWorkshopComponents();
+        // One original painter pass shares centering state in component order.
+        std::array<uint32_t,3> position{};std::vector<uint8_t> rgba(623*368*4,0);
+        const std::array<std::array<int,4>,4> clips{{{30,7,129,92},{30,101,129,186},{30,195,129,280},{462,7,561,92}}};
+        for(int kind=0;kind<4;++kind) {
+            const auto image=m_workshop_components->Render(kind,kind==2 ? int(armor):0,false,true,position);
+            if(!image) {continue;}const auto& clip=clips[kind];
+            for(int y=clip[1];y<clip[3];++y) {for(int x=clip[0];x<clip[2];++x) {
+                const int sx=x-image->target_anchor[0]+128,sy=y-image->target_anchor[1]+128;
+                if(sx<0 || sx>=256 || sy<0 || sy>=256) {throw std::invalid_argument("Workshop component clip exceeds internal image");}
+                const size_t source=(size_t(sy)*256+sx)*4,destination=(size_t(y)*623+x)*4;
+                std::copy_n(image->rgba.begin()+source,4,rgba.begin()+destination);
+            }}
+        }
+        CreateTexture();m_background.texture->Resize(623,368);std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());
+        m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
+        return VALUE(gse::value::Bool,,true);
+    }));
+
+    Method(GSE_CALL,"smacworkshoparmorpicker",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(2);N_GETVALUE(selected,0,Int);N_GET(rows,1,Array);
+        if(selected<0 || selected>9 || rows->value.size()>20) {throw std::invalid_argument("Unsupported Workshop armor picker page");}
+        std::vector<std::pair<int,bool>> choices;std::array<bool,256> seen{};
+        for(const auto* value:rows->value) {
+            if(!value || value->type!=gse::VT_OBJECT) {throw std::invalid_argument("Invalid Workshop armor card");}
+            const auto& row=static_cast<const gse::value::Object*>(value)->value;
+            const auto id=row.find("id"),known=row.find("technology_available");
+            if(id==row.end() || known==row.end() || !id->second || !known->second || id->second->type!=gse::VT_INT || known->second->type!=gse::VT_BOOL) {throw std::invalid_argument("Incomplete Workshop armor card");}
+            const auto component=static_cast<const gse::value::Int*>(id->second)->value;
+            if(component<0 || component>255 || seen[component]) {throw std::invalid_argument("Unsupported or duplicate Workshop armor card");}
+            seen[component]=true;choices.emplace_back(int(component),static_cast<const gse::value::Bool*>(known->second)->value);
+        }
+        EnsureWorkshopComponents();
+        if(!m_dialog_source) {m_dialog_source=g_engine->GetTextureLoader()->GetSmacDialogSource();}
+        if(!m_dialog_source) {throw std::runtime_error("Original Workshop frame source unavailable");}
+        std::vector<uint8_t> indexed(623*387,9);std::array<uint32_t,3> position{};
+        for(size_t ordinal=0;ordinal<choices.size();++ordinal) {
+            const auto [id,known]=choices[ordinal];const int x=27+108*int(ordinal%5),y=4+94*int(ordinal/5);
+            loader::texture::smac_dialog_frame::Paint(indexed,623,387,*m_dialog_source,{id==selected?2:0,x,y,x+105,y+91},{0,0,623,387});
+            // Expansion-only models await their own native composition controls.
+            if(id>9) {continue;}
+            const auto image=m_workshop_components->Render(2,id,true,known,position,int(ordinal));
+            if(!image) {continue;}
+            for(int py=y+3;py<y+88;++py) {for(int px=x+3;px<x+102;++px) {
+                const int sx=px-image->target_anchor[0]+128,sy=py-image->target_anchor[1]+128;
+                const auto source=image->indexed.color[size_t(sy)*256+sx];auto& destination=indexed[size_t(py)*623+px];
+                if(id==5 && known) {destination=m_workshop_components->Composite(source,destination);}
+                else if(source!=9) {destination=source;}
+            }}
+        }
+        const auto rgba=loader::texture::smac_dialog_frame::Rgba(indexed,*m_dialog_source);
+        CreateTexture();m_background.texture->Resize(623,387);std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());
+        m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
+        return VALUE(gse::value::Bool,,true);
+    }));
+
     Method(GSE_CALL,"smacworkshoppreview",NATIVE_CALL(this) {
         N_EXPECT_ARGS(2);N_GETVALUE(armor,0,Int);N_GETVALUE(yaw,1,Float);
         if(armor<0 || armor>1 || !std::isfinite(yaw) || std::abs(yaw)>64.0) {throw std::invalid_argument("Unsupported Workshop preview draft");}
@@ -467,6 +526,17 @@ types::texture::Texture* Surface::GetOwnedTexturePtr() {
 }
 
 namespace ui::dom {
+
+void Surface::EnsureWorkshopComponents() {
+        if(!m_workshop_components) {
+            const auto read=[](const std::string& name) {
+                std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));
+                return std::string(bytes.begin(),bytes.end());
+            };
+            m_workshop_components=std::make_shared<const loader::cvr::CvrWorkshopComponents>(loader::cvr::CvrWorkshopComponents::Load(read));
+        }
+ }
+
 void Surface::UpdateDialogFrames() {
     if(m_dialog_frames.empty()) {return;}
     const auto& area=m_geometry->m_area;

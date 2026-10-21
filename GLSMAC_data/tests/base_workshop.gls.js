@@ -671,6 +671,23 @@ entry_screen.open_workshop(); test.assert(dialog.opening && commands[#sizeof(com
 entry_screen.read_only = true; const read_only_commands = #sizeof(commands);
 entry_screen.open_workshop(); test.assert(!dialog.opening && #sizeof(commands) == read_only_commands); entry_screen.read_only = false;
 
+// Global opening has no production prompt: carry asynchronous failure/stale
+// results to the ordinary game message area through the real editor listener.
+let opening_messages = [];
+entry_screen.is_open = false;
+entry_screen.p = {modules: {bottom_bar: {process_message: (text) => { opening_messages :+ text; }}}};
+dialog.p.utils = {workshop_open_result: entry_screen.workshop_open_result};
+for (stale of [false, true]) {
+    dialog.begin(base, selection, (0 - 1));
+    listeners.smac_workshop_open({base: base, request_id: dialog.opening_id, stale: stale, failed: !stale});
+    test.assert(!dialog.opening && !dialog.active);
+}
+test.assert(opening_messages == ['Workshop inputs are unavailable for this save.', 'Game state changed. Please reopen Workshop.']);
+entry_screen.workshop_open_result(true, ''); test.assert(#sizeof(opening_messages) == 2);
+entry_screen.is_open = true; entry_screen.production_selection = {}; entry_screen.production_prompt = {text: ''};
+entry_screen.workshop_open_result(false, 'Base picker failure');
+test.assert(entry_screen.production_prompt.text == 'Base picker failure' && #sizeof(opening_messages) == 2);
+
 let returned_to_picker = 0; dialog.p.utils = {workshop_closed: () => { returned_to_picker++; }};
 dialog.open(base, selection); test.assert(dialog.cancel_button.handlers.click({}) && returned_to_picker == 1 && !dialog.active);
 dialog.open(base, selection); listeners.turn_status({status: 'please_wait'}); test.assert(returned_to_picker == 1 && !dialog.active);

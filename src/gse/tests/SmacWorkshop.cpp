@@ -14,6 +14,8 @@
 #include "ui/dom/SmacEditState.h"
 #include "fixtures/WorkshopAbilities.h"
 #include "fixtures/WorkshopSavedCommits.h"
+#include "fixtures/WorkshopUpgrade.h"
+#include "game/backend/unit/SmacWorkshopUpgrade.h"
 #include "fixtures/WorkshopAllocation.h"
 #include "fixtures/SmacIntrinsicOverlays.h"
 #include "task/gsetests/GSETests.h"
@@ -31,6 +33,53 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop Upgrade matches25 native candidate and cached quote controls",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);const std::string source(std::istreambuf_iterator<char>(file),{});
+        const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;
+        for(const auto& c:workshop_upgrade_fixture::Cases) {
+            auto pool=workshop_general_fixture::BasePool();for(int id=64;id<128;++id) {pool[id]={};}
+            for(size_t i=0;i<3;++i) {std::copy(c.records[i].begin(),c.records[i].end(),pool[64+i].begin()+32);
+                const std::string name="Design"+std::to_string(64+i);std::copy(name.begin(),name.end(),pool[64+i].begin());}
+            const auto before=pool;
+            GT_ASSERT(unit::SmacWorkshopUpgradeCandidates(pool,1,64,catalog)==c.candidates,"Native Upgrade candidate mismatch: "+std::string(c.id));
+            if(c.quote>=0) {GT_ASSERT(unit::SmacWorkshopUpgradeQuoteRows(pool,65,64,catalog,c.nano)==c.quote,"Native Upgrade quote mismatch: "+std::string(c.id));}
+            GT_ASSERT(pool==before,"Upgrade query mutated retained registry");
+            if(c.applied) {
+                auto state=Empty();state.retirement_history[1]=unit::SmacRetirementHistory::NewWorld();state.RetainNativeRegistry(pool,catalog);const auto original=state;
+                const int target=std::string(c.id)=="upgrade_many_choose66" ? 66:65;
+                const auto result=unit::PrepareSmacWorkshopUpgrade(state,1,target,64,catalog,uint8_t(c.count),c.nano);
+                auto expected=pool;expected[64][48]&=254;if(c.charged) {expected[target][48]|=4;}
+                const int morale=int(bool(pool[target][33]&0x40))-int(bool(pool[64][33]&0x40));
+                GT_ASSERT(state==original && result.total_energy==c.charged && result.cached_source_count==c.count
+                    && result.morale_delta==morale && *result.state.native_registry==expected && result.state.retirement_history==state.retirement_history,
+                    "Native Upgrade detached conversion mismatch: "+std::string(c.id));
+                GT_ASSERT(unit::SmacStartupDesignState::Deserialize(result.state.Serialize(catalog).ToString(),catalog)==result.state,"Upgrade design flags failed restore");
+            }
+        }
+        auto pool=workshop_general_fixture::BasePool();pool[64]=pool[2];pool[65]=pool[2];pool[65][37]=1;pool[65][38]=1;pool[65][48]=7;
+        for(const auto row:std::array<std::array<int,4>,4>{{{{1,1,0,3}},{{1,1,1,1}},{{1,0,0,8}},{{2,0,0,14}}}}) {
+            pool[65][41]=uint8_t(row[0]);pool[65][48]=uint8_t(row[1] ? 7:3);
+            GT_ASSERT(unit::SmacWorkshopUpgradeQuoteRows(pool,65,64,catalog,bool(row[2]))==row[3],"Native Upgrade scalar quote mismatch");
+        }
+        // Retained scan predicates deliberately differ from new construction:
+        // unrelated ability/reactor changes do not disqualify a stored target.
+        auto special=pool;special[65][33]|=0x40;special[65][39]=4;special[65][48]=1;
+        GT_ASSERT(unit::SmacWorkshopUpgradeCandidates(special,1,2,catalog)==std::vector<int32_t>({64,65}),"Intrinsic source or retained ability/reactor was filtered");
+        special[64][48]=0;special[65][44]=2;
+        GT_ASSERT(unit::SmacWorkshopUpgradeCandidates(special,1,2,catalog).empty(),"Owner exclusion was ignored");
+        special[65][44]=4;
+        GT_ASSERT(unit::SmacWorkshopUpgradeCandidates(special,1,2,catalog)==std::vector<int32_t>({65}),"Another owner's exclusion hid target");
+        auto intrinsic=Empty();intrinsic.RetainNativeRegistry(special,catalog);const auto intrinsic_before=intrinsic;
+        const auto upgraded=unit::PrepareSmacWorkshopUpgrade(intrinsic,1,65,2,catalog,2,false);
+        auto intrinsic_expected=special;intrinsic_expected[65][48]|=4;
+        GT_ASSERT(intrinsic==intrinsic_before && *upgraded.state.native_registry==intrinsic_expected && upgraded.morale_delta==1
+            && upgraded.state.retirement_history==intrinsic.retirement_history,"Intrinsic Upgrade changed source or history");
+        GT_ASSERT(unit::SmacWorkshopUpgradeQuoteRows(pool,2,64,catalog,false)==1,"Intrinsic quote gained a prototype transform");
+        GT_ASSERT(Rejects([&]{unit::SmacWorkshopUpgradeCandidates(pool,1,128,catalog);}),"Upgrade admitted a foreign source bank");
+        auto state=Empty();state.RetainNativeRegistry(pool,catalog);const auto before=state;
+        GT_ASSERT(Rejects([&]{unit::PrepareSmacWorkshopUpgrade(state,1,2,64,catalog,1,false);}) && state==before,"Upgrade admitted an intrinsic target");GT_OK();
+    });
     task->AddTest("SMAC Workshop direct Retire preserves intrinsic records and records custom old tuples",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);const std::string source(std::istreambuf_iterator<char>(file),{});

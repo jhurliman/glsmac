@@ -1350,11 +1350,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto retired=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,64);
             const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
             const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
-            base->SetProductionState(GSE_CALL,ProductionState{retired,17,retired,11,std::vector<ProductionItem>{retired,scout,retired},true});
+            base->SetProductionState(GSE_CALL,ProductionState{retired,17,retired,11,std::vector<ProductionItem>{retired,retired,scout,retired,retired},true});
             Base::pops_t pops;pops.emplace(19,Pop(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
             auto context=base->GetSmacResourceContext();context.owner_simulation_id=2;
             auto* foreign=new Base(game,702,foreign_owner,foreign_owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(16,16),"Foreign queue",{},pops,41,3,
-                ProductionState{retired,23,retired,19,std::vector<ProductionItem>{scout,retired,stockpile,retired},true},context);
+                ProductionState{retired,23,retired,19,std::vector<ProductionItem>{scout,retired,retired,stockpile,retired},true},context);
             bm->SpawnBase(GSE_CALL,foreign);foreign->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},1}},Roles());
             const auto local_before=*base->GetProductionState(),foreign_before=*foreign->GetProductionState();
             const auto spawn=[&](size_t id,int owner,int design,size_t x) {
@@ -1399,8 +1399,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             foreign_retiring->GetTile()->Lock(0);game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();foreign_retiring->GetTile()->Unlock();
             GT_ASSERT(failed && hooks==0 && fixture.Snapshot()==before,"Late foreign Unit placement failure partially published queues/history/records");
             args["request_id"]=VALUE(value::Int,,5);game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
-            auto local_expected=local_before;local_expected.current_item=stockpile;local_expected.queue=std::vector<ProductionItem>{scout};
-            auto foreign_expected=foreign_before;foreign_expected.current_item=stockpile;foreign_expected.queue=std::vector<ProductionItem>{scout,stockpile};
+            auto local_expected=local_before;local_expected.current_item=stockpile;local_expected.queue=std::vector<ProductionItem>{retired,scout,retired};
+            auto foreign_expected=foreign_before;foreign_expected.current_item=stockpile;foreign_expected.queue=std::vector<ProductionItem>{scout,retired,stockpile};
             bool retained=false;fixture.ResourceState([&](const auto& state){const auto& design=state.designs.Find(1)->designs.front();
                 retained=design.id==64 && design.defense==1 && design.cost==2 && !design.prototyped && state.designs.retirement_history[1]->cursor==1
                     && state.designs.retirement_history[1]->slots[0]==SmacRetirementTuple({0,0,0,0,0,0,0,1})

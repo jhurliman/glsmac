@@ -26,6 +26,7 @@ struct CvrScoutRenderer::Assets {
 	std::vector< std::vector< Geometry > > geometry;
 	std::vector< CvrPalette > palettes;
     std::vector<CvrFrameSelection> selections;
+    int workshop_weapon_mode=0;
 	std::optional< std::array< CvrPalette::Color, 256 > > software_colors;
 	scout::LightingTable lighting;
 };
@@ -67,58 +68,120 @@ CvrScoutRenderer CvrScoutRenderer::LoadWorkshopDesign(const WorkshopReader& read
         || (chassis==1 && weapon==2 && armor==1 && reactor==1))) {
         throw std::invalid_argument("Workshop composition requires admitted conventional components");
     }
+    return LoadWorkshopDesign(read,faction_pcx,chassis,weapon,armor,reactor,kind,{weapon==2 ? 4:weapon==1 ? 2:1,0,armor==0 ? 1:armor+1});
+}
+
+CvrScoutRenderer CvrScoutRenderer::LoadWorkshopDesign(const WorkshopReader& read,std::string_view faction_pcx,
+    int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition) {
+    if(chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9 || reactor<1 || reactor>4 || kind< -1 || kind>3
+        || !((definition.weapon_mode>=0 && definition.weapon_mode<=2) || (definition.weapon_mode>=7 && definition.weapon_mode<=12))) {
+        throw std::invalid_argument("Workshop composition requires stock component identities and supported modes");
+    }
+    // The original temporarily remaps this Probe design for all four composers.
+    if(weapon==18 && chassis==1 && definition.armor_strength<=1) {chassis=0;}
     const auto palette=read("palette.pcx"),system=read("system.txt");scout::ValidateMapLight(system);
     const auto materials=CvrActorMaterial::ReadWorkshop(palette,read("vbp.cvr"),system);
     const auto shades=CvrPaletteReader::Read(CvrContainerReader::Read(read("vbp.cvr"))).shades;
     auto faction=CvrActorMaterial::Read(palette,faction_pcx,shades);faction.colors=materials.colors;
     faction.shades=CvrActorMaterial::Tint(faction.colors,shades,faction.tint_index);
     std::vector<std::string> bytes;std::vector<WorkshopAttachment> attachments;
-    const auto append=[&](const std::string& file,std::array<float,3> offset,bool direct,
-        const std::array<uint8_t,24*256>* tint=nullptr) {
+    const std::array<float,3> infantry{-400,200,0},zero{};
+    const auto append=[&](const std::string& file,const std::array<uint8_t,24*256>* tint=nullptr,
+        std::array<float,3> offset={},bool direct=true) {
         bytes.push_back(read(file));attachments.push_back({offset,direct,tint ? std::optional<std::array<uint8_t,24*256>>(*tint):std::nullopt});
     };
-    const std::array<float,3> infantry{-400,200,0},zero{};
+    const auto mount=[&](const std::string& name) {
+        const auto marker=CvrSceneReader::Read(CvrContainerReader::Read(read(name)));
+        if(marker.frame_count!=2 || marker.objects.empty()) {throw std::invalid_argument("Workshop mount requires two source frames");}
+        std::array<float,3> result;
+        for(size_t i=0;i<3;++i) {
+            const auto difference=scout::Store(scout::Subtract(scout::Decode(Bits(marker.objects[0].frames[1].location)[i]),scout::Decode(Bits(marker.objects[0].frames[0].location)[i])));
+            std::memcpy(&result[i],&difference,sizeof(difference));
+        }return result;
+    };
+    const auto number=[](const std::string& prefix,int index) {return prefix+(index<10 ? "0":"")+std::to_string(index)+".cvr";};
+    const bool infantry_actor=chassis==0 && (definition.weapon_mode<3 || definition.weapon_mode==11);
+    const bool body_armored=armor==1 || armor==2 || armor==3 || armor==4 || armor==5 || armor==6 || armor==7 || armor==8;
+    const auto base=[&] {append("vb.cvr");append("vbp.cvr",&faction.shades);};
+    const auto gunbase=[&] {append("vgmc.cvr");append("vgmcp.cvr",&faction.shades);};
+    const auto powerbase=[&] {append(number("vrcp",reactor-1));};
     const auto body=[&] {
-        if(chassis==0) {append("vi.cvr",infantry,false);return;}
-        for(const auto* name:{"vrcp00.cvr","vgmc.cvr","vgmcp.cvr","vb.cvr","vbp.cvr","vsp.cvr","vsptb.cvr","vsptf.cvr","vlights.cvr"}) {
-            const std::string file=name;append(file,zero,true,file=="vgmcp.cvr" || file=="vbp.cvr" ? &faction.shades:nullptr);
+        switch(chassis) {
+        case 0:
+            if(definition.weapon_mode<3) {if(weapon!=14) {append("vi.cvr",nullptr,infantry,false);}}
+            else if(weapon==18) {append("vpt.cvr",nullptr,infantry,false);}
+            else if(weapon!=19) {base();append("vcl.cvr");append("vclt00.cvr");append("vlights.cvr");}break;
+        case 1:powerbase();gunbase();base();append("vsp.cvr");append("vsptb.cvr");append("vsptf.cvr");append("vlights.cvr");break;
+        case 2:
+            append("vb.cvr");for(const auto* name:{"vht-vbp.cvr","vhtp.cvr","vhttp.cvr"}) {append(name,&faction.shades);}
+            if(!body_armored) {append("vhta00.cvr");append("vhtta00.cvr");}
+            append("vlights.cvr",nullptr,mount("avht-lightsreposition.cvr"),false);break;
+        case 3:powerbase();gunbase();base();append("vfl.cvr");break;
+        case 4:base();gunbase();append("vcu.cvr");append("vcup.cvr",&faction.shades);append("vcuw.cvr");if(!body_armored) {append("vcua00.cvr");}break;
+        case 5:powerbase();base();gunbase();append("vjtp.cvr",&faction.shades);if(!body_armored) {append("vjt00.cvr");}break;
+        case 6:powerbase();base();gunbase();append("vct.cvr");append("vctp.cvr",&faction.shades);append("vctb.cvr");if(!body_armored) {append("vct00.cvr",&faction.shades);}break;
+        case 7:powerbase();base();gunbase();append("vgs.cvr");append("vgsp.cvr",&faction.shades);break;
+        case 8:append(weapon==13 ? "vw13.cvr":"vm.cvr");base();break;
         }
     };
     const auto gun=[&] {
-        if(chassis==1) {append("vw02.cvr",zero,true);return;}
-        if(weapon==0) {if(kind==1) {append("vw00.cvr",zero,true);}return;}
-        const auto marker=CvrSceneReader::Read(CvrContainerReader::Read(read("avgmtgun.cvr")));
-        if(marker.frame_count!=2 || marker.objects.empty()) {throw std::invalid_argument("Infantry weapon mount requires two source frames");}
-        std::array<float,3> mount;
-        for(size_t i=0;i<3;++i) {
-            const auto difference=scout::Store(scout::Subtract(scout::Decode(Bits(marker.objects[0].frames[1].location)[i]),scout::Decode(Bits(marker.objects[0].frames[0].location)[i])));
-            std::memcpy(&mount[i],&difference,sizeof(difference));
+        if(chassis==8) {return;}
+        if(weapon==13 || weapon==20) {append(weapon==13 ? "vw13.cvr":"vm.cvr");return;}
+        if(definition.weapon_mode<3) {
+            constexpr std::array<int,25> lookup{-1,-1,0,0,1,3,2,2,4,4,5,5,6,7,7,7,8,8,8,8,9,9,9,9,10};
+            const auto power=definition.weapon_power;
+            const auto n=power==-1 ? 11:power==99 ? 12:lookup[std::clamp(power,0,24)];
+            if(n<0) {if(kind==1 && weapon==0) {append("vw00.cvr");}return;}
+            const auto name=number("vw",n+1);
+            if(chassis==0) {append(name,nullptr,mount("avgmtgun.cvr"),false);append("vgmt.cvr");append("vgmtp.cvr",&faction.shades);}
+            else if(chassis==2) {append(name,nullptr,mount("avht-gunreposition.cvr"),false);}else {append(name);}return;
         }
-        append("vw01.cvr",mount,false);append("vgmt.cvr",zero,true);append("vgmtp.cvr",zero,true,&faction.shades);
+        switch(definition.weapon_mode) {
+        case 7:append("vwntt.cvr");break;
+        case 8:if(chassis==0) {append("drop.cvr");append("droplet.cvr");}else {append("droplet.cvr",nullptr,mount("adroper.cvr"),false);}break;
+        case 9:if(chassis==0) {append("vt.cvr");}append("vwntu.cvr");break;
+        case 10:append("vwnst.cvr");break;
+        case 11:if(chassis!=0) {append("ptmod.cvr");}break;
+        case 12:append("vwnaa.cvr");break;
+        }
     };
     const auto shield=[&] {
-        if(chassis==1) {append("va01.cvr",zero,true);append("vspa01.cvr",zero,true);return;}
-        if(armor) {append("vipta00.cvr",infantry,false,armor>=2 ? &materials.armor[armor-2]:nullptr);}
+        const bool ordinary=armor==1 || armor==2 || armor==3 || armor==6 || armor==7;
+        const bool structure=armor==4 || armor==8 || armor==9 || armor==5;
+        const auto* tint=armor==2 ? &materials.armor[0]:armor==3 ? &materials.armor[1]:armor==6 ? &materials.armor[2]:armor==7 ? &materials.armor[3]:nullptr;
+        if(armor==4 || armor==8 || armor==9) {
+            if(infantry_actor) {append(armor==4 ? "viptawal.cvr":armor==8 ? "viptasgn.cvr":"viptapsi.cvr",nullptr,infantry,false);}
+            else {append("a.cvr");append(armor==4 ? "apwall.cvr":armor==8 ? "asgen.cvr":"apsid.cvr");}
+        }
+        switch(chassis) {
+        case 0:if(ordinary) {append(infantry_actor ? "vipta00.cvr":"va01.cvr",tint,infantry_actor ? infantry:zero,!infantry_actor);}break;
+        case 1:if(ordinary) {append("va01.cvr",tint);append("vspa01.cvr",tint);}break;
+        case 2:if(structure) {append("vhta00.cvr");append("vhtta00.cvr");}else if(ordinary) {append("vhta01.cvr",tint);append("vhtta01.cvr",tint);}break;
+        case 3:case 7:if(ordinary) {append("va01.cvr",tint);}break;
+        case 4:if(structure && armor!=5) {append("vcua00.cvr");}else if(ordinary) {append("vcua01.cvr",tint);}break;
+        case 5:if(structure && armor!=5) {append("vjt00.cvr");}else if(ordinary) {append("va01.cvr",tint);append("vjt01.cvr",tint);}break;
+        case 6:if(structure && armor!=5) {append("vct00.cvr");append("va01.cvr");}else if(ordinary) {append("vct01.cvr",tint);append("va01.cvr",tint);}break;
+        }
     };
-    const auto power=[&] {append(chassis==1 ? "vr00.cvr":reactor==1 ? "viptr00.cvr":"viptr01.cvr",chassis==1 ? zero:infantry,chassis==1);};
+    const auto power=[&] {append(number(infantry_actor ? "viptr":chassis==8 ? "vpbr":"vr",reactor-1),nullptr,infantry_actor ? infantry:zero,!infantry_actor);};
     if(kind<0) {body();gun();shield();power();}else {
         switch(kind) {case 0:body();break;case 1:gun();break;case 2:shield();break;case 3:power();break;}
     }
     if(bytes.empty()) {throw std::invalid_argument("Workshop component has no model");}
     std::vector<std::string_view> parts;for(const auto& part:bytes) {parts.push_back(part);}
-    return LoadParts(parts,kind<0 ? Profile::Workshop:Profile::WorkshopPart,&faction,&attachments);
+    return LoadParts(parts,kind<0 ? Profile::Workshop:Profile::WorkshopPart,&faction,&attachments,definition.weapon_mode);
 }
 
 CvrScoutImage CvrScoutRenderer::RenderWorkshopCard(int kind,std::array<uint32_t,3>& position) const {
     if(kind<0 || kind>3 || m_assets->profile!=Profile::WorkshopPart) {throw std::invalid_argument("Workshop card requires its component scene");}
-    const std::array<uint32_t,4> scale{0x3d4ccccd,0x3e19999a,0x3d8f5c29,0x3e4ccccd};
+    const std::array<uint32_t,4> scale{0x3d4ccccd,m_assets->workshop_weapon_mode<3 ? 0x3e19999au:m_assets->workshop_weapon_mode==9 ? 0x3d75c28fu:0x3da3d70au,0x3d8f5c29,0x3e4ccccd};
     const std::array<std::array<int32_t,2>,4> anchor{{{79,47},{79,143},{79,235},{511,45}}};
     auto view=scout::MakeWorkshopView(position,0x3f05f92d,scale[kind],anchor[kind]);
     if(kind!=0) {position=WorkshopPosition(view.orientation,position);view=scout::MakeWorkshopView(position,0x3f05f92d,scale[kind],anchor[kind]);}
     return RenderView(view,9,false,kind==1 ? std::optional<std::array<int32_t,4>>({79,86,178,171}):std::nullopt);
 }
 
-CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_view >& parts, const Profile profile, const CvrActorMaterial* material, const std::vector<WorkshopAttachment>* attachments ) {
+CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_view >& parts, const Profile profile, const CvrActorMaterial* material, const std::vector<WorkshopAttachment>* attachments, int workshop_weapon_mode ) {
 	constexpr size_t MAX_ASSET_BYTES = 32 * 1024 * 1024;
 	size_t total_bytes = 0;
     if(attachments && attachments->size()!=parts.size()) {throw std::invalid_argument("Workshop attachment extent mismatch");}
@@ -129,6 +192,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_vie
 		total_bytes += bytes.size();
 	}
 	auto owned = std::make_shared< Assets >( profile );
+    owned->workshop_weapon_mode=workshop_weapon_mode;
 	owned->geometry.resize( parts.size() ); owned->palettes.resize( parts.size() );
 	if ( material ) { owned->software_colors = material->colors; }
 	std::vector< CvrScene > scenes;
@@ -164,7 +228,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_vie
 					record_count += group.records.size();
 				}
 			};
-			if ( (profile == Profile::SpartanSpeeder && index == 8) || (attachments && !(object.voxel_data->at(0)&10)) ) {
+			if ( (profile == Profile::SpartanSpeeder && index == 8) || (attachments && (!(object.voxel_data->at(0)&10) || (object.voxel_data->at(0)&1))) ) {
 				// VLIGHTS retains every simple level, including continuation flags.
 				// Selection happens using each draw's actual global scale.
 				auto chain = CvrSimpleDetailChain::Read( *object.voxel_data );
@@ -291,7 +355,7 @@ CvrScoutImage CvrScoutRenderer::RenderView(const scout::View& view,const uint8_t
 			std::copy( origin_bits.begin(), origin_bits.end(), origin_input.begin() + 6 );
 			const auto origin = CvrBasisConverter::Convert( origin_input )[ 2 ];
 			auto drawn = CvrIndexedRasterizer::DrawModuloDepth( result.indexed, lookups,
-				{ { &group.records, ( geometry.flags & 8 ) != 0, footprint, basis, origin, clip } } );
+				{ { &group.records, ( geometry.flags & 8 ) != 0, footprint, basis, origin, footprint==CvrSampleFootprint::Single ? clip:std::nullopt } } );
 			result.indexed = std::move( drawn.surface );
 			++result.draw_count;
 			result.processed_records += drawn.processed_records;

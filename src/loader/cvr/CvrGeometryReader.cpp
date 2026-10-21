@@ -34,7 +34,7 @@ void Parse( const uint8_t* const data, const size_t local_size, const size_t rem
 	// Fixed header and five-byte trailer must exist before any field access.
 	if ( local_size < 47 ) { Invalid( "missing or truncated header/trailer" ); }
 	const auto flags = Word( data );
-	if ( linked ? flags > 1 : flags != 0 && flags != 2 && flags != 8 && flags != 10 ) { Invalid( "unsupported geometry flags" ); }
+	if ( linked ? flags > 3 : flags != 0 && flags != 2 && flags != 8 && flags != 10 ) { Invalid( "unsupported geometry flags" ); }
 	const auto size = Word( data + 4 );
 	const auto scalar_bits = Word( data + 8 );
 	const auto end_offset = Word( data + 12 );
@@ -106,7 +106,7 @@ void ParseChain( const std::vector< uint8_t >& bytes, std::vector< CvrGeometry >
 		if ( local < 47 || local > remaining ) { Invalid( "invalid detail link" ); }
 		// A terminal level consumes the exact rest; continuation must leave a
 		// complete next header. Every link therefore makes forward progress.
-		if ( Word( data ) == 0 ? local != remaining : remaining - local < 47 ) { Invalid( "detail continuation disagrees with remaining extent" ); }
+		if ( !(Word( data ) & 1) ? local != remaining : remaining - local < 47 ) { Invalid( "detail continuation disagrees with remaining extent" ); }
 		const auto count = Word( data + 38 );
 		if ( count > CvrSimpleDetailChain::MAX_RECORDS - records ) { Invalid( "detail record budget exceeded" ); }
 		records += count;

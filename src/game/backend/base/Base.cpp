@@ -598,6 +598,16 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} )
 	},
 	{
+		"get_smac_workshop",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS(0);
+			const auto& rules=m_game->GetState()->m_settings.global.GetSmacPredefinedUnitRules();
+			if(!m_resource_context || !m_allocation || !m_production || !m_owner || m_owner->GetPlayer()!=m_game->GetPlayer()
+				|| !rules || rules->catalog.source.ruleset_id!="smac") {return VALUE(gse::value::Undefined);}
+			return CopySmacWorkshop(GSE_CALL);
+		} )
+	},
+	{
 		"get_smac_production_presentation",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS_MIN_MAX(0,1);

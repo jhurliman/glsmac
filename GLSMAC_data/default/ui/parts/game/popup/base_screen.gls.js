@@ -16,6 +16,7 @@ return {
 		'rename',
 		'queue_editor',
 		'hurry',
+        'workshop',
 	],
 
 	production_selection_no_hiding: {
@@ -25,6 +26,7 @@ return {
 		rename: true,
 		queue_editor: true,
 		hurry: true,
+        workshop: true,
 	},
 
 	init: (p) => {
@@ -113,6 +115,7 @@ return {
 				if (this.base_id == e.base_id) {
 					this.sections.specialist_selection.hide_view();
 					this.sections.rename.hide_view(); this.sections.queue_editor.hide_view(); this.sections.hurry.hide_view();
+        if (#is_defined(this.sections.workshop)) { this.sections.workshop.hide_view(); }
 					if (this.is_open) { this.p.modules.popup.hide('base_screen'); }
 					this.base = null;
 					this.base_id = null;
@@ -130,6 +133,7 @@ return {
 					navigate_base: parent.parent.navigate_base,
 					open_specialist_selection: parent.parent.open_specialist_selection,
 					open_rename: parent.parent.open_rename,
+                    open_workshop: parent.parent.open_workshop,
 					open_queue_editor: parent.parent.open_queue_editor,
 					open_hurry: parent.parent.open_hurry,
 					can_edit_queue: parent.parent.can_edit_queue,
@@ -318,6 +322,14 @@ return {
 		this.sections.queue_editor.open(base, data);
 	},
 
+    open_workshop: () => {
+        if (!this.is_open || this.read_only) { return; }
+        const data = this.base.get_smac_workshop();
+        if (!#is_defined(data)) { return; }
+        this.hide_production_selection();
+        this.sections.workshop.open(this.base, data);
+    },
+
 	open_rename: () => {
 		if (!this.is_open || !this.can_rename()) { return; }
 		const base = this.base; const expected = base.get_smac_rename_state();
@@ -347,6 +359,7 @@ return {
 		this.sections.top_buttons.hide_view();
 		this.sections.specialist_selection.hide_view();
 		this.sections.rename.hide_view(); this.sections.queue_editor.hide_view(); this.sections.hurry.hide_view();
+        if (#is_defined(this.sections.workshop)) { this.sections.workshop.hide_view(); }
 		this.sections.bottom_bar.frame.hide();
 		this.hide_production_selection();
 		this.is_open = false;

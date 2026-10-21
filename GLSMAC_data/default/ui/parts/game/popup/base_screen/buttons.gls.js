@@ -62,16 +62,12 @@ return {
 				left: 3,
 				text: 'Help unavailable',
 			}),
-			this.frame.text({
-				class: 'base-screen-frame-text', font: 'arialnb.ttf:11',
-				top: 7,
-				align: 'left',
-				left: 109,
-				text: 'Workshop unavailable',
-			}),
+			this.frame.button({class: 'base-screen-popup-bottom-button', align: 'left', left: 109, width: 104, text: 'WORKSHOP'}),
 			btn_ok,
 			btn_cancel,
 		];
+
+        this.buttons[1].on('click', () => { this.p.utils.open_workshop(); return true; });
 
 		btn_cancel.on('click', (e) => {
 			this.p.utils.hide_production_selection();

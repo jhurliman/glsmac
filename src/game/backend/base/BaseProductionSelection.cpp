@@ -7,6 +7,8 @@
 #include "game/backend/Player.h"
 #include "game/backend/slot/Slot.h"
 #include "game/backend/unit/Def.h"
+#include "game/backend/unit/SmacWorkshop.h"
+#include "game/backend/State.h"
 #include "gc/Space.h"
 #include "gse/value/Array.h"
 #include "gse/value/Bool.h"
@@ -14,11 +16,66 @@
 #include "gse/value/Object.h"
 #include "gse/value/String.h"
 #include <type_traits>
+#include <algorithm>
 
 namespace game::backend {
 
 bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
     const gse::value::object_properties_t& args, size_t caller, bool apply ) {
+    if(name=="commit_smac_workshop") {
+        const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
+            const auto at=args.find(key);
+            if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop command");}
+            return at->second->Deref();
+        };
+        if(args.size()!=6) {THROW("Workshop command requires Base, expected state, armor, name, Done flag and UI request");}
+        const auto* object=static_cast<const gse::value::Object*>(field("base",gse::VT_OBJECT));
+        if(object->object_class!=base::Base::WRAP_CLASS) {THROW("Workshop requires an actual Base");}
+        auto* base=base::Base::Unwrap(args.at("base"));
+        const auto& expected=static_cast<const gse::value::String*>(field("expected_state",gse::VT_STRING))->value;
+        const auto armor=static_cast<const gse::value::Int*>(field("armor",gse::VT_INT))->value;
+        const auto& supplied=static_cast<const gse::value::String*>(field("name",gse::VT_STRING))->value;
+        const auto done=static_cast<const gse::value::Bool*>(field("done",gse::VT_BOOL))->value;
+        // Client correlation only: ownership and the complete saved-state fence
+        // below authorize the edit. Old acknowledgements must not close a new UI.
+        const auto request=static_cast<const gse::value::Int*>(field("request_id",gse::VT_INT))->value;
+        if(!base || base->GetGame()!=this || caller!=m_slot_num || expected.size()>unit::SmacStartupDesignState::MAX_WIRE_BYTES+89
+            || request<1 || armor<0 || armor>1 || supplied.size()>31 || supplied.find('\0')!=std::string::npos) {THROW("Invalid Workshop command authority or draft");}
+        // Current narrow UI has the same printable-byte rendering boundary as
+        // Base Rename. Do not install a name that its renderer cannot display.
+        for(const unsigned char c:supplied) {if(c<32 || c>126) {THROW("Workshop name requires printable display bytes");}}
+        base->RequireSmacProductionSelection();
+        if(apply) {
+            CheckRW(GSE_CALL);
+            if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Workshop requires its owning accumulation");}
+        }
+        const bool stale=base->SmacWorkshopState()!=expected;
+        bool warning=false,failed=false;int32_t design_id=2;
+        if(!stale) {
+            auto next=m_simulation->value.designs;
+            unit::SmacWorkshopDraft draft;draft.armor=uint32_t(armor);draft.name=supplied;
+            const auto& settings=GetState()->m_settings.global;
+            const auto* owner=m_simulation->value.technology.Find(base->GetSmacResourceContext().owner_simulation_id);
+            try {
+                const auto result=unit::CommitSmacWorkshopFirstDesign(next,draft,settings.GetSmacPredefinedUnitRules()->catalog,*settings.GetSmacTechnologyRules(),*owner);
+                warning=result.intrinsic_name_warning;design_id=result.design_id;
+            } catch(const std::invalid_argument&) {failed=true;}
+            catch(const std::runtime_error&) {failed=true;}
+            if(apply && !failed) {
+                m_simulation->value.designs.owners.swap(next.owners);
+            }
+        }
+        if(apply) {
+            GetState()->TriggerObject(this,"smac_workshop_commit",ARGS_F(this,base,done,stale,warning,design_id,failed,request) {
+                {"base",base->Wrap(GSE_CALL)}, {"selection",base->CopySmacWorkshop(GSE_CALL)},
+                {"done",VALUE(gse::value::Bool,,done && !stale && !failed)}, {"stale",VALUE(gse::value::Bool,,stale)},
+                {"failed",VALUE(gse::value::Bool,,failed)},
+                {"request_id",VALUE(gse::value::Int,,request)},
+                {"intrinsic_name_warning",VALUE(gse::value::Bool,,warning)}, {"design_id",VALUE(gse::value::Int,,design_id)}
+            };});
+        }
+        return true;
+    }
     if ( name != "select_smac_production" ) { return false; }
     const auto field = [ & ]( const char* key, gse::value_type_t type ) -> const gse::Value* {
         const auto at = args.find( key );
@@ -49,6 +106,68 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
 }
 
 namespace base {
+std::string Base::SmacWorkshopState() const {
+    RequireSmacProductionSelection();
+    const auto* technologies=m_game->m_simulation->value.technology.Find(GetSmacResourceContext().owner_simulation_id);
+    const auto& rules=m_game->GetState()->m_settings.global.GetSmacPredefinedUnitRules();
+    if(!technologies || !rules || rules->catalog.source.ruleset_id!="smac") {THROW("Workshop requires an owned SMAC catalog and technologies");}
+    auto state=m_game->m_simulation->value.designs.Serialize(rules->catalog).ToString();
+    for(const auto owned:technologies->owned) {state.push_back(owned ? '1':'0');}
+    return state;
+}
+gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE) const {
+    const auto expected=SmacWorkshopState();
+    const auto& settings=m_game->GetState()->m_settings.global;
+    const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;
+    const auto& technology=*m_game->m_simulation->value.technology.Find(GetSmacResourceContext().owner_simulation_id);
+    const auto choices=unit::SmacWorkshopChoices(unit::SmacWorkshopComponent::Armor,catalog,*settings.GetSmacTechnologyRules(),technology);
+    const auto mineral_factor=m_game->GetSmacProductionMineralFactor(m_owner);
+    gse::value::array_elements_t armor;
+    for(const auto& choice:choices) {
+        bool supported=choice.component_id<=1 && choice.technology_available;
+        std::string design_name;
+        int32_t cost_rows=0;
+        if(supported) {
+            auto probe=m_game->m_simulation->value.designs;unit::SmacWorkshopDraft draft;draft.armor=choice.component_id;
+            try {
+                const auto result=unit::CommitSmacWorkshopFirstDesign(probe,draft,catalog,*settings.GetSmacTechnologyRules(),technology);
+                if(result.design_id<64) {design_name=catalog.source.units.at(result.design_id).name;cost_rows=catalog.units.at(result.design_id).cost;}
+                else {
+                    const auto* bank=probe.Find(technology.admission.simulation_id);
+                    if(!bank) {throw std::runtime_error("Workshop preview has no owned bank");}
+                    const auto design=std::find_if(bank->designs.begin(),bank->designs.end(),[&](const auto& row){return row.id==result.design_id;});
+                    if(design==bank->designs.end() || !design->name) {throw std::runtime_error("Workshop preview has no retained design name");}
+                    design_name=*design->name;
+                    cost_rows=design->cost;
+                }
+            }
+            catch(const std::exception&) {supported=false;}
+        }
+        // Workshop shows ordinary rows times 4f9d60's mineral factor, without
+        // the Base's separate first-prototype surcharge.
+        const int64_t shown_cost=int64_t(cost_rows)*mineral_factor;
+        if(shown_cost<0 || shown_cost>INT32_MAX) {throw std::overflow_error("Workshop displayed cost exceeds signed32");}
+        armor.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+            {"id",VALUE(gse::value::Int,,choice.component_id)},
+            {"name",VALUE(gse::value::String,,catalog.defenses.defenses.at(choice.component_id).name)},
+            {"short_name",VALUE(gse::value::String,,catalog.defenses.defenses.at(choice.component_id).short_name)},
+            {"rating",VALUE(gse::value::Int,,catalog.defenses.defenses.at(choice.component_id).rating)},
+            {"design_name",VALUE(gse::value::String,,design_name)},
+            {"cost",VALUE(gse::value::Int,,shown_cost)},
+            {"available",VALUE(gse::value::Bool,,supported)}
+        }));
+    }
+    return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+        {"expected_state",VALUE(gse::value::String,,expected)}, {"armor",VALUE(gse::value::Array,,armor)},
+        {"chassis",VALUE(gse::value::String,,catalog.chassis.chassis.at(0).names[0].name)},
+        {"speed",VALUE(gse::value::Int,,catalog.chassis.chassis.at(0).speed)},
+        {"weapon",VALUE(gse::value::String,,catalog.weapons.weapons.at(0).name)},
+        {"offense",VALUE(gse::value::Int,,catalog.weapons.weapons.at(0).offense)},
+        {"reactor",VALUE(gse::value::String,,catalog.reactors.reactors.at(0).name)},
+        {"power",VALUE(gse::value::Int,,catalog.reactors.reactors.at(0).power)},
+        {"scout_name",VALUE(gse::value::String,,catalog.source.units.at(2).name)}
+    });
+}
 void Base::RequireSmacProductionSelection() const {
     GetSmacResourceContext();
     m_game->RequireSmacLocalHumanOwner( m_owner );

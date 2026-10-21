@@ -26,6 +26,111 @@ namespace game::backend {
 
 bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
     const gse::value::object_properties_t& args, size_t caller, bool apply ) {
+    using WorkshopBaseUpdates=decltype(GetBM()->m_base_updates);
+    const auto stage_retirement=[&](int32_t retired,bool custom,
+        std::optional<unit::UnitManager::PreparedConventionalRemoval>& removal,
+        std::vector<std::pair<base::Base*,std::optional<base::ProductionState>>>& queues,
+        std::optional<WorkshopBaseUpdates>& base_updates) {
+        auto* manager=GetUM();std::vector<size_t> ids;base_updates=GetBM()->m_base_updates;
+        const auto& order=manager->GetUnitRecordOrder();
+        for(auto it=order.rbegin();it!=order.rend();++it) {
+            const auto* actor=manager->GetUnit(*it);
+            if(!actor || (!actor->IsConventional() && !actor->IsNative())) {throw std::runtime_error("Workshop retirement requires canonical Unit identities");}
+            const auto design=actor->IsConventional() ? actor->Conventional().design_id:actor->Native().design;
+            if(design==retired) {
+                ids.push_back(*it);
+                if(actor->IsConventional() && actor->Conventional().home_base_id) {
+                    auto* home=GetBM()->GetBase(*actor->Conventional().home_base_id);
+                    if(!home) {throw std::runtime_error("Retiring Unit has no registered home");}
+                    base::BaseManager::QueueBaseUpdateInto(*base_updates,home,base::BaseManager::BUO_REFRESH);
+                }
+            }
+        }
+        // Intrinsic retirement leaves every Base queue unchanged.
+        // Custom retirement has no Base-owner filter or cache recount.
+        if(custom) for(const auto& entry:GetBM()->GetBases()) {
+            auto* affected=entry.second;if(!affected->m_production) {continue;}
+            auto production=affected->m_production;
+            const auto matches=[&](const base::ProductionItem& item) {
+                if(item.kind!=base::ProductionItemKind::Unit) {return false;}
+                if(!item.smac_source_id) {throw std::runtime_error("Workshop retirement requires canonical queue identities");}
+                return *item.smac_source_id==retired;
+            };
+            if(matches(production->current_item)) {production->current_item=MakeSmacProductionItem(affected->m_owner,base::ProductionItemKind::Stockpile,38);}
+            if(production->queue) {
+                auto& pending=*production->queue;
+                // Original595ac0 advances even after shifting a removed
+                // entry. Keep the newly shifted neighbor when adjacent
+                // entries name the same retired design.
+                for(size_t i=0;i<pending.size();++i) {
+                    if(matches(pending[i])) {pending.erase(pending.begin()+i);}
+                }
+            }
+            production->Validate();
+            if(!(*production==*affected->m_production)) {
+                queues.emplace_back(affected,std::move(production));
+                base::BaseManager::QueueBaseUpdateInto(*base_updates,affected,base::BaseManager::BUO_REFRESH);
+            }
+        }
+        removal.emplace(manager->PrepareWorldUnitRemoval(GSE_CALL,ids));
+    };
+    if(name=="retire_smac_workshop") {
+        const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
+            const auto at=args.find(key);if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop Retire command");}
+            return at->second->Deref();
+        };
+        if(args.size()!=7) {THROW("Workshop Retire requires selection, retained name, answer and fence");}
+        const auto integer=[&](const char* key){return static_cast<const gse::value::Int*>(field(key,gse::VT_INT))->value;};
+        const auto* object=static_cast<const gse::value::Object*>(field("base",gse::VT_OBJECT));
+        if(object->object_class!=base::Base::WRAP_CLASS) {THROW("Workshop Retire requires an actual Base");}
+        auto* base=base::Base::Unwrap(args.at("base"));const auto selected=integer("selected_design"),answer=integer("confirm"),request=integer("request_id"),offset=integer("strip_offset");
+        const auto& expected=static_cast<const gse::value::String*>(field("expected_state",gse::VT_STRING))->value;
+        const auto& retained=static_cast<const gse::value::String*>(field("name",gse::VT_STRING))->value;
+        if(!base || base->GetGame()!=this || caller!=m_slot_num || selected<0 || selected>511 || answer< -1 || answer>1 || request<1 || offset<0 || offset>512
+            || expected.size()>unit::SmacStartupDesignState::MAX_WIRE_BYTES+89+2*513 || retained.size()>31 || retained.find('\0')!=std::string::npos) {THROW("Invalid Workshop Retire authority or selection");}
+        base->RequireSmacProductionSelection();const auto owner=base->GetSmacResourceContext().owner_simulation_id;
+        if(selected>=64 && selected/64!=owner) {THROW("Workshop Retire selected a foreign bank");}
+        if(apply) {CheckRW(GSE_CALL);if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Workshop Retire requires its owning accumulation");}}
+        const bool stale=base->SmacWorkshopState()!=expected;bool failed=false,retired=false;int32_t count=0;size_t strip_offset=size_t(offset);std::string stored_name,illustration;
+        unit::SmacWorkshopDraft response_draft;
+        std::optional<unit::UnitManager::PreparedConventionalRemoval> removal;
+        std::vector<std::pair<base::Base*,std::optional<base::ProductionState>>> queues;std::optional<WorkshopBaseUpdates> base_updates;
+        if(!stale) {try {
+            const auto& settings=GetState()->m_settings.global;const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;
+            const auto& state=m_simulation->value.designs;const auto& economy=m_simulation->value.economy.at(owner);
+            if(!state.native_registry || !economy.design_counts) {throw std::runtime_error("Workshop Retire requires retained design and Unit-count authority");}
+            const auto& row=state.native_registry->at(selected);stored_name=std::string(row.begin(),std::find(row.begin(),row.begin()+32,uint8_t(0)));count=economy.design_counts->at(selected);
+            const auto triad=catalog.chassis.chassis.at(row[36]).triad;
+            illustration=triad==loader::txt::ChassisTriad::Land ? "unit_sm.pcx":triad==loader::txt::ChassisTriad::Sea ? "navun_sm.pcx":"air_sm.pcx";
+            if(answer==1) {
+                auto next=unit::RetireSmacWorkshopDesign(state,int32_t(selected),catalog,owner);
+                auto selection=unit::PrepareSmacWorkshopReselection(next,int32_t(selected),retained,catalog,owner);
+                const auto& technology=*m_simulation->value.technology.Find(owner);
+                selection.draft.abilities=unit::CleanSmacWorkshopRetainedAbilities(selection.draft,catalog,*settings.GetSmacTechnologyRules(),technology).mask;
+                const auto list=unit::BrowseSmacWorkshopDesigns(selection.state,catalog,*settings.GetSmacTechnologyRules(),technology,economy.design_counts);
+                const auto at=std::find(list.begin(),list.end(),selection.draft.selected_design);
+                if(at!=list.end()) {strip_offset=(size_t(at-list.begin())+list.size()-5)%list.size();}
+                response_draft=selection.draft;
+                if(apply) {
+                    stage_retirement(int32_t(selected),selected>=64,removal,queues,base_updates);
+                    static_assert(std::is_nothrow_swappable_v<unit::SmacStartupDesignState> && std::is_nothrow_swappable_v<std::optional<base::ProductionState>>);
+                    removal->Commit();for(auto& change:queues) {change.first->m_production.swap(change.second);}
+                    GetBM()->m_base_updates.swap(*base_updates);std::swap(m_simulation->value.designs,selection.state);retired=true;
+                }
+            }
+        }catch(const std::invalid_argument&) {failed=true;}catch(const std::runtime_error&) {failed=true;}}
+        if(apply) {
+            if(retired) {removal->Notify(GSE_CALL);}
+            GetState()->TriggerObject(this,"smac_workshop_retire",ARGS_F(this,base,request,answer,stale,failed,retired,count,stored_name,illustration,strip_offset,response_draft) {
+                {"base",base->Wrap(GSE_CALL)}, {"request_id",VALUE(gse::value::Int,,request)}, {"stale",VALUE(gse::value::Bool,,stale)}, {"failed",VALUE(gse::value::Bool,,failed)},
+                {"confirmation",VALUE(gse::value::Bool,,answer<0 && !stale && !failed)}, {"declined",VALUE(gse::value::Bool,,answer==0 && !stale && !failed)},
+                {"retired",VALUE(gse::value::Bool,,retired)}, {"count",VALUE(gse::value::Int,,count)}, {"stored_name",VALUE(gse::value::String,,stored_name)},
+                {"illustration",VALUE(gse::value::String,,illustration)},
+                {"expected_state",VALUE(gse::value::String,,base->SmacWorkshopState())}, {"strip_offset",VALUE(gse::value::Int,,strip_offset)},
+                {"selection",retired ? base->CopySmacWorkshop(GSE_CALL,&response_draft):VALUE(gse::value::Undefined)}
+            };});
+        }return true;
+    }
     if(name=="open_smac_workshop_rename" || name=="answer_smac_workshop_rename") {
         const bool answer=name=="answer_smac_workshop_rename";
         const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
@@ -199,51 +304,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
                             overwrite_name=std::string(old.begin(),std::find(old.begin(),old.begin()+32,uint8_t(0)));
                             overwrite_count=economy.design_counts->at(result.design_id);
                         } else if(!prepared.success) {throw std::runtime_error("Workshop allocation failed");}
-                        if(apply && prepared.retirement) {
-                            const auto retired=*prepared.retirement;auto* manager=GetUM();std::vector<size_t> ids;
-                            base_updates=GetBM()->m_base_updates;
-                            // 595ac0 removes raw-design matches in descending physical order.
-                            const auto& order=manager->GetUnitRecordOrder();
-                            for(auto it=order.rbegin();it!=order.rend();++it) {
-                                const auto* actor=manager->GetUnit(*it);
-                                if(!actor || (!actor->IsConventional() && !actor->IsNative())) {throw std::runtime_error("Workshop retirement requires canonical Unit identities");}
-                                const auto design=actor->IsConventional() ? actor->Conventional().design_id:actor->Native().design;
-                                if(design==retired) {
-                                    ids.push_back(*it);
-                                    if(actor->IsConventional() && actor->Conventional().home_base_id) {
-                                        auto* home=GetBM()->GetBase(*actor->Conventional().home_base_id);
-                                        if(!home) {throw std::runtime_error("Retiring Unit has no registered home");}
-                                        base::BaseManager::QueueBaseUpdateInto(*base_updates,home,base::BaseManager::BUO_REFRESH);
-                                    }
-                                }
-                            }
-                            // No Base-owner filter, no queue promotion, and no cache recount.
-                            for(const auto& entry:GetBM()->GetBases()) {
-                                auto* affected=entry.second;if(!affected->m_production) {continue;}
-                                auto production=affected->m_production;
-                                const auto matches=[&](const base::ProductionItem& item) {
-                                    if(item.kind!=base::ProductionItemKind::Unit) {return false;}
-                                    if(!item.smac_source_id) {throw std::runtime_error("Workshop retirement requires canonical queue identities");}
-                                    return *item.smac_source_id==retired;
-                                };
-                                if(matches(production->current_item)) {production->current_item=MakeSmacProductionItem(affected->m_owner,base::ProductionItemKind::Stockpile,38);}
-                                if(production->queue) {
-                                    auto& pending=*production->queue;
-                                    // Original595ac0 advances even after shifting a removed
-                                    // entry. Keep the newly shifted neighbor when adjacent
-                                    // entries name the same retired design.
-                                    for(size_t i=0;i<pending.size();++i) {
-                                        if(matches(pending[i])) {pending.erase(pending.begin()+i);}
-                                    }
-                                }
-                                production->Validate();
-                                if(!(*production==*affected->m_production)) {
-                                    queues.emplace_back(affected,std::move(production));
-                                    base::BaseManager::QueueBaseUpdateInto(*base_updates,affected,base::BaseManager::BUO_REFRESH);
-                                }
-                            }
-                            removal.emplace(manager->PrepareWorldUnitRemoval(GSE_CALL,ids));
-                        }
+                        if(apply && prepared.retirement) {stage_retirement(*prepared.retirement,true,removal,queues,base_updates);}
                         next=std::move(prepared.state);
                     }
                 } else {result=unit::CommitSmacWorkshopFirstDesign(next,draft,settings.GetSmacPredefinedUnitRules()->catalog,*settings.GetSmacTechnologyRules(),*owner);}

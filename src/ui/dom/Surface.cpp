@@ -49,6 +49,11 @@ Surface::Surface( DOM_ARGS_T )
     Method(GSE_CALL,"smacworkshoprenametext",NATIVE_CALL(this) {
         N_EXPECT_ARGS(0);return WorkshopRenameText(GSE_CALL);
     }));
+    Method(GSE_CALL,"smacworkshopretiretext",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(2);N_GETVALUE(name,0,String);N_GETVALUE(count,1,Int);
+        if(name.size()>31 || name.find('\0')!=std::string::npos || count<0 || count>255) {throw std::invalid_argument("Invalid Workshop Retire text context");}
+        return WorkshopRetireText(GSE_CALL,name,int32_t(count));
+    }));
     Method(GSE_CALL,"smacworkshopconsolebacking",NATIVE_CALL(this) {
         N_EXPECT_ARGS(0);
         if(!m_workshop_console_backing) {
@@ -87,6 +92,24 @@ Surface::Surface( DOM_ARGS_T )
         m_geometry->AsRectangle()->SetStretched();
         return VALUE(gse::value::Undefined);
     }));
+    Property(GSE_CALL,"smac_button_sprite",gse::VT_ARRAY,nullptr,PF_NONE,[this](GSE_CALLABLE,gse::Value* const value) {
+        const auto& fields=static_cast<gse::value::Array*>(value)->value;
+        if(fields.size()!=2 || !fields[0] || !fields[1] || fields[0]->type!=gse::VT_INT || fields[1]->type!=gse::VT_INT) {GSE_ERROR(gse::EC.UI_ERROR,"Modal button sprite requires [state,width]");}
+        const auto state=static_cast<const gse::value::Int*>(fields[0])->value,width=static_cast<const gse::value::Int*>(fields[1])->value;
+        if(state<0 || state>2 || width<6 || width>2048) {GSE_ERROR(gse::EC.UI_ERROR,"Modal button sprite requires state0..2 and width6..2048");}
+        if(!m_dialog_source) {m_dialog_source=g_engine->GetTextureLoader()->GetSmacDialogSource();}
+        if(!m_dialog_source || m_dialog_source->indexed.size()!=size_t(750*900)) {throw std::runtime_error("Original modal button sprite source unavailable");}
+        // Original460720 installs interface.pcx rows6/7/8 for generic
+        // normal/hover/pressed buttons. They are three sprites, not frame27.
+        std::vector<uint8_t> indexed(size_t(width)*20,9);const int top=127+21*int(state);
+        for(int y=0;y<20;++y) {for(int x=0;x<width;++x) {
+            const int sx=x<3 ? 64+x:x>=width-3 ? 136+x-int(width)+3:68+(x-3)%67;
+            indexed[size_t(y)*size_t(width)+size_t(x)]=m_dialog_source->indexed[size_t(top+y)*750+size_t(sx)];
+        }}
+        const auto rgba=loader::texture::smac_dialog_frame::Rgba(indexed,*m_dialog_source);
+        CreateTexture();m_background.texture->Resize(width,20);std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());
+        m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
+    },[this](GSE_CALLABLE){ClearTexture();});
     Property(GSE_CALL,"smac_frame",gse::VT_ARRAY,nullptr,PF_NONE,[this](GSE_CALLABLE,gse::Value* const value) {
         std::vector<std::array<int,5>> calls;
         const auto& rows=static_cast<gse::value::Array*>(value)->value;
@@ -753,8 +776,8 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         const auto source=read("script.txt");if(source.size()>2*1024*1024) {throw std::invalid_argument("Workshop script exceeds source budget");}
         const auto design=loader::txt::TXTLoader::ReadUniqueSection(source,"DESIGNLABELS");
         const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
-        if(design.size()!=16 || labels.size()<=918) {throw std::invalid_argument("Incomplete Workshop parent text source");}
-        std::array<std::string,26> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];text[24]=labels[757];text[25]=labels[126];
+        if(design.size()!=16 || labels.size()<=926) {throw std::invalid_argument("Incomplete Workshop parent text source");}
+        std::array<std::string,27> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];text[24]=labels[757];text[25]=labels[126];text[26]=labels[926];
         // LABELS includes its count at index0; offsets are four-byte entries.
         const std::array<size_t,7> status_indices{916,914,918,917,782,783,915};
         for(size_t i=0;i<status_indices.size();++i) {text[17+i]=labels[status_indices[i]];}
@@ -777,6 +800,7 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         {"status_labels",VALUE(gse::value::Array,,status)}, {"slot",VALUE(gse::value::String,,m_workshop_parent_text->at(23))},
         {"obsolete",VALUE(gse::value::String,,m_workshop_parent_text->at(24))},
         {"rename",VALUE(gse::value::String,,m_workshop_parent_text->at(25))},
+        {"retire",VALUE(gse::value::String,,m_workshop_parent_text->at(26))},
         {"weapon",picker->Get("weapon")}, {"equipment",picker->Get("equipment")}, {"psi",picker->Get("psi")}
     });
 }
@@ -804,6 +828,58 @@ gse::Value* Surface::WorkshopRenameText(GSE_CALLABLE) {
     return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
         {"title",VALUE(gse::value::String,,text[0])}, {"label",VALUE(gse::value::String,,text[1])},
         {"ok",VALUE(gse::value::String,,text[2])}, {"cancel",VALUE(gse::value::String,,text[3])}, {"colors",parent->Get("colors")}
+    });
+}
+
+gse::Value* Surface::WorkshopRetireText(GSE_CALLABLE,const std::string& name,int32_t count) {
+    if(!m_workshop_retire_text) {
+        const auto read=[](const std::string& file){std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(file));return std::string(bytes.begin(),bytes.end());};
+        const auto source=read("script.txt");const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
+        if(source.size()>2*1024*1024 || labels.size()<=102) {throw std::invalid_argument("Incomplete Workshop Retire text source");}
+        std::array<std::string,9> text;
+        for(size_t variant=0;variant<2;++variant) {
+            const std::string tag=variant ? "#RETIRETYPE":"#RETIRETYPE2";bool inside=false,found=false;size_t block=0;
+            for(const auto& raw:util::String::Split(source,'\n')) {
+                const auto line=util::String::TrimCopy(raw);
+                if(line.empty()) {if(inside && block==0 && !text[variant*4+1].empty()) {block=1;}continue;}
+                if(line.front()==';' || line.compare(0,2,"##")==0) {continue;}
+                if(line.front()=='#' && line.find_first_of(" \t")==std::string::npos) {
+                    inside=line==tag;if(inside) {if(found) {throw std::invalid_argument("Repeated Workshop Retire template");}found=true;}
+                }else if(inside) {
+                    if(line.compare(0,9,"#caption ")==0) {text[variant*4]=line.substr(9);}
+                    else if(line.front()!='#') {
+                        if(block>2) {throw std::invalid_argument("Unexpected Workshop Retire template rows");}
+                        auto& part=text[variant*4+1+block];if(!part.empty()) {part+=' ';}part+=line;
+                        if(block) {++block;}
+                    }
+                }
+            }
+        }
+        // Original LABELS byte offset194 hex is entry101; the text loader
+        // retains the count at index0, hence array102 (not decimal194/Ocean).
+        text[8]=labels[102];
+        for(const auto& item:text) {if(item.empty() || item.size()>1024 || item.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop Retire label");}}
+        m_workshop_retire_text=std::move(text);
+    }
+    // Substitute original template tokens once; never reinterpret a user name
+    // containing dollar signs as another template expression.
+    const auto substitute=[&](const std::string& source) {
+        std::string result;
+        for(size_t i=0;i<source.size();) {
+            if(source.compare(i,10,"$UNITTYPE0")==0) {result+=name;i+=10;}
+            else if(source.compare(i,5,"$NUM0")==0) {result+=std::to_string(count);i+=5;}
+            else if(source.compare(i,5,"$<#0:")==0) {
+                const auto middle=source.find(':',i+5),end=source.find('>',i+5);
+                if(middle==std::string::npos || end==std::string::npos || middle>end) {throw std::invalid_argument("Invalid Workshop Retire plural token");}
+                result+=count==1 ? source.substr(i+5,middle-i-5):source.substr(middle+1,end-middle-1);i=end+1;
+            }else {result+=source[i++];}
+        }return result;
+    };
+    auto* parent=static_cast<gse::value::Object*>(WorkshopParentText(GSE_CALL));const auto& text=*m_workshop_retire_text;const size_t first=count ? 4:0;
+    gse::value::array_elements_t rows{VALUE(gse::value::String,,substitute(text[first+2])),VALUE(gse::value::String,,substitute(text[first+3]))};
+    return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+        {"title",VALUE(gse::value::String,,text[first])}, {"body",VALUE(gse::value::String,,substitute(text[first+1]))},
+        {"rows",VALUE(gse::value::Array,,rows)}, {"ok",VALUE(gse::value::String,,text[8])}, {"colors",parent->Get("colors")}
     });
 }
 gse::Value* Surface::WorkshopAbilityText(GSE_CALLABLE,const std::string& technology) {

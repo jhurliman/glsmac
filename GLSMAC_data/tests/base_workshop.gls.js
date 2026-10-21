@@ -7,10 +7,12 @@ const node = (data) => {
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
     data.smacworkshopparenttext = () => { let colors = []; let index = 0; while (index < 256) { colors :+ ('color' + #to_string(index)); index++; }
         return {labels: ['Vehicle Design','Moves:','Type:','Power:','Prototype Cost:','Cost:','Data','Presets','W:','A:','C:','R:','SP1:','SP2:','E:','P:'],
-            minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', obsolete: 'Obsolete', rename: 'Rename', status_title: 'Design Workshop', slot: 'Slot',
+            minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', obsolete: 'Obsolete', rename: 'Rename', retire: 'Retire', status_title: 'Design Workshop', slot: 'Slot',
             status_labels: ['Examining Basic Unit','New Design Based On Old','Examining Previous Design','Designing New Unit','Modifying Previous Design']}; };
     data.smacworkshopconsolebacking = () => { data.console_tiled = true; };
     data.smacworkshoprenametext = () => { const words = data.smacworkshopparenttext(); return {title: 'What shall we call this unit type?', label: 'Name:', ok: 'OK', cancel: 'Cancel', colors: words.colors}; };
+    data.smacworkshopretiretext = (name, count) => { const words = data.smacworkshopparenttext();
+        return {title: 'Chief Engineer', body: count == 0 ? 'Do you wish to retire this design?' : 'Do you wish to retire this design? Units of that type still in operation will be disbanded.', rows: ['Never mind.', 'Retire ' + name + ' design.'], ok: 'OK', colors: words.colors}; };
     data.focus = () => { data.focused = true; }; data.select_all = () => { data.all_selected = true; };
     data.smacworkshopabilitytext = (technology) => { return {title: 'Select Special Ability', none: 'No special ability', ok: 'OK', cancel: 'Cancel', cost: 'Cost', attack: 'Attack', defense: 'Defense', speed: 'Speed', domains: ['Land', 'Sea', 'Air'], second_title: 'Chief Engineer', second_body: 'Research ' + technology + '.', missile_title: 'Chief Engineer', missile_body: 'Missiles cannot have special abilities.'}; };
     data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
@@ -395,3 +397,41 @@ listeners.smac_workshop_rename({base: base, request_id: dialog.pending_id, answe
 test.assert(dialog.active && !dialog.pending && dialog.draft_name == 'Draft Guard' && dialog.title.text == 'DRAFT GUARD'
     && dialog.selected_design == rename_selected && dialog.selected_armor == rename_armor);
 dialog.submit(false); test.assert(commands[#sizeof(commands) - 1].data.name == 'Draft Guard'); dialog.hide_view();
+
+// Direct Retire uses the stored selected design, never the unsaved components.
+dialog.open(base, selection); dialog.draft_name = 'Unsaved Draft'; const retire = dialog.retire_dialog;
+retire.begin(dialog); const retire_commands = #sizeof(commands); retire.begin(dialog);
+test.assert(dialog.pending && #sizeof(commands) == retire_commands && commands[retire_commands - 1].name == 'retire_smac_workshop'
+    && commands[retire_commands - 1].data.confirm == (0 - 1) && commands[retire_commands - 1].data.name == 'Unsaved Draft'
+    && !#is_defined(commands[retire_commands - 1].data.armor));
+listeners.smac_workshop_retire({base: base, request_id: dialog.pending_id, stale: false, failed: false, confirmation: true, expected_state: 'retire-quote', count: 0, stored_name: 'Stored Scout', illustration: 'unit_sm.pcx'});
+test.assert(retire.active && !dialog.pending && retire.window.left == 150 && retire.window.top == 255 && retire.window.width == 755 && retire.window.height == 300
+    && retire.rows[0].button.top == 165 && retire.rows[1].button.top == 187 && retire.ok.top == 217 && retire.rows[1].label.text == 'Retire Stored Scout design.');
+test.assert(retire.title.color == 'color226' && retire.body[0].color == 'color226' && retire.ok.text == 'OK' && retire.illustration.background == 'unit_sm.pcx:smacsoftware()');
+test.assert(retire.rows[1].button.handlers.mouseover({}) == true && retire.selected == 0);
+test.assert(retire.rows[1].label.color == 'color223');
+test.assert(retire.rows[1].button.handlers.mousedown({button: 'left'}) == true && retire.selected == 1 && #sizeof(commands) == retire_commands);
+test.assert(retire.rows[1].button.handlers.click({}) == true && retire.selected == 1 && #sizeof(commands) == retire_commands);
+retire.window.handlers.keydown({modifiers: {}, code: 'HOME'});
+test.assert(retire.window.handlers.keydown({modifiers: {}, code: 'ESCAPE'}) == true && dialog.pending && !retire.active && commands[#sizeof(commands) - 1].data.confirm == 0);
+listeners.smac_workshop_retire({base: base, request_id: dialog.pending_id, stale: false, failed: false, confirmation: false, retired: false, declined: true, expected_state: 'retire-quote'});
+test.assert(!dialog.pending && dialog.draft_name == 'Unsaved Draft' && dialog.selected_design == 2);
+retire.begin(dialog);
+listeners.smac_workshop_retire({base: base, request_id: dialog.pending_id, stale: false, failed: false, confirmation: true, expected_state: 'retire-live', count: 2, stored_name: 'Stored Scout', illustration: 'unit_sm.pcx'});
+test.assert(retire.rows[0].button.top == 165 && retire.ok.top == 217 && #sizeof(retire.body) == 2);
+retire.window.handlers.keydown({modifiers: {}, code: 'DOWN'}); retire.window.handlers.keydown({modifiers: {}, code: 'ESCAPE'});
+test.assert(dialog.pending && commands[#sizeof(commands) - 1].data.confirm == 1 && commands[#sizeof(commands) - 1].data.expected_state == 'retire-live');
+const after_retire = selection + {}; after_retire.expected_state = 'retired';
+after_retire.draft = {selected_design: 64, chassis: 0, weapon: 0, armor: 0, reactor: 1, abilities: 0, name: 'Unsaved Draft'};
+listeners.smac_workshop_retire({base: base, request_id: dialog.pending_id, stale: false, failed: false, confirmation: false, retired: true, declined: false, expected_state: 'retired', selection: after_retire, strip_offset: 7});
+test.assert(!dialog.pending && !retire.active && dialog.active && dialog.selected_design == 64 && dialog.draft_name == 'Unsaved Draft' && dialog.strip_offset == 7);
+retire.begin(dialog);
+listeners.smac_workshop_retire({base: base, request_id: dialog.pending_id, stale: false, failed: false, confirmation: true, expected_state: 'retire-double', count: 0, stored_name: 'Stored Scout', illustration: 'unit_sm.pcx'});
+test.assert(retire.rows[1].button.handlers.dblclick({button: 'left'}) == true && dialog.pending && commands[#sizeof(commands) - 1].data.confirm == 1);
+listeners.smac_workshop_retire({base: base, request_id: dialog.pending_id, stale: false, failed: false, confirmation: false, retired: false, declined: true, expected_state: 'retire-double'});
+retire.begin(dialog);
+listeners.smac_workshop_retire({base: base, request_id: dialog.pending_id, stale: false, failed: false, confirmation: true, expected_state: 'retire-shift-enter', count: 0, stored_name: 'Stored Scout', illustration: 'unit_sm.pcx'});
+test.assert(retire.window.handlers.keydown({modifiers: {shift: true}, code: 'ENTER'}) == true && dialog.pending && commands[#sizeof(commands) - 1].data.confirm == 0);
+listeners.smac_workshop_retire({base: base, request_id: dialog.pending_id, stale: false, failed: false, confirmation: false, retired: false, declined: true, expected_state: 'retire-shift-enter'});
+retire.begin(dialog); const retired_request = dialog.pending_id; dialog.hide_view();
+listeners.smac_workshop_retire({base: base, request_id: retired_request, confirmation: true}); test.assert(!retire.active && !dialog.active);

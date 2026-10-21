@@ -50,12 +50,12 @@ verified seven-faction Planet startup and per-owner upkeep boundaries to the
 current engine. Computer admission, owner scheduling and actual decisions are
 required before the local conquest milestone can be claimed.
 
-## Current acceptance dashboard — 2026-10-20
+## Current acceptance dashboard — 2026-10-21
 
-Accepted integration: **`a12a5e77ac6599d38ceae56dc352d7d595b01dd2`**, through
-[#503](https://github.com/jhurliman/glsmac/pull/503), on `codex/faithful-1.0`.
+Accepted integration: **`6205fb50307c224c9c96d950663dbceaa5b96c5c`**, through
+[#523](https://github.com/jhurliman/glsmac/pull/523), on `codex/faithful-1.0`.
 Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `8aba5b9aa76cf1168647b9c697e23ca41f85b201`. This is an integration
+at head `0e5fb514465604cb1e90be4897d6826db951a285`. This is an integration
 checkpoint, not a release candidate or a statement that all platforms were rerun.
 
 **Current focus: the complete Design Workshop (M3/M6). M0–M7 remain open.**

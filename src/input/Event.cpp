@@ -12,6 +12,7 @@ void Event::SetType( const event_type_t type ) {
 	switch ( m_type ) {
 		case EV_MOUSE_MOVE:
 		case EV_MOUSE_DOWN:
+		case EV_DOUBLE_CLICK:
 		case EV_MOUSE_UP:
 		case EV_MOUSE_OVER:
 		case EV_MOUSE_OUT:

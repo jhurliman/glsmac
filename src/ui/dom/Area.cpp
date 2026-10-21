@@ -23,6 +23,7 @@ Area::Area( DOM_ARGS_T )
 			input::EV_MOUSE_OVER,
 			input::EV_MOUSE_OUT,
 			input::EV_MOUSE_DOWN,
+			input::EV_DOUBLE_CLICK,
 			input::EV_MOUSE_UP,
 		}
 	);
@@ -93,6 +94,7 @@ void Area::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_pr
 		case input::EV_MOUSE_OVER:
 		case input::EV_MOUSE_OUT:
 		case input::EV_MOUSE_DOWN:
+		case input::EV_DOUBLE_CLICK:
 		case input::EV_MOUSE_UP:
 		case input::EV_MOUSE_SCROLL: {
 			const auto& area = m_geometry->GetEffectiveArea();
@@ -120,7 +122,7 @@ void Area::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_pr
 					VALUE( gse::value::Int, , e.data.mouse.y )
 				}
 			);
-			if ( e.type == input::EV_MOUSE_DOWN || e.type == input::EV_MOUSE_UP ) {
+			if ( e.type == input::EV_MOUSE_DOWN || e.type == input::EV_MOUSE_UP || e.type == input::EV_DOUBLE_CLICK ) {
 				std::string buttonstr = "";
 				switch ( e.data.mouse.button ) {
 					case input::MB_LEFT: {

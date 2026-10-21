@@ -209,6 +209,60 @@ After acceptance the caller reselects the same raw ID via4490b0(id,0), rebuilds
 the browse list, recenters when found, and requests a full repaint. It does
 not select the Upgrade destination or allocate a replacement design.
 
+## Live Retire integration
+
+Standalone Retire now uses an owned Base command and the complete saved-state
+fence. Its prompt reads the stored selected name and cached own-unit byte,
+ignoring unsaved component edits. Query and decline preserve the complete
+world. Acceptance prepares design history/flags, descending raw-design Unit
+removal, custom-only queue surgery, reselection and strip centering before
+publication. Notifications observe the committed state. A late locked-Unit
+failure rolls all of those preparations back. The same retirement staging is
+shared by occupied-slot overwrite; intrinsic Retire leaves all Base queues
+and its shared design active flag unchanged.
+
+Inactive retained custom IDs remain resolvable for existing production
+baselines and surviving adjacent queue entries. This lookup does not admit
+new production: the eligibility predicate still rejects inactive records.
+The saved starting-Scout ID can retain its retired original record, while
+foreign starting IDs and uninitialized slots remain invalid. No new save
+format or fabricated legacy registry is introduced.
+
+The live tests cover intrinsic/custom acceptance, cached0 with an actual
+Unit, byte-wrapped cached counts, foreign raw-design users, unchanged mineral
+and retool state, duplicate queues, stale replay, foreign-bank rejection and
+actual save/reload. A suspended Colony Screen also accepts the action without
+reposting its income. This remains within the existing explicitly local human
+canonical command admission; it does not implement the original network sender.
+
+The illustrated confirmation uses the corrected755x300 wrapper,449px body
+wrap, loaded triad illustration and localized OK. Its mouse-down, double-click,
+Enter/Shift+Enter and selected-row Escape behavior follow the
+[twelve native input controls](design-workshop-modal-input.md). SDL's existing
+double-click count now reaches the DOM as a mouse event, after ordinary down
+selection and without applying the logical viewport transform twice.
+
+In the final instrumented1024x768 run, all24,000 illustration pixels and
+all16,056 pixels of the caption's complete outer frame match the native owned
+surface. After reproducing the original interface.pcx initialization, all13,096
+opaque OK-button pixels also match, including its91 glyph pixels. Its four
+transparent source corners compose over the parent. These are exact region
+comparisons, not a whole-modal claim; the reference uses different body text.
+The corrected [button-paint receipt](design-workshop-ok-button-paint.md)
+records the original three sprite pieces and their hover/pressed source rows.
+The actual SDL run captures normal, hover and pressed states, declines the
+default row, accepts an intrinsic Retire through Escape and a custom Retire
+through double-click, then closes the Workshop and exits0 without sanitizer
+or tracked GL leaks.
+
+Validation uses the cached Linux build:17 affected native groups and six UI
+scripts;34 native groups and two UI scripts under focused ASan/UBSan; a final
+foreign inactive-start scalar check; and the actual SDL capture with18 production
+and two test translation units instrumented. Targeted correctness analysis
+covers13 production/consumer translation units, including the shared SDL/DOM
+input path and Panel forwarding. Unchanged engine checks are reused after the
+final UI-only corrections.
+
 ## Network sender/admission and receiver boundary
 
 The network flag is949308. The new sender controls supply network admission

@@ -1,0 +1,2039 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Original499b70 wrapper including requested illustration lookup/load, template/substitution/measurement and native drawing. Paused before modal loop; owned-DIB exports; OS loop returns0 for cleanup. Private bundled font retained throughout.",
+  "validation": {
+    "native_substitution_calls": 4,
+    "upgrade_template_layouts": 5,
+    "retire_wrapper_corrections": 2,
+    "source_literals": 5
+  },
+  "cases": [
+    {
+      "input": {
+        "id": "prototyped_confirm",
+        "source_fixture": "upgrade_one_accept",
+        "credits_override": null,
+        "source_id": 64,
+        "target_id": 65,
+        "native_return": 0,
+        "tag": "UPGRADEPROTO",
+        "flags": 0,
+        "illustration": "unit_sm.pcx",
+        "callback": "0x0",
+        "strings": [
+          "Upgrade Source (1-2-1)",
+          "Upgrade Target 65 (2-3-1)"
+        ],
+        "numbers": [
+          100,
+          2000,
+          2
+        ]
+      },
+      "geometry": {
+        "client": [
+          0,
+          0,
+          755,
+          300
+        ],
+        "screen": [
+          150,
+          255,
+          905,
+          555
+        ],
+        "frames": [
+          [
+            23,
+            0,
+            700,
+            305
+          ],
+          [
+            27,
+            4,
+            696,
+            28
+          ],
+          [
+            30,
+            7,
+            693,
+            25
+          ],
+          [
+            236,
+            35,
+            693,
+            98
+          ],
+          [
+            233,
+            32,
+            696,
+            101
+          ]
+        ],
+        "button": [
+          33,
+          217,
+          688,
+          237
+        ],
+        "list_rect": [
+          33,
+          164,
+          688,
+          208
+        ],
+        "rows": [
+          [
+            0,
+            1,
+            655,
+            21
+          ],
+          [
+            0,
+            23,
+            655,
+            43
+          ]
+        ],
+        "text_x": 239,
+        "body_baselines": [
+          50,
+          70,
+          90
+        ]
+      },
+      "controls": [
+        {
+          "rect": [
+            150,
+            255,
+            905,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "rect": [
+            33,
+            217,
+            688,
+            237
+          ],
+          "parent": "0x20008c78"
+        },
+        {
+          "rect": [
+            33,
+            164,
+            688,
+            208
+          ],
+          "parent": "0x20008c78"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            700,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            696,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            693,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            236,
+            35,
+            693,
+            98
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            233,
+            32,
+            696,
+            101
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "rows": [
+        {
+          "value": 0,
+          "state": 2,
+          "rect": [
+            0,
+            1,
+            655,
+            21
+          ]
+        },
+        {
+          "value": 1,
+          "state": 0,
+          "rect": [
+            0,
+            23,
+            655,
+            43
+          ]
+        }
+      ],
+      "buttons": [
+        {
+          "label": "OK",
+          "action": 4294967295
+        }
+      ],
+      "glyphs": [
+        {
+          "text": "OPERATIONS DIRECTOR",
+          "x": 278,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1079164912
+        },
+        {
+          "text": "Shall we upgrade all of our obsolete Upgrade Source (1-2-1) ",
+          "x": 239,
+          "baseline": 50,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1079164912
+        },
+        {
+          "text": "units to the new Upgrade Target 65 (2-3-1) model at a cost of 100 ",
+          "x": 239,
+          "baseline": 70,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1079164912
+        },
+        {
+          "text": "energy credits? (2000 available).",
+          "x": 239,
+          "baseline": 90,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1079164912
+        },
+        {
+          "text": "No, we can't afford that.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079240064
+        },
+        {
+          "text": "Yes, we need to modernize our weaponry.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079240064
+        },
+        {
+          "text": "OK",
+          "x": 318,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079260320
+        },
+        {
+          "text": "OK",
+          "x": 317,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079260320
+        },
+        {
+          "text": "No, we can't afford that.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079240064
+        },
+        {
+          "text": "Yes, we need to modernize our weaponry.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079240064
+        }
+      ],
+      "surfaces": [
+        {
+          "file": "prototyped_confirm-own-0.png",
+          "width": 755,
+          "height": 300,
+          "indexed_sha256": "5def93cefd57fee2791f11a7207daf152347dc2d94cfa504eaac4a7a98969a3a",
+          "png_sha256": "da46e4ef37e8686e2270ff358148aa875245ad28aa639ac119804c29b0e9633e",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        },
+        {
+          "file": "prototyped_confirm-own-1.png",
+          "width": 655,
+          "height": 20,
+          "indexed_sha256": "d40e52a3eaf2f08f4a05eec9395531358837737b86455625a484c5ed690c1dd0",
+          "png_sha256": "7dacfec74b1d871ab4fba606e4c4bd354504b081119dd1280d95b77ee8d43c24",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        },
+        {
+          "file": "prototyped_confirm-own-2.png",
+          "width": 655,
+          "height": 44,
+          "indexed_sha256": "5dc5883e9913316c33f5de56073e624d50c8b6e0886141c7b934ac0b0b37ca37",
+          "png_sha256": "3b5b301a0dfb409732011df7219f3621b84bd13ed09bcaaa8dc120c94c279610",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "unprototyped_confirm",
+        "source_fixture": "upgrade_unprototyped",
+        "credits_override": null,
+        "source_id": 64,
+        "target_id": 65,
+        "native_return": 0,
+        "tag": "UPGRADEPROTO2",
+        "flags": 0,
+        "illustration": "unit_sm.pcx",
+        "callback": "0x0",
+        "strings": [
+          "Upgrade Source (1-2-1)",
+          "Upgrade Target 65 (2-3-1)"
+        ],
+        "numbers": [
+          640,
+          2000,
+          2
+        ]
+      },
+      "geometry": {
+        "client": [
+          0,
+          0,
+          755,
+          300
+        ],
+        "screen": [
+          150,
+          255,
+          905,
+          555
+        ],
+        "frames": [
+          [
+            23,
+            0,
+            700,
+            305
+          ],
+          [
+            27,
+            4,
+            696,
+            28
+          ],
+          [
+            30,
+            7,
+            693,
+            25
+          ],
+          [
+            236,
+            35,
+            693,
+            118
+          ],
+          [
+            233,
+            32,
+            696,
+            121
+          ]
+        ],
+        "button": [
+          33,
+          217,
+          688,
+          237
+        ],
+        "list_rect": [
+          33,
+          164,
+          688,
+          208
+        ],
+        "rows": [
+          [
+            0,
+            1,
+            655,
+            21
+          ],
+          [
+            0,
+            23,
+            655,
+            43
+          ]
+        ],
+        "text_x": 239,
+        "body_baselines": [
+          50,
+          70,
+          90,
+          110
+        ]
+      },
+      "controls": [
+        {
+          "rect": [
+            150,
+            255,
+            905,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "rect": [
+            33,
+            217,
+            688,
+            237
+          ],
+          "parent": "0x20008c78"
+        },
+        {
+          "rect": [
+            33,
+            164,
+            688,
+            208
+          ],
+          "parent": "0x20008c78"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            700,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            696,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            693,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            236,
+            35,
+            693,
+            118
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            233,
+            32,
+            696,
+            121
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "rows": [
+        {
+          "value": 0,
+          "state": 2,
+          "rect": [
+            0,
+            1,
+            655,
+            21
+          ]
+        },
+        {
+          "value": 1,
+          "state": 0,
+          "rect": [
+            0,
+            23,
+            655,
+            43
+          ]
+        }
+      ],
+      "buttons": [
+        {
+          "label": "OK",
+          "action": 4294967295
+        }
+      ],
+      "glyphs": [
+        {
+          "text": "OPERATIONS DIRECTOR",
+          "x": 278,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1080000160
+        },
+        {
+          "text": "The Upgrade Target 65 (2-3-1) model has ",
+          "x": 239,
+          "baseline": 50,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1080000160
+        },
+        {
+          "text": "not yet been ",
+          "x": 528,
+          "baseline": 50,
+          "font": 130,
+          "color": 285147293,
+          "clip": null,
+          "dib": 1080000160
+        },
+        {
+          "text": "prototyped,",
+          "x": 239,
+          "baseline": 70,
+          "font": 130,
+          "color": 285147293,
+          "clip": null,
+          "dib": 1080000160
+        },
+        {
+          "text": " so to upgrade our Upgrade Source (1-2-1) units to ",
+          "x": 319,
+          "baseline": 70,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1080000160
+        },
+        {
+          "text": "the new model would cost 640 energy credits (2000 available). ",
+          "x": 239,
+          "baseline": 90,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1080000160
+        },
+        {
+          "text": "Do you wish to upgrade anyway?",
+          "x": 239,
+          "baseline": 110,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1080000160
+        },
+        {
+          "text": "No, we can't afford that.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080075312
+        },
+        {
+          "text": "Yes, we need to modernize our weaponry.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080075312
+        },
+        {
+          "text": "OK",
+          "x": 318,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080095568
+        },
+        {
+          "text": "OK",
+          "x": 317,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080095568
+        },
+        {
+          "text": "No, we can't afford that.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080075312
+        },
+        {
+          "text": "Yes, we need to modernize our weaponry.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080075312
+        }
+      ],
+      "surfaces": [
+        {
+          "file": "unprototyped_confirm-own-0.png",
+          "width": 755,
+          "height": 300,
+          "indexed_sha256": "72bfb6f43a29bd510efe0842337106cbcfcaf629482470b3a3390d669cf91178",
+          "png_sha256": "2ba7d3c85088963541c8da6f3e7b47052def482ee749179c90c54e896a49a31f",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        },
+        {
+          "file": "unprototyped_confirm-own-1.png",
+          "width": 655,
+          "height": 20,
+          "indexed_sha256": "d40e52a3eaf2f08f4a05eec9395531358837737b86455625a484c5ed690c1dd0",
+          "png_sha256": "7dacfec74b1d871ab4fba606e4c4bd354504b081119dd1280d95b77ee8d43c24",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        },
+        {
+          "file": "unprototyped_confirm-own-2.png",
+          "width": 655,
+          "height": 44,
+          "indexed_sha256": "5dc5883e9913316c33f5de56073e624d50c8b6e0886141c7b934ac0b0b37ca37",
+          "png_sha256": "3b5b301a0dfb409732011df7219f3621b84bd13ed09bcaaa8dc120c94c279610",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "prototyped_cost",
+        "source_fixture": "upgrade_insufficient",
+        "credits_override": null,
+        "source_id": 64,
+        "target_id": 65,
+        "native_return": 0,
+        "tag": "UPGRADEPROTOCOST",
+        "flags": 0,
+        "illustration": "unit_sm.pcx",
+        "callback": "0x0",
+        "strings": [
+          "Upgrade Source (1-2-1)",
+          "Upgrade Target 65 (2-3-1)"
+        ],
+        "numbers": [
+          100,
+          0,
+          2
+        ]
+      },
+      "geometry": {
+        "client": [
+          0,
+          0,
+          758,
+          300
+        ],
+        "screen": [
+          149,
+          255,
+          907,
+          555
+        ],
+        "frames": [
+          [
+            23,
+            0,
+            703,
+            305
+          ],
+          [
+            27,
+            4,
+            699,
+            28
+          ],
+          [
+            30,
+            7,
+            696,
+            25
+          ],
+          [
+            236,
+            35,
+            696,
+            98
+          ],
+          [
+            233,
+            32,
+            699,
+            101
+          ]
+        ],
+        "button": [
+          33,
+          167,
+          691,
+          187
+        ],
+        "list_rect": null,
+        "rows": [],
+        "text_x": 239,
+        "body_baselines": [
+          50,
+          70,
+          90
+        ]
+      },
+      "controls": [
+        {
+          "rect": [
+            149,
+            255,
+            907,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "rect": [
+            33,
+            167,
+            691,
+            187
+          ],
+          "parent": "0x20008c78"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            703,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            699,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            696,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            236,
+            35,
+            696,
+            98
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            233,
+            32,
+            699,
+            101
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "rows": [],
+      "buttons": [
+        {
+          "label": "OK",
+          "action": 4294967295
+        }
+      ],
+      "glyphs": [
+        {
+          "text": "OPERATIONS DIRECTOR",
+          "x": 280,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1080836320
+        },
+        {
+          "text": "To upgrade all of our obsolete Upgrade Source (1-2-1) units to ",
+          "x": 239,
+          "baseline": 50,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1080836320
+        },
+        {
+          "text": "the new Upgrade Target 65 (2-3-1) model would cost 100 energy ",
+          "x": 239,
+          "baseline": 70,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1080836320
+        },
+        {
+          "text": "credits. At present we have only 0 credits in reserve.",
+          "x": 239,
+          "baseline": 90,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1080836320
+        },
+        {
+          "text": "OK",
+          "x": 320,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080895792
+        },
+        {
+          "text": "OK",
+          "x": 318,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080895792
+        }
+      ],
+      "surfaces": [
+        {
+          "file": "prototyped_cost-own-0.png",
+          "width": 758,
+          "height": 300,
+          "indexed_sha256": "270f5b8fe7f926c66ea5afc178e9477f687a0df3b5980f2bc98666f8076c0103",
+          "png_sha256": "2efac152d6d783fd9a9b4e1749bd211ae2380fd8b112acebd649a8ec52e5a554",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        },
+        {
+          "file": "prototyped_cost-own-1.png",
+          "width": 658,
+          "height": 20,
+          "indexed_sha256": "33372d7032ed1df55cfe3a5f56265a7fd3e36e2cf7bb48d5f06fae64f001ae4d",
+          "png_sha256": "ac35d0a91a678cf02997dd230cb5abb3853da8ff86835ed43c46d14cd6e73bde",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "unprototyped_cost",
+        "source_fixture": "upgrade_unprototyped",
+        "credits_override": 0,
+        "source_id": 64,
+        "target_id": 65,
+        "native_return": 0,
+        "tag": "UPGRADEPROTOCOST2",
+        "flags": 0,
+        "illustration": "unit_sm.pcx",
+        "callback": "0x0",
+        "strings": [
+          "Upgrade Source (1-2-1)",
+          "Upgrade Target 65 (2-3-1)"
+        ],
+        "numbers": [
+          640,
+          0,
+          2
+        ]
+      },
+      "geometry": {
+        "client": [
+          0,
+          0,
+          758,
+          300
+        ],
+        "screen": [
+          149,
+          255,
+          907,
+          555
+        ],
+        "frames": [
+          [
+            23,
+            0,
+            703,
+            305
+          ],
+          [
+            27,
+            4,
+            699,
+            28
+          ],
+          [
+            30,
+            7,
+            696,
+            25
+          ],
+          [
+            236,
+            35,
+            696,
+            118
+          ],
+          [
+            233,
+            32,
+            699,
+            121
+          ]
+        ],
+        "button": [
+          33,
+          167,
+          691,
+          187
+        ],
+        "list_rect": null,
+        "rows": [],
+        "text_x": 239,
+        "body_baselines": [
+          50,
+          70,
+          90,
+          110
+        ]
+      },
+      "controls": [
+        {
+          "rect": [
+            149,
+            255,
+            907,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "rect": [
+            33,
+            167,
+            691,
+            187
+          ],
+          "parent": "0x20008c78"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            703,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            699,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            696,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            236,
+            35,
+            696,
+            118
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            233,
+            32,
+            699,
+            121
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "rows": [],
+      "buttons": [
+        {
+          "label": "OK",
+          "action": 4294967295
+        }
+      ],
+      "glyphs": [
+        {
+          "text": "OPERATIONS DIRECTOR",
+          "x": 280,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1081637456
+        },
+        {
+          "text": "The Upgrade Target 65 (2-3-1) model has ",
+          "x": 239,
+          "baseline": 50,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1081637456
+        },
+        {
+          "text": "not yet been ",
+          "x": 528,
+          "baseline": 50,
+          "font": 130,
+          "color": 285147293,
+          "clip": null,
+          "dib": 1081637456
+        },
+        {
+          "text": "prototyped,",
+          "x": 239,
+          "baseline": 70,
+          "font": 130,
+          "color": 285147293,
+          "clip": null,
+          "dib": 1081637456
+        },
+        {
+          "text": " so to upgrade all of our Upgrade Source (1-2-1) units ",
+          "x": 319,
+          "baseline": 70,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1081637456
+        },
+        {
+          "text": "to the new Upgrade Target 65 (2-3-1) model would cost 640 ",
+          "x": 239,
+          "baseline": 90,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1081637456
+        },
+        {
+          "text": "energy credits. At present we have only 0 credits in reserve.",
+          "x": 239,
+          "baseline": 110,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1081637456
+        },
+        {
+          "text": "OK",
+          "x": 320,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081696928
+        },
+        {
+          "text": "OK",
+          "x": 318,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081696928
+        }
+      ],
+      "surfaces": [
+        {
+          "file": "unprototyped_cost-own-0.png",
+          "width": 758,
+          "height": 300,
+          "indexed_sha256": "cb0b21ed0eb4516150a3c74eb02cb5a10851814b593d462c396f9615462815ce",
+          "png_sha256": "35f0de9389258286c8c7946c2fbf825ab76fecde853b21a8f13a31eaf4562cb8",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        },
+        {
+          "file": "unprototyped_cost-own-1.png",
+          "width": 658,
+          "height": 20,
+          "indexed_sha256": "33372d7032ed1df55cfe3a5f56265a7fd3e36e2cf7bb48d5f06fae64f001ae4d",
+          "png_sha256": "ac35d0a91a678cf02997dd230cb5abb3853da8ff86835ed43c46d14cd6e73bde",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "completion",
+        "source_fixture": "upgrade_no_units",
+        "tag": "YESUPGRADE",
+        "flags": 0,
+        "illustration": "unit_sm.pcx",
+        "callback": "0x54e8e0",
+        "strings": [],
+        "numbers": [],
+        "scope": "Existing successful no-unit dispatcher receipt; YESUPGRADE has no substitutions. Caller arguments from442f85..442f9c."
+      },
+      "geometry": {
+        "client": [
+          0,
+          0,
+          758,
+          300
+        ],
+        "screen": [
+          149,
+          255,
+          907,
+          555
+        ],
+        "frames": [
+          [
+            23,
+            0,
+            703,
+            305
+          ],
+          [
+            27,
+            4,
+            699,
+            28
+          ],
+          [
+            30,
+            7,
+            696,
+            25
+          ],
+          [
+            236,
+            35,
+            696,
+            58
+          ],
+          [
+            233,
+            32,
+            699,
+            61
+          ]
+        ],
+        "button": [
+          33,
+          167,
+          691,
+          187
+        ],
+        "list_rect": null,
+        "rows": [],
+        "text_x": 239,
+        "body_baselines": [
+          50
+        ]
+      },
+      "controls": [
+        {
+          "rect": [
+            149,
+            255,
+            907,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "rect": [
+            33,
+            167,
+            691,
+            187
+          ],
+          "parent": "0x20008c78"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            703,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            699,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            696,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            236,
+            35,
+            696,
+            58
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            233,
+            32,
+            699,
+            61
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "rows": [],
+      "buttons": [
+        {
+          "label": "OK",
+          "action": 4294967295
+        }
+      ],
+      "glyphs": [
+        {
+          "text": "OPERATIONS DIRECTOR",
+          "x": 280,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1082438080
+        },
+        {
+          "text": "Upgrade complete!",
+          "x": 239,
+          "baseline": 50,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1082438080
+        },
+        {
+          "text": "OK",
+          "x": 320,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1082497552
+        },
+        {
+          "text": "OK",
+          "x": 318,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1082497552
+        }
+      ],
+      "surfaces": [
+        {
+          "file": "completion-own-0.png",
+          "width": 758,
+          "height": 300,
+          "indexed_sha256": "068dc0145f60546190f20519813caf0908184547814c26db3e9b5166cda55d1d",
+          "png_sha256": "1b175ac4f279267ea69c5157388fc7fa8d129404a56973f8a005a8f3f4220aa7",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        },
+        {
+          "file": "completion-own-1.png",
+          "width": 658,
+          "height": 20,
+          "indexed_sha256": "33372d7032ed1df55cfe3a5f56265a7fd3e36e2cf7bb48d5f06fae64f001ae4d",
+          "png_sha256": "ac35d0a91a678cf02997dd230cb5abb3853da8ff86835ed43c46d14cd6e73bde",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "retire_zero_wrapper",
+        "tag": "RETIRETYPE2",
+        "flags": 0,
+        "illustration": "unit_sm.pcx",
+        "callback": "0x54e8e0",
+        "strings": [
+          "Upgrade Source"
+        ],
+        "numbers": [
+          0
+        ]
+      },
+      "geometry": {
+        "client": [
+          0,
+          0,
+          755,
+          300
+        ],
+        "screen": [
+          150,
+          255,
+          905,
+          555
+        ],
+        "frames": [
+          [
+            23,
+            0,
+            700,
+            305
+          ],
+          [
+            27,
+            4,
+            696,
+            28
+          ],
+          [
+            30,
+            7,
+            693,
+            25
+          ],
+          [
+            236,
+            35,
+            693,
+            58
+          ],
+          [
+            233,
+            32,
+            696,
+            61
+          ]
+        ],
+        "button": [
+          33,
+          217,
+          688,
+          237
+        ],
+        "list_rect": [
+          33,
+          164,
+          688,
+          208
+        ],
+        "rows": [
+          [
+            0,
+            1,
+            655,
+            21
+          ],
+          [
+            0,
+            23,
+            655,
+            43
+          ]
+        ],
+        "text_x": 239,
+        "body_baselines": [
+          50
+        ]
+      },
+      "controls": [
+        {
+          "rect": [
+            150,
+            255,
+            905,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "rect": [
+            33,
+            217,
+            688,
+            237
+          ],
+          "parent": "0x20008c78"
+        },
+        {
+          "rect": [
+            33,
+            164,
+            688,
+            208
+          ],
+          "parent": "0x20008c78"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            700,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            696,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            693,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            236,
+            35,
+            693,
+            58
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            233,
+            32,
+            696,
+            61
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "rows": [
+        {
+          "value": 0,
+          "state": 2,
+          "rect": [
+            0,
+            1,
+            655,
+            21
+          ]
+        },
+        {
+          "value": 1,
+          "state": 0,
+          "rect": [
+            0,
+            23,
+            655,
+            43
+          ]
+        }
+      ],
+      "buttons": [
+        {
+          "label": "OK",
+          "action": 4294967295
+        }
+      ],
+      "glyphs": [
+        {
+          "text": "CHIEF ENGINEER",
+          "x": 302,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1083237696
+        },
+        {
+          "text": "Do you wish to retire the \"Upgrade Source\" design?",
+          "x": 239,
+          "baseline": 50,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1083237696
+        },
+        {
+          "text": "Never mind.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1083312832
+        },
+        {
+          "text": "Retire \"Upgrade Source\" design.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1083312832
+        },
+        {
+          "text": "OK",
+          "x": 318,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1083333088
+        },
+        {
+          "text": "OK",
+          "x": 317,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1083333088
+        },
+        {
+          "text": "Never mind.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1083312832
+        },
+        {
+          "text": "Retire \"Upgrade Source\" design.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1083312832
+        }
+      ],
+      "surfaces": [
+        {
+          "file": "retire_zero_wrapper-own-0.png",
+          "width": 755,
+          "height": 300,
+          "indexed_sha256": "4e274b3e8ba2a273c1c83fad1304c39e022b029dbbba9dc87d3a31dd56d4647e",
+          "png_sha256": "0fee3600950324434bdb1c84b2980c757dde02f2836d407d528cf401cff0e5ef",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        },
+        {
+          "file": "retire_zero_wrapper-own-1.png",
+          "width": 655,
+          "height": 20,
+          "indexed_sha256": "d40e52a3eaf2f08f4a05eec9395531358837737b86455625a484c5ed690c1dd0",
+          "png_sha256": "7dacfec74b1d871ab4fba606e4c4bd354504b081119dd1280d95b77ee8d43c24",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        },
+        {
+          "file": "retire_zero_wrapper-own-2.png",
+          "width": 655,
+          "height": 44,
+          "indexed_sha256": "d4d0c368f61629a4e3197e48122bc441a74d55da8863bc287d10e48704aff9cf",
+          "png_sha256": "760d264f13b202dcc41031b0d957108c29b82d60b66a07f047aefcd280476339",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        }
+      ]
+    },
+    {
+      "input": {
+        "id": "retire_two_wrapper",
+        "tag": "RETIRETYPE",
+        "flags": 0,
+        "illustration": "unit_sm.pcx",
+        "callback": "0x54e8e0",
+        "strings": [
+          "Upgrade Source"
+        ],
+        "numbers": [
+          2
+        ]
+      },
+      "geometry": {
+        "client": [
+          0,
+          0,
+          755,
+          300
+        ],
+        "screen": [
+          150,
+          255,
+          905,
+          555
+        ],
+        "frames": [
+          [
+            23,
+            0,
+            700,
+            305
+          ],
+          [
+            27,
+            4,
+            696,
+            28
+          ],
+          [
+            30,
+            7,
+            693,
+            25
+          ],
+          [
+            236,
+            35,
+            693,
+            78
+          ],
+          [
+            233,
+            32,
+            696,
+            81
+          ]
+        ],
+        "button": [
+          33,
+          217,
+          688,
+          237
+        ],
+        "list_rect": [
+          33,
+          164,
+          688,
+          208
+        ],
+        "rows": [
+          [
+            0,
+            1,
+            655,
+            21
+          ],
+          [
+            0,
+            23,
+            655,
+            43
+          ]
+        ],
+        "text_x": 239,
+        "body_baselines": [
+          50,
+          70
+        ]
+      },
+      "controls": [
+        {
+          "rect": [
+            150,
+            255,
+            905,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "rect": [
+            33,
+            217,
+            688,
+            237
+          ],
+          "parent": "0x20008c78"
+        },
+        {
+          "rect": [
+            33,
+            164,
+            688,
+            208
+          ],
+          "parent": "0x20008c78"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            700,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            696,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            693,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            236,
+            35,
+            693,
+            78
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            233,
+            32,
+            696,
+            81
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "rows": [
+        {
+          "value": 0,
+          "state": 2,
+          "rect": [
+            0,
+            1,
+            655,
+            21
+          ]
+        },
+        {
+          "value": 1,
+          "state": 0,
+          "rect": [
+            0,
+            23,
+            655,
+            43
+          ]
+        }
+      ],
+      "buttons": [
+        {
+          "label": "OK",
+          "action": 4294967295
+        }
+      ],
+      "glyphs": [
+        {
+          "text": "CHIEF ENGINEER",
+          "x": 302,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1084072576
+        },
+        {
+          "text": "Do you wish to retire the \"Upgrade Source\" design? 2 units of ",
+          "x": 239,
+          "baseline": 50,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1084072576
+        },
+        {
+          "text": "that type still in operation will be disbanded.",
+          "x": 239,
+          "baseline": 70,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1084072576
+        },
+        {
+          "text": "Never mind.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1084147712
+        },
+        {
+          "text": "Retire \"Upgrade Source\" design.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1084147712
+        },
+        {
+          "text": "OK",
+          "x": 318,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1084167968
+        },
+        {
+          "text": "OK",
+          "x": 317,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1084167968
+        },
+        {
+          "text": "Never mind.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1084147712
+        },
+        {
+          "text": "Retire \"Upgrade Source\" design.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1084147712
+        }
+      ],
+      "surfaces": [
+        {
+          "file": "retire_two_wrapper-own-0.png",
+          "width": 755,
+          "height": 300,
+          "indexed_sha256": "229e4db675da665b49e55fae43464f70826042d5b3f98bb8519b705829c83a50",
+          "png_sha256": "b82d012638eacd824b37a1e08962de0644dee4897b36f83702565eb8ee454635",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        },
+        {
+          "file": "retire_two_wrapper-own-1.png",
+          "width": 655,
+          "height": 20,
+          "indexed_sha256": "d40e52a3eaf2f08f4a05eec9395531358837737b86455625a484c5ed690c1dd0",
+          "png_sha256": "7dacfec74b1d871ab4fba606e4c4bd354504b081119dd1280d95b77ee8d43c24",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        },
+        {
+          "file": "retire_two_wrapper-own-2.png",
+          "width": 655,
+          "height": 44,
+          "indexed_sha256": "d4d0c368f61629a4e3197e48122bc441a74d55da8863bc287d10e48704aff9cf",
+          "png_sha256": "760d264f13b202dcc41031b0d957108c29b82d60b66a07f047aefcd280476339",
+          "scope": "Native owned DIB only, no manually composed child surfaces."
+        }
+      ]
+    }
+  ],
+  "fonts": [
+    {
+      "id": 129,
+      "LOGFONT_hex": "f0ffffff000000000000000000000000bc0200000000000007000000417269616c204e6172726f7700ec6a001000000000000000d0ec6a0010000000",
+      "height": -16,
+      "weight": 700,
+      "face": "Arial Narrow",
+      "text_height": 20,
+      "ascent": 16,
+      "descent": 4,
+      "internal_leading": 4,
+      "metrics_hex": "14000000100000000400000004000000000000000700000014000000bc0200000000000060000000600000001eff1f200000002700000000"
+    },
+    {
+      "id": 130,
+      "LOGFONT_hex": "f0ffffff000000000000000000000000bc0200000000000007000000417269616c204e6172726f7700ec6a001000000000000000d0ec6a0010000000",
+      "height": -16,
+      "weight": 700,
+      "face": "Arial Narrow",
+      "text_height": 20,
+      "ascent": 16,
+      "descent": 4,
+      "internal_leading": 4,
+      "metrics_hex": "14000000100000000400000004000000000000000700000014000000bc0200000000000060000000600000001eff1f200000002700000000"
+    },
+    {
+      "id": 149,
+      "LOGFONT_hex": "f2ffffff000000000000000000000000bc0200000000000007000000417269616c000000000000000000000039005f0000000000dd38610018000000",
+      "height": -14,
+      "weight": 700,
+      "face": "Arial",
+      "text_height": 16,
+      "ascent": 13,
+      "descent": 3,
+      "internal_leading": 2,
+      "metrics_hex": "100000000d0000000300000002000000000000000700000025000000bc0200000000000060000000600000001eff1f200000002700000000"
+    }
+  ],
+  "illustration": {
+    "file": "unit_sm.pcx",
+    "size": [
+      200,
+      120
+    ],
+    "sha256": "fee9ebada73122af58822a58396d1c81b8a81a4149cb99a4c7c29b5f5d1b46e3"
+  },
+  "private_directory": "tmp/reference/workshop-upgrade-prompts-layout-v2-private-20261021",
+  "notation_corrections": {
+    "ordinary_palette_index": 226,
+    "ordinary_rgb": [
+      92,
+      124,
+      188
+    ],
+    "journal_color": "0x10ff00e2",
+    "ok_label": {
+      "byte_offset": "0x194",
+      "zero_based_token": 101,
+      "one_based_loader_row": 102,
+      "count_prefixed_array_index": 102
+    }
+  }
+}

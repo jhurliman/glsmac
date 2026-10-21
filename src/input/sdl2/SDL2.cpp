@@ -180,7 +180,14 @@ void SDL2::Iterate() {
 		}
 
 		if ( e.type != EV_NONE ) {
+            const bool double_down=e.type==EV_MOUSE_DOWN && event.type==SDL_MOUSEBUTTONDOWN && event.button.clicks==2;
 			dispatch( e );
+            if(double_down) {
+                // The ordinary down establishes selection first. dispatch has
+                // already mapped coordinates into the logical4:3 viewport.
+                input::Event doubled;doubled.SetType(EV_DOUBLE_CLICK);doubled.data.mouse=e.data.mouse;
+                ProcessEvent(doubled);
+            }
 		}
 	}
 	if ( e_mouse_move.type != EV_NONE ) {

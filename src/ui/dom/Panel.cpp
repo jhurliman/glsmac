@@ -20,6 +20,7 @@ Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
 
 	ForwardProperty( GSE_CALL, "background", m_surface );
     ForwardProperty(GSE_CALL,"smac_frame",m_surface);
+    ForwardProperty(GSE_CALL,"smac_button_sprite",m_surface);
     ForwardProperty(GSE_CALL,"smac_frame_phase",m_surface);
 
 	Property(

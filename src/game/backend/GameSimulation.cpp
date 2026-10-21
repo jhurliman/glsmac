@@ -332,6 +332,9 @@ unit::SmacCustomDesign Game::ResolveConventionalDesign( const unit::Conventional
 	}
 	else if ( const auto* designs = simulation.value.designs.Find( state.design_id / 64 ) ) {
 		for ( const auto& row : designs->designs ) { if ( row.id == state.design_id ) { return row; } }
+        // Retirement can retain inactive IDs in production baselines and
+        // adjacent queue entries. Eligibility still checks active separately.
+        if(simulation.value.designs.native_registry) {return simulation.value.designs.RetainedCustomDesign(state.design_id,catalog);}
 	}
 	throw std::runtime_error( "Conventional global design not found in its retained source block" );
 }

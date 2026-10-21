@@ -11,6 +11,7 @@ SET( SRC ${SRC}
 	${PWD}/ScoutLighting.cpp
 	${PWD}/ScoutArithmetic.cpp
 	${PWD}/ScoutView.cpp
+    ${PWD}/WorkshopPreviewController.cpp
 	${PWD}/CvrScoutRenderer.cpp
 	${PWD}/CvrScoutTexture.cpp
 	${PWD}/CvrActorMaterial.cpp

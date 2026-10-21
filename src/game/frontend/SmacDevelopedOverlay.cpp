@@ -1,4 +1,7 @@
 #include "SmacDevelopedOverlay.h"
+#include "loader/cvr/ScoutArithmetic.h"
+#include "loader/cvr/ScoutLighting.h"
+#include <cstring>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -51,7 +54,7 @@ bool ReplacesLegacySprite(std::string_view name) {
     }
     return false;
 }
-std::array<uint8_t,256> ShadowLookup(const Palette& palette) {
+std::array<uint8_t,256> ShadowLookup(const Palette& palette,const ShadowPrecision precision) {
     using Triple=std::array<double,3>;
     std::array<Triple,256> points{};
     for(size_t i=0;i<256;++i) {
@@ -67,13 +70,52 @@ std::array<uint8_t,256> ShadowLookup(const Palette& palette) {
         const auto radians=hue*(3.14159265358979323846/180.0);
         points[i]={saturation*std::cos(radians),saturation*std::sin(radians),value};
     }
+    if(precision==ShadowPrecision::Binary64) {
+        std::array<uint8_t,256> result{};
+        for(size_t i=0;i<256;++i) {
+            auto target=points[i];target[2]*=.57;double best=std::numeric_limits<double>::infinity();
+            for(size_t candidate=10;candidate<=245;++candidate) {
+                double distance=0;for(size_t c=0;c<3;++c) {const auto delta=target[c]-points[candidate][c];distance+=delta*delta;}
+                if(distance<best) {best=distance;result[i]=static_cast<uint8_t>(candidate);}
+            }
+        }return result;
+    }
+    namespace arithmetic=loader::cvr::scout;
+    arithmetic::RequireNearestRounding();
+    const auto extended=[](double value) {
+        uint64_t bits;std::memcpy(&bits,&value,sizeof(bits));const auto exponent=(bits>>52)&0x7ffu;
+        const auto fraction=bits&UINT64_C(0xfffffffffffff);
+        if(exponent==0) {
+            if(fraction) {throw std::invalid_argument("Subnormal palette distance operand");}
+            return arithmetic::Number{0,0,(bits>>63)!=0};
+        }
+        if(exponent==0x7ffu) {throw std::invalid_argument("Nonfinite palette distance operand");}
+        return arithmetic::Number{(fraction|UINT64_C(0x10000000000000))<<11,int(exponent)-1086,(bits>>63)!=0};
+    };
+    const auto less=[](const arithmetic::Number& left,const arithmetic::Number& right) {
+        if(!left.magnitude) {return right.magnitude!=0;}
+        if(!right.magnitude) {return false;}
+        return left.exponent<right.exponent || (left.exponent==right.exponent && left.magnitude<right.magnitude);
+    };
+    std::array<std::array<arithmetic::Number,3>,256> operands;
+    for(size_t i=0;i<256;++i) {for(size_t c=0;c<3;++c) {operands[i][c]=extended(points[i][c]);}}
     std::array<uint8_t,256> result{};
     for(size_t i=0;i<256;++i) {
-        auto target=points[i];target[2]*=.57;
-        double best=std::numeric_limits<double>::infinity();
+        auto target=operands[i];target[2]=extended(arithmetic::ToDouble(arithmetic::Multiply(arithmetic::Multiply(target[2],arithmetic::Integer(57)),extended(.01))));
+        arithmetic::Number best{};bool have_best=false;
         for(size_t candidate=10;candidate<=245;++candidate) {
-            double distance=0;for(size_t c=0;c<3;++c) {const auto delta=target[c]-points[candidate][c];distance+=delta*delta;}
-            if(distance<best) {best=distance;result[i]=static_cast<uint8_t>(candidate);}
+            //618890 stores dx as binary64, retaining dy and dv extended.
+            const auto dx=extended(arithmetic::ToDouble(arithmetic::Subtract(target[0],operands[candidate][0])));
+            const auto dy=arithmetic::Subtract(target[1],operands[candidate][1]);
+            const auto dv=arithmetic::Subtract(target[2],operands[candidate][2]);
+            const auto distance=arithmetic::Add(arithmetic::Add(arithmetic::Multiply(dy,dy),arithmetic::Multiply(dx,dx)),arithmetic::Multiply(dv,dv));
+            const auto stored=extended(arithmetic::ToDouble(distance));
+            // Native compares an extended candidate with a binary64 saved best.
+            // A rounded-up store can therefore let a later duplicate win even
+            // though the actual comparison is strictly less-than.
+            if(!have_best || less(distance,best)) {
+                have_best=true;best=stored;result[i]=static_cast<uint8_t>(candidate);
+            }
         }
     }
     return result;

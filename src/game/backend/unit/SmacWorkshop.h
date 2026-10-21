@@ -34,6 +34,18 @@ struct SmacWorkshopDraft {
 };
 // Live editor ability admission for a new tuple; saved aliases/reselection retain their
 // separate technology-loss semantics. Throws without changing the draft.
+struct SmacWorkshopPreviewMorale {
+    uint8_t scratch_plan;int8_t weapon_power;
+    int32_t direct_morale,retained_morale,retained_probe;
+    bool negative_morale_immunity,telepathic_matrix;
+    int32_t probe_technologies;
+};
+int32_t SmacWorkshopPreviewRank(const SmacWorkshopPreviewMorale& input);
+int32_t SmacWorkshopProbeTechnologyCount(const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner);
+// -1:3D scene; -2:reserved scratch63's cached-idle edge; >=0:UNITS icon.
+int32_t SmacWorkshopPreviewIcon(const SmacStartupDesignState& state,const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog);
 void ValidateSmacWorkshopEditorAbilities(const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog,
     const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner);
 // Original compatibility is independent of technology admission.

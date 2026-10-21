@@ -25,6 +25,8 @@
 #include "util/String.h"
 #include "types/texture/Filter.h"
 #include "ui/UI.h"
+#include "ui/SmacWorkshopCachedPreview.h"
+#include <chrono>
 #include "gse/value/Float.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Undefined.h"
@@ -40,6 +42,11 @@
 
 namespace ui {
 namespace dom {
+namespace {
+uint64_t WorkshopNow() {
+    return uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
+}
+}
 
 Surface::Surface( DOM_ARGS_T )
 	: Area( DOM_ARGS_PASS, tag ) {
@@ -357,14 +364,51 @@ Surface::Surface( DOM_ARGS_T )
         return WorkshopPickerText(GSE_CALL);
     }));
 
+    Method(GSE_CALL,"smacworkshopclock",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(1);N_GETVALUE(operation,0,Int);
+        if(operation<0 || operation>2) {throw std::invalid_argument("Invalid Workshop clock operation");}
+        if(operation==0) {m_workshop_preview.Stop();}
+        if(operation==2) {m_workshop_preview.Reset();}
+        if(operation==1) {
+            m_workshop_preview.Start(WorkshopNow());
+            if(!m_workshop_preview_iterable) {
+                Iterable([this]() {
+                    if(m_workshop_preview.Due(WorkshopNow())) {
+                        m_ui->WithGSE([this](GSE_CALLABLE) {Trigger(GSE_CALL,"workshopframe",gse::f_args_t{},gse::VT_BOOL);});
+                    }
+                });m_workshop_preview_iterable=true;
+            }
+        }
+        return VALUE(gse::value::Bool,,true);
+    }));
+    Method(GSE_CALL,"smacworkshopcachedpreview",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(2);N_GETVALUE(icon,0,Int);N_GETVALUE(variant,1,Int);
+        if(icon<0 || icon>9 || variant<0 || variant>(icon==3 ? 6:0)) {throw std::invalid_argument("Invalid Workshop cached preview");}
+        m_workshop_preview.BeginPaint(true);
+        const std::array<int,2> key{int(icon),int(variant)};
+        if(key!=m_workshop_cached_key) {
+            if(!m_workshop_cached) {
+                const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;
+                    util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));return std::string(bytes.begin(),bytes.end());};
+                m_workshop_cached=std::make_shared<const ui::SmacWorkshopCachedPreview>(ui::SmacWorkshopCachedPreview::Load(read));
+            }
+            const auto image=m_workshop_cached->Render(key[0],key[1]);
+            CreateTexture();m_background.texture->Resize(311,311);std::memcpy(m_background.texture->GetBitmap(),image.rgba.data(),image.rgba.size());
+            m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();m_workshop_cached_key=key;
+        }
+        return VALUE(gse::value::Bool,,true);
+    }));
+
     Method(GSE_CALL,"smacworkshopdesign",NATIVE_CALL(this) {
-        N_EXPECT_ARGS(10);N_GETVALUE(chassis,0,Int);N_GETVALUE(weapon,1,Int);N_GETVALUE(armor,2,Int);N_GETVALUE(reactor,3,Int);
+        N_EXPECT_ARGS_MIN_MAX(10,11);N_GETVALUE(chassis,0,Int);N_GETVALUE(weapon,1,Int);N_GETVALUE(armor,2,Int);N_GETVALUE(reactor,3,Int);
         N_GETVALUE(kind,4,Int);N_GETVALUE(faction,5,String);N_GETVALUE(yaw,6,Float);
         N_GETVALUE(power,7,Int);N_GETVALUE(mode,8,Int);N_GETVALUE(strength,9,Int);
         if(chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9 || reactor<1 || reactor>4 || kind< -1 || kind>3
             || power< -127 || power>127 || mode<0 || mode>12 || strength< -127 || strength>127
             || faction.empty() || faction.size()>256 || faction.find_first_of("/\\:\0",0,4)!=std::string::npos
-            || !std::isfinite(yaw) || std::abs(yaw)>64.0) {throw std::invalid_argument("Unsupported Workshop composition request");}
+            || !std::isfinite(yaw) || !std::isfinite(static_cast<float>(yaw))) {throw std::invalid_argument("Unsupported Workshop composition request");}
+        bool visible=false;if(arguments.size()==11) {N_GETVALUE(show,10,Bool);visible=show;}
+        const bool animated=arguments.size()==11;
         const std::array<int,8> key{int(chassis),int(weapon),int(armor),int(reactor),int(kind),int(power),int(mode),int(strength)};
         if(!m_workshop_design || key!=m_workshop_design_key || faction!=m_workshop_design_faction) {
             const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;
@@ -375,7 +419,11 @@ Surface::Surface( DOM_ARGS_T )
             m_workshop_design=std::move(next);m_workshop_design_key=key;m_workshop_design_faction=faction;
         }
         const float angle=static_cast<float>(yaw);uint32_t bits;std::memcpy(&bits,&angle,sizeof(bits));std::array<uint32_t,3> position{};
-        const auto image=kind<0 ? m_workshop_design->RenderWorkshop(bits):m_workshop_design->RenderWorkshopCard(int(kind),position);
+        if(animated && kind<0) {bits=m_workshop_preview.BeginPaint(false);}
+        loader::cvr::CvrScoutRenderer::WorkshopAnimation animation{m_ui->ModelAnimationPhase(),visible};
+        const auto image=kind<0 ? m_workshop_design->RenderWorkshop(bits,animated ? &animation:nullptr):m_workshop_design->RenderWorkshopCard(int(kind),position,animated ? &animation:nullptr);
+        if(animated) {m_ui->ModelAnimationPhase()=animation.phase;}
+        m_workshop_cached_key={-1,-1};
         CreateTexture();m_background.texture->Resize(256,256);std::memcpy(m_background.texture->GetBitmap(),image.rgba.data(),image.rgba.size());
         m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
         return VALUE(gse::value::Bool,,true);

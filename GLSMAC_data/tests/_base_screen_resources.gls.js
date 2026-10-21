@@ -27,6 +27,8 @@ return (game, base, ui) => {
 		result.area = child;
 		result.button = child;
 		result.surface = child;
+        // Base teardown stops the real Workshop timer even if it never opened.
+        result.smacworkshopclock = (operation) => { if (operation != 0) { throw TestError('Base resource fixture unexpectedly started Workshop animation'); } };
 		result.widget = child;
 		result.listview = child;
 		result.scrollview = child;

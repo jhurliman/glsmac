@@ -1,12 +1,14 @@
 #pragma once
 
 #include "Area.h"
+#include "loader/cvr/WorkshopPreviewController.h"
 #include <memory>
 #include <cstdint>
 #include <vector>
 #include <array>
 #include <optional>
 
+namespace ui {class SmacWorkshopCachedPreview;}
 namespace task::intro { class Movie; }
 namespace loader::cvr {class CvrScoutRenderer;class CvrWorkshopComponents;struct CvrStripImage;struct CvrScoutImage;}
 namespace loader::texture {struct SmacDialogSource;struct SmacTurnFrames;struct SmacGraphPalette;}
@@ -79,6 +81,10 @@ private:
     std::shared_ptr<const loader::texture::SmacGraphPalette> m_graph_palette;
 	std::array<std::shared_ptr<const loader::cvr::CvrScoutRenderer>,2> m_workshop_models;
 	std::shared_ptr<const loader::cvr::CvrWorkshopComponents> m_workshop_components;
+    loader::cvr::WorkshopPreviewController m_workshop_preview;
+    bool m_workshop_preview_iterable=false;
+    std::shared_ptr<const ui::SmacWorkshopCachedPreview> m_workshop_cached;
+    std::array<int,2> m_workshop_cached_key{{-1,-1}};
     std::shared_ptr<const loader::cvr::CvrScoutRenderer> m_workshop_design;
     std::array<int,8> m_workshop_design_key{{-2,-2,-2,-2,-2,-2,-2,-2}};
     std::string m_workshop_design_faction;

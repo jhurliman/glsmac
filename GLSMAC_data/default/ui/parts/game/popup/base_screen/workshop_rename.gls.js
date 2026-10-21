@@ -48,7 +48,7 @@ view = {
         if (e.answer) {
             workshop.draft_name = e.name;
             if (#is_defined(workshop.selection.draft)) { workshop.selection.draft.name = e.name; }
-            workshop.title.text = #uppercase(e.display_name); workshop.message.text = ''; view.hide(); return;
+            workshop.title.text = #uppercase(e.display_name); workshop.message.text = ''; view.hide(); workshop.paint_main_preview(); return;
         }
         view.default_name = e.default_name;
         if (!#is_defined(view.window)) { view.create(); }

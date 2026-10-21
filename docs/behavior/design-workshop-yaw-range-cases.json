@@ -1,0 +1,496 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "One complete native main frame at yaw65, independently decoded owned-asset frames/bounds/center/view/draw transforms and staged full indexed/depth replay, with declared constructor camera/material and native kernel-entry boundaries as in nonzero-animation receipt. Eight complete original641930 rotation-helper controls, not an exhaustive raster matrix.",
+  "frame": {
+    "id": "inf_yaw65_main",
+    "phase_in": 1,
+    "phase_out": 1,
+    "yaw_in": "0x42820000",
+    "yaw_out": "0x4282199a",
+    "assembled_objects": 64,
+    "minimum": [
+      -174.3957061767578,
+      -231.46441650390625,
+      -4.7022705078125
+    ],
+    "maximum": [
+      176.60426330566406,
+      561.0173950195312,
+      526.3294067382812
+    ],
+    "center": [
+      -1.104278564453125,
+      -164.7764892578125,
+      -260.8135681152344
+    ],
+    "projection": [
+      -0.07874353975057602,
+      -0.11575601249933243,
+      0.0,
+      0.08188444375991821,
+      -0.05570225417613983,
+      -0.09895552694797516,
+      -0.292211651802063,
+      0.19877828657627106,
+      -0.3536941111087799
+    ],
+    "translation": [
+      128.34539794921875,
+      137.9904327392578,
+      37917.98046875
+    ],
+    "asset_frames_bounds_view_draws_match": true,
+    "indexed_sha256": "898589b479879c3ad830a1e11256c94895a523977850d23bbfe19de2a13e9752",
+    "depth_sha256": "4057549681e69ed5e39930ebde0ffeedcf57a1f07aef9cae04745d78c59ad697"
+  },
+  "rotation_controls": [
+    {
+      "yaw": 0.0,
+      "yaw_bits": "0x0",
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "trig_status": [
+        {
+          "after": "0x641948",
+          "operation": "sin_z",
+          "status_word": "0x2800",
+          "c2": 0
+        },
+        {
+          "after": "0x64195d",
+          "operation": "sin_y",
+          "status_word": "0x2000",
+          "c2": 0
+        },
+        {
+          "after": "0x641966",
+          "operation": "cos_z",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x64196e",
+          "operation": "sin_x",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641976",
+          "operation": "cos_y",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641984",
+          "operation": "cos_x",
+          "status_word": "0x1000",
+          "c2": 0
+        }
+      ],
+      "finite": true,
+      "independent_binary32_matrix_match": true
+    },
+    {
+      "yaw": 1.0,
+      "yaw_bits": "0x3f800000",
+      "matrix": [
+        0.5403022766113281,
+        -0.8414709568023682,
+        0.0,
+        0.8414709568023682,
+        0.5403022766113281,
+        0.0,
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "trig_status": [
+        {
+          "after": "0x641948",
+          "operation": "sin_z",
+          "status_word": "0x2800",
+          "c2": 0
+        },
+        {
+          "after": "0x64195d",
+          "operation": "sin_y",
+          "status_word": "0x2000",
+          "c2": 0
+        },
+        {
+          "after": "0x641966",
+          "operation": "cos_z",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x64196e",
+          "operation": "sin_x",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641976",
+          "operation": "cos_y",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641984",
+          "operation": "cos_x",
+          "status_word": "0x1000",
+          "c2": 0
+        }
+      ],
+      "finite": true,
+      "independent_binary32_matrix_match": true
+    },
+    {
+      "yaw": 64.0,
+      "yaw_bits": "0x42800000",
+      "matrix": [
+        0.39185723662376404,
+        -0.9200260639190674,
+        0.0,
+        0.9200260639190674,
+        0.39185723662376404,
+        0.0,
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "trig_status": [
+        {
+          "after": "0x641948",
+          "operation": "sin_z",
+          "status_word": "0x2800",
+          "c2": 0
+        },
+        {
+          "after": "0x64195d",
+          "operation": "sin_y",
+          "status_word": "0x2000",
+          "c2": 0
+        },
+        {
+          "after": "0x641966",
+          "operation": "cos_z",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x64196e",
+          "operation": "sin_x",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641976",
+          "operation": "cos_y",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641984",
+          "operation": "cos_x",
+          "status_word": "0x1000",
+          "c2": 0
+        }
+      ],
+      "finite": true,
+      "independent_binary32_matrix_match": true
+    },
+    {
+      "yaw": 65.0,
+      "yaw_bits": "0x42820000",
+      "matrix": [
+        -0.5624538660049438,
+        -0.82682865858078,
+        0.0,
+        0.82682865858078,
+        -0.5624538660049438,
+        0.0,
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "trig_status": [
+        {
+          "after": "0x641948",
+          "operation": "sin_z",
+          "status_word": "0x2800",
+          "c2": 0
+        },
+        {
+          "after": "0x64195d",
+          "operation": "sin_y",
+          "status_word": "0x2000",
+          "c2": 0
+        },
+        {
+          "after": "0x641966",
+          "operation": "cos_z",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x64196e",
+          "operation": "sin_x",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641976",
+          "operation": "cos_y",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641984",
+          "operation": "cos_x",
+          "status_word": "0x1000",
+          "c2": 0
+        }
+      ],
+      "finite": true,
+      "independent_binary32_matrix_match": true
+    },
+    {
+      "yaw": 128.0,
+      "yaw_bits": "0x43000000",
+      "matrix": [
+        -0.6928958296775818,
+        -0.7210376858711243,
+        0.0,
+        0.7210376858711243,
+        -0.6928958296775818,
+        0.0,
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "trig_status": [
+        {
+          "after": "0x641948",
+          "operation": "sin_z",
+          "status_word": "0x2800",
+          "c2": 0
+        },
+        {
+          "after": "0x64195d",
+          "operation": "sin_y",
+          "status_word": "0x2000",
+          "c2": 0
+        },
+        {
+          "after": "0x641966",
+          "operation": "cos_z",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x64196e",
+          "operation": "sin_x",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641976",
+          "operation": "cos_y",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641984",
+          "operation": "cos_x",
+          "status_word": "0x1000",
+          "c2": 0
+        }
+      ],
+      "finite": true,
+      "independent_binary32_matrix_match": true
+    },
+    {
+      "yaw": 65536.0,
+      "yaw_bits": "0x47800000",
+      "matrix": [
+        -0.7218347787857056,
+        -0.6920654773712158,
+        0.0,
+        0.6920654773712158,
+        -0.7218347787857056,
+        0.0,
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "trig_status": [
+        {
+          "after": "0x641948",
+          "operation": "sin_z",
+          "status_word": "0x2800",
+          "c2": 0
+        },
+        {
+          "after": "0x64195d",
+          "operation": "sin_y",
+          "status_word": "0x2000",
+          "c2": 0
+        },
+        {
+          "after": "0x641966",
+          "operation": "cos_z",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x64196e",
+          "operation": "sin_x",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641976",
+          "operation": "cos_y",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641984",
+          "operation": "cos_x",
+          "status_word": "0x1000",
+          "c2": 0
+        }
+      ],
+      "finite": true,
+      "independent_binary32_matrix_match": true
+    },
+    {
+      "yaw": 1048575.9375,
+      "yaw_bits": "0x497fffff",
+      "matrix": [
+        0.9626079797744751,
+        -0.2708982229232788,
+        0.0,
+        0.2708982229232788,
+        0.9626079797744751,
+        0.0,
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "trig_status": [
+        {
+          "after": "0x641948",
+          "operation": "sin_z",
+          "status_word": "0x2800",
+          "c2": 0
+        },
+        {
+          "after": "0x64195d",
+          "operation": "sin_y",
+          "status_word": "0x2000",
+          "c2": 0
+        },
+        {
+          "after": "0x641966",
+          "operation": "cos_z",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x64196e",
+          "operation": "sin_x",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641976",
+          "operation": "cos_y",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641984",
+          "operation": "cos_x",
+          "status_word": "0x1000",
+          "c2": 0
+        }
+      ],
+      "finite": true,
+      "independent_binary32_matrix_match": true
+    },
+    {
+      "yaw": 1048576.0,
+      "yaw_bits": "0x49800000",
+      "matrix": [
+        0.943808376789093,
+        -0.33049315214157104,
+        0.0,
+        0.33049315214157104,
+        0.943808376789093,
+        0.0,
+        -0.0,
+        0.0,
+        1.0
+      ],
+      "trig_status": [
+        {
+          "after": "0x641948",
+          "operation": "sin_z",
+          "status_word": "0x2800",
+          "c2": 0
+        },
+        {
+          "after": "0x64195d",
+          "operation": "sin_y",
+          "status_word": "0x2000",
+          "c2": 0
+        },
+        {
+          "after": "0x641966",
+          "operation": "cos_z",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x64196e",
+          "operation": "sin_x",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641976",
+          "operation": "cos_y",
+          "status_word": "0x1000",
+          "c2": 0
+        },
+        {
+          "after": "0x641984",
+          "operation": "cos_x",
+          "status_word": "0x1000",
+          "c2": 0
+        }
+      ],
+      "finite": true,
+      "independent_binary32_matrix_match": true
+    }
+  ],
+  "checks": {
+    "full_color_depth_frames": 1,
+    "object_transforms": 64,
+    "kernel_calls": 71,
+    "helper_calls": 8,
+    "trig_instructions": 48,
+    "all_sampled_c2_clear": true
+  }
+}

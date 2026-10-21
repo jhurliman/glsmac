@@ -1,0 +1,365 @@
+{
+  "scope": "Complete original scratch initializer/effective-rank/56fd50 row12 controls.\nSprite painting is supplied; actual rank, variant and sprite address execute.\n",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "cases": [
+    {
+      "input": {
+        "id": "psi_neutral",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 0,
+        "design_icon": 3,
+        "weapon_power": -1,
+        "direct_morale": 0,
+        "retained_social_morale": 0,
+        "unit_negative_morale_immunity": false,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 1,
+      "effective_rank": 1,
+      "variant": 1,
+      "sprite": "0x780b8c"
+    },
+    {
+      "input": {
+        "id": "psi_social_low",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 0,
+        "design_icon": 3,
+        "weapon_power": -1,
+        "direct_morale": 0,
+        "retained_social_morale": -4,
+        "unit_negative_morale_immunity": false,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 1,
+      "effective_rank": 1,
+      "variant": 1,
+      "sprite": "0x780b8c"
+    },
+    {
+      "input": {
+        "id": "psi_social_high",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 0,
+        "design_icon": 3,
+        "weapon_power": -1,
+        "direct_morale": 0,
+        "retained_social_morale": 4,
+        "unit_negative_morale_immunity": false,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 1,
+      "effective_rank": 1,
+      "variant": 1,
+      "sprite": "0x780b8c"
+    },
+    {
+      "input": {
+        "id": "psi_direct_two",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 0,
+        "design_icon": 3,
+        "weapon_power": -1,
+        "direct_morale": 2,
+        "retained_social_morale": 4,
+        "unit_negative_morale_immunity": false,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 3,
+      "effective_rank": 3,
+      "variant": 3,
+      "sprite": "0x780be4"
+    },
+    {
+      "input": {
+        "id": "psi_direct_minus_one",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 0,
+        "design_icon": 3,
+        "weapon_power": -1,
+        "direct_morale": -1,
+        "retained_social_morale": 0,
+        "unit_negative_morale_immunity": false,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 0,
+      "effective_rank": 0,
+      "variant": 0,
+      "sprite": "0x780b60"
+    },
+    {
+      "input": {
+        "id": "psi_direct_minus_two",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 0,
+        "design_icon": 3,
+        "weapon_power": -1,
+        "direct_morale": -2,
+        "retained_social_morale": 0,
+        "unit_negative_morale_immunity": false,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 255,
+      "effective_rank": 6,
+      "variant": 6,
+      "sprite": "0x780c68"
+    },
+    {
+      "input": {
+        "id": "psi_direct_256",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 0,
+        "design_icon": 3,
+        "weapon_power": -1,
+        "direct_morale": 256,
+        "retained_social_morale": 0,
+        "unit_negative_morale_immunity": false,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 1,
+      "effective_rank": 1,
+      "variant": 1,
+      "sprite": "0x780b8c"
+    },
+    {
+      "input": {
+        "id": "conventional_neutral",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 0,
+        "design_icon": 3,
+        "weapon_power": 1,
+        "direct_morale": 0,
+        "retained_social_morale": 0,
+        "unit_negative_morale_immunity": false,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 1,
+      "effective_rank": 1,
+      "variant": 1,
+      "sprite": "0x780b8c"
+    },
+    {
+      "input": {
+        "id": "conventional_social_low",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 0,
+        "design_icon": 3,
+        "weapon_power": 1,
+        "direct_morale": 0,
+        "retained_social_morale": -4,
+        "unit_negative_morale_immunity": false,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 1,
+      "effective_rank": 0,
+      "variant": 0,
+      "sprite": "0x780b60"
+    },
+    {
+      "input": {
+        "id": "conventional_social_high",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 0,
+        "design_icon": 3,
+        "weapon_power": 1,
+        "direct_morale": 0,
+        "retained_social_morale": 2,
+        "unit_negative_morale_immunity": false,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 1,
+      "effective_rank": 2,
+      "variant": 2,
+      "sprite": "0x780bb8"
+    },
+    {
+      "input": {
+        "id": "conventional_direct_two",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 0,
+        "design_icon": 3,
+        "weapon_power": 1,
+        "direct_morale": 2,
+        "retained_social_morale": 0,
+        "unit_negative_morale_immunity": false,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 3,
+      "effective_rank": 5,
+      "variant": 5,
+      "sprite": "0x780c3c"
+    },
+    {
+      "input": {
+        "id": "conventional_immunity",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 0,
+        "design_icon": 3,
+        "weapon_power": 1,
+        "direct_morale": 0,
+        "retained_social_morale": -4,
+        "unit_negative_morale_immunity": true,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 1,
+      "effective_rank": 1,
+      "variant": 1,
+      "sprite": "0x780b8c"
+    },
+    {
+      "input": {
+        "id": "scratch_probe_plan",
+        "owner": 1,
+        "scratch_design": 63,
+        "design_plan_byte42": 11,
+        "design_icon": 3,
+        "weapon_power": 1,
+        "direct_morale": 0,
+        "retained_social_morale": 0,
+        "unit_negative_morale_immunity": false,
+        "home": "none",
+        "query": [
+          2048,
+          0,
+          0
+        ]
+      },
+      "stored_morale": 1,
+      "effective_rank": 2,
+      "variant": 2,
+      "sprite": "0x780bb8"
+    }
+  ],
+  "lifecycle": {
+    "source_constructor_reset": "4469a0@4469d5 -> 4468d0",
+    "fresh_open": "449630@449659..449670: state !=2 calls constructor",
+    "already_open_refresh": "state2 skips constructor;449828..449844 calls virtual+f8, skips registration",
+    "reset_reused_native_case": "workshop_reset_fragment",
+    "reset_reused_freeze_manifest_sha256": "a6c8dba7ba04f4fdd4c97cd837bdd379b72cb0031917ccc1dfdb5338dc7d0634",
+    "reset_reused_case": {
+      "kind": "workshop_reset_fragment",
+      "before": {
+        "timer": "0000000011000000a068440000000000000000000000000028000000000000000500000000000000",
+        "phase": 1000,
+        "yaw_bits": "0x3f800000",
+        "draw_count": 99
+      },
+      "after": {
+        "timer": "00000000000000000000000000000000000000000000000000000000000000000500000000000000",
+        "phase": 1000,
+        "yaw_bits": "0x0",
+        "draw_count": 0
+      },
+      "events": [
+        [
+          "peek",
+          [
+            536932308,
+            0,
+            1025,
+            1025,
+            1
+          ]
+        ],
+        [
+          "mmset",
+          [
+            40,
+            5,
+            6488880,
+            7670188,
+            1
+          ]
+        ],
+        [
+          "mmkill",
+          [
+            17
+          ]
+        ],
+        [
+          "peek",
+          [
+            536928208,
+            0,
+            1025,
+            1025,
+            1
+          ]
+        ]
+      ]
+    }
+  }
+}

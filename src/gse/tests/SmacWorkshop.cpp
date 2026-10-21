@@ -19,6 +19,7 @@
 #include "fixtures/WorkshopUpgradeStrings.h"
 #include "game/backend/unit/SmacWorkshopUpgrade.h"
 #include "fixtures/WorkshopAllocation.h"
+#include "fixtures/WorkshopCachedRank.h"
 #include "fixtures/SmacIntrinsicOverlays.h"
 #include "task/gsetests/GSETests.h"
 #include <cstdlib>
@@ -35,6 +36,48 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop scratch preview ranks match38 native Psi conventional and Probe controls",GT(){
+        for(const auto& row:workshop_cached_rank_fixture::RANKS) {
+            GT_ASSERT(unit::SmacWorkshopPreviewRank({uint8_t(row.plan),int8_t(row.power),row.direct,row.morale,row.probe,row.immune,row.matrix,row.technologies})==row.expected,"Native scratch rank differs");
+        }GT_OK();
+    });
+
+    task->AddTest("SMAC Workshop Probe preview technology count matches25 native ownership and prerequisite cases",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);const std::string source(std::istreambuf_iterator<char>(file),{});
+        const auto original=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        for(const auto& row:workshop_cached_rank_fixture::TECHNOLOGIES) {
+            auto technologies=original;auto owner=Owner();owner.owned.fill(false);for(const auto id:row.owned) {owner.owned.at(id)=true;}
+            if(row.flag_id>=0) {technologies.technologies.at(row.flag_id).flags=2;}
+            if(row.parent_id>=0) {
+                const auto token=[&](int id){return id== -2 ? std::string("Disable"):id== -1 ? std::string("None"):technologies.technologies.at(id).key;};
+                technologies.technologies.at(row.parent_id).prerequisites={token(row.first),token(row.second)};
+            }
+            GT_ASSERT(unit::SmacWorkshopProbeTechnologyCount(technologies,owner)==row.expected,"Native admitted Probe tech count differs for "+std::string(row.name));
+        }GT_OK();
+    });
+
+    task->AddTest("SMAC Workshop cached preview uses native signed icons and complete tuple admission",GT(){
+        unit::SmacPredefinedUnitCatalog catalog;catalog.weapons.weapons.resize(1);catalog.weapons.weapons[0].icon=-1;
+        unit::SmacStartupDesignState state;state.native_registry.emplace();auto& row=state.native_registry->at(2);
+        row[39]=1;row[46]=0;unit::SmacWorkshopDraft draft;draft.selected_design=2;draft.chassis=0;draft.weapon=0;draft.armor=0;draft.reactor=1;draft.abilities=0;
+        const auto before=*state.native_registry;
+        GT_ASSERT(unit::SmacWorkshopPreviewIcon(state,draft,catalog)==0 && *state.native_registry==before,"Zero icon rejected or preview mutated retained records");
+        row[0]='X';row[48]=255;GT_ASSERT(unit::SmacWorkshopPreviewIcon(state,draft,catalog)==0,"Name/status incorrectly changed cached admission");
+        row[33]=1;GT_ASSERT(unit::SmacWorkshopPreviewIcon(state,draft,catalog)==-1,"Ability DWORD mismatch admitted");row[33]=0;
+        row[38]=1;GT_ASSERT(unit::SmacWorkshopPreviewIcon(state,draft,catalog)==-1,"Armor mismatch admitted");
+        catalog.weapons.weapons[0].icon=1;
+        GT_ASSERT(unit::SmacWorkshopPreviewIcon(state,draft,catalog)==0,"Weapon fallback lost copied design-icon precedence");
+        row[46]=255;GT_ASSERT(unit::SmacWorkshopPreviewIcon(state,draft,catalog)==1,"Infantry weapon-icon fallback missing");
+        draft.chassis=1;GT_ASSERT(unit::SmacWorkshopPreviewIcon(state,draft,catalog)==-1,"Weapon fallback admitted non-Infantry");draft.chassis=0;
+        catalog.weapons.weapons[0].icon=128;GT_ASSERT(unit::SmacWorkshopPreviewIcon(state,draft,catalog)==-1,"Signed weapon icon treated as unsigned");
+        catalog.weapons.weapons[0].icon=256;GT_ASSERT(unit::SmacWorkshopPreviewIcon(state,draft,catalog)==0,"Weapon icon did not narrow its low byte");
+        catalog.weapons.weapons[0].icon=-1;row[38]=0;row[46]=128;
+        GT_ASSERT(unit::SmacWorkshopPreviewIcon(state,draft,catalog)==-1,"Signed selected icon treated as unsigned");
+        draft.selected_design=63;state.native_registry->at(63)=row;state.native_registry->at(63)[46]=0;
+        GT_ASSERT(unit::SmacWorkshopPreviewIcon(state,draft,catalog)==-2,"Reserved scratch alias did not preserve its idle edge");GT_OK();
+    });
+
     task->AddTest("SMAC Workshop Upgrade stored strings match11 native stats and three prompt pairs",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);const std::string source(std::istreambuf_iterator<char>(file),{});

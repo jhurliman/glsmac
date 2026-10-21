@@ -32,6 +32,9 @@ struct CvrActorMaterial {
     static std::vector<uint8_t> ReadWorkshopBackdrop(std::string_view deswin_pcx);
     // UNITS frame0 bank used only for configured nonnegative weapon selectors.
     static std::array<std::vector<uint8_t>,10> ReadWorkshopWeaponSprites(std::string_view units_pcx);
+    struct WorkshopSprite {int width=0,height=0;std::array<int32_t,2> offset{};std::vector<uint8_t> pixels;};
+    // Original trimmed row9..18 bank, including all seven row12 variants.
+    static std::array<std::vector<WorkshopSprite>,10> ReadWorkshopUnitSprites(std::string_view units_pcx);
     static void PaintWorkshopWeaponSprite(std::vector<uint8_t>& destination,size_t width,size_t height,
         const std::vector<uint8_t>& sprite,int ordinal);
     static CvrWorkshopMaterials ReadWorkshop(std::string_view palette_pcx,std::string_view vbp,std::string_view system);

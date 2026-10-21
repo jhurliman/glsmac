@@ -1,0 +1,143 @@
+{
+  "scope": "Exact cached sprite-only pre/post clip, plus independent upscale/shadow replay.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "boundary": {
+    "entry": "5fe680, caller57015f",
+    "return_pc": "57015f before its first instruction",
+    "later_main_labels_excluded": true
+  },
+  "fixture": {
+    "selected": 2,
+    "design_icon_override": 0,
+    "original_design_icon": 255,
+    "clip_client": [
+      140,
+      9,
+      451,
+      320
+    ],
+    "clip_image": [
+      311,
+      311
+    ],
+    "clip_pitch": 311,
+    "sprite_size": [
+      87,
+      67
+    ],
+    "sprite_pitch": 87,
+    "sprite_offset": [
+      8,
+      0
+    ],
+    "call_xy_client": [
+      202,
+      94
+    ],
+    "call_xy_clip": [
+      62,
+      85
+    ],
+    "trimmed_origin_client": [
+      217,
+      94
+    ],
+    "trimmed_origin_clip": [
+      77,
+      85
+    ],
+    "scaled_size": [
+      163,
+      125
+    ],
+    "scale": [
+      30,
+      16
+    ],
+    "transparent_key": 9,
+    "shadow_source_index": 0,
+    "shadow_lookup": "71db18",
+    "payloads": {
+      "before": {
+        "file": "before-clip311.indexed.bin",
+        "bytes": 96721,
+        "sha256": "e972fad227b9752631de74f08f56a21db259d28cc40b6628e0b748967095a0ef"
+      },
+      "after": {
+        "file": "after-sprite-clip311.indexed.bin",
+        "bytes": 96721,
+        "sha256": "ddc79c83082d712d6209fbdebdd2ec38383edf4e66ce516fb3281c002b4b274f"
+      },
+      "sprite": {
+        "file": "sprite87x67.indexed.bin",
+        "bytes": 5829,
+        "sha256": "9c784a21e0e3f0d902d93dcfc39eaee66238e2cb70127a33570736992bd55c42"
+      },
+      "lookup": {
+        "file": "shadow-lookup256.bin",
+        "bytes": 256,
+        "sha256": "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+      }
+    }
+  },
+  "checks": {
+    "independent_source_sprite_match": true,
+    "independent_full_destination_replay_match": true,
+    "changed_pixels": 11121,
+    "changed_bounds_client": [
+      217,
+      94,
+      380,
+      219
+    ],
+    "copied_samples": 6756,
+    "shadow_samples": 4773,
+    "transparent_samples": 8846,
+    "outside_sprite_destination_unchanged": true
+  },
+  "capture_note": "One complete native main paint. Initial host diagnostic formatting failed after native return; exact pre/post boundary records were already saved. Only KeyError(args) is admitted by the checker; native boundary bytes are independently replayed and matched.",
+  "initialized_lookup_control": {
+    "scope": "Original palette-shadow producer and original blit at retained source/destination boundaries.\nNo art/bootstrap replay; canvas admission/flush are supplied presentation boundaries.\n",
+    "palette_stage_input": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6",
+    "producer": {
+      "entry": "617fa0",
+      "this": "959aa8",
+      "args": [
+        "71db18",
+        0,
+        256,
+        -43
+      ],
+      "caller_source": "429e30@42a042..42a055, cache-miss generation branch"
+    },
+    "lookup": {
+      "file": "initialized-shadow-lookup256.bin",
+      "bytes": 256,
+      "sha256": "0229080d2b3b2e56a39523f3ced54fcbcbe8bc8dea8a8548d5fbe75820cd6ef3"
+    },
+    "before": {
+      "file": "initialized-before-clip311.indexed.bin",
+      "bytes": 96721,
+      "sha256": "e972fad227b9752631de74f08f56a21db259d28cc40b6628e0b748967095a0ef"
+    },
+    "after": {
+      "file": "initialized-after-sprite-clip311.indexed.bin",
+      "bytes": 96721,
+      "sha256": "b0a21c378fd7b95920ecdf4d2b67d60e4a648c7ddab3ac926a2b6842d7e95d20"
+    },
+    "full_after": {
+      "file": "initialized-after-full.indexed.bin",
+      "bytes": 241488,
+      "sha256": "ba4413433fcb3b1f8163cbbc2910002d91886e438904d47dc183689555dab870"
+    },
+    "source": "9c784a21e0e3f0d902d93dcfc39eaee66238e2cb70127a33570736992bd55c42",
+    "native_producer_return": 0,
+    "native_blit_return": 0,
+    "lookup_distinct": 102,
+    "independent_full_destination_replay_match": true,
+    "changed_pixels": 8668,
+    "upscale_shadow_rule": "Resolve lookup once using the replication block top-left destination, then replicate that output across the block.",
+    "per_destination_shadow_lookup_mismatches": 2320,
+    "preferred_port_compositor_fixture": true
+  }
+}

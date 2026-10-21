@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <cstdint>
 #include <functional>
 #include <vector>
 #include "common/Mutex.h"
@@ -64,6 +65,7 @@ CLASS( UI, gse::GCWrappable )
 	~UI();
 
 	void Iterate();
+    uint32_t& ModelAnimationPhase() {return m_model_animation_phase;}
 
 	WRAPDEFS_PTR( UI );
 
@@ -138,6 +140,7 @@ private:
 
 private:
 
+    uint32_t m_model_animation_phase=1;
 	dom::Root* m_root = nullptr;
 
 	struct {

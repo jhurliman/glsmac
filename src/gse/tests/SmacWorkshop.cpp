@@ -23,6 +23,41 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop active and New reselection preserves the original draft and raw-record rules",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        const auto read=[&](const char* name) {std::ifstream file(std::string(assets)+"/"+name,std::ios::binary);if(!file) {throw std::runtime_error("Missing owned Workshop selection rules");}return std::string(std::istreambuf_iterator<char>(file),{});};
+        const auto source=read("alpha.txt");const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;catalog.workshop_name_labels=unit::ReadSmacWorkshopNameLabels(read("labels.txt"));
+        auto pool=workshop_general_fixture::BasePool();pool[64]=pool[2];pool[64][38]=1;pool[64][48]=0x83;pool[64][49]=2;pool[64][47]=0xa5;pool[64][50]=0x34;pool[64][51]=0x12;
+        const std::string stored="Stored Guard";std::fill_n(pool[64].begin(),32,0);std::copy(stored.begin(),stored.end(),pool[64].begin());
+        pool[65]=pool[127];pool[65][48]=0x82;pool[65][49]=2;
+        auto state=Empty();state.RetainNativeRegistry(pool,catalog);const auto before=state;
+        const auto active=unit::PrepareSmacWorkshopReselection(state,64,"Unsaved",catalog,1);auto expected=pool;expected[64][48]&=uint8_t(~0x80u);
+        GT_ASSERT(state==before && *active.state.native_registry==expected && active.draft.selected_design==64 && active.draft.armor==1
+            && active.draft.name==stored && active.draft.chassis==0 && active.draft.weapon==0 && active.draft.reactor==1,"Active selection lost components/name, opaque bytes or raw flags");
+        for(int requested:{-1,65,127}) {
+            const auto fresh=unit::PrepareSmacWorkshopReselection(state,requested,"Old Draft",catalog,1);
+            GT_ASSERT(fresh.state==before && fresh.draft.selected_design==65 && fresh.draft.name=="Old Draft" && fresh.draft.chassis==0 && fresh.draft.weapon==0
+                && fresh.draft.armor==0 && fresh.draft.reactor==1 && fresh.draft.abilities==0 && fresh.ability_slots[0]==-1 && fresh.ability_slots[1]==-1,"New selection copied stale fields, changed flags/name or kept the clicked empty ID");
+        }
+        auto with_mask=pool;const uint32_t mask=(1u<<3)|(1u<<9)|(1u<<18);for(unsigned i=0;i<4;++i) {with_mask[64][32+i]=uint8_t(mask>>(8*i));}
+        state.RetainNativeRegistry(with_mask,catalog);const auto abilities=unit::PrepareSmacWorkshopReselection(state,64,"Ignored",catalog,1);
+        GT_ASSERT(abilities.draft.abilities==mask && abilities.ability_slots[0]==3 && abilities.ability_slots[1]==9,"Selection incorrectly cleaned the saved mask or preserved old selector order");
+        auto intrinsic=pool;intrinsic[2][48]|=0x80;state.RetainNativeRegistry(intrinsic,catalog);
+        const auto scout=unit::PrepareSmacWorkshopReselection(state,2,"Ignored",catalog,1);intrinsic[2][48]&=uint8_t(~0x80u);
+        GT_ASSERT(*scout.state.native_registry==intrinsic && scout.draft.selected_design==2 && scout.draft.name.empty(),"Intrinsic reselect copied a name or altered other records");
+        const auto psi=unit::PrepareSmacWorkshopReselection(state,8,"Old Draft",catalog,1);
+        GT_ASSERT(psi.draft.selected_design==65 && psi.draft.name=="Old Draft" && psi.state==state,"Negative-power intrinsic did not fall back to New");
+        auto automatic=pool;const std::string name="Synthmetal Garrison";std::fill_n(automatic[64].begin(),32,0);std::copy(name.begin(),name.end(),automatic[64].begin());
+        state.RetainNativeRegistry(automatic,catalog);const auto normalized=unit::PrepareSmacWorkshopReselection(state,64,"Ignored",catalog,1);automatic[64][48]&=uint8_t(~0x82u);
+        GT_ASSERT(normalized.draft.name.empty() && *normalized.state.native_registry==automatic,"Automatic stored name did not clear only named/selection flags");
+        for(int id=64;id<128;++id) {pool[id]=pool[2];}state.RetainNativeRegistry(pool,catalog);
+        const auto full=unit::PrepareSmacWorkshopReselection(state,-1,"Ignored",catalog,1);
+        GT_ASSERT(full.draft.selected_design==64 && full.draft.name.empty(),"Exhausted New search did not fall back to the first owner record");
+        state.owners.push_back({7,{},2});state.SynchronizeNativeRegistry();const auto seven=unit::PrepareSmacWorkshopReselection(state,511,"Seven",catalog,7);
+        GT_ASSERT(seven.draft.selected_design==448 && seven.draft.name=="Seven" && seven.state==state,"Owner7 New selection used another bank");
+        GT_ASSERT(Rejects([&]{unit::PrepareSmacWorkshopReselection(state,128,"",catalog,1);}) && Rejects([&]{unit::PrepareSmacWorkshopReselection(state,64,std::string(32,'x'),catalog,1);}),"Foreign selection or overlong retained draft was admitted");GT_OK();
+    });
     task->AddTest("SMAC Workshop retained common commits match seven complete native saved pools",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         const auto read=[&](const char* name) {std::ifstream file(std::string(assets)+"/"+name,std::ios::binary);if(!file) {throw std::runtime_error("Missing owned Workshop rules");}return std::string(std::istreambuf_iterator<char>(file),{});};

@@ -56,7 +56,8 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
             if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Workshop requires its owning accumulation");}
         }
         const bool stale=base->SmacWorkshopState()!=expected;
-        bool warning=false,failed=false,confirmation=false,declined=false;int32_t design_id=2,overwrite_count=0;std::string overwrite_name;
+        bool warning=false,failed=false,confirmation=false,declined=false,reselected=false,retired=false;
+        int32_t design_id=int32_t(selected),overwrite_count=0,restored_armor=0;std::string overwrite_name,restored_name;
         std::optional<unit::UnitManager::PreparedConventionalRemoval> removal;
         std::vector<std::pair<base::Base*,std::optional<base::ProductionState>>> queues;
         std::optional<decltype(GetBM()->m_base_updates)> base_updates;
@@ -132,28 +133,36 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
                 warning=result.intrinsic_name_warning;design_id=result.design_id;
             } catch(const std::invalid_argument&) {failed=true;}
             catch(const std::runtime_error&) {failed=true;}
-            if(apply && !failed && !confirmation && !declined) {
+            if(apply && !done && !confirmation && next.native_registry) {
+                try {
+                    // Apply always reselects with argument0, even after a failed
+                    // edit or declined overwrite. Failed preparation never leaks
+                    // a tentative record into the reselect source.
+                    const auto& source=failed || declined ? m_simulation->value.designs:next;
+                    auto selection=unit::PrepareSmacWorkshopReselection(source,design_id,supplied,settings.GetSmacPredefinedUnitRules()->catalog,owner->admission.simulation_id);
+                    next=std::move(selection.state);design_id=selection.draft.selected_design;
+                    restored_armor=int32_t(selection.draft.armor);restored_name=std::move(selection.draft.name);reselected=true;
+                } catch(const std::exception&) {failed=true;}
+            }
+            if(apply && !confirmation && ((!failed && !declined) || reselected)) {
                 static_assert(std::is_nothrow_swappable_v<unit::SmacStartupDesignState> && std::is_nothrow_swappable_v<std::optional<base::ProductionState>>);
-                if(removal) {removal->Commit();}
-                for(auto& change:queues) {change.first->m_production.swap(change.second);}
-                if(base_updates) {GetBM()->m_base_updates.swap(*base_updates);}
+                if(!failed && !declined) {
+                    if(removal) {removal->Commit();retired=true;}
+                    for(auto& change:queues) {change.first->m_production.swap(change.second);}
+                    if(base_updates) {GetBM()->m_base_updates.swap(*base_updates);}
+                }
                 std::swap(m_simulation->value.designs,next);
             }
         }
         if(apply) {
-            if(removal && !failed) {removal->Notify(GSE_CALL);}
-            int32_t restored_armor=0;std::string restored_name;
-            if(!failed && !stale && declined && !done && m_simulation->value.designs.native_registry) {
-                const auto& row=m_simulation->value.designs.native_registry->at(design_id);restored_armor=row[38];
-                if(row[48]&2) {restored_name=std::string(row.begin(),std::find(row.begin(),row.begin()+32,uint8_t(0)));}
-            }
-            GetState()->TriggerObject(this,"smac_workshop_commit",ARGS_F(this,base,done,stale,warning,design_id,failed,request,confirmation,declined,overwrite_count,overwrite_name,restored_armor,restored_name) {
+            if(retired) {removal->Notify(GSE_CALL);}
+            GetState()->TriggerObject(this,"smac_workshop_commit",ARGS_F(this,base,done,stale,warning,design_id,failed,request,confirmation,declined,overwrite_count,overwrite_name,restored_armor,restored_name,reselected) {
                 {"base",base->Wrap(GSE_CALL)}, {"selection",base->CopySmacWorkshop(GSE_CALL)},
                 {"done",VALUE(gse::value::Bool,,done && !stale && !failed && !confirmation && !declined)}, {"stale",VALUE(gse::value::Bool,,stale)},
                 {"failed",VALUE(gse::value::Bool,,failed)},
                 {"confirmation",VALUE(gse::value::Bool,,confirmation)}, {"declined",VALUE(gse::value::Bool,,declined)},
                 {"overwrite_name",VALUE(gse::value::String,,overwrite_name)}, {"overwrite_count",VALUE(gse::value::Int,,overwrite_count)},
-                {"restore_draft",VALUE(gse::value::Bool,,declined && !done && !stale && !failed)},
+                {"restore_draft",VALUE(gse::value::Bool,,reselected)},
                 {"restored_armor",VALUE(gse::value::Int,,restored_armor)}, {"restored_name",VALUE(gse::value::String,,restored_name)},
                 {"request_id",VALUE(gse::value::Int,,request)},
                 {"intrinsic_name_warning",VALUE(gse::value::Bool,,warning)}, {"design_id",VALUE(gse::value::Int,,design_id)}

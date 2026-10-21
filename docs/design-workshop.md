@@ -648,3 +648,42 @@ Weapon/noncombat formatting and original full-screen glyph/layout matching
 remain open. The completed interactive-editing and normal-open handoffs are
 retained for the next selection/component implementation; their references do
 not themselves implement the live UI.
+
+
+### Apply uses the native argument0 reselect path
+
+Apply now reselects after a completed commit attempt, including failed edits
+and declined overwrite, before its acknowledgement reaches the live editor.
+Pending overwrite consent and stale commands do not reselect. Done closes only
+on success and retains the edited draft on failure.
+
+The shared detached selector follows4490b0(id,0): active records copy stored
+components and the complete ability mask, rebuild the first two ascending
+selector bits without compatibility cleanup, and clear only raw flag80.
+Named custom text equal to its current automatic name is normalized by clearing
+named bit2 and the draft string; other named text is retained. Intrinsics give
+an empty draft name. New/inactive requests resolve to the lowest inactive own
+slot, reset basic components/reactor/abilities and retain the current draft name
+and all raw flags. Exhaustion falls back to the owner's first record. Foreign
+bank input and oversized draft text are rejected before publication.
+
+The live narrow editor consumes restored armor/name before reporting a failed
+Apply. Bookkeeping can therefore change the original selection bit even when
+component construction fails; failed preparation still cannot publish tentative
+designs, Unit removal or queue changes. Actual removal notifications are sent
+only after a removal transaction committed. Morgan's marked startup regression
+now verifies exactly the expected80-bit clear and no other world mutation.
+
+Validation:29 selected native groups and six affected UI scripts pass. The new
+live failed-Apply/Done fixture covers saved records after technology loss and
+New fallback/name retention. The detached selector checks raw pools, opaque
+fields, named/automatic text, three-bit mask retention, intrinsic PSI rejection,
+full-bank fallback and owner7 selection. Twenty-six relevant groups pass focused
+ASan/UBSan with nine production and three test files instrumented. Correctness
+analysis is clean for seven production files/consumers.
+
+This is the reselect contract used by the current Apply caller, not completed
+design browsing. Normal opening passes argument1 and still needs the general
+recommendation controller. The full component/UI projection, browser strip,
+Rename, compatibility refresh and full-screen pixel acceptance remain open.
+No new rendering or native-platform matrix was needed for this state transition.

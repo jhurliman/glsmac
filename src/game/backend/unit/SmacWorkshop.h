@@ -45,6 +45,16 @@ void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const Sma
 // Returns the untruncated native buffer; saving owns the31-byte boundary.
 std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,int32_t owner);
+// Original4490b0(id,0), used by card selection and Apply reselection.
+// Does not run normal-open recommendations or compatibility cleanup.
+struct SmacWorkshopReselection {
+    SmacStartupDesignState state;
+    SmacWorkshopDraft draft;
+    std::array<int32_t,2> ability_slots{{-1,-1}};
+};
+SmacWorkshopReselection PrepareSmacWorkshopReselection(const SmacStartupDesignState& state,int32_t requested,
+    const std::string& retained_name,const SmacPredefinedUnitCatalog& catalog,int32_t owner);
+
 enum class SmacWorkshopSlotKind {Alias,Build,IntrinsicFailure};
 struct SmacWorkshopSlot {int32_t selected;SmacWorkshopSlotKind kind;bool confirmation;};
 // Original 441e20 tuple matching and two-stage allocation. Consumes retained

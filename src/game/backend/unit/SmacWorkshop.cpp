@@ -175,6 +175,38 @@ std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t ind
         if(!changed) {return variant ? short_name:full;}
     }
 }
+SmacWorkshopReselection PrepareSmacWorkshopReselection(const SmacStartupDesignState& state,int32_t requested,
+    const std::string& retained_name,const SmacPredefinedUnitCatalog& catalog,int32_t owner) {
+    state.Validate(catalog);
+    if(owner<1 || owner>7 || !state.Find(owner) || !state.native_registry || requested>=512
+        || (requested>=64 && requested/64!=owner) || retained_name.size()>31 || retained_name.find('\0')!=std::string::npos) {
+        throw std::invalid_argument("Workshop reselect requires retained owner records and a bounded draft");
+    }
+    SmacWorkshopReselection result{state,{}};auto pool=*state.native_registry;
+    const auto admissible=[&](int32_t id) {return id>=0 && (pool.at(id)[48]&1)
+        && (id>=64 || catalog.weapons.weapons.at(pool.at(id)[37]).offense>=0);};
+    int32_t selected=requested;
+    if(!admissible(selected)) {
+        selected=owner*64;
+        // Inactive own records sort by raw ID, before excluded records.
+        for(int32_t id=owner*64;id<(owner+1)*64;++id) {if(!(pool[id][48]&1)) {selected=id;break;}}
+    }
+    auto& row=pool.at(selected);auto& draft=result.draft;draft.selected_design=selected;
+    if(!(row[48]&1)) {
+        draft.name=retained_name; // New selection resets components, not the draft name or raw flags.
+        return result;
+    }
+    draft.chassis=row[36];draft.weapon=row[37];draft.armor=row[38];draft.reactor=row[39];
+    for(unsigned byte=0;byte<4;++byte) {draft.abilities|=uint32_t(row[32+byte])<<(8*byte);}
+    RequireComponents(draft,catalog);row[48]&=uint8_t(~0x80u);
+    if(selected>=64 && (row[48]&2)) {
+        draft.name=std::string(row.begin(),std::find(row.begin(),row.begin()+32,uint8_t(0)));
+        if(draft.name==NameSmacWorkshopDesign(pool,size_t(selected),draft,catalog,owner)) {row[48]&=uint8_t(~2u);draft.name.clear();}
+    }
+    size_t slot=0;for(int32_t bit=0;bit<24 && slot<2;++bit) {if(draft.abilities&(1u<<bit)) {result.ability_slots[slot++]=bit;}}
+    result.state.RetainNativeRegistry(pool,catalog);return result;
+}
+
 SmacWorkshopSlot ChooseSmacWorkshopSlot(const SmacOriginalDesignPool& pool,const SmacWorkshopDraft& draft,
     const faction::SmacDesignCounts& units,const faction::SmacDesignCounts& production,
     const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner) {

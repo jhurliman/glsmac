@@ -50,7 +50,9 @@ return {
         this.picker.on('keydown', (e) => { if (e.modifiers == {} && e.code == 'ESCAPE') { this.picker.hide(); } return true; });
         this.window.listen(p.game, 'smac_workshop_commit', (e) => {
             if (!this.active || !this.pending || e.base.id != this.base.id || e.request_id != this.pending_id) { return; }
-            this.pending = false; this.selection = e.selection; this.update_armor();
+            this.pending = false; this.selection = e.selection;
+            if (#is_defined(e.restore_draft) && e.restore_draft) { this.selected_design = e.design_id; this.selected_armor = e.restored_armor; this.draft_name = e.restored_name; }
+            this.update_armor();
             if (e.stale) { this.message.text = 'Game state changed. Please check your design.'; return; }
             if (e.failed) { this.message.text = 'This design cannot be saved.'; return; }
             if (#is_defined(e.confirmation) && e.confirmation) {
@@ -59,7 +61,6 @@ return {
                 this.overwrite_window.show(); return;
             }
             if (#is_defined(e.declined) && e.declined) {
-                if (#is_defined(e.restore_draft) && e.restore_draft) { this.selected_design = e.design_id; this.selected_armor = e.restored_armor; this.draft_name = e.restored_name; this.update_armor(); }
                 this.message.text = ''; return;
             }
             this.selected_design = e.design_id;

@@ -8,6 +8,8 @@
 #include "slot/Slot.h"
 #include "slot/Slots.h"
 #include "unit/UnitManager.h"
+#include "unit/UnsupportedConventionalDesign.h"
+#include "unit/SmacProductionDesigns.h"
 #include "base/Base.h"
 #include "base/BaseManager.h"
 #include "base/SmacBaseResourceContext.h"
@@ -326,6 +328,13 @@ unit::SmacCustomDesign Game::ResolveConventionalDesign( const unit::Conventional
 	unit::SmacCustomDesign design;
 
 	if ( state.design_id < 64 ) {
+        if(state.design_id>=0 && simulation.value.designs.native_registry) {
+            const auto& raw=simulation.value.designs.native_registry->at(state.design_id);
+            //63 is the Workshop scratch slot, not a persistent physical design.
+            // Uninitialized intrinsic placeholders have no reactor identity.
+            if(state.design_id==63 || raw[39]==0) {throw std::runtime_error("Conventional intrinsic design has no persistent record");}
+            return unit::ReadSmacProductionDesign(raw,state.design_id);
+        }
 		for ( const auto& row : catalog.units ) {
 			if ( row.source_id == static_cast< uint32_t >( state.design_id ) ) {
 				const auto current=simulation.value.designs.EffectiveIntrinsic(row);
@@ -448,7 +457,7 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
         || design.reactor > catalog.reactors.reactors.size() || (design.abilities & ~0x4000u)
 		|| catalog.chassis.chassis.size() <= design.chassis || catalog.weapons.weapons.size() <= design.weapon
 		|| catalog.defenses.defenses.empty() || catalog.reactors.reactors.empty() ) {
-		throw std::runtime_error( "Unsupported conventional ground design" );
+		throw unit::UnsupportedConventionalDesign( "Unsupported conventional ground design" );
 	}
 	using namespace loader::txt;
 	const auto& chassis = catalog.chassis.chassis[ design.chassis ];
@@ -460,7 +469,7 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
 	if ( chassis.triad != ChassisTriad::Land || chassis.missile || chassis.range != 0 || chassis.cargo != 1
 		|| ( !combat && !former && !colony ) || defense.rating <= 0
         || (defense.mode != DefenseMode::Projectile && defense.mode != DefenseMode::Energy && defense.mode != DefenseMode::Binary) ) {
-		throw std::runtime_error( "Unsupported conventional component semantics" );
+		throw unit::UnsupportedConventionalDesign( "Unsupported conventional component semantics" );
 	}
 	if ( !former && ( state.work_order != unit::ConventionalUnitState::WorkOrder::None || state.work_progress != 0 ) ) {
 		throw std::runtime_error( "Only admitted Former packages may retain terraforming work" );
@@ -497,7 +506,7 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
         const auto source_owner=origin/64;const auto* selected=simulation.value.designs.Find(source_owner);
         const auto source=std::find_if(simulation.value.roster.begin(),simulation.value.roster.end(),[&](const auto& row){return row.simulation_id==source_owner;});
         if(origin<64 || source==simulation.value.roster.end() || source->faction_id!="SPARTANS" || !selected || selected->starting_scout!=origin) {
-            throw std::runtime_error("Speeder presentation needs retained Spartan startup or measured riot prototype provenance");
+            throw unit::UnsupportedConventionalDesign("Speeder presentation needs retained Spartan startup or measured riot prototype provenance");
         }
         result.presentation=unit::ConventionalUnitContext::Presentation::SelectedSpartanRover;
     }

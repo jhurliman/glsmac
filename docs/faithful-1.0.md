@@ -52,13 +52,15 @@ required before the local conquest milestone can be claimed.
 
 ## Current acceptance dashboard — 2026-10-21
 
-Accepted integration: **`8a07616b5b7b2401075bc1516ab065b2b3b478b2`**, through
-[#541](https://github.com/jhurliman/glsmac/pull/541), on `codex/faithful-1.0`.
+Accepted integration: **`91ffd4a88943721d40f545f0bb7559999c6897b3`**, through
+[#543](https://github.com/jhurliman/glsmac/pull/543), on `codex/faithful-1.0`.
 Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `3956fd407c7c4aac25e16eceab18a816092e0330`. This is an integration
+at head `2fa4c72c29427e6bff4bbdcae1c50ad819bce18e`. This is an integration
 checkpoint, not a release candidate or a statement that all platforms were rerun.
 
-Through#541 the console Vehicle Presets panel is connected to authenticated
+Through#543 normal Workshop opening follows the highlighted production choice
+and rebuilds the picker on return. Fresh/reset air counters preserve explicit
+foreign history. The console Vehicle Presets panel is connected to authenticated
 commands and matches all43,804 pixels in its bounded original region. Retained
 Fight/air-summary authority and the illustrated NOPRESET path are integrated.
 This does not establish full Workshop, manufactured-Unit or campaign acceptance.

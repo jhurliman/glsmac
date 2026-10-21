@@ -10,6 +10,7 @@
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/SmacWorkshop.h"
+#include "game/backend/unit/SmacProductionDesigns.h"
 #include "game/backend/unit/SmacWorkshopUpgrade.h"
 #include "game/backend/unit/SmacConventionalStats.h"
 #include "game/backend/State.h"
@@ -889,7 +890,8 @@ SmacManualSwitchResult Base::PrepareSmacProductionSelection( const int32_t sourc
     const auto* designs = m_game->m_simulation->value.designs.Find( GetSmacResourceContext().owner_simulation_id );
     const bool facility=source_id>=-33 && source_id<0 && Game::SupportsSmacFacilityProduction(-source_id);
     if(facility && !m_game->GetBM()->GetSmacFacilityDef(-source_id)) {THROW("Facility selection has no registered definition");}
-    if ( !designs || (!facility && source_id != 0 && source_id != 1 && source_id != 2 && source_id != designs->starting_scout ) ) {
+    if ( !designs || (!facility && (source_id<0 || source_id>=512
+        || (!m_game->m_simulation->value.designs.native_registry && source_id!=0 && source_id!=1 && source_id!=2 && source_id!=designs->starting_scout))) ) {
         THROW( "Production selector does not support this design" );
     }
     const auto target = m_game->MakeSmacProductionItem( m_owner, facility ? ProductionItemKind::Facility : ProductionItemKind::Unit, facility ? -source_id : source_id );
@@ -916,15 +918,31 @@ std::vector< Base::ProductionChoice > Base::GetSmacProductionChoices() const {
     RequireSmacProductionSelection();
     const auto* designs = m_game->m_simulation->value.designs.Find( GetSmacResourceContext().owner_simulation_id );
     if ( !designs ) { THROW( "Production choices require the owned design selection" ); }
-    std::vector< int32_t > ids{ 2, 1, 0 };
-    if ( designs->starting_scout != 2 ) { ids.push_back( designs->starting_scout ); }
+    const auto& state=m_game->m_simulation->value;const auto& settings=m_game->GetState()->m_settings.global;
+    std::vector<int32_t> ids;
+    if(state.designs.native_registry) {
+        if(state.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {THROW("Production ordering requires admitted project authority");}
+        unit::SmacProductionDesignContext context{designs->simulation_id,std::nullopt,std::nullopt,std::nullopt,0,false,false};
+        if(state.capabilities) {const auto& peer=state.capabilities->factions.at(designs->simulation_id-1).foreign;
+            context.peer_attack=peer[faction::SmacCapabilityState::Weapon];context.peer_defense=peer[faction::SmacCapabilityState::Armor];}
+        if(settings.GetSmacCombatRules() && settings.GetSmacCombatRules()->psi_ratios) {context.land_psi_ratio=settings.GetSmacCombatRules()->psi_ratios->at(0);}
+        const auto list=unit::BuildSmacProductionDesignList(*state.designs.native_registry,settings.GetSmacPredefinedUnitRules()->catalog,
+            *settings.GetSmacTechnologyRules(),*state.technology.Find(designs->simulation_id),context);
+        ids.assign(list.order.begin(),list.order.begin()+list.count);
+    } else {
+        // Old port saves lack raw candidate/name authority. Keep their prior
+        // limited projection; do not fabricate native records or ordering.
+        ids={2,1,0};if(designs->starting_scout!=2) {ids.push_back(designs->starting_scout);}
+    }
     std::vector< ProductionChoice > result;
     for ( const auto id : ids ) {
+        if(state.designs.native_registry && !(state.designs.native_registry->at(id)[48]&1)) {continue;}
         const auto item = m_game->MakeSmacProductionItem( m_owner, ProductionItemKind::Unit, id );
         if ( !m_game->IsSmacUnitProductionEligible( *this, item ) ) { continue; }
         const auto switched = PrepareSmacProductionSelection( id, true );
         const auto* def = m_game->ResolveSmacProductionPresentation( m_owner, id );
-        result.push_back( { id, def->m_name, m_game->GetSmacProductionCost( m_owner, item, this ), switched.state.minerals, switched.penalty_prompt_required } );
+        const auto name=state.designs.native_registry ? *unit::ReadSmacProductionDesign(state.designs.native_registry->at(id),id).name:def->m_name;
+        result.push_back( { id, name, m_game->GetSmacProductionCost( m_owner, item, this ), switched.state.minerals, switched.penalty_prompt_required } );
     }
     for(int32_t id=1;id<=33;++id) {
         if(!Game::SupportsSmacFacilityProduction(id)) {continue;}

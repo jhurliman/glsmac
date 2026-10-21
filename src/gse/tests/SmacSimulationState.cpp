@@ -1,3 +1,5 @@
+#include "fixtures/SmacProductionCandidates.h"
+#include "game/backend/unit/SmacProductionDesigns.h"
 #include "SmacSimulationState.h"
 #include "fixtures/SmacRegionalMilitary.h"
 #include "fixtures/SmacAirSummary.h"
@@ -781,6 +783,38 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(Rejects([&]{strategy.ApplyResearchPriorities(16);}) && strategy==before,"invalid priority answer changed state");
         GT_ASSERT(profile.worker_priorities[1]==2,"mutable strategy changed frozen personality");
         GT_OK();
+    });
+    task->AddTest("SMAC production design ranking matches three complete native orders and raw intrinsic overlays",GT(){
+        auto catalog=smac_startup_fixture::Units().catalog;const auto technologies=smac_rules_fixture::Technologies();
+        catalog.chassis.chassis.resize(9);catalog.weapons.weapons.resize(21);catalog.defenses.defenses.resize(10);
+        for(const auto& row:std::array<std::array<int,3>,4>{{{{0,1,0}},{{1,2,0}},{{3,3,1}},{{7,8,2}}}}) {
+            catalog.chassis.chassis[row[0]].speed=row[1];catalog.chassis.chassis[row[0]].triad=static_cast<loader::txt::ChassisTriad>(row[2]);}
+        for(const auto& row:std::array<std::array<int,2>,6>{{{{0,1}},{{1,4}},{{2,8}},{{14,0}},{{15,0}},{{16,0}}}}) {catalog.weapons.weapons[row[0]].offense=row[1];}
+        for(int i=0;i<3;++i) {catalog.defenses.defenses[i].rating=i+1;}
+        auto owner=State().technology.factions.front();owner.admission.simulation_id=1;owner.owned.fill(false);
+        const unit::SmacProductionDesignContext context{1,std::nullopt,std::nullopt,std::nullopt,0,false,false};
+        for(const auto& test:smac_production_candidates_fixture::Cases) {
+            unit::SmacOriginalDesignPool pool{};
+            for(const auto& r:test.records) {auto& row=pool.at(r.id);const std::string name=r.name;std::copy(name.begin(),name.end(),row.begin());
+                row[36]=r.chassis;row[37]=r.weapon;row[38]=r.armor;row[39]=1;row[42]=r.plan;row[44]=r.exclusion;row[48]=1;
+                row[50]=uint8_t(r.prerequisite);row[51]=uint8_t(uint32_t(r.prerequisite)>>8);}
+            const auto before=pool;const auto result=unit::BuildSmacProductionDesignList(pool,catalog,technologies,owner,context);
+            GT_ASSERT(result.count==test.count && result.order==test.order && pool==before,"Native128 production order, prefix or read-only contract differs");
+            for(const auto& entry:test.keys) {const auto at=std::find(result.order.begin(),result.order.end(),entry.first)-result.order.begin();
+                GT_ASSERT(result.keys.at(at)==entry.second,"Native production score differs");}
+            std::vector<int> eligible;
+            for(size_t i=0;i<result.count;++i) {const auto id=result.order[i];const auto& row=pool[id];
+                if((row[48]&1) && !(row[44]&2) && (id>=64 || unit::HasSmacProductionDesignTechnology(row,technologies,owner))) {eligible.push_back(id);}}
+            GT_ASSERT(eligible==test.eligible,"Filtering ranked prefix lost saved customs or included inactive/excluded rows");
+            const auto scout=unit::ReadSmacProductionDesign(pool[2],2);
+            GT_ASSERT(scout.name=="Scout overlay" && scout.chassis==(std::string(test.name)=="mutated_intrinsic_scout" ? 1u:0u),"Intrinsic reader regenerated a stock Scout instead of retaining its actual tuple/name");
+        }
+        const std::array<int32_t,2> ratios{{3,2}};
+        GT_ASSERT(unit::SmacProductionArmorScore(2,{1,9,std::nullopt,std::nullopt,0,false,false})==4
+            && unit::SmacProductionArmorScore(-1,{1,9,std::nullopt,ratios,0,false,false})==12
+            && unit::SmacProductionArmorScore(-1,{1,9,std::nullopt,ratios,25,false,true})==20
+            && unit::SmacProductionArmorScore(-1,{-1,std::nullopt,std::nullopt,std::nullopt,25,false,true})==-2,
+            "Four native doubled-defense helpers differ");GT_OK();
     });
     task->AddTest("SMAC air summary matches18 native predicates and8 PSI attack helpers",GT(){
         const std::optional<std::array<int32_t,2>> ratio=std::array<int32_t,2>{{3,2}};

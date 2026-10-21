@@ -1,3 +1,4 @@
+#include "SmacProductionDesigns.h"
 #include "SmacStartupDesignState.h"
 #include "SmacPredefinedDesigns.h"
 
@@ -109,13 +110,7 @@ std::string RecordName(const SmacOriginalDesign& row) {
     const auto end=std::find(row.begin(),row.begin()+32,uint8_t(0));
     return std::string(row.begin(),end);
 }
-SmacCustomDesign DecodeRegistryDesign(const SmacOriginalDesign& row,int id) {
-    SmacCustomDesign d;d.id=id;d.chassis=row[36];d.weapon=row[37];d.defense=row[38];d.reactor=row[39];
-    d.carry=row[40];d.cost=row[41];d.plan=row[42];d.faction_exclusion=row[44];
-    for(unsigned i=0;i<4;++i) {d.abilities|=uint32_t(row[32+i])<<(8*i);}
-    const auto flags=RecordFlags(row);d.active=(flags&1)!=0;d.explicitly_named=(flags&2)!=0;d.prototyped=(flags&4)!=0;
-    d.auxiliary_flags=uint16_t(flags&~7u);d.name=RecordName(row);return d;
-}
+
 void EncodeRegistryDesign(SmacOriginalDesign& row,const SmacCustomDesign& d) {
     if(d.chassis>255 || d.weapon>255 || d.defense>255 || d.faction_exclusion>255) {throw std::invalid_argument("Native design field exceeds byte");}
     if(d.name && *d.name!=RecordName(row)) {std::copy(d.name->begin(),d.name->end(),row.begin());row[d.name->size()]=0;}
@@ -150,7 +145,7 @@ void SmacStartupDesignState::RetainNativeRegistry(const SmacOriginalDesignPool& 
         std::vector<SmacCustomDesign> rows;
         for(int id=64*owner.simulation_id;id<64*(owner.simulation_id+1);++id) {
             if(!(RecordFlags(pool.at(id))&1)) {continue;}
-            auto row=DecodeRegistryDesign(pool[id],id);
+            auto row=ReadSmacProductionDesign(pool[id],id);
             const auto prior=std::find_if(owner.designs.begin(),owner.designs.end(),[&](const auto& d){return d.id==id;});
             if(prior!=owner.designs.end()) {row.riot=prior->riot;}
             rows.push_back(std::move(row));
@@ -163,7 +158,7 @@ SmacCustomDesign SmacStartupDesignState::RetainedCustomDesign(int32_t id,const S
     const auto& owner=*Find(id/64);
     for(const auto& design:owner.designs) {if(design.id==id) {return design;}}
     if(!native_registry || (native_registry->at(id)[48]&1)) {throw std::runtime_error("Custom design has no retained record");}
-    auto design=DecodeRegistryDesign(native_registry->at(id),id);
+    auto design=ReadSmacProductionDesign(native_registry->at(id),id);
     ValidateOwner(SmacDesignOwner{id/64,{design},2},catalog);return design;
 }
 void SmacStartupDesignState::SynchronizeNativeRegistry() {

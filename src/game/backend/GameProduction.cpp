@@ -10,6 +10,8 @@
 #include "map/tile/Tile.h"
 #include "resource/SmacMineralCostFactor.h"
 #include "unit/SmacWorkshop.h"
+#include "unit/UnsupportedConventionalDesign.h"
+#include "unit/SmacProductionDesigns.h"
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -77,6 +79,11 @@ bool Game::HasSmacProductionPrerequisite( const slot::Slot* owner, const base::P
 	settings::SmacTechnologyReference reference;
 	if ( item.kind == base::ProductionItemKind::Unit ) {
 		if ( *item.smac_source_id >= 64 ) { return true; } // own custom designs skip predefined prerequisite
+        if(m_simulation->value.designs.native_registry) {
+            const auto* owned=m_simulation->value.technology.Find(participant.simulation_id);
+            if(!owned) {throw std::runtime_error("Production technology ownership is unavailable");}
+            return unit::HasSmacProductionDesignTechnology(m_simulation->value.designs.native_registry->at(*item.smac_source_id),technologies,*owned);
+        }
 		const auto& units = global.GetSmacPredefinedUnitRules()->catalog.units;
 		const auto row = std::find_if( units.begin(), units.end(), [ & ]( const auto& row ) { return row.source_id == static_cast< uint32_t >( *item.smac_source_id ); } );
 		if ( row == units.end() ) { throw std::runtime_error( "Predefined production source is unavailable" ); }
@@ -143,6 +150,15 @@ bool Game::IsSmacUnitProductionEligibleAt( const slot::Slot* owner, const map::t
 		unit::ConventionalUnitState::Home::None, unit::SmacMoraleMode::Mode0 }, *m_simulation );
 	if ( !design.active || ( design.faction_exclusion & ( uint32_t( 1 ) << participant.simulation_id ) ) ) { return false; }
 	if ( !HasSmacProductionPrerequisite( owner, item ) ) { return false; }
+    const auto& campaign=m_state->m_settings.global.GetSmacCampaignRules();
+    if(design.plan==8 && campaign && (campaign->primary&0x00400000u)) {return false;}
+    if(*item.smac_source_id>=64 && *item.smac_source_id/64!=participant.simulation_id) {return false;}
+    // Eligibility is distinct from the port's current physical Unit support.
+    // Do not offer a target whose eventual factory would reject its profile;
+    // missing/corrupt authority still propagates rather than disappearing.
+    try { (void)ResolveConventionalIdentity({*item.smac_source_id,participant.simulation_id,1,0,0,false,
+        unit::ConventionalUnitState::Home::None,unit::SmacMoraleMode::Mode0},owner,*m_simulation); }
+    catch(const unit::UnsupportedConventionalDesign&) {return false;}
 	const auto& catalog = m_state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
 	if ( catalog.weapons.weapons.at( design.weapon ).mode == loader::txt::WeaponMode::Colonist ) {
 		RequireSmacLocalHumanOwner( owner );

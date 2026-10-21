@@ -177,7 +177,9 @@ Faction, Base, Unit and retirement-history byte; UI draft/selection may change
 as described. Non-retirement cases preserve all non-design buffers.
 
 Accepting the live overwrite calls `595ac0(selectedId,owner)` **before** the
-new design builder. In the three accepted live cases:
+new design builder. Its final store at `595d99` clears active bit 1 in the old
+record. Consequently the replacement builder's prototype-coverage scan must
+not count the retired record as still active. In the three accepted live cases:
 
 - Existing own unit 0/design 64 is removed through `5d8c40`; global count
   changes 2 to 1. Foreign unit 1/design 128 survives byte-exact and is copied

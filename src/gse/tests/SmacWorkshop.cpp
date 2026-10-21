@@ -47,6 +47,11 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
         unit::SmacRetirementTuple old{};std::copy_n(pool[64].begin()+32,8,old.begin());
         GT_ASSERT(accepted.success && accepted.retirement==64 && accepted.state.retirement_history[1]->cursor==1 && accepted.state.retirement_history[1]->slots[0]==old
             && accepted.state.native_registry->at(128)==pool[128] && state==full,"Accepted retirement omitted old tuple or changed foreign/source authority");
+        auto prototyped=state;prototyped.owners[0].designs[0].prototyped=true;prototyped.SynchronizeNativeRegistry();
+        auto reactor_edit=draft;reactor_edit.armor=1;reactor_edit.reactor=2;
+        const auto replacement=unit::PrepareSmacWorkshopCommit(prototyped,reactor_edit,catalog,tech,owner,counts,counts,true);
+        GT_ASSERT(replacement.retirement==64 && !replacement.state.owners[0].designs[0].prototyped,
+            "Retired source remained active during the new prototype-coverage scan");
         counts[64]=0;faction::SmacDesignCounts queued{};queued[64]=9;
         const auto silent=unit::PrepareSmacWorkshopCommit(state,draft,catalog,tech,owner,counts,queued);
         GT_ASSERT(silent.success && !silent.confirmation && !silent.retirement && silent.state.retirement_history==state.retirement_history,"Queue-only silent edit incorrectly retired/history-recorded a design");

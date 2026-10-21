@@ -348,6 +348,7 @@ SmacWorkshopPreparation PrepareSmacWorkshopCommit(const SmacStartupDesignState& 
         auto& history=prepared.state.retirement_history.at(owner.admission.simulation_id);
         if(!history) {throw std::runtime_error("Confirmed Workshop retirement requires retained tuple history");}
         SmacRetirementTuple tuple{};std::copy_n(pool.at(slot.selected).begin()+32,8,tuple.begin());history->Record(tuple);prepared.retirement=slot.selected;
+        pool.at(slot.selected)[48]&=uint8_t(~1u); // 595d99 precedes the replacement builder/prototype scan
     }
     BuildSmacWorkshopRecord(pool,size_t(slot.selected),draft,catalog,technologies,owner);
     auto automatic=NameSmacWorkshopDesign(pool,size_t(slot.selected),draft,catalog,owner.admission.simulation_id);

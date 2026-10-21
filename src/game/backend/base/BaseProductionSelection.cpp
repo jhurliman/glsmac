@@ -385,6 +385,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         }
         const bool stale=base->SmacWorkshopState()!=expected;
         bool warning=false,failed=false,confirmation=false,declined=false,reselected=false,retired=false;
+        auto notice=unit::SmacWorkshopNotice::None;std::string notice_name;
         int32_t design_id=int32_t(selected),overwrite_count=0,restored_armor=0;std::string overwrite_name,restored_name;
         unit::SmacWorkshopDraft response_draft{int32_t(selected),uint32_t(chassis),uint32_t(weapon),uint32_t(armor),uint32_t(abilities),uint8_t(reactor),supplied};
         std::optional<unit::UnitManager::PreparedConventionalRemoval> removal;
@@ -420,12 +421,20 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
                             const auto& old=next.native_registry->at(result.design_id);
                             overwrite_name=std::string(old.begin(),std::find(old.begin(),old.begin()+32,uint8_t(0)));
                             overwrite_count=economy.design_counts->at(result.design_id);
-                        } else if(!prepared.success) {throw std::runtime_error("Workshop allocation failed");}
+                        } else if(!prepared.success) {
+                            if(prepared.notice==unit::SmacWorkshopNotice::None) {throw std::runtime_error("Workshop allocation failed");}
+                            failed=true;notice=prepared.notice;
+                        }
                         if(apply && prepared.retirement) {stage_retirement(*prepared.retirement,true,removal,queues,base_updates);}
                         next=std::move(prepared.state);
                     }
                 } else {result=unit::CommitSmacWorkshopFirstDesign(next,draft,settings.GetSmacPredefinedUnitRules()->catalog,*settings.GetSmacTechnologyRules(),*owner);}
                 warning=result.intrinsic_name_warning;design_id=result.design_id;
+                if(warning && notice==unit::SmacWorkshopNotice::None) {notice=unit::SmacWorkshopNotice::IntrinsicName;}
+                if(notice==unit::SmacWorkshopNotice::IntrinsicName || notice==unit::SmacWorkshopNotice::IntrinsicType) {
+                    if(next.native_registry) {const auto& row=next.native_registry->at(design_id);notice_name.assign(row.begin(),std::find(row.begin(),row.begin()+32,uint8_t(0)));}
+                    else {notice_name=settings.GetSmacPredefinedUnitRules()->catalog.source.units.at(design_id).name;}
+                }
             } catch(const std::invalid_argument&) {failed=true;}
             catch(const std::runtime_error&) {failed=true;}
             if(apply && !done && !confirmation && next.native_registry) {
@@ -453,7 +462,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         }
         if(apply) {
             if(retired) {removal->Notify(GSE_CALL);}
-            GetState()->TriggerObject(this,"smac_workshop_commit",ARGS_F(this,base,done,stale,warning,design_id,failed,request,confirmation,declined,overwrite_count,overwrite_name,restored_armor,restored_name,reselected,response_draft) {
+            GetState()->TriggerObject(this,"smac_workshop_commit",ARGS_F(this,base,done,stale,warning,design_id,failed,request,confirmation,declined,overwrite_count,overwrite_name,restored_armor,restored_name,reselected,response_draft,notice,notice_name) {
                 {"base",base->Wrap(GSE_CALL)}, {"selection",base->CopySmacWorkshop(GSE_CALL,&response_draft)},
                 {"done",VALUE(gse::value::Bool,,done && !stale && !failed && !confirmation && !declined)}, {"stale",VALUE(gse::value::Bool,,stale)},
                 {"failed",VALUE(gse::value::Bool,,failed)},
@@ -462,6 +471,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
                 {"restore_draft",VALUE(gse::value::Bool,,reselected)},
                 {"restored_armor",VALUE(gse::value::Int,,restored_armor)}, {"restored_name",VALUE(gse::value::String,,restored_name)},
                 {"request_id",VALUE(gse::value::Int,,request)},
+                {"intrinsic_notice",VALUE(gse::value::Int,,int32_t(notice))}, {"intrinsic_notice_name",VALUE(gse::value::String,,notice_name)},
                 {"intrinsic_name_warning",VALUE(gse::value::Bool,,warning)}, {"design_id",VALUE(gse::value::Int,,design_id)}
             };});
         }

@@ -1192,4 +1192,32 @@ then exits0. Its supplied name/count do not claim a live full-bank campaign;
 the existing occupied-bank native fixture covers the actual transaction.
 All53,152 compared illustration/caption/opaque OK pixels match existing original
 surfaces. Body/choice glyph pixels are not part of that regional pixel gate.
-Separate INTRINSICTYPE/INTRINSICNAME informational dialogs remain to be connected.
+The intrinsic informational-dialog follow-up is documented below.
+
+### Intrinsic design informational dialogs
+
+The live commit reply now carries typed INTRINSICTYPE/INTRINSICNAME notices
+and the retained intrinsic name. Failed full-bank intrinsic edits preserve the
+world and the original Apply reselection/Done draft behavior. Normal active,
+tech-admitted matches include the selected intrinsic itself: a differing name
+warns but succeeds, while an empty/equal name succeeds without a warning. The
+return-zero unchanged branch is reached only after the whole alias scan fails;
+it can warn about the name or return silently. The corrected
+[branch contract](behavior/design-workshop-redesign-confirmation.md#selected-intrinsic-name-clarification)
+and [native selected-Scout receipt](behavior/design-workshop-intrinsic-name-branch-cases.json)
+keep those paths separate.
+
+Both installed informational templates reuse the illustrated modal with no
+choice rows and one OK button. A successful Done waits for acknowledgment before
+closing the Workshop; rejected Done remains open. Acknowledgment sends no new
+commit, and modifiers/duplicate acknowledgments/teardown are fenced.
+
+Validation: six affected native groups and three Workshop scripts pass under a
+1 MiB stack limit. Seven native groups and the UI script pass ASan/UBSan with
+eight production and two test translation units instrumented. Eight production
+translation units pass targeted correctness analysis. An instrumented actual
+SDL session opens Rename, types a differing name, accepts Done, displays the
+original-name warning and closes to the Base screen only after Escape; exit0,
+no tracked GL leaks. All53,152 compared illustration/caption/opaque OK pixels
+match the existing original surfaces; no full informational-body pixel parity
+or full-bank desktop capture is claimed. No save-format change is introduced.

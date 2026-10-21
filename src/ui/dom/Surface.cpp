@@ -70,6 +70,11 @@ Surface::Surface( DOM_ARGS_T )
         return WorkshopUpgradeText(GSE_CALL,int32_t(kind),{kind==0 ? a.name:SmacWorkshopModalDesignLabel(a,words),SmacWorkshopModalDesignLabel(b,words)},
             {int32_t(total),int32_t(available),int32_t(count)});
     }));
+    Method(GSE_CALL,"smacworkshopintrinsictext",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(2);N_GETVALUE(kind,0,Int);N_GETVALUE(name,1,String);
+        if(kind<1 || kind>2 || name.size()>31 || name.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop intrinsic warning context");}
+        return WorkshopUpgradeText(GSE_CALL,int32_t(kind)+7,{name,""},{0,0,0});
+    }));
     Method(GSE_CALL,"smacworkshopredesigntext",NATIVE_CALL(this) {
         N_EXPECT_ARGS(2);N_GETVALUE(name,0,String);N_GETVALUE(count,1,Int);
         if(name.size()>31 || name.find('\0')!=std::string::npos || count<0 || count>255) {throw std::invalid_argument("Invalid Workshop redesign text context");}
@@ -860,14 +865,14 @@ gse::Value* Surface::WorkshopRenameText(GSE_CALLABLE) {
 
 gse::Value* Surface::WorkshopUpgradeText(GSE_CALLABLE,int32_t kind,const std::array<std::string,2>& names,const std::array<int32_t,3>& numbers) {
     if(!m_workshop_upgrade_text) {
-        const std::array<std::string,8> tags{{"WHICHUPGRADE2","UPGRADEPROTO","UPGRADEPROTO2","UPGRADEPROTOCOST","UPGRADEPROTOCOST2","YESUPGRADE","NOUPGRADE","OVERWRITEPROTO"}};
+        const std::array<std::string,10> tags{{"WHICHUPGRADE2","UPGRADEPROTO","UPGRADEPROTO2","UPGRADEPROTOCOST","UPGRADEPROTOCOST2","YESUPGRADE","NOUPGRADE","OVERWRITEPROTO","INTRINSICTYPE","INTRINSICNAME"}};
         const auto read=[](const std::string& file){std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(file));return std::string(bytes.begin(),bytes.end());};
         const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
         if(labels.size()<=103) {throw std::invalid_argument("Incomplete Workshop Upgrade button labels");}
-        const auto script=read("script.txt");std::array<std::string,34> text;
+        const auto script=read("script.txt");std::array<std::string,42> text;
         for(size_t i=0;i<tags.size();++i) {const auto parsed=ReadSmacWorkshopModalTemplate(script,tags[i]);text[4*i]=parsed.caption;text[4*i+1]=parsed.body;
             for(size_t row=0;row<parsed.rows.size();++row) {text[4*i+2+row]=parsed.rows[row];}}
-        text[32]=labels[102];text[33]=labels[103];m_workshop_upgrade_text=std::move(text);
+        text[40]=labels[102];text[41]=labels[103];m_workshop_upgrade_text=std::move(text);
     }
     const auto& text=*m_workshop_upgrade_text;const size_t first=4*size_t(kind);
     const auto body=SubstituteSmacWorkshopModal(text.at(first+1),names,numbers);
@@ -883,7 +888,7 @@ gse::Value* Surface::WorkshopUpgradeText(GSE_CALLABLE,int32_t kind,const std::ar
     auto* parent=static_cast<gse::value::Object*>(WorkshopParentText(GSE_CALL));
     return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
         {"title",VALUE(gse::value::String,,text.at(first))}, {"body",VALUE(gse::value::String,,body)}, {"tokens",VALUE(gse::value::Array,,tokens)},
-        {"rows",VALUE(gse::value::Array,,rows)}, {"ok",VALUE(gse::value::String,,text[32])},{"cancel",VALUE(gse::value::String,,text[33])}, {"colors",parent->Get("colors")}
+        {"rows",VALUE(gse::value::Array,,rows)}, {"ok",VALUE(gse::value::String,,text[40])},{"cancel",VALUE(gse::value::String,,text[41])}, {"colors",parent->Get("colors")}
     });
 }
 gse::Value* Surface::WorkshopRetireText(GSE_CALLABLE,const std::string& name,int32_t count) {

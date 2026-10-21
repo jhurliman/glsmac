@@ -91,7 +91,7 @@ return {
                 this.picker_first = this.picker_state.first; this.paint_picker(); } return true; });
         this.picker_scroll.hide();
         this.picker.hide(); this.cards = [];
-        this.confirming = false;
+        this.confirming = false; this.intrinsic_message = false;
         this.redesign_dialog = #include('./workshop_redesign'); this.redesign_dialog.init(p);
         this.overwrite_window = this.redesign_dialog.window;
         this.picker.on('keydown', (e) => { this.picker_key(e); return true; });
@@ -114,6 +114,13 @@ return {
             this.update_labels(); this.update_armor();
             this.render_strip();
             if (e.stale) { this.message.text = 'Game state changed. Please check your design.'; return; }
+            if (#is_defined(e.intrinsic_notice) && e.intrinsic_notice > 0) {
+                this.message.text = '';
+                if (e.intrinsic_notice == 3) { return; }
+                this.confirming = true; this.intrinsic_message = true; this.notice_done = e.done;
+                if (e.intrinsic_name_warning) { this.draft_name = ''; }
+                this.redesign_dialog.open(this, e.intrinsic_notice_name, 0, e.intrinsic_notice); return;
+            }
             if (e.failed) { this.message.text = 'This design cannot be saved.'; return; }
             if (#is_defined(e.confirmation) && e.confirmation) {
                 this.confirming = true; this.confirm_done = this.pending_done; this.confirm_expected = e.selection.expected_state;
@@ -169,7 +176,7 @@ return {
     open: (base, data) => {
         if (!#is_defined(this.parent_text)) { this.parent_text = this.components.smacworkshopparenttext(); }
         this.mineral_factor = data.mineral_factor;
-        this.base = base; this.selection = data; this.active = true; this.pending = false; this.pending_obsolete = false; this.pending_rename = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.overwrite_window.hide();
+        this.base = base; this.selection = data; this.active = true; this.pending = false; this.pending_obsolete = false; this.pending_rename = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide();
         this.obsolete_button.text = #uppercase(this.parent_text.obsolete); this.obsolete_button.color = this.parent_text.colors[65];
         this.rename_button.text = #uppercase(this.parent_text.rename); this.rename_button.color = this.parent_text.colors[65];
         this.pending_upgrade = false; this.upgrade_button.text = #uppercase(this.parent_text.upgrade); this.upgrade_button.color = this.parent_text.colors[65];
@@ -439,9 +446,14 @@ return {
         if (!this.active || this.pending || this.confirming) { return; }
         this.submit_choice(done, (0 - 1));
     },
-    render_overwrite: (name, count) => { this.redesign_dialog.open(this, name, count); },
+    render_overwrite: (name, count) => { this.intrinsic_message = false; this.redesign_dialog.open(this, name, count, 0); },
+    answer_intrinsic: () => {
+        if (!this.active || this.pending || !this.confirming || !this.intrinsic_message) { return; }
+        const done = this.notice_done; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide();
+        if (done) { this.hide_view(); }
+    },
     answer_overwrite: (accept) => {
-        if (!this.active || this.pending || !this.confirming) { return; }
+        if (!this.active || this.pending || !this.confirming || this.intrinsic_message) { return; }
         this.confirming = false; this.redesign_dialog.hide(); this.submit_choice(this.confirm_done, accept ? 1 : 0);
     },
     submit_choice: (done, choice) => {
@@ -457,5 +469,5 @@ return {
         if (choice >= 0) { fields = fields + {overwrite: choice}; }
         this.p.game.event('commit_smac_workshop', fields);
     },
-    hide_view: () => { this.picker_active = false; this.ability_dialog.hide(); this.rename_dialog.hide(); this.retire_dialog.hide(); this.upgrade_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.redesign_dialog.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); this.console.hide(); },
+    hide_view: () => { this.picker_active = false; this.ability_dialog.hide(); this.rename_dialog.hide(); this.retire_dialog.hide(); this.upgrade_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); this.console.hide(); },
 };

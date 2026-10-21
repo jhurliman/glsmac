@@ -962,7 +962,10 @@ SmacWorkshopPreparation PrepareSmacWorkshopCommit(const SmacStartupDesignState& 
     if(!state.native_registry || !catalog.workshop_name_labels || !state.Find(owner.admission.simulation_id)
         || draft.name.size()>31 || draft.name.find('\0')!=std::string::npos) {throw std::invalid_argument("Workshop common commit requires retained records, naming text and owned draft");}
     SmacWorkshopPreparation prepared{state,{draft.selected_design,false}};
-    if(const auto reused=ReuseSmacWorkshopDesign(prepared.state,draft,catalog,technologies,owner)) {prepared.result=*reused;prepared.success=true;return prepared;}
+    if(const auto reused=ReuseSmacWorkshopDesign(prepared.state,draft,catalog,technologies,owner)) {
+        prepared.result=*reused;prepared.success=true;
+        if(reused->intrinsic_name_warning) {prepared.notice=SmacWorkshopNotice::IntrinsicName;}return prepared;
+    }
     const auto require=[&](SmacWorkshopComponent kind,uint32_t id) {
         const auto choices=SmacWorkshopChoices(kind,catalog,technologies,owner);
         if(std::none_of(choices.begin(),choices.end(),[&](const auto& row){return row.component_id==id && row.technology_available;})) {throw std::invalid_argument("Workshop component technology is unavailable");}
@@ -971,7 +974,14 @@ SmacWorkshopPreparation PrepareSmacWorkshopCommit(const SmacStartupDesignState& 
     require(SmacWorkshopComponent::Armor,draft.armor);require(SmacWorkshopComponent::Reactor,draft.reactor);
     const auto slot=ChooseSmacWorkshopSlot(*state.native_registry,draft,units,production,technologies,owner);
     prepared.result.design_id=slot.selected;prepared.confirmation=slot.confirmation;
-    if(slot.kind==SmacWorkshopSlotKind::IntrinsicFailure) {prepared.result.intrinsic_name_warning=true;return prepared;}
+    if(slot.kind==SmacWorkshopSlotKind::IntrinsicFailure) {
+        const auto& row=state.native_registry->at(slot.selected);
+        const uint32_t mask=uint32_t(row[32])|(uint32_t(row[33])<<8)|(uint32_t(row[34])<<16)|(uint32_t(row[35])<<24);
+        const bool unchanged=row[36]==draft.chassis && row[37]==draft.weapon && row[38]==draft.armor && row[39]==draft.reactor && mask==draft.abilities;
+        const std::string name(row.begin(),std::find(row.begin(),row.begin()+32,uint8_t(0)));
+        prepared.notice=unchanged ? (!draft.name.empty() && draft.name!=name ? SmacWorkshopNotice::IntrinsicName:SmacWorkshopNotice::UnchangedIntrinsic):SmacWorkshopNotice::IntrinsicType;
+        prepared.result.intrinsic_name_warning=prepared.notice==SmacWorkshopNotice::IntrinsicName;return prepared;
+    }
     if(slot.kind!=SmacWorkshopSlotKind::Build) {throw std::runtime_error("Workshop allocation and alias passes disagree");}
     if(slot.confirmation && !confirm) {return prepared;}
     auto pool=*state.native_registry;

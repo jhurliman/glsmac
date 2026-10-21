@@ -1115,7 +1115,7 @@ the real instrumented dialog. See the
 Upgrade, automatic family controls, persistent preferences, animated preview
 and complete screen parity remain open; this does not complete the Workshop.
 
-### Upgrade transaction and pending UI
+### Stored-design Upgrade action
 
 `SmacWorkshopUpgrade.h` owns the original action7 candidate scan,504eb0 quote
 and detached design flags of504cc0. The queued `upgrade_smac_workshop`
@@ -1143,44 +1143,30 @@ source after Upgrade. These identities use existing conventional stat rules;
 this does not remove the separate narrow tactical combat, Speeder provenance,
 native/PSI, other ability or component-rendering restrictions.
 
-Validation:46 affected native groups pass, including conventional/factory and
-startup rejection consumers. Four focused groups pass ASan/UBSan with19
-production and two test translation units instrumented; targeted correctness
-analysis is clean for seven production/consumer translation units.
+The original chooser, confirmation, insufficient-funds, no-target and zero-cache
+completion templates load from installed SCRIPT text. Single-pass substitution
+preserves plural forms, word boundaries and emphasis. Stored labels include
+localized Psi/Sea/Air, reactor suffixes and ascending ability abbreviations;
+[eleven stat strings and three prompt pairs](behavior/design-workshop-upgrade-strings.md)
+are checked against native receipts. The chooser appends the original unprototyped
+` *` marker to the right stats field under its exact source/target flag condition.
+Unsaved draft components do not enter this stored-source action.
 
-The action still needs the original chooser, affordability, confirmation and
-zero-cache informational dialogs, full prompt formatting, remaining component
-bindings and visual validation. Unsaved draft components must stay out of this
-stored-source action. Do not route it through Retire/history or claim the
-complete Workshop from the transaction tests.
+The [long-list contract](behavior/design-workshop-upgrade-long-list.md) controls
+column-major layout, native horizontal-key direction, literal-pipe measurement,
+height and placement. Actual SDL harnesses render all13/63 synthetic rows and
+select the last row. Measured maximum widths are166/174; resulting client sizes
+are757x300 and1177x382. The latter reproduces native off-screen overflow. These
+copied-data harnesses do not assert an all-technology campaign or full grid
+pixel parity.
 
-The original Upgrade templates are now loaded by the Surface adapter, with
-single-pass plural/numeric substitution and word-preserving emphasis spans.
-The Upgrade button and correlated dialog flow are connected: two-target chooser,
-confirmation, affordability, no-target and zero-cache completion views. The
-first real SDL run opened the live Scout-to-Synthmetal confirmation (cached1,
-30 credits,112 available), declined and closed, exiting0 without tracked GL
-leaks. Three affected native groups and the expanded UI script pass; analysis
-of Surface and five UI consumers is clean. This is an initial normal-build
-capture, not final pixel parity or sanitizer evidence for the new adapter.
-Full stored-design string formatting and measured long-list column geometry
-are the next corrections before publishing the completed Upgrade UI.
-
-The real SDL follow-up accepts Upgrade through selected-row Escape, reselects
-Synthmetal Garrison and exits0. Choice rows now preserve the native list's
-pattern phase instead of reversing its alternating scanlines. Against the
-owned original surfaces, all79,352 compared pixels match:24,000 illustration,
-16,056 complete caption frame,13,096 opaque OK pixels and26,200 choice-row
-pixels, including their glyphs. Four OK corners are transparent; the live
-body uses different names/count/credits and is not included in this claim.
-The six affected UI scripts pass after the phase correction. The same row
-phase correction is also applied to Retire in this branch.
-
-The newly imported [stored-string contract](behavior/design-workshop-upgrade-strings.md)
-and [long-list contract](behavior/design-workshop-upgrade-long-list.md) resolve
-the remaining implementation questions: short ability modifiers concatenate
-without separators; localized Psi/Sea/Air belong to the stored-stat formatter;
-long chooser lists are column-major with no scrollbar. Their geometry is
-text-dependent, including the literal pipe in the Arial Narrow measurement,
-and intentionally can extend off-screen. These formulas are ready to replace
-the initial single-column chooser and basic prompt-label implementation.
+Validation:46 affected native groups passed for the transaction and consumers;
+six focused groups and the UI script pass ASan/UBSan with19 production and two
+test translation units instrumented. Production/consumer correctness analysis
+is clean. The instrumented actual-game capture accepts the live Scout-to-
+Synthmetal upgrade through selected-row Escape, reselects its target and exits0.
+All79,352 compared pixels match the owned original:24,000 illustration,16,056
+caption,13,096 opaque initialized OK pixels and26,200 choice-row pixels with
+glyphs. Four OK corners are transparent. The body contains different live
+names/count/credits and is excluded from this pixel claim. This software,
+no-audio run makes no hardware-performance or audio claim.

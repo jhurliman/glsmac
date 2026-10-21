@@ -12,6 +12,7 @@
 #include "fixtures/WorkshopData.h"
 #include "fixtures/WorkshopEdit.h"
 #include "ui/dom/SmacEditState.h"
+#include "ui/dom/SmacWorkshopModalText.h"
 #include "fixtures/WorkshopAbilities.h"
 #include "fixtures/WorkshopSavedCommits.h"
 #include "fixtures/WorkshopUpgrade.h"
@@ -33,6 +34,28 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop Upgrade modal templates preserve owned text and emphasis word boundaries",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream file(std::string(assets)+"/script.txt",std::ios::binary);const std::string source(std::istreambuf_iterator<char>(file),{});
+        using namespace ::ui::dom;
+        const auto confirm=ReadSmacWorkshopModalTemplate(source,"UPGRADEPROTO");
+        GT_ASSERT(confirm.caption=="Operations Director" && confirm.rows.size()==2,"Original Upgrade confirmation text missing");
+        const auto one=SubstituteSmacWorkshopModal(confirm.body,{"Source ($NUM0)","Target"},{100,2000,1});
+        const auto many=SubstituteSmacWorkshopModal(confirm.body,{"Source","Target"},{640,2000,2});
+        GT_ASSERT(one.find("our single")!=std::string::npos && one.find("Source ($NUM0) unit ")!=std::string::npos
+            && one.find("100 energy")!=std::string::npos && many.find("all of our")!=std::string::npos && many.find("Source units ")!=std::string::npos,
+            "Upgrade plural/numeric substitutions recursed into stored text or lost singular form");
+        for(const auto& tag:{"WHICHUPGRADE2","UPGRADEPROTOCOST","UPGRADEPROTOCOST2","YESUPGRADE","NOUPGRADE"}) {
+            GT_ASSERT(ReadSmacWorkshopModalTemplate(source,tag).rows.empty(),"Informational/chooser template acquired invented choice rows");}
+        const auto unprototyped=ReadSmacWorkshopModalTemplate(source,"UPGRADEPROTO2");
+        const auto text=SubstituteSmacWorkshopModal(unprototyped.body,{"Source","Target"},{640,2000,2});
+        const auto words=SmacWorkshopModalWords(text);std::string flat,emphasis;
+        for(const auto& word:words) {std::string actual;for(const auto& span:word.spans) {actual+=span.text;if(span.emphasis) {emphasis+=span.text;}}
+            GT_ASSERT(actual==word.text,"Highlight split lost its indivisible wrap word");flat+=word.text;}
+        GT_ASSERT(flat.find('{')==std::string::npos && flat.find('}')==std::string::npos && emphasis=="not yet been prototyped,",
+            "Prototype warning highlight escaped or acquired neighboring spaces");
+        GT_ASSERT(Rejects([&]{ReadSmacWorkshopModalTemplate(source+"\n#YESUPGRADE\n#caption Duplicate\nRepeated\n","YESUPGRADE");}),"Duplicate modal template admitted");GT_OK();
+    });
     task->AddTest("SMAC Workshop Upgrade matches25 native candidate and cached quote controls",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);const std::string source(std::istreambuf_iterator<char>(file),{});

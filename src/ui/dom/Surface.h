@@ -65,10 +65,12 @@ private:
     gse::Value* WorkshopParentText(GSE_CALLABLE);
     gse::Value* WorkshopRenameText(GSE_CALLABLE);
     gse::Value* WorkshopRetireText(GSE_CALLABLE,const std::string& name,int32_t count);
+    gse::Value* WorkshopUpgradeText(GSE_CALLABLE,int32_t kind,const std::array<std::string,2>& names,const std::array<int32_t,3>& numbers);
     gse::Value* WorkshopAbilityText(GSE_CALLABLE,const std::string& technology);
     std::optional<std::array<std::string,8>> m_workshop_picker_text;
-    std::optional<std::array<std::string,27>> m_workshop_parent_text;
+    std::optional<std::array<std::string,28>> m_workshop_parent_text;
     std::optional<std::array<std::string,9>> m_workshop_retire_text;
+    std::optional<std::array<std::string,30>> m_workshop_upgrade_text;
     std::optional<std::array<std::string,4>> m_workshop_rename_text;
     bool m_workshop_console_backing=false;
     std::optional<std::array<std::string,12>> m_workshop_ability_text;

@@ -1,4 +1,5 @@
 #include "Surface.h"
+#include "SmacWorkshopModalText.h"
 
 #include <memory>
 
@@ -48,6 +49,11 @@ Surface::Surface( DOM_ARGS_T )
     }));
     Method(GSE_CALL,"smacworkshoprenametext",NATIVE_CALL(this) {
         N_EXPECT_ARGS(0);return WorkshopRenameText(GSE_CALL);
+    }));
+    Method(GSE_CALL,"smacworkshopupgradetext",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(6);N_GETVALUE(kind,0,Int);N_GETVALUE(source,1,String);N_GETVALUE(target,2,String);N_GETVALUE(count,3,Int);N_GETVALUE(total,4,Int);N_GETVALUE(available,5,Int);
+        if(kind<0 || kind>6 || source.size()>1024 || target.size()>1024 || count<0 || count>255 || total<0 || total>INT32_MAX || available<INT32_MIN || available>INT32_MAX) {throw std::invalid_argument("Invalid Workshop Upgrade text context");}
+        return WorkshopUpgradeText(GSE_CALL,int32_t(kind),{source,target},{int32_t(total),int32_t(available),int32_t(count)});
     }));
     Method(GSE_CALL,"smacworkshopretiretext",NATIVE_CALL(this) {
         N_EXPECT_ARGS(2);N_GETVALUE(name,0,String);N_GETVALUE(count,1,Int);
@@ -777,7 +783,7 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         const auto design=loader::txt::TXTLoader::ReadUniqueSection(source,"DESIGNLABELS");
         const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
         if(design.size()!=16 || labels.size()<=926) {throw std::invalid_argument("Incomplete Workshop parent text source");}
-        std::array<std::string,27> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];text[24]=labels[757];text[25]=labels[126];text[26]=labels[926];
+        std::array<std::string,28> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];text[24]=labels[757];text[25]=labels[126];text[26]=labels[926];text[27]=labels[758];
         // LABELS includes its count at index0; offsets are four-byte entries.
         const std::array<size_t,7> status_indices{916,914,918,917,782,783,915};
         for(size_t i=0;i<status_indices.size();++i) {text[17+i]=labels[status_indices[i]];}
@@ -801,6 +807,7 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         {"obsolete",VALUE(gse::value::String,,m_workshop_parent_text->at(24))},
         {"rename",VALUE(gse::value::String,,m_workshop_parent_text->at(25))},
         {"retire",VALUE(gse::value::String,,m_workshop_parent_text->at(26))},
+        {"upgrade",VALUE(gse::value::String,,m_workshop_parent_text->at(27))},
         {"weapon",picker->Get("weapon")}, {"equipment",picker->Get("equipment")}, {"psi",picker->Get("psi")}
     });
 }
@@ -831,6 +838,34 @@ gse::Value* Surface::WorkshopRenameText(GSE_CALLABLE) {
     });
 }
 
+gse::Value* Surface::WorkshopUpgradeText(GSE_CALLABLE,int32_t kind,const std::array<std::string,2>& names,const std::array<int32_t,3>& numbers) {
+    if(!m_workshop_upgrade_text) {
+        const std::array<std::string,7> tags{{"WHICHUPGRADE2","UPGRADEPROTO","UPGRADEPROTO2","UPGRADEPROTOCOST","UPGRADEPROTOCOST2","YESUPGRADE","NOUPGRADE"}};
+        const auto read=[](const std::string& file){std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(file));return std::string(bytes.begin(),bytes.end());};
+        const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
+        if(labels.size()<=103) {throw std::invalid_argument("Incomplete Workshop Upgrade button labels");}
+        const auto script=read("script.txt");std::array<std::string,30> text;
+        for(size_t i=0;i<tags.size();++i) {const auto parsed=ReadSmacWorkshopModalTemplate(script,tags[i]);text[4*i]=parsed.caption;text[4*i+1]=parsed.body;
+            for(size_t row=0;row<parsed.rows.size();++row) {text[4*i+2+row]=parsed.rows[row];}}
+        text[28]=labels[102];text[29]=labels[103];m_workshop_upgrade_text=std::move(text);
+    }
+    const auto& text=*m_workshop_upgrade_text;const size_t first=4*size_t(kind);
+    const auto body=SubstituteSmacWorkshopModal(text.at(first+1),names,numbers);
+    gse::value::array_elements_t rows,tokens;
+    for(size_t i=0;i<2;++i) {if(!text.at(first+2+i).empty()) {rows.push_back(VALUE(gse::value::String,,SubstituteSmacWorkshopModal(text.at(first+2+i),names,numbers)));}}
+    for(const auto& word:SmacWorkshopModalWords(body)) {
+        gse::value::array_elements_t spans;
+        for(const auto& span:word.spans) {spans.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+            {"text",VALUE(gse::value::String,,span.text)}, {"color",VALUE(gse::value::Int,,span.emphasis ? 157:226)}
+        }));}
+        tokens.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{{"text",VALUE(gse::value::String,,word.text)},{"spans",VALUE(gse::value::Array,,spans)}}));
+    }
+    auto* parent=static_cast<gse::value::Object*>(WorkshopParentText(GSE_CALL));
+    return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+        {"title",VALUE(gse::value::String,,text.at(first))}, {"body",VALUE(gse::value::String,,body)}, {"tokens",VALUE(gse::value::Array,,tokens)},
+        {"rows",VALUE(gse::value::Array,,rows)}, {"ok",VALUE(gse::value::String,,text[28])},{"cancel",VALUE(gse::value::String,,text[29])}, {"colors",parent->Get("colors")}
+    });
+}
 gse::Value* Surface::WorkshopRetireText(GSE_CALLABLE,const std::string& name,int32_t count) {
     if(!m_workshop_retire_text) {
         const auto read=[](const std::string& file){std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(file));return std::string(bytes.begin(),bytes.end());};

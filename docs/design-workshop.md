@@ -1153,3 +1153,15 @@ zero-cache informational dialogs, full prompt formatting, remaining component
 bindings and visual validation. Unsaved draft components must stay out of this
 stored-source action. Do not route it through Retire/history or claim the
 complete Workshop from the transaction tests.
+
+The original Upgrade templates are now loaded by the Surface adapter, with
+single-pass plural/numeric substitution and word-preserving emphasis spans.
+The Upgrade button and correlated dialog flow are connected: two-target chooser,
+confirmation, affordability, no-target and zero-cache completion views. The
+first real SDL run opened the live Scout-to-Synthmetal confirmation (cached1,
+30 credits,112 available), declined and closed, exiting0 without tracked GL
+leaks. Three affected native groups and the expanded UI script pass; analysis
+of Surface and five UI consumers is clean. This is an initial normal-build
+capture, not final pixel parity or sanitizer evidence for the new adapter.
+Full stored-design string formatting and measured long-list column geometry
+are the next corrections before publishing the completed Upgrade UI.

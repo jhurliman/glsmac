@@ -2275,6 +2275,49 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(rejected && fixture.Snapshot()==before,"Foreign editor request passed authority checks");GT_OK();
         });
     });
+    task->AddTest("SMAC Workshop owner queries work without Bases and preserve Base query results",[](GSE*,context::Context*)->std::string {
+        const auto source=[](const std::string& filename) {
+            auto text=TanksSource(filename);size_t at=0;
+            while((at=text.find("Tech50",at))!=std::string::npos) {text.replace(at,6,"Neural");at+=6;}
+            return text;
+        };
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(source,true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* player=game->GetState()->m_slots->GetSlot(0).GetPlayer();
+            auto* object=static_cast<value::Object*>(player->Wrap(GSE_CALL));
+            const auto call=[&](const char* method,const value::function_arguments_t& args)->Value* {
+                return static_cast<value::Callable*>(object->Get(method))->Run(GSE_CALL,args);
+            };
+            GT_ASSERT(game->GetBM()->GetBases().empty(),"No-Base query fixture unexpectedly has a Base");
+            const auto before=fixture.Snapshot();const auto next_base=Base::GetNextId();const auto next_unit=unit::Unit::GetNextId();
+            auto* data=call("get_smac_workshop",{});
+            value::function_arguments_t draft{VALUE(value::Int,,2),VALUE(value::Int,,0),VALUE(value::Int,,0),VALUE(value::Int,,0),
+                VALUE(value::Int,,1),VALUE(value::Int,,0),VALUE(value::String,,"Owner draft")};
+            call("get_smac_workshop",draft);
+            auto abilities=draft;abilities.insert(abilities.end(),{VALUE(value::Int,,-1),VALUE(value::Int,,-1),VALUE(value::Int,,0)});
+            call("get_smac_workshop_abilities",abilities);
+            auto edit=draft;edit.insert(edit.end(),{VALUE(value::Int,,-1),VALUE(value::Int,,-1),VALUE(value::Int,,0),VALUE(value::Int,,0),VALUE(value::Bool,,false)});
+            call("get_smac_workshop_edit",edit);
+            GT_ASSERT(data->type==VT_OBJECT && fixture.Snapshot()==before && game->GetBM()->GetBases().empty()
+                && Base::GetNextId()==next_base && unit::Unit::GetNextId()==next_unit,"Owner queries allocated a Base/Unit or changed world state");
+            auto foreign=draft;foreign[0]=VALUE(value::Int,,128);
+            GT_ASSERT(Rejects([&]{call("get_smac_workshop",foreign);}),"Owner query accepted another faction bank");
+            auto* outsider=game->GetState()->m_slots->GetSlot(6).GetPlayer();
+            auto* other=static_cast<value::Object*>(outsider->Wrap(GSE_CALL));
+            GT_ASSERT(Rejects([&]{static_cast<value::Callable*>(other->Get("get_smac_workshop"))->Run(GSE_CALL,{});}),"Foreign Player queried local Workshop");
+            auto* base=Populate(GSE_CALL,fixture,false);const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+            auto* wrapped=static_cast<value::Object*>(base->Wrap(GSE_CALL));
+            for(const auto& query:std::vector<std::pair<std::string,value::function_arguments_t>>{
+                {"get_smac_workshop",draft},{"get_smac_workshop_abilities",abilities},{"get_smac_workshop_edit",edit}}) {
+                auto* actual=static_cast<value::Callable*>(wrapped->Get(query.first))->Run(GSE_CALL,query.second);
+                GT_ASSERT(actual->ToString()==call(query.first.c_str(),query.second)->ToString(),"Base and owner Workshop queries differ");
+            }
+            auto* retained=static_cast<value::Callable*>(object->Get("get_smac_workshop"));
+            game->GetState()->RetireGameCallbacks();
+            GT_ASSERT(Rejects([&]{retained->Run(GSE_CALL,{});}),"Workshop query crossed its retired game session");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Workshop normal opening retains New selection reactor and entry phase effects",[](GSE*,context::Context*)->std::string {
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         const auto source=[&](const std::string& filename) {std::ifstream file(std::string(assets)+"/"+filename,std::ios::binary);

@@ -85,6 +85,7 @@ class ResourceManager;
 }
 
 namespace unit {
+struct SmacWorkshopDraft;
 class UnitManager;
 class Def;
 }
@@ -431,6 +432,11 @@ public:
 	// Positional source identity is explicit; opaque IDs are never parsed.
 	base::ProductionItem MakeSmacProductionItem( const slot::Slot* owner, base::ProductionItemKind kind, int32_t source_id ) const;
 	void ValidateSmacProductionState( const slot::Slot* owner, const base::ProductionState& state ) const;
+    // Shared editor queries require a real local owner, not a Base/production proxy.
+    int32_t RequireSmacWorkshopOwner(const slot::Slot* owner) const;
+    std::string SmacWorkshopState(const slot::Slot* owner) const;
+    gse::Value* CopySmacWorkshop(GSE_CALLABLE,const slot::Slot* owner,const unit::SmacWorkshopDraft* draft=nullptr) const;
+    gse::Value* QuerySmacWorkshop(GSE_CALLABLE,const slot::Slot* owner,const std::string& method,const gse::value::function_arguments_t& arguments) const;
 	int32_t GetSmacProductionMineralFactor(const slot::Slot* owner) const;
 	int32_t GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item, const base::Base* queried_base = nullptr ) const;
 	// Only the ordinary prerequisite query, not active/role/coastal buildability.

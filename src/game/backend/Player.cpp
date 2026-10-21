@@ -208,6 +208,16 @@ WRAPIMPL_BEGIN( Player )
 				VALUE( gse::value::Bool, , m_role == PR_SINGLE || m_role == PR_HOST )
 			},
 		};
+    const auto workshop_session=m_roster_state ? m_roster_state->CaptureGameSession():State::game_session_t{};
+    for(const auto* method:{"get_smac_workshop","get_smac_workshop_abilities","get_smac_workshop_edit"}) {
+        const std::string query=method;
+        properties.emplace(query,NATIVE_CALL(this,game,identity,notification,query,workshop_session) {
+            // Test identity before dereferencing this: methods may outlive Player.
+            if(!identity->active || notification || !workshop_session || !workshop_session->IsActive()) {GSE_ERROR(gse::EC.GAME_ERROR,"Workshop Player is read-only or expired");}
+            if(game->GetPlayer()!=this) {GSE_ERROR(gse::EC.GAME_ERROR,"Workshop requires the current local Player");}
+            return game->QuerySmacWorkshop(GSE_CALL,GetSlot(),query,arguments);
+        }));
+    }
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Player )

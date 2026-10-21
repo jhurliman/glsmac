@@ -1165,3 +1165,22 @@ of Surface and five UI consumers is clean. This is an initial normal-build
 capture, not final pixel parity or sanitizer evidence for the new adapter.
 Full stored-design string formatting and measured long-list column geometry
 are the next corrections before publishing the completed Upgrade UI.
+
+The real SDL follow-up accepts Upgrade through selected-row Escape, reselects
+Synthmetal Garrison and exits0. Choice rows now preserve the native list's
+pattern phase instead of reversing its alternating scanlines. Against the
+owned original surfaces, all79,352 compared pixels match:24,000 illustration,
+16,056 complete caption frame,13,096 opaque OK pixels and26,200 choice-row
+pixels, including their glyphs. Four OK corners are transparent; the live
+body uses different names/count/credits and is not included in this claim.
+The six affected UI scripts pass after the phase correction. The same row
+phase correction is also applied to Retire in this branch.
+
+The newly imported [stored-string contract](behavior/design-workshop-upgrade-strings.md)
+and [long-list contract](behavior/design-workshop-upgrade-long-list.md) resolve
+the remaining implementation questions: short ability modifiers concatenate
+without separators; localized Psi/Sea/Air belong to the stored-stat formatter;
+long chooser lists are column-major with no scrollbar. Their geometry is
+text-dependent, including the literal pipe in the Arial Narrow measurement,
+and intentionally can extend off-screen. These formulas are ready to replace
+the initial single-column chooser and basic prompt-label implementation.

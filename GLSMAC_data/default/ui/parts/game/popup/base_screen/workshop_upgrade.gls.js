@@ -83,7 +83,7 @@ view = {
         view.selected = 0; view.hovered = (0 - 1); view.list_top = list_top; view.row_width = chooser ? 657 : 655;
         let index = 0;
         for (option of view.options) {
-            const at = index; const button = view.window.button({left: 33, top: list_top + 1 + index * 22, width: view.row_width, height: 20, background: 'transparent'});
+            const at = index; const button = view.window.button({left: 33, top: list_top + 1 + index * 22, width: view.row_width, height: 20, smac_frame_phase: [0,1], background: 'transparent'});
             const label = button.text({left: 3, baseline: 16, font: 'arialn.ttf:16:mono-bold', text: option.text});
             const stats = button.text({baseline: 16, font: 'arialn.ttf:16:mono-bold', text: option.stats}); stats.left = view.row_width - 3 - stats.measure().width;
             button.on('mousedown', (ev) => { if (ev.button == 'left') { view.selected = at; view.paint(); } return true; });

@@ -1,0 +1,308 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Eleven original5935c0 calls on controlled stored records with declared prefix; three original504fe0 prompt calls ending in supplied return0. Loaded original ALPHA/LABELS strings. No UI or engine conversion.",
+  "ability_names": [
+    "Super",
+    "",
+    "Cloaked",
+    "Amphibious",
+    "Drop",
+    "SAM",
+    "Sub",
+    "Carrier",
+    "AAA",
+    "ECM",
+    "Grav",
+    "Empath",
+    "Secure",
+    "Fungicidal",
+    "Trained",
+    "Artillery",
+    "Clean",
+    "Blink",
+    "Trance",
+    "Heavy",
+    "X",
+    "Repair",
+    "Police",
+    "Slow"
+  ],
+  "labels": {
+    "0x310": "Psi",
+    "0x288": "Air",
+    "0x28c": "Sea",
+    "0xbd4": "UPGRADE",
+    "0xc5c": "Upgrade all units of this type to^another unit design you have created."
+  },
+  "cases": [
+    {
+      "id": "plain",
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "ability_mask": "0x0",
+      "reactor": 1,
+      "initial": "prefix:",
+      "output": "prefix:1-1-1",
+      "record": "000000000000000000000000000000000000000000000000000000000000000000000000000000010001000a0002ff0005010000",
+      "resolved_rules": {
+        "offense": 1,
+        "defense": 1,
+        "speed": 1,
+        "triad": 0,
+        "special_chassis": 0,
+        "weapon_mode": 0,
+        "reactor": 1,
+        "mask": 0
+      }
+    },
+    {
+      "id": "fusion",
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "ability_mask": "0x0",
+      "reactor": 2,
+      "initial": "prefix:",
+      "output": "prefix:1-1-1*2",
+      "record": "000000000000000000000000000000000000000000000000000000000000000000000000000000020003000a0002ff0005010000",
+      "resolved_rules": {
+        "offense": 1,
+        "defense": 1,
+        "speed": 1,
+        "triad": 0,
+        "special_chassis": 0,
+        "weapon_mode": 0,
+        "reactor": 2,
+        "mask": 0
+      }
+    },
+    {
+      "id": "singularity",
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "ability_mask": "0x0",
+      "reactor": 4,
+      "initial": "prefix:",
+      "output": "prefix:1-1-1*4",
+      "record": "000000000000000000000000000000000000000000000000000000000000000000000000000000040006000a0002ff0005010000",
+      "resolved_rules": {
+        "offense": 1,
+        "defense": 1,
+        "speed": 1,
+        "triad": 0,
+        "special_chassis": 0,
+        "weapon_mode": 0,
+        "reactor": 4,
+        "mask": 0
+      }
+    },
+    {
+      "id": "decorations",
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "ability_mask": "0x160b38",
+      "reactor": 2,
+      "initial": "prefix:",
+      "output": "prefix:<1^~xe!>-<1+t>-1*2",
+      "record": "0000000000000000000000000000000000000000000000000000000000000000380b1600000000020011000a0002ff0005010000",
+      "resolved_rules": {
+        "offense": 1,
+        "defense": 1,
+        "speed": 1,
+        "triad": 0,
+        "special_chassis": 0,
+        "weapon_mode": 0,
+        "reactor": 2,
+        "mask": 1444664
+      }
+    },
+    {
+      "id": "psi_both",
+      "chassis": 0,
+      "weapon": 12,
+      "armor": 9,
+      "ability_mask": "0x160b38",
+      "reactor": 2,
+      "initial": "prefix:",
+      "output": "prefix:Psi-Psi-1*2",
+      "record": "0000000000000000000000000000000000000000000000000000000000000000380b1600000c0902002300010002ff0001000000",
+      "resolved_rules": {
+        "offense": -1,
+        "defense": -1,
+        "speed": 1,
+        "triad": 0,
+        "special_chassis": 0,
+        "weapon_mode": 2,
+        "reactor": 2,
+        "mask": 1444664
+      }
+    },
+    {
+      "id": "special_weapon",
+      "chassis": 0,
+      "weapon": 13,
+      "armor": 0,
+      "ability_mask": "0x160b38",
+      "reactor": 1,
+      "initial": "prefix:",
+      "output": "prefix:*-<1+t>-1",
+      "record": "0000000000000000000000000000000000000000000000000000000000000000380b1600000d0001003800010002ff0001000000",
+      "resolved_rules": {
+        "offense": 99,
+        "defense": 1,
+        "speed": 1,
+        "triad": 0,
+        "special_chassis": 0,
+        "weapon_mode": 0,
+        "reactor": 1,
+        "mask": 1444664
+      }
+    },
+    {
+      "id": "equipment",
+      "chassis": 0,
+      "weapon": 14,
+      "armor": 0,
+      "ability_mask": "0x0",
+      "reactor": 1,
+      "initial": "prefix:",
+      "output": "prefix:0-1-1",
+      "record": "000000000000000000000000000000000000000000000000000000000000000000000000000e0001000308280002ff0005010000",
+      "resolved_rules": {
+        "offense": 0,
+        "defense": 1,
+        "speed": 1,
+        "triad": 0,
+        "special_chassis": 0,
+        "weapon_mode": 8,
+        "reactor": 1,
+        "mask": 0
+      }
+    },
+    {
+      "id": "sea",
+      "chassis": 3,
+      "weapon": 0,
+      "armor": 0,
+      "ability_mask": "0x0",
+      "reactor": 2,
+      "initial": "prefix:",
+      "output": "prefix:(1)-1-4 Sea*2",
+      "record": "00000000000000000000000000000000000000000000000000000000000000000000000003000002000306060002ff0001000000",
+      "resolved_rules": {
+        "offense": 1,
+        "defense": 1,
+        "speed": 4,
+        "triad": 1,
+        "special_chassis": 0,
+        "weapon_mode": 0,
+        "reactor": 2,
+        "mask": 0
+      }
+    },
+    {
+      "id": "air",
+      "chassis": 5,
+      "weapon": 0,
+      "armor": 0,
+      "ability_mask": "0x0",
+      "reactor": 2,
+      "initial": "prefix:",
+      "output": "prefix:1-1-12 Air*2",
+      "record": "00000000000000000000000000000000000000000000000000000000000000000000000005000002000300080002ff0001000000",
+      "resolved_rules": {
+        "offense": 1,
+        "defense": 1,
+        "speed": 8,
+        "triad": 2,
+        "special_chassis": 0,
+        "weapon_mode": 0,
+        "reactor": 2,
+        "mask": 0
+      }
+    },
+    {
+      "id": "psi_sea",
+      "chassis": 3,
+      "weapon": 0,
+      "armor": 9,
+      "ability_mask": "0x0",
+      "reactor": 2,
+      "initial": "prefix:",
+      "output": "prefix:1-Psi-4 Sea*2",
+      "record": "00000000000000000000000000000000000000000000000000000000000000000000000003000902000306060002ff0001000000",
+      "resolved_rules": {
+        "offense": 1,
+        "defense": -1,
+        "speed": 4,
+        "triad": 1,
+        "special_chassis": 0,
+        "weapon_mode": 0,
+        "reactor": 2,
+        "mask": 0
+      }
+    },
+    {
+      "id": "artillery",
+      "chassis": 0,
+      "weapon": 0,
+      "armor": 0,
+      "ability_mask": "0x8000",
+      "reactor": 1,
+      "initial": "prefix:",
+      "output": "prefix:(1)-1-1",
+      "record": "000000000000000000000000000000000000000000000000000000000000000000800000000000010001000a0002ff0005010000",
+      "resolved_rules": {
+        "offense": 1,
+        "defense": 1,
+        "speed": 1,
+        "triad": 0,
+        "special_chassis": 0,
+        "weapon_mode": 0,
+        "reactor": 1,
+        "mask": 32768
+      }
+    }
+  ],
+  "prompts": [
+    {
+      "id": "ordered",
+      "source_mask": "0x94",
+      "target_mask": "0x40208",
+      "tag": "UPGRADEPROTO",
+      "strings": [
+        "Upgrade Source (1^-2-1 CloakedDropCarrier)",
+        "Upgrade Target 65 (2~-3+t-1 AmphibiousECMTrance)"
+      ]
+    },
+    {
+      "id": "fusion_names",
+      "source_mask": "0x0",
+      "target_mask": "0x0",
+      "tag": "UPGRADEPROTO",
+      "strings": [
+        "Upgrade Source (1-2-1*2)",
+        "Upgrade Target 65 (2-3-1*2)"
+      ]
+    },
+    {
+      "id": "empty_suffix",
+      "source_mask": "0x2",
+      "target_mask": "0x80000000",
+      "tag": "UPGRADEPROTO",
+      "strings": [
+        "Upgrade Source (1-2-1 )",
+        "Upgrade Target 65 (2-3-1 )"
+      ]
+    }
+  ],
+  "validation": {
+    "native_stats": 11,
+    "native_prompt_pairs": 3,
+    "ability_tokens": 24,
+    "source_literals": 10
+  }
+}

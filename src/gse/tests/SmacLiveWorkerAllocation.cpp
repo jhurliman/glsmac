@@ -5120,6 +5120,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 const auto first=Unit::GetNextId();const auto pair=fixture.GameplayRandom();const auto random=game->GetRandom()->GetStateString();
                 auto* wrapper=static_cast<value::Object*>(base->Wrap(GSE_CALL));
                 fixture.ResourceState([](auto& state){state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts->fill(199);});
+                unit::SmacRetirementHistory retained_history;retained_history.cursor=63;
+                for(size_t i=0;i<512;++i) {retained_history.slots[i/8][i%8]=uint8_t(i*37+19);}
+                fixture.ResourceState([&](auto& state){state.designs.retirement_history[1]=retained_history;});
                 if(accept) {bm->AbandonSmacBase(GSE_CALL,*base,um->GetUnitDef("choice-colony"),SmacMoraleMode::Mode0);}
                 else {const auto result=base->ProcessSmacUpkeep(GSE_CALL,Roles(),[&](int32_t){return um->GetUnitDef("choice-scout");},SmacMoraleMode::Mode0);
                     GT_ASSERT(result.removed_base && !result.completed_unit,"starvation manufactured before faction disposition");}
@@ -5127,6 +5130,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 auto expected_references=faction::SmacDesignCounts{};expected_references.fill(restarted ? 0:199);
                 bool exact_references=false;fixture.ResourceState([&](const auto& state){exact_references=state.economy.at(1).production_reference_counts==std::optional<faction::SmacDesignCounts>(expected_references);});
                 GT_ASSERT(exact_references,"deletion debited references or restart failed to clear the full row");
+                bool exact_history=false;fixture.ResourceState([&](const auto& state){exact_history=state.designs.retirement_history[1]==std::optional<unit::SmacRetirementHistory>(retained_history);});
+                GT_ASSERT(exact_history,"nonzero faction restart/elimination reset retirement slots or cursor");
                 GT_ASSERT(bm->GetBases().empty() && !wrapper->wrapobj && !um->GetUnit(91) && um->GetUnits().size()==count,
                     "last Base or old roster survived disposition, or replacement count differs: bases="+std::to_string(bm->GetBases().size())
                     +" units="+std::to_string(um->GetUnits().size())+" expected="+std::to_string(count)+" CRT="+std::to_string(fixture.GameplayRandom().Crt()));

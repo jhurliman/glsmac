@@ -156,6 +156,22 @@ return {
             this.strip_hover = (0 - 1); this.update_labels(); this.update_armor(); this.render_strip();
             this.message.text = e.stale ? 'Game state changed. Please check your design.' : (e.failed ? 'This design cannot be made obsolete.' : '');
         });
+        this.window.listen(p.game, 'smac_workshop_preset', (e) => {
+            if (!this.active || !this.pending || !this.pending_preset || e.base.id != this.base.id || e.request_id != this.pending_id) { return; }
+            this.pending = false; this.pending_preset = false;
+            if (e.stale || e.failed) {
+                this.message.text = e.stale ? 'Game state changed. Please check your design.' : 'Preset inputs are not available.';
+                if (e.stale) {
+                    const base = this.base; const selected = this.selected_design; const chassis = this.selected_chassis; const weapon = this.selected_weapon;
+                    const armor = this.selected_armor; const reactor = this.selected_reactor; const abilities = this.selected_abilities; const name = this.draft_name;
+                    this.selection = base.get_smac_workshop(selected, chassis, weapon, armor, reactor, abilities, name);
+                }
+                return;
+            }
+            this.selection = e.selection; this.read_draft(e.selection.draft); this.selected_design = e.selection.draft.selected_design;
+            if (e.matched) { this.finish_preset(e.feedback); }
+            else { this.preset_notice.open(this); }
+        });
         this.window.listen(p.game, 'smac_workshop_rename', (e) => { this.rename_dialog.reply(e); });
         this.window.listen(p.game, 'smac_workshop_retire', (e) => { this.retire_dialog.reply(e); });
         this.window.listen(p.game, 'smac_workshop_upgrade', (e) => { this.upgrade_dialog.reply(e); });
@@ -169,6 +185,16 @@ return {
         this.console_backing = this.console.surface({left: 0, top: 50, width: 1024, height: 207});
         this.console.surface({left: 0, top: 0, width: 1024, height: 257, background: 'console2.pcx:smacsoftware()'});
         this.console.surface({left: 0, top: 0, width: 1024, height: 257, smac_frame: [[3,7,59,242,189],[0,10,62,239,186],[3,266,70,759,168],[0,269,73,756,165]]});
+        this.console.surface({left: 0, top: 0, width: 1024, height: 257, smac_frame: [[3,783,60,1016,248],[6,786,63,1013,84]]});
+        this.presets_heading = this.console.text({left: 786, baseline: 79, font: 'arialbd.ttf:14:mono', text: ''});
+        p.ui.class('workshop-preset-action').set({font: 'arialbd.ttf:14:mono', textalign: 'top left', textbaseline: 16,
+            smac_frame: [[27,0,0,112,21]], _hover: {smac_frame: [[29,0,0,112,21]]}, _active: {smac_frame: [[29,0,0,112,21]]}});
+        this.preset_buttons = []; let preset = 0;
+        while (preset < 14) {
+            const action = preset + 9;
+            const button = this.console.button({class: 'workshop-preset-action', left: 786 + (preset / 7) * 115, top: 87 + (preset % 7) * 23, width: 112, height: 21});
+            button.on('click', () => { this.preset(action); return true; }); this.preset_buttons :+ button; preset++;
+        }
         this.status_frame = this.console.panel({left: 272, top: 76, width: 481, height: 86, overflow: 'hidden'});
         this.status_title = this.status_frame.text({align: 'top left', baseline: 18, font: 'arialbd.ttf:18:mono', text: ''});
         this.status_lines = []; this.console.hide();
@@ -183,6 +209,7 @@ return {
         this.strip_right = this.strip.button({class: 'workshop-strip-right', left: 740, top: 7, width: 12, height: 42});
         this.strip_left.on('click', () => { this.scroll_strip(false); return true; });
         this.strip_right.on('click', () => { this.scroll_strip(true); return true; });
+        this.preset_notice = #include('./workshop_preset_notice'); this.preset_notice.init(p);
         return this.window;
     },
     set_action_caption: (button, caption) => {
@@ -195,6 +222,14 @@ return {
         if (!this.active) { this.model.smacworkshopclock(2); }
         if (!#is_defined(this.parent_text)) { this.parent_text = this.components.smacworkshopparenttext(); }
         for (entry of this.centered_captions) { entry.label.color = this.parent_text.colors[entry.color]; }
+        this.presets_heading.text = #uppercase(this.parent_text.presets_title); this.presets_heading.color = this.parent_text.colors[240];
+        this.presets_heading.left = 786 + (227 - this.presets_heading.measure().width) / 2;
+        let preset_index = 0;
+        for (button of this.preset_buttons) {
+            const text = #uppercase(this.parent_text.presets[preset_index]); this.action_probe.text = text;
+            button.text = text; button.textleft = (112 - this.action_probe.measure().width) / 2; button.color = this.parent_text.colors[65]; preset_index++;
+        }
+        this.pending_preset = false;
         this.mineral_factor = data.mineral_factor;
         this.base = base; this.selection = data; this.active = true; this.pending = false; this.pending_obsolete = false; this.pending_rename = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide();
         this.set_action_caption(this.apply_button, this.parent_text.apply);
@@ -276,6 +311,21 @@ return {
         const offset = this.strip_offset; const expected = this.selection.expected_state; const request = this.pending_id;
         let list = []; if (#is_defined(this.selection.designs)) { for (row of this.selection.designs) { list :+ row.id; } }
         this.p.game.event('obsolete_smac_workshop', {base: base, selected_design: selected, name: name, old_list: list, strip_offset: offset, expected_state: expected, request_id: request});
+    },
+    finish_preset: (feedback) => {
+        // Original stock sound-bank slots39/43 are unbound. Retain the request
+        // boundary and ordering without substituting another sound sample.
+        this.last_preset_feedback = feedback;
+        this.recenter_strip(this.selected_design); this.update_labels(); this.update_armor(); this.render_strip(); this.message.text = '';
+    },
+    preset: (action) => {
+        if (!this.active || this.pending || this.confirming || this.picker_active || this.ability_dialog.active || this.preset_notice.active || !#is_defined(this.selection.preset_state)) { return; }
+        this.pending = true; this.pending_preset = true; this.next_request = this.next_request + 1; this.pending_id = this.next_request;
+        const base = this.base; const selected = this.selected_design; const chassis = this.selected_chassis; const weapon = this.selected_weapon;
+        const armor = this.selected_armor; const reactor = this.selected_reactor; const abilities = this.selected_abilities; const name = this.draft_name;
+        const expected = this.selection.preset_state; const request = this.pending_id;
+        this.p.game.event('preset_smac_workshop', {base: base, selected_design: selected, chassis: chassis, weapon: weapon, armor: armor, reactor: reactor,
+            abilities: abilities, name: name, action: action, request_id: request, expected_state: expected});
     },
     read_draft: (draft) => {
         this.selected_chassis = draft.chassis; this.selected_weapon = draft.weapon; this.selected_reactor = draft.reactor; this.selected_abilities = draft.abilities;
@@ -582,5 +632,5 @@ return {
         if (choice >= 0) { fields = fields + {overwrite: choice}; }
         this.p.game.event('commit_smac_workshop', fields);
     },
-    hide_view: () => { this.model.smacworkshopclock(0); this.picker_active = false; this.ability_dialog.hide(); this.rename_dialog.hide(); this.retire_dialog.hide(); this.upgrade_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); this.console.hide(); },
+    hide_view: () => { this.preset_notice.hide(); this.model.smacworkshopclock(0); this.picker_active = false; this.ability_dialog.hide(); this.rename_dialog.hide(); this.retire_dialog.hide(); this.upgrade_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); this.console.hide(); },
 };

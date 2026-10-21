@@ -44,8 +44,49 @@ for this command-only slice.
 
 ## Remaining integration
 
-This command does not add visible buttons yet. The source-audited console-owned
-Vehicle Presets panel, installed captions, no-result modal, original feedback
-playback and live UI replies are the immediate next consumers. Ordinary open
-recommendations and their separate entry refresh/selector effects remain open.
+Ordinary open recommendations and their separate entry refresh/selector effects
+remain open. Fresh-image air-counter initialization has a new source-backed
+handoff and remains the next lifecycle follow-up. General hover-tooltip
+presentation and localized/resized modal measurement are not implemented here.
 This is not complete Workshop or playable manufacturing acceptance.
+
+
+## Console binding follow-up
+
+The console now loads installed DESIGNAUTO captions and LABELS heading/tooltip
+text and exposes the14 controls at their original console-local bounds. It
+submits the complete current draft directly to the queued command and matches
+responses by Base/request; pending and modal states suppress repeat requests.
+Success reconstructs the ability slots while preserving the returned full mask.
+Unmatched requests open the installed illustrated NOPRESET message. Its dismissal
+requests the original unbound feedback39 before repaint; success requests the
+also-unbound43 immediately. No unrelated WAV is substituted. Turn/close teardown
+hides the notice without submitting another command.
+
+The panel region [783,571,1016,759) matches all43,804 original reference pixels,
+including caption, frames and every button; no mask/tolerance. This is one
+bounded panel in a real software-rendered ordinary starting Workshop, not whole
+screen parity or14 researched gameplay interactions. The native reference's
+surrounding campaign/material/strip/cost state differs from this live session.
+The port also loads the shared tooltip text, but the general hover-tooltip
+presentation is not connected by this change.
+
+
+The normal and focused-sanitizer UI script runs pass. The instrumented runtime
+opens the ordinary Workshop, clicks unavailable Air Assault, displays NOPRESET,
+dismisses it and closes cleanly, with no ASan/UBSan report or tracked OpenGL leak.
+Caption frame and illustration match16,128/24,000 native pixels respectively;
+the13,514-pixel body-frame comparison differs by1 pixel. The exported original
+OK child DIB lacks its final backing, so it is not used as a complete visual
+button target. No whole-dialog parity claim follows from these bounded checks.
+Five production translation units/consumers pass correctness analysis.
+
+
+Reproduce the panel check with the existing image gate:
+
+```text
+python docs/behavior/workshop_parent_pixel_gate.py NATIVE.png PORT.png --region presets
+```
+
+Both files must be actual1024x768 captures at native scale. This compares the
+entire declared rectangle and returns nonzero on any mismatch.

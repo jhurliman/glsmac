@@ -1,0 +1,418 @@
+{
+  "scope": "Reused single normal 1024x768 parent capture and existing Morgan constructor headers; source-only action/keyboard and refresh order. No new UI run.",
+  "caption_source": "SCRIPT DESIGNAUTO, rows1..14; not LABELS",
+  "heading": {
+    "labels_index_0based": 668,
+    "labels_offset": "0xa70",
+    "caption": "Vehicle Presets",
+    "console_rect": [
+      786,
+      63,
+      1013,
+      84
+    ],
+    "glyph_x_console": 836,
+    "glyph_baseline_console": 79,
+    "palette_index": 240,
+    "color_operand": "0x10ff00f0",
+    "font_height": -14,
+    "font_weight": 700
+  },
+  "shared_tooltip": {
+    "labels_index_0based": 827,
+    "labels_offset": "0xcec"
+  },
+  "buttons": [
+    {
+      "action": 9,
+      "filter": 2,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 1,
+      "caption": "Garrison",
+      "drawn_caption": "GARRISON",
+      "console_rect": [
+        786,
+        87,
+        898,
+        108
+      ],
+      "screen_rect": [
+        786,
+        598,
+        898,
+        619
+      ],
+      "glyph_x_local": 19,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 10,
+      "filter": 3,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 2,
+      "caption": "Infantry",
+      "drawn_caption": "INFANTRY",
+      "console_rect": [
+        786,
+        110,
+        898,
+        131
+      ],
+      "screen_rect": [
+        786,
+        621,
+        898,
+        642
+      ],
+      "glyph_x_local": 21,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 11,
+      "filter": 1,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 3,
+      "caption": "Artillery",
+      "drawn_caption": "ARTILLERY",
+      "console_rect": [
+        786,
+        133,
+        898,
+        154
+      ],
+      "screen_rect": [
+        786,
+        644,
+        898,
+        665
+      ],
+      "glyph_x_local": 18,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 12,
+      "filter": 4,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 4,
+      "caption": "Tank",
+      "drawn_caption": "TANK",
+      "console_rect": [
+        786,
+        156,
+        898,
+        177
+      ],
+      "screen_rect": [
+        786,
+        667,
+        898,
+        688
+      ],
+      "glyph_x_local": 37,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 13,
+      "filter": 10,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 5,
+      "caption": "Scout",
+      "drawn_caption": "SCOUT",
+      "console_rect": [
+        786,
+        179,
+        898,
+        200
+      ],
+      "screen_rect": [
+        786,
+        690,
+        898,
+        711
+      ],
+      "glyph_x_local": 32,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 14,
+      "filter": 6,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 6,
+      "caption": "Naval",
+      "drawn_caption": "NAVAL",
+      "console_rect": [
+        786,
+        202,
+        898,
+        223
+      ],
+      "screen_rect": [
+        786,
+        713,
+        898,
+        734
+      ],
+      "glyph_x_local": 33,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 15,
+      "filter": 7,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 7,
+      "caption": "Transport",
+      "drawn_caption": "TRANSPORT",
+      "console_rect": [
+        786,
+        225,
+        898,
+        246
+      ],
+      "screen_rect": [
+        786,
+        736,
+        898,
+        757
+      ],
+      "glyph_x_local": 14,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 16,
+      "filter": 8,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 8,
+      "caption": "Air Assault",
+      "drawn_caption": "AIR ASSAULT",
+      "console_rect": [
+        901,
+        87,
+        1013,
+        108
+      ],
+      "screen_rect": [
+        901,
+        598,
+        1013,
+        619
+      ],
+      "glyph_x_local": 11,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 17,
+      "filter": 9,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 9,
+      "caption": "Air Defense",
+      "drawn_caption": "AIR DEFENSE",
+      "console_rect": [
+        901,
+        110,
+        1013,
+        131
+      ],
+      "screen_rect": [
+        901,
+        621,
+        1013,
+        642
+      ],
+      "glyph_x_local": 10,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 18,
+      "filter": 17,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 10,
+      "caption": "Chopper",
+      "drawn_caption": "CHOPPER",
+      "console_rect": [
+        901,
+        133,
+        1013,
+        154
+      ],
+      "screen_rect": [
+        901,
+        644,
+        1013,
+        665
+      ],
+      "glyph_x_local": 22,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 19,
+      "filter": 13,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 11,
+      "caption": "Missile",
+      "drawn_caption": "MISSILE",
+      "console_rect": [
+        901,
+        156,
+        1013,
+        177
+      ],
+      "screen_rect": [
+        901,
+        667,
+        1013,
+        688
+      ],
+      "glyph_x_local": 28,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 20,
+      "filter": 14,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 12,
+      "caption": "Buster",
+      "drawn_caption": "BUSTER",
+      "console_rect": [
+        901,
+        179,
+        1013,
+        200
+      ],
+      "screen_rect": [
+        901,
+        690,
+        1013,
+        711
+      ],
+      "glyph_x_local": 28,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 21,
+      "filter": 11,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 13,
+      "caption": "Paradrop",
+      "drawn_caption": "PARADROP",
+      "console_rect": [
+        901,
+        202,
+        1013,
+        223
+      ],
+      "screen_rect": [
+        901,
+        713,
+        1013,
+        734
+      ],
+      "glyph_x_local": 17,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    },
+    {
+      "action": 22,
+      "filter": 12,
+      "script_section": "DESIGNAUTO",
+      "row_1based": 14,
+      "caption": "Amphibious",
+      "drawn_caption": "AMPHIBIOUS",
+      "console_rect": [
+        901,
+        225,
+        1013,
+        246
+      ],
+      "screen_rect": [
+        901,
+        736,
+        1013,
+        757
+      ],
+      "glyph_x_local": 11,
+      "glyph_baseline_local": 16,
+      "font_height": -14,
+      "font_weight": 700,
+      "color_operand": "0x10ff0041",
+      "palette_index": 65,
+      "direct_keyboard_shortcut": null
+    }
+  ],
+  "keyboard_actions": {
+    "Enter": 4,
+    "Escape": 8,
+    "M/m": 6,
+    "O/o": 6,
+    "U/u": 7,
+    "Left/Numpad4": 23,
+    "Right/Numpad6": 24
+  },
+  "source_input_hashes": {
+    "tmp\\reference\\workshop-parent-capture-private-20261021\\controls.json": "6f8da2b5effc719e46a2066250207a0e2c5694ff4cdb18d6daa6e1d3dd837092",
+    "tmp\\reference\\workshop-morgan-parent-visuals-v3-private-20261021\\controls.json": "bc25ffb91b61279fd2c4d7fc3e36a0db4c579006e333012ef3926c75f90d6d5b"
+  }
+}

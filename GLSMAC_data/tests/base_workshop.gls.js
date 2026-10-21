@@ -10,10 +10,11 @@ const node = (data) => {
     data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi'}; };
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
     data.smacworkshopparenttext = () => { let colors = []; let index = 0; while (index < 256) { colors :+ ('color' + #to_string(index)); index++; }
-        return {chassis: 'Chassis', shielding: 'Shielding', reactor: 'Reactor', special_ability: 'Special Ability', none: 'NONE', level: 'Level', power: 'Power', domains: ['Land','Sea','Air'], labels: ['Vehicle Design','Moves:','Type:','Power:','Prototype Cost:','Cost:','Data','Presets','W:','A:','C:','R:','SP1:','SP2:','E:','P:'],
+        return {presets: ['Garrison','Infantry','Artillery','Tank','Scout','Naval','Transport','Air Assault','Air Defense','Chopper','Missile','Buster','Paradrop','Amphibious'], presets_title: 'Vehicle Presets', preset_tooltip: 'Design a unit', chassis: 'Chassis', shielding: 'Shielding', reactor: 'Reactor', special_ability: 'Special Ability', none: 'NONE', level: 'Level', power: 'Power', domains: ['Land','Sea','Air'], labels: ['Vehicle Design','Moves:','Type:','Power:','Prototype Cost:','Cost:','Data','Presets','W:','A:','C:','R:','SP1:','SP2:','E:','P:'],
             apply: 'Apply', done: 'Done', cancel: 'Cancel', minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', obsolete: 'Obsolete', rename: 'Rename', retire: 'Retire', upgrade: 'Upgrade', status_title: 'Design Workshop', slot: 'Slot',
             status_labels: ['Examining Basic Unit','New Design Based On Old','Examining Previous Design','Designing New Unit','Modifying Previous Design']}; };
     data.smacworkshopconsolebacking = () => { data.console_tiled = true; };
+    data.smacworkshoppresettext = () => { const words = data.smacworkshopparenttext(); return {title: 'Chief Engineer', body: 'We cannot design that kind of unit with our current technology.', ok: 'OK', colors: words.colors}; };
     data.smacworkshoprenametext = () => { const words = data.smacworkshopparenttext(); return {title: 'What shall we call this unit type?', label: 'Name:', ok: 'OK', cancel: 'Cancel', colors: words.colors}; };
     data.smacworkshopretiretext = (name, count) => { const words = data.smacworkshopparenttext();
         return {title: 'Chief Engineer', body: count == 0 ? 'Do you wish to retire this design?' : 'Do you wish to retire this design? Units of that type still in operation will be disbanded.', rows: ['Never mind.', 'Retire ' + name + ' design.'], ok: 'OK', colors: words.colors}; };
@@ -607,3 +608,36 @@ selection.preview_icon = 3; selection.preview_variant = 2;
 dialog.model.handlers.workshopframe({}); test.assert(dialog.model.cached_icon == 3 && dialog.model.cached_variant == 2 && dialog.model.width == 311);
 selection.preview_icon = (0 - 1); dialog.model.handlers.workshopframe({}); test.assert(dialog.model.width == 256);
 const closed_paints = dialog.model.preview_paints; dialog.hide_view(); test.assert(dialog.model.clock_operation == 0 && dialog.model.handlers.workshopframe({}) && dialog.model.preview_paints == closed_paints);
+
+// Presets submit the current draft directly, once, and match replies by owner/request.
+selection.preset_state = 'opaque-preset-fence'; dialog.open(base, selection);
+test.assert(#sizeof(dialog.preset_buttons) == 14 && dialog.presets_heading.text == 'VEHICLE PRESETS' && dialog.presets_heading.color == 'color240');
+let preset_index = 0;
+for (button of dialog.preset_buttons) {
+    test.assert(button.left == 786 + (preset_index / 7) * 115 && button.top == 87 + (preset_index % 7) * 23 && button.width == 112 && button.height == 21 && button.color == 'color65'); preset_index++;
+}
+dialog.selected_reactor = 3; dialog.selected_abilities = 32; dialog.draft_name = 'Inherited';
+const preset_before = #sizeof(commands); test.assert(dialog.preset_buttons[7].handlers.click({}));
+test.assert(#sizeof(commands) == preset_before + 1 && commands[preset_before].name == 'preset_smac_workshop');
+test.assert(commands[preset_before].data.action == 16 && commands[preset_before].data.reactor == 3 && commands[preset_before].data.abilities == 32 && commands[preset_before].data.name == 'Inherited' && commands[preset_before].data.expected_state == 'opaque-preset-fence');
+dialog.preset_buttons[0].handlers.click({}); test.assert(#sizeof(commands) == preset_before + 1);
+listeners.smac_workshop_preset({base: {id: 999}, request_id: dialog.pending_id, stale: false, failed: false}); test.assert(dialog.pending);
+listeners.smac_workshop_preset({base: base, request_id: dialog.pending_id + 1, stale: false, failed: false}); test.assert(dialog.pending);
+listeners.smac_workshop_preset({base: base, request_id: dialog.pending_id, stale: false, failed: true});
+test.assert(!dialog.pending && dialog.draft_name == 'Inherited' && dialog.selected_reactor == 3);
+const preset_result = selection + {}; preset_result.draft = {selected_design: 2, chassis: 0, weapon: 0, armor: 0, reactor: 1, abilities: 524801, name: 'Preset'};
+preset_result.ability_slots = [0,9]; dialog.preset_buttons[4].handlers.click({});
+listeners.smac_workshop_preset({base: base, request_id: dialog.pending_id, stale: false, failed: false, matched: true, selection: preset_result, feedback: 43});
+test.assert(!dialog.pending && dialog.draft_name == 'Preset' && dialog.selected_abilities == 524801 && dialog.ability_slots == [0,9]);
+dialog.hide_view(); const closed_presets = #sizeof(commands); dialog.preset_buttons[0].handlers.click({}); test.assert(#sizeof(commands) == closed_presets);
+
+dialog.open(base, selection); dialog.preset(16);
+listeners.smac_workshop_preset({base: base, request_id: dialog.pending_id, stale: false, failed: false, matched: false, selection: preset_result, feedback: 39});
+test.assert(dialog.last_preset_feedback == 43);
+test.assert(dialog.preset_notice.active && dialog.preset_notice.body.text == 'We cannot design that kind of unit with our current technology.');
+test.assert(dialog.preset_notice.window.width == 758 && dialog.preset_notice.window.left == 149 && dialog.preset_notice.ok.width == 658);
+const before_preset_notice = #sizeof(commands); dialog.preset(9); test.assert(#sizeof(commands) == before_preset_notice);
+test.assert(dialog.preset_notice.window.handlers.keydown({modifiers: {shift: true}, code: 'ENTER'}) && !dialog.preset_notice.active && dialog.last_preset_feedback == 39);
+for (key of ['ESCAPE','ENTER']) { dialog.preset_notice.open(dialog); test.assert(dialog.preset_notice.window.handlers.keydown({modifiers: {}, code: key}) && !dialog.preset_notice.active); }
+dialog.preset_notice.open(dialog); test.assert(dialog.preset_notice.ok.handlers.click({}) && !dialog.preset_notice.active);
+dialog.preset_notice.open(dialog); dialog.hide_view(); test.assert(!dialog.preset_notice.active && dialog.preset_notice.window.hidden);

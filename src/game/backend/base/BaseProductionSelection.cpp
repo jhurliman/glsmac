@@ -93,7 +93,8 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         if((source>=64 && source/64!=owner) || (requested>=0 && (requested<64 || requested/64!=owner))) {THROW("Workshop Upgrade selected a foreign bank or intrinsic target");}
         if(apply) {CheckRW(GSE_CALL);if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Workshop Upgrade requires its owning accumulation");}}
         const bool stale=base->SmacWorkshopState()!=expected;bool failed=false,upgraded=false,confirmation=false,affordable=true,unprototyped=false;
-        int32_t count=0,total=0,available=0,target=int32_t(requested);size_t strip_offset=size_t(offset);std::string source_name,target_name,source_label,target_label,illustration;
+        int32_t count=0,total=0,available=0,target=int32_t(requested);size_t strip_offset=size_t(offset);std::string source_name,target_name,illustration;
+        struct DesignText {std::string name,stats,tokens;int32_t domain=0,reactor=1;uint32_t abilities=0;};DesignText source_text,target_text;
         struct Choice {int32_t id;std::string name,stats;bool prototype;};std::vector<Choice> choices;
         unit::SmacWorkshopDraft response_draft;
         if(!stale) {try {
@@ -105,9 +106,10 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
                 || !state.native_registry || !economy.design_counts) {throw std::runtime_error("Workshop Upgrade requires retained registry/count and project authority");}
             const auto& pool=*state.native_registry;const auto& old=pool.at(source);
             const auto name_of=[](const auto& row){return std::string(row.begin(),std::find(row.begin(),row.begin()+32,uint8_t(0)));};
-            const auto label_of=[&](int32_t id){const auto& row=pool.at(id);return name_of(row)+" ("+unit::FormatSmacWorkshopStats({id,row[36],row[37],row[38],
-                uint32_t(row[32])|(uint32_t(row[33])<<8)|(uint32_t(row[34])<<16)|(uint32_t(row[35])<<24),row[39],{}},catalog)+")";};
-            source_label=label_of(int32_t(source));
+            const auto text_of=[&](int32_t id){const auto& row=pool.at(id);const uint32_t mask=uint32_t(row[32])|(uint32_t(row[33])<<8)|(uint32_t(row[34])<<16)|(uint32_t(row[35])<<24);
+                std::string tokens;for(size_t bit=0;bit<24;++bit) {if(mask&(1u<<bit)) {tokens+=catalog.abilities.abilities.at(bit).abbreviation;}}
+                return DesignText{name_of(row),unit::FormatSmacWorkshopStats({id,row[36],row[37],row[38],mask,row[39],{}},catalog),tokens,int32_t(catalog.chassis.chassis.at(row[36]).triad),row[39],mask};};
+            source_text=text_of(int32_t(source));
             const auto triad=catalog.chassis.chassis.at(old[36]).triad;
             illustration=triad==loader::txt::ChassisTriad::Land ? "unit_sm.pcx":triad==loader::txt::ChassisTriad::Sea ? "navun_sm.pcx":"air_sm.pcx";
             source_name=name_of(old);count=economy.design_counts->at(source);available=economy.credits;
@@ -119,7 +121,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
             if(target<0 && candidates.size()==1) {target=candidates.front();}
             if(target>=0) {
                 if(std::find(candidates.begin(),candidates.end(),target)==candidates.end()) {throw std::runtime_error("Workshop Upgrade target is no longer eligible");}
-                target_name=name_of(pool.at(target));target_label=label_of(target);unprototyped=!(pool.at(target)[48]&4);
+                target_name=name_of(pool.at(target));target_text=text_of(target);unprototyped=!(pool.at(target)[48]&4);
                 auto prepared=unit::PrepareSmacWorkshopUpgrade(state,owner,target,int32_t(source),catalog,uint8_t(count),false);
                 total=prepared.total_energy;affordable=total==0 || available>=total;
                 confirmation=answer<0 && total>0 && affordable;
@@ -168,16 +170,20 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
             }
         }catch(const std::invalid_argument&) {failed=true;}catch(const std::runtime_error&) {failed=true;}}
         if(apply) {
-            GetState()->TriggerObject(this,"smac_workshop_upgrade",_ARGS_F(this,base,request,answer,stale,failed,upgraded,confirmation,affordable,unprototyped,count,total,available,target,source_name,target_name,source_label,target_label,illustration,choices,strip_offset,response_draft) {
+            GetState()->TriggerObject(this,"smac_workshop_upgrade",_ARGS_F(this,base,request,answer,stale,failed,upgraded,confirmation,affordable,unprototyped,count,total,available,target,source_name,target_name,source_text,target_text,illustration,choices,strip_offset,response_draft) {
                 gse::value::array_elements_t rows;for(const auto& choice:choices) {rows.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
                     {"id",VALUE(gse::value::Int,,choice.id)}, {"stored_name",VALUE(gse::value::String,,choice.name)}, {"stat_line",VALUE(gse::value::String,,choice.stats)}, {"prototype",VALUE(gse::value::Bool,,choice.prototype)}
                 }));}
+                const auto wrap_text=[&](const DesignText& text){return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                    {"name",VALUE(gse::value::String,,text.name)}, {"stats",VALUE(gse::value::String,,text.stats)}, {"ability_tokens",VALUE(gse::value::String,,text.tokens)},
+                    {"domain",VALUE(gse::value::Int,,text.domain)}, {"reactor",VALUE(gse::value::Int,,text.reactor)}, {"abilities",VALUE(gse::value::Int,,text.abilities)}
+                });};
                 out_args={
                     {"base",base->Wrap(GSE_CALL)}, {"request_id",VALUE(gse::value::Int,,request)}, {"stale",VALUE(gse::value::Bool,,stale)}, {"failed",VALUE(gse::value::Bool,,failed)},
                     {"upgraded",VALUE(gse::value::Bool,,upgraded)}, {"confirmation",VALUE(gse::value::Bool,,confirmation && !failed)}, {"affordable",VALUE(gse::value::Bool,,affordable)},
                     {"declined",VALUE(gse::value::Bool,,answer==0 && !stale && !failed)}, {"unprototyped",VALUE(gse::value::Bool,,unprototyped)}, {"count",VALUE(gse::value::Int,,count)},
                     {"total",VALUE(gse::value::Int,,total)}, {"available",VALUE(gse::value::Int,,available)}, {"target_design",VALUE(gse::value::Int,,target)},
-                    {"source_label",VALUE(gse::value::String,,source_label)}, {"target_label",VALUE(gse::value::String,,target_label)}, {"illustration",VALUE(gse::value::String,,illustration)},
+                    {"source_text",wrap_text(source_text)}, {"target_text",wrap_text(target_text)}, {"illustration",VALUE(gse::value::String,,illustration)},
                     {"source_name",VALUE(gse::value::String,,source_name)}, {"target_name",VALUE(gse::value::String,,target_name)}, {"choices",VALUE(gse::value::Array,,rows)},
                     {"zero_count_notice",VALUE(gse::value::Bool,,upgraded && count==0)}, {"expected_state",VALUE(gse::value::String,,base->SmacWorkshopState())},
                     {"strip_offset",VALUE(gse::value::Int,,strip_offset)}, {"selection",upgraded ? base->CopySmacWorkshop(GSE_CALL,&response_draft):VALUE(gse::value::Undefined)}

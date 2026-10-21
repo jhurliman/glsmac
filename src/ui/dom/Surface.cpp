@@ -51,9 +51,24 @@ Surface::Surface( DOM_ARGS_T )
         N_EXPECT_ARGS(0);return WorkshopRenameText(GSE_CALL);
     }));
     Method(GSE_CALL,"smacworkshopupgradetext",NATIVE_CALL(this) {
-        N_EXPECT_ARGS(6);N_GETVALUE(kind,0,Int);N_GETVALUE(source,1,String);N_GETVALUE(target,2,String);N_GETVALUE(count,3,Int);N_GETVALUE(total,4,Int);N_GETVALUE(available,5,Int);
-        if(kind<0 || kind>6 || source.size()>1024 || target.size()>1024 || count<0 || count>255 || total<0 || total>INT32_MAX || available<INT32_MIN || available>INT32_MAX) {throw std::invalid_argument("Invalid Workshop Upgrade text context");}
-        return WorkshopUpgradeText(GSE_CALL,int32_t(kind),{source,target},{int32_t(total),int32_t(available),int32_t(count)});
+        N_EXPECT_ARGS(6);N_GETVALUE(kind,0,Int);N_GET(source,1,Object);N_GET(target,2,Object);N_GETVALUE(count,3,Int);N_GETVALUE(total,4,Int);N_GETVALUE(available,5,Int);
+        if(kind<0 || kind>6 || count<0 || count>255 || total<0 || total>INT32_MAX || available<INT32_MIN || available>INT32_MAX) {throw std::invalid_argument("Invalid Workshop Upgrade text context");}
+        const auto unpack=[](gse::value::Object* object) {
+            const auto field=[&](const char* key,gse::value_type_t type) {const auto* value=object->Get(key)->Deref();
+                if(value->type!=type) {throw std::invalid_argument("Incomplete stored Workshop text record");}return value;};
+            const auto string=[&](const char* key){return static_cast<const gse::value::String*>(field(key,gse::VT_STRING))->value;};
+            const auto integer=[&](const char* key){return static_cast<const gse::value::Int*>(field(key,gse::VT_INT))->value;};
+            const auto domain=integer("domain"),reactor=integer("reactor"),mask=integer("abilities");
+            if(domain<0 || domain>2 || reactor<0 || reactor>255 || mask<0 || mask>UINT32_MAX) {throw std::invalid_argument("Invalid stored Workshop text metadata");}
+            return SmacWorkshopModalDesign{string("name"),string("stats"),string("ability_tokens"),int32_t(domain),int32_t(reactor),uint32_t(mask)};
+        };
+        const auto a=unpack(source),b=unpack(target);
+        auto* picker=static_cast<gse::value::Object*>(WorkshopPickerText(GSE_CALL));
+        const auto& domains=static_cast<gse::value::Array*>(picker->Get("domains"))->value;
+        const std::array<std::string,3> words{{static_cast<gse::value::String*>(picker->Get("psi"))->value,
+            static_cast<gse::value::String*>(domains.at(1))->value,static_cast<gse::value::String*>(domains.at(2))->value}};
+        return WorkshopUpgradeText(GSE_CALL,int32_t(kind),{kind==0 ? a.name:SmacWorkshopModalDesignLabel(a,words),SmacWorkshopModalDesignLabel(b,words)},
+            {int32_t(total),int32_t(available),int32_t(count)});
     }));
     Method(GSE_CALL,"smacworkshopretiretext",NATIVE_CALL(this) {
         N_EXPECT_ARGS(2);N_GETVALUE(name,0,String);N_GETVALUE(count,1,Int);

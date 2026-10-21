@@ -16,6 +16,7 @@
 #include "fixtures/WorkshopAbilities.h"
 #include "fixtures/WorkshopSavedCommits.h"
 #include "fixtures/WorkshopUpgrade.h"
+#include "fixtures/WorkshopUpgradeStrings.h"
 #include "game/backend/unit/SmacWorkshopUpgrade.h"
 #include "fixtures/WorkshopAllocation.h"
 #include "fixtures/SmacIntrinsicOverlays.h"
@@ -34,6 +35,26 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop Upgrade stored strings match11 native stats and three prompt pairs",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);const std::string source(std::istreambuf_iterator<char>(file),{});
+        const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;
+        const std::array<std::string,3> words{{"Psi","Sea","Air"}};
+        for(const auto& c:workshop_upgrade_strings::Cases) {
+            const auto stats=unit::FormatSmacWorkshopStats({64,c.chassis,c.weapon,c.armor,c.mask,c.reactor,{}},catalog);
+            GT_ASSERT(::ui::dom::SmacWorkshopStoredModalStats({{},stats,{},c.domain,c.reactor,c.mask},words)==c.expected,"Original5935c0 string differs: "+std::string(c.id));
+        }
+        const auto label=[&](const std::string& name,uint32_t weapon,uint32_t armor,uint32_t mask,uint8_t reactor) {
+            const auto stats=unit::FormatSmacWorkshopStats({64,0,weapon,armor,mask&0xffffff,reactor,{}},catalog);
+            std::string tokens;for(size_t i=0;i<24;++i) {if(mask&(1u<<i)) {tokens+=catalog.abilities.abilities[i].abbreviation;}}
+            return ::ui::dom::SmacWorkshopModalDesignLabel({name,stats,tokens,0,reactor,mask},words);
+        };
+        GT_ASSERT(label("Upgrade Source",0,1,0x94,1)=="Upgrade Source (1^-2-1 CloakedDropCarrier)"
+            && label("Upgrade Target 65",1,2,0x40208,1)=="Upgrade Target 65 (2~-3+t-1 AmphibiousECMTrance)","Upgrade ability modifiers lost bit order or concatenation");
+        GT_ASSERT(label("Upgrade Source",0,1,0,2)=="Upgrade Source (1-2-1*2)" && label("Upgrade Target 65",1,2,0,2)=="Upgrade Target 65 (2-3-1*2)","Upgrade prompt reactor suffix differs");
+        GT_ASSERT(label("Upgrade Source",0,1,2,1)=="Upgrade Source (1-2-1 )" && label("Upgrade Target 65",1,2,0x80000000u,1)=="Upgrade Target 65 (2-3-1 )","Empty ability suffix lost its raw-mask space");
+        GT_ASSERT(::ui::dom::SmacWorkshopStoredModalStats({{},"?-?-4*2",{},1,2,0},{"Mind","Ocean","Sky"})=="Mind-Mind-4 Ocean*2","Stored-stat localization changed reactor/domain order");GT_OK();
+    });
     task->AddTest("SMAC Workshop Upgrade modal templates preserve owned text and emphasis word boundaries",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream file(std::string(assets)+"/script.txt",std::ios::binary);const std::string source(std::istreambuf_iterator<char>(file),{});

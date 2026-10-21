@@ -18,6 +18,8 @@ view = {
             else if (e.modifiers == {} && #sizeof(view.options) > 0) {
                 if (e.code == 'UP' || e.code == 'HOME') { view.selected = e.code == 'HOME' ? 0 : #max(0, view.selected - 1); view.paint(); }
                 else if (e.code == 'DOWN' || e.code == 'END') { view.selected = e.code == 'END' ? #sizeof(view.options) - 1 : #min(#sizeof(view.options) - 1, view.selected + 1); view.paint(); }
+                else if (view.kind == 0 && e.code == 'LEFT' && view.selected + view.rows_per_column < #sizeof(view.options)) { view.selected = view.selected + view.rows_per_column; view.paint(); }
+                else if (view.kind == 0 && e.code == 'RIGHT' && view.selected >= view.rows_per_column) { view.selected = view.selected - view.rows_per_column; view.paint(); }
             } return true;
         }); view.window.hide();
     },
@@ -55,10 +57,18 @@ view = {
     show: (kind) => {
         if (!#is_defined(view.window)) { view.create(); }
         const e = view.result; view.kind = kind;
-        const words = view.art.smacworkshopupgradetext(kind, kind == 0 ? e.source_name : e.source_label, e.target_label, e.count, e.total, e.available);
+        const words = view.art.smacworkshopupgradetext(kind, e.source_text, e.target_text, e.count, e.total, e.available);
         view.colors = words.colors; const chooser = kind == 0; const confirm = kind == 1 || kind == 2;
-        const width = chooser ? 757 : (confirm ? 755 : 758); const inner = width - 92; const wrap = chooser ? 657 : width - 306; const x = chooser ? 33 : 239;
-        view.window.width = width; view.window.left = confirm ? 150 : 149; view.art.width = width; view.rail.left = width - 55; view.caption.width = inner;
+        let columns = 1; let allocation = 660; let rows_per_column = 2;
+        if (chooser) {
+            const count = #sizeof(e.choices); columns = count <= 12 ? 1 : count / 12 + 1; rows_per_column = (count + columns - 1) / columns;
+            let measured = 0;
+            for (choice of e.choices) { view.probe.text = choice.stored_name + '|' + choice.stat_line; measured = #max(measured, view.probe.measure().width); }
+            allocation = #max(660, columns * (measured + 6));
+        }
+        const width = chooser ? allocation + 97 : (confirm ? 755 : 758); const inner = width - 92; const wrap = chooser ? allocation - 3 : width - 306; const x = chooser ? 33 : 239;
+        view.window.width = width; view.window.left = (1024 - width + 32) / 2; view.art.width = width; view.rail.left = width - 55; view.caption.width = inner;
+        view.rows_per_column = rows_per_column;
         view.title.text = #uppercase(words.title); view.title.color = words.colors[226]; view.title.left = (inner - view.title.measure().width) / 2;
         if (chooser) { view.illustration.hide(); } else { view.illustration.background = (kind == 5 ? 'unit_sm.pcx' : e.illustration) + ':smacsoftware()'; view.illustration.show(); }
         for (node of view.body) { node.remove(); } view.body = [];
@@ -80,10 +90,14 @@ view = {
         view.options = [];
         if (chooser) { for (choice of e.choices) { view.options :+ {value: choice.id, text: choice.stored_name, stats: choice.stat_line}; } }
         else { let value = 0; for (row of words.rows) { view.options :+ {value: value, text: row, stats: ''}; value++; } }
-        view.selected = 0; view.hovered = (0 - 1); view.list_top = list_top; view.row_width = chooser ? 657 : 655;
+        view.selected = 0; view.hovered = (0 - 1); view.list_top = list_top; view.row_width = chooser ? allocation / columns - 3 : 655;
+        const height = chooser ? #max(300, 22 * rows_per_column + 20 * lines + 120) : 300;
+        view.window.height = height; view.window.top = 555 - height; view.art.height = height;
         let index = 0;
         for (option of view.options) {
-            const at = index; const button = view.window.button({left: 33, top: list_top + 1 + index * 22, width: view.row_width, height: 20, smac_frame_phase: [0,1], background: 'transparent'});
+            const at = index; const column = chooser ? index / rows_per_column : 0; const row_index = chooser ? index % rows_per_column : index;
+            const left = column * (view.row_width + 3); const row_top = 1 + row_index * 22;
+            const button = view.window.button({left: 33 + left, top: list_top + row_top, width: view.row_width, height: 20, smac_frame_phase: [0 + left,0 + row_top], background: 'transparent'});
             const label = button.text({left: 3, baseline: 16, font: 'arialn.ttf:16:mono-bold', text: option.text});
             const stats = button.text({baseline: 16, font: 'arialn.ttf:16:mono-bold', text: option.stats}); stats.left = view.row_width - 3 - stats.measure().width;
             button.on('mousedown', (ev) => { if (ev.button == 'left') { view.selected = at; view.paint(); } return true; });
@@ -92,21 +106,21 @@ view = {
             button.on('mouseout', () => { view.hovered = (0 - 1); view.paint(); return true; });
             view.rows :+ {button: button, label: label, stats: stats}; index++;
         }
-        const bottom = list_top + 22 * #sizeof(view.options); let button_top = bottom + 9;
+        const bottom = list_top + 22 * (chooser ? rows_per_column : #sizeof(view.options)); let button_top = bottom + 9;
         if (!chooser && !confirm) { button_top = #max(167, 47 + 20 * lines); }
         if (chooser) {
-            view.art.smac_frame = [[9,23,0,width - 55,305],[3,27,4,width - 59,28],[6,30,7,width - 62,25],[0,30,35,width - 62,38 + 20 * lines],[3,27,32,width - 59,bottom + 3]];
+            view.art.smac_frame = [[9,23,0,width - 55,height + 5],[3,27,4,width - 59,28],[6,30,7,width - 62,25],[0,30,35,width - 62,38 + 20 * lines],[3,27,32,width - 59,bottom + 3]];
         } else {
-            view.art.smac_frame = [[9,23,0,width - 55,305],[3,27,4,width - 59,28],[6,30,7,width - 62,25],[0,236,35,width - 62,38 + 20 * lines],[3,233,32,width - 59,41 + 20 * lines]];
+            view.art.smac_frame = [[9,23,0,width - 55,height + 5],[3,27,4,width - 59,28],[6,30,7,width - 62,25],[0,236,35,width - 62,38 + 20 * lines],[3,233,32,width - 59,41 + 20 * lines]];
         }
-        const button_width = chooser ? 325 : width - 100;
+        const button_width = chooser ? (allocation - 9) / 2 : width - 100;
         const button_class = 'workshop-upgrade-answer-' + #to_string(button_width);
         view.p.ui.class(button_class).set({font: 'arialn.ttf:16:mono-bold', textalign: 'top center', textbaseline: 16,
             smac_button_sprite: [0,button_width], _hover: {smac_button_sprite: [1,button_width]}, _active: {smac_button_sprite: [2,button_width]}});
         const ok = view.window.button({class: button_class, left: chooser ? 34 : 33, top: button_top, width: button_width, height: 20, color: words.colors[0], text: words.ok});
         ok.on('click', () => { view.finish(view.selected); return true; }); view.answers :+ ok;
         if (chooser) {
-            const cancel = view.window.button({class: button_class, left: 365, top: button_top, width: 325, height: 20, color: words.colors[0], text: words.cancel});
+            const cancel = view.window.button({class: button_class, left: 34 + button_width + 6, top: button_top, width: button_width, height: 20, color: words.colors[0], text: words.cancel});
             cancel.on('click', () => { view.finish(0 - 1); return true; }); view.answers :+ cancel;
         }
         view.active = true; view.paint(); view.window.show();

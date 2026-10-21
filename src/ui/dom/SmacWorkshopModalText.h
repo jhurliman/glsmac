@@ -8,6 +8,28 @@
 #include "util/String.h"
 
 namespace ui::dom {
+// Backend supplies neutral stats and host-owned ability modifiers. The local
+// installed labels own Psi/Sea/Air translation, separate from retained names.
+struct SmacWorkshopModalDesign {
+    std::string name,stats,ability_tokens;
+    int32_t domain=0,reactor=1;
+    uint32_t abilities=0;
+};
+inline std::string SmacWorkshopStoredModalStats(const SmacWorkshopModalDesign& design,const std::array<std::string,3>& words) {
+    if(design.domain<0 || design.domain>2 || design.reactor<0 || design.reactor>255 || design.stats.size()>256) {throw std::invalid_argument("Invalid Workshop stored-stat context");}
+    std::string stats;for(const char c:design.stats) {if(c=='?') {stats+=words[0];}else {stats+=c;}}
+    const auto suffix=design.reactor>1 ? "*"+std::to_string(design.reactor):std::string();
+    if(!suffix.empty()) {
+        if(stats.size()<suffix.size() || stats.compare(stats.size()-suffix.size(),suffix.size(),suffix)!=0) {throw std::invalid_argument("Stored stat reactor suffix is missing");}
+        stats.resize(stats.size()-suffix.size());
+    }
+    if(design.domain>0) {stats+=' '+words.at(size_t(design.domain));}return stats+suffix;
+}
+inline std::string SmacWorkshopModalDesignLabel(const SmacWorkshopModalDesign& design,const std::array<std::string,3>& words) {
+    if(design.name.size()>31 || design.ability_tokens.size()>1024 || design.name.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid stored Workshop label");}
+    auto result=design.name+" ("+SmacWorkshopStoredModalStats(design,words);
+    if(design.abilities) {result+=' '+design.ability_tokens;}return result+')';
+}
 struct SmacWorkshopModalTemplate {std::string caption,body;std::vector<std::string> rows;};
 inline SmacWorkshopModalTemplate ReadSmacWorkshopModalTemplate(const std::string& source,const std::string& tag) {
     if(source.size()>2*1024*1024) {throw std::invalid_argument("Workshop modal source exceeds budget");}

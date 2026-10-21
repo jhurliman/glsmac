@@ -450,7 +450,7 @@ test.assert(dialog.pending && #sizeof(commands) == upgrade_commands && commands[
     && commands[upgrade_commands - 1].data.target_design == (0 - 1) && !#is_defined(commands[upgrade_commands - 1].data.armor));
 let upgrade_reply = {base: base, request_id: dialog.pending_id, expected_state: 'upgrade-quote', stale: false, failed: false, declined: false, upgraded: false,
     confirmation: false, affordable: true, unprototyped: false, count: 2, total: 100, available: 2000, target_design: (0 - 1),
-    source_name: 'Stored Scout', source_label: 'Stored Scout (1-1-1)', target_label: 'Guard (2-3-1)', illustration: 'unit_sm.pcx',
+    source_name: 'Stored Scout', source_text: {name: 'Stored Scout', stats: '1-1-1', domain: 0, reactor: 1, abilities: 0, ability_tokens: ''}, target_text: {name: 'Guard', stats: '2-3-1', domain: 0, reactor: 1, abilities: 0, ability_tokens: ''}, illustration: 'unit_sm.pcx',
     choices: [{id: 65, stored_name: 'Guard', stat_line: '2-3-1', prototype: false}, {id: 66, stored_name: 'Better Guard', stat_line: '4-3-1', prototype: false}]};
 listeners.smac_workshop_upgrade(upgrade_reply);
 test.assert(upgrade.active && upgrade.kind == 0 && !dialog.pending && upgrade.window.width == 757 && upgrade.answers[0].left == 34 && upgrade.answers[1].left == 365);
@@ -472,3 +472,25 @@ const before_notice = #sizeof(commands); upgrade.window.handlers.keydown({modifi
 upgrade.begin(dialog); upgrade_reply.request_id = dialog.pending_id; upgrade_reply.affordable = true; upgrade_reply.upgraded = true; upgrade_reply.zero_count_notice = true; listeners.smac_workshop_upgrade(upgrade_reply);
 test.assert(upgrade.kind == 5 && upgrade.active && dialog.active); upgrade.window.handlers.keydown({modifiers: {shift: true}, code: 'ENTER'}); test.assert(!upgrade.active);
 upgrade.begin(dialog); const upgrade_old = dialog.pending_id; dialog.hide_view(); listeners.smac_workshop_upgrade({base: base, request_id: upgrade_old, confirmation: true}); test.assert(!upgrade.active && !dialog.active);
+
+// Native627740 uses a column-major grid, not a scrollbar. Its width measure
+// includes the literal pipe; this double supplies the native measured174px.
+dialog.open(base, selection); upgrade.begin(dialog); upgrade_reply.request_id = dialog.pending_id;
+upgrade_reply.upgraded = false; upgrade_reply.zero_count_notice = false; upgrade_reply.target_design = (0 - 1); upgrade_reply.choices = [];
+let ordinal = 0; while (ordinal < 13) { upgrade_reply.choices :+ {id: 65 + ordinal, stored_name: 'Upgrade Target ' + #to_string(65 + ordinal), stat_line: '2-3-1', prototype: false}; ordinal++; }
+upgrade.probe.measure = () => { return {width: 174}; };
+listeners.smac_workshop_upgrade(upgrade_reply);
+test.assert(upgrade.rows_per_column == 7 && upgrade.row_width == 327 && upgrade.window.width == 757 && upgrade.window.height == 300
+    && upgrade.answers[0].top == 227 && upgrade.answers[1].left == 365 && #sizeof(upgrade.rows) == 13);
+let i = 0; for (row of upgrade.rows) { test.assert(row.button.left == 33 + (i / 7) * 330 && row.button.top == 65 + (i % 7) * 22); i++; }
+upgrade.window.handlers.keydown({modifiers: {}, code: 'LEFT'}); test.assert(upgrade.selected == 7);
+upgrade.window.handlers.keydown({modifiers: {}, code: 'RIGHT'}); test.assert(upgrade.selected == 0);
+upgrade.rows[12].button.handlers.dblclick({button: 'left'}); test.assert(commands[#sizeof(commands) - 1].data.target_design == 77);
+upgrade_reply.request_id = dialog.pending_id; upgrade_reply.choices = []; ordinal = 0;
+while (ordinal < 63) { upgrade_reply.choices :+ {id: 65 + ordinal, stored_name: 'Upgrade Target ' + #to_string(65 + ordinal), stat_line: '2-3-1', prototype: false}; ordinal++; }
+listeners.smac_workshop_upgrade(upgrade_reply);
+test.assert(upgrade.rows_per_column == 11 && upgrade.row_width == 177 && upgrade.window.width == 1177 && upgrade.window.height == 382 && upgrade.window.left == (0 - 60) && upgrade.window.top == 173
+    && upgrade.answers[0].top == 315 && upgrade.answers[0].width == 535 && upgrade.answers[1].left == 575 && #sizeof(upgrade.rows) == 63);
+i = 0; for (row of upgrade.rows) { test.assert(row.button.left == 33 + (i / 11) * 180 && row.button.top == 65 + (i % 11) * 22); i++; }
+upgrade.rows[62].button.handlers.dblclick({button: 'left'}); test.assert(commands[#sizeof(commands) - 1].data.target_design == 127);
+dialog.hide_view();

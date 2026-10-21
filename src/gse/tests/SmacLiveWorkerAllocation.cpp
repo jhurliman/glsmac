@@ -1849,6 +1849,73 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         }GT_OK();
     });
 
+    task->AddTest("SMAC saved Workshop design selects manufactures moves and replays through Start",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");std::string checkpoint,completed;
+        const auto finish=[&](GSE_CALLABLE,ConventionalUnitFixture& active)->std::string {
+            auto* game=active.Game();auto* base=game->GetBM()->GetBase(701);auto* um=game->GetUM();
+            const auto result=base->ProcessSmacUpkeep(GSE_CALL,Roles(),[&](int32_t id) {
+                return game->ResolveSmacProductionPresentation(base->m_owner,id);},unit::SmacMoraleMode::Mode0);
+            GT_ASSERT(result.completed_unit,"Saved design did not manufacture through Base upkeep");
+            auto* newborn=um->GetUnit(*result.completed_unit);
+            GT_ASSERT(newborn->Conventional().design_id==127 && newborn->Conventional().home_base_id==701
+                && newborn->Conventional().stored_morale==2 && newborn->GetTile()==base->GetTile(),"Saved prototype lost physical identity or first-prototype morale");
+            bool marked=false;active.ResourceState([&](const auto& state){marked=(state.designs.native_registry->at(127)[48]&4)!=0;});
+            GT_ASSERT(marked && base->GetProductionState()->current_item.smac_source_id==2
+                && base->GetProductionState()->queue->empty(),"Manufacture lost prototype history or successor queue");
+            auto* destination=game->GetMap()->GetTile(4,2);active.MoveEvent(GSE_CALL,newborn,destination);
+            GT_ASSERT(newborn->GetTile()==destination && newborn->Conventional().spent>0,"Manufactured design cannot move through the actual command");
+            completed=ResearchSnapshot(game,active.Snapshot());GT_OK();
+        };
+        const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,128,64));
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{scout}});
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[1]=true;});
+            game->Event(GSE_CALL,"commit_smac_workshop",{{"base",base->Wrap(GSE_CALL)},
+                {"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"armor",VALUE(value::Int,,1)},
+                {"selected_design",VALUE(value::Int,,2)},{"name",VALUE(value::String,,"Factory Guard")},
+                {"done",VALUE(value::Bool,,false)},{"request_id",VALUE(value::Int,,1)}});fixture.DrainEvents();
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;
+                pool[126]=pool[127];pool[126][44]=2; // excluded for owner1
+                pool[125]=pool[127];pool[125][48]&=uint8_t(~1u); // inactive
+                pool[124]=pool[127];pool[124][36]=3; // not yet physically supported sea chassis
+                pool[128]=pool[127]; // foreign bank must not leak into this owner's menu
+                pool[127][50]=254;pool[127][51]=255; // saved custom ignores disabled intrinsic prerequisite
+                state.designs.RetainNativeRegistry(pool,catalog);state.technology.factions[0].owned[1]=false;});
+            const auto custom=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,127);
+            const auto price=game->GetSmacProductionCost(base->m_owner,custom,base);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,price-3,scout,price-3,std::vector<ProductionItem>{scout}});
+            const auto saved=fixture.Snapshot();bool found=false;
+            auto* menu=static_cast<value::Object*>(base->CopySmacProductionChoices(GSE_CALL));
+            for(auto* entry:static_cast<value::Array*>(menu->Get("choices"))->value) {
+                auto* row=static_cast<value::Object*>(entry);const auto id=static_cast<value::Int*>(row->Get("source_id"))->value;
+                GT_ASSERT(id!=124 && id!=125 && id!=126 && id!=128,"Menu offers inactive excluded foreign or unsupported design");
+                if(id==127) {found=static_cast<value::String*>(row->Get("name"))->value=="Factory Guard"
+                    && static_cast<value::Int*>(row->Get("cost"))->value==price;}
+            }
+            GT_ASSERT(found && fixture.Snapshot()==saved,"Saved custom name/cost absent or menu mutated world");
+            auto* setup=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_base_production_selection"));
+            auto* picker=static_cast<value::Callable*>(setup->Run(GSE_CALL,{game->Wrap(GSE_CALL),base->Wrap(GSE_CALL)}));
+            const auto click=[&](const char* action) {return static_cast<value::Bool*>(picker->Run(GSE_CALL,
+                {VALUE(value::Int,,127),VALUE(value::String,,action)}))->value;};
+            GT_ASSERT(click("open") && fixture.Snapshot()==saved,"Custom picker open changed world");
+            GT_ASSERT(!click("cancel") && fixture.Snapshot()==saved,"Custom picker cancel changed world");
+            click("open");GT_ASSERT(!click("ok") && fixture.Snapshot()==saved,"Custom picker bypassed event queue");fixture.DrainEvents();
+            GT_ASSERT(base->GetProductionState()->current_item==custom && base->GetProductionState()->queue==std::optional<std::vector<ProductionItem>>({scout}),"Custom choice lost successor queue");
+            checkpoint=fixture.Snapshot();return finish(GSE_CALL,fixture);
+        });GT_ASSERT(setup.empty(),"Saved Workshop production: "+setup);
+        const auto uninterrupted=completed;
+        ConventionalUnitFixture restored;restored.ConfigureProduction(TanksSource,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,checkpoint,[](GSE_CALLABLE){});
+            restored.ProductionPresentations({"choice-scout","choice-rover","choice-former","choice-colony"});
+            const auto replay=finish(GSE_CALL,restored);GT_ASSERT(replay.empty(),"Restored custom manufacture: "+replay);
+            GT_ASSERT(completed==uninterrupted,"Start restore changed custom manufacture/movement replay");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC live Workshop first prototype stages history and manufactures once with bonus morale",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");std::string checkpoint,completed;
         const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {

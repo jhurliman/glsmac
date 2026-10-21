@@ -310,3 +310,27 @@ world headers. Targeted analysis of six production consumers is clean. 24
 selected native groups pass with four production translation units and two test
 consumers instrumented under ASan/UBSan. No platform matrix or unchanged UI
 capture was repeated.
+
+### Occupied-slot selection and overwrite decisions
+
+The shared slot selector reproduces the native two-stage allocation scans:
+changed intrinsic designs prefer the last inactive slot during the provisional
+scan; an active candidate then runs the common scan, where the first inactive
+slot wins. Fully unused excluded slots replace earlier candidates, while queued
+same-role slots have their separate fallback rule. Active cached units trigger
+the overwrite question only when no empty or fully unused alternative won.
+Tuple matching precedes allocation and ignores stored names.
+
+The live empty-bank commit now uses this selector instead of choosing an ID
+arithmetically. Broader occupied-bank publication remains gated: the active-unit
+cache is retained, but the separate production-reference cache and complete
+retirement/controller transaction still need connection. The original cache
+lifetime is documented in [production reference counts](behavior/production-design-reference-cache.md);
+opening/applying Workshop must not insert a recount or rebuild stale saved rows.
+
+Validation: 36 native allocation decisions match using their tuple, role,
+flag, prerequisite and cached-count inputs. All 28 focused native groups and six
+UI scripts pass. Targeted analysis of the selector and both production consumers
+is clean; the 28 groups pass with the changed builder and test consumer under
+focused ASan/UBSan. These checks establish allocation decisions, not completed
+live retirement or occupied-bank UI behavior.

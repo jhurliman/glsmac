@@ -69,7 +69,7 @@ Base::SmacProductionResult Base::CompleteSmacRiotDefection(GSE_CALLABLE,SmacProd
         static_cast<int32_t>(m_game->GetMap()->GetWidth()),static_cast<int32_t>(m_game->GetMap()->GetHeight()),true};
     // A first prototype precedes riot transfer. Compose from its detached
     // history so the recipient transition cannot overwrite those flag stores.
-    const auto* manufactured=attempt.created ? attempt.created->PrototypeDesigns():nullptr;
+    const auto* manufactured=attempt.created ? attempt.created->PrototypeDesigns():attempt.prototype_only;
     auto designs=manufactured ? *manufactured:simulation.designs;
     std::set<size_t> converted;
     auto initial=um->PrepareRemovalForQuery(all_removed,attempt.created);

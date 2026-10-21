@@ -13,6 +13,7 @@
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/SmacStartupDesignState.h"
+#include "game/backend/unit/SmacWorkshop.h"
 #include "gc/Space.h"
 #include "util/FinallyGuard.h"
 #include <algorithm>
@@ -82,11 +83,12 @@ void Base::ValidateSmacColonyPause( const SmacColonyUpkeepPause& pause ) const {
 
 Base::SmacProductionResult Base::ResumeSmacColonyUpkeep( GSE_CALLABLE, const SmacColonyUpkeepPause& pause,
 	SmacColonyChoice choice, const SmacAllocationRoles& roles, const std::function< unit::Def*( int32_t ) >& definition ) {
-	if ( choice != SmacColonyChoice::Delay && choice != SmacColonyChoice::Screen ) {
+    const bool accepted_refusal=choice==SmacColonyChoice::Accept && m_game->GetUM()->GetUnits().size()>=2048;
+	if ( choice != SmacColonyChoice::Delay && choice != SmacColonyChoice::Screen && !accepted_refusal ) {
 		THROW( "Colony acceptance requires its distinct abandonment provider" );
 	}
 	ValidateSmacColonyPause( pause );
-	return ProcessSmacProductionAndPopulation( GSE_CALL, roles, definition, pause.morale_mode, true, false, &pause );
+	return ProcessSmacProductionAndPopulation( GSE_CALL, roles, definition, pause.morale_mode, true, false, &pause, nullptr, {}, nullptr, accepted_refusal );
 }
 
 Base::SmacProductionResult Base::ResumeSmacAbandonmentTail( GSE_CALLABLE, const SmacBaseUpkeepCache& retained,
@@ -99,7 +101,10 @@ Base::SmacProductionResult Base::ResumeSmacAbandonmentTail( GSE_CALLABLE, const 
 
 Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABLE, const SmacAllocationRoles& roles,
 	const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode, const bool population_step,
-	const bool allow_colony_pause, const SmacColonyUpkeepPause* pause, const SmacBaseUpkeepCache* retained, std::optional<int32_t> former_repair, bool* publication ) {
+	const bool allow_colony_pause, const SmacColonyUpkeepPause* pause, const SmacBaseUpkeepCache* retained, std::optional<int32_t> former_repair, bool* publication, const bool accepted_colony_refusal ) {
+    if(accepted_colony_refusal && (!pause || retained || m_game->GetUM()->GetUnits().size()<2048)) {
+        THROW("Accepted Colony refusal lost its posted question or full Unit pool");
+    }
 	m_game->CheckRW( GSE_CALL );
 	if ( gc_space != m_game->GetGCSpace() || !gc_space->IsAccumulating() ) { THROW( "Production requires its owning accumulation" ); }
 	m_game->GetBM()->RequireSmacWorkerRecalculation();
@@ -130,10 +135,12 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	auto support = retained ? retained->support : m_game->CalculateCanonicalUnitSupport( *this, population, nullptr );
 	std::optional< unit::UnitManager::PreparedConventionalUnit > unit;
 	std::optional< unit::UnitManager::PreparedConventionalRemoval > removal;
+    std::unique_ptr<unit::SmacStartupDesignState> refused_prototype;
+    bool allocation_refused=false;
 	const FacilityDef* granted=nullptr;
 	std::vector<std::pair<Base*,facilities_t>> facility_changes;
-	if ( !pause && !retained && resources.nutrients.normalized_stored >= 0 && production.current_item.kind != ProductionItemKind::Stockpile ) {
-		if ( resources.minerals.surplus >= 0 && !context.drone_riots ) {
+	if ( ( !pause || accepted_colony_refusal ) && !retained && resources.nutrients.normalized_stored >= 0 && production.current_item.kind != ProductionItemKind::Stockpile ) {
+		if ( !pause && resources.minerals.surplus >= 0 && !context.drone_riots ) {
 			production.minerals = Checked( production.minerals + resources.minerals.surplus );
 		}
 		const auto cost = m_game->GetSmacProductionCost( m_owner, production.current_item, this );
@@ -153,7 +160,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 			colony = m_game->ResolveConventionalUnit( identity, m_owner ).package == unit::ConventionalUnitContext::Package::Colony;
 			if ( colony ) {
 				if ( !population_step || population == 0 ) { THROW( "Colony completion requires full upkeep and a populated Base" ); }
-				if ( population == 1 && unit::SmacStartupDesignState::OriginalDifficulty( m_owner->GetPlayer()->GetDifficultyLevel() ) > 1 ) {
+				if ( !accepted_colony_refusal && population == 1 && unit::SmacStartupDesignState::OriginalDifficulty( m_owner->GetPlayer()->GetDifficultyLevel() ) > 1 ) {
 					// Stored easy difficulty bypasses this check. Production
 					// management (0x1) is independent of citizen management.
 					if ( context.GovernorActive() && ( context.governor_options & 0x1u ) ) { complete = false; }
@@ -204,16 +211,27 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 				auto facilities=m_facilities;facilities.emplace(granted->m_id,granted);facility_changes.emplace_back(this,std::move(facilities));
 			} else {
 				const auto design_id = *production.current_item.smac_source_id;
-				if ( !definition ) { THROW( "Completed unit has no explicit presentation resolver" ); }
-				auto* def = definition( design_id );
-				unit.emplace( m_game->GetUM()->PrepareManufacturedConventionalUnit( GSE_CALL, *this, design_id, def, mode ) );
+                if(m_game->GetUM()->GetUnits().size()>=2048) {
+                    // Original allocation refusal follows the debit/history prefix.
+                    // No newborn, queue advancement or success-side population debit.
+                    const auto& global=m_game->GetState()->m_settings.global;
+                    const auto* technology=m_game->m_simulation->value.technology.Find(context.owner_simulation_id);
+                    if(!technology) {THROW("Allocation refusal requires owner technology authority");}
+                    refused_prototype=unit::PrepareSmacManufacturedPrototype(m_game->m_simulation->value.designs,design_id,
+                        global.GetSmacPredefinedUnitRules()->catalog,*global.GetSmacTechnologyRules(),*technology);
+                    allocation_refused=true;
+                } else {
+                    if ( !definition ) { THROW( "Completed unit has no explicit presentation resolver" ); }
+                    auto* def = definition( design_id );
+                    unit.emplace( m_game->GetUM()->PrepareManufacturedConventionalUnit( GSE_CALL, *this, design_id, def, mode ) );
+                }
 			}
-			if ( colony && population > 1 ) {
+			if ( colony && !allocation_refused && population > 1 ) {
 				--population; // factory/home first; debit before queue, baselines and growth
 			}
 			// Empty queues keep the current target without revalidation. Each
 			// popped candidate remains current, including the last rejected one.
-			while ( !production.queue->empty() ) {
+			while ( !allocation_refused && !production.queue->empty() ) {
 				production.current_item = production.queue->front();
 				production.queue->erase( production.queue->begin() );
 				const auto& item=production.current_item;
@@ -358,7 +376,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
                     }
                     if(recipient && *recipient>0) {
                         SmacDefectionAttempt attempt{roles,*recipient,context,production,allocation,population,food,granted,
-                            std::move(facility_changes),unit ? &*unit:nullptr,result.removed_units,random,committed,publication};
+                            std::move(facility_changes),unit ? &*unit:nullptr,result.removed_units,random,committed,publication,refused_prototype.get()};
                         return CompleteSmacRiotDefection(GSE_CALL,std::move(result),attempt);
                     }
 
@@ -390,6 +408,10 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, next_context, production, food, population, std::move(facility_changes), nullptr, {}, population_step );
 	// No callback, allocation or validation between Unit and Base authority.
 	publishing();
+    if(refused_prototype) {
+        static_assert(std::is_nothrow_swappable_v<unit::SmacStartupDesignState>);
+        using std::swap;swap(m_game->m_simulation->value.designs,*refused_prototype);
+    }
 	if ( unit ) { result.completed_unit = unit->Commit()->m_id; }
 	if ( removal ) { removal->Commit(); }
 	accounting->Commit();

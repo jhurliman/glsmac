@@ -341,6 +341,38 @@ std::string SelectionSource( const std::string& filename ) {
 		output += line + '\n';
 	} return output;
 }
+// Self-authored full registry through the real snapshot decoder, avoiding2048
+// repeated whole-world sight/factory preparations in each boundary test.
+std::string FullUnitPoolSnapshot(Game* game,const std::string& bytes) {
+    types::Buffer world(bytes);world_snapshot::ValidateHeader(world,game->GetState()->m_settings.global);
+    (void)world_snapshot::ReadRandomState(world);(void)world_snapshot::ReadTurnState(world,game->GetState()->m_slots->GetSlots());
+    if(world.ReadBool()) {(void)world.ReadString();}
+    (void)map::GlsmacResourceMapPolicy::ReadOptional(world,true);const auto knowledge_start=world.lenr;
+    auto knowledge=world_snapshot::ReadWorkerKnowledge(world,true);const auto knowledge_end=world.lenr;
+    if(!knowledge) {throw std::runtime_error("Full pool requires explicit knowledge");}
+    auto data=knowledge->CopyData();data.units.clear();
+    for(int i=0;i<2048;++i) {data.units.push_back({uint64_t(i ? 1000+i:91),0,false});}
+    types::Buffer knowledge_wire;world_snapshot::WriteWorkerKnowledge(knowledge_wire,Knowledge::Create(data),true);
+    (void)world_snapshot::ReadTerritoryTopology(world,true);(void)world.ReadString();(void)world.ReadString();
+    const auto prefix=bytes.substr(0,knowledge_start)+knowledge_wire.ToString()+bytes.substr(knowledge_end,world.lenr-knowledge_end);
+    types::Buffer units(world.ReadString()),replacement;
+    replacement.WriteString(units.ReadString());
+    for(int table=0;table<2;++table) {
+        const auto count=units.ReadInt();replacement.WriteInt(count);
+        for(int64_t i=0;i<count;++i) {replacement.WriteString(units.ReadString());replacement.WriteString(units.ReadString());}
+    }
+    replacement.WriteInt(2048);
+    for(int i=0;i<2048;++i) {
+        types::Buffer wire;wire.WriteInt(10);wire.WriteInt(1);wire.WriteInt(i ? 1000+i:91);wire.WriteString("live-scout");
+        wire.WriteInt(0);wire.WriteInt(6);wire.WriteInt(6);
+        unit::ConventionalUnitState record{2,1,1,0,0,false,unit::ConventionalUnitState::Home::None,unit::SmacMoraleMode::Mode0};
+        record.retained_state_word=0;record.native_flags=0;record.facing=2;
+        record.stack=unit::ConventionalUnitState::Stack{int16_t(i),int16_t(i==2047 ? -1:i+1),int16_t(i-1)};
+        record.Serialize(wire,true,true,true,true,true);replacement.WriteString(wire.ToString());
+    }
+    replacement.WriteInt(3048);types::Buffer framed;framed.WriteString(replacement.ToString());
+    return prefix+framed.ToString()+bytes.substr(world.lenr);
+}
 void SelectionPresentations( ConventionalUnitFixture& fixture ) {
 	using namespace game::backend::unit;
 	auto* um = fixture.Game()->GetUM(); auto* morale = um->GetMoraleSet( "live-morale" );
@@ -1723,6 +1755,97 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     "Native newborn morale/state mismatch: "+std::to_string(int(candidate.stored_morale))+"/"+std::to_string(expected.morale));
                 const auto* newborn=prepared.Commit();GT_ASSERT(newborn->Conventional()==candidate,"Newborn publication changed its prepared record");GT_OK();
             });GT_ASSERT(error.empty(),"Native newborn fixture: "+error);
+        }GT_OK();
+    });
+
+    task->AddTest("SMAC live manufacturing allocation refusal retains debit history queue and all2048 Units",[](GSE*,context::Context*)->std::string {
+        std::string full_pool;ConventionalUnitFixture source;source.ConfigureProduction(TanksSource,"GAIANS",32,16);
+        const auto setup=source.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=source.Game();Populate(GSE_CALL,source,false);
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,32,16));
+            full_pool=FullUnitPoolSnapshot(game,source.Snapshot());GT_OK();
+        });GT_ASSERT(setup.empty(),"Full registry setup: "+setup);
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS",32,16);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            using namespace game::backend::unit;
+            fixture.Restore(GSE_CALL,full_pool,true);
+            auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);auto* um=game->GetUM();
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            fixture.ResourceState([&](auto& state) {
+                auto pool=*state.designs.native_registry;auto& row=pool[127];row=pool[2];row[38]=1;row[33]=0x40;row[41]=3;row[45]=2;row[48]=3;row[49]=0;
+                state.designs.RetainNativeRegistry(pool,catalog);
+            });
+            std::vector<std::pair<size_t,std::string>> units;
+            for(const auto id:um->GetUnitRecordOrder()) {units.emplace_back(id,Unit::Serialize(um->GetUnit(id)).ToString());}
+            const auto next=Unit::GetNextId();
+            const auto custom=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,127);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            for(int pass=0;pass<2;++pass) {
+                bool prototyped=false;fixture.ResourceState([&](auto& state){prototyped=state.designs.RetainedCustomDesign(127,catalog).prototyped;});
+                GT_ASSERT(prototyped==bool(pass),"Refusal did not retain first-completion history");
+                const auto cost=game->GetSmacProductionCost(base->m_owner,custom,base);
+                base->SetAccumulatedNutrients(0);
+                const int64_t surplus=4; // TanksSource center + forest, no homed support.
+                base->SetProductionState(GSE_CALL,ProductionState{custom,cost-surplus,scout,17,std::vector<ProductionItem>{scout}});
+                bool resolved=false;
+                const auto result=base->ProcessSmacUpkeep(GSE_CALL,Roles(),[&](int32_t)->Def* {resolved=true;throw std::runtime_error("Refused allocation reached presentation");},SmacMoraleMode::Mode0);
+                const auto& state=*base->GetProductionState();
+                GT_ASSERT(!resolved && !result.completed_unit && !result.queue_advanced && result.final_calculation && !result.removed_base,
+                    "Full-pool refusal did not continue ordinary Base aftermath");
+                GT_ASSERT(state.minerals==0 && state.baseline_minerals==0 && state.current_item==custom && state.baseline_item==custom
+                    && state.queue==std::optional<std::vector<ProductionItem>>({scout}),"Refusal debit/queue: minerals="+std::to_string(state.minerals)+" baseline="+std::to_string(state.baseline_minerals)+" surplus="+std::to_string(result.first_calculation.minerals.surplus)+" prepared="+std::to_string(surplus)+" target="+std::to_string(*state.current_item.smac_source_id));
+                GT_ASSERT(um->GetUnits().size()==2048 && Unit::GetNextId()==next,"Refusal allocated or removed a Unit");
+                for(const auto& row:units) {GT_ASSERT(Unit::Serialize(um->GetUnit(row.first)).ToString()==row.second,"Refusal changed an existing Unit");}
+            }
+            bool marked=false;fixture.ResourceState([&](auto& state){marked=state.designs.RetainedCustomDesign(127,catalog).prototyped;});
+            GT_ASSERT(marked,"Repeated refusal lost prototype history");GT_OK();
+        });
+    });
+
+    task->AddTest("SMAC Colony allocation refusal preserves size two easy Accept and Delay through live callers",[](GSE*,context::Context*)->std::string {
+        for(int profile=0;profile<4;++profile) {
+            std::string full_pool;ConventionalUnitFixture source;source.ConfigureProduction(ColonyChoiceSource,"GAIANS",32,16);
+            const auto setup=source.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=source.Game();auto* base=Populate(GSE_CALL,source,false,false,0,1,profile==0 ? 2:1);
+                base->m_owner->GetPlayer()->SetDifficultyLevel(profile==1 ? "Citizen":"Librarian");
+                auto allocation=*base->GetSmacAllocation();allocation.selected=profile==0 ? 7:5;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,32,16));
+                const auto pod=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,0);
+                const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+                const auto cost=game->GetSmacProductionCost(base->m_owner,pod,base);
+                const int64_t surplus=3; // ColonyChoiceSource center + forest, no homed support.
+                base->SetProductionState(GSE_CALL,ProductionState{pod,cost-surplus,pod,77,std::vector<ProductionItem>{scout}});
+                base->SetAccumulatedNutrients(profile==0 ? 10:0);full_pool=FullUnitPoolSnapshot(game,source.Snapshot());GT_OK();
+            });GT_ASSERT(setup.empty(),"Colony limit setup: "+setup);
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(ColonyChoiceSource,"GAIANS",32,16);
+            std::vector<std::pair<size_t,std::string>> units;int64_t posted=0;size_t next=0;
+            const auto prefix=fixture.Run([&](GSE_CALLABLE)->std::string {
+                fixture.Game()->GetState()->m_slots->GetSlot(0).GetPlayer()->SetDifficultyLevel(profile==1 ? "Citizen":"Librarian");
+                fixture.Restore(GSE_CALL,full_pool,true);auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);auto* um=game->GetUM();
+                fixture.PrepareBaseCallbacks();std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}
+                fixture.BasePresentationRoles(roles);SelectionPresentations(fixture);
+                for(const auto id:um->GetUnitRecordOrder()) {units.emplace_back(id,game::backend::unit::Unit::Serialize(um->GetUnit(id)).ToString());}
+                next=game::backend::unit::Unit::GetNextId();
+                if(profile<2) {
+                    const auto result=base->BeginSmacUpkeep(GSE_CALL,Roles(),{},game::backend::unit::SmacMoraleMode::Mode0);
+                    GT_ASSERT(!result.colony_pause && !result.completed_unit && result.final_calculation,"Colony limit did not finish its unprompted Base tail");
+                } else {
+                    fixture.BeginColonyChoice(GSE_CALL,base->m_id);posted=base->GetProductionState()->minerals;
+                    auto* pending=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(game->Wrap(GSE_CALL)),"get_pending_smac_colony"));
+                    game->Event(GSE_CALL,"choose_colony",{{"request_id",pending->Get("request_id")},{"choice",VALUE(value::String,,profile==2 ? "accept":"delay")}});
+                }GT_OK();
+            });GT_ASSERT(prefix.empty(),"Colony limit prefix: "+prefix);fixture.DrainEvents();
+            const auto tail=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);auto* um=game->GetUM();
+                GT_ASSERT(base && base->GetPopulation()==size_t(profile==0 ? 2:1) && um->GetUnits().size()==2048
+                    && game::backend::unit::Unit::GetNextId()==next,"Colony refusal profile="+std::to_string(profile)+" population="+std::to_string(base ? base->GetPopulation():0)+" units="+std::to_string(um->GetUnits().size())+" next="+std::to_string(game::backend::unit::Unit::GetNextId())+" expected="+std::to_string(next));
+                const auto& state=*base->GetProductionState();
+                GT_ASSERT(state.minerals==(profile==3 ? posted:0) && state.baseline_minerals==state.minerals
+                    && state.current_item.smac_source_id==0 && state.baseline_item==state.current_item
+                    && state.queue && state.queue->size()==1 && state.queue->front().smac_source_id==2,"Colony limit debit baseline or queue differs");
+                for(const auto& row:units) {GT_ASSERT(game::backend::unit::Unit::Serialize(um->GetUnit(row.first)).ToString()==row.second,"Colony refusal changed an existing Unit");}
+                GT_OK();
+            });GT_ASSERT(tail.empty(),"Colony limit tail: "+tail);
         }GT_OK();
     });
 

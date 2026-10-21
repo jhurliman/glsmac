@@ -1010,10 +1010,9 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareManufacturedConvention
         const auto& global=m_game->GetState()->m_settings.global;
         const auto* technology=m_game->m_simulation->value.technology.Find(context.owner_simulation_id);
         if(!technology || !m_game->m_simulation->value.designs.native_registry) {THROW("First prototype requires retained owner technology and design records");}
-        prototype_designs=std::make_unique<SmacStartupDesignState>(m_game->m_simulation->value.designs);
-        auto& pool=*prototype_designs->native_registry;
-        first_prototype=CompleteSmacWorkshopPrototype(pool,design.id,global.GetSmacPredefinedUnitRules()->catalog,*global.GetSmacTechnologyRules(),*technology);
-        prototype_designs->RetainNativeRegistry(pool,global.GetSmacPredefinedUnitRules()->catalog);
+        prototype_designs=PrepareSmacManufacturedPrototype(m_game->m_simulation->value.designs,design.id,
+            global.GetSmacPredefinedUnitRules()->catalog,*global.GetSmacTechnologyRules(),*technology);
+        first_prototype=bool(prototype_designs);
     }
     // Halve only training above; ability/prototype/baseline points precede one final clamp.
     state.stored_morale=static_cast<uint8_t>(std::clamp(training+int(bool(design.abilities&0x4000u))+int(first_prototype)+1,0,6));

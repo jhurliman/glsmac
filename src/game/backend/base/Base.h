@@ -228,7 +228,7 @@ private:
 	void PublishSmacWorkerState( GSE_CALLABLE, const SmacBaseAllocationState& allocation, const SmacAllocationRoles& roles, const SmacBaseResourceContext& context );
 	SmacProductionResult ProcessSmacProductionAndPopulation( GSE_CALLABLE, const SmacAllocationRoles& roles,
 		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode, bool population_step,
-		bool allow_colony_pause = false, const SmacColonyUpkeepPause* pause = nullptr, const SmacBaseUpkeepCache* retained = nullptr, std::optional<int32_t> former_repair = {}, bool* publication = nullptr );
+		bool allow_colony_pause = false, const SmacColonyUpkeepPause* pause = nullptr, const SmacBaseUpkeepCache* retained = nullptr, std::optional<int32_t> former_repair = {}, bool* publication = nullptr, bool accepted_colony_refusal = false );
 	void ValidateSmacColonyPause( const SmacColonyUpkeepPause& pause ) const;
 	SmacProductionResult ResumeSmacAbandonmentTail( GSE_CALLABLE, const SmacBaseUpkeepCache& retained,
 		const SmacAllocationRoles& roles, unit::SmacMoraleMode mode );

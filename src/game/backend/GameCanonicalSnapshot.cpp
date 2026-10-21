@@ -118,7 +118,8 @@ std::optional<Game::CanonicalTurnContinuation> Game::ReadCanonicalContinuation(t
             next.colony=base::SmacColonyUpkeepPause{calculation,static_cast<unit::SmacMoraleMode>(mode)};
             if(kind==3) {
                 const auto choice=buffer.ReadInt();
-                if(choice!=static_cast<int64_t>(base::SmacColonyChoice::Delay) && choice!=static_cast<int64_t>(base::SmacColonyChoice::Screen)) {
+                if(choice!=static_cast<int64_t>(base::SmacColonyChoice::Delay) && choice!=static_cast<int64_t>(base::SmacColonyChoice::Screen)
+                    && choice!=static_cast<int64_t>(base::SmacColonyChoice::Accept)) {
                     throw std::runtime_error("Invalid saved former faction Colony answer");
                 }
                 next.former_colony_choice=static_cast<base::SmacColonyChoice>(choice);

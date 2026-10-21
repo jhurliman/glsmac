@@ -52,10 +52,10 @@ required before the local conquest milestone can be claimed.
 
 ## Current acceptance dashboard — 2026-10-21
 
-Accepted integration: **`c08d77273af264899eacc1a8292aa55bb91617e2`**, through
-[#532](https://github.com/jhurliman/glsmac/pull/532), on `codex/faithful-1.0`.
+Accepted integration: **`8865b021652cc8d0434812262d798be007b0e09c`**, through
+[#533](https://github.com/jhurliman/glsmac/pull/533), on `codex/faithful-1.0`.
 Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `f82d0ad8034939d8064f02fc7de217f127aa3d52`. This is an integration
+at head `1d7b78e993054988b6f707c2af31cb19375b3243`. This is an integration
 checkpoint, not a release candidate or a statement that all platforms were rerun.
 
 **Current focus: the complete Design Workshop (M3/M6). M0–M7 remain open.**
@@ -88,8 +88,10 @@ These receipts do not establish whole-screen parity or the complete human-played
 manufactured Unit path. First custom prototype completion is now integrated
 in#531: a queued saved design is manufactured with its one-time morale bonus
 and native design-history changes, and checkpoint replay matches uninterrupted
-repeat production. High Morale's admitted manufacturing contribution, complete
-newborn state flags and allocation-limit aftermath still need follow-up.
+repeat production. #533 connects admitted High Morale and the successful
+newborn-state stores against15 native controls. The allocation-limit aftermath
+is the current follow-up; complete original Unit/Base equality and the complete
+human-played/remote manufacturing receipt remain open.
 
 | Acceptance | Status at the accepted head | Evidence and remaining exit requirement |
 | --- | --- | --- |

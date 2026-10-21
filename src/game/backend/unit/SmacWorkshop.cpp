@@ -363,6 +363,17 @@ bool CompleteSmacWorkshopPrototype(SmacOriginalDesignPool& pool,int32_t design,
     }
     return true;
 }
+std::unique_ptr<SmacStartupDesignState> PrepareSmacManufacturedPrototype(const SmacStartupDesignState& state,
+    int32_t design,const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner) {
+    if(design<64 || state.RetainedCustomDesign(design,catalog).prototyped) {return {};}
+    if(!state.native_registry) {throw std::invalid_argument("First prototype requires retained design records");}
+    auto prepared=std::make_unique<SmacStartupDesignState>(state);
+    auto& pool=*prepared->native_registry;
+    CompleteSmacWorkshopPrototype(pool,design,catalog,technologies,owner);
+    prepared->RetainNativeRegistry(pool,catalog);
+    return prepared;
+}
 void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
     const faction::SmacFactionTechnologyState& owner) {

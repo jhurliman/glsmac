@@ -83,6 +83,7 @@
 #include "SmacGlobalWildlife.h"
 #include "SmacSimulationState.h"
 #include "SmacStartupDesignState.h"
+#include "SmacWorkshop.h"
 #include "SmacRestartUnitPackage.h"
 #include "SmacWorldSizeRules.h"
 #include "SmacPredefinedUnitCatalog.h"
@@ -437,6 +438,7 @@ void AddTests( task::gsetests::GSETests* task ) {
         tests::AddSmacGlobalWildlifeTests( task );
 	AddSmacSimulationStateTests( task );
 	AddSmacStartupDesignStateTests( task );
+	AddSmacWorkshopTests( task );
 	AddSmacRestartUnitPackageTests( task );
 		tests::AddSmacWorldSizeRulesTests( task );
 		tests::AddSmacPredefinedUnitCatalogTests( task );

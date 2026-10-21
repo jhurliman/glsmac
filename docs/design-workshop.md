@@ -93,6 +93,33 @@ the working Workshop milestone, not individual layout adjustments.
 The existing `Reverse engineer Terran.exe` task has been asked to prioritize
 the first native Workshop capture, asset/layout provenance, picker eligibility,
 preview composition and Apply/Done/Cancel/design-to-production transitions.
-No Workshop-specific native receipt or pixel-match result is claimed yet.
+Native offscreen receipts are now documented in
+[the first path](behavior/design-workshop-first-path.md) and
+[the preview/parent supplement](behavior/design-workshop-preview-parent.md).
+They cover 43 picker admissions, four commit calls, edited model composition,
+constructor geometry and fonts. Full-frame boot/compositing remains unverified.
 Ask the user only for specific inaccessible screen states if local capture
 cannot obtain them; screenshots alone cannot establish costs or mutation rules.
+
+## First editor rules implemented
+
+`SmacWorkshop` provides component-card source identities and effective technology
+admission, retaining unavailable cards and omitting explicitly disabled rows.
+This is the technology predicate, not general advanced-component compatibility.
+
+The first commit API operates on `SmacStartupDesignState`: Scout tuple reuse,
+an Infantry/Hand Weapons/Synthmetal/Fission/no-ability draft, last-slot allocation
+in an empty faction bank, automatic or supplied names, and exact-name repeated
+commit reuse. It uses the shared original Fission builder and installed-language
+name producer. Unavailable or unsupported edits throw before publication.
+Occupied-bank replacement, reactivation and existing-custom renaming remain
+outside this API's admission boundary until their bookkeeping/prompt policy is
+connected. A separate mutable Workshop design store was not introduced.
+
+The named-design flag survives codec V3; prior V1/V2 bytes remain unchanged for
+states that do not require that flag. Existing simulation serialization embeds
+the same registry. This is an editor backend slice: the Workshop button still
+needs its actual popup, draft session and Apply/Done/Cancel routing. Production
+admission/prototype completion, runtime armored-unit identity and the separate
+CVR preview scene remain required for the first end-to-end playable receipt.
+No visual or complete Workshop functionality claim follows from these tests.

@@ -7,6 +7,7 @@
 #include "fixtures/WorkshopGeneral.h"
 #include "fixtures/WorkshopHuman.h"
 #include "fixtures/WorkshopFiltered.h"
+#include "fixtures/WorkshopPsi.h"
 #include "fixtures/WorkshopDomain.h"
 #include "fixtures/WorkshopPicker.h"
 #include "fixtures/WorkshopStats.h"
@@ -433,7 +434,7 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
         GT_ASSERT(sea_checked,"Missing native Sea Former control");
         GT_OK();
     });
-    task->AddTest("SMAC Workshop human proposal producer matches437 original submissions and all policy transitions",GT(){
+    task->AddTest("SMAC Workshop human proposal producer matches521 original submissions and all policy transitions",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);if(!file) {throw std::runtime_error("Missing owned human Workshop rules");}
         const std::string source{std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>()};const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
@@ -441,6 +442,7 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
         std::vector<workshop_filtered_fixture::Case> inputs;
         for(const auto& test:workshop_human_fixture::Cases()) {inputs.push_back({test,{65,1,1,1,0,1,"Retained draft"},-1});}
         for(const auto& test:workshop_filtered_fixture::Cases()) {inputs.push_back(test);}
+        for(const auto& test:workshop_psi_fixture::Cases()) {inputs.push_back(test);}
         for(const auto& input:inputs) {const auto& test=input.control;
             auto owner=Owner();owner.owned.fill(false);for(const auto id:test.technologies) {owner.owned.at(id)=true;}
             auto pool=workshop_general_fixture::BasePool();for(const auto& group:test.records) {for(const auto id:group.first) {pool.at(id)=group.second;}}
@@ -455,7 +457,15 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
                     && actual.alias==expected.alias && actual.mode==expected.mode && actual.filter==expected.filter,"Native human proposal/policy differs: "+std::string(test.name)+" step="+std::to_string(i));
                 GT_ASSERT(actual.published.selected_design==65 && actual.published.name=="Retained draft","Proposal changed UI selector/name");
             }
-            uint64_t digest=UINT64_C(14695981039346656037);for(const auto& row:*result.state.native_registry) {for(const auto byte:row) {digest=(digest^byte)*UINT64_C(1099511628211);}}
+            auto checked_pool=*result.state.native_registry;
+            if(input.caller_clear_selected>=0) {
+                const auto id=static_cast<size_t>(input.caller_clear_selected);
+                GT_ASSERT(checked_pool.at(id)[48]==pool.at(id)[48],"Producer consumed the caller-owned selector flag");
+                // The12 PSI normal-open captures include4490b0's later readback.
+                // Compose only that documented caller effect for the pool check.
+                checked_pool.at(id)[48]&=uint8_t(~0x80u);
+            }
+            uint64_t digest=UINT64_C(14695981039346656037);for(const auto& row:checked_pool) {for(const auto byte:row) {digest=(digest^byte)*UINT64_C(1099511628211);}}
             GT_ASSERT(digest==test.digest,"Human producer complete native pool differs: "+std::string(test.name));
             GT_ASSERT(result.state.owners.size()==state.owners.size() && result.state.retirement_history==state.retirement_history,"Preview changed owner/history authority");
             if(std::string(test.name)=="basic") {

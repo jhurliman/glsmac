@@ -4,8 +4,8 @@ Inputs are current raw records, ownership, faction buffer and explicit scalar
 entry state. For live generation, on_submit must execute preview policy and
 return its updated raw pool; normal_open() supplies that callback. Producing a
 batch against a frozen registry cannot reproduce mid-loop unexclusion.
-AI owners, modified component tables, negative/PSI custom records
-and integer-overflow strategic states are outside this producer's scope.
+AI owners, modified component tables and integer-overflow strategic states
+are outside this producer's scope. Active PSI records are admitted.
 """
 import struct,types
 from startup_technology_reference import has_technology
@@ -16,13 +16,6 @@ import startup_design_cost_reference as costs
 def proposals(designs,factions,ownership,owner,tables,prerequisites,
               reactor_prerequisites,*,personality,threat=0,on_submit=None):
     assert 1<=owner<=7 and threat in (0,1,2,3)
-    # Preview matching's PSI evaluation/scoring is a separate boundary.
-    for i in range(owner*64,(owner+1)*64):
-        a=i*52
-        if struct.unpack_from('<H',designs,a+48)[0]&1:
-            w,d=designs[a+37],designs[a+38]
-            if int(tables['WEAPONS'][w][2])<0 or int(tables['DEFENSES'][d][2])<0:
-                raise NotImplementedError('negative/PSI custom records require strategic evaluation')
     CH=tables['CHASSIS'];WE=tables['WEAPONS'];AR=tables['DEFENSES'];AB=tables['ABILITIES']
     tokens={r[1]:i for i,r in enumerate(tables['TECHNOLOGY'])}
     resolve=lambda s:-1 if s.lower()=='none' else -2 if s.lower()=='disable' else tokens[s]
@@ -223,8 +216,10 @@ def proposals(designs,factions,ownership,owner,tables,prerequisites,
 
 
 def normal_open(designs,factions,ownership,owner,tables,capability,language_rules,
-                reactor_prerequisites,*,personality,unit_counts,production_counts):
-    """New/inactive-slot normal-open composition for stock neutral-project state.
+                reactor_prerequisites,*,personality,unit_counts,production_counts,
+                psi_percent=0,ratio=(3,2),dream_twister_owner=-1,
+                neural_amplifier_owner=-1):
+    """New/inactive-slot normal-open with explicit PSI bonus/project inputs.
 
     Uses independently refreshed capabilities, generated proposals and preview
     submissions, including immediate exclusion side effects between proposals.
@@ -250,7 +245,7 @@ def normal_open(designs,factions,ownership,owner,tables,capability,language_rule
         p=int(row[2])
         if tech(resolve(row[5])) and p>=armor_strength:ar=i;armor_strength=p
     state=dict(mode=1,filter=-1,fields=dict(chassis=ch,weapon=we,armor=ar,reactor=re,mask=0));steps=[]
-    current_factions=refresh(factions,ownership,capability['prerequisites'],capability['catalog'],owner=owner,rules=0x1a0e)['factions']
+    current_factions=refresh(factions,ownership,capability['prerequisites'],capability['catalog'],owner=owner,rules=0x1a0e,psi_percent=psi_percent,ratio=ratio,dream_twister_owner=dream_twister_owner,neural_amplifier_owner=neural_amplifier_owner)['factions']
     def accept(proposal):
         nonlocal raw,state
         raw,state,result=submit(raw,ownership,capability['prerequisites'],owner,proposal['fields'],proposal['category'],state,unit_counts,production_counts)

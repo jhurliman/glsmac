@@ -504,8 +504,6 @@ SmacWorkshopHumanPreview PrepareSmacWorkshopHumanPreview(const SmacStartupDesign
     const auto intrinsic_known=[&](int id) {const auto& row=pool.at(id);
         return Available(int16_t(uint16_t(row[50])|(uint16_t(row[51])<<8)),technologies,owner);};
     const auto eligible=[&](int id) {return (pool.at(id)[48]&1) && !(pool.at(id)[44]&excluded) && (id>=64 || intrinsic_known(id));};
-    for(int id=first;id<first+64;++id) {if(pool[id][48]&1) {const auto d=read(id);
-        if(WE.at(d.weapon).offense<0 || AR.at(d.armor).rating<0) {throw std::invalid_argument("Human Workshop PSI custom evaluation is not admitted");}}}
     const auto price=[&](int ch,int we,int ar,uint32_t mask=0) {return SmacPredefinedUnitCatalog::CalculateCost(CH.at(ch),WE.at(we),AR.at(ar),reactor,mask,catalog.abilities);};
     const auto submit=[&](const SmacWorkshopDraft& draft,int category,int source) {
         int alias=-1;
@@ -551,7 +549,7 @@ SmacWorkshopHumanPreview PrepareSmacWorkshopHumanPreview(const SmacStartupDesign
         else if(plan==1) {
             if(new_armor>=0) {offense_factor=reactor==1 ? 2:1;}
             const int candidate=new_weapon>=0 ? new_weapon:int(draft.weapon);const int64_t strength=WE.at(candidate).offense;
-            if(strength<=0) {throw std::invalid_argument("Human Workshop upgrade requires positive offense");}
+            if(strength==0) {throw std::invalid_argument("Human Workshop upgrade requires nonzero offense");}
             int64_t limit=(reactor==1 ? 2:1)*power*4/strength;limit=limit>=2 && strength>=2 ? std::min(limit,strength):2;
             if(new_armor>=0 && AR.at(new_armor).rating<=limit) {draft.armor=new_armor;}else if(new_weapon<0) {continue;}
             draft.weapon=candidate;

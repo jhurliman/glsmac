@@ -1,6 +1,6 @@
 """Source-derived custom-bank upgrade prefix at 597de0..598433.
 
-Admits installed component tables and conventional weapon/armor values.
+Admits installed component tables, including signed PSI weapon/armor values.
 Plans3/5 skip, plan4 shares0, plan6 requires declared faction values.
 This generates prefix submissions only; it is not the later role controller.
 """
@@ -55,8 +55,9 @@ def upgrade_prefix(designs,ownership,owner,tables,prerequisites,reactor_prerequi
         elif plan==1:
             if new_ar is not None:offense_factor=2 if reactor==1 else 1
             candidate=new_we if new_we is not None else j['weapon']
-            power=int(we[candidate][2]);assert power>0
-            limit=(2 if reactor==1 else 1)*(2<<reactor)*4//power
+            from startup_site_balance_reference import truncdiv
+            power=int(we[candidate][2])
+            limit=truncdiv((2 if reactor==1 else 1)*(2<<reactor)*4,power)
             limit=min(limit,power) if limit>=2 and power>=2 else 2
             if new_ar is not None and int(ar[new_ar][2])<=limit:j['armor']=new_ar
             elif new_we is None:continue

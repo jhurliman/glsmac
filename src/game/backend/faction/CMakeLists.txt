@@ -9,6 +9,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacFactionTurn.cpp
 	${PWD}/SmacComputerGoals.cpp
 	${PWD}/SmacSimulationState.cpp
+    ${PWD}/SmacAirSummary.cpp
 	${PWD}/SmacNativeFactoryState.cpp
 	${PWD}/SmacEcologyWorld.cpp
 	${PWD}/SmacEconomyState.cpp

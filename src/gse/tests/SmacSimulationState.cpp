@@ -1,5 +1,6 @@
 #include "SmacSimulationState.h"
 #include "fixtures/SmacRegionalMilitary.h"
+#include "fixtures/SmacAirSummary.h"
 #include "fixtures/SmacRegionalBaseFlags.h"
 
 #include "game/backend/faction/SmacSimulationState.h"
@@ -92,7 +93,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=35,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=36,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -191,6 +192,11 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=35,bool
     if(version>=34) {suffix.WriteBool(value.faction_turn.has_value());if(value.faction_turn) {suffix.WriteString(value.faction_turn->Serialize().ToString());}}
     if(version>=35 && value.strategy) {for(const auto& entry:*value.strategy) {
         suffix.WriteBool(entry.second.fight.has_value());if(entry.second.fight) {suffix.WriteInt(*entry.second.fight);}
+    }}
+    if(version>=36) {for(const auto& summary:value.air_summary) {
+        suffix.WriteBool(summary.has_value());if(summary) {
+            suffix.WriteInt(summary->foreign_threats);suffix.WriteInt(summary->own_plan0);suffix.WriteInt(summary->own_plan4);
+        }
     }}
     return Wire(value,1,version)+suffix.ToString();
 }
@@ -775,6 +781,41 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(Rejects([&]{strategy.ApplyResearchPriorities(16);}) && strategy==before,"invalid priority answer changed state");
         GT_ASSERT(profile.worker_priorities[1]==2,"mutable strategy changed frozen personality");
         GT_OK();
+    });
+    task->AddTest("SMAC air summary matches18 native predicates and8 PSI attack helpers",GT(){
+        const std::optional<std::array<int32_t,2>> ratio=std::array<int32_t,2>{{3,2}};
+        for(const auto& test:smac_air_fixture::Attacks) {
+            GT_ASSERT(faction::SmacAirAttackEstimate(test.offense,test.peer_defense,ratio,test.bonus,test.project)==test.expected,"Native air attack helper differs");
+        }
+        for(const auto& test:smac_air_fixture::Counters) {
+            std::array<uint32_t,8> relations{};relations.at(test.unit.owner)=test.relation;
+            GT_ASSERT(faction::CountSmacAirSummary({test.unit},{1,test.peer_defense,relations,ratio,test.bonus,false})==test.expected,"Native air counter differs: "+std::string(test.name));
+        }
+        const faction::SmacAirSummaryContext context{1,4,{},std::nullopt,0,false};
+        const faction::SmacAirSummaryUnit locust{1,2,4,-1,false};
+        GT_ASSERT(faction::CountSmacAirSummary({locust,locust},context).own_plan4==2,"Air summary counted distinct designs instead of actual Units");
+        GT_ASSERT(faction::SmacAirAttackEstimate(4,5,std::nullopt,0,false)==4
+            && Rejects([&]{faction::SmacAirAttackEstimate(-1,5,std::nullopt,0,false);}),"Conventional helper required PSI inputs or negative power invented missing ratios");
+        auto catalog=smac_startup_fixture::Units().catalog;
+        catalog.chassis.chassis.resize(8);catalog.chassis.chassis[7].triad=loader::txt::ChassisTriad::Air;catalog.chassis.chassis[7].missile=false;
+        catalog.weapons.weapons.resize(13);catalog.weapons.weapons[12].offense=-1;
+        auto state=State();unit::SmacOriginalDesignPool pool{};pool[10][36]=7;pool[10][37]=12;pool[10][42]=4;pool[10][44]=255;
+        state.designs.native_registry=pool;
+        const auto native=faction::ProjectSmacAirSummaryUnit(state.designs,catalog,10,1);
+        GT_ASSERT(native.owner==1 && native.domain==2 && native.plan==4 && native.offense==-1
+            && faction::CountSmacAirSummary({native},context).own_plan4==1,"Source Native Locust projection filtered an inactive/excluded design or lost its raw plan");GT_OK();
+    });
+    task->AddTest("SMAC air summary V36 retains stale signed counts and per-owner legacy absence",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();value.air_summary[2]=faction::SmacAirSummary{INT32_MIN,0,INT32_MAX};value.air_summary[7]=faction::SmacAirSummary{0,0,0};
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"V36 recomputed stale counts or collapsed known zero into absence");
+        auto legacy=value;legacy.air_summary={};
+        GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(value,35),technologies,profiles,units)==legacy,"V35 migration invented a missing air recount");
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(wire.substr(0,wire.size()-1),technologies,profiles,units);})
+            && Rejects([&]{SmacSimulationState::Deserialize(wire+"x",technologies,profiles,units);}),"Truncated/trailing V36 counts accepted");
+        types::Buffer invalid;invalid.WriteBool(true);invalid.WriteInt(int64_t(INT32_MAX)+1);invalid.WriteInt(0);invalid.WriteInt(0);
+        GT_ASSERT(Rejects([&]{SmacSimulationState::Deserialize(Wire(value,1,36)+CurrentWire(value,35).substr(Wire(value,1,35).size())+invalid.ToString(),technologies,profiles,units);}),"Oversized signed air count accepted");GT_OK();
     });
     task->AddTest("SMAC current fight V35 preserves independent signed policy and legacy absence",GT(){
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();

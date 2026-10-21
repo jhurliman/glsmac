@@ -3,6 +3,7 @@
 #include "SmacTechnologyState.h"
 #include "SmacSocialState.h"
 #include "SmacFactionTurn.h"
+#include "SmacAirSummary.h"
 #include "SmacEconomyState.h"
 #include "SmacRankOrder.h"
 #include "SmacDominanceHistory.h"
@@ -163,6 +164,8 @@ struct SmacSimulationState {
 	// V11-V16 did not record capability history. Migration retains absence;
 	// neither loading nor a read-only query reconstructs it from ownership.
 	std::optional<SmacCapabilityState> capabilities;
+    // V36: last post-Base owner recount. Missing is not a zero threat count.
+    std::array<std::optional<SmacAirSummary>,8> air_summary{};
 	// Absent before V18. Loading cannot reconstruct stale owner-summary counts.
 	std::optional<SmacRegionalMilitaryState> regional_military;
 	// Absent in V11-V20. Migration cannot invent economic attempts or parity of

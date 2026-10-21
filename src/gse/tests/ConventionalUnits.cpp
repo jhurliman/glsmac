@@ -430,6 +430,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
                 state.regional_military->factions[0].base_phase_flags.emplace();state.regional_military->factions[0].base_phase_flags->fill(8);
                 state.regional_military->factions[6].base_phase_flags.emplace();state.regional_military->factions[6].base_phase_flags->fill(128);
                 state.social.factions.front().retained->at(4)=0;
+                state.air_summary[1].reset();state.air_summary[7]=faction::SmacAirSummary{71,72,73};
             });
             game->PublishSmacWorkerKnowledge(GSE_CALL,map::SmacWorkerKnowledge::Create(knowledge));Define(game->GetUM());
             auto low=Record();low.stored_morale=0;auto high=Record();high.stored_morale=6;high.damage=9;
@@ -445,7 +446,9 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
             const auto rng=fixture.GameplayRandom();const auto jsf=game->GetRandom()->GetStateString();fixture.RefreshPopulation(1);
             bool correct=false;
             fixture.ResourceState([&](auto& state){const auto& military=*state.regional_military;
-                correct=military.factions[0].units[1]==2 && military.factions[0].attack[1]==1
+                correct=state.air_summary[1] && *state.air_summary[1]==faction::SmacAirSummary{}
+                    && state.air_summary[7] && state.air_summary[7]->foreign_threats==71
+                    && military.factions[0].units[1]==2 && military.factions[0].attack[1]==1
                     && military.factions[6].units[127]==777 && military.factions[6].attack[0]==888
                     && military.factions[0].unit_phase_flags->at(1)==10242 && military.factions[6].unit_phase_flags->at(127)==4096
                     && game->GetTurnId()==1 && military.factions[0].base_phase_flags->at(1)==8 && military.factions[0].base_phase_flags->at(14)==0
@@ -461,18 +464,29 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(correct,"failed military preparation partially published capability or owner counters");
             for(auto* corner:square->elevation.corners) {*corner=100;}square->Update();
 
+            fixture.ResourceState([&](auto& state){
+                state.air_summary[1]=faction::SmacAirSummary{31,32,33};
+                const auto& settings=game->GetState()->m_settings.global;
+                state.RefreshCapabilities(1,*settings.GetSmacTechnologyRules(),*settings.GetSmacPredefinedUnitRules(),*settings.GetSmacCombatRules(),false);
+                correct=state.air_summary[1]->foreign_threats==31;
+            });
+            GT_ASSERT(correct,"Capability-only refresh eagerly recounted retained air history");
             auto removal=game->GetUM()->PrepareConventionalRemoval(GSE_CALL,{901,798});removal.Commit();removal.Notify(GSE_CALL);
-            fixture.ResourceState([&](auto& state){correct=state.regional_military->factions[0].units[1]==2;});
+            fixture.ResourceState([&](auto& state){correct=state.regional_military->factions[0].units[1]==2 && state.air_summary[1]->own_plan0==32;});
             GT_ASSERT(correct && fixture.GameplayRandom()==rng && game->GetRandom()->GetStateString()==jsf,"removal eagerly recounted military or producer consumed RNG");
             saved=fixture.Snapshot();GT_OK();
         });if(!first.empty()) {return first;}
         ConventionalUnitFixture restored;restored.ConfigureMovementCampaign(false);
         return restored.Run([&](GSE_CALLABLE)->std::string {
             restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});bool correct=false;
-            restored.ResourceState([&](auto& state){correct=state.regional_military && state.regional_military->factions[0].units[1]==2 && state.regional_military->factions[0].unit_phase_flags->at(1)==10242;});
+            restored.ResourceState([&](auto& state){correct=state.air_summary[1] && state.air_summary[1]->foreign_threats==31 && state.air_summary[1]->own_plan4==33
+                && state.air_summary[7] && state.air_summary[7]->foreign_threats==71
+                && state.regional_military && state.regional_military->factions[0].units[1]==2 && state.regional_military->factions[0].unit_phase_flags->at(1)==10242;});
             GT_ASSERT(correct,"actual Start reconstructed stale military history");
             restored.RefreshPopulation(1);
-            restored.ResourceState([&](auto& state){correct=state.regional_military->factions[0].units[1]==1 && state.regional_military->factions[0].attack[1]==1 && state.regional_military->factions[0].unit_phase_flags->at(1)==8194;});
+            restored.ResourceState([&](auto& state){correct=state.air_summary[1] && *state.air_summary[1]==faction::SmacAirSummary{}
+                && state.air_summary[7] && state.air_summary[7]->own_plan0==72
+                && state.regional_military->factions[0].units[1]==1 && state.regional_military->factions[0].attack[1]==1 && state.regional_military->factions[0].unit_phase_flags->at(1)==8194;});
             GT_ASSERT(correct,"restored next owner summary did not consume current Unit records");GT_OK();
         });
     });

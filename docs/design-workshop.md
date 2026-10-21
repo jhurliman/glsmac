@@ -555,3 +555,38 @@ ASan/UBSan with six production and three test files instrumented. Targeted
 correctness analysis is clean for five production files/consumers; changed
 producer/caller follow-ups reused unchanged successful checks. No UI source or
 pixels changed in this slice.
+
+
+### Confirmed live design retirement
+
+The live Workshop command now accepts an explicit overwrite answer. An unanswered
+request returns the original saved state and the old design name/cached local
+Unit count. Declining Done keeps the edited draft; declining Apply restores the
+retained armor/name supported by the current narrow editor. Enter/Escape decline,
+and the modal preserves the original request fence and Apply/Done intent.
+
+Accepted retirement stages all global raw-design Unit matches in descending
+physical order and all registered Base queues without an owner filter. Matching
+current production becomes Stockpile; matching pending entries are removed
+without promotion. Minerals, production baselines, Hurry state and retained
+production-reference caches are preserved. Registry, occupancy, knowledge,
+ordinary Unit counts, queue refreshes, design history and replacement publish
+before despawn callbacks. Failed preparation and replayed acceptance leave the
+world unchanged.
+
+Validation:26 selected native groups and six UI scripts pass. The23 relevant
+Workshop/registry/codec groups pass focused ASan/UBSan with nine production and
+three test files instrumented. Targeted correctness analysis is clean for six
+production files/consumers. A normal software-rendered layout preview exposed
+text overflow; the modal now measures and wraps its paragraph into clipped lines.
+The preview injects an example prompt into isolated copied UI data; live retirement
+is verified by backend fixtures, not claimed as an interactive full-bank capture.
+
+The full-bank fixture covers foreign-owned users of the same raw design ID,
+multiple pending references, unchanged source caches, a late locked-tile failure,
+coherent post-commit callbacks, stale replay and serialized world restoration.
+The full component picker, saved-design browser, original modal frame/font
+matching and complete screen pixel parity remain unfinished. The port also lacks
+the original separate raw Faction aggregate total-Unit field; this slice updates
+its actual roster and ordinary per-design counts rather than claiming that raw
+buffer parity.

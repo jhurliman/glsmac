@@ -1327,6 +1327,91 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
 
+    task->AddTest("SMAC live Workshop confirmed retirement removes global design users and queues atomically",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);std::string saved;
+        const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {
+            using namespace game::backend::unit;
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();auto* um=game->GetUM();
+            fixture.ResourceState([&](auto& state){
+                auto pool=*state.designs.native_registry;
+                for(size_t id=64;id<128;++id) {pool[id]=pool[2];pool[id][45]=2;pool[id][48]=5;}
+                state.designs.RetainNativeRegistry(pool,game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog);
+                state.technology.factions[0].owned[1]=true;
+                for(int owner=1;owner<=2;++owner) {auto& economy=state.economy.at(owner);
+                    if(!economy.design_counts) {economy.design_counts=faction::SmacDesignCounts{};}
+                    economy.design_counts->at(2)=owner==1 ? 1:0;economy.design_counts->at(64)=0;
+                    economy.production_reference_counts=faction::SmacDesignCounts{};}
+            });
+            auto* foreign_owner=&game->GetState()->m_slots->GetSlot(6);
+            const auto retired=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,64);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+            base->SetProductionState(GSE_CALL,ProductionState{retired,17,retired,11,std::vector<ProductionItem>{retired,scout,retired},true});
+            Base::pops_t pops;pops.emplace(19,Pop(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
+            auto context=base->GetSmacResourceContext();context.owner_simulation_id=2;
+            auto* foreign=new Base(game,702,foreign_owner,foreign_owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(16,16),"Foreign queue",{},pops,41,3,
+                ProductionState{retired,23,retired,19,std::vector<ProductionItem>{scout,retired,stockpile,retired},true},context);
+            bm->SpawnBase(GSE_CALL,foreign);foreign->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},1}},Roles());
+            const auto local_before=*base->GetProductionState(),foreign_before=*foreign->GetProductionState();
+            const auto spawn=[&](size_t id,int owner,int design,size_t x) {
+                return um->SpawnConventionalUnit(GSE_CALL,id,um->GetUnitDef("live-scout"),owner==1 ? base->m_owner:foreign_owner,game->GetMap()->GetTile(x,6),
+                    ConventionalUnitState{design,owner,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+            };
+            spawn(92,1,64,8);spawn(93,2,2,10);auto* foreign_retiring=spawn(94,2,64,12);
+            auto knowledge=KnowledgeValue(true,true,128,64).CopyData();knowledge.observers[2]=Knowledge::Observer{false,{}};knowledge.observers[2]->pact_with=0;
+            knowledge.units={{91,6,false},{92,6,false},{93,6,false},{94,6,false}};for(auto& tile:knowledge.tiles) {tile.explored_by=6;}
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+            fixture.ResourceState([](auto& state){
+                // The initial opaque production fixture deliberately invalidates
+                // reference authority. Seed these independently retained rows only
+                // after installing every canonical queue.
+                for(int owner=1;owner<=2;++owner) {state.economy.at(owner).production_reference_counts=faction::SmacDesignCounts{};}
+                state.economy.at(1).production_reference_counts->at(64)=4;state.economy.at(2).production_reference_counts->at(64)=9;
+            });
+            size_t responses=0,hooks=0;bool prompt=false,failed=false,declined=false,closed=false,restore=false,coherent=true;
+            game->On(GSE_CALL,"smac_workshop_commit",NATIVE_CALL(&) {
+                N_EXPECT_ARGS(1);N_GET(view,0,Object);++responses;
+                prompt=static_cast<value::Bool*>(view->Get("confirmation"))->value;failed=static_cast<value::Bool*>(view->Get("failed"))->value;
+                declined=static_cast<value::Bool*>(view->Get("declined"))->value;closed=static_cast<value::Bool*>(view->Get("done"))->value;
+                restore=static_cast<value::Bool*>(view->Get("restore_draft"))->value;return VALUE(value::Undefined);
+            }));
+            um->On(GSE_CALL,"unit_despawn",NATIVE_CALL(&) {
+                ++hooks;bool history=false;fixture.ResourceState([&](const auto& state){history=state.designs.retirement_history[1]->cursor==1
+                    && state.economy.at(1).design_counts->at(64)==0 && state.economy.at(2).design_counts->at(64)==0;});
+                coherent=coherent && history && um->GetUnits().size()==2 && !um->GetUnit(92) && !um->GetUnit(94)
+                    && base->GetProductionState()->current_item.kind==ProductionItemKind::Stockpile && foreign->GetProductionState()->current_item.kind==ProductionItemKind::Stockpile;
+                return VALUE(value::Undefined);
+            }));
+            const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();const auto next_id=Unit::GetNextId();
+            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},
+                {"selected_design",VALUE(value::Int,,64)},{"armor",VALUE(value::Int,,1)},{"name",VALUE(value::String,,"")},{"done",VALUE(value::Bool,,true)},{"request_id",VALUE(value::Int,,1)}};
+            game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(prompt && !failed && !closed && hooks==0 && fixture.Snapshot()==before,"Unanswered overwrite changed world or omitted its modal");
+            args["overwrite"]=VALUE(value::Int,,0);args["request_id"]=VALUE(value::Int,,2);game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(declined && !restore && !closed && fixture.Snapshot()==before,"Declined Done changed the draft/world outcome");
+            args["done"]=VALUE(value::Bool,,false);args["request_id"]=VALUE(value::Int,,3);game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(declined && restore && !closed && fixture.Snapshot()==before,"Declined Apply did not request saved-draft restoration");
+            args["overwrite"]=VALUE(value::Int,,1);args["done"]=VALUE(value::Bool,,true);args["request_id"]=VALUE(value::Int,,4);
+            foreign_retiring->GetTile()->Lock(0);game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();foreign_retiring->GetTile()->Unlock();
+            GT_ASSERT(failed && hooks==0 && fixture.Snapshot()==before,"Late foreign Unit placement failure partially published queues/history/records");
+            args["request_id"]=VALUE(value::Int,,5);game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+            auto local_expected=local_before;local_expected.current_item=stockpile;local_expected.queue=std::vector<ProductionItem>{scout};
+            auto foreign_expected=foreign_before;foreign_expected.current_item=stockpile;foreign_expected.queue=std::vector<ProductionItem>{scout,stockpile};
+            bool retained=false;fixture.ResourceState([&](const auto& state){const auto& design=state.designs.Find(1)->designs.front();
+                retained=design.id==64 && design.defense==1 && design.cost==2 && !design.prototyped && state.designs.retirement_history[1]->cursor==1
+                    && state.designs.retirement_history[1]->slots[0]==SmacRetirementTuple({0,0,0,0,0,0,0,1})
+                    && state.economy.at(1).production_reference_counts->at(64)==4 && state.economy.at(2).production_reference_counts->at(64)==9;});
+            GT_ASSERT(!failed && closed && hooks==2 && coherent && retained && *base->GetProductionState()==local_expected && *foreign->GetProductionState()==foreign_expected
+                && fixture.GameplayRandom()==random && Unit::GetNextId()==next_id,"Confirmed retirement lost global queue/count/history or callback atomicity");
+            saved=fixture.Snapshot();args["request_id"]=VALUE(value::Int,,6);game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(fixture.Snapshot()==saved && hooks==2 && responses==6,"Replayed overwrite repeated retirement");GT_OK();
+        });GT_ASSERT(run.empty(),"Live Workshop retirement: "+run);
+        ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(TanksSource,true);
+        return restored.Run([&](GSE_CALLABLE)->std::string {restored.Restore(GSE_CALL,saved,true);
+            const auto actual=ResearchSnapshot(restored.Game(),restored.Snapshot()),expected=ResearchSnapshot(restored.Game(),saved);
+            const auto mismatch=std::mismatch(actual.begin(),actual.end(),expected.begin(),expected.end());
+            GT_ASSERT(actual==expected && restored.Game()->GetUM()->GetUnits().size()==2,"Retired world restore differs at normalized byte "+std::to_string(std::distance(actual.begin(),mismatch.first))+" sizes "+std::to_string(actual.size())+"/"+std::to_string(expected.size()));GT_OK();});
+    });
     task->AddTest("SMAC live Workshop commits through owned Base commands without altering production",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction([](const std::string& filename) {
             auto source=TanksSource(filename);if(filename!="alpha.txt") {return source;}

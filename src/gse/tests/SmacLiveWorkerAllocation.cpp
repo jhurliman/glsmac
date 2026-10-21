@@ -1378,6 +1378,15 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"commit_smac_workshop",args);}) && fixture.Snapshot()==applied,"Invalid armor reached the registry");
             args["armor"]=VALUE(value::Int,,1);args["request_id"]=VALUE(value::Int,,0);
             GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"commit_smac_workshop",args);}) && fixture.Snapshot()==applied,"Invalid UI request changed the registry");
+            fixture.ResourceState([](auto& state){state.designs.intrinsic_overrides[2]=unit::SmacIntrinsicDesignState{0x205,0x86};});
+            GT_ASSERT(!game->IsSmacUnitProductionEligible(*base,production.current_item),"production ignored owner's intrinsic exclusion");
+            auto* existing=game->GetUM()->GetUnit(91);game->GetUM()->UpdateConventionalUnit(GSE_CALL,existing,existing->Conventional());
+            args["request_id"]=VALUE(value::Int,,3);args["selected_design"]=VALUE(value::Int,,127);args["armor"]=VALUE(value::Int,,0);
+            args["name"]=VALUE(value::String,,"");args["expected_state"]=VALUE(value::String,,base->SmacWorkshopState());
+            game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();bool intrinsic=false;
+            fixture.ResourceState([&](const auto& state){intrinsic=state.designs.intrinsic_overrides[2]==std::optional<unit::SmacIntrinsicDesignState>({0x20d,0x84});});
+            GT_ASSERT(intrinsic && game->IsSmacUnitProductionEligible(*base,production.current_item) && *base->GetProductionState()==production,"live alias did not publish shared intrinsic state or changed production");
+            game->GetUM()->UpdateConventionalUnit(GSE_CALL,existing,existing->Conventional());
             GT_OK();
         });GT_ASSERT(run.empty(),"Live Workshop command: "+run);GT_OK();
     });

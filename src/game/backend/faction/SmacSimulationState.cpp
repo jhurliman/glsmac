@@ -32,7 +32,7 @@ bool RankingTechnologyAvailable(const settings::SmacTechnologyReference& referen
 void SmacCapabilityState::Refresh(int32_t owner,const SmacFactionTechnologyState& technology,
     const settings::SmacTechnologyRules& technologies,const unit::SmacPredefinedUnitCatalog& catalog,
     const settings::SmacCombatRules& combat,const std::array<uint32_t,8>& relations,
-    int32_t psi_percent,bool dream_twister,bool neural_amplifier,bool no_colony_pods) {
+    int32_t psi_percent,bool dream_twister,bool neural_amplifier,bool no_colony_pods,const unit::SmacStartupDesignState* designs) {
     if(owner<1 || owner>7 || technology.admission.simulation_id!=owner || catalog.weapons.weapons.size()!=21 ||
         catalog.defenses.defenses.size()!=10 || catalog.chassis.chassis.size()!=9) {
         throw std::runtime_error("Capability refresh requires its positive owner and complete component tables");
@@ -54,8 +54,9 @@ void SmacCapabilityState::Refresh(int32_t owner,const SmacFactionTechnologyState
     };
     const auto native=std::find_if(catalog.units.begin(),catalog.units.end(),[](const auto& row){return row.source_id==8;});
     if(native==catalog.units.end()) {throw std::runtime_error("Capability refresh requires predefined design8");}
-    const bool native_available=native->active && !(native->faction_exclusion&(1u<<owner)) && available(native->prerequisite)
-        && !(native->plan==8 && no_colony_pods);
+    const auto effective_native=designs ? designs->EffectiveIntrinsic(*native):*native;
+    const bool native_available=effective_native.active && !(effective_native.faction_exclusion&(1u<<owner)) && available(effective_native.prerequisite)
+        && !(effective_native.plan==8 && no_colony_pods);
     Faction next;
     next.available={1,1,1,native_available?evaluate(signed_byte(catalog.weapons.weapons[12].offense),true):0,
         native_available?evaluate(signed_byte(catalog.defenses.defenses[9].rating),false):0};
@@ -130,7 +131,7 @@ void SmacSimulationState::RefreshCapabilities(int32_t owner,const settings::Smac
     // The current validated faction-keyword domain has no PSI scalar writer;
     // its definition constructor supplies0. Projects are explicitly excluded by
     // the campaign capability above, rather than inferred from missing Bases.
-    capabilities->Refresh(owner,*owned,technologies,units.catalog,combat,relations,0,false,false,no_colony_pods);
+    capabilities->Refresh(owner,*owned,technologies,units.catalog,combat,relations,0,false,false,no_colony_pods,&designs);
 }
 
 int32_t CalculateSmacOrdinaryRankingScore(const SmacFactionTechnologyState& owner,

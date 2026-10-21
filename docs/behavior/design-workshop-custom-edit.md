@@ -52,6 +52,9 @@ the attempted named change, and can still return success with that built-in.
 Cached unit and production-reference counts are owner-faction byte arrays
 at `95d9fc + owner*20bc + designId` and
 `95dbfc + owner*20bc + designId`. They are distinct from design flags.
+The [production-reference lifetime contract](production-design-reference-cache.md)
+specifies current-plus-pending contributions, wrapping updates, recount timing
+and saved-state authority; Workshop open/Apply do not refresh that row.
 
 For an unmatched changed built-in, first choose a **provisional** custom slot:
 scan the owner's bank ascending; first owner-excluded slot with both cached
@@ -127,9 +130,10 @@ Reopening/reselecting with `4490b0(selection,0)` clears selected flag `0x80`.
 An explicitly named custom selection supplies its stored name as draft; if
 that text exactly equals the newly generated automatic name, clear named bit
 and leave the draft empty. `rename_automatic` verifies this normalization.
-Built-in/unnamed selections use an empty draft. Selecting an inactive slot
-does not establish a complete fresh-draft initialization contract: retained
-draft fields are possible and are outside the saved-design reopening claim.
+Built-in/unnamed active selections use an empty draft. The separate
+[fresh-draft supplement](design-workshop-fresh-draft.md) closes inactive
+selection: argument 0 resets basic components while retaining draft name and
+raw flags; normal opening passes 1 for technology/recommendation defaults.
 
 ## Obsolete/reactivate and browse order
 

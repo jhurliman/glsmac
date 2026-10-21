@@ -48,6 +48,12 @@ struct SmacRetirementHistory {
     bool operator==(const SmacRetirementHistory& other) const {return cursor==other.cursor && slots==other.slots;}
 };
 
+struct SmacIntrinsicDesignState {
+    uint16_t flags=0;
+    uint8_t exclusion=0;
+    bool operator==(const SmacIntrinsicDesignState& other) const {return flags==other.flags && exclusion==other.exclusion;}
+};
+
 // Mutable owned designs; component indices refer to the frozen unit catalog.
 // Generation is a bounded human startup producer, not a workshop/AI classifier.
 struct SmacStartupDesignState {
@@ -57,6 +63,11 @@ struct SmacStartupDesignState {
     // Native global history has eight rows, including nonparticipating owners.
     // Absence marks old port frames; restore never invents a cleared history.
     std::array<std::optional<SmacRetirementHistory>,8> retirement_history;
+    // Sparse global overrides of the frozen predefined records, shared by
+    // every owner. Absence keeps the legacy immutable-catalog behavior.
+    std::array<std::optional<SmacIntrinsicDesignState>,64> intrinsic_overrides;
+    SmacIntrinsicDesignState IntrinsicState(const SmacPredefinedUnit& definition) const;
+    SmacPredefinedUnit EffectiveIntrinsic(const SmacPredefinedUnit& definition) const;
 	static int32_t OriginalDifficulty( const std::string& canonical_name );
 	static SmacDesignOwner GenerateEmptyOwner( const faction::SmacFactionTechnologyState& technology,
 		const settings::SmacTechnologyRules& technologies, const SmacPredefinedUnitCatalog& catalog, int32_t global_difficulty );

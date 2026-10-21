@@ -87,7 +87,8 @@ SmacRestartUnitPackage SmacRestartUnitPackage::Select(int32_t turn, const SmacSt
     };
     // Positional predefined slots precede this owner's sorted block. All other
     // slots in the original 512-slot scan are empty or foreign and cannot win.
-    for(const auto& row:catalog.units) {
+    for(const auto& definition:catalog.units) {
+        const auto row=designs.EffectiveIntrinsic(definition);
         if(row.active && !(row.faction_exclusion&(uint32_t(1)<<id)) && Prerequisite(row.prerequisite,owner,technologies)) {
             consider(row.source_id,row.chassis_id,row.weapon_id,row.defense_id);
         }

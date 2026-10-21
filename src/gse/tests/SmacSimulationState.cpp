@@ -206,6 +206,19 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC capability refresh honors retained intrinsic activity and exclusion",GT(){
+        auto catalog=CapabilityCatalog();auto technologies=smac_rules_fixture::Technologies();
+        faction::SmacFactionTechnologyState owned{{1,"GAIANS"}};owned.owned.fill(true);
+        settings::SmacCombatRules combat{25,25,25,settings::SmacCombatRules::PsiRatios{{{3,2},{1,1},{1,1}}}};
+        unit::SmacStartupDesignState designs;designs.intrinsic_overrides[8]=unit::SmacIntrinsicDesignState{1,2};
+        faction::SmacCapabilityState current;current.factions[0].foreign={9,8,0,0,0};
+        current.Refresh(1,owned,technologies,catalog,combat,{},0,false,false,false,&designs);
+        GT_ASSERT(current.factions[0].available[faction::SmacCapabilityState::PsiWeapon]==0 && current.factions[0].available[faction::SmacCapabilityState::PsiArmor]==0,"capability refresh ignored shared exclusion");
+        designs.intrinsic_overrides[8]->exclusion=0;current.factions[0].foreign={9,8,0,0,0};
+        current.Refresh(1,owned,technologies,catalog,combat,{},0,false,false,false,&designs);
+        GT_ASSERT(current.factions[0].available[faction::SmacCapabilityState::PsiWeapon]>0,"capability refresh did not observe reactivated intrinsic");GT_OK();
+    });
+
     task->AddTest("SMAC dominance V32 freezes seven native identities and preserves V31 dense payload",GT(){
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
         auto value=State();value.dominance_history.emplace();value.dominance_native_keys.emplace();
@@ -821,6 +834,8 @@ void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
         value.economy.at(2).production_reference_counts->at(2)=251;
         value.economy.at(7).production_reference_counts->at(128)=201;
         value.economy.at(7).production_reference_counts->at(511)=17;
+        value.designs.intrinsic_overrides[2]=unit::SmacIntrinsicDesignState{0x205,0x86};
+        value.designs.intrinsic_overrides[63]=unit::SmacIntrinsicDesignState{0xbeef,0xa5};
         value.rank_order=faction::SmacRankOrder{};value.rank_order->faction_at_rank[7]=2;value.rank_order->faction_at_rank[4]=7;
         value.roster[1].active=false; // retained leaders can identify an eliminated faction
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();

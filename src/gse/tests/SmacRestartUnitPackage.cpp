@@ -38,6 +38,13 @@ bool Rejects(const std::function<void()>& call) {try{call();}catch(const std::ex
 }
 
 void AddSmacRestartUnitPackageTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC restart selector honors shared intrinsic exclusions",GT(){
+        Inputs in;auto& strongest=in.units.catalog.units[11];strongest.chassis_id=0;strongest.weapon_id=5;strongest.defense_id=8;
+        strongest.prerequisite={settings::SmacTechnologyReference::Kind::NONE,std::nullopt};
+        const auto ordinary=in.Select();GT_ASSERT(ordinary.defender==11,"restart overlay control lost eligible strong defender");
+        in.designs.intrinsic_overrides[11]=unit::SmacIntrinsicDesignState{1,2};const auto retained=in.designs;
+        GT_ASSERT(in.Select().defender!=11 && in.designs==retained,"restart ignored own intrinsic exclusion or changed state");GT_OK();
+    });
     task->AddTest("SMAC restart package uses seven saved startup catalogs without regeneration",GT(){
         const std::array<std::pair<const char*,const char*>,7> names{{
             {"GAIANS","gaians_turn100"},{"HIVE","hive_turn100"},{"UNIVERSITY","univ_turn100"},{"MORGANITES","morgan_turn100"},

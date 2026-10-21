@@ -18,6 +18,7 @@
 #include "gse/value/Int.h"
 #include "gse/value/Object.h"
 #include "gse/value/String.h"
+#include "gse/value/Undefined.h"
 #include <type_traits>
 #include <algorithm>
 
@@ -221,6 +222,29 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE) const {
     const auto& technology=*m_game->m_simulation->value.technology.Find(GetSmacResourceContext().owner_simulation_id);
     const auto choices=unit::SmacWorkshopChoices(unit::SmacWorkshopComponent::Armor,catalog,*settings.GetSmacTechnologyRules(),technology);
     const auto mineral_factor=m_game->GetSmacProductionMineralFactor(m_owner);
+    gse::Value* designs=VALUE(gse::value::Undefined);
+    const auto& registry=m_game->m_simulation->value.designs;
+    const auto& counts=m_game->m_simulation->value.economy.at(technology.admission.simulation_id).design_counts;
+    if(registry.native_registry) {
+        const auto first=64*technology.admission.simulation_id;bool ready=true;
+        if(!counts) {for(int id=first;id<first+64;++id) {const auto& row=registry.native_registry->at(id);
+            if((row[48]&1) && (row[44]&(1u<<technology.admission.simulation_id))) {ready=false;break;}}}
+        if(ready) {
+            gse::value::array_elements_t rows;
+            for(const auto id:unit::BrowseSmacWorkshopDesigns(registry,catalog,*settings.GetSmacTechnologyRules(),technology,counts)) {
+                const auto& raw=registry.native_registry->at(id);const bool active=(raw[48]&1)!=0;
+                // Stored metadata is not the selector's editable draft or a
+                // generated display caption. Inactive records supply neither.
+                rows.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                    {"id",VALUE(gse::value::Int,,id)}, {"active",VALUE(gse::value::Bool,,active)},
+                    {"excluded",VALUE(gse::value::Bool,,(raw[44]&(1u<<technology.admission.simulation_id))!=0)},
+                    {"flags",VALUE(gse::value::Int,,uint16_t(uint16_t(raw[48])|(uint16_t(raw[49])<<8)))},
+                    {"stored_name",VALUE(gse::value::String,,active ? std::string(raw.begin(),std::find(raw.begin(),raw.begin()+32,uint8_t(0))):std::string())},
+                    {"unit_count",counts ? static_cast<gse::Value*>(VALUE(gse::value::Int,,counts->at(id))):VALUE(gse::value::Undefined)}
+                }));
+            }designs=VALUE(gse::value::Array,,rows);
+        }
+    }
     gse::value::array_elements_t armor;
     for(const auto& choice:choices) {
         bool supported=choice.technology_available;
@@ -274,6 +298,7 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE) const {
     }
     return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
         {"expected_state",VALUE(gse::value::String,,expected)}, {"armor",VALUE(gse::value::Array,,armor)},
+        {"designs",designs},
         {"chassis",VALUE(gse::value::String,,catalog.chassis.chassis.at(0).names[0].name)},
         {"speed",VALUE(gse::value::Int,,catalog.chassis.chassis.at(0).speed)},
         {"weapon",VALUE(gse::value::String,,catalog.weapons.weapons.at(0).name)},

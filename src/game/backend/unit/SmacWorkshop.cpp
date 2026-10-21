@@ -175,6 +175,33 @@ std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t ind
         if(!changed) {return variant ? short_name:full;}
     }
 }
+std::vector<int32_t> BrowseSmacWorkshopDesigns(const SmacStartupDesignState& state,
+    const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner,const std::optional<faction::SmacDesignCounts>& units) {
+    RequireOwner(owner);state.Validate(catalog);
+    if(!state.native_registry || !state.Find(owner.admission.simulation_id)) {throw std::invalid_argument("Workshop browse requires its retained owner registry");}
+    const auto& pool=*state.native_registry;const int first=owner.admission.simulation_id*64;
+    const uint8_t mask=uint8_t(1u<<owner.admission.simulation_id);std::vector<std::pair<int32_t,int32_t>> order;
+    for(int id=0;id<512;++id) {
+        if(id>=64 && (id<first || id>=first+64)) {continue;}
+        const auto& row=pool[id];const bool active=(row[48]&1)!=0;
+        if(id<64) {
+            if(!active || catalog.weapons.weapons.at(row[37]).offense<0) {continue;}
+            const auto prerequisite=int16_t(uint16_t(row[50])|(uint16_t(row[51])<<8));
+            if(!Available(prerequisite,technologies,owner)) {continue;}
+        }
+        int32_t key=id;
+        if(!active) {key+=0x400;}
+        else if(row[44]&mask) {
+            if(id<64) {key+=0x2000;}
+            else {if(!units) {throw std::runtime_error("Workshop browse requires the retained Unit-count row");}key+=units->at(id)>0 ? 0x800:0x1000;}
+        }
+        order.emplace_back(key,id);
+    }
+    std::sort(order.begin(),order.end());std::vector<int32_t> ids;ids.reserve(order.size());
+    for(const auto& row:order) {ids.push_back(row.second);}return ids;
+}
+
 SmacWorkshopReselection PrepareSmacWorkshopReselection(const SmacStartupDesignState& state,int32_t requested,
     const std::string& retained_name,const SmacPredefinedUnitCatalog& catalog,int32_t owner) {
     state.Validate(catalog);

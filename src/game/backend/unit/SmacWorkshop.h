@@ -45,6 +45,13 @@ void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const Sma
 // Returns the untruncated native buffer; saving owns the31-byte boundary.
 std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,int32_t owner);
+// Original5bdb60 ordering: active included, every inactive own slot,
+// excluded own with/without cached Units, then excluded intrinsics.
+// A missing count row is acceptable only when no excluded active own row needs it.
+std::vector<int32_t> BrowseSmacWorkshopDesigns(const SmacStartupDesignState& state,
+    const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner,const std::optional<faction::SmacDesignCounts>& units);
+
 // Original4490b0(id,0), used by card selection and Apply reselection.
 // Does not run normal-open recommendations or compatibility cleanup.
 struct SmacWorkshopReselection {

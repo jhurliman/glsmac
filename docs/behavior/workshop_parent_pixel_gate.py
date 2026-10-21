@@ -4,7 +4,7 @@ from PIL import Image, ImageChops
 
 REGIONS = {'parent': (216,168,839,555), 'console': (0,511,1024,768),
            'full': (0,0,1024,768), 'decoration': (216,168,839,555),
-           'data': (376,275,460,373)}  # Stock DATA heading and six rows only.
+           'data': (376,275,460,373), 'status': (266,581,759,679)}  # Stock DATA heading and six rows only.
 
 
 def compare(reference, candidate, region='parent', skin=None):

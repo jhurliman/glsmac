@@ -46,6 +46,24 @@ Surface::Surface( DOM_ARGS_T )
     Method(GSE_CALL,"smacworkshopparenttext",NATIVE_CALL(this) {
         N_EXPECT_ARGS(0);return WorkshopParentText(GSE_CALL);
     }));
+    Method(GSE_CALL,"smacworkshopconsolebacking",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(0);
+        if(!m_workshop_console_backing) {
+            if(!m_dialog_source) {m_dialog_source=g_engine->GetTextureLoader()->GetSmacDialogSource();}
+            if(!m_dialog_source) {throw std::runtime_error("Original Workshop console palette unavailable");}
+            // The console uses the same native7b01e0 scanline tile as its
+            // strip. Local top50 is even, preserving the whole-console phase.
+            std::vector<uint8_t> indexed(1024*207);
+            for(size_t y=0;y<207;++y) {std::fill_n(indexed.begin()+y*1024,1024,y%2 ? 65:198);}
+            const auto rgba=loader::texture::smac_dialog_frame::Rgba(indexed,*m_dialog_source);
+            CreateTexture();m_background.texture->Resize(1024,207);
+            std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());
+            m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);
+            m_geometry->AsRectangle()->SetStretched();
+            m_workshop_console_backing=true;
+        }
+        return VALUE(gse::value::Undefined);
+    }));
 
 	NEW( m_mesh, types::mesh::Rectangle );
 	auto* g = m_geometry->AsRectangle();
@@ -728,15 +746,19 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
         const auto source=read("script.txt");if(source.size()>2*1024*1024) {throw std::invalid_argument("Workshop script exceeds source budget");}
         const auto design=loader::txt::TXTLoader::ReadUniqueSection(source,"DESIGNLABELS");
         const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
-        if(design.size()!=16 || labels.size()<=123) {throw std::invalid_argument("Incomplete Workshop parent text source");}
-        std::array<std::string,17> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];
+        if(design.size()!=16 || labels.size()<=918) {throw std::invalid_argument("Incomplete Workshop parent text source");}
+        std::array<std::string,24> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];
+        // LABELS includes its count at index0; offsets are four-byte entries.
+        const std::array<size_t,7> status_indices{916,914,918,917,782,783,915};
+        for(size_t i=0;i<status_indices.size();++i) {text[17+i]=labels[status_indices[i]];}
         for(const auto& item:text) {if(item.empty() || item.size()>44 || item.find('\0')!=std::string::npos) {throw std::invalid_argument("Unsupported Workshop parent label");}}
         m_workshop_parent_text=std::move(text);
     }
     if(!m_dialog_source) {m_dialog_source=g_engine->GetTextureLoader()->GetSmacDialogSource();}
     if(!m_dialog_source) {throw std::runtime_error("Original Workshop palette unavailable");}
-    gse::value::array_elements_t labels,colors;
+    gse::value::array_elements_t labels,colors,status;
     for(size_t i=0;i<16;++i) {labels.push_back(VALUE(gse::value::String,,m_workshop_parent_text->at(i)));}
+    for(size_t i=18;i<23;++i) {status.push_back(VALUE(gse::value::String,,m_workshop_parent_text->at(i)));}
     for(const auto& rgb:m_dialog_source->palette) {
         colors.push_back(VALUE(gse::value::String,,"rgb("+std::to_string(rgb[0])+","+std::to_string(rgb[1])+","+std::to_string(rgb[2])+")"));
     }
@@ -744,6 +766,8 @@ gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
     return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
         {"labels",VALUE(gse::value::Array,,labels)}, {"colors",VALUE(gse::value::Array,,colors)},
         {"minimum",VALUE(gse::value::String,,m_workshop_parent_text->at(16))},
+        {"status_title",VALUE(gse::value::String,,m_workshop_parent_text->at(17))},
+        {"status_labels",VALUE(gse::value::Array,,status)}, {"slot",VALUE(gse::value::String,,m_workshop_parent_text->at(23))},
         {"weapon",picker->Get("weapon")}, {"equipment",picker->Get("equipment")}, {"psi",picker->Get("psi")}
     });
 }

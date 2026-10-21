@@ -52,6 +52,13 @@ struct SmacWorkshopEditor {
     std::array<int32_t,2> ability_slots{{-1,-1}};
 };
 int32_t SmacWorkshopMovement(const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog);
+enum class SmacWorkshopStatusKind { Basic, BasedOnOld, Previous, New, Modifying };
+struct SmacWorkshopStatus {int32_t selected;SmacWorkshopStatusKind kind;};
+// Original43d730 status paint also selects a provisional slot. Read retained
+// owner caches lazily; this transition neither constructs nor saves a record.
+SmacWorkshopStatus QuerySmacWorkshopStatus(const SmacOriginalDesignPool& pool,const SmacWorkshopDraft& draft,
+    int32_t owner,const std::optional<faction::SmacDesignCounts>& units,
+    const std::optional<faction::SmacDesignCounts>& production);
 // Original5932d0 formatting from the editable tuple, with the main painter's
 // optional trailing space and ascending installed ability abbreviations.
 std::string FormatSmacWorkshopStats(const SmacWorkshopDraft& draft,

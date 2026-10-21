@@ -114,7 +114,7 @@ return {
             if (#is_defined(e.declined) && e.declined) {
                 this.message.text = ''; return;
             }
-            this.selected_design = e.design_id;
+            if (!#is_defined(this.selection.status)) { this.selected_design = e.design_id; }
             if (e.intrinsic_name_warning) { this.draft_name = ''; this.message.text = 'The original unit name is retained.'; }
             else { this.message.text = ''; }
             if (e.done) { this.hide_view(); }
@@ -123,6 +123,15 @@ return {
             this.window.listen(p.game, event, (e) => { this.hide_view(); });
         }
         this.window.listen(p.game, 'turn_status', (e) => { if (e.status == 'please_wait') { this.hide_view(); } });
+        // Console composites after the parent: it must escape the parent's
+        // modal dimmer, and its upper rail overlaps the bottom of DESWIN.
+        this.console = p.ui.root.window({zindex: 0.905, align: 'top left', left: 0, top: 511, width: 1024, height: 257});
+        this.console_backing = this.console.surface({left: 0, top: 50, width: 1024, height: 207});
+        this.console.surface({left: 0, top: 0, width: 1024, height: 257, background: 'console2.pcx:smacsoftware()'});
+        this.console.surface({left: 0, top: 0, width: 1024, height: 257, smac_frame: [[3,7,59,242,189],[0,10,62,239,186],[3,266,70,759,168],[0,269,73,756,165]]});
+        this.status_frame = this.console.panel({left: 272, top: 76, width: 481, height: 86, overflow: 'hidden'});
+        this.status_title = this.status_frame.text({align: 'top left', baseline: 18, font: 'arialbd.ttf:18:mono', text: ''});
+        this.status_lines = []; this.console.hide();
         this.strip = p.ui.root.window({zindex: 0.91, align: 'top left', left: 8, top: 703, width: 756, height: 56, background: 'black'});
         this.strip_canvas = this.strip.surface({left: 0, top: 0, width: 756, height: 56});
         this.strip_cards = []; this.strip_offset = 0; this.strip_hover = (0 - 1); this.strip.hide();
@@ -215,6 +224,7 @@ return {
         if (#is_defined(this.selection.ability_slots)) { this.ability_slots = this.selection.ability_slots; }
     },
     update_labels: () => {
+        this.update_status();
         this.chassis.text = #uppercase(this.selection.chassis); this.weapon.text = #uppercase(this.selection.weapon); this.reactor.text = #uppercase(this.selection.reactor);
         const equipment = this.selection.weapon_mode >= 3;
         const label = equipment ? this.parent_text.equipment : this.parent_text.weapon;
@@ -226,6 +236,34 @@ return {
         let slot = 0; for (label of this.ability_labels) { const bit = this.ability_slots[slot];
             label.text = bit < 0 ? 'NONE' : #uppercase(this.selection.ability_names[bit]); slot++;
         }
+    },
+    update_status: () => {
+        if (!#is_defined(this.selection.status)) { this.console.hide(); return; }
+        const previous = this.selected_design;
+        this.selected_design = this.selection.draft.selected_design;
+        const text = this.parent_text; const status = this.selection.status;
+        this.console_backing.smacworkshopconsolebacking();
+        let message = text.status_labels[status];
+        if (status == 3) { message += ' (' + text.slot + ' #' + #to_string(this.selected_design % 64 + 1) + ')'; }
+        message = #uppercase(message);
+        this.status_title.text = #uppercase(text.status_title); this.status_title.color = text.colors[224];
+        this.status_title.left = (481 - this.status_title.measure().width) / 2;
+        for (line of this.status_lines) { line.remove(); } this.status_lines = [];
+        const frame = this.status_frame;
+        const probe = frame.text({font: 'arialbd.ttf:18:mono', text: ''});
+        let lines = []; let line = '';
+        for (word of #split(message, ' ')) {
+            const candidate = line == '' ? word : line + ' ' + word; probe.text = candidate;
+            if (line != '' && probe.measure().width > 481) { lines :+ line; line = word; }
+            else { line = candidate; }
+        }
+        lines :+ line; probe.remove(); let baseline = 78 - 22 * (#sizeof(lines) - 1);
+        for (value of lines) {
+            const label = frame.text({align: 'top left', baseline: baseline, font: 'arialbd.ttf:18:mono', color: text.colors[224], text: value});
+            label.left = (481 - label.measure().width) / 2; this.status_lines :+ label; baseline += 22;
+        }
+        this.console.show();
+        if (previous != this.selected_design && #is_defined(this.visible_designs) && #is_defined(this.selection.designs)) { this.paint_strip(); }
     },
     armor_strength: (strength) => { return strength < 0 ? 'Psi' : #to_string(strength); },
     update_armor: () => {
@@ -399,5 +437,5 @@ return {
         if (choice >= 0) { fields = fields + {overwrite: choice}; }
         this.p.game.event('commit_smac_workshop', fields);
     },
-    hide_view: () => { this.picker_active = false; this.ability_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.overwrite_window.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); },
+    hide_view: () => { this.picker_active = false; this.ability_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.overwrite_window.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); this.console.hide(); },
 };

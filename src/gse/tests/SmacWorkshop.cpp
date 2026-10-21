@@ -29,6 +29,31 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop status matches nine native selection transitions without saving",GT(){
+        // Native controls.json, frozen92d5a04d299620a805bf710345bc6fdc6e50079dbf8e095c6e3888958dc47d07.
+        using K=unit::SmacWorkshopStatusKind;
+        const std::array<K,9> kinds{K::Basic,K::BasedOnOld,K::Previous,K::New,K::New,K::BasedOnOld,K::Modifying,K::BasedOnOld,K::BasedOnOld};
+        const std::array<int32_t,9> selections{2,2,64,64,64,67,64,66,68};
+        for(size_t i=0;i<kinds.size();++i) {
+            auto pool=workshop_general_fixture::BasePool();faction::SmacDesignCounts units{},production{};units.fill(1);
+            for(size_t id=64;id<128;++id) {pool[id]=pool[2];pool[id][48]=1;pool[id][44]=0;}
+            if(i==3) {pool[64][48]=0;}if(i==4) {pool[64][44]=2;}if(i==5) {pool[67][48]=0;}
+            if(i>=7) {for(size_t id:{66u,68u}) {pool[id][44]=2;units[id]=0;production[id]=i==7 ? 1:0;}}
+            const auto before=pool;
+            unit::SmacWorkshopDraft draft{i<2 ? 2:64,0,0,uint32_t(i==0 || i==2 ? 0:1),0,1,"ignored name"};
+            const auto result=unit::QuerySmacWorkshopStatus(pool,draft,1,units,production);
+            GT_ASSERT(result.selected==selections[i] && result.kind==kinds[i] && pool==before,"Native status transition differs: "+std::to_string(i));
+        }
+        auto pool=workshop_general_fixture::BasePool();faction::SmacDesignCounts zero{};
+        for(size_t id=64;id<128;++id) {pool[id]=pool[2];pool[id][48]=1;pool[id][44]=0;}
+        unit::SmacWorkshopDraft changed{64,0,0,1,0,1,""};
+        pool[66][44]=2;pool[66][43]=uint8_t(pool[64][43]+1);auto queued=zero;queued[66]=1;
+        GT_ASSERT(unit::QuerySmacWorkshopStatus(pool,changed,1,zero,queued).kind==K::Modifying,"Queued wrong-role record became selected");
+        GT_ASSERT(Rejects([&]{unit::QuerySmacWorkshopStatus(pool,changed,1,std::nullopt,queued);}),"Missing required cached counts became zero");
+        pool[65][48]=0;
+        GT_ASSERT(unit::QuerySmacWorkshopStatus(pool,changed,1,std::nullopt,std::nullopt).selected==65,"Inactive slot unnecessarily required caches");
+        GT_ASSERT(Rejects([&]{unit::QuerySmacWorkshopStatus(pool,changed,2,zero,zero);}),"Foreign status bank accepted");GT_OK();
+    });
     task->AddTest("SMAC Workshop ability chooser matches three native lists and nine cost fragments",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);if(!input) {throw std::runtime_error("Missing owned ability rules");}

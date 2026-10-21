@@ -5279,6 +5279,8 @@ public:
 	std::string CheckEarlyConventionalStartup( const int scenario ) {
 		using namespace game::backend;
 		using namespace game::backend::unit;
+		// Keep later restore fixtures off the stack: all scenario branches share
+		// this debug frame, including while the real startup path is nested.
 		// Actual claimed Start and real event dispatch, with synthetic frozen
 		// profiles/map. Scenarios8/9 execute the actual default-world/definition scripts;
 		// rendering remains asset-free, while creation, movement and turn are real.
@@ -5580,7 +5582,7 @@ public:
 				GT_OK();
 			}
 			std::string saved;std::vector<std::string> research_saves;std::vector<int64_t> retired_requests;
-			std::optional<faction::SmacSimulationState> first_completed;
+			std::unique_ptr<faction::SmacSimulationState> first_completed;
 			std::array<int64_t,2> first_resources{};
 			const auto completed = WithScriptValues([&](GSE_CALLABLE)->std::string {
 				auto* base=m_game.GetBM()->GetBases().begin()->second;
@@ -5608,7 +5610,7 @@ public:
 					&& m_game.m_simulation->value.technology.Find(1)->target==64
 					&& base->GetProductionState()->minerals==first_minerals && base->GetAccumulatedNutrients()==first_food
 					&& m_game.GetCanonicalEconomy(base->m_owner).credits==first_credits+first_energy,"answer replayed upkeep or failed to post exactly one credit");
-				first_completed=m_game.m_simulation->value;first_resources={first_food,first_minerals};
+				first_completed=std::make_unique<faction::SmacSimulationState>(m_game.m_simulation->value);first_resources={first_food,first_minerals};
 				// Force only the saved threshold boundary; the next full native turn
 				// still calculates/submits its actual Base labs and acquires the flag9 tech.
 				auto& tech=m_game.m_simulation->value.technology.factions.front();tech.cached_threshold=1;tech.labs=0;
@@ -5634,7 +5636,7 @@ public:
 			GT_ASSERT(completed.empty(), "research completion: "+completed);
 			const auto source=[](const std::string& name){return CanonicalStartupSource(name,true,true);};
 			for(size_t checkpoint=0;checkpoint<research_saves.size();++checkpoint) {
-				BackendFixture resumed;resumed.ConfigureConventional(true,3,true,false,false,nullptr,source);
+				auto resumed_storage=std::make_unique<BackendFixture>(); auto& resumed=*resumed_storage;resumed.ConfigureConventional(true,3,true,false,false,nullptr,source);
 				resumed.m_game.m_next_research_request=1000;
 				const auto error=resumed.WithScriptValues([&](GSE_CALLABLE)->std::string {
 					resumed.RestoreKnowledgeThroughStart(GSE_CALL,research_saves[checkpoint],[&](GSE_CALLABLE) {
@@ -5664,7 +5666,7 @@ public:
 			}
 			// Register/retire a destination GC space only outside the source
 			// accumulation: the collector locks the space registry before collecting.
-			BackendFixture destination;
+			auto destination_storage=std::make_unique<BackendFixture>(); auto& destination=*destination_storage;
 			destination.ConfigureConventional(true,3,true,false,false,nullptr,source);
 			return destination.WithScriptValues([&](GSE_CALLABLE)->std::string {
 				destination.RestoreConventional(GSE_CALL,saved,true);
@@ -5699,7 +5701,7 @@ public:
                 GT_ASSERT(rejected && Unit::GetNextId()==id && m_game.GetUM()->GetUnits().size()==2,"Late compensation Pod escaped claimed startup");
                 saved=WorldSnapshot();pod_wire=Unit::Serialize(pod).ToString();GT_OK();
             });GT_ASSERT(captured.empty(),"Compensation save: "+captured);
-            BackendFixture destination;
+            auto destination_storage=std::make_unique<BackendFixture>(); auto& destination=*destination_storage;
             destination.ConfigureConventional(true,3,true,false,false,nullptr,[](const std::string& name){return CanonicalStartupSource(name,true);});
             destination.m_state->m_settings.global.difficulty_level=1;
             destination.m_state->m_slots->GetSlot(0).GetPlayer()->SetDifficultyLevel("Thinker");
@@ -5777,7 +5779,7 @@ public:
 		GT_ASSERT( published.empty(), "sealed publication: " + published );
 		// The actual world-body reader gets its staged BoundSimulation and must
 		// restore Ready records directly, without replaying startup or entropy.
-		BackendFixture destination;
+		auto destination_storage=std::make_unique<BackendFixture>(); auto& destination=*destination_storage;
 		const std::function<std::string(const std::string&)> restore_source=default_world
 			? std::function<std::string(const std::string&)>([](const std::string& name){return CanonicalStartupSource(name,true);}) : nullptr;
 		destination.ConfigureConventional( true, 3, default_world, default_world ? local_rover : true,false,nullptr,restore_source );

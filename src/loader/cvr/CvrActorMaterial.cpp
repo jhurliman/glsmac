@@ -67,6 +67,30 @@ std::vector<uint8_t> CvrActorMaterial::ReadWorkshopBackdrop(std::string_view des
     if(image.width!=623 || image.height!=368) {throw std::invalid_argument("Workshop requires its original623x368 backdrop");}
     for(auto& pixel:image.pixels) {pixel=uint8_t(pixel+10);}return std::move(image.pixels);
 }
+std::array<std::vector<uint8_t>,10> CvrActorMaterial::ReadWorkshopWeaponSprites(std::string_view units_pcx) {
+    const auto image=ReadPcx(units_pcx);std::array<std::vector<uint8_t>,10> result;
+    if(image.width<816 || image.height<693) {throw std::invalid_argument("Incomplete Workshop weapon sprite sheet");}
+    for(size_t id=0;id<10;++id) {
+        const size_t left=id==9?716:2,top=id==9?233:2+77*id;auto& sprite=result[id];sprite.reserve(7500);
+        for(size_t y=0;y<75;++y) {for(size_t x=0;x<100;++x) {
+            auto pixel=uint8_t(image.pixels[(top+y)*image.width+left+x]+10);
+            if(pixel==6 || pixel==7) {pixel=9;}sprite.push_back(pixel);
+        }}
+    }return result;
+}
+void CvrActorMaterial::PaintWorkshopWeaponSprite(std::vector<uint8_t>& dst,size_t width,size_t height,
+    const std::vector<uint8_t>& sprite,int ordinal) {
+    if(&dst==&sprite || width==0 || height==0 || width>2048 || height>2048 || dst.size()!=width*height
+        || sprite.size()!=7500 || ordinal<0 || ordinal>=20) {throw std::invalid_argument("Invalid Workshop weapon underlay surface");}
+    const int left=27+108*(ordinal%5),top=4+94*(ordinal/5);
+    // Keep the logical100x75 origin: an untrimmed keyed copy is equivalent
+    // to preserving the native trim offsets, including the extra x129 pixel.
+    for(int y=0;y<75;++y) {for(int x=0;x<100;++x) {
+        const int px=left+3+x,py=top+8+y;const auto pixel=sprite[size_t(y)*100+x];
+        if(pixel!=9 && px>=left && px<left+105 && py>=top && py<top+91 && px>=0 && py>=0
+            && size_t(px)<width && size_t(py)<height) {dst[size_t(py)*width+size_t(px)]=pixel;}
+    }}
+}
 
 std::array< CvrPalette::Color, 256 > CvrActorMaterial::ReadSoftwareColors( const std::string_view palette_pcx ) {
 	const auto palette = ReadPcx( palette_pcx );

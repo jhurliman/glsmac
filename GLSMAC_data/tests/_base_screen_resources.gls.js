@@ -30,6 +30,7 @@ return (game, base, ui) => {
 		result.widget = child;
 		result.listview = child;
 		result.scrollview = child;
+		result.scrollbar = child;
 		if (!#is_defined(result.text)) { result.text = child; }
 		return result;
 	};

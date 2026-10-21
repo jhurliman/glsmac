@@ -184,7 +184,7 @@ Surface::Surface( DOM_ARGS_T )
             if(id>9) {continue;}
             const auto image=m_workshop_components->Render(2,id,true,known,position,int(ordinal));
             if(!image) {continue;}
-            for(int py=y+3;py<y+88;++py) {for(int px=x+3;px<x+102;++px) {
+            for(int py=y;py<y+91;++py) {for(int px=x;px<x+105;++px) {
                 const int sx=px-image->target_anchor[0]+128,sy=py-image->target_anchor[1]+128;
                 const auto source=image->indexed.color[size_t(sy)*256+sx];auto& destination=indexed[size_t(py)*623+px];
                 if(id==5 && known) {destination=m_workshop_components->Composite(source,destination);}
@@ -201,19 +201,33 @@ Surface::Surface( DOM_ARGS_T )
         N_EXPECT_ARGS(10);N_GETVALUE(kind,0,Int);N_GETVALUE(selected,1,Int);N_GET(rows,2,Array);
         N_GETVALUE(chassis,3,Int);N_GETVALUE(weapon,4,Int);N_GETVALUE(reactor,5,Int);N_GETVALUE(faction,6,String);
         N_GETVALUE(power,7,Int);N_GETVALUE(mode,8,Int);N_GETVALUE(strength,9,Int);
-        if((kind!=0 && kind!=3) || selected<(kind==0?0:1) || selected>(kind==0?8:4) || rows->value.size()>size_t(kind==0?9:4)
+        const int maximum=kind==0?8:kind==1?20:4;
+        if((kind!=0 && kind!=1 && kind!=3) || selected<(kind==3?1:0) || selected>maximum || rows->value.size()>size_t(kind==0?9:kind==1?20:4)
             || chassis<0 || chassis>8 || weapon<0 || weapon>20 || reactor<1 || reactor>4
             || power< -127 || power>127 || mode<0 || mode>12 || strength< -127 || strength>127
             || faction.empty() || faction.size()>256 || faction.find_first_of("/\\:\0",0,4)!=std::string::npos) {throw std::invalid_argument("Invalid Workshop component picker request");}
-        std::vector<std::pair<int,bool>> choices;std::array<bool,9> seen{};
+        struct Choice {int id;bool known;int power,mode,sprite;};
+        std::vector<Choice> choices;std::array<bool,21> seen{};
         for(const auto* value:rows->value) {
             if(!value || value->type!=gse::VT_OBJECT) {throw std::invalid_argument("Invalid Workshop component card");}
             const auto& row=static_cast<const gse::value::Object*>(value)->value;
             const auto id=row.find("id"),known=row.find("technology_available");
             if(id==row.end() || known==row.end() || !id->second || !known->second || id->second->type!=gse::VT_INT || known->second->type!=gse::VT_BOOL) {throw std::invalid_argument("Incomplete Workshop component card");}
             const auto component=static_cast<const gse::value::Int*>(id->second)->value;
-            if(component<(kind==0?0:1) || component>(kind==0?8:4) || seen[size_t(component)]) {throw std::invalid_argument("Invalid or repeated Workshop component identity");}
-            seen[size_t(component)]=true;choices.emplace_back(int(component),static_cast<const gse::value::Bool*>(known->second)->value);
+            if(component<(kind==3?1:0) || component>maximum || seen[size_t(component)]) {throw std::invalid_argument("Invalid or repeated Workshop component identity");}
+            Choice choice{int(component),static_cast<const gse::value::Bool*>(known->second)->value,0,0,-1};
+            if(kind==1) {
+                const auto integer=[&](const char* key) {const auto item=row.find(key);
+                    if(item==row.end() || !item->second || item->second->type!=gse::VT_INT) {throw std::invalid_argument("Incomplete Workshop weapon metadata");}
+                    return static_cast<const gse::value::Int*>(item->second)->value;};
+                const auto card_power=integer("power"),card_mode=integer("mode"),sprite=integer("sprite");
+                if(card_power< -128 || card_power>127 || !((card_mode>=0 && card_mode<=2) || (card_mode>=7 && card_mode<=12))
+                    || sprite< -128 || sprite>127 || ((card_mode==8 || card_mode==9 || card_mode==11) && sprite>9)) {
+                    throw std::invalid_argument("Unsupported Workshop weapon definition or sprite selector");
+                }
+                choice.power=int(card_power);choice.mode=int(card_mode);choice.sprite=int(sprite);
+            }
+            seen[size_t(component)]=true;choices.push_back(choice);
         }
         if(!m_dialog_source) {m_dialog_source=g_engine->GetTextureLoader()->GetSmacDialogSource();}
         if(!m_dialog_source) {throw std::runtime_error("Original Workshop frame source unavailable");}
@@ -222,23 +236,31 @@ Surface::Surface( DOM_ARGS_T )
             util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));return std::string(bytes.begin(),bytes.end());};
         std::vector<uint8_t> indexed(623*387,9);std::array<uint32_t,3> position{};
         for(size_t ordinal=0;ordinal<choices.size();++ordinal) {
-            const int id=choices[ordinal].first;const bool known=choices[ordinal].second;const int x=27+108*int(ordinal%5),y=4+94*int(ordinal/5);
+            const auto& choice=choices[ordinal];const int id=choice.id;const bool known=choice.known;
+            const int x=27+108*int(ordinal%5),y=4+94*int(ordinal/5);
             loader::texture::smac_dialog_frame::Paint(indexed,623,387,*m_dialog_source,{id==selected?2:0,x,y,x+105,y+91},{0,0,623,387});
-            const std::array<int,8> key{int(kind),kind==0?id:int(chassis),kind==0?0:int(weapon),kind==0?int(reactor):id,
-                kind==0?1:int(power),kind==0?0:int(mode),kind==0?1:int(strength),int(ordinal)};
+            if(kind==1 && (choice.mode==8 || choice.mode==9 || choice.mode==11) && choice.sprite>=0) {
+                if(!m_workshop_weapon_sprites) {m_workshop_weapon_sprites=loader::cvr::CvrActorMaterial::ReadWorkshopWeaponSprites(read("units.pcx"));}
+                loader::cvr::CvrActorMaterial::PaintWorkshopWeaponSprite(indexed,623,387,m_workshop_weapon_sprites->at(size_t(choice.sprite)),int(ordinal));
+            }
+            const std::array<int,8> key{int(kind),kind==0?id:kind==1?0:int(chassis),kind==0?0:kind==1?id:int(weapon),kind==0?int(reactor):kind==1?1:id,
+                kind==0?1:kind==1?choice.power:int(power),kind==0?0:kind==1?choice.mode:int(mode),kind==0 || kind==1?1:int(strength),0};
             const auto before=position;
             auto found=std::find_if(m_workshop_picker_images.begin(),m_workshop_picker_images.end(),[&](const auto& entry){return entry.key==key && entry.known==known && entry.before==before;});
-            std::shared_ptr<const loader::cvr::CvrScoutImage> image;
-            if(found!=m_workshop_picker_images.end()) {image=found->image;position=found->after;}
+            std::shared_ptr<const std::vector<uint8_t>> colors;
+            if(found!=m_workshop_picker_images.end()) {colors=found->colors;position=found->after;}
             else {
-                auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,read(faction),key[1],key[2],0,key[3],int(kind),{key[4],key[5],key[6]});
-                image=std::make_shared<const loader::cvr::CvrScoutImage>(renderer.RenderWorkshopPicker(int(kind),int(ordinal),known,position));
-                if(m_workshop_picker_images.size()==16) {m_workshop_picker_images.erase(m_workshop_picker_images.begin());}
-                m_workshop_picker_images.push_back({key,known,before,position,image});
+                auto renderer=kind==1 ? loader::cvr::CvrScoutRenderer::LoadWorkshopPickerWeapon(read,read(faction),id,{key[4],key[5],1})
+                    :loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,read(faction),key[1],key[2],0,key[3],int(kind),{key[4],key[5],key[6]});
+                auto image=renderer.RenderWorkshopPicker(int(kind),int(ordinal),known,position);
+                colors=std::make_shared<const std::vector<uint8_t>>(std::move(image.indexed.color));
+                if(m_workshop_picker_images.size()==64) {m_workshop_picker_images.erase(m_workshop_picker_images.begin());}
+                m_workshop_picker_images.push_back({key,known,before,position,colors});
             }
-            for(int py=y+3;py<y+88;++py) {for(int px=x+3;px<x+102;++px) {
-                const int sx=px-image->target_anchor[0]+128,sy=py-image->target_anchor[1]+128;
-                const auto source=image->indexed.color[size_t(sy)*256+sx];if(source!=9) {indexed[size_t(py)*623+px]=source;}
+            // The destination anchor changes metadata, not the256-square planes.
+            for(int py=y;py<y+91;++py) {for(int px=x;px<x+105;++px) {
+                const int sx=px-(x+52)+128,sy=py-(y+45)+128;
+                const auto source=colors->at(size_t(sy)*256+sx);if(source!=9) {indexed[size_t(py)*623+px]=source;}
             }}
         }
         const auto rgba=loader::texture::smac_dialog_frame::Rgba(indexed,*m_dialog_source);
@@ -732,14 +754,15 @@ gse::Value* Surface::WorkshopPickerText(GSE_CALLABLE) {
         const auto domains=loader::txt::TXTLoader::ReadUniqueSection(read("alpha.txt"),"TRIAD");
         const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
         if(domains.size()!=3 || labels.size()<198) {throw std::invalid_argument("Incomplete Workshop picker text source");}
-        std::array<std::string,6> text{domains[0],domains[1],domains[2],labels[122],labels[127],labels[197]};
+        std::array<std::string,8> text{domains[0],domains[1],domains[2],labels[122],labels[127],labels[197],labels[130],labels[129]};
         for(const auto& item:text) {if(item.empty() || item.size()>128 || item.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop picker label");}}
         m_workshop_picker_text=std::move(text);
     }
     const auto& text=*m_workshop_picker_text;
     return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
         {"domains",VALUE(gse::value::Array,,gse::value::array_elements_t{VALUE(gse::value::String,,text[0]),VALUE(gse::value::String,,text[1]),VALUE(gse::value::String,,text[2])})},
-        {"power",VALUE(gse::value::String,,text[3])}, {"shielding",VALUE(gse::value::String,,text[4])}, {"psi",VALUE(gse::value::String,,text[5])}
+        {"power",VALUE(gse::value::String,,text[3])}, {"shielding",VALUE(gse::value::String,,text[4])}, {"psi",VALUE(gse::value::String,,text[5])},
+        {"weapon",VALUE(gse::value::String,,text[6])}, {"equipment",VALUE(gse::value::String,,text[7])}
     });
 }
 

@@ -27,6 +27,7 @@ struct CvrScoutRenderer::Assets {
 	std::vector< CvrPalette > palettes;
     std::vector<CvrFrameSelection> selections;
     int workshop_weapon_mode=0;
+    int picker_weapon=-1;
 	std::optional< std::array< CvrPalette::Color, 256 > > software_colors;
 	scout::LightingTable lighting;
 };
@@ -75,6 +76,10 @@ CvrScoutRenderer CvrScoutRenderer::LoadWorkshopDesign(const WorkshopReader& read
     int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition) {
     return LoadDesign(read,faction_pcx,chassis,weapon,armor,reactor,kind,definition,kind<0 ? Profile::Workshop:Profile::WorkshopPart);
 }
+CvrScoutRenderer CvrScoutRenderer::LoadWorkshopPickerWeapon(const WorkshopReader& read,std::string_view faction_pcx,
+    int weapon,const WorkshopDefinition& definition) {
+    return LoadDesign(read,faction_pcx,0,weapon,0,1,1,definition,Profile::WorkshopPart,true);
+}
 CvrScoutRenderer CvrScoutRenderer::LoadStripDesign(const WorkshopReader& read,std::string_view faction_pcx,
     int chassis,int weapon,int armor,int reactor,const WorkshopDefinition& definition) {
     // Original4d8420 selects this before the later Probe body remap and does
@@ -84,16 +89,16 @@ CvrScoutRenderer CvrScoutRenderer::LoadStripDesign(const WorkshopReader& read,st
     return LoadDesign(read,faction_pcx,chassis,weapon,armor,reactor,-1,definition,profile);
 }
 CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::string_view faction_pcx,
-    int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition,Profile profile) {
+    int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition,Profile profile,bool independent_weapon) {
     if(chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9 || reactor<1 || reactor>4 || kind< -1 || kind>3
-        || !((definition.weapon_mode>=0 && definition.weapon_mode<=2) || (definition.weapon_mode>=7 && definition.weapon_mode<=12))) {
+        || (independent_weapon && kind!=1) || !((definition.weapon_mode>=0 && definition.weapon_mode<=2) || (definition.weapon_mode>=7 && definition.weapon_mode<=12))) {
         throw std::invalid_argument("Workshop composition requires stock component identities and supported modes");
     }
     // The original temporarily remaps this Probe design for all four composers.
     if(weapon==18 && chassis==1 && definition.armor_strength<=1) {chassis=0;}
     // The live weapon side-card caller substitutes chassis-1 for Probe when
     // its ordinary-unit cache flag is zero. Whole-unit composition does not.
-    if(kind==1 && weapon==18 && definition.independent_probe) {chassis=-1;}
+    if(independent_weapon || (kind==1 && weapon==18 && definition.independent_probe)) {chassis=-1;}
     const auto palette=read("palette.pcx"),system=read("system.txt");scout::ValidateMapLight(system);
     const auto materials=CvrActorMaterial::ReadWorkshop(palette,read("vbp.cvr"),system);
     const auto shades=CvrPaletteReader::Read(CvrContainerReader::Read(read("vbp.cvr"))).shades;
@@ -185,7 +190,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::st
     }
     if(bytes.empty() && kind<0) {throw std::invalid_argument("Workshop unit has no model");}
     std::vector<std::string_view> parts;for(const auto& part:bytes) {parts.push_back(part);}
-    return LoadParts(parts,profile,&faction,&attachments,definition.weapon_mode);
+    return LoadParts(parts,profile,&faction,&attachments,definition.weapon_mode,independent_weapon ? weapon:-1);
 }
 
 size_t CvrStripImage::Composite(std::vector<uint8_t>& target,uint32_t width,uint32_t height,uint32_t pitch,
@@ -223,14 +228,19 @@ CvrScoutImage CvrScoutRenderer::RenderWorkshopCard(int kind,std::array<uint32_t,
 }
 
 CvrScoutImage CvrScoutRenderer::RenderWorkshopPicker(int kind,int ordinal,bool available,std::array<uint32_t,3>& position) const {
-    if((kind!=0 && kind!=3) || ordinal<0 || ordinal>=20 || m_assets->profile!=Profile::WorkshopPart) {
-        throw std::invalid_argument("Unsupported Workshop chassis/reactor picker scene");
+    if((kind!=0 && kind!=1 && kind!=3) || ordinal<0 || ordinal>=20 || m_assets->profile!=Profile::WorkshopPart
+        || (kind==1 && m_assets->picker_weapon<0)) {
+        throw std::invalid_argument("Unsupported Workshop component picker scene");
     }
-    return RenderWorkshopPart(kind==0 ? 0x3d75c28f:0x3e4ccccd,true,
+    uint32_t scale=kind==0 ? 0x3d75c28f:0x3e4ccccd;
+    if(kind==1) {const auto weapon=m_assets->picker_weapon,mode=m_assets->workshop_weapon_mode;
+        scale=weapon==0 ? 0x3e4ccccd:weapon==13 || weapon==20 ? 0x3d75c28f:mode<3 || mode==11 ? 0x3e4ccccd:mode==9 ? 0x3da3d70a:0x3dcccccd;
+    }
+    return RenderWorkshopPart(scale,true,
         {79+108*(ordinal%5),49+94*(ordinal/5)},!available,false,position);
 }
 
-CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_view >& parts, const Profile profile, const CvrActorMaterial* material, const std::vector<WorkshopAttachment>* attachments, int workshop_weapon_mode ) {
+CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_view >& parts, const Profile profile, const CvrActorMaterial* material, const std::vector<WorkshopAttachment>* attachments, int workshop_weapon_mode,int picker_weapon ) {
 	constexpr size_t MAX_ASSET_BYTES = 32 * 1024 * 1024;
 	size_t total_bytes = 0;
     if(attachments && attachments->size()!=parts.size()) {throw std::invalid_argument("Workshop attachment extent mismatch");}
@@ -242,6 +252,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_vie
 	}
 	auto owned = std::make_shared< Assets >( profile );
     owned->workshop_weapon_mode=workshop_weapon_mode;
+    owned->picker_weapon=picker_weapon;
 	owned->geometry.resize( parts.size() ); owned->palettes.resize( parts.size() );
 	if ( material ) { owned->software_colors = material->colors; }
 	std::vector< CvrScene > scenes;
@@ -264,7 +275,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_vie
 		}
 		object_count += scene.objects.size();
 		for ( const auto& object : scene.objects ) {
-			if ( !object.voxel_data || object.frames.empty() || (object.frames[0].flags!=0 && !(attachments && object.frames[0].flags==0x80)) ) {
+			if ( !object.voxel_data || object.frames.empty() || (object.frames[0].flags!=0 && !((attachments || profile==Profile::WorkshopWeapon) && object.frames[0].flags==0x80)) ) {
 				throw std::invalid_argument( "CVR Scout: missing geometry or unsupported idle frame" );
 			}
 			const auto account = [ & ]( const CvrGeometry& geometry ) {

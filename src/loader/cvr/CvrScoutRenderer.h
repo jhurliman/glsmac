@@ -74,6 +74,9 @@ public:
     // installed rules, not an inferred weapon-ID/power mapping. No abilities yet.
     static CvrScoutRenderer LoadWorkshopDesign(const WorkshopReader& read,std::string_view faction_pcx,
         int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition);
+    // Generic chooser4d8e40(owner,-1,weapon), distinct from main side cards.
+    static CvrScoutRenderer LoadWorkshopPickerWeapon(const WorkshopReader& read,std::string_view faction_pcx,
+        int weapon,const WorkshopDefinition& definition);
     // Ordinary idle/facing2/zoom-10 scene used by the saved Workshop strip.
     // Body and shadow remain separate indexed sources for the native keyed copy.
     static CvrScoutRenderer LoadStripDesign(const WorkshopReader& read,std::string_view faction_pcx,
@@ -96,9 +99,9 @@ private:
 	enum class Profile { Infantry, SpartanSpeeder, InitializedInfantry, Workshop, WorkshopPart, WorkshopWeapon, StripInfantry, StripBody, StripSmallInfantry };
     struct WorkshopAttachment {std::array<float,3> offset;bool direct;std::optional<std::array<uint8_t,24*256>> shades;};
     static CvrScoutRenderer LoadDesign(const WorkshopReader& read,std::string_view faction_pcx,
-        int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition,Profile profile);
+        int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition,Profile profile,bool independent_weapon=false);
 	static CvrScoutRenderer LoadParts( const std::vector< std::string_view >& parts, Profile profile, const CvrActorMaterial* material,
-        const std::vector<WorkshopAttachment>* attachments=nullptr,int workshop_weapon_mode=0);
+        const std::vector<WorkshopAttachment>* attachments=nullptr,int workshop_weapon_mode=0,int picker_weapon=-1);
 	CvrScoutImage RenderView(const scout::View& view,uint8_t clear=9,bool unavailable=false,
         std::optional<std::array<int32_t,4>> clip=std::nullopt) const;
     std::array<uint32_t,3> WorkshopPosition(const std::array<uint32_t,9>& rotation,const std::array<uint32_t,3>& previous={0,0,0}) const;

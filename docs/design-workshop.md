@@ -1614,3 +1614,16 @@ authority. It refreshes capabilities once, preserves air history and publishes
 only the prepared registry/capability result. Stale, missing-input and foreign
 requests are rejected without mutation. See the [live command contract](behavior/workshop-live-presets.md).
 The visible console buttons and normal-open recommendation path remain next.
+
+
+## 2026-10-21 Vehicle Presets console UI
+
+Fourteen original console-owned buttons now send the live preset command.
+Installed captions, native geometry and the complete43,804-pixel panel match
+the original target. Unmatched Air Assault opens the illustrated NOPRESET
+message, with original keys and unbound feedback39 after dismissal. Success
+uses unbound43 immediately. See the [UI audit](behavior/design-workshop-presets-ui.md),
+[modal/audio handoff](behavior/design-workshop-nopreset.md), and updated
+[live integration scope](behavior/workshop-live-presets.md).
+Normal-open recommendations, tooltip display and broader Workshop acceptance
+remain open. No complete screen or golden release gate is closed by this slice.

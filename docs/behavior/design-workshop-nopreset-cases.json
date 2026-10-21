@@ -1,0 +1,297 @@
+{
+  "scope": "One actual499b70 NOPRESET illustrated wrapper through pre-modal layout, four key/OK fragments, three caller-order fragments, four unloaded-bank playback controls. Supplied OS/service boundaries explicitly retained in private evidence.",
+  "template": {
+    "section": "NOPRESET",
+    "xs": 320,
+    "caption": "Chief Engineer",
+    "body": "We cannot design that kind of unit with our current technology.",
+    "flags": 0,
+    "illustration": "unit_sm.pcx",
+    "illustration_size": [
+      200,
+      120
+    ],
+    "illustration_origin": [
+      28,
+      32
+    ],
+    "callback": "0x54e8e0",
+    "choice_count": 0,
+    "buttons": [
+      {
+        "label_index_0based": 101,
+        "caption": "OK",
+        "action": -1,
+        "rect": [
+          33,
+          167,
+          691,
+          187
+        ]
+      }
+    ]
+  },
+  "geometry": {
+    "profile": [
+      1024,
+      768
+    ],
+    "MainFontSize": 16,
+    "console_visible": true,
+    "client": [
+      0,
+      0,
+      758,
+      300
+    ],
+    "screen_rect": [
+      149,
+      255,
+      907,
+      555
+    ],
+    "frames": [
+      {
+        "rect": [
+          23,
+          0,
+          703,
+          305
+        ],
+        "style": "0x7b01c0"
+      },
+      {
+        "rect": [
+          27,
+          4,
+          699,
+          28
+        ],
+        "style": "0x7b00d0"
+      },
+      {
+        "rect": [
+          30,
+          7,
+          696,
+          25
+        ],
+        "style": "0x7b0148"
+      },
+      {
+        "rect": [
+          236,
+          35,
+          696,
+          58
+        ],
+        "style": "0x7b0058"
+      },
+      {
+        "rect": [
+          233,
+          32,
+          699,
+          61
+        ],
+        "style": "0x7b00d0"
+      }
+    ]
+  },
+  "glyphs": [
+    {
+      "text": "CHIEF ENGINEER",
+      "x": 304,
+      "baseline": 21,
+      "color_operand": "0x10ff00e2",
+      "font": {
+        "face": "Arial",
+        "height": -14,
+        "weight": 700
+      }
+    },
+    {
+      "text": "We cannot design that kind of unit with our current technology.",
+      "x": 239,
+      "baseline": 50,
+      "color_operand": "0x10ff00e2",
+      "font": {
+        "face": "Arial Narrow",
+        "height": -16,
+        "weight": 700
+      }
+    },
+    {
+      "text": "OK",
+      "x": 318,
+      "baseline": 16,
+      "color_operand": "0x10ff0000",
+      "font": {
+        "face": "Arial Narrow",
+        "height": -16,
+        "weight": 700
+      }
+    }
+  ],
+  "key_cases": [
+    {
+      "input": "enter",
+      "answer": 0,
+      "loop_result": 0,
+      "events": [
+        "close"
+      ]
+    },
+    {
+      "input": "shift_enter",
+      "answer": 0,
+      "loop_result": 0,
+      "events": [
+        "close"
+      ]
+    },
+    {
+      "input": "escape",
+      "answer": 0,
+      "loop_result": 0,
+      "events": [
+        "close"
+      ]
+    },
+    {
+      "input": "ok",
+      "answer": 0,
+      "loop_result": 0,
+      "events": [
+        "close"
+      ]
+    }
+  ],
+  "caller_order": [
+    {
+      "input_mode": 1,
+      "events": [
+        {
+          "event": "modal_wrapper",
+          "arguments": [
+            "script",
+            "NOPRESET",
+            0,
+            "unit_sm.pcx",
+            "0x54e8e0"
+          ]
+        },
+        {
+          "event": "feedback_request",
+          "slot": 39,
+          "mode_at_request": 1
+        },
+        {
+          "event": "virtual_30"
+        },
+        {
+          "event": "virtual_fc"
+        }
+      ],
+      "final_mode": 0
+    },
+    {
+      "input_mode": 2,
+      "events": [
+        {
+          "event": "feedback_request",
+          "slot": 43,
+          "mode_at_request": 2
+        },
+        {
+          "event": "virtual_30"
+        },
+        {
+          "event": "virtual_fc"
+        }
+      ],
+      "final_mode": 0
+    },
+    {
+      "input_mode": 3,
+      "events": [
+        {
+          "event": "feedback_request",
+          "slot": 43,
+          "mode_at_request": 3
+        },
+        {
+          "event": "virtual_30"
+        },
+        {
+          "event": "virtual_fc"
+        }
+      ],
+      "final_mode": 0
+    }
+  ],
+  "audio": {
+    "setting_mask": "0x400",
+    "slots": [
+      {
+        "id": 39,
+        "asset": null,
+        "bank_binding": "unbound in pinned startup",
+        "address": "0x769bc4"
+      },
+      {
+        "id": 43,
+        "asset": null,
+        "bank_binding": "unbound in pinned startup",
+        "address": "0x769d74"
+      }
+    ],
+    "playback_controls": [
+      {
+        "enabled": false,
+        "slot": 39,
+        "fields_3c_4c_54_68": [
+          0,
+          0,
+          0,
+          16
+        ],
+        "return_value": 0
+      },
+      {
+        "enabled": false,
+        "slot": 43,
+        "fields_3c_4c_54_68": [
+          0,
+          0,
+          0,
+          16
+        ],
+        "return_value": 0
+      },
+      {
+        "enabled": true,
+        "slot": 39,
+        "fields_3c_4c_54_68": [
+          0,
+          0,
+          0,
+          16
+        ],
+        "return_value": 20
+      },
+      {
+        "enabled": true,
+        "slot": 43,
+        "fields_3c_4c_54_68": [
+          0,
+          0,
+          0,
+          16
+        ],
+        "return_value": 20
+      }
+    ]
+  },
+  "source_sha256": "784a2b8bdc68d7ca92978673c366bdace266f0c048452adac271808650e6d8c8"
+}

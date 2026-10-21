@@ -367,7 +367,13 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
         std::array<uint32_t,3> position{};
         for(const auto& row:workshop_component_fixture::FRAMES) {
             if(row.reset) {position={};}
+            const auto before=position;
             const auto image=bank.Render(row.kind,row.id,row.picker,row.available,position);
+            if(row.kind==2 && row.picker && row.id>0) {
+                auto moved_position=before;const auto moved=bank.Render(2,row.id,true,row.available,moved_position,17);
+                GT_ASSERT(moved->indexed.color==image->indexed.color && moved->indexed.depth==image->indexed.depth && moved_position==position
+                    && (moved->target_anchor==std::array<int32_t,2>{295,331}),"Armor picker destination changed cached model planes or centering state");
+            }
             if(row.kind==3 && !row.picker) {
                 const auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,read("spartans.pcx"),0,0,0,1,3,{1,0,1});
                 // Reactor uses the same source scene, angle, scale and centering

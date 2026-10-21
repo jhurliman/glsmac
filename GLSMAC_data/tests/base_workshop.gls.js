@@ -1,8 +1,8 @@
 const dialog = #include('../default/ui/parts/game/popup/base_screen/workshop');
 let windows = []; let commands = []; let listeners = {}; let edits = [];
 const node = (data) => {
-    data.hidden = false; data.handlers = {}; data.children = [];
-    data.hide = () => { data.hidden = true; }; data.show = () => { data.hidden = false; }; data.remove = () => {};
+    data.hidden = false; data.removed = false; data.handlers = {}; data.children = [];
+    data.hide = () => { data.hidden = true; }; data.show = () => { data.hidden = false; }; data.remove = () => { data.removed = true; };
     data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi'}; };
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
     data.smacworkshopabilitytext = (technology) => { return {title: 'Select Special Ability', none: 'No special ability', ok: 'OK', cancel: 'Cancel', cost: 'Cost', attack: 'Attack', defense: 'Defense', speed: 'Speed', domains: ['Land', 'Sea', 'Air'], second_title: 'Chief Engineer', second_body: 'Research ' + technology + '.', missile_title: 'Chief Engineer', missile_body: 'Missiles cannot have special abilities.'}; };
@@ -21,6 +21,7 @@ const node = (data) => {
 dialog.init({ui: {class: (name) => { return {set: (properties) => { test.assert(#is_defined(properties._hover) && #is_defined(properties._active)); }}; }, root: {window: (data) => { const result = node(data); windows :+ result; return result; }}},
     game: {event: (name, data) => { commands :+ {name: name, data: data}; }}});
 const base = {id: 701};
+const release_card = (index) => { return dialog.picker_canvas.handlers.mouseup({button: 'left', x: 79 + (index % 5) * 108, y: 49 + #floor(#to_float(index) / 5.0) * 94}); };
 const selection = {expected_state: 'before', chassis: 'Infantry', weapon: 'Hand Weapons', reactor: 'Fission', scout_name: 'Scout', faction_art: 'morgan.pcx', speed: 1, offense: 1, weapon_mode: 0, power: 1,
     ability_names: ['Super Former', 'Deep Radar', '', '', '', '', '', '', '', 'Polymorphic', '', '', '', '', '', '', '', '', 'Trance', '', '', '', '', ''],
     chassis_choices: [{id: 0, name: 'Infantry', domain: 0, value: 1, technology_available: true}, {id: 3, name: 'Foil', domain: 1, value: 4, technology_available: false}],
@@ -48,8 +49,9 @@ test.assert(stat_geometry);
 dialog.open(base, selection); test.assert(dialog.active && !windows[0].hidden && dialog.selected_armor == 0);
 test.assert(dialog.model.preview_armor == 0 && dialog.model.preview_yaw == 0.0 && dialog.model.preview_faction == 'morgan.pcx');
 dialog.open_picker(); test.assert(!windows[1].hidden && #sizeof(dialog.cards) == 3 && dialog.picker_canvas.picker_selected == 0 && #sizeof(dialog.picker_canvas.picker_rows) == 3 && #sizeof(dialog.cards[2].children) == 0);
-test.assert(dialog.cards[2].handlers.click({}) == true && dialog.selected_armor == 0 && !windows[1].hidden);
-test.assert(dialog.cards[1].handlers.click({}) == true && dialog.selected_armor == 1 && windows[1].hidden);
+test.assert(release_card(2) == true && dialog.selected_armor == 0 && windows[1].hidden);
+dialog.open_picker();
+test.assert(release_card(1) == true && dialog.selected_armor == 1 && windows[1].hidden);
 test.assert(dialog.model.preview_armor == 1 && dialog.model.preview_yaw == 0.0 && dialog.components.components_armor == 1);
 test.assert(dialog.title.text == 'SYNTHMETAL GARRISON' && dialog.stats.text == '1-2-1 ' && dialog.cost.text == 'COST:  20' && dialog.chassis.text == 'INFANTRY' && dialog.armor_name.text == 'SYNTHMETAL' && dialog.armor_stat.text == 'Level 2');
 dialog.submit(false); dialog.submit(false);
@@ -116,7 +118,7 @@ const advanced = selection + {unused: true};
 advanced.armor = [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, stat_line: '1-1-1 ', design_name: 'Scout', cost: 10, technology_available: true, available: true},
     {id: 9, name: 'Psi Defense', short_name: 'PSI', rating: (0 - 1), stat_line: '1-?-1 ', design_name: 'Psi Infantry', cost: 60, technology_available: true, available: true}];
 dialog.open(base, advanced); dialog.open_picker(); test.assert(#sizeof(dialog.cards) == 2);
-dialog.cards[1].handlers.click({});
+release_card(1);
 test.assert(dialog.selected_armor == 9 && dialog.model.preview_armor == 9 && dialog.model.preview_strength == (0 - 1)
     && dialog.model.preview_power == 1 && dialog.model.preview_mode == 0 && dialog.components.components_armor == 9);
 dialog.submit(false); test.assert(commands[#sizeof(commands) - 1].data.armor == 9);
@@ -130,7 +132,7 @@ dialog.open(base, advanced); dialog.open_picker();
 let psi_number = false;
 for (child of dialog.cards[1].children) { if (child.text == 'Psi') { psi_number = true; } }
 test.assert(psi_number);
-dialog.cards[1].handlers.click({});
+release_card(1);
 test.assert(dialog.armor_stat.text == 'Level Psi' && dialog.stats.text == '1-?-1 ');
 dialog.hide_view();
 
@@ -192,15 +194,16 @@ dialog.open(base, selection);
 dialog.chassis_button.handlers.click({});
 test.assert(dialog.picker_canvas.picker_kind == 0 && #sizeof(dialog.cards) == 2);
 const before_edits = #sizeof(edits);
-dialog.cards[1].handlers.click({}); test.assert(#sizeof(edits) == before_edits && !dialog.picker.hidden);
-dialog.cards[0].handlers.click({}); test.assert(edits[#sizeof(edits) - 1].kind == 0 && dialog.picker.hidden);
+release_card(1); test.assert(#sizeof(edits) == before_edits + 1 && edits[before_edits].choice == (0 - 1) && dialog.picker.hidden);
+dialog.chassis_button.handlers.click({});
+release_card(0); test.assert(edits[#sizeof(edits) - 1].kind == 0 && dialog.picker.hidden);
 dialog.reactor_button.handlers.click({});
 test.assert(dialog.picker_canvas.picker_kind == 3 && dialog.picker_canvas.picker_selected == 1 && #sizeof(dialog.cards) == 2);
-dialog.cards[1].handlers.click({}); test.assert(dialog.selected_reactor == 2 && edits[#sizeof(edits) - 1].choice == 2);
+release_card(1); test.assert(dialog.selected_reactor == 2 && edits[#sizeof(edits) - 1].choice == 2);
 dialog.reactor_button.handlers.click({});
 test.assert(dialog.picker.handlers.keydown({modifiers: {}, code: 'ESCAPE'}) == true);
 test.assert(edits[#sizeof(edits) - 1].kind == 3 && edits[#sizeof(edits) - 1].choice == (0 - 1) && edits[#sizeof(edits) - 1].automatic && dialog.selected_reactor == 2 && dialog.picker.hidden);
-dialog.automatic_suggestions = false; dialog.open_picker(); dialog.cards[1].handlers.click({});
+dialog.automatic_suggestions = false; dialog.open_picker(); release_card(1);
 test.assert(!edits[#sizeof(edits) - 1].automatic && edits[#sizeof(edits) - 1].kind == 2 && dialog.selected_armor == 1);
 dialog.hide_view();
 // Manual abilities are modal: selection/hover do not edit, None is always initial.
@@ -256,15 +259,21 @@ test.assert(dialog.picker_canvas.picker_rows[0].id == 5 && dialog.picker_canvas.
 let equipment_label = false; for (child of dialog.cards[15].children) { if (child.text == 'Equipment') { equipment_label = true; } }
 test.assert(equipment_label);
 test.assert(dialog.picker_scroll.handlers.change({value: 2.0}) == true && dialog.picker_first == 10 && #sizeof(dialog.cards) == 11 && dialog.picker_canvas.picker_rows[10].id == 20);
-dialog.cards[10].handlers.click({}); test.assert(dialog.picker.hidden && edits[#sizeof(edits) - 1].kind == 1 && edits[#sizeof(edits) - 1].choice == 20);
+release_card(10); test.assert(dialog.picker.hidden && edits[#sizeof(edits) - 1].kind == 1 && edits[#sizeof(edits) - 1].choice == (0 - 1));
+// Paging retained A0 and same-ordinal release did not refresh it. A different
+// hover establishes availability before returning to the payload card.
+dialog.weapon_button.handlers.click({}); dialog.picker_scroll.handlers.change({value: 2.0});
+dialog.picker_canvas.handlers.mousemove({x: 79, y: 49}); release_card(10);
+test.assert(dialog.picker.hidden && edits[#sizeof(edits) - 1].choice == 20);
 dialog.weapon_button.handlers.click({}); dialog.picker_scroll.handlers.change({value: 0.0});
-const weapon_edits = #sizeof(edits); dialog.cards[1].handlers.click({});
-test.assert(#sizeof(edits) == weapon_edits && #sizeof(dialog.cards[1].children) == 0);
+const weapon_edits = #sizeof(edits); release_card(1);
+test.assert(#sizeof(edits) == weapon_edits + 1 && edits[weapon_edits].choice == (0 - 1) && dialog.picker.hidden && #sizeof(dialog.cards[1].children) == 0);
+dialog.weapon_button.handlers.click({}); dialog.picker_scroll.handlers.change({value: 0.0});
 let psi_weapon = false; let buster_value = false;
 for (child of dialog.cards[12].children) { if (child.text == 'Psi') { psi_weapon = true; } }
 for (child of dialog.cards[13].children) { if (child.text == '99') { buster_value = true; } }
 test.assert(psi_weapon && buster_value);
-dialog.cards[14].handlers.click({}); test.assert(dialog.selected_weapon == 14 && dialog.picker.hidden);
+release_card(14); test.assert(dialog.selected_weapon == 14 && dialog.picker.hidden);
 dialog.hide_view();
 let stock_weapons = []; for (row of weapons) { if (row.id != 19) { stock_weapons :+ row + {}; } }
 const stock_weapon_view = selection + {weapon_choices: stock_weapons};
@@ -275,3 +284,27 @@ dialog.picker.handlers.keydown({code: 'ESCAPE', modifiers: {}}); test.assert(dia
 dialog.selected_weapon = 19; dialog.weapon_button.handlers.click({});
 test.assert(dialog.picker_first == 5 && #sizeof(dialog.cards) == 15 && dialog.picker_canvas.picker_selected == 19 && dialog.picker_canvas.picker_rows[14].id == 20);
 dialog.hide_view();
+
+// Live navigation highlights unknown cards, preserves text nodes and closes to
+// the original value when the stored painter availability is zero.
+dialog.open(base, selection); dialog.chassis_button.handlers.click({});
+const existing_card = dialog.cards[0]; const navigation_edits = #sizeof(edits);
+test.assert(dialog.picker_state.selected == 0 && dialog.picker_state.availability == 0);
+dialog.picker.handlers.keydown({code: 'RIGHT', modifiers: {}});
+test.assert(dialog.picker_state.selected == 1 && dialog.picker_state.availability == 0 && !existing_card.removed && #sizeof(edits) == navigation_edits && dialog.picker_canvas.picker_selected == 3);
+dialog.picker.handlers.keydown({code: 'ENTER', modifiers: {}});
+test.assert(dialog.picker.hidden && edits[#sizeof(edits) - 1].choice == (0 - 1) && dialog.selected_chassis == 0);
+dialog.chassis_button.handlers.click({}); dialog.picker_canvas.handlers.mousemove({x: 4, y: 98});
+test.assert(dialog.picker_state.selected == (0 - 1) && dialog.picker_canvas.picker_selected == (0 - 1));
+test.assert(dialog.picker_canvas.handlers.mouseup({button: 'right', x: 79, y: 49}) == true && !dialog.picker.hidden);
+dialog.picker_canvas.handlers.mouseup({button: 'left', x: 4, y: 98}); test.assert(dialog.picker.hidden);
+dialog.hide_view();
+
+// Window creation can deliver a pointer move at the opening button. Normalize
+// an automated keyboard sequence with Home; never assume the cursor stayed0.
+dialog.open(base, weapon_view); dialog.weapon_button.handlers.click({});
+dialog.picker_canvas.handlers.mousemove({x: 79, y: 142}); test.assert(dialog.picker_state.selected == 5);
+dialog.picker.handlers.keydown({code: 'HOME', modifiers: {}}); test.assert(dialog.picker_state.selected == 0);
+for (code of ['DOWN','DOWN','RIGHT','RIGHT','RIGHT','RIGHT']) { dialog.picker.handlers.keydown({code: code, modifiers: {}}); }
+test.assert(dialog.picker_state.selected == 14 && dialog.picker_state.availability == 1);
+dialog.picker.handlers.keydown({code: 'ENTER', modifiers: {}}); test.assert(dialog.selected_weapon == 14 && dialog.picker.hidden); dialog.hide_view();

@@ -1,6 +1,7 @@
 return {
     init: (p) => {
         this.p = p; this.active = false; this.pending = false; this.next_request = 0;
+        this.picker_active = false; this.picker_input = #include('./workshop_picker_input');
         this.automatic_suggestions = true; // Original fresh preference-store default.
         this.ability_slots = [(0 - 1), (0 - 1)];
         this.ability_dialog = #include('./workshop_abilities'); this.ability_dialog.init(p);
@@ -66,7 +67,9 @@ return {
         this.picker_scroll = this.picker.scrollbar({class: 'default-scroll-v', left: 580, top: 21, width: 24, height: 246,
             fromto_size: 24, slider_size: 24, min: 0.0, max: 2.0, value: 0.0});
         this.picker_scroll.left = 580; this.picker_scroll.width = 24; this.picker_scroll.top = 21; this.picker_scroll.height = 246;
-        this.picker_scroll.on('change', (e) => { this.picker_first = 5 * #floor(e.value + 0.5); this.paint_picker(); return true; });
+        this.picker_scroll.on('change', (e) => {
+            if (this.picker_active) { this.picker_state.position = #floor(e.value + 0.5); this.picker_state.first = 5 * this.picker_state.position;
+                this.picker_first = this.picker_state.first; this.paint_picker(); } return true; });
         this.picker_scroll.hide();
         this.picker.hide(); this.cards = [];
         this.confirming = false;
@@ -77,7 +80,9 @@ return {
         this.overwrite_window.button({class: 'game-popup-button', align: 'bottom right', right: 12, width: 200, bottom: 12, height: 28, text: 'Proceed with redesign.'}).on('click', () => { this.answer_overwrite(true); return true; });
         this.overwrite_window.on('keydown', (e) => { if (e.modifiers == {} && (e.code == 'ESCAPE' || e.code == 'ENTER')) { this.answer_overwrite(false); } return true; });
         this.overwrite_window.hide();
-        this.picker.on('keydown', (e) => { if (e.modifiers == {} && e.code == 'ESCAPE') { this.accept_component(this.picker_kind, (0 - 1)); } return true; });
+        this.picker.on('keydown', (e) => { this.picker_key(e); return true; });
+        this.picker_canvas.on('mousemove', (e) => { this.picker_pointer(e, false); return true; });
+        this.picker_canvas.on('mouseup', (e) => { if (e.button == 'left') { this.picker_pointer(e, true); } return true; });
         this.window.listen(p.game, 'smac_workshop_commit', (e) => {
             if (!this.active || !this.pending || e.base.id != this.base.id || e.request_id != this.pending_id) { return; }
             const selecting = this.pending_selection;
@@ -234,8 +239,8 @@ return {
         const armor = this.selected_armor; const reactor = this.selected_reactor; const abilities = this.selected_abilities; const name = this.draft_name;
         const first = this.ability_slots[0]; const second = this.ability_slots[1]; const automatic = this.automatic_suggestions;
         const result = base.get_smac_workshop_edit(selected, chassis, weapon, armor, reactor, abilities, name, first, second, kind, choice, automatic);
-        if (!#is_defined(result)) { this.picker.hide(); this.message.text = 'Workshop is no longer available.'; return; }
-        this.selection = result; this.read_draft(result.draft); this.update_labels(); this.update_armor(); this.picker.hide();
+        if (!#is_defined(result)) { this.picker_active = false; this.picker.hide(); this.message.text = 'Workshop is no longer available.'; return; }
+        this.selection = result; this.read_draft(result.draft); this.update_labels(); this.update_armor(); this.picker_active = false; this.picker.hide();
     },
     open_component_picker: (kind) => {
         if (!this.active || this.pending || this.confirming) { return; }
@@ -243,11 +248,13 @@ return {
         if (kind == 0) { this.picker_rows = this.selection.chassis_choices; this.picker_selected = this.selected_chassis; }
         if (kind == 1) { this.picker_rows = this.selection.weapon_choices; this.picker_selected = this.selected_weapon; }
         if (kind == 3) { this.picker_rows = this.selection.reactor_choices; this.picker_selected = this.selected_reactor; }
-        if (kind == 1) {
-            let initial = 0; for (row of this.picker_rows) { if (row.id == this.picker_selected) { break; } initial++; }
-            while (initial >= this.picker_first + 20) { this.picker_first = this.picker_first + 5; }
-        }
-        const count = #sizeof(this.picker_rows);
+        let initial = 0; for (row of this.picker_rows) { if (row.id == this.picker_selected) { break; } initial++; }
+        while (initial >= this.picker_first + 20) { this.picker_first = this.picker_first + 5; }
+        const count = #sizeof(this.picker_rows); const first = this.picker_first;
+        this.picker_state = {count: count, selected: initial, first: first,
+            position: #floor(#to_float(first) / 5.0), availability: 0};
+        this.picker_valid = []; for (row of this.picker_rows) { this.picker_valid :+ (row.technology_available ? 1 : 0); }
+        this.picker_active = true;
         if (count > 18) {
             const range = #floor(#to_float(count) / 5.0) - 2;
             this.picker_scroll.max = #to_float(range); this.picker_scroll.value = #to_float(this.picker_first) / 5.0;
@@ -264,21 +271,13 @@ return {
         for (card of this.cards) { card.remove(); } this.cards = [];
         let rows = []; let ordinal = this.picker_first;
         while (ordinal < #sizeof(this.picker_rows) && ordinal < this.picker_first + 20) { rows :+ this.picker_rows[ordinal] + {}; ordinal++; }
-        if (kind == 2) { this.picker_text = this.picker_canvas.smacworkshoparmorpicker(this.picker_selected, rows); }
-        else {
-            const selected = this.picker_selected;
-            const chassis = this.selected_chassis; const weapon = this.selected_weapon; const reactor = this.selected_reactor;
-            const faction = this.selection.faction_art; const power = this.selection.offense; const mode = this.selection.weapon_mode;
-            let strength = 1; for (row of this.selection.armor) { if (row.id == this.selected_armor) { strength = row.rating; } }
-            this.picker_text = this.picker_canvas.smacworkshopcomponentpicker(kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength);
-        }
+        this.picker_page = rows; this.paint_picker_models();
         let i = 0;
         for (row of rows) {
-            const id = row.id; const available = row.technology_available;
             let strength = '';
             if (kind == 2) { strength = row.rating < 0 ? this.picker_text.psi : #to_string(row.rating); }
             else { strength = kind == 1 && row.psi ? this.picker_text.psi : #to_string(row.value); }
-            const card = this.picker.button({background: 'transparent', overflow: 'hidden', left: 27 + (i % 5) * 108, top: 4 + #floor(#to_float(i) / 5.0) * 94, width: 105, height: 91});
+            const card = this.picker.panel({background: 'transparent', overflow: 'hidden', left: 27 + (i % 5) * 108, top: 4 + #floor(#to_float(i) / 5.0) * 94, width: 105, height: 91});
             if (row.technology_available) {
                 const name = card.text({align: 'top center', baseline: 10, font: 'arial.ttf:10:mono', color: 'rgb(176,212,235)', text: ''});
                 let lines = []; let line = '';
@@ -296,9 +295,55 @@ return {
                 card.text({align: 'top left', left: 3, baseline: 85, font: 'arial.ttf:10:mono', color: 'rgb(176,212,235)', text: description});
                 card.text({align: 'top right', right: 3, baseline: 86, font: 'arialbd.ttf:12:mono', color: 'rgb(176,212,235)', text: strength});
             }
-            card.on('click', () => { if (available) { this.accept_component(kind, id); } return true; });
             this.cards :+ card; i++;
         }
+    },
+    paint_picker_models: () => {
+        const kind = this.picker_kind; const rows = this.picker_page;
+        if (kind == 2) { this.picker_text = this.picker_canvas.smacworkshoparmorpicker(this.picker_selected, rows); }
+        else {
+            const selected = this.picker_selected;
+            const chassis = this.selected_chassis; const weapon = this.selected_weapon; const reactor = this.selected_reactor;
+            const faction = this.selection.faction_art; const power = this.selection.offense; const mode = this.selection.weapon_mode;
+            let strength = 1; for (row of this.selection.armor) { if (row.id == this.selected_armor) { strength = row.rating; } }
+            this.picker_text = this.picker_canvas.smacworkshopcomponentpicker(kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength);
+        }
+    },
+    picker_key: (e) => {
+        if (!this.picker_active) { return; }
+        let key = 0;
+        for (entry of [{code: 'UP', key: 38}, {code: 'KP_UP', key: 104}, {code: 'DOWN', key: 40}, {code: 'KP_DOWN', key: 98},
+            {code: 'LEFT', key: 37}, {code: 'KP_LEFT', key: 100}, {code: 'RIGHT', key: 39}, {code: 'KP_RIGHT', key: 102},
+            {code: 'HOME', key: 36}, {code: 'END', key: 35}, {code: 'PAGEUP', key: 33}, {code: 'PAGEDOWN', key: 34},
+            {code: 'ENTER', key: 13}, {code: 'ESCAPE', key: 27}]) { if (entry.code == e.code) { key = entry.key; } }
+        const workshop = this; const input = this.picker_input; const state = this.picker_state; const valid = this.picker_valid;
+        const result = input.keyboard(state, key, valid); workshop.apply_picker_input(result);
+    },
+    picker_pointer: (e, release) => {
+        if (!this.picker_active) { return; }
+        const workshop = this; const input = this.picker_input; const state = this.picker_state; const valid = this.picker_valid;
+        const x = e.x; const y = e.y;
+        // Native canvas and callback share their origin. Hit x4 differs from
+        // painted frame x27; do not add a compensating client offset.
+        const result = release ? input.release(state, x, y, valid) : input.hover(state, x, y, valid);
+        workshop.apply_picker_input(result);
+    },
+    apply_picker_input: (result) => {
+        const before = this.picker_state; const state = result.state; this.picker_state = state; this.picker_first = state.first;
+        this.picker_selected = (0 - 1);
+        if (state.selected >= 0 && state.selected < state.count) { this.picker_selected = this.picker_rows[state.selected].id; }
+        let close = false;
+        for (event of result.events) {
+            if (event[0] == 'scroll_position') { this.picker_scroll.value = #to_float(event[1]); }
+            if (event[0] == 'close') { close = true; }
+        }
+        if (close) {
+            let choice = (0 - 1);
+            if (state.selected >= 0 && state.selected < state.count && state.availability != 0) { choice = this.picker_rows[state.selected].id; }
+            this.accept_component(this.picker_kind, choice); return;
+        }
+        if (before.first != state.first) { this.paint_picker(); }
+        else if (before.selected != state.selected) { this.paint_picker_models(); }
     },
     submit: (done) => {
         if (!this.active || this.pending || this.confirming) { return; }
@@ -335,5 +380,5 @@ return {
         if (choice >= 0) { fields = fields + {overwrite: choice}; }
         this.p.game.event('commit_smac_workshop', fields);
     },
-    hide_view: () => { this.ability_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.overwrite_window.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); },
+    hide_view: () => { this.picker_active = false; this.ability_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.overwrite_window.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); },
 };

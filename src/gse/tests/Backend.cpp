@@ -583,7 +583,11 @@ public:
 		if ( !source || source->designs.empty() ) { throw std::runtime_error( "missing fixture copy source" ); }
 		auto copy = source->designs.front();
 		copy.id = design;
-		for ( auto& owner : m_game.m_simulation->value.designs.owners ) { if ( owner.simulation_id == simulation ) { owner.designs.push_back( copy ); return; } }
+		for ( auto& owner : m_game.m_simulation->value.designs.owners ) { if ( owner.simulation_id == simulation ) {
+            auto& designs=m_game.m_simulation->value.designs;
+            if(designs.native_registry) {designs.native_registry->at(design)=designs.native_registry->at(source->designs.front().id);}
+            owner.designs.push_back(copy);designs.SynchronizeNativeRegistry();return;
+        } }
 		throw std::runtime_error( "missing fixture design owner" );
 	}
 	void RestoreConventional( GSE_CALLABLE, const std::string& snapshot, const bool no_current_simulation = false ) {

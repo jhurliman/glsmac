@@ -1963,7 +1963,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto native=std::find_if(designs.begin(),designs.end(),[](const auto& row){return row.source_id==2;});
             GT_ASSERT(native!=designs.end(),"missing actual Scout design");
             fixture.ResourceState([&](auto& state){state.designs.owners.front().designs.push_back({64,native->chassis_id,native->weapon_id,native->defense_id,native->reactor,
-                native->cost,native->plan,native->carry,native->abilities,native->faction_exclusion,true,false});});
+                native->cost,native->plan,native->carry,native->abilities,native->faction_exclusion,true,false});
+                state.designs.owners.front().designs.back().name=rules.GetSmacPredefinedUnitRules()->catalog.source.units.at(2).name;
+                state.designs.SynchronizeNativeRegistry();});
             const auto custom=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,64);
             base->SetProductionState(GSE_CALL,ProductionState{custom,7,custom,7,std::vector<ProductionItem>{custom,scout}});
             const auto unprototyped=fixture.Snapshot();
@@ -3922,6 +3924,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     // Explicit owner1 custom ID64, identical score to actual source2.
                     state.designs.owners.front().designs.push_back({64,row->chassis_id,row->weapon_id,row->defense_id,row->reactor,
                         row->cost,row->plan,row->carry,row->abilities,row->faction_exclusion,true,true});
+                    state.designs.owners.front().designs.back().name=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog.source.units.at(2).name;
+                    state.designs.SynchronizeNativeRegistry();
                 });
                 um->DefineUnit(new StaticDef("live-colony",um->GetMoraleSet("live-morale"),"Colony",MT_LAND,0,new ColonyMarkerRender()));
                 auto* site=game->GetMap()->GetTile(6,2);

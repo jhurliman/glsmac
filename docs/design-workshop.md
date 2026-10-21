@@ -518,3 +518,5 @@ implement its retirement prompts/queue surgery or full component controls.
 The [animation controller](behavior/design-workshop-animation-controller.md)
 also now has 24 native controls for the next animation integration. Nonzero-frame
 pixel matching remains separate from the already-exact static compositions.
+
+CI follow-up: three additional fixtures (selected Rover admission, production presentation, and founding selection) now synchronize their explicitly authored records and names. All three focused reruns pass; production code is unchanged by this follow-up.

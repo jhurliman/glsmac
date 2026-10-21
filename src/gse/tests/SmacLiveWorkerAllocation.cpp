@@ -63,8 +63,8 @@ using Knowledge = map::SmacWorkerKnowledge;
 
 bool Rejects( const std::function< void() >& call ) { try { call(); } catch ( const std::exception& ) { return true; } return false; }
 
-// Base definition registries are unordered. Normalize only their named entries;
-// retain exact definitions, Base record order and all remaining world bytes.
+// Unit/Base definition registries are unordered. Normalize only named entries;
+// retain exact definitions, physical record order and all remaining world bytes.
 std::string ResearchSnapshot(Game* game,const std::string& bytes) {
     types::Buffer world(bytes);const auto& settings=game->GetState()->m_settings.global;
     world_snapshot::ValidateHeader(world,settings);
@@ -74,8 +74,17 @@ std::string ResearchSnapshot(Game* game,const std::string& bytes) {
     (void)map::GlsmacResourceMapPolicy::ReadOptional(world,true);
     (void)world_snapshot::ReadWorkerKnowledge(world,true);
     (void)world_snapshot::ReadTerritoryTopology(world,true);
-    for(int i=0;i<3;++i) {(void)world.ReadString();} // map, resources, units
-    const auto prefix=bytes.substr(0,world.lenr);types::Buffer bases(world.ReadString()),canonical;
+    for(int i=0;i<2;++i) {(void)world.ReadString();} // map, resources
+    auto prefix=bytes.substr(0,world.lenr);types::Buffer units(world.ReadString()),unit_definitions;
+    unit_definitions.WriteString(units.ReadString());
+    for(int table=0;table<2;++table) {
+        const auto count=units.ReadInt();if(count<0 || count>1024) {throw std::runtime_error("Invalid research fixture Unit definition count");}
+        std::map<std::string,std::string> entries;
+        for(int64_t i=0;i<count;++i) {const auto name=units.ReadString(),wire=units.ReadString();if(!entries.emplace(name,wire).second) {throw std::runtime_error("Duplicate research fixture Unit definition");}}
+        unit_definitions.WriteInt(count);for(const auto& entry:entries) {unit_definitions.WriteString(entry.first);unit_definitions.WriteString(entry.second);}
+    }
+    types::Buffer unit_frame;unit_frame.WriteString(unit_definitions.ToString()+units.ToString().substr(units.lenr));prefix+=unit_frame.ToString();
+    types::Buffer bases(world.ReadString()),canonical;
     canonical.WriteString(bases.ReadString());
     for(int table=0;table<2;++table) {
         const auto count=bases.ReadInt();
@@ -1331,6 +1340,70 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
 
+    task->AddTest("SMAC live Workshop direct Retire confirms cached counts and atomically removes intrinsic and custom users",[](GSE*,context::Context*)->std::string {
+        for(const int selected:{2,64}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);std::string saved;
+            const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {
+                using namespace game::backend::unit;
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();auto* um=game->GetUM();SelectionPresentations(fixture);
+                fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;pool[64]=pool[2];pool[64][48]=7;
+                    if(selected==64) {state.designs.owners[0].starting_scout=64;}
+                    state.designs.RetainNativeRegistry(pool,game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog);});
+                auto* foreign_owner=&game->GetState()->m_slots->GetSlot(6);
+                const auto item=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,selected);
+                const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+                base->SetProductionState(GSE_CALL,ProductionState{item,17,item,11,std::vector<ProductionItem>{item,item},true});
+                Base::pops_t pops;pops.emplace(19,Pop(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));auto context=base->GetSmacResourceContext();context.owner_simulation_id=2;
+                auto* foreign=new Base(game,702,foreign_owner,foreign_owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(16,16),"Foreign queue",{},pops,41,3,
+                    ProductionState{item,23,item,19,std::vector<ProductionItem>{item,item},true},context);
+                bm->SpawnBase(GSE_CALL,foreign);foreign->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},1}},Roles());
+                um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-scout"),base->m_owner,game->GetMap()->GetTile(8,6),
+                    ConventionalUnitState{selected,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+                auto* foreign_unit=um->SpawnConventionalUnit(GSE_CALL,93,um->GetUnitDef("live-scout"),foreign_owner,game->GetMap()->GetTile(10,6),
+                    ConventionalUnitState{selected,2,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+                const auto local_before=*base->GetProductionState(),foreign_before=*foreign->GetProductionState();
+                fixture.ResourceState([&](auto& state){for(int owner=1;owner<=2;++owner) {state.economy.at(owner).production_reference_counts=faction::SmacDesignCounts{};}
+                    // Cached0 deliberately still has an actual custom Unit.
+                    if(selected==64) {state.economy.at(1).design_counts->at(64)=0;}});
+                const auto before=fixture.Snapshot();bool prompt=false,failed=false,retired=false,declined=false;int count=-1;size_t hooks=0;
+                game->On(GSE_CALL,"smac_workshop_retire",NATIVE_CALL(&){N_EXPECT_ARGS(1);N_GET(view,0,Object);
+                    prompt=static_cast<value::Bool*>(view->Get("confirmation"))->value;failed=static_cast<value::Bool*>(view->Get("failed"))->value;
+                    retired=static_cast<value::Bool*>(view->Get("retired"))->value;declined=static_cast<value::Bool*>(view->Get("declined"))->value;
+                    count=int(static_cast<value::Int*>(view->Get("count"))->value);return VALUE(value::Undefined);}));
+                um->On(GSE_CALL,"unit_despawn",NATIVE_CALL(&){++hooks;return VALUE(value::Undefined);}));
+                value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,selected)},
+                    {"name",VALUE(value::String,,"Unsaved Draft")},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},
+                    {"request_id",VALUE(value::Int,,1)},{"confirm",VALUE(value::Int,,-1)},{"strip_offset",VALUE(value::Int,,0)}};
+                game->Event(GSE_CALL,"retire_smac_workshop",args);GT_ASSERT(fixture.Snapshot()==before,"Direct Retire bypassed queue");fixture.DrainEvents();
+                GT_ASSERT(prompt && !failed && !retired && count==(selected==64 ? 0:2) && fixture.Snapshot()==before,"Retire prompt changed state or recounted cached Unit authority");
+                args["confirm"]=VALUE(value::Int,,0);game->Event(GSE_CALL,"retire_smac_workshop",args);fixture.DrainEvents();
+                GT_ASSERT(declined && !retired && hooks==0 && fixture.Snapshot()==before,"Declined Retire changed the world");
+                args["confirm"]=VALUE(value::Int,,1);foreign_unit->GetTile()->Lock(0);game->Event(GSE_CALL,"retire_smac_workshop",args);fixture.DrainEvents();foreign_unit->GetTile()->Unlock();
+                GT_ASSERT(failed && hooks==0 && fixture.Snapshot()==before,"Failed direct Retire partially published world/history");
+                game->Event(GSE_CALL,"retire_smac_workshop",args);fixture.DrainEvents();
+                GT_ASSERT(retired && !failed && hooks==(selected==2 ? 3:2) && !um->GetUnit(92) && !um->GetUnit(93),"Direct Retire missed foreign/raw design users");
+                auto local_expected=local_before,foreign_expected=foreign_before;
+                if(selected>=64) {local_expected.current_item=stockpile;local_expected.queue=std::vector<ProductionItem>{item};foreign_expected.current_item=stockpile;foreign_expected.queue=std::vector<ProductionItem>{item};}
+                GT_ASSERT(*base->GetProductionState()==local_expected && *foreign->GetProductionState()==foreign_expected,"Direct Retire queue/mineral/retool behavior differs");
+                if(selected>=64) {
+                    auto* choices=static_cast<value::Object*>(base->CopySmacProductionChoices(GSE_CALL));bool offered=false;
+                    for(auto* row:static_cast<value::Array*>(choices->Get("choices"))->value) {offered=offered || static_cast<value::Int*>(static_cast<value::Object*>(row)->Get("source_id"))->value==64;}
+                    GT_ASSERT(!offered,"Retained inactive queue reference became a new production choice");
+                }
+                bool correct=false;fixture.ResourceState([&](const auto& state){correct=selected==2 ? (state.designs.native_registry->at(2)[48]&1) && state.designs.retirement_history[1]->cursor==0:
+                    !(state.designs.native_registry->at(64)[48]&1) && state.designs.retirement_history[1]->cursor==1 && state.economy.at(1).design_counts->at(64)==255;});
+                GT_ASSERT(correct,"Direct Retire changed intrinsic/history authority or failed cached-byte wrapping");
+                saved=fixture.Snapshot();game->Event(GSE_CALL,"retire_smac_workshop",args);fixture.DrainEvents();GT_ASSERT(fixture.Snapshot()==saved,"Stale Retire repeated history/removal");
+                args["selected_design"]=VALUE(value::Int,,128);GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"retire_smac_workshop",args);}) && fixture.Snapshot()==saved,"Retire admitted a foreign bank");GT_OK();
+            });GT_ASSERT(run.empty(),"Direct Retire: "+run);
+            ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(TanksSource,true);restored.ProductionPresentations({"choice-scout","choice-rover","choice-former","choice-colony"});
+            const auto restore=restored.Run([&](GSE_CALLABLE)->std::string {restored.Restore(GSE_CALL,saved,true);
+                const auto actual=ResearchSnapshot(restored.Game(),restored.Snapshot()),expected=ResearchSnapshot(restored.Game(),saved);
+                const auto mismatch=std::mismatch(actual.begin(),actual.end(),expected.begin(),expected.end());
+                GT_ASSERT(actual==expected,"Direct Retire save/restore differs at "+std::to_string(std::distance(actual.begin(),mismatch.first))+" sizes "+std::to_string(actual.size())+"/"+std::to_string(expected.size()));GT_OK();});
+            GT_ASSERT(restore.empty(),"Direct Retire restore: "+restore);
+        }GT_OK();
+    });
     task->AddTest("SMAC live Workshop confirmed retirement removes global design users and queues atomically",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);std::string saved;
         const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {
@@ -5172,6 +5245,19 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(named && base->GetProductionState()->minerals==30 && base->GetAccumulatedNutrients()==1
                 && game->GetCanonicalEconomy(base->m_owner).credits==101,"Screen Workshop Rename failed or reposted income");GT_OK();
         });GT_ASSERT(workshop_rename_check.empty(),"Screen Workshop Rename result: "+workshop_rename_check);
+        const auto workshop_retire=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);auto* second=game->GetBM()->GetBase(702);
+            value::object_properties_t args{{"base",second->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,64)},{"name",VALUE(value::String,,"Screen Draft")},
+                {"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"request_id",VALUE(value::Int,,4)},{"confirm",VALUE(value::Int,,1)},{"strip_offset",VALUE(value::Int,,0)}};
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"retire_smac_workshop",args);}),"Screen Retire admitted another Base");
+            args["base"]=base->Wrap(GSE_CALL);game->Event(GSE_CALL,"retire_smac_workshop",args);GT_OK();
+        });GT_ASSERT(workshop_retire.empty(),"Screen Workshop Retire: "+workshop_retire);fixture.DrainEvents();
+        const auto workshop_retire_check=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);bool recorded=false;
+            fixture.ResourceState([&](const auto& state){recorded=state.designs.retirement_history[1]->cursor==1;});
+            GT_ASSERT(recorded && base->GetProductionState()->minerals==30 && base->GetAccumulatedNutrients()==1
+                && game->GetCanonicalEconomy(base->m_owner).credits==101,"Screen Retire failed or reposted income");GT_OK();
+        });GT_ASSERT(workshop_retire_check.empty(),"Screen Workshop Retire result: "+workshop_retire_check);
         const auto queue_check=fixture.Run([&](GSE_CALLABLE)->std::string {auto* base=fixture.Game()->GetBM()->GetBase(701);
             GT_ASSERT(base->GetProductionState()->queue->size()==1 && base->GetProductionState()->queue->front().smac_source_id==2
                 && base->GetProductionState()->minerals==30 && base->GetAccumulatedNutrients()==1,"Screen queue edit failed or reposted upkeep");GT_OK();

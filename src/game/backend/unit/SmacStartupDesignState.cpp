@@ -15,13 +15,13 @@ void RequireDifficulty( int32_t difficulty ) {
 	if ( difficulty < 0 || difficulty > 5 ) { throw std::runtime_error( "SMAC startup requires original difficulty 0..5" ); }
 }
 
-void ValidateOwner( const SmacDesignOwner& owner, const SmacPredefinedUnitCatalog& catalog ) {
+void ValidateOwner( const SmacDesignOwner& owner, const SmacPredefinedUnitCatalog& catalog, bool retained_start = false ) {
 	if ( owner.simulation_id < 1 || owner.simulation_id > 7 || owner.designs.size() > 64 || catalog.units.size() <= 2 ) {
 		throw std::runtime_error( "Invalid SMAC custom design owner or catalog" );
 	}
 	const int32_t first = 64 * owner.simulation_id;
 	int32_t previous = first - 1;
-	bool selected = owner.starting_scout == 2;
+	bool selected = owner.starting_scout == 2 || (retained_start && owner.starting_scout>=first && owner.starting_scout<first+64);
 	for ( const auto& design : owner.designs ) {
 		if ( design.id < first || design.id >= first + 64 || design.id <= previous
 			|| design.chassis >= catalog.chassis.chassis.size() || design.weapon >= catalog.weapons.weapons.size()
@@ -158,6 +158,14 @@ void SmacStartupDesignState::RetainNativeRegistry(const SmacOriginalDesignPool& 
     }
     next.Validate(catalog);*this=std::move(next);
 }
+SmacCustomDesign SmacStartupDesignState::RetainedCustomDesign(int32_t id,const SmacPredefinedUnitCatalog& catalog) const {
+    if(id<64 || id>=512 || !Find(id/64)) {throw std::invalid_argument("Custom design has no retained owner block");}
+    const auto& owner=*Find(id/64);
+    for(const auto& design:owner.designs) {if(design.id==id) {return design;}}
+    if(!native_registry || (native_registry->at(id)[48]&1)) {throw std::runtime_error("Custom design has no retained record");}
+    auto design=DecodeRegistryDesign(native_registry->at(id),id);
+    ValidateOwner(SmacDesignOwner{id/64,{design},2},catalog);return design;
+}
 void SmacStartupDesignState::SynchronizeNativeRegistry() {
     if(!native_registry) {return;}
     auto pool=*native_registry;
@@ -285,7 +293,13 @@ void SmacStartupDesignState::Validate( const SmacPredefinedUnitCatalog& catalog 
     }
 	std::array< bool, 8 > seen{};
 	for ( const auto& owner : owners ) {
-		ValidateOwner( owner, catalog );
+		// The saved opening selection is provenance, not an active-design
+        // requirement for the rest of the campaign. Retire keeps its raw ID.
+        bool retained_start=false;
+        if(native_registry && owner.starting_scout!=2) {
+            retained_start=!RetainedCustomDesign(owner.starting_scout,catalog).active;
+        }
+        ValidateOwner( owner, catalog, retained_start );
 		if ( seen[ owner.simulation_id ] ) { throw std::runtime_error( "Duplicate SMAC custom design owner" ); }
         seen[ owner.simulation_id ] = true;
     }

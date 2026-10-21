@@ -31,6 +31,25 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop direct Retire preserves intrinsic records and records custom old tuples",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);const std::string source(std::istreambuf_iterator<char>(file),{});
+        const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;
+        auto pool=workshop_general_fixture::BasePool();pool[64]=pool[2];pool[64][48]=0x87;
+        auto state=Empty();state.retirement_history[1]=unit::SmacRetirementHistory::NewWorld();state.owners[0].starting_scout=64;state.RetainNativeRegistry(pool,catalog);const auto before=state;
+        GT_ASSERT(unit::RetireSmacWorkshopDesign(state,2,catalog,1)==before,"Intrinsic Retire changed shared record or history");
+        auto expected=pool;expected[64][48]=0x86;const auto next=unit::RetireSmacWorkshopDesign(state,64,catalog,1);
+        GT_ASSERT(state==before && *next.native_registry==expected && next.retirement_history[1]->cursor==1
+            && next.retirement_history[1]->slots[0]==unit::SmacRetirementTuple({0,0,0,0,0,0,0,1}),"Custom Retire changed more than active flag and old tuple history");
+        GT_ASSERT(unit::SmacStartupDesignState::Deserialize(next.Serialize(catalog).ToString(),catalog)==next,"Direct Retire did not survive restore");
+        const auto retained=next.RetainedCustomDesign(64,catalog);
+        GT_ASSERT(!retained.active && retained.id==64 && retained.chassis==pool[64][36] && retained.weapon==pool[64][37]
+            && retained.defense==pool[64][38] && retained.reactor==pool[64][39] && retained.cost==pool[64][41],"Inactive retained record lost its catalog identity");
+        GT_ASSERT(Rejects([&]{next.RetainedCustomDesign(65,catalog);}),"Uninitialized empty slot became a catalog design");
+        auto foreign_start=next;foreign_start.owners[1].starting_scout=64;
+        GT_ASSERT(Rejects([&]{foreign_start.Validate(catalog);}),"Inactive retained record admitted a foreign starting selection");
+        GT_ASSERT(Rejects([&]{unit::RetireSmacWorkshopDesign(state,128,catalog,1);}) && state==before,"Direct Retire admitted a foreign bank");GT_OK();
+    });
     task->AddTest("SMAC Workshop edit translates printable SDL letters and space before virtual keys",GT(){
         auto result=::ui::dom::StepSmacInput({"Scout Infantry",0,14},input::K_P,'p',true,input::KM_NONE,31);
         GT_ASSERT(result.handled && result.state.text=="p" && result.state.anchor==1 && result.state.caret==1,"SDL letter did not replace selection");

@@ -1,0 +1,223 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "One original illustrated Retire wrapper paused before modal loop; active-dialog global9c1264 supplied as native modal startup does. Original key, list down/up/double callback and command routines; close replaced with scalar receipt. Selected-index writes declared for independent key cases. No engine action.",
+  "validation": {
+    "native_input_controls": 12,
+    "source_literals": 11,
+    "retained_wrap_checks": 2,
+    "prior_glyph_cases": 7
+  },
+  "notation": {
+    "ordinary_palette_index": 226,
+    "ordinary_rgb": [
+      92,
+      124,
+      188
+    ],
+    "journal_color": "0x10ff00e2",
+    "ok_label": {
+      "byte_offset": "0x194",
+      "zero_based_token": 101,
+      "one_based_loader_row": 102,
+      "count_prefixed_array_index": 102
+    }
+  },
+  "wraps": [
+    {
+      "id": "retire_two_wrapper",
+      "width": 755,
+      "fields": {
+        "0x30e0": 0,
+        "0x30f4": 67,
+        "0x30d8": 206,
+        "0x30f0": 33,
+        "0x21c8": 0
+      },
+      "wrap_width": 449
+    },
+    {
+      "id": "retire_zero",
+      "width": 757,
+      "fields": {
+        "0x30e0": 0,
+        "0x30f4": 67,
+        "0x30d8": 0,
+        "0x30f0": 33,
+        "0x21c8": 0
+      },
+      "wrap_width": 657
+    }
+  ],
+  "cases": [
+    {
+      "id": "row0_keyd",
+      "selected": 0,
+      "answer": 0,
+      "loop_result": 0,
+      "events": [
+        {
+          "event": "command",
+          "action": -1
+        },
+        {
+          "event": "close",
+          "this": "0x20008c78"
+        }
+      ]
+    },
+    {
+      "id": "row0_key1000d",
+      "selected": 0,
+      "answer": 0,
+      "loop_result": 0,
+      "events": [
+        {
+          "event": "command",
+          "action": -1
+        },
+        {
+          "event": "close",
+          "this": "0x20008c78"
+        }
+      ]
+    },
+    {
+      "id": "row0_key1b",
+      "selected": 0,
+      "answer": 0,
+      "loop_result": 0,
+      "events": [
+        {
+          "event": "command",
+          "action": -2
+        },
+        {
+          "event": "close",
+          "this": "0x20008c78"
+        }
+      ]
+    },
+    {
+      "id": "row1_keyd",
+      "selected": 1,
+      "answer": 1,
+      "loop_result": 0,
+      "events": [
+        {
+          "event": "command",
+          "action": -1
+        },
+        {
+          "event": "close",
+          "this": "0x20008c78"
+        }
+      ]
+    },
+    {
+      "id": "row1_key1000d",
+      "selected": 1,
+      "answer": 1,
+      "loop_result": 0,
+      "events": [
+        {
+          "event": "command",
+          "action": -1
+        },
+        {
+          "event": "close",
+          "this": "0x20008c78"
+        }
+      ]
+    },
+    {
+      "id": "row1_key1b",
+      "selected": 1,
+      "answer": 1,
+      "loop_result": 0,
+      "events": [
+        {
+          "event": "command",
+          "action": -2
+        },
+        {
+          "event": "close",
+          "this": "0x20008c78"
+        }
+      ]
+    },
+    {
+      "id": "flags40_row1_escape",
+      "selected": 1,
+      "answer": -1,
+      "loop_result": 0,
+      "events": [
+        {
+          "event": "command",
+          "action": -2
+        },
+        {
+          "event": "close",
+          "this": "0x20008c78"
+        }
+      ]
+    },
+    {
+      "id": "single_down_row1",
+      "selected": 1,
+      "answer": 0,
+      "loop_result": 0,
+      "events": []
+    },
+    {
+      "id": "single_up_row1",
+      "selected": 1,
+      "answer": 0,
+      "loop_result": 0,
+      "events": []
+    },
+    {
+      "id": "double_callback_row1",
+      "selected": 1,
+      "answer": 1,
+      "loop_result": 0,
+      "events": [
+        {
+          "event": "close",
+          "this": "0x20008c78"
+        }
+      ]
+    },
+    {
+      "id": "ok_row0",
+      "selected": 0,
+      "answer": 0,
+      "loop_result": 0,
+      "events": [
+        {
+          "event": "command",
+          "action": -1
+        },
+        {
+          "event": "close",
+          "this": "0x20008c78"
+        }
+      ]
+    },
+    {
+      "id": "ok_row1",
+      "selected": 1,
+      "answer": 1,
+      "loop_result": 0,
+      "events": [
+        {
+          "event": "command",
+          "action": -1
+        },
+        {
+          "event": "close",
+          "this": "0x20008c78"
+        }
+      ]
+    }
+  ]
+}

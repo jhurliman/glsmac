@@ -691,6 +691,21 @@ SmacWorkshopObsolete PrepareSmacWorkshopObsolete(const SmacStartupDesignState& s
     if(at!=rebuilt.end()) {strip_offset=(size_t(at-rebuilt.begin())+rebuilt.size()-5)%rebuilt.size();}
     return {std::move(selection),strip_offset};
 }
+SmacStartupDesignState RetireSmacWorkshopDesign(const SmacStartupDesignState& state,int32_t selected,
+    const SmacPredefinedUnitCatalog& catalog,int32_t owner) {
+    state.Validate(catalog);
+    if(!state.native_registry || owner<1 || owner>7 || !state.Find(owner) || selected<0 || selected>=512
+        || (selected>=64 && selected/64!=owner)) {throw std::invalid_argument("Invalid Workshop Retire selection or owner");}
+    auto next=state;
+    if(selected>=64) {
+        auto& history=next.retirement_history.at(owner);
+        if(!history) {throw std::runtime_error("Workshop Retire requires retained tuple history");}
+        auto pool=*state.native_registry;SmacRetirementTuple tuple{};
+        std::copy_n(pool.at(selected).begin()+32,8,tuple.begin());history->Record(tuple);
+        pool.at(selected)[48]&=uint8_t(~1u);next.RetainNativeRegistry(pool,catalog);
+    }
+    return next;
+}
 namespace {
 void RequireRename(const SmacStartupDesignState& state,const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog,int32_t owner) {
     state.Validate(catalog);RequireComponents(draft,catalog);

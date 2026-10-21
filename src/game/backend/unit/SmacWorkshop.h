@@ -162,6 +162,10 @@ struct SmacWorkshopReselection {
 SmacWorkshopReselection PrepareSmacWorkshopReselection(const SmacStartupDesignState& state,int32_t requested,
     const std::string& retained_name,const SmacPredefinedUnitCatalog& catalog,int32_t owner);
 struct SmacWorkshopObsolete {SmacWorkshopReselection selection;size_t strip_offset;};
+// Direct595ac0 design/history portion. Unit removal and custom Base queue
+// surgery must be staged by the live caller before publishing this state.
+SmacStartupDesignState RetireSmacWorkshopDesign(const SmacStartupDesignState& state,int32_t selected,
+    const SmacPredefinedUnitCatalog& catalog,int32_t owner);
 // Action6 toggles stored exclusion/flags before navigating the old browse list.
 // Draft components are not saved; inactive reselection preserves draft name.
 SmacWorkshopObsolete PrepareSmacWorkshopObsolete(const SmacStartupDesignState& state,int32_t selected,

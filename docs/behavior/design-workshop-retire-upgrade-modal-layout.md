@@ -1,5 +1,12 @@
 # Workshop Retire prompts and multiple-target Upgrade chooser geometry
 
+**Retire correction:** the Retire cases below are direct generic-template
+diagnostics without the caller's unit_sm.pcx argument. Original499b70 loads
+that illustration and changes the real Retire layout to755x300, choices
+`[33,164,688,208)`, OK `[33,217,688,237)`. Use the
+[actual wrapper supplement](design-workshop-upgrade-confirmation-layout.md)
+for Retire; the image-free multiple-target chooser below remains valid.
+
 2026-10-21. Original terran.exe SHA-256
 `0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01`.
 Four bounded native template/layout controls: Retire cached counts0/1/2,
@@ -40,7 +47,8 @@ that the units still operating will be disbanded. The stock template has
 | 0 | Never mind. |
 | 1 | Retire "Upgrade Source" design. |
 
-The single button is localized OK (`LABELS194`), action -1. There is no
+The single button is localized OK (LABELS byte offset `0x194`, zero-based
+token101; `labels[102]` when the array includes its count), action -1. There is no
 separate visible Cancel or Yes/No button pair. Row0 is initially selected
 (native state2); row1 is initially normal (state0). The action handler exits
 for returned0 and proceeds for nonzero. Do not silently turn selecting the

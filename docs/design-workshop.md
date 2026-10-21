@@ -1094,3 +1094,23 @@ is conditioned on supplied backing boundaries, and live overflow scrollbar
 chrome/repeat timing and keyboard focus decoration still need fidelity work.
 The remaining weapon picker, parent ability-card decoration, other actions,
 preferences, cost warnings and preview animation remain on the Workshop path.
+
+### Standalone Retire and retained inactive references
+
+Retire now has a live illustrated confirmation and a fenced queued transaction.
+It uses the selected stored design and cached count, then removes all raw-ID
+Unit matches. Custom retirement updates history and Base queues; intrinsic
+retirement preserves the shared design and every queue. Existing inactive
+queue/baseline references and the retired starting-Scout provenance survive
+save/reload, while inactive designs stay out of new production choices.
+
+The original flags-zero modal returns its selected row on Escape as well as
+Enter/Shift+Enter; double-click also accepts. The live SDL bridge supplies the
+double-click event after ordinary mouse-down selection. The original
+illustration, full caption frame and initialized OK sprite/glyph pixels match
+their native surface regions exactly (53,152 compared pixels; the button has
+four transparent corners). Normal, hover and pressed states are captured in
+the real instrumented dialog. See the
+[Retire integration evidence](behavior/design-workshop-explicit-upgrade-and-retire.md).
+Upgrade, automatic family controls, persistent preferences, animated preview
+and complete screen parity remain open; this does not complete the Workshop.

@@ -71,6 +71,9 @@ struct SmacStartupDesignState {
     // identifies legacy port saves; it never implies a fabricated zero pool.
     std::optional<SmacOriginalDesignPool> native_registry;
     void RetainNativeRegistry(const SmacOriginalDesignPool& pool,const SmacPredefinedUnitCatalog& catalog);
+    // Existing queues/baselines can retain an inactive custom ID after595ac0.
+    // Resolving that stored identity does not admit a new production choice.
+    SmacCustomDesign RetainedCustomDesign(int32_t id,const SmacPredefinedUnitCatalog& catalog) const;
     // Existing typed writers explicitly publish their modeled changes into
     // retained storage. Untouched names/tails and unmodeled bytes survive.
     void SynchronizeNativeRegistry();

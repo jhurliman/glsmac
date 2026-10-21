@@ -1,6 +1,7 @@
 #pragma once
 #include "SmacStartupDesignState.h"
 #include "SmacOpeningDesigns.h"
+#include "game/backend/faction/SmacDesignCounts.h"
 
 namespace game::backend::unit {
 struct SmacPrototypePriceContext {
@@ -44,6 +45,13 @@ void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const Sma
 // Returns the untruncated native buffer; saving owns the31-byte boundary.
 std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,int32_t owner);
+enum class SmacWorkshopSlotKind {Alias,Build,IntrinsicFailure};
+struct SmacWorkshopSlot {int32_t selected;SmacWorkshopSlotKind kind;bool confirmation;};
+// Original 441e20 tuple matching and two-stage allocation. Consumes retained
+// count bytes; no recount, retirement or design mutation occurs here.
+SmacWorkshopSlot ChooseSmacWorkshopSlot(const SmacOriginalDesignPool& pool,const SmacWorkshopDraft& draft,
+    const faction::SmacDesignCounts& units,const faction::SmacDesignCounts& production,
+    const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner);
 struct SmacWorkshopCommit {
     int32_t design_id;
     bool intrinsic_name_warning;

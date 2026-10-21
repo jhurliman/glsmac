@@ -175,6 +175,50 @@ std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t ind
         if(!changed) {return variant ? short_name:full;}
     }
 }
+SmacWorkshopSlot ChooseSmacWorkshopSlot(const SmacOriginalDesignPool& pool,const SmacWorkshopDraft& draft,
+    const faction::SmacDesignCounts& units,const faction::SmacDesignCounts& production,
+    const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner) {
+    RequireOwner(owner);const int32_t first=owner.admission.simulation_id*64,limit=first+64;
+    const int32_t original=draft.selected_design;
+    if(original<0 || original>=512 || (original>=64 && (original<first || original>=limit))
+        || draft.chassis>255 || draft.weapon>255 || draft.armor>255 || draft.reactor<1 || draft.reactor>4 || draft.abilities>0xffffff) {
+        throw std::invalid_argument("Invalid Workshop slot selection or tuple");
+    }
+    const auto active=[&](int32_t i){return (pool.at(i)[48]&1)!=0;};
+    const auto matches=[&](int32_t i) {
+        const auto& row=pool.at(i);
+        if(row[36]!=draft.chassis || row[37]!=draft.weapon || row[38]!=draft.armor || row[39]!=draft.reactor) {return false;}
+        for(unsigned k=0;k<4;++k) {if(row[32+k]!=uint8_t(draft.abilities>>(8*k))) {return false;}}return true;
+    };
+    const uint8_t mask=uint8_t(1u<<owner.admission.simulation_id);
+    const auto excluded=[&](int32_t i){return (pool.at(i)[44]&mask)!=0;};
+    for(int32_t i=0;i<limit;++i) {
+        if(i>=64 && i<first) {continue;}if(!active(i) || !matches(i)) {continue;}
+        if(i<64) {const auto& row=pool.at(i);const auto prerequisite=int16_t(uint16_t(row[50])|(uint16_t(row[51])<<8));
+            if(!Available(prerequisite,technologies,owner)) {continue;}}
+        return {i,SmacWorkshopSlotKind::Alias,false};
+    }
+    int32_t selected=original;
+    if(selected<64) {
+        if(matches(selected)) {return {selected,SmacWorkshopSlotKind::IntrinsicFailure,false};}
+        for(int32_t i=first;i<limit;++i) {
+            if(excluded(i) && units.at(i)==0 && production.at(i)==0) {selected=i;break;}
+            if(!active(i)) {selected=i;}
+        }
+        if(selected<64) {return {selected,SmacWorkshopSlotKind::IntrinsicFailure,false};}
+    }
+    bool unused=false,empty=false;
+    if(active(selected) && !matches(selected)) {
+        for(int32_t i=first;i<limit;++i) {
+            if(!active(i)) {selected=i;empty=true;break;}
+            if(excluded(i) && units.at(i)==0) {
+                if(production.at(i)==0) {selected=i;unused=true;}
+                else if(!unused && pool.at(i)[43]==pool.at(selected)[43]) {selected=i;}
+            }
+        }
+    }
+    return {selected,SmacWorkshopSlotKind::Build,!empty && !unused && active(selected) && units.at(selected)>0};
+}
 SmacPrototypePrice SmacDesignProductionRows(const SmacCustomDesign& design,
     const SmacPredefinedUnitCatalog& catalog,const SmacPrototypePriceContext& context) {
     if(design.id<0 || design.id>=512) {throw std::invalid_argument("Prototype price requires a canonical design identity");}
@@ -298,13 +342,16 @@ SmacWorkshopCommit CommitSmacWorkshopFirstDesign(SmacStartupDesignState& state,c
         row[48]=uint8_t((builtin.active?1:0)|(builtin.prototyped?4:0));const auto prerequisite=uint16_t(Prerequisite(builtin.prerequisite));
         row[50]=uint8_t(prerequisite);row[51]=uint8_t(prerequisite>>8);
     }
-    const size_t slot=size_t(owner.admission.simulation_id)*64+63;
+    const faction::SmacDesignCounts zero{};
+    const auto allocation=ChooseSmacWorkshopSlot(pool,draft,zero,zero,technologies,owner);
+    if(allocation.kind!=SmacWorkshopSlotKind::Build || allocation.confirmation) {throw std::runtime_error("First Workshop allocation requires an unused custom slot");}
+    const size_t slot=size_t(allocation.selected);
     BuildSmacWorkshopRecord(pool,slot,draft,catalog,technologies,owner);
     const auto& chassis=catalog.chassis.chassis.at(0);
     const auto& armor=catalog.defenses.defenses.at(1);
     const SmacEarlyDesignNames names{armor.short_name,chassis.names[2].name,chassis.names[3].name,"","",armor.rating};
     auto automatic=catalog.workshop_name_labels ? NameSmacWorkshopDesign(pool,slot,draft,catalog,owner.admission.simulation_id):NameSmacOpeningDesign(names,owner.admission.simulation_id,0,1);automatic.resize(std::min<size_t>(automatic.size(),31));
-    SmacCustomDesign design;design.id=owner.admission.simulation_id*64+63;design.defense=1;
+    SmacCustomDesign design;design.id=static_cast<int32_t>(slot);design.defense=1;
     design.cost=pool[slot][41];design.plan=pool[slot][42];design.carry=pool[slot][40];
     design.prototyped=(pool[slot][48]&4)!=0;design.auxiliary_flags=uint16_t((uint16_t(pool[slot][48])|(uint16_t(pool[slot][49])<<8))&~7u);
     design.name=draft.name.empty()?automatic:draft.name;design.explicitly_named=*design.name!=automatic;

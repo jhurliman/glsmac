@@ -5,6 +5,7 @@
 #include "fixtures/SmacPrototypePrice.h"
 #include "fixtures/WorkshopAlias.h"
 #include "fixtures/WorkshopGeneral.h"
+#include "fixtures/WorkshopAllocation.h"
 #include "task/gsetests/GSETests.h"
 #include <cstdlib>
 #include <fstream>
@@ -129,6 +130,17 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
         GT_ASSERT(Rejects([&]{unit::SmacDesignProductionRows(design,catalog,context);}),"Negative percentage admitted");
         context.percentages=std::array<int32_t,3>{{INT32_MAX,50,50}};
         GT_ASSERT(Rejects([&]{unit::SmacDesignProductionRows(design,catalog,context);}),"Overflowed native signed32 product admitted");GT_OK();
+    });
+    task->AddTest("SMAC Workshop owned allocation scans and overwrite prompts match original decisions",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);if(!input) {throw std::runtime_error("Missing owned allocation rules");}
+        const auto technologies=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(std::string(std::istreambuf_iterator<char>(input),{}));const auto owner=Owner();
+        for(const auto& row:workshop_allocation_fixture::Cases()) {
+            auto pool=workshop_allocation_fixture::BasePool();for(const auto& patch:row.patches) {pool.at(patch.first/52).at(patch.first%52)=patch.second;}
+            faction::SmacDesignCounts units{},production{};for(const auto& item:row.units) {units.at(item.first)=item.second;}for(const auto& item:row.production) {production.at(item.first)=item.second;}
+            const auto before=pool;const auto result=unit::ChooseSmacWorkshopSlot(pool,row.draft,units,production,technologies,owner);
+            GT_ASSERT(result.selected==row.selected && result.kind==row.kind && result.confirmation==row.confirmation && pool==before,"Original slot selection differs: " + std::string(row.name));
+        }GT_OK();
     });
     task->AddTest("SMAC Workshop owned general builder compatibility and cleanup match native controls",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}

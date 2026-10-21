@@ -1156,7 +1156,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 		"Early conventional claimed queued Start preserves raw order then seals before upkeep",
 		"Early conventional claimed immediate Start preserves raw order then seals before upkeep",
 		"Early conventional missing first turn retires raw identities without publication",
-		"Early conventional all-unit seal preflight rejects incompatible later selection atomically",
+		"Early conventional all-unit seal preflight rejects unavailable later design atomically",
 		"Early conventional Pending Start cancellation creates no raw units",
 		"Early conventional Running reset waits then retires raw identities",
 		"Early conventional throwing raw event cleans identity and frontend ownership",

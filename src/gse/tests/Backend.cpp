@@ -5517,7 +5517,13 @@ public:
 			} );
 			auto* raw = NATIVE_CALL( this, scenario, spawn, &reset, &ticket, require ) {
 				for ( size_t slot : { 0u, 2u, 6u } ) { spawn( GSE_CALL, slot ); }
-				if ( scenario == 3 ) { ConventionalSelectStartup( 2, 2 ); } // valid later participant, incompatible saved selection
+				if ( scenario == 3 ) {
+                    // A later startup choice no longer invalidates a retained
+                    // Rover. Removing its actual retained record still must
+                    // fail the all-unit preflight before any seal/upkeep.
+                    ConventionalSelectStartup(2,2);
+                    for(auto& owner:m_game.m_simulation->value.designs.owners) {if(owner.simulation_id==2) {owner.designs.clear();}}
+                }
 				if ( scenario == 5 ) { std::thread worker( [ & ] { reset = m_game.MT_Reset( ticket ); m_game.Iterate(); } ); worker.join(); require( m_game.m_map && m_game.GetUM()->GetUnits().size() == 3, "Running reset destroyed raw units" ); }
 				if ( scenario == 6 ) { throw std::runtime_error( "fixture raw event failure" ); }
 				return VALUE( value::Undefined );

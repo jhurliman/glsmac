@@ -1479,6 +1479,49 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_OK();
         });GT_ASSERT(run.empty(),"Live Workshop command: "+run);GT_OK();
     });
+    task->AddTest("SMAC live Workshop read-only edit adapter derives owner admission and carries slot state",[](GSE*,context::Context*)->std::string {
+        const auto source=[](const std::string& filename) {
+            auto text=TanksSource(filename);size_t at=0;
+            // Give the synthetic technology namespace an explicit Neural identity.
+            while((at=text.find("Tech50",at))!=std::string::npos) {text.replace(at,6,"Neural");at+=6;}
+            if(filename!="alpha.txt") {return text;}
+            std::istringstream lines(text);std::string line,section,result;size_t row=0;
+            while(std::getline(lines,line)) {
+                if(!line.empty() && line.front()=='#') {section=line;row=0;}
+                else if(section=="#REACTORS") {
+                    if(row==1) {line.replace(line.rfind(',')+1,std::string::npos,"Tech1");}++row;
+                }result+=line+'\n';
+            }return result;
+        };
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* base=Populate(GSE_CALL,fixture,false);
+            const auto scout=fixture.Game()->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned.fill(true);
+                state.economy.at(1).design_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};});
+            auto* object=static_cast<value::Object*>(base->Wrap(GSE_CALL));auto* edit=static_cast<value::Callable*>(object->Get("get_smac_workshop_edit"));
+            value::function_arguments_t args{VALUE(value::Int,,2),VALUE(value::Int,,0),VALUE(value::Int,,0),VALUE(value::Int,,1),VALUE(value::Int,,1),
+                VALUE(value::Int,,0),VALUE(value::String,,"Retained Draft"),VALUE(value::Int,,-1),VALUE(value::Int,,-1),VALUE(value::Int,,3),VALUE(value::Int,,2),VALUE(value::Bool,,false)};
+            const auto before=fixture.Snapshot();auto* response=static_cast<value::Object*>(edit->Run(GSE_CALL,args));
+            auto* draft=static_cast<value::Object*>(response->Get("draft"));
+            GT_ASSERT(static_cast<value::Int*>(draft->Get("reactor"))->value==2 && static_cast<value::String*>(draft->Get("name"))->value=="Retained Draft"
+                && static_cast<value::Array*>(response->Get("ability_slots"))->value.size()==2 && fixture.Snapshot()==before,"Read-only edit lost reactor/name/slots or changed world state");
+            args[10]=VALUE(value::Int,,3);response=static_cast<value::Object*>(edit->Run(GSE_CALL,args));
+            GT_ASSERT(static_cast<value::Int*>(static_cast<value::Object*>(response->Get("draft"))->Get("reactor"))->value==1 && fixture.Snapshot()==before,
+                "Disabled reactor choice replaced the original value");
+            args[9]=VALUE(value::Int,,4);args[10]=VALUE(value::Int,,24);args[5]=VALUE(value::Int,,512);args[8]=VALUE(value::Int,,9);
+            response=static_cast<value::Object*>(edit->Run(GSE_CALL,args));auto* slots=static_cast<value::Array*>(response->Get("ability_slots"));
+            GT_ASSERT(static_cast<value::Bool*>(response->Get("ability_entry_allowed"))->value
+                && static_cast<value::Int*>(slots->value[0])->value==-1 && static_cast<value::Int*>(slots->value[1])->value==9
+                && static_cast<value::Int*>(static_cast<value::Object*>(response->Get("draft"))->Get("abilities"))->value==512
+                && fixture.Snapshot()==before,"Manual None sorted/cleaned retained slot state or changed world");
+            auto oversized=args;oversized[4]=VALUE(value::Int,,257);
+            GT_ASSERT(Rejects([&]{edit->Run(GSE_CALL,oversized);}) && fixture.Snapshot()==before,"Reactor request narrowed before validation");
+            args[0]=VALUE(value::Int,,128);bool rejected=false;try {edit->Run(GSE_CALL,args);}catch(const std::exception&) {rejected=true;}
+            GT_ASSERT(rejected && fixture.Snapshot()==before,"Foreign editor request passed authority checks");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Workshop queued card selection retains saved tuples and fences world state",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {

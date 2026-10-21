@@ -52,10 +52,10 @@ required before the local conquest milestone can be claimed.
 
 ## Current acceptance dashboard — 2026-10-20
 
-Accepted integration: **`f2e247a22164fe75ef03148782da2772a94aa438`**, through
-[#502](https://github.com/jhurliman/glsmac/pull/502), on `codex/faithful-1.0`.
+Accepted integration: **`a12a5e77ac6599d38ceae56dc352d7d595b01dd2`**, through
+[#503](https://github.com/jhurliman/glsmac/pull/503), on `codex/faithful-1.0`.
 Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `188b262c46ee6b878fd4874fc0cebea17903c898`. This is an integration
+at head `8aba5b9aa76cf1168647b9c697e23ca41f85b201`. This is an integration
 checkpoint, not a release candidate or a statement that all platforms were rerun.
 
 **Current focus: the complete Design Workshop (M3/M6). M0–M7 remain open.**
@@ -78,10 +78,16 @@ Evidence classes are deliberately separate:
   setup, UI/gameplay, save/reload and result. The Workshop receipt and M2
   local/network match have **not run to completion** at this checkpoint.
 
-The all-stock shielding follow-up [#503](https://github.com/jhurliman/glsmac/pull/503)
-is a candidate, not included in this accepted checkpoint. Its local live tests,
-rendered harness and focused analysis/sanitizers must not be counted as a passed
-release or complete Workshop gate while it awaits integration.
+The all-stock shielding path is now integrated in #503:27 selected native
+groups and six UI scripts pass;30 relevant groups pass focused sanitizers and
+eight production files/consumers pass correctness analysis. The live fixture
+uses owned stock defense metadata with explicitly mapped synthetic prerequisites;
+it verifies queued saves/quotes in occupied banks and whole-world restore.
+The rendered card harness separately overrides availability in copied UI data.
+Neither receipt is a complete interactive Workshop or original screen diff.
+The PSI label follow-up [#505](https://github.com/jhurliman/glsmac/pull/505) remains
+a candidate at this accepted checkpoint; do not count its pending state as
+integrated acceptance.
 
 | Acceptance | Status at the accepted head | Evidence and remaining exit requirement |
 | --- | --- | --- |
@@ -96,7 +102,7 @@ release or complete Workshop gate while it awaits integration.
 | M2.7: combat, capture, elimination and valid conquest | Partial | [Hostile movement](smac-live-scout-combat.md), [defended capture](smac-defended-base-combat.md) and the [conquest-controller contract](behavior/conquest-controller.md) cover bounded paths. A legal opponent, full remaining-Unit/Pod disposition and actual match ending remain required. |
 | M2.8: every checkpoint reload, remote repeat and late join | Not run as the complete acceptance | Local restoration fixtures are not the numbered uninterrupted-vs-restored match or its network repeat. Retain this as an explicit M2 exit gate. |
 | WS1: open, browse/New, rename, reselect, Apply/Done/Cancel | Partial | [Custom-edit](behavior/design-workshop-custom-edit.md) and [fresh-draft](behavior/design-workshop-fresh-draft.md) reference contracts exist; queued save/retirement paths pass. The live UI still opens hardcoded Scout and lacks the complete saved-design browser and original reselect/rename behavior. |
-| WS2: all legal components, previews, costs and abilities | Partial | [Workshop journal](design-workshop.md) separates exact static compositions, card controls, general record construction and live integration. Full chassis/weapon/reactor/ability pickers, cleanup order, PSI formatting, animation and SMAX content remain open. |
+| WS2: all legal components, previews, costs and abilities | Partial | [Workshop journal](design-workshop.md) separates exact static compositions, card controls, general record construction and live integration. All stock shielding is connected through the live editor. Full chassis/weapon/reactor/ability pickers, cleanup order, PSI formatting (#505 candidate), animation and SMAX content remain open. |
 | WS3: new named design to usable manufactured Unit | Not run as the complete acceptance | Follow the journal's minimum receipt through Apply, close/reopen, save/reload, Base production, first prototype and a playable Unit. Price/registry tests alone do not close general production admission. |
 | WS4: original full Workshop screen and interaction diff | Not run as the complete acceptance | Exact declared CVR buffers and UI layout previews are supporting evidence only. Match the original parent/console, artwork, glyph advances, all picker/confirmation states and fixed animation phase at logical4:3 before claiming screen parity. |
 | M3: complete SMAC rule/content inventory | Partial | Many bounded rule families are implemented; Workshop WS1–WS3 and the full inventory/interaction reconciliation remain open. No full campaign receipt. |

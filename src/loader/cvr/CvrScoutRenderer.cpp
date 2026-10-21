@@ -91,6 +91,9 @@ CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::st
     }
     // The original temporarily remaps this Probe design for all four composers.
     if(weapon==18 && chassis==1 && definition.armor_strength<=1) {chassis=0;}
+    // The live weapon side-card caller substitutes chassis-1 for Probe when
+    // its ordinary-unit cache flag is zero. Whole-unit composition does not.
+    if(kind==1 && weapon==18 && definition.independent_probe) {chassis=-1;}
     const auto palette=read("palette.pcx"),system=read("system.txt");scout::ValidateMapLight(system);
     const auto materials=CvrActorMaterial::ReadWorkshop(palette,read("vbp.cvr"),system);
     const auto shades=CvrPaletteReader::Read(CvrContainerReader::Read(read("vbp.cvr"))).shades;
@@ -137,6 +140,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::st
         }
     };
     const auto gun=[&] {
+        if(kind==1 && weapon==0) {append("vw00.cvr");return;}
         if(chassis==8) {return;}
         if(weapon==13 || weapon==20) {append(weapon==13 ? "vw13.cvr":"vm.cvr");return;}
         if(definition.weapon_mode<3) {
@@ -179,7 +183,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::st
     if(kind<0) {body();gun();shield();power();}else {
         switch(kind) {case 0:body();break;case 1:gun();break;case 2:shield();break;case 3:power();break;}
     }
-    if(bytes.empty()) {throw std::invalid_argument("Workshop component has no model");}
+    if(bytes.empty() && kind<0) {throw std::invalid_argument("Workshop unit has no model");}
     std::vector<std::string_view> parts;for(const auto& part:bytes) {parts.push_back(part);}
     return LoadParts(parts,profile,&faction,&attachments,definition.weapon_mode);
 }
@@ -216,6 +220,14 @@ CvrScoutImage CvrScoutRenderer::RenderWorkshopCard(int kind,std::array<uint32_t,
     auto view=scout::MakeWorkshopView(position,0x3f05f92d,scale[kind],anchor[kind]);
     if(kind!=0) {position=WorkshopPosition(view.orientation,position);view=scout::MakeWorkshopView(position,0x3f05f92d,scale[kind],anchor[kind]);}
     return RenderView(view,9,false,kind==1 ? std::optional<std::array<int32_t,4>>({79,86,178,171}):std::nullopt);
+}
+
+CvrScoutImage CvrScoutRenderer::RenderWorkshopPicker(int kind,int ordinal,bool available,std::array<uint32_t,3>& position) const {
+    if((kind!=0 && kind!=3) || ordinal<0 || ordinal>=20 || m_assets->profile!=Profile::WorkshopPart) {
+        throw std::invalid_argument("Unsupported Workshop chassis/reactor picker scene");
+    }
+    return RenderWorkshopPart(kind==0 ? 0x3d75c28f:0x3e4ccccd,true,
+        {79+108*(ordinal%5),49+94*(ordinal/5)},!available,false,position);
 }
 
 CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_view >& parts, const Profile profile, const CvrActorMaterial* material, const std::vector<WorkshopAttachment>* attachments, int workshop_weapon_mode ) {
@@ -317,7 +329,8 @@ CvrScoutImage CvrScoutRenderer::RenderWorkshop(const uint32_t yaw_bits) const {
 std::array<uint32_t,3> CvrScoutRenderer::WorkshopPosition(const std::array<uint32_t,9>& rotation,const std::array<uint32_t,3>& previous) const {
     using namespace scout;
     const auto frames=CvrFrameAssembler::Assemble(m_assets->frames,m_assets->selections);
-    if(frames.first_omitted || frames.records.empty()) {throw std::invalid_argument("Workshop preview has incomplete frames");}
+    if(frames.first_omitted) {throw std::invalid_argument("Workshop preview has incomplete frames");}
+    if(frames.records.empty()) {return previous;}
     std::optional<WorkshopBounds> scene;
     for(const auto& frame:frames.records) {
         const auto& source=m_assets->geometry[frame.scene_index][frame.object_index];

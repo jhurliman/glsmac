@@ -8,7 +8,7 @@
 #include <optional>
 
 namespace task::intro { class Movie; }
-namespace loader::cvr {class CvrScoutRenderer;class CvrWorkshopComponents;struct CvrStripImage;}
+namespace loader::cvr {class CvrScoutRenderer;class CvrWorkshopComponents;struct CvrStripImage;struct CvrScoutImage;}
 namespace loader::texture {struct SmacDialogSource;struct SmacTurnFrames;struct SmacGraphPalette;}
 
 namespace types {
@@ -60,6 +60,8 @@ private:
     std::array<int,2> m_dialog_size{{-1,-1}},m_dialog_phase{{0,0}};
     void UpdateDialogFrames();
     void EnsureWorkshopComponents();
+    gse::Value* WorkshopPickerText(GSE_CALLABLE);
+    std::optional<std::array<std::string,6>> m_workshop_picker_text;
 	std::unique_ptr<task::intro::Movie> m_movie;
     std::shared_ptr<const loader::texture::SmacTurnFrames> m_turn_frames;
     std::shared_ptr<const loader::texture::SmacGraphPalette> m_graph_palette;
@@ -68,6 +70,9 @@ private:
     std::shared_ptr<const loader::cvr::CvrScoutRenderer> m_workshop_design;
     std::array<int,8> m_workshop_design_key{{-2,-2,-2,-2,-2,-2,-2,-2}};
     std::string m_workshop_design_faction;
+    struct PickerImage {std::array<int,8> key;bool known;std::array<uint32_t,3> before,after;std::shared_ptr<const loader::cvr::CvrScoutImage> image;};
+    std::vector<PickerImage> m_workshop_picker_images;
+    std::string m_workshop_picker_faction;
     struct StripImage {std::array<int,7> key;std::shared_ptr<const loader::cvr::CvrStripImage> image;};
     std::vector<StripImage> m_workshop_strip_images;
     std::string m_workshop_strip_faction;

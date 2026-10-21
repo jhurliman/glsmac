@@ -1510,6 +1510,12 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             args[10]=VALUE(value::Int,,3);response=static_cast<value::Object*>(edit->Run(GSE_CALL,args));
             GT_ASSERT(static_cast<value::Int*>(static_cast<value::Object*>(response->Get("draft"))->Get("reactor"))->value==1 && fixture.Snapshot()==before,
                 "Disabled reactor choice replaced the original value");
+            auto missile=args;missile[1]=VALUE(value::Int,,8);missile[2]=VALUE(value::Int,,20);missile[3]=VALUE(value::Int,,0);
+            auto* missile_view=static_cast<value::Object*>(edit->Run(GSE_CALL,missile));
+            GT_ASSERT(static_cast<value::Array*>(missile_view->Get("armor"))->value.size()==1
+                && static_cast<value::Array*>(missile_view->Get("chassis_choices"))->value.size()==2
+                && static_cast<value::Array*>(missile_view->Get("reactor_choices"))->value.size()==2
+                && fixture.Snapshot()==before,"Missile picker guard or configured component admission differs");
             args[9]=VALUE(value::Int,,4);args[10]=VALUE(value::Int,,24);args[5]=VALUE(value::Int,,512);args[8]=VALUE(value::Int,,9);
             response=static_cast<value::Object*>(edit->Run(GSE_CALL,args));auto* slots=static_cast<value::Array*>(response->Get("ability_slots"));
             GT_ASSERT(static_cast<value::Bool*>(response->Get("ability_entry_allowed"))->value

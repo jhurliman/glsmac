@@ -1,9 +1,10 @@
 const dialog = #include('../default/ui/parts/game/popup/base_screen/workshop');
-let windows = []; let commands = []; let listeners = {};
+let windows = []; let commands = []; let listeners = {}; let edits = [];
 const node = (data) => {
     data.hidden = false; data.handlers = {}; data.children = [];
     data.hide = () => { data.hidden = true; }; data.show = () => { data.hidden = false; }; data.remove = () => {};
-    data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; };
+    data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi'}; };
+    data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi'}; };
     data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
     data.smacworkshopcomponents = (armor, only_armor) => { test.assert(only_armor); data.components_armor = armor; };
     data.smacworkshopstrip = (rows, faction, selected, hovered) => { data.strip_rows = rows; data.strip_faction = faction; data.strip_selected = selected; data.strip_hovered = hovered;
@@ -20,7 +21,17 @@ dialog.init({ui: {class: (name) => { return {set: (properties) => { test.assert(
     game: {event: (name, data) => { commands :+ {name: name, data: data}; }}});
 const base = {id: 701};
 const selection = {expected_state: 'before', chassis: 'Infantry', weapon: 'Hand Weapons', reactor: 'Fission', scout_name: 'Scout', faction_art: 'morgan.pcx', speed: 1, offense: 1, weapon_mode: 0, power: 1,
+    ability_names: ['Super Former', 'Deep Radar', '', '', '', '', '', '', '', 'Polymorphic', '', '', '', '', '', '', '', '', 'Trance', '', '', '', '', ''],
+    chassis_choices: [{id: 0, name: 'Infantry', domain: 0, value: 1, technology_available: true}, {id: 3, name: 'Foil', domain: 1, value: 4, technology_available: false}],
+    reactor_choices: [{id: 1, name: 'Fission', value: 1, technology_available: true}, {id: 2, name: 'Fusion', value: 2, technology_available: true}],
     armor: [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, stat_line: '1-1-1 ', design_name: 'Scout', cost: 10, technology_available: true, available: true}, {id: 1, name: 'Synthmetal', short_name: 'Synthmetal', rating: 2, stat_line: '1-2-1 ', design_name: 'Synthmetal Garrison', cost: 20, technology_available: true, available: true}, {id: 2, name: 'Unknown', short_name: 'Unknown', rating: 3, stat_line: '1-3-1 ', design_name: '', cost: 0, technology_available: false, available: false}]};
+base.get_smac_workshop_edit = (selected, chassis, weapon, armor, reactor, abilities, name, first, second, kind, choice, automatic) => {
+    edits :+ {kind: kind, choice: choice, automatic: automatic, first: first, second: second};
+    if (choice >= 0) { if (kind == 0) { chassis = choice; } if (kind == 2) { armor = choice; } if (kind == 3) { reactor = choice; } }
+    const result = dialog.selection + {};
+    result.draft = {selected_design: selected, chassis: chassis, weapon: weapon, armor: armor, reactor: reactor, abilities: abilities, name: name};
+    result.ability_slots = [first, second]; return result;
+};
 test.assert(windows[0].left == 216 && windows[0].top == 168 && windows[0].width == 623 && windows[0].height == 387 && windows[0].children[0].background == 'deswin.pcx:smacsoftware()');
 test.assert(dialog.component_models[0].model.top == (0 - 88) && dialog.component_models[1].model.top == (0 - 86) && dialog.component_models[2].model.top == (0 - 90));
 test.assert(dialog.stats.baseline == 261);
@@ -166,4 +177,21 @@ test.assert(!dialog.pending && dialog.active && dialog.selected_design == 77 && 
 dialog.hide_view(); test.assert(dialog.strip.hidden);
 const short_browser = selection + {designs: [saved_rows[0] + {}, saved_rows[1] + {}]}; dialog.open(base, short_browser);
 test.assert(#sizeof(dialog.strip_cards) == 2 && #sizeof(dialog.strip_canvas.strip_rows) == 2 && dialog.strip_cards[1].left == 91);
+dialog.hide_view();
+
+// Live control routing carries the complete tuple and explicit preference.
+dialog.open(base, selection);
+dialog.chassis_button.handlers.click({});
+test.assert(dialog.picker_canvas.picker_kind == 0 && #sizeof(dialog.cards) == 2);
+const before_edits = #sizeof(edits);
+dialog.cards[1].handlers.click({}); test.assert(#sizeof(edits) == before_edits && !dialog.picker.hidden);
+dialog.cards[0].handlers.click({}); test.assert(edits[#sizeof(edits) - 1].kind == 0 && dialog.picker.hidden);
+dialog.reactor_button.handlers.click({});
+test.assert(dialog.picker_canvas.picker_kind == 3 && dialog.picker_canvas.picker_selected == 1 && #sizeof(dialog.cards) == 2);
+dialog.cards[1].handlers.click({}); test.assert(dialog.selected_reactor == 2 && edits[#sizeof(edits) - 1].choice == 2);
+dialog.reactor_button.handlers.click({});
+test.assert(dialog.picker.handlers.keydown({modifiers: {}, code: 'ESCAPE'}) == true);
+test.assert(edits[#sizeof(edits) - 1].kind == 3 && edits[#sizeof(edits) - 1].choice == (0 - 1) && edits[#sizeof(edits) - 1].automatic && dialog.selected_reactor == 2 && dialog.picker.hidden);
+dialog.automatic_suggestions = false; dialog.open_picker(); dialog.cards[1].handlers.click({});
+test.assert(!edits[#sizeof(edits) - 1].automatic && edits[#sizeof(edits) - 1].kind == 2 && dialog.selected_armor == 1);
 dialog.hide_view();

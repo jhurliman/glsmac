@@ -172,7 +172,7 @@ Surface::Surface( DOM_ARGS_T )
         if(!m_dialog_source) {throw std::runtime_error("Original Workshop frame source unavailable");}
         std::vector<uint8_t> indexed(623*387,9);std::array<uint32_t,3> position{};
         for(size_t ordinal=0;ordinal<choices.size();++ordinal) {
-            const auto [id,known]=choices[ordinal];const int x=27+108*int(ordinal%5),y=4+94*int(ordinal/5);
+            const int id=choices[ordinal].first;const bool known=choices[ordinal].second;const int x=27+108*int(ordinal%5),y=4+94*int(ordinal/5);
             loader::texture::smac_dialog_frame::Paint(indexed,623,387,*m_dialog_source,{id==selected?2:0,x,y,x+105,y+91},{0,0,623,387});
             // Expansion-only models await their own native composition controls.
             if(id>9) {continue;}
@@ -188,7 +188,57 @@ Surface::Surface( DOM_ARGS_T )
         const auto rgba=loader::texture::smac_dialog_frame::Rgba(indexed,*m_dialog_source);
         CreateTexture();m_background.texture->Resize(623,387);std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());
         m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
-        return VALUE(gse::value::Bool,,true);
+        return WorkshopPickerText(GSE_CALL);
+    }));
+
+    Method(GSE_CALL,"smacworkshopcomponentpicker",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(10);N_GETVALUE(kind,0,Int);N_GETVALUE(selected,1,Int);N_GET(rows,2,Array);
+        N_GETVALUE(chassis,3,Int);N_GETVALUE(weapon,4,Int);N_GETVALUE(reactor,5,Int);N_GETVALUE(faction,6,String);
+        N_GETVALUE(power,7,Int);N_GETVALUE(mode,8,Int);N_GETVALUE(strength,9,Int);
+        if((kind!=0 && kind!=3) || selected<(kind==0?0:1) || selected>(kind==0?8:4) || rows->value.size()>size_t(kind==0?9:4)
+            || chassis<0 || chassis>8 || weapon<0 || weapon>20 || reactor<1 || reactor>4
+            || power< -127 || power>127 || mode<0 || mode>12 || strength< -127 || strength>127
+            || faction.empty() || faction.size()>256 || faction.find_first_of("/\\:\0",0,4)!=std::string::npos) {throw std::invalid_argument("Invalid Workshop component picker request");}
+        std::vector<std::pair<int,bool>> choices;std::array<bool,9> seen{};
+        for(const auto* value:rows->value) {
+            if(!value || value->type!=gse::VT_OBJECT) {throw std::invalid_argument("Invalid Workshop component card");}
+            const auto& row=static_cast<const gse::value::Object*>(value)->value;
+            const auto id=row.find("id"),known=row.find("technology_available");
+            if(id==row.end() || known==row.end() || !id->second || !known->second || id->second->type!=gse::VT_INT || known->second->type!=gse::VT_BOOL) {throw std::invalid_argument("Incomplete Workshop component card");}
+            const auto component=static_cast<const gse::value::Int*>(id->second)->value;
+            if(component<(kind==0?0:1) || component>(kind==0?8:4) || seen[size_t(component)]) {throw std::invalid_argument("Invalid or repeated Workshop component identity");}
+            seen[size_t(component)]=true;choices.emplace_back(int(component),static_cast<const gse::value::Bool*>(known->second)->value);
+        }
+        if(!m_dialog_source) {m_dialog_source=g_engine->GetTextureLoader()->GetSmacDialogSource();}
+        if(!m_dialog_source) {throw std::runtime_error("Original Workshop frame source unavailable");}
+        if(faction!=m_workshop_picker_faction) {m_workshop_picker_images.clear();m_workshop_picker_faction=faction;}
+        const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;
+            util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));return std::string(bytes.begin(),bytes.end());};
+        std::vector<uint8_t> indexed(623*387,9);std::array<uint32_t,3> position{};
+        for(size_t ordinal=0;ordinal<choices.size();++ordinal) {
+            const int id=choices[ordinal].first;const bool known=choices[ordinal].second;const int x=27+108*int(ordinal%5),y=4+94*int(ordinal/5);
+            loader::texture::smac_dialog_frame::Paint(indexed,623,387,*m_dialog_source,{id==selected?2:0,x,y,x+105,y+91},{0,0,623,387});
+            const std::array<int,8> key{int(kind),kind==0?id:int(chassis),kind==0?0:int(weapon),kind==0?int(reactor):id,
+                kind==0?1:int(power),kind==0?0:int(mode),kind==0?1:int(strength),int(ordinal)};
+            const auto before=position;
+            auto found=std::find_if(m_workshop_picker_images.begin(),m_workshop_picker_images.end(),[&](const auto& entry){return entry.key==key && entry.known==known && entry.before==before;});
+            std::shared_ptr<const loader::cvr::CvrScoutImage> image;
+            if(found!=m_workshop_picker_images.end()) {image=found->image;position=found->after;}
+            else {
+                auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,read(faction),key[1],key[2],0,key[3],int(kind),{key[4],key[5],key[6]});
+                image=std::make_shared<const loader::cvr::CvrScoutImage>(renderer.RenderWorkshopPicker(int(kind),int(ordinal),known,position));
+                if(m_workshop_picker_images.size()==16) {m_workshop_picker_images.erase(m_workshop_picker_images.begin());}
+                m_workshop_picker_images.push_back({key,known,before,position,image});
+            }
+            for(int py=y+3;py<y+88;++py) {for(int px=x+3;px<x+102;++px) {
+                const int sx=px-image->target_anchor[0]+128,sy=py-image->target_anchor[1]+128;
+                const auto source=image->indexed.color[size_t(sy)*256+sx];if(source!=9) {indexed[size_t(py)*623+px]=source;}
+            }}
+        }
+        const auto rgba=loader::texture::smac_dialog_frame::Rgba(indexed,*m_dialog_source);
+        CreateTexture();m_background.texture->Resize(623,387);std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());
+        m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
+        return WorkshopPickerText(GSE_CALL);
     }));
 
     Method(GSE_CALL,"smacworkshopdesign",NATIVE_CALL(this) {
@@ -204,7 +254,7 @@ Surface::Surface( DOM_ARGS_T )
             const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;
                 util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));return std::string(bytes.begin(),bytes.end());};
             const auto faction_bytes=read(faction);
-            auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,faction_bytes,key[0],key[1],key[2],key[3],key[4],{key[5],key[6],key[7]});
+            auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,faction_bytes,key[0],key[1],key[2],key[3],key[4],{key[5],key[6],key[7],kind==1 && weapon==18});
             auto next=std::make_shared<const loader::cvr::CvrScoutRenderer>(std::move(renderer));
             m_workshop_design=std::move(next);m_workshop_design_key=key;m_workshop_design_faction=faction;
         }
@@ -629,6 +679,24 @@ types::texture::Texture* Surface::GetOwnedTexturePtr() {
 }
 
 namespace ui::dom {
+
+gse::Value* Surface::WorkshopPickerText(GSE_CALLABLE) {
+    if(!m_workshop_picker_text) {
+        const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;
+            util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));return std::string(bytes.begin(),bytes.end());};
+        const auto domains=loader::txt::TXTLoader::ReadUniqueSection(read("alpha.txt"),"TRIAD");
+        const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
+        if(domains.size()!=3 || labels.size()<198) {throw std::invalid_argument("Incomplete Workshop picker text source");}
+        std::array<std::string,6> text{domains[0],domains[1],domains[2],labels[122],labels[127],labels[197]};
+        for(const auto& item:text) {if(item.empty() || item.size()>128 || item.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop picker label");}}
+        m_workshop_picker_text=std::move(text);
+    }
+    const auto& text=*m_workshop_picker_text;
+    return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+        {"domains",VALUE(gse::value::Array,,gse::value::array_elements_t{VALUE(gse::value::String,,text[0]),VALUE(gse::value::String,,text[1]),VALUE(gse::value::String,,text[2])})},
+        {"power",VALUE(gse::value::String,,text[3])}, {"shielding",VALUE(gse::value::String,,text[4])}, {"psi",VALUE(gse::value::String,,text[5])}
+    });
+}
 
 void Surface::EnsureWorkshopComponents() {
         if(!m_workshop_components) {

@@ -40,6 +40,10 @@ SmacWorkshopAbilitySelection CleanSmacWorkshopAbilities(const SmacWorkshopDraft&
 void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
     const faction::SmacFactionTechnologyState& owner);
+// Post-build conventional land naming, including own-bank/intrinsic collisions.
+// Returns the untruncated native buffer; saving owns the31-byte boundary.
+std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog,int32_t owner);
 struct SmacWorkshopCommit {
     int32_t design_id;
     bool intrinsic_name_warning;

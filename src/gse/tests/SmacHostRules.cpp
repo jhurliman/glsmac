@@ -94,7 +94,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 				const auto source = [ & ]( const std::string& filename ) { ++reads; return fixture::Source( filename ); };
 				settings.PrepareRuleset( source );
 				const bool smac = settings.global.GetRulesetId() == "smac";
-				GT_ASSERT( reads == ( smac ? 8 : 0 ), "rules file read for the wrong profile/role" );
+				GT_ASSERT( reads == ( smac ? 9 : 0 ), "rules file read for the wrong profile/role" );
 				GT_ASSERT( smac ? fixture::Matches( settings.global ) : !settings.global.GetSmacResourceRules(), "host numeric rules do not match explicit profile" );
 				const auto before = settings.global.Serialize().ToString();
 				settings.PrepareRuleset( []( const std::string& ) -> std::string { throw std::runtime_error( "locked session reread file" ); } );
@@ -102,7 +102,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 				GT_ASSERT( Rejects( [ & ]() { settings.global.SelectRuleset( id ); } ), "host selection remained mutable" );
 				settings.local.network_role = LocalSettings::NR_CLIENT;
 				settings.PrepareRuleset( source );
-				GT_ASSERT( reads == ( smac ? 8 : 0 ), "joining loaded local rules" );
+				GT_ASSERT( reads == ( smac ? 9 : 0 ), "joining loaded local rules" );
 				GT_ASSERT( settings.global.GetRulesetId() == "unselected" && !settings.global.GetSmacResourceRules() && !settings.global.GetSmacProductionRules() && !settings.global.GetSmacTechnologyRules() && !settings.global.GetSmacMovementRules(), "joining retained the previous host's rules" );
 				settings.global.SelectRuleset( "smax" );
 				GT_ASSERT( !settings.global.GetSmacResourceRules() && !settings.global.GetSmacProductionRules() && !settings.global.GetSmacTechnologyRules() && !settings.global.GetSmacMovementRules(), "new selection inherited SMAC numeric rules" );
@@ -212,7 +212,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 		}
 		GT_OK();
 	} );
-	task->AddTest( "SMAC faction host preparation stages all eight sources before publishing any profile", GT() {
+	task->AddTest( "SMAC faction host preparation stages all nine sources before publishing any profile", GT() {
 		Settings settings; settings.global.SelectRuleset( "smac" );
 		settings.global.game_name = "kept name"; settings.global.difficulty_level = -19;
 		settings.global.map.filename = "kept/full/path"; settings.global.map.size_x = 90;
@@ -322,7 +322,7 @@ void AddSmacHostRulesTests( task::gsetests::GSETests* task ) {
 				}
 				return source;
 			} );
-			GT_ASSERT( reads == 8 && settings.global.GetSmacMovementRules() && settings.global.GetSmacMovementRules()->RawRoadRate() == raw,
+			GT_ASSERT( reads == 9 && settings.global.GetSmacMovementRules() && settings.global.GetSmacMovementRules()->RawRoadRate() == raw,
 				"host did not freeze the supplied raw movement rule" );
 			GlobalSettings copy; copy.Deserialize( settings.global.Serialize() );
 			GT_ASSERT( copy.GetSmacMovementRules() == settings.global.GetSmacMovementRules(), "movement transport lost raw value" );

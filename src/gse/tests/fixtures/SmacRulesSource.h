@@ -184,11 +184,20 @@ inline types::Buffer UncheckedFactions( const game::backend::settings::SmacFacti
 	return result;
 }
 
-inline game::backend::settings::SmacPredefinedUnitRules PredefinedUnits( const game::backend::settings::SmacTechnologyRules& technologies = Technologies() ) {
+inline game::backend::settings::SmacPredefinedUnitRules LegacyPredefinedUnits( const game::backend::settings::SmacTechnologyRules& technologies = Technologies() ) {
 	return game::backend::settings::SmacPredefinedUnitRules::Parse( PredefinedSource(), technologies );
 }
 
+inline std::string WorkshopLabelsSource() {
+    std::string source="#LABELS\n920\n";const std::array<size_t,7> slots{147,183,544,545,615,616,920};
+    const std::array<const char*,7> words{"Scout","Recon","Artillery","Battery","Marines","Invaders","Mk"};
+    for(size_t row=1;row<=920;++row) {std::string text="Fixture label";for(size_t i=0;i<slots.size();++i) {if(row==slots[i]) {text=words[i];}}source+=text+'\n';}return source;
+}
+inline game::backend::settings::SmacPredefinedUnitRules PredefinedUnits(const game::backend::settings::SmacTechnologyRules& technologies=Technologies()) {
+    auto rules=LegacyPredefinedUnits(technologies);rules.catalog.workshop_name_labels=game::backend::unit::ReadSmacWorkshopNameLabels(WorkshopLabelsSource());return rules;
+}
 inline std::string Source( const std::string& filename ) {
+    if(filename=="labels.txt") {return WorkshopLabelsSource();}
 	if ( filename != "alpha.txt" ) { return FactionSource( filename ); }
 	return terraforming_rules_fixture::Source() + ProductionSource() + SpecialistSource() + TechnologySource() + WorldSizeSource() + FactionAlpha() + PredefinedSource() + "#RESOURCEINFO\nOcean Square,*,*,*\nBase Square,17,-2147483648,2147483647\n"
 		"Bonus Square,-2,300,0\nForest Square,*,*,*\nRecycling Tanks,-7,8,9\n"

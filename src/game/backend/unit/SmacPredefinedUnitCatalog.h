@@ -1,6 +1,7 @@
 #pragma once
 
 #include "loader/txt/UnitRulesTXTLoader.h"
+#include <optional>
 #include "game/backend/settings/SmacTechnologyRules.h"
 
 namespace game::backend::unit {
@@ -16,6 +17,10 @@ struct SmacPredefinedUnit {
 	uint32_t faction_exclusion = 0;
 };
 
+// Original LABELS slots: Scout, Recon, Artillery, Battery, Marines, Invaders, Mk.
+using SmacWorkshopNameLabels=std::array<std::string,7>;
+SmacWorkshopNameLabels ReadSmacWorkshopNameLabels(const std::string& source);
+
 // Owns source metadata as well as final positional records. Component indices
 // address these owned tables; no source-buffer or caller-container pointers.
 struct SmacPredefinedUnitCatalog {
@@ -26,6 +31,7 @@ struct SmacPredefinedUnitCatalog {
 	loader::txt::ReactorTable reactors;
 	loader::txt::AbilityTable abilities;
 	std::vector< SmacPredefinedUnit > units;
+    std::optional<SmacWorkshopNameLabels> workshop_name_labels; // absent in legacy V1 profiles
 
 	static SmacPredefinedUnitCatalog Build( const loader::txt::UnitTable& units,
 		const loader::txt::ChassisTable& chassis, const loader::txt::WeaponTable& weapons,

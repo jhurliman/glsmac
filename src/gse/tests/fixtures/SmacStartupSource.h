@@ -49,6 +49,7 @@ inline std::string FactionSource( const std::string& filename ) {
 }
 
 inline std::string Source( const std::string& filename ) {
+    if(filename=="labels.txt") {return smac_rules_fixture::WorkshopLabelsSource();}
 	if ( filename != "alpha.txt" ) { return FactionSource( filename ); }
 	auto result = smac_rules_fixture::Source( filename );
 	const auto old = smac_rules_fixture::PredefinedSource();

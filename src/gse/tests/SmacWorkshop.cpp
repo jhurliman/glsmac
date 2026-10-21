@@ -135,11 +135,14 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
         std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);if(!input) {throw std::runtime_error("Missing owned Workshop rules");}
         const std::string source{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
         const auto technologies=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
-        const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,technologies).catalog;auto owner=Owner();owner.owned.fill(true);
+        auto catalog=settings::SmacPredefinedUnitRules::Parse(source,technologies).catalog;
+        std::ifstream labels_input(std::string(assets)+"/labels.txt",std::ios::binary);if(!labels_input) {throw std::runtime_error("Missing owned Workshop labels");}
+        catalog.workshop_name_labels=unit::ReadSmacWorkshopNameLabels(std::string(std::istreambuf_iterator<char>(labels_input),{}));auto owner=Owner();owner.owned.fill(true);
         for(const auto& row:workshop_general_fixture::Builders()) {
             auto pool=workshop_general_fixture::BasePool();for(const auto& patch:row.patches) {pool.at(patch.first/52).at(patch.first%52)=patch.second;}
             unit::BuildSmacWorkshopRecord(pool,127,row.draft,catalog,technologies,owner);
             uint64_t digest=UINT64_C(14695981039346656037);for(const auto& record:pool) {for(const auto byte:record) {digest=(digest^byte)*UINT64_C(1099511628211);}}
+            GT_ASSERT(unit::NameSmacWorkshopDesign(pool,127,row.draft,catalog,1)==row.native_name,"Original automatic name differs: " + std::string(row.name));
             GT_ASSERT(digest==row.digest,"Complete original design pool differs: " + std::string(row.name));
         }
         for(const auto& row:workshop_general_fixture::COMPATIBILITY) {

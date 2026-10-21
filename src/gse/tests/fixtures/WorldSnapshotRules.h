@@ -260,12 +260,13 @@ inline std::vector< std::pair< std::string, std::string > > InvalidPredefinedHea
 	add( "extra predefined fields", bytes + wrong.ToString() );
 	add( "oversized predefined payload", std::string( game::backend::settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES + 1, 'x' ) );
 	add( "oversized downloaded predefined payload", std::string( game::backend::settings::SmacPredefinedUnitRules::MAX_WIRE_BYTES * 4, 'x' ) );
-	types::Buffer bad_version; bad_version.WriteInt( 2 );
+	const auto derived_end=smac_rules_fixture::LegacyPredefinedUnits().Serialize(technologies).lenw;
+	types::Buffer bad_version; bad_version.WriteInt( 3 );
 	add( "unknown predefined version", bad_version.ToString() + bytes.substr( bad_version.lenw ) );
 	for ( const auto value : { int64_t( 1 ), INT64_MAX } ) {
-		types::Buffer bad; bad.WriteInt( value ); add( "forged last derived exclusion", bytes.substr( 0, bytes.size() - bad.lenw ) + bad.ToString() );
+		types::Buffer bad; bad.WriteInt( value ); add( "forged last derived exclusion", bytes.substr( 0, derived_end - bad.lenw ) + bad.ToString()+bytes.substr(derived_end) );
 	}
-	add( "mistyped last derived exclusion", bytes.substr( 0, bytes.size() - wrong.lenw ) + present.ToString() );
+	add( "mistyped last derived exclusion", bytes.substr( 0, derived_end - wrong.lenw ) + present.ToString()+bytes.substr(derived_end) );
 	using Profile = game::backend::settings::SmacPredefinedUnitRules;
 	const std::vector< std::function< void( Profile& ) > > changes = {
 		[]( auto& p ) { p.catalog.chassis.chassis.back().names[ 5 ].name += " changed"; },
@@ -282,11 +283,15 @@ inline std::vector< std::pair< std::string, std::string > > InvalidPredefinedHea
 		[]( auto& p ) { p.catalog.source.units.pop_back(); }
 	};
 	for ( size_t i = 0; i < changes.size(); ++i ) {
-		auto changed = profile; changes[ i ]( changed ); auto& c = changed.catalog;
+		auto changed = profile; changes[ i ]( changed ); auto& c = changed.catalog;const auto labels=c.workshop_name_labels;
 		c = game::backend::unit::SmacPredefinedUnitCatalog::Build( c.source, c.chassis, c.weapons, c.defenses, c.reactors, c.abilities, technologies );
+		c.workshop_name_labels=labels;
 		add( "different valid predefined source/derived field " + std::to_string( i ), changed.Serialize( technologies ).ToString() );
 	}
-	return result;
+	for(size_t slot=0;slot<7;++slot) {auto changed=profile;changed.catalog.workshop_name_labels->at(slot)+=" changed";
+        add("different valid Workshop naming field "+std::to_string(slot),changed.Serialize(technologies).ToString());
+    }
+    return result;
 }
 
 inline std::vector< std::pair< std::string, std::string > > InvalidMovementHeaders( const std::string& id ) {

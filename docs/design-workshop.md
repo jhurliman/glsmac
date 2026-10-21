@@ -283,3 +283,30 @@ UI scripts pass. Targeted analysis covers the builder plus its Base and game
 production consumers. The26 native groups also pass under focused ASan/UBSan
 instrumentation of the changed builder and its test consumer. The screen and
 save protocol retain the component pass's live validation.
+
+### Installed-language automatic naming
+
+Fresh SMAC sessions freeze seven Workshop words from LABELS.TXT with their
+component catalog. The selective V2 unit-profile encoding retains those words;
+absent labels retain exact legacy V1 bytes, including after settings restore.
+Clients receive the host's words and do not reload their local installation.
+Late replacements reject before publication, and a missing naming source leaves
+host initialization retryable.
+
+The conventional land naming producer combines the installed chassis, weapon,
+armor, reactor and ability strings with these labels. It preserves native
+parity and prefix rules, scans intrinsic and own-bank names even when inactive,
+skips matching tuples and foreign banks, and handles localized Mk suffixes.
+The untruncated producer includes the original Polic Rover quirk; saving retains
+its separate 31-byte boundary. The live first-design commit uses this producer
+when its frozen language fields are present and preserves the legacy path for
+older sessions. Broader component editing and generalized allocation remain next.
+
+Validation: all 40 independent automatic names match, alongside their complete
+design-pool controls. 95 focused native groups cover host/profile transport,
+legacy bytes, packets, world headers, construction and naming; six UI scripts
+pass. All seven frozen naming fields reject late replacement in settings and
+world headers. Targeted analysis of six production consumers is clean. 24
+selected native groups pass with four production translation units and two test
+consumers instrumented under ASan/UBSan. No platform matrix or unchanged UI
+capture was repeated.

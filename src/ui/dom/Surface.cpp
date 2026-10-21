@@ -43,6 +43,10 @@ namespace dom {
 Surface::Surface( DOM_ARGS_T )
 	: Area( DOM_ARGS_PASS, tag ) {
 
+    Method(GSE_CALL,"smacworkshopparenttext",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(0);return WorkshopParentText(GSE_CALL);
+    }));
+
 	NEW( m_mesh, types::mesh::Rectangle );
 	auto* g = m_geometry->AsRectangle();
 	g->AddMesh( m_mesh );
@@ -716,6 +720,33 @@ types::texture::Texture* Surface::GetOwnedTexturePtr() {
 }
 
 namespace ui::dom {
+
+gse::Value* Surface::WorkshopParentText(GSE_CALLABLE) {
+    if(!m_workshop_parent_text) {
+        const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;
+            util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));return std::string(bytes.begin(),bytes.end());};
+        const auto source=read("script.txt");if(source.size()>2*1024*1024) {throw std::invalid_argument("Workshop script exceeds source budget");}
+        const auto design=loader::txt::TXTLoader::ReadUniqueSection(source,"DESIGNLABELS");
+        const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
+        if(design.size()!=16 || labels.size()<=123) {throw std::invalid_argument("Incomplete Workshop parent text source");}
+        std::array<std::string,17> text;std::copy(design.begin(),design.end(),text.begin());text[16]=labels[123];
+        for(const auto& item:text) {if(item.empty() || item.size()>44 || item.find('\0')!=std::string::npos) {throw std::invalid_argument("Unsupported Workshop parent label");}}
+        m_workshop_parent_text=std::move(text);
+    }
+    if(!m_dialog_source) {m_dialog_source=g_engine->GetTextureLoader()->GetSmacDialogSource();}
+    if(!m_dialog_source) {throw std::runtime_error("Original Workshop palette unavailable");}
+    gse::value::array_elements_t labels,colors;
+    for(size_t i=0;i<16;++i) {labels.push_back(VALUE(gse::value::String,,m_workshop_parent_text->at(i)));}
+    for(const auto& rgb:m_dialog_source->palette) {
+        colors.push_back(VALUE(gse::value::String,,"rgb("+std::to_string(rgb[0])+","+std::to_string(rgb[1])+","+std::to_string(rgb[2])+")"));
+    }
+    auto* picker=static_cast<gse::value::Object*>(WorkshopPickerText(GSE_CALL));
+    return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+        {"labels",VALUE(gse::value::Array,,labels)}, {"colors",VALUE(gse::value::Array,,colors)},
+        {"minimum",VALUE(gse::value::String,,m_workshop_parent_text->at(16))},
+        {"weapon",picker->Get("weapon")}, {"equipment",picker->Get("equipment")}, {"psi",picker->Get("psi")}
+    });
+}
 
 gse::Value* Surface::WorkshopAbilityText(GSE_CALLABLE,const std::string& technology) {
     if(!m_workshop_ability_text) {

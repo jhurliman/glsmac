@@ -5,6 +5,9 @@ const node = (data) => {
     data.hide = () => { data.hidden = true; }; data.show = () => { data.hidden = false; }; data.remove = () => { data.removed = true; };
     data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi'}; };
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
+    data.smacworkshopparenttext = () => { let colors = []; let index = 0; while (index < 256) { colors :+ ('color' + #to_string(index)); index++; }
+        return {labels: ['Vehicle Design','Moves:','Type:','Power:','Prototype Cost:','Cost:','Data','Presets','W:','A:','C:','R:','SP1:','SP2:','E:','P:'],
+            minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment'}; };
     data.smacworkshopabilitytext = (technology) => { return {title: 'Select Special Ability', none: 'No special ability', ok: 'OK', cancel: 'Cancel', cost: 'Cost', attack: 'Attack', defense: 'Defense', speed: 'Speed', domains: ['Land', 'Sea', 'Air'], second_title: 'Chief Engineer', second_body: 'Research ' + technology + '.', missile_title: 'Chief Engineer', missile_body: 'Missiles cannot have special abilities.'}; };
     data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
     data.smacworkshopcomponents = (armor, only_armor) => { test.assert(only_armor); data.components_armor = armor; };
@@ -22,11 +25,11 @@ dialog.init({ui: {class: (name) => { return {set: (properties) => { test.assert(
     game: {event: (name, data) => { commands :+ {name: name, data: data}; }}});
 const base = {id: 701};
 const release_card = (index) => { return dialog.picker_canvas.handlers.mouseup({button: 'left', x: 79 + (index % 5) * 108, y: 49 + #floor(#to_float(index) / 5.0) * 94}); };
-const selection = {expected_state: 'before', chassis: 'Infantry', weapon: 'Hand Weapons', reactor: 'Fission', scout_name: 'Scout', faction_art: 'morgan.pcx', speed: 1, offense: 1, weapon_mode: 0, power: 1,
+const selection = {expected_state: 'before', mineral_factor: 10, weapon_cost: 1, movement: 1, chassis: 'Infantry', weapon: 'Hand Weapons', reactor: 'Fission', scout_name: 'Scout', faction_art: 'morgan.pcx', speed: 1, offense: 1, weapon_mode: 0, power: 1,
     ability_names: ['Super Former', 'Deep Radar', '', '', '', '', '', '', '', 'Polymorphic', '', '', '', '', '', '', '', '', 'Trance', '', '', '', '', ''],
     chassis_choices: [{id: 0, name: 'Infantry', domain: 0, value: 1, technology_available: true}, {id: 3, name: 'Foil', domain: 1, value: 4, technology_available: false}],
     reactor_choices: [{id: 1, name: 'Fission', value: 1, technology_available: true}, {id: 2, name: 'Fusion', value: 2, technology_available: true}],
-    armor: [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, stat_line: '1-1-1 ', design_name: 'Scout', cost: 10, technology_available: true, available: true}, {id: 1, name: 'Synthmetal', short_name: 'Synthmetal', rating: 2, stat_line: '1-2-1 ', design_name: 'Synthmetal Garrison', cost: 20, technology_available: true, available: true}, {id: 2, name: 'Unknown', short_name: 'Unknown', rating: 3, stat_line: '1-3-1 ', design_name: '', cost: 0, technology_available: false, available: false}]};
+    armor: [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, armor_class: 0, stat_line: '1-1-1 ', design_name: 'Scout', cost: 10, cost_rows: 1, fast_land_warning: false, technology_available: true, available: true}, {id: 1, name: 'Synthmetal', short_name: 'Synthmetal', rating: 2, armor_class: 0, stat_line: '1-2-1 ', design_name: 'Synthmetal Garrison', cost: 20, cost_rows: 2, fast_land_warning: false, technology_available: true, available: true}, {id: 2, name: 'Unknown', short_name: 'Unknown', rating: 3, armor_class: 0, stat_line: '1-3-1 ', design_name: '', cost: 0, cost_rows: 0, fast_land_warning: false, technology_available: false, available: false}]};
 let ability_menu = {guard: '', required_technology: 'Neural', rows: [{id: 24, name: '', description: '', cost: undefined}]};
 base.get_smac_workshop_abilities = (selected, chassis, weapon, armor, reactor, abilities, name, first, second, slot) => { return ability_menu; };
 base.get_smac_workshop_edit = (selected, chassis, weapon, armor, reactor, abilities, name, first, second, kind, choice, automatic) => {
@@ -115,8 +118,8 @@ test.assert(!dialog.active && windows[2].hidden && #sizeof(commands) == after_cl
 
 // Researched advanced/PSI shielding keeps source identities through preview and Apply.
 const advanced = selection + {unused: true};
-advanced.armor = [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, stat_line: '1-1-1 ', design_name: 'Scout', cost: 10, technology_available: true, available: true},
-    {id: 9, name: 'Psi Defense', short_name: 'PSI', rating: (0 - 1), stat_line: '1-?-1 ', design_name: 'Psi Infantry', cost: 60, technology_available: true, available: true}];
+advanced.armor = [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, armor_class: 0, stat_line: '1-1-1 ', design_name: 'Scout', cost: 10, cost_rows: 1, fast_land_warning: false, technology_available: true, available: true},
+    {id: 9, name: 'Psi Defense', short_name: 'PSI', rating: (0 - 1), armor_class: 2, stat_line: '1-?-1 ', design_name: 'Psi Infantry', cost: 60, cost_rows: 6, fast_land_warning: false, technology_available: true, available: true}];
 dialog.open(base, advanced); dialog.open_picker(); test.assert(#sizeof(dialog.cards) == 2);
 release_card(1);
 test.assert(dialog.selected_armor == 9 && dialog.model.preview_armor == 9 && dialog.model.preview_strength == (0 - 1)
@@ -308,3 +311,22 @@ dialog.picker.handlers.keydown({code: 'HOME', modifiers: {}}); test.assert(dialo
 for (code of ['DOWN','DOWN','RIGHT','RIGHT','RIGHT','RIGHT']) { dialog.picker.handlers.keydown({code: code, modifiers: {}}); }
 test.assert(dialog.picker_state.selected == 14 && dialog.picker_state.availability == 1);
 dialog.picker.handlers.keydown({code: 'ENTER', modifiers: {}}); test.assert(dialog.selected_weapon == 14 && dialog.picker.hidden); dialog.hide_view();
+
+// Main COST uses the open-time factor and recomputed rows, not legacy quote
+// totals. This minimum branch is a declared native presentation control.
+const price_view = selection + {unused_price: true}; price_view.mineral_factor = 8;
+price_view.armor = [selection.armor[0] + {}]; price_view.armor[0].cost_rows = 1; price_view.armor[0].cost = 999;
+dialog.open(base, price_view); test.assert(dialog.cost.text == 'COST:  8');
+dialog.selection.mineral_factor = 10; dialog.update_armor(); test.assert(dialog.cost.text == 'COST:  8');
+dialog.selected_reactor = 2; dialog.update_armor(); test.assert(dialog.cost.text == 'COST:  (MIN COST: 16)');
+price_view.armor[0].cost_rows = 6; price_view.armor[0].fast_land_warning = true; dialog.update_armor();
+test.assert(dialog.cost.text == 'COST:  48!' && dialog.cost.color == 'color249');
+dialog.selection.weapon_mode = 8; dialog.selection.weapon_cost = 10; dialog.update_labels();
+test.assert(dialog.weapon_heading.text == 'EQUIPMENT' && dialog.weapon_stat.text == 'Equipment 10');
+dialog.hide_view(); dialog.open(base, price_view); test.assert(dialog.mineral_factor == 10); dialog.hide_view();
+
+dialog.open(base, selection);
+test.assert(dialog.data_heading.text == 'DATA' && dialog.data_rows[0].text == 'W: 1' && dialog.data_rows[1].text == 'A: 1' && dialog.data_rows[2].text == 'C: 1' && dialog.data_rows[3].text == 'R: 1' && dialog.data_rows[4].text == 'SP1: -');
+test.assert(dialog.data_rows[0].baseline == 122 && dialog.data_rows[5].baseline == 192);
+dialog.ability_slots = [(0 - 1),1]; dialog.update_armor(); test.assert(dialog.data_rows[4].text == 'SP1: -' && dialog.data_rows[5].text == 'SP2:R');
+dialog.hide_view();

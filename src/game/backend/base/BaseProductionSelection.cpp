@@ -311,7 +311,12 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
     for(const auto& choice:choices) {
         bool supported=choice.technology_available;
         std::string design_name;
-        int32_t cost_rows=0;
+        const auto& chassis=catalog.chassis.chassis.at(draft.chassis);
+        const auto& weapon=catalog.weapons.weapons.at(draft.weapon);
+        const auto& defense=catalog.defenses.defenses.at(choice.component_id);
+        const auto cost_rows=unit::SmacPredefinedUnitCatalog::CalculateCost(chassis,weapon,defense,draft.reactor,draft.abilities,catalog.abilities);
+        const bool fast_land=chassis.triad==loader::txt::ChassisTriad::Land && uint8_t(chassis.speed)>1
+            && int8_t(uint8_t(defense.rating))>1 && uint8_t(weapon.cost)>1;
         if(supported) {
             auto probe=m_game->m_simulation->value.designs;auto candidate=draft;candidate.armor=choice.component_id;
             try {
@@ -335,25 +340,23 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
                             auto pool=*probe.native_registry;pool.at(result.design_id)[48]&=uint8_t(~1u);
                             unit::BuildSmacWorkshopRecord(pool,size_t(result.design_id),candidate,catalog,*settings.GetSmacTechnologyRules(),technology);
                             design_name=unit::NameSmacWorkshopDesign(pool,size_t(result.design_id),candidate,catalog,technology.admission.simulation_id);
-                            cost_rows=pool.at(result.design_id)[41];
                         } else {probe=std::move(prepared.state);}
                     }
                 } else {result=unit::CommitSmacWorkshopFirstDesign(probe,candidate,catalog,*settings.GetSmacTechnologyRules(),technology);}
-                if(result.design_id<64) {design_name=catalog.source.units.at(result.design_id).name;cost_rows=catalog.units.at(result.design_id).cost;}
+                if(result.design_id<64) {design_name=catalog.source.units.at(result.design_id).name;}
                 else if(design_name.empty()) {
                     const auto* bank=probe.Find(technology.admission.simulation_id);
                     if(!bank) {throw std::runtime_error("Workshop preview has no owned bank");}
                     const auto design=std::find_if(bank->designs.begin(),bank->designs.end(),[&](const auto& row){return row.id==result.design_id;});
                     if(design==bank->designs.end()) {throw std::runtime_error("Workshop preview has no retained design name");}
                     design_name=unit::SmacWorkshopDesignName(*design,catalog,technology.admission.simulation_id);
-                    cost_rows=design->cost;
                 }
             }
             catch(const std::exception&) {supported=false;}
         }
-        // Workshop shows ordinary rows times 4f9d60's mineral factor, without
-        // the Base's separate first-prototype surcharge.
-        const int64_t shown_cost=int64_t(cost_rows)*mineral_factor;
+        // 43f8c0 recomputes draft rows; a reused record's stored cost byte is
+        // not the main COST source. The UI caches its factor at modal open.
+        const int64_t shown_cost=int64_t(std::max(cost_rows,int32_t(draft.reactor)))*mineral_factor;
         if(shown_cost<0 || shown_cost>INT32_MAX) {throw std::overflow_error("Workshop displayed cost exceeds signed32");}
         auto displayed=draft;displayed.armor=choice.component_id;
         armor.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
@@ -361,9 +364,12 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
             {"name",VALUE(gse::value::String,,catalog.defenses.defenses.at(choice.component_id).name)},
             {"short_name",VALUE(gse::value::String,,catalog.defenses.defenses.at(choice.component_id).short_name)},
             {"rating",VALUE(gse::value::Int,,catalog.defenses.defenses.at(choice.component_id).rating)},
+            {"armor_class",VALUE(gse::value::Int,,int32_t(catalog.defenses.defenses.at(choice.component_id).mode))},
             {"stat_line",VALUE(gse::value::String,,unit::FormatSmacWorkshopStats(displayed,catalog,true))},
             {"design_name",VALUE(gse::value::String,,design_name)},
             {"cost",VALUE(gse::value::Int,,shown_cost)},
+            {"cost_rows",VALUE(gse::value::Int,,cost_rows)},
+            {"fast_land_warning",VALUE(gse::value::Bool,,fast_land)},
             {"technology_available",VALUE(gse::value::Bool,,choice.technology_available)},
             {"available",VALUE(gse::value::Bool,,supported)}
         }));
@@ -372,6 +378,9 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
     for(const auto& row:catalog.abilities.abilities) {ability_names.push_back(VALUE(gse::value::String,,row.name));}
     return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
         {"expected_state",VALUE(gse::value::String,,expected)}, {"armor",VALUE(gse::value::Array,,armor)},
+        {"mineral_factor",VALUE(gse::value::Int,,mineral_factor)},
+        {"movement",VALUE(gse::value::Int,,unit::SmacWorkshopMovement(draft,catalog))},
+        {"weapon_cost",VALUE(gse::value::Int,,uint8_t(catalog.weapons.weapons.at(draft.weapon).cost))},
         {"chassis_choices",component_choices(unit::SmacWorkshopComponent::Chassis)},
         {"weapon_choices",component_choices(unit::SmacWorkshopComponent::Weapon)},
         {"reactor_choices",component_choices(unit::SmacWorkshopComponent::Reactor)},

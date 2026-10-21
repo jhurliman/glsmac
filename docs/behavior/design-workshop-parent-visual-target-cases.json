@@ -1,0 +1,2230 @@
+{
+  "scope": "Three original whole-parent composites with independently derived declared Morgan material, blank opaque black uncovered map context, inert timers and host GDI. No port capture comparison or new whole-renderer regeneration.",
+  "exe_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "basis_manifest": "826a933ae6c5f1fa979af9c5bd1575aa00759fc6ae2ba56355dd6d5a68aebeff",
+  "installed_asset_sha256": {
+    "deswin.pcx": "ad1eebc6ac5de170a18c4aaf2fee86e7bfc9938d9257a12e66cf9c9b272e6ab9",
+    "interface.pcx": "a787846aaf62a199a9f40a5b36d53c121cfdfae2c4baa7bab4dd525d9f374618",
+    "console2.pcx": "7bbf65aa6de2aa03301bc9e1f3b0afbe11263f7670bd760ee4f68b608fd352b0",
+    "console_x2.pcx": "d0dd0c7d0529e738436312e664a42d44de3bf3492618cc4c3ed833aadec42017",
+    "morgan.pcx": "d9eb422a7326e8b042bc7e22b5071c9170e18e4d846751a82df07e9746ae6f5a",
+    "palette.pcx": "54341b1bee31736997950e432ff3312a620f7cf722016c154098a4c78d28f866",
+    "alpha.txt": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4",
+    "script.txt": "eaf44ddeb066952cfb4f441a64c5f3517c1e8c59e0bc3bdf72e10fd80a2fc87d",
+    "labels.txt": "b6b7057a9f96a29a77e89da143d38e34bec5d93d651ac798b3c27d4efdab2009"
+  },
+  "timer_requests": [
+    [
+      40,
+      5,
+      6488880,
+      7670188,
+      1
+    ]
+  ],
+  "material": {
+    "file": "morgan.pcx",
+    "sample": [
+      435,
+      745
+    ],
+    "loaded_index": 251,
+    "rgb": [
+      255,
+      255,
+      0
+    ],
+    "table_sha256": "d4830e6cfad32f510d2b06322065665ac85d36e1cf5c7ab8ac5dc0a7c4d8254d",
+    "scope": "Independently derived declared material-stage row for owner1. Original sample/PCX loader; prior checked material algebra. Not a new full faction cache or Morgan campaign startup."
+  },
+  "frames": [
+    {
+      "id": "morgan_scout",
+      "selected": 2,
+      "name": "Scout Patrol",
+      "components": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "frame_sha256": "7750d8fc97a3efa82f48886c0ac51320d53e5ec01e033a7d46c5504dec598e3a",
+      "parent_crop_sha256": "f90510a947d9bb03c41eae7a931dd3a7d250a8fe5908a9baf6d91c5708313717",
+      "phase": 0,
+      "yaw_bits": "cdcc4c3d",
+      "cost_glyphs": [
+        {
+          "text": "COST:  ",
+          "x": 268,
+          "baseline": 69,
+          "font": 159,
+          "color": 285147360
+        },
+        {
+          "text": "10",
+          "x": 309,
+          "baseline": 69,
+          "font": 159,
+          "color": 285147360
+        }
+      ],
+      "children": [
+        {
+          "rect": [
+            135,
+            347,
+            240,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            27,
+            347,
+            132,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            459,
+            347,
+            564,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            351,
+            347,
+            456,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            243,
+            347,
+            348,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            351,
+            321,
+            456,
+            341
+          ],
+          "parent": "0x73e238",
+          "visible": false
+        },
+        {
+          "rect": [
+            459,
+            321,
+            564,
+            341
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            135,
+            321,
+            240,
+            341
+          ],
+          "parent": "0x73e238",
+          "visible": false
+        },
+        {
+          "rect": [
+            27,
+            321,
+            132,
+            341
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            748,
+            199,
+            760,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            12,
+            199,
+            24,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            225,
+            1013,
+            246
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            202,
+            1013,
+            223
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            179,
+            1013,
+            200
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            156,
+            1013,
+            177
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            133,
+            1013,
+            154
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            110,
+            1013,
+            131
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            87,
+            1013,
+            108
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            225,
+            898,
+            246
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            202,
+            898,
+            223
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            179,
+            898,
+            200
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            156,
+            898,
+            177
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            133,
+            898,
+            154
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            110,
+            898,
+            131
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            87,
+            898,
+            108
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            522,
+            132,
+            546,
+            156
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            522,
+            107,
+            546,
+            131
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            522,
+            82,
+            546,
+            106
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            497,
+            132,
+            521,
+            156
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            497,
+            107,
+            521,
+            131
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            497,
+            82,
+            521,
+            106
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            148,
+            488,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            129,
+            488,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            110,
+            488,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            91,
+            488,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            72,
+            488,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            148,
+            444,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            129,
+            444,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            110,
+            444,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            91,
+            444,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            72,
+            444,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            148,
+            400,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            129,
+            400,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            110,
+            400,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            91,
+            400,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            72,
+            400,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            148,
+            356,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            129,
+            356,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            110,
+            356,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            91,
+            356,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            72,
+            356,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            148,
+            312,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            129,
+            312,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            110,
+            312,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            91,
+            312,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            72,
+            312,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            748,
+            199,
+            760,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            244,
+            199,
+            256,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            143,
+            199,
+            155,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            960,
+            214,
+            1014,
+            246
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            904,
+            214,
+            958,
+            246
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            908,
+            22,
+            1014,
+            36
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            11,
+            20,
+            117,
+            34
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            734,
+            100,
+            754,
+            138
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            734,
+            75,
+            754,
+            95
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            734,
+            143,
+            754,
+            163
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        }
+      ]
+    },
+    {
+      "id": "morgan_colony",
+      "selected": 0,
+      "name": "Colony Pod",
+      "components": [
+        0,
+        14,
+        0,
+        1
+      ],
+      "frame_sha256": "2fddfd357e30da4242699b0379091bc7c1c17794273c10cab459dcc299d1487a",
+      "parent_crop_sha256": "ca2fd43c95a21e37c4c7b5662f4d93c1bb3b28fb6654f50b8c846789e48c80c3",
+      "phase": 0,
+      "yaw_bits": "cdcc4c3d",
+      "cost_glyphs": [
+        {
+          "text": "COST:  ",
+          "x": 268,
+          "baseline": 69,
+          "font": 159,
+          "color": 285147360
+        },
+        {
+          "text": "30",
+          "x": 309,
+          "baseline": 69,
+          "font": 159,
+          "color": 285147360
+        }
+      ],
+      "children": [
+        {
+          "rect": [
+            135,
+            347,
+            240,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            27,
+            347,
+            132,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            459,
+            347,
+            564,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            351,
+            347,
+            456,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            243,
+            347,
+            348,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            351,
+            321,
+            456,
+            341
+          ],
+          "parent": "0x73e238",
+          "visible": false
+        },
+        {
+          "rect": [
+            459,
+            321,
+            564,
+            341
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            135,
+            321,
+            240,
+            341
+          ],
+          "parent": "0x73e238",
+          "visible": false
+        },
+        {
+          "rect": [
+            27,
+            321,
+            132,
+            341
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            748,
+            199,
+            760,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            12,
+            199,
+            24,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            225,
+            1013,
+            246
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            202,
+            1013,
+            223
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            179,
+            1013,
+            200
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            156,
+            1013,
+            177
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            133,
+            1013,
+            154
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            110,
+            1013,
+            131
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            87,
+            1013,
+            108
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            225,
+            898,
+            246
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            202,
+            898,
+            223
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            179,
+            898,
+            200
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            156,
+            898,
+            177
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            133,
+            898,
+            154
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            110,
+            898,
+            131
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            87,
+            898,
+            108
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            522,
+            132,
+            546,
+            156
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            522,
+            107,
+            546,
+            131
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            522,
+            82,
+            546,
+            106
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            497,
+            132,
+            521,
+            156
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            497,
+            107,
+            521,
+            131
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            497,
+            82,
+            521,
+            106
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            148,
+            488,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            129,
+            488,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            110,
+            488,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            91,
+            488,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            72,
+            488,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            148,
+            444,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            129,
+            444,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            110,
+            444,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            91,
+            444,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            72,
+            444,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            148,
+            400,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            129,
+            400,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            110,
+            400,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            91,
+            400,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            72,
+            400,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            148,
+            356,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            129,
+            356,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            110,
+            356,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            91,
+            356,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            72,
+            356,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            148,
+            312,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            129,
+            312,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            110,
+            312,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            91,
+            312,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            72,
+            312,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            748,
+            199,
+            760,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            244,
+            199,
+            256,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            143,
+            199,
+            155,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            960,
+            214,
+            1014,
+            246
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            904,
+            214,
+            958,
+            246
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            908,
+            22,
+            1014,
+            36
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            11,
+            20,
+            117,
+            34
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            734,
+            100,
+            754,
+            138
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            734,
+            75,
+            754,
+            95
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            734,
+            143,
+            754,
+            163
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        }
+      ]
+    },
+    {
+      "id": "morgan_rover",
+      "selected": 11,
+      "name": "Unity Rover",
+      "components": [
+        1,
+        0,
+        0,
+        1
+      ],
+      "frame_sha256": "e92ba66a030f079eaec2e328a0ebfabdf3bb1ebbb9476cda78a7f0d370501dbb",
+      "parent_crop_sha256": "d4e4cbfaf5f531d0aabad75eda221085b48a7fc4eeacbfabec9881c6402691e9",
+      "phase": 0,
+      "yaw_bits": "cdcc4c3d",
+      "cost_glyphs": [
+        {
+          "text": "COST:  ",
+          "x": 268,
+          "baseline": 69,
+          "font": 159,
+          "color": 285147360
+        },
+        {
+          "text": "20",
+          "x": 309,
+          "baseline": 69,
+          "font": 159,
+          "color": 285147360
+        }
+      ],
+      "children": [
+        {
+          "rect": [
+            135,
+            347,
+            240,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            27,
+            347,
+            132,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            459,
+            347,
+            564,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            351,
+            347,
+            456,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            243,
+            347,
+            348,
+            367
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            351,
+            321,
+            456,
+            341
+          ],
+          "parent": "0x73e238",
+          "visible": false
+        },
+        {
+          "rect": [
+            459,
+            321,
+            564,
+            341
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            135,
+            321,
+            240,
+            341
+          ],
+          "parent": "0x73e238",
+          "visible": false
+        },
+        {
+          "rect": [
+            27,
+            321,
+            132,
+            341
+          ],
+          "parent": "0x73e238",
+          "visible": true
+        },
+        {
+          "rect": [
+            748,
+            199,
+            760,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            12,
+            199,
+            24,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            225,
+            1013,
+            246
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            202,
+            1013,
+            223
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            179,
+            1013,
+            200
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            156,
+            1013,
+            177
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            133,
+            1013,
+            154
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            110,
+            1013,
+            131
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            901,
+            87,
+            1013,
+            108
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            225,
+            898,
+            246
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            202,
+            898,
+            223
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            179,
+            898,
+            200
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            156,
+            898,
+            177
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            133,
+            898,
+            154
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            110,
+            898,
+            131
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            786,
+            87,
+            898,
+            108
+          ],
+          "parent": "0x7cb7c0",
+          "visible": true
+        },
+        {
+          "rect": [
+            522,
+            132,
+            546,
+            156
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            522,
+            107,
+            546,
+            131
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            522,
+            82,
+            546,
+            106
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            497,
+            132,
+            521,
+            156
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            497,
+            107,
+            521,
+            131
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            497,
+            82,
+            521,
+            106
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            148,
+            488,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            129,
+            488,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            110,
+            488,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            91,
+            488,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            445,
+            72,
+            488,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            148,
+            444,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            129,
+            444,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            110,
+            444,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            91,
+            444,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            401,
+            72,
+            444,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            148,
+            400,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            129,
+            400,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            110,
+            400,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            91,
+            400,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            357,
+            72,
+            400,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            148,
+            356,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            129,
+            356,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            110,
+            356,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            91,
+            356,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            313,
+            72,
+            356,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            148,
+            312,
+            166
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            129,
+            312,
+            147
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            110,
+            312,
+            128
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            91,
+            312,
+            109
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            269,
+            72,
+            312,
+            90
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            748,
+            199,
+            760,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            244,
+            199,
+            256,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            143,
+            199,
+            155,
+            241
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            960,
+            214,
+            1014,
+            246
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            904,
+            214,
+            958,
+            246
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            908,
+            22,
+            1014,
+            36
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            11,
+            20,
+            117,
+            34
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            734,
+            100,
+            754,
+            138
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            734,
+            75,
+            754,
+            95
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        },
+        {
+          "rect": [
+            734,
+            143,
+            754,
+            163
+          ],
+          "parent": "0x7cb7c0",
+          "visible": false
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "id": "morgan_scout",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "indexed_hash_verified": true,
+      "png_expansion_verified": true,
+      "deswin_nonkey_pixels_matched": 3552,
+      "pixel_gate_selfcheck": {
+        "region": "parent",
+        "screen_rect": [
+          216,
+          168,
+          839,
+          555
+        ],
+        "pixels": 241101,
+        "mismatched_pixels": 0,
+        "exact_match": true,
+        "mismatch_screen_bounds": null
+      }
+    },
+    {
+      "id": "morgan_colony",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "indexed_hash_verified": true,
+      "png_expansion_verified": true,
+      "deswin_nonkey_pixels_matched": 3552,
+      "pixel_gate_selfcheck": {
+        "region": "parent",
+        "screen_rect": [
+          216,
+          168,
+          839,
+          555
+        ],
+        "pixels": 241101,
+        "mismatched_pixels": 0,
+        "exact_match": true,
+        "mismatch_screen_bounds": null
+      }
+    },
+    {
+      "id": "morgan_rover",
+      "dimensions": [
+        1024,
+        768
+      ],
+      "indexed_hash_verified": true,
+      "png_expansion_verified": true,
+      "deswin_nonkey_pixels_matched": 3552,
+      "pixel_gate_selfcheck": {
+        "region": "parent",
+        "screen_rect": [
+          216,
+          168,
+          839,
+          555
+        ],
+        "pixels": 241101,
+        "mismatched_pixels": 0,
+        "exact_match": true,
+        "mismatch_screen_bounds": null
+      }
+    }
+  ],
+  "native_economic_fixture": {
+    "human_owner": 1,
+    "resolved_map_size_category": 2,
+    "map_size_cost_label": "Standard",
+    "map_generation": "None; declared blank map UI context",
+    "mineral_rule_multiplier": 10,
+    "current_industry": 0,
+    "cached_mineral_factor": 10,
+    "technology": "Inherited all89 owner1 known bits",
+    "faction_scope": "Morgan material input; not a full campaign/faction-cache startup",
+    "authority": [
+      "probe_workshop_preview_parent.py writes9b9528=2 and9ba444=10",
+      "Retained native-parent before-open Faction owner1+270 is0",
+      "Native displayed Scout10/Colony30/Rover20"
+    ]
+  },
+  "reported_live_port_fixture": {
+    "source": "Implementation-thread report,2026-10-21",
+    "screen": [
+      1024,
+      768
+    ],
+    "faction": "Morgan",
+    "world": "Tiny",
+    "resolved_map_size_category": 0,
+    "current_industry": "Default current value, as reported",
+    "cached_mineral_factor": 8,
+    "observed_costs": {
+      "Scout": 8,
+      "Colony": 24
+    }
+  },
+  "comparison_policy": {
+    "decoration": "3552 opaque DESWIN shell/top pixels; independent of economic text",
+    "whole_parent": "Require matching economic inputs, state, palette, fonts, selection and pointer highlight before asserting exact parity",
+    "expected_cost_differences_are_defects": false,
+    "followup_scope": "This metadata clarification postdates the18-file native evidence freeze; original frozen files are unchanged"
+  }
+}

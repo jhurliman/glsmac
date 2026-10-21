@@ -1479,6 +1479,34 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_OK();
         });GT_ASSERT(run.empty(),"Live Workshop command: "+run);GT_OK();
     });
+    task->AddTest("SMAC live Workshop main cost recomputes draft rows instead of retained alias bytes",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;pool[64]=pool[2];
+                pool[64][36]=1;pool[64][38]=1;pool[64][41]=200;pool[64][48]=5;
+                state.designs.RetainNativeRegistry(pool,catalog);state.technology.factions[0].owned.fill(true);
+                state.economy.at(1).design_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};});
+            const auto before=fixture.Snapshot();const unit::SmacWorkshopDraft draft{64,1,0,1,0,1,""};
+            auto* menu=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL,&draft));
+            const auto factor=game->GetSmacProductionMineralFactor(base->m_owner);
+            const auto rows=unit::SmacPredefinedUnitCatalog::CalculateCost(catalog.chassis.chassis[1],catalog.weapons.weapons[0],catalog.defenses.defenses[1],1,0,catalog.abilities);
+            GT_ASSERT(rows!=200 && static_cast<value::Int*>(menu->Get("mineral_factor"))->value==factor,"Fixture did not separate retained rows from draft price");
+            GT_ASSERT(static_cast<value::Int*>(menu->Get("movement"))->value==unit::SmacWorkshopMovement(draft,catalog)
+                && static_cast<value::Int*>(menu->Get("weapon_cost"))->value==uint8_t(catalog.weapons.weapons[0].cost),"DATA did not receive draft movement and raw equipment cost");
+            bool found=false;for(auto* item:static_cast<value::Array*>(menu->Get("armor"))->value) {auto* row=static_cast<value::Object*>(item);
+                if(static_cast<value::Int*>(row->Get("id"))->value!=1) {continue;}found=true;
+                GT_ASSERT(static_cast<value::Int*>(row->Get("cost_rows"))->value==rows && static_cast<value::Int*>(row->Get("cost"))->value==int64_t(rows)*factor,
+                    "Main COST followed the reused design's stale byte");
+                GT_ASSERT(static_cast<value::Int*>(row->Get("armor_class"))->value==int32_t(catalog.defenses.defenses[1].mode)
+                    && static_cast<value::Bool*>(row->Get("fast_land_warning"))->value==(uint8_t(catalog.weapons.weapons[0].cost)>1),"Armor class or fast-land warning differs from draft components");
+            }
+            GT_ASSERT(found && fixture.Snapshot()==before,"Price query changed world or omitted armor");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Workshop weapon cards expose raw stats and retained intrinsic Probe sprite",[](GSE*,context::Context*)->std::string {
         const auto source=[](const std::string& filename) {
             const auto text=TanksSource(filename);if(filename!="alpha.txt") {return text;}

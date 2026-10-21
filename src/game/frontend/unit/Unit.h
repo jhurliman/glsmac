@@ -82,6 +82,7 @@ public:
 
 	sprite::Sprite* GetSprite() const;
 	sprite::InstancedSprite* GetCardSprite( bool roster ) const;
+    std::shared_ptr<types::texture::Texture> GetConsoleCard(bool roster,const std::array<int,2>& origin) const;
     std::shared_ptr<types::texture::Texture> GetCardOverlay() const;
 	sprite::Sprite* GetBadgeSprite() const;
 	sprite::Sprite* GetBadgeHealthbarSprite() const;

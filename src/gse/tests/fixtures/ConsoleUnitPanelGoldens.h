@@ -1,0 +1,19 @@
+#pragma once
+#include <array>
+namespace console_unit_panel_fixture {
+struct Case {const char* name;int chassis,weapon,armor,reactor,facing;bool roster;std::array<int,2> origin,size;const char* before;const char* final;};
+inline constexpr std::array<Case,12> Cases{{
+    {"scout_selected",0,0,0,1,0,false,{14,66},{116,176},"269c3e27c5b169e603157fd000a945a70c033b8930a5f81f982a8a65cc77000f","f4e471acbe269831ea256236803b12f82a666f881e2a23ce5ebe737495c01a18"},
+    {"scout_roster_0",0,0,0,1,0,true,{143,196},{65,48},"3787953a0aff95ad395f923b6f3b75b8a72a7d6aeb15b1dbd4d578e3642fa76d","9fc415d13bd27957b5123f763c725d3876666ce87e5f7434043d71829364541f"},
+    {"scout_roster_1",0,0,0,1,0,true,{209,196},{65,48},"7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24","d9635c9b7642860a28c8ee5393592c2a392d44404627c5ae881b5b351cf890c3"},
+    {"scout_roster_2",0,0,0,1,0,true,{275,196},{65,48},"7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24","d9635c9b7642860a28c8ee5393592c2a392d44404627c5ae881b5b351cf890c3"},
+    {"garrison_selected",0,0,1,1,0,false,{14,66},{116,176},"269c3e27c5b169e603157fd000a945a70c033b8930a5f81f982a8a65cc77000f","da762b2d05f8a92a880e96ee1d53a4629ab7c764260db28bbdc2a53ab7b154dd"},
+    {"garrison_roster_0",0,0,1,1,0,true,{143,196},{65,48},"3787953a0aff95ad395f923b6f3b75b8a72a7d6aeb15b1dbd4d578e3642fa76d","f4ef1a74fc3af099df5c9dfbe1104dd2443456215fd831e4edb405a6bec05215"},
+    {"garrison_roster_1",0,0,1,1,0,true,{209,196},{65,48},"7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24","8fb9f730424b8392b73b87a615ae04079099d559c63e9014710be6bacdabd9f7"},
+    {"garrison_roster_2",0,0,1,1,0,true,{275,196},{65,48},"7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24","8fb9f730424b8392b73b87a615ae04079099d559c63e9014710be6bacdabd9f7"},
+    {"rover_selected",1,0,0,1,0,false,{14,66},{116,176},"269c3e27c5b169e603157fd000a945a70c033b8930a5f81f982a8a65cc77000f","a99613dab6a55ef58b4cdf8d9de572a3a0c62cbd659d9e0bf0b6f6a1686d9aa8"},
+    {"rover_roster_0",1,0,0,1,0,true,{143,196},{65,48},"3787953a0aff95ad395f923b6f3b75b8a72a7d6aeb15b1dbd4d578e3642fa76d","1c13a6beed9742ef67572bd01bde89c3ee81d09862c3f0a34e9c10461b53eeb9"},
+    {"rover_roster_1",1,0,0,1,0,true,{209,196},{65,48},"7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24","eb1cc73914071e4afc70bb218a3b558749b2200ce7f6b026736b9580f1400e24"},
+    {"rover_roster_2",1,0,0,1,0,true,{275,196},{65,48},"7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24","eb1cc73914071e4afc70bb218a3b558749b2200ce7f6b026736b9580f1400e24"},
+}};
+}

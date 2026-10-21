@@ -13,6 +13,7 @@
 #include "gse/value/Bool.h"
 #include "game/frontend/sprite/InstancedSprite.h"
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <memory>
 
@@ -25,23 +26,34 @@ UnitPreview::UnitPreview( Game* const game, ui::UI* const ui )
 	game, ui, ui::WT_UNIT_PREVIEW, "unit-preview", {
 		{ "unit", { true, gse::VT_OBJECT, ::game::backend::unit::Unit::WRAP_CLASS } },
 		{ "roster", { false, gse::VT_BOOL } },
+        { "native_console", { false, gse::VT_BOOL } },
 	}
 ) {}
 
 void UnitPreview::Register( ui::dom::Widget* const widget ) {
 	const std::weak_ptr< const bool > lifetime = m_lifetime;
+    const auto old=m_area_handlers.find(widget);
+    if(old!=m_area_handlers.end()) {widget->GetGeometry()->RemoveHandler(old->second);m_area_handlers.erase(old);}
+    const auto identity=std::make_shared<std::optional<size_t>>();
+    const auto area_handler=widget->GetGeometry()->AddHandler(ui::GH_ON_AREA_UPDATE,[this,lifetime,widget,identity]() {
+        if(lifetime.expired() || !identity->has_value() || !m_game->GetUM()) {return;}
+        Update(widget,m_game->GetUM()->GetUnitById(**identity));
+    });
+    m_area_handlers.emplace(widget,area_handler);
 	widget->OnUpdate(
-		F_WIDGET_UPDATE( this, lifetime ) {
+		F_WIDGET_UPDATE( this, lifetime, identity ) {
 			if ( lifetime.expired() ) { return; }
 			ASSERT( data->value.find( "unit" ) != data->value.end(), "unit property missing" );
 			const auto* const u = ::game::backend::unit::Unit::Unwrap( data->value.at( "unit" ) );
 			ASSERT( u, "invalid unit ptr" );
+            *identity=u->m_id;
 			m_game->SetWidgetRelation( m_type, u->m_id, widget );
 		}
 	);
 	widget->OnRemove(
-		F_WIDGET_REMOVE( this, lifetime ) {
+		F_WIDGET_REMOVE( this, lifetime, identity, area_handler ) {
 			if ( lifetime.expired() ) { return; }
+            identity->reset();widget->GetGeometry()->RemoveHandler(area_handler);m_area_handlers.erase(widget);
 			m_game->ClearWidgetRelation( m_type, widget );
 		}
 	);
@@ -83,11 +95,23 @@ void UnitPreview::Update( ui::dom::Widget* const widget, const void* const data 
 		// Keep the native work surface at 1:1 pixels; only its visible ink lies
 		// inside the clipped card. Never fit the transparent 256-square canvas.
 		widget->RetainTexture( card->texture_owner );
-		const auto& area = widget->GetGeometry()->AsRectangle()->m_area;
-		if ( area.width <= 0 || area.height <= 0 ) { return; }
-		const float cx = roster ? 38 : 57, cy = roster ? 26 : 37;
-		AddMeshAndTexture( widget, index++, nullptr, card->texture_owner.get(), false,
-			{ 256 / area.width, 256 / area.height }, { ( cx - 128 ) / area.width, ( cy - 128 ) / area.height } );
+        const auto& area = widget->GetGeometry()->AsRectangle()->m_area;
+        if (area.width<=0 || area.height<=0) {return;}
+        const auto native=properties.find("native_console");
+        std::shared_ptr<types::texture::Texture> composed;
+        if(native!=properties.end() && static_cast<gse::value::Bool*>(native->second)->value) {
+            const std::array<int,2> origin{int(std::lround(area.left)),int(std::lround(area.top))-511};
+            if(origin[1]==(roster?196:66)) {composed=unit->GetConsoleCard(roster,origin);}
+        }
+        if(composed) {
+            widget->RetainTexture(composed);
+            AddMeshAndTexture(widget,index++,nullptr,composed.get(),false,
+                {composed->GetWidth()/area.width,composed->GetHeight()/area.height});
+        }else {
+            const float cx=roster?38:57,cy=roster?26:37;
+            AddMeshAndTexture(widget,index++,nullptr,card->texture_owner.get(),false,
+                {256/area.width,256/area.height},{(cx-128)/area.width,(cy-128)/area.height});
+        }
 		const float bx = roster ? 2 : 0, by = roster ? 1 : 0;
         if(auto overlay=unit->GetCardOverlay()) {
             widget->RetainTexture(overlay);

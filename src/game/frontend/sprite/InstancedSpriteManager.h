@@ -49,6 +49,7 @@ public:
 		std::shared_ptr<types::texture::Texture> texture, const types::Vec2<float>& pixel_center );
 	InstancedSprite* GetNativeActorMarker(const std::string& name,bool base,int zoom,uint32_t fill,uint32_t border);
 	InstancedSprite* GetScoutSprite( const std::string& name, const backend::unit::CvrScoutRender& descriptor, bool native_projection = false );
+    std::shared_ptr<types::texture::Texture> GetConventionalCard(const ConventionalUnitVisual& visual,int facing,bool roster,const std::array<int,2>& origin);
     InstancedSprite* GetConventionalSprite(const std::string& definition,const ConventionalUnitVisual& design,const loader::cvr::CvrScoutViewInput& view,bool native_projection);
 	InstancedSprite* GetFormerMarkerSprite( const std::string& name );
 	InstancedSprite* GetColonyMarkerSprite( const std::string& name );

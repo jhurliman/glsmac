@@ -1,4 +1,5 @@
 #include "ConventionalSpriteCache.h"
+#include "loader/texture/TextureLoader.h"
 #include "InstancedSpriteManager.h"
 #include "game/NativeZoom.h"
 #include "game/frontend/NativeActorMarker.h"
@@ -116,6 +117,12 @@ InstancedSprite* InstancedSpriteManager::GetScoutSprite( const std::string& name
 	return &inserted->second;
 }
 
+std::shared_ptr<types::texture::Texture> InstancedSpriteManager::GetConventionalCard(const ConventionalUnitVisual& visual,int facing,bool roster,const std::array<int,2>& origin) {
+    if(!m_conventional_cache) {m_conventional_cache=std::make_unique<ConventionalSpriteCache>();}
+    const auto source=g_engine->GetTextureLoader()->GetSmacDialogSource();
+    if(!source) {throw std::runtime_error("Native console palette/frame source is unavailable");}
+    return m_conventional_cache->GetCard(*g_engine->GetResourceManager(),visual,facing,roster,origin,*source);
+}
 InstancedSprite* InstancedSpriteManager::GetConventionalSprite(const std::string& definition,const ConventionalUnitVisual& design,
     const loader::cvr::CvrScoutViewInput& view,bool native_projection) {
     // Per-Def Sprite wrappers own their instance counter. Share model/pixels,

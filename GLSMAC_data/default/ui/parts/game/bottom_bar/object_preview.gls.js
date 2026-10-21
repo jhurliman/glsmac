@@ -41,6 +41,7 @@ return {
 			case 'Unit': {
 				type = 'unit-preview';
 				data.unit = object;
+                data.native_console = #is_defined(this.native_console) && this.native_console;
 				break;
 			}
 			case 'Base': {
@@ -200,6 +201,7 @@ return {
 		this.moralesets = {};
 
 		this.p = p;
+        const native_console = #is_defined(p.native_console) && p.native_console; this.native_console = native_console;
 		this.um = p.game.get_um();
 
 		p.ui.class('bottombar-object-preview').set({
@@ -210,17 +212,17 @@ return {
 			height: 68,
 		});
 
-		const frame_outer = p.el.panel({
-			class: 'bottombar-panel',
+		const frame_outer = p.el.panel((native_console ? {} : {class: 'bottombar-panel'}) + {
 			align: 'top left',
 			top: 60,
 			bottom: 9,
 			left: 8,
 			width: 128,
 		});
+        if (native_console) { frame_outer.surface({left: 0, right: 0, top: 0, bottom: 0,
+            smac_frame_phase: [8,60], smac_frame: [[21,0,0,128,188],[18,3,3,125,185]]}); }
 		this.outer_frame = frame_outer;
-		this.frame = frame_outer.panel({
-			class: 'bottombar-panel-inner',
+		this.frame = frame_outer.panel((native_console ? {} : {class: 'bottombar-panel-inner'}) + {
 			left: 6, right: 6, top: 6, bottom: 6,
 		});
 

@@ -102,6 +102,9 @@ sprite::Sprite* UnitDef::GetDesignSprite(const ConventionalUnitVisual& visual,st
         found=m_design_sprites.emplace(key,prepared).first;
     }return &found->second;
 }
+std::shared_ptr<types::texture::Texture> UnitDef::GetDesignCardImage(const ConventionalUnitVisual& visual,std::optional<uint8_t> facing,bool roster,const std::array<int,2>& origin) {
+    return m_ism->GetConventionalCard(visual,Facing(facing,2),roster,origin);
+}
 sprite::InstancedSprite* UnitDef::GetDesignCard(const ConventionalUnitVisual& visual,std::optional<uint8_t> facing,bool roster) {
     return m_ism->GetConventionalSprite(m_id,visual,{Facing(facing,2),roster ? -8:-4,0,1,{0,0}},false);
 }

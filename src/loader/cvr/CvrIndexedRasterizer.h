@@ -62,7 +62,7 @@ public:
 	// effective draws and malformed terminals with std::invalid_argument.
 	// Empty batches return an owned copy. Allocation failures propagate.
 	// No camera, scalar, RGB palette, group-origin or matrix defaults.
-    // Terminal, single-pixel shadow path. Ignores depth and record color bytes;
+    // Counted or terminal, contained one/two-pixel shadow path. Ignores depth and record color bytes;
     // each delta step stamps128 even when a previous record hit the same pixel.
     static CvrShadowResult Shadow(uint32_t width,uint32_t height,const std::vector<CvrIndexedDraw>& draws);
 	static CvrIndexedResult Draw( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,

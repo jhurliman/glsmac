@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 #include <unordered_map>
 #include <optional>
 #include "game/ConventionalUnitVisual.h"
@@ -43,6 +44,7 @@ public:
     bool UsesNativeMapPlacement() const;
     bool UsesDesignNativeMapPlacement() const {return m_native_projection;}
     sprite::Sprite* GetDesignSprite(const ConventionalUnitVisual& visual,std::optional<uint8_t> facing,int zoom);
+    std::shared_ptr<types::texture::Texture> GetDesignCardImage(const ConventionalUnitVisual& visual,std::optional<uint8_t> facing,bool roster,const std::array<int,2>& origin);
     sprite::InstancedSprite* GetDesignCard(const ConventionalUnitVisual& visual,std::optional<uint8_t> facing,bool roster);
 	// Native console zoom is independent of the map; initialized Infantry keeps
 	// its retained presentation facing. Legacy profiles retain their fixture view.

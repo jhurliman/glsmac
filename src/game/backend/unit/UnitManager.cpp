@@ -998,26 +998,33 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareManufacturedConvention
 		THROW( "Ordinary manufacturing requires current MORALE" );
 	}
 	// The saved campaign excludes Command Nexus/Cyborg Factory. The admitted
-	// conventional designs have no training ability; first-prototype morale is
-	// added separately below. Only
-	// these two local training categories precede the ordinary baseline one.
+	// two local training categories are independent of the ability/prototype
+	// points added below. Only their combined training is halved.
 	int32_t training = ( command_center ? 2 : 0 ) + ( bioenhancement ? 2 : 0 );
 	if ( social->current[ 4 ] < -1 ) { training /= 2; }
 	ConventionalUnitState state{ design_id, context.owner_simulation_id, static_cast< uint8_t >( 1 + training ), 0, 0, false, ConventionalUnitState::Home::Base, mode, home.m_id };
 	state.retained_state_word=0; // new manufactured record; no legacy state reconstruction
 	const auto design = m_game->ResolveConventionalDesign( state, *m_game->m_simulation );
-    std::unique_ptr<SmacStartupDesignState> prototype_designs;
+    std::unique_ptr<SmacStartupDesignState> prototype_designs;bool first_prototype=false;
     if(design.id>=64 && !design.prototyped) {
         const auto& global=m_game->GetState()->m_settings.global;
         const auto* technology=m_game->m_simulation->value.technology.Find(context.owner_simulation_id);
         if(!technology || !m_game->m_simulation->value.designs.native_registry) {THROW("First prototype requires retained owner technology and design records");}
         prototype_designs=std::make_unique<SmacStartupDesignState>(m_game->m_simulation->value.designs);
         auto& pool=*prototype_designs->native_registry;
-        const bool initial=CompleteSmacWorkshopPrototype(pool,design.id,global.GetSmacPredefinedUnitRules()->catalog,*global.GetSmacTechnologyRules(),*technology);
+        first_prototype=CompleteSmacWorkshopPrototype(pool,design.id,global.GetSmacPredefinedUnitRules()->catalog,*global.GetSmacTechnologyRules(),*technology);
         prototype_designs->RetainNativeRegistry(pool,global.GetSmacPredefinedUnitRules()->catalog);
-        state.stored_morale=static_cast<uint8_t>(std::clamp(int32_t(state.stored_morale)+(initial ? 1:0),0,6));
     }
+    // Halve only training above; ability/prototype/baseline points precede one final clamp.
+    state.stored_morale=static_cast<uint8_t>(std::clamp(training+int(bool(design.abilities&0x4000u))+int(first_prototype)+1,0,6));
     auto prepared=PrepareConventionalUnit(GSE_CALL,Unit::GetNextId(),def,home.m_owner,home.GetTile(),state);
+    auto& produced=std::get<ConventionalUnitState>(prepared.m_data->candidate->m_state);
+    *produced.retained_state_word|=0x2000u;
+    if(m_game->m_simulation->value.IsHuman(context.owner_simulation_id) && (context.governor_options&0x80000080u)==0x80000080u) {
+        *produced.retained_state_word|=0x200u; // GovernorActive + AutomateNewUnits, not ManageCitizens
+    }
+    // Primary viewing faction is independent of the processed upkeep owner.
+    if(m_game->RequireSimulationParticipant(m_game->GetPlayer()).simulation_id==context.owner_simulation_id) {*produced.native_flags|=0x1000u;}
     prepared.m_data->prototype_designs=std::move(prototype_designs);
     return prepared;
 }

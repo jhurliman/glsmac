@@ -33,8 +33,9 @@ to load them from a user-supplied installation. See
 
 The [Design Workshop implementation plan](design-workshop.md) tracks the user's
 request for the complete functional, pixel-faithful unit customization screen.
-Its first acceptance slice includes editing, previewing, saving and producing
-a new design; the current Workshop entry remains a placeholder.
+A live editor now opens from Base production and saves retained designs through
+authenticated commands. Its complete playable and pixel-faithful acceptance is
+still open; see the current dashboard and the dated implementation receipts.
 
 The user's honey playthrough exposed startup/menu, logical-resolution, terrain
 seam and main-map visibility gaps. They are tracked with original asset sections
@@ -49,53 +50,65 @@ verified seven-faction Planet startup and per-owner upkeep boundaries to the
 current engine. Computer admission, owner scheduling and actual decisions are
 required before the local conquest milestone can be claimed.
 
-## Current checkpoint — 2026-10-19
+## Current acceptance dashboard — 2026-10-20
 
-Integration checkpoint: `bd931ed7` (through [#369](https://github.com/jhurliman/glsmac/pull/369)).
-The dated notes below retain historical evidence; this checkpoint supersedes
-older implementation status. No milestone or release gate is declared complete.
+Accepted integration: **`f2e247a22164fe75ef03148782da2772a94aa438`**, through
+[#502](https://github.com/jhurliman/glsmac/pull/502), on `codex/faithful-1.0`.
+Its selected Linux regression/lifecycle and correctness-analysis checks passed
+at head `188b262c46ee6b878fd4874fc0cebea17903c898`. This is an integration
+checkpoint, not a release candidate or a statement that all platforms were rerun.
 
-- Bounded conventional movement, founding, production, research, terraforming,
-  combat and capture paths exist. Individual rule/caller tests do not establish
-  the complete M2 local/network conquest scenario. Ordinary startup still has
-  one local human; network/SMAX startup retains a placeholder path. A legal
-  opponent and complete match remain required.
-- Native terrain now retains view-specific geometry/cache history, uses measured
-  painter order and anchors objects to their own projector calls
-  ([#356](https://github.com/jhurliman/glsmac/pull/356),
-  [#358](https://github.com/jhurliman/glsmac/pull/358)).
-  [#359](https://github.com/jhurliman/glsmac/pull/359) matches all eight complete
-  original indexed viewport frames and paint-store counts under ASan/UBSan:
-  first/repeat/east/back for a diagnostic observer and a valid faction control.
-  See [comparison scope and commands](behavior/viewport-pixel-comparison.md).
-  These controls have empty rosters and explicit allocation/visibility inputs;
-  they do not establish complete game screens, fog, arbitrary cameras or GPU parity.
-- The Detail minimap has observer-aware terrain geometry and navigation (#357),
-  with Base body, defense/HQ and population controls (#360). Main-map Base
-  metadata (#362), captured Base art from its former owner (#364), native
-  population geometry (#366), and full-canvas CVR body placement (#367) are
-  integrated. Complete label/font parity, unit shadows and a matched populated
-  original viewport remain open. Native terrain replacement remains behind the
-  inspector flag; the ordinary map is not yet a proven original viewport match.
-- The live dominance graph uses saved native faction identities/history (#345).
-  Whole movement no longer prints a decimal suffix (#361). The lower console
-  now uses the native flat-tile preview painter and owned texture cache (#365):
-  seven original controls pass, and an actual bare-tile upload matches all
-  1,600 opaque framebuffer pixels. Optional inspector geometry is excluded from
-  ordinary preview snapshots. Actual selected/roster Scout body dimensions are
-  15 by 33 and 11 by 23 pixels; full console composition, aircraft state and
-  remaining console actions are not established by those measurements.
-- Retained conquest distinguishes liberation to the former owner (#368).
-  Ordinary population-one capture removes a Base rather than retaining it at
-  zero population (#369), including homed Unit repair, territory, loot, history,
-  rollback and actual Start reload. Last population-one Base disposition is in
-  [#370](https://github.com/jhurliman/glsmac/pull/370), not integrated at this
-  checkpoint. Its original reference ends at a window-cleanup boundary; full
-  ending UI and executed movement-return parity remain unproven.
-- Earlier Mac interactive checks passed. Focused checks and selected CI do not
-  replace release hardware, frame pacing, audio or complete campaign acceptance.
-- GitHub Codex review credit is exhausted; the user waived that merge requirement.
-  Focused correctness checks and relevant CI continue.
+**Current focus: the complete Design Workshop (M3/M6). M0–M7 remain open.**
+The next implementation tasks below preserve that focus. The local faction
+controller and complete conquest scenario remain dependencies of M2; a growing
+set of verified rules is not a completed match.
+
+Evidence classes are deliberately separate:
+
+- **Bounded reference match:** declared original inputs produce matching native
+  fields or complete buffers. For example, the Workshop's29 general/stock
+  static model frames match; this does not prove arbitrary drafts or animation.
+- **Live caller test:** an authenticated queued operation changes a real backend
+  fixture, including failure/restore checks. #502 verifies confirmed global
+  design retirement and queue surgery; it is not a human-played match.
+- **Rendered preview:** an actual rendered UI/scene, with harness overrides
+  disclosed. The #502 example confirmation capture proves layout, not an
+  interactive full-bank retirement or whole-screen original pixel parity.
+- **End-to-end playable acceptance:** the complete named scenario through normal
+  setup, UI/gameplay, save/reload and result. The Workshop receipt and M2
+  local/network match have **not run to completion** at this checkpoint.
+
+The all-stock shielding follow-up [#503](https://github.com/jhurliman/glsmac/pull/503)
+is a candidate, not included in this accepted checkpoint. Its local live tests,
+rendered harness and focused analysis/sanitizers must not be counted as a passed
+release or complete Workshop gate while it awaits integration.
+
+| Acceptance | Status at the accepted head | Evidence and remaining exit requirement |
+| --- | --- | --- |
+| M0: foundation/platform gate | Partial | Focused CI and earlier native Mac interaction passed; [development policy](#analysis-and-development-loop-policy) applies. Fresh release-platform full suites, hardware graphics/audio pacing and packaging receipts remain required. |
+| M1: persistent simulation gate | Partial | [Campaign saves](local-campaign-save-load.md), [UI cursor persistence](campaign-ui-cursor.md), [faction continuation](faction-turn-continuation.md), and live Workshop whole-world restore tests exist. Complete cross-platform uninterrupted/replay comparison, remote late join/reconnect and migration acceptance are not established by these bounded tests. |
+| M2.1: normal setup, starting roster and first Base | Partial | Local-human conventional startup/founding has live callers. [Faction-controller admission/scheduling](local-faction-controller.md) is still required; independent seven-faction startup records do not create a working opponent. |
+| M2.2: workers, growth and starvation | Partial | Worker/upkeep and shortage fixtures exercise live state. Repeat them inside the complete two-faction scenario without stale claims; no complete scenario receipt exists. |
+| M2.3: Scout/Former/Pod production and accounting | Partial | [Canonical production selection](canonical-production-selection.md) and [Colony production](smac-colony-production.md) are bounded live paths. Complete the scenario's support/maintenance/production checkpoints and usable manufactured Units. |
+| M2.4: research Centauri Ecology | Partial | [Live research](smac-live-research.md) and [choice continuation](research-choice-ui.md) exist. The full scenario must demonstrate the resulting availability changes through gameplay. |
+| M2.5: farm/mine/solar/roads | Partial | The [terraforming catalog](smac-terraforming-catalog.md) and live Former paths have focused evidence. Finish the complete scenario's job times, yields, cancellation, legality and road movement checks. |
+| M2.6: second Base and Pod consumption | Partial | Founding and [colony-choice continuation](smac-colony-choice-continuation.md) have live fixtures. Verify population/ownership/support together in the complete scenario. |
+| M2.7: combat, capture, elimination and valid conquest | Partial | [Hostile movement](smac-live-scout-combat.md), [defended capture](smac-defended-base-combat.md) and the [conquest-controller contract](behavior/conquest-controller.md) cover bounded paths. A legal opponent, full remaining-Unit/Pod disposition and actual match ending remain required. |
+| M2.8: every checkpoint reload, remote repeat and late join | Not run as the complete acceptance | Local restoration fixtures are not the numbered uninterrupted-vs-restored match or its network repeat. Retain this as an explicit M2 exit gate. |
+| WS1: open, browse/New, rename, reselect, Apply/Done/Cancel | Partial | [Custom-edit](behavior/design-workshop-custom-edit.md) and [fresh-draft](behavior/design-workshop-fresh-draft.md) reference contracts exist; queued save/retirement paths pass. The live UI still opens hardcoded Scout and lacks the complete saved-design browser and original reselect/rename behavior. |
+| WS2: all legal components, previews, costs and abilities | Partial | [Workshop journal](design-workshop.md) separates exact static compositions, card controls, general record construction and live integration. Full chassis/weapon/reactor/ability pickers, cleanup order, PSI formatting, animation and SMAX content remain open. |
+| WS3: new named design to usable manufactured Unit | Not run as the complete acceptance | Follow the journal's minimum receipt through Apply, close/reopen, save/reload, Base production, first prototype and a playable Unit. Price/registry tests alone do not close general production admission. |
+| WS4: original full Workshop screen and interaction diff | Not run as the complete acceptance | Exact declared CVR buffers and UI layout previews are supporting evidence only. Match the original parent/console, artwork, glyph advances, all picker/confirmation states and fixed animation phase at logical4:3 before claiming screen parity. |
+| M3: complete SMAC rule/content inventory | Partial | Many bounded rule families are implemented; Workshop WS1–WS3 and the full inventory/interaction reconciliation remain open. No full campaign receipt. |
+| M4: AI, diplomacy and all SMAC outcomes | Not run as complete campaigns | [Local controller plan](local-faction-controller.md) still requires live per-owner dispatch and legal decisions. Seeded AI campaign/hidden-information/automation/victory quality gates remain open. |
+| M5: complete Planetary Pack/SMAX | Not run as complete campaigns | A distinct ruleset route is not full expansion gameplay. Expansion content inventory, alien rules, scenarios, complete campaigns and SMAC nonregression remain required. |
+| M6: complete presentation/input/AV | Partial | [Playthrough audit](smac-playthrough-ui-audit.md), [ordinary exploration](ordinary-native-exploration.md) and [generated-terrain acceptance](generated-terrain-appearance.md) record supported profiles and remaining boundaries. General generated/flat/SMAX live authority, populated actor/font/UI comparisons and native hardware AV receipts remain open. The guided tour is excluded. |
+| M7: packaged golden1.0.0 | Not run | All [golden release gates](#golden-release-gate) remain open: campaign/platform/soak/network/AI/content evidence must be pinned to actual packaged binaries and a release commit. |
+
+There is no current external blocker that justifies marking the project blocked.
+“Partial” means supporting bounded evidence exists; it never means the listed
+exit test passed. Historical checkpoints below retain their original scope and
+dates, and must not be read as current implementation inventories.
 
 ## Starting evidence — 2026-10-15
 
@@ -169,21 +182,32 @@ Use a small fixed world and two human factions with recorded options/difficulty.
 An internal milestone may use scripted opponents. That does not constitute
 finished single-player or satisfy the 1.0 AI gate.
 
-## Immediate PR queue
+## Next three tasks and their acceptance targets
 
-| Slice | Acceptance / dependency |
-| --- | --- |
-| Populated map fidelity | Integrate #362 after relevant CI; retain original source art family across capture rather than deriving it from current owner. Compare real Base/unit/flag/population overlays against an original populated scene with declared state, camera, observer and asset provenance. Terrain-only exact frames do not close this gate. |
-| Native lower-console tile preview | Capture the original flags0x621, 85% preview paint with flat/sloped land and a feature control, including indexed pixels, geometry, UVs, lighting, clip and cache effects. Reuse native material/raster rules in an independent preview viewport; do not downsample the main map or guess relief. Then compare preview pixels and working console interactions. |
-| Complete M2 conquest acceptance | Establish a legal second faction through an authenticated startup path, then exercise the complete numbered M2 scenario through gameplay callers. Save/reload each checkpoint and compare uninterrupted state/RNG; repeat remotely with late join. Existing startup restricts conventional play to the local SMAC human, so extending only fixture rosters or rendering extra factions does not close this prerequisite. |
+1. **Connect Workshop selection and reselect — WS1.** Replace the hardcoded
+   Scout opening with the measured normal-open recommendation and original
+   saved-design/New browse policy. Preserve native name/flag/ability-selector
+   semantics across card choice, Rename, Apply, Done and Cancel. Test ordinary
+   opening and reselection through live callers, including stale responses.
+2. **Complete component editing — WS2.** After the shielding slice, connect
+   chassis, weapon, reactor and both ability pickers to the common installed
+   catalog, legality/cleanup and construction path. Use the frozen picker
+   transition ordering; extend model/native controls where a composition is
+   still unverified. Include PSI/noncombat display formatting and animation
+   rather than treating a static Scout preview as a complete editor.
+3. **Close the playable and visual Workshop receipts — WS3/WS4, contributing
+   to M2.3/M1/M6.** Take a newly named edited design through close/reopen,
+   save/reload, production selection, first prototype and an actually usable
+   manufactured Unit. Then compare matched original/engine Workshop screens
+   and interactions at the same logical4:3 resolution and preview phase.
+   Targeted tests do not substitute for this normal gameplay/UI receipt.
 
-Keep the next three actionable slices specified in enough detail to implement.
-Expand later milestones into PRs when their prerequisites and reference cases
-exist. A speculative list of hundreds of tickets is not an implementation plan.
+The complete M2 local/network conquest scenario and the M0–M7 release gates
+remain required after this focused Workshop work. Do not restart obsolete
+integration queues or infer promotion of the integration branch to main.
 
 Presentation discrepancy tracking: [4:3 viewport and title-menu comparison](four-three-presentation.md).
-This is an open fidelity gate; correct aspect and successful rendering do not
-establish original UI parity.
+Correct aspect and successful rendering do not establish original UI parity.
 
 ## PR and review workflow
 
@@ -709,3 +733,52 @@ and the expansion remain substantial work. Original executable evidence is
 tracked separately from interactive PRACX observations. Original assets,
 binaries and the researcher's uncommitted files are excluded from implementation
 PRs. Golden 1.0.0 still requires every release gate above.
+
+## Historical checkpoint — 2026-10-19 (through #369)
+
+Integration checkpoint: `bd931ed7` (through [#369](https://github.com/jhurliman/glsmac/pull/369)).
+These notes describe that historical head, not current feature absence. The
+current dashboard above supersedes their status and queue claims. No milestone
+or release gate was declared complete at this head.
+
+- Bounded conventional movement, founding, production, research, terraforming,
+  combat and capture paths exist. Individual rule/caller tests do not establish
+  the complete M2 local/network conquest scenario. Ordinary startup still has
+  one local human; network/SMAX startup retains a placeholder path. A legal
+  opponent and complete match remain required.
+- Native terrain now retains view-specific geometry/cache history, uses measured
+  painter order and anchors objects to their own projector calls
+  ([#356](https://github.com/jhurliman/glsmac/pull/356),
+  [#358](https://github.com/jhurliman/glsmac/pull/358)).
+  [#359](https://github.com/jhurliman/glsmac/pull/359) matches all eight complete
+  original indexed viewport frames and paint-store counts under ASan/UBSan:
+  first/repeat/east/back for a diagnostic observer and a valid faction control.
+  See [comparison scope and commands](behavior/viewport-pixel-comparison.md).
+  These controls have empty rosters and explicit allocation/visibility inputs;
+  they do not establish complete game screens, fog, arbitrary cameras or GPU parity.
+- The Detail minimap has observer-aware terrain geometry and navigation (#357),
+  with Base body, defense/HQ and population controls (#360). Main-map Base
+  metadata (#362), captured Base art from its former owner (#364), native
+  population geometry (#366), and full-canvas CVR body placement (#367) are
+  integrated. Complete label/font parity, unit shadows and a matched populated
+  original viewport remain open. Native terrain replacement remains behind the
+  inspector flag; the ordinary map is not yet a proven original viewport match.
+- The live dominance graph uses saved native faction identities/history (#345).
+  Whole movement no longer prints a decimal suffix (#361). The lower console
+  now uses the native flat-tile preview painter and owned texture cache (#365):
+  seven original controls pass, and an actual bare-tile upload matches all
+  1,600 opaque framebuffer pixels. Optional inspector geometry is excluded from
+  ordinary preview snapshots. Actual selected/roster Scout body dimensions are
+  15 by 33 and 11 by 23 pixels; full console composition, aircraft state and
+  remaining console actions are not established by those measurements.
+- Retained conquest distinguishes liberation to the former owner (#368).
+  Ordinary population-one capture removes a Base rather than retaining it at
+  zero population (#369), including homed Unit repair, territory, loot, history,
+  rollback and actual Start reload. Last population-one Base disposition is in
+  [#370](https://github.com/jhurliman/glsmac/pull/370), not integrated at this
+  checkpoint. Its original reference ends at a window-cleanup boundary; full
+  ending UI and executed movement-return parity remain unproven.
+- Earlier Mac interactive checks passed. Focused checks and selected CI do not
+  replace release hardware, frame pacing, audio or complete campaign acceptance.
+- GitHub Codex review credit is exhausted; the user waived that merge requirement.
+  Focused correctness checks and relevant CI continue.

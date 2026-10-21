@@ -4,9 +4,12 @@ The user requested the complete original unit customization screen on
 2026-10-20. This is a functional and visual release requirement for both SMAC
 and SMAX. A static screen or a list of decoded components does not satisfy it.
 
-## Audited starting point
+## Historical starting audit — 2026-10-20
 
-The live Base production dialog still displays `Workshop unavailable` in
+This describes the pre-implementation baseline; the dated slices below track
+the implemented editor and remaining acceptance.
+
+At this baseline, the live Base production dialog displays `Workshop unavailable` in
 `GLSMAC_data/default/ui/parts/game/popup/base_screen/buttons.gls.js`.
 There is no Workshop popup implementation in that script directory.
 

@@ -52,6 +52,9 @@ void Walk( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,
 	const CvrIndexedDraw& draw, CvrIndexedResult* const output, const bool modulo_depth ) {
 	if ( !draw.records ) { Invalid( " missing records" ); }
 	const auto& records = *draw.records;
+    if(draw.clip && (draw.footprint!=CvrSampleFootprint::Single || (*draw.clip)[0]<0 || (*draw.clip)[1]<0
+        || (*draw.clip)[2]<(*draw.clip)[0] || (*draw.clip)[3]<(*draw.clip)[1]
+        || uint32_t((*draw.clip)[2])>initial.width || uint32_t((*draw.clip)[3])>initial.height)) {Invalid(" invalid kernel clip");}
 	if ( records.size() <= size_t( draw.terminal ) ) { Invalid( " empty effective draw" ); }
 	if ( draw.footprint != CvrSampleFootprint::Single && draw.footprint != CvrSampleFootprint::Square2 ) { Invalid( " unsupported footprint" ); }
 	const auto steps = MakeSteps( draw, modulo_depth );
@@ -75,12 +78,13 @@ void Walk( const CvrIndexedSurface& initial, const CvrIndexedLookups& lookups,
 		const auto x = Floor256( position[ 0 ] );
 		const auto y = Floor256( position[ 1 ] );
 		const auto extra = draw.footprint == CvrSampleFootprint::Square2 ? 1 : 0;
+        if(output) {++output->processed_records;}
+        if(draw.clip && (x<(*draw.clip)[0] || y<(*draw.clip)[1] || x>=(*draw.clip)[2] || y>=(*draw.clip)[3])) {continue;}
 		if ( x < 0 || y < 0 || x + extra >= initial.width || y + extra >= initial.height ) { Invalid( " sample outside surface" ); }
 		const size_t first_index = ( size_t( record.bytes[ 0 ] & 7 ) << 8 ) | record.bytes[ 1 ];
 		const size_t second_index = ( size_t( lookups.first[ first_index ] ) << 8 ) | record.bytes[ 2 ];
 		if ( second_index >= lookups.second.size() ) { Invalid( " lookup outside supplied table" ); }
 		if ( output ) {
-			++output->processed_records;
 			const auto depth = static_cast< uint16_t >( modulo_depth ? depth_position >> 16 : Floor256( position[ 2 ] ) );
 			const auto color = lookups.second[ second_index ];
 			for ( int dy = 0 ; dy <= extra ; ++dy ) {

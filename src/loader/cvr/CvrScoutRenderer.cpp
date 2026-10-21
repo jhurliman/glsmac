@@ -16,6 +16,7 @@
 #include <variant>
 
 namespace loader::cvr {
+namespace {template<size_t N> std::array<uint32_t,N> Bits(const std::array<float,N>& values);}
 
 struct CvrScoutRenderer::Assets {
 	explicit Assets( const Profile selected ) : profile( selected ) {}
@@ -24,6 +25,7 @@ struct CvrScoutRenderer::Assets {
 	using Geometry = std::variant< CvrGeometry, CvrSimpleDetailChain >;
 	std::vector< std::vector< Geometry > > geometry;
 	std::vector< CvrPalette > palettes;
+    std::vector<CvrFrameSelection> selections;
 	std::optional< std::array< CvrPalette::Color, 256 > > software_colors;
 	scout::LightingTable lighting;
 };
@@ -59,9 +61,67 @@ CvrScoutRenderer CvrScoutRenderer::LoadWorkshopPart(std::string_view part,std::s
     return LoadParts({part},direct_locations?Profile::WorkshopWeapon:Profile::WorkshopPart,&material);
 }
 
-CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_view >& parts, const Profile profile, const CvrActorMaterial* material ) {
+CvrScoutRenderer CvrScoutRenderer::LoadWorkshopDesign(const WorkshopReader& read,std::string_view faction_pcx,
+    int chassis,int weapon,int armor,int reactor,int kind) {
+    if(kind< -1 || kind>3 || !((chassis==0 && weapon>=0 && weapon<=1 && armor>=0 && armor<=3 && reactor>=1 && reactor<=2)
+        || (chassis==1 && weapon==2 && armor==1 && reactor==1))) {
+        throw std::invalid_argument("Workshop composition requires admitted conventional components");
+    }
+    const auto palette=read("palette.pcx"),system=read("system.txt");scout::ValidateMapLight(system);
+    const auto materials=CvrActorMaterial::ReadWorkshop(palette,read("vbp.cvr"),system);
+    const auto shades=CvrPaletteReader::Read(CvrContainerReader::Read(read("vbp.cvr"))).shades;
+    auto faction=CvrActorMaterial::Read(palette,faction_pcx,shades);faction.colors=materials.colors;
+    faction.shades=CvrActorMaterial::Tint(faction.colors,shades,faction.tint_index);
+    std::vector<std::string> bytes;std::vector<WorkshopAttachment> attachments;
+    const auto append=[&](const std::string& file,std::array<float,3> offset,bool direct,
+        const std::array<uint8_t,24*256>* tint=nullptr) {
+        bytes.push_back(read(file));attachments.push_back({offset,direct,tint ? std::optional<std::array<uint8_t,24*256>>(*tint):std::nullopt});
+    };
+    const std::array<float,3> infantry{-400,200,0},zero{};
+    const auto body=[&] {
+        if(chassis==0) {append("vi.cvr",infantry,false);return;}
+        for(const auto* name:{"vrcp00.cvr","vgmc.cvr","vgmcp.cvr","vb.cvr","vbp.cvr","vsp.cvr","vsptb.cvr","vsptf.cvr","vlights.cvr"}) {
+            const std::string file=name;append(file,zero,true,file=="vgmcp.cvr" || file=="vbp.cvr" ? &faction.shades:nullptr);
+        }
+    };
+    const auto gun=[&] {
+        if(chassis==1) {append("vw02.cvr",zero,true);return;}
+        if(weapon==0) {if(kind==1) {append("vw00.cvr",zero,true);}return;}
+        const auto marker=CvrSceneReader::Read(CvrContainerReader::Read(read("avgmtgun.cvr")));
+        if(marker.frame_count!=2 || marker.objects.empty()) {throw std::invalid_argument("Infantry weapon mount requires two source frames");}
+        std::array<float,3> mount;
+        for(size_t i=0;i<3;++i) {
+            const auto difference=scout::Store(scout::Subtract(scout::Decode(Bits(marker.objects[0].frames[1].location)[i]),scout::Decode(Bits(marker.objects[0].frames[0].location)[i])));
+            std::memcpy(&mount[i],&difference,sizeof(difference));
+        }
+        append("vw01.cvr",mount,false);append("vgmt.cvr",zero,true);append("vgmtp.cvr",zero,true,&faction.shades);
+    };
+    const auto shield=[&] {
+        if(chassis==1) {append("va01.cvr",zero,true);append("vspa01.cvr",zero,true);return;}
+        if(armor) {append("vipta00.cvr",infantry,false,armor>=2 ? &materials.armor[armor-2]:nullptr);}
+    };
+    const auto power=[&] {append(chassis==1 ? "vr00.cvr":reactor==1 ? "viptr00.cvr":"viptr01.cvr",chassis==1 ? zero:infantry,chassis==1);};
+    if(kind<0) {body();gun();shield();power();}else {
+        switch(kind) {case 0:body();break;case 1:gun();break;case 2:shield();break;case 3:power();break;}
+    }
+    if(bytes.empty()) {throw std::invalid_argument("Workshop component has no model");}
+    std::vector<std::string_view> parts;for(const auto& part:bytes) {parts.push_back(part);}
+    return LoadParts(parts,kind<0 ? Profile::Workshop:Profile::WorkshopPart,&faction,&attachments);
+}
+
+CvrScoutImage CvrScoutRenderer::RenderWorkshopCard(int kind,std::array<uint32_t,3>& position) const {
+    if(kind<0 || kind>3 || m_assets->profile!=Profile::WorkshopPart) {throw std::invalid_argument("Workshop card requires its component scene");}
+    const std::array<uint32_t,4> scale{0x3d4ccccd,0x3e19999a,0x3d8f5c29,0x3e4ccccd};
+    const std::array<std::array<int32_t,2>,4> anchor{{{79,47},{79,143},{79,235},{511,45}}};
+    auto view=scout::MakeWorkshopView(position,0x3f05f92d,scale[kind],anchor[kind]);
+    if(kind!=0) {position=WorkshopPosition(view.orientation,position);view=scout::MakeWorkshopView(position,0x3f05f92d,scale[kind],anchor[kind]);}
+    return RenderView(view,9,false,kind==1 ? std::optional<std::array<int32_t,4>>({79,86,178,171}):std::nullopt);
+}
+
+CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_view >& parts, const Profile profile, const CvrActorMaterial* material, const std::vector<WorkshopAttachment>* attachments ) {
 	constexpr size_t MAX_ASSET_BYTES = 32 * 1024 * 1024;
 	size_t total_bytes = 0;
+    if(attachments && attachments->size()!=parts.size()) {throw std::invalid_argument("Workshop attachment extent mismatch");}
 	for ( const auto bytes : parts ) {
 		if ( bytes.size() > MAX_ASSET_BYTES || bytes.size() > 64 * 1024 * 1024 - total_bytes ) {
 			throw std::invalid_argument( "CVR idle composition: asset exceeds adapter budget" );
@@ -75,19 +135,23 @@ CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_vie
 	size_t object_count = 0, group_count = 0, record_count = 0;
 	for ( const auto bytes : parts ) {
 		const auto index = scenes.size();
+        const auto* attachment=attachments ? &attachments->at(index):nullptr;
+        const bool direct=attachment ? attachment->direct:profile==Profile::SpartanSpeeder || profile==Profile::WorkshopWeapon;
+        owned->selections.push_back({index,0,attachment ? attachment->offset:direct ? std::array<float,3>{0,0,0}:std::array<float,3>{-400,200,0},attachment && direct});
 		const auto container = CvrContainerReader::Read( bytes );
 		owned->palettes[ index ] = CvrPaletteReader::Read( container );
-        if((profile==Profile::WorkshopPart || profile==Profile::WorkshopWeapon) && material) {owned->palettes[index].shades=material->shades;}
+        if((profile==Profile::WorkshopPart || profile==Profile::WorkshopWeapon) && material && !attachments) {owned->palettes[index].shades=material->shades;}
 		// Fixed Speeder composition: only VGMCP and VBP use the generated actor
 		// material. All other parts retain their own decoded shade lookups.
 		if ( profile == Profile::SpartanSpeeder && material && ( index == 2 || index == 4 ) ) { owned->palettes[ index ].shades = material->shades; }
-		auto scene = CvrSceneReader::Read( container );
+		if(attachment && attachment->shades) {owned->palettes[index].shades=*attachment->shades;}
+        auto scene = CvrSceneReader::Read( container );
 		if ( scene.objects.size() > CvrFrameAssembler::CAPACITY - object_count ) {
 			throw std::invalid_argument( "CVR Scout: complete composition exceeds frame budget" );
 		}
 		object_count += scene.objects.size();
 		for ( const auto& object : scene.objects ) {
-			if ( !object.voxel_data || object.frames.empty() || object.frames[ 0 ].flags != 0 ) {
+			if ( !object.voxel_data || object.frames.empty() || (object.frames[0].flags!=0 && !(attachments && object.frames[0].flags==0x80)) ) {
 				throw std::invalid_argument( "CVR Scout: missing geometry or unsupported idle frame" );
 			}
 			const auto account = [ & ]( const CvrGeometry& geometry ) {
@@ -100,7 +164,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_vie
 					record_count += group.records.size();
 				}
 			};
-			if ( profile == Profile::SpartanSpeeder && index == 8 ) {
+			if ( (profile == Profile::SpartanSpeeder && index == 8) || (attachments && !(object.voxel_data->at(0)&10)) ) {
 				// VLIGHTS retains every simple level, including continuation flags.
 				// Selection happens using each draw's actual global scale.
 				auto chain = CvrSimpleDetailChain::Read( *object.voxel_data );
@@ -108,7 +172,7 @@ CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_vie
 				owned->geometry[ index ].emplace_back( std::move( chain ) );
 			} else {
 				auto geometry = CvrGeometryReader::Read( *object.voxel_data );
-				if ( geometry.flags != 8 && geometry.flags != 10 ) { throw std::invalid_argument( "CVR idle composition: unsupported geometry flags" ); }
+				if ( geometry.flags != 8 && geometry.flags != 10 && !(attachments && geometry.flags==2) ) { throw std::invalid_argument( "CVR idle composition: unsupported geometry flags" ); }
 				account( geometry );
 				owned->geometry[ index ].emplace_back( std::move( geometry ) );
 			}
@@ -149,13 +213,13 @@ CvrScoutImage CvrScoutRenderer::RenderWorkshop(const uint32_t yaw_bits) const {
 
 std::array<uint32_t,3> CvrScoutRenderer::WorkshopPosition(const std::array<uint32_t,9>& rotation,const std::array<uint32_t,3>& previous) const {
     using namespace scout;
-    std::vector<CvrFrameSelection> requests;
-    for(size_t i=0;i<m_assets->geometry.size();++i) {requests.push_back({i,0,m_assets->profile==Profile::WorkshopWeapon ? std::array<float,3>{0,0,0}:std::array<float,3>{-400,200,0}});}
-    const auto frames=CvrFrameAssembler::Assemble(m_assets->frames,requests);
+    const auto frames=CvrFrameAssembler::Assemble(m_assets->frames,m_assets->selections);
     if(frames.first_omitted || frames.records.empty()) {throw std::invalid_argument("Workshop preview has incomplete frames");}
     std::optional<WorkshopBounds> scene;
     for(const auto& frame:frames.records) {
-        const auto& geometry=std::get<CvrGeometry>(m_assets->geometry[frame.scene_index][frame.object_index]);
+        const auto& source=m_assets->geometry[frame.scene_index][frame.object_index];
+        const auto* chain=std::get_if<CvrSimpleDetailChain>(&source);
+        const auto& geometry=chain ? chain->Levels().front():std::get<CvrGeometry>(source);
         const auto bounds=WorkshopObjectBounds({rotation,Bits(frame.value.matrix),previous,Bits(frame.value.location),
             0x3f800000,geometry.scalar_bits,geometry.vectors[0],geometry.vectors[1]});
         if(!scene) {scene=bounds;} else {
@@ -181,15 +245,9 @@ CvrScoutImage CvrScoutRenderer::RenderWorkshopPart(uint32_t scale,bool centered,
     return RenderView(view,translucent && !unavailable ? 24:9,unavailable);
 }
 
-CvrScoutImage CvrScoutRenderer::RenderView(const scout::View& view,const uint8_t clear,const bool unavailable) const {
+CvrScoutImage CvrScoutRenderer::RenderView(const scout::View& view,const uint8_t clear,const bool unavailable,const std::optional<std::array<int32_t,4>> clip) const {
     using namespace scout;
-    const bool speeder=m_assets->profile==Profile::SpartanSpeeder || m_assets->profile==Profile::WorkshopWeapon;
-	std::vector< CvrFrameSelection > requests;
-	// Speeder assembly uses each part's asset location directly. The Infantry
-	// attachment offset belongs only to its distinct VI/reactor composition.
-	const std::array< float, 3 > offset = speeder ? std::array< float, 3 >{ 0, 0, 0 } : std::array< float, 3 >{ -400, 200, 0 };
-	for ( size_t i = 0; i < m_assets->geometry.size(); ++i ) { requests.push_back( { i, 0, offset } ); }
-	const auto frames = CvrFrameAssembler::Assemble( m_assets->frames, requests );
+    const auto frames = CvrFrameAssembler::Assemble( m_assets->frames, m_assets->selections );
 	if ( frames.first_omitted ) { throw std::invalid_argument( "CVR Scout: incomplete frame assembly" ); }
 	CvrScoutImage result{ { 256, 256, 256, std::vector< uint8_t >( 256 * 256, clear ),
 		std::vector< uint16_t >( 256 * 256, 65535 ) }, {}, view.target_anchor, 0, 0, 0 };
@@ -202,6 +260,7 @@ CvrScoutImage CvrScoutRenderer::RenderView(const scout::View& view,const uint8_t
 	}
 	if ( m_assets->software_colors ) { colors = *m_assets->software_colors; defined.fill( true ); }
 	for ( const auto& frame : frames.records ) {
+        if(frame.value.flags&0x80) {continue;}
 		const auto& source = m_assets->geometry[ frame.scene_index ][ frame.object_index ];
 		const auto* chain = std::get_if< CvrSimpleDetailChain >( &source );
 		const auto& geometry = chain ? chain->Levels()[ chain->Select( view.scales[ 0 ] ) ] : std::get< CvrGeometry >( source );
@@ -232,7 +291,7 @@ CvrScoutImage CvrScoutRenderer::RenderView(const scout::View& view,const uint8_t
 			std::copy( origin_bits.begin(), origin_bits.end(), origin_input.begin() + 6 );
 			const auto origin = CvrBasisConverter::Convert( origin_input )[ 2 ];
 			auto drawn = CvrIndexedRasterizer::DrawModuloDepth( result.indexed, lookups,
-				{ { &group.records, ( geometry.flags & 8 ) != 0, footprint, basis, origin } } );
+				{ { &group.records, ( geometry.flags & 8 ) != 0, footprint, basis, origin, clip } } );
 			result.indexed = std::move( drawn.surface );
 			++result.draw_count;
 			result.processed_records += drawn.processed_records;

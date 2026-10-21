@@ -26,6 +26,7 @@ struct CvrIndexedDraw {
 	CvrSampleFootprint footprint;
 	std::array< std::array< int32_t, 3 >, 3 > basis;
 	std::array< int32_t, 3 > initial;
+    std::optional<std::array<int32_t,4>> clip; // Half-open kernel clip, before depth lookup.
 };
 
 struct CvrIndexedResult {

@@ -180,6 +180,26 @@ Surface::Surface( DOM_ARGS_T )
         return VALUE(gse::value::Bool,,true);
     }));
 
+    Method(GSE_CALL,"smacworkshopdesign",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(7);N_GETVALUE(chassis,0,Int);N_GETVALUE(weapon,1,Int);N_GETVALUE(armor,2,Int);N_GETVALUE(reactor,3,Int);
+        N_GETVALUE(kind,4,Int);N_GETVALUE(faction,5,String);N_GETVALUE(yaw,6,Float);
+        if(chassis<0 || chassis>1 || weapon<0 || weapon>2 || armor<0 || armor>3 || reactor<1 || reactor>2 || kind< -1 || kind>3
+            || faction.empty() || faction.size()>256 || faction.find_first_of("/\\:\0",0,4)!=std::string::npos
+            || !std::isfinite(yaw) || std::abs(yaw)>64.0) {throw std::invalid_argument("Unsupported Workshop composition request");}
+        const std::array<int,5> key{int(chassis),int(weapon),int(armor),int(reactor),int(kind)};
+        if(!m_workshop_design || key!=m_workshop_design_key || faction!=m_workshop_design_faction) {
+            const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;
+                util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));return std::string(bytes.begin(),bytes.end());};
+            auto next=std::make_shared<const loader::cvr::CvrScoutRenderer>(loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,read(faction),key[0],key[1],key[2],key[3],key[4]));
+            m_workshop_design=std::move(next);m_workshop_design_key=key;m_workshop_design_faction=faction;
+        }
+        const float angle=static_cast<float>(yaw);uint32_t bits;std::memcpy(&bits,&angle,sizeof(bits));std::array<uint32_t,3> position{};
+        const auto image=kind<0 ? m_workshop_design->RenderWorkshop(bits):m_workshop_design->RenderWorkshopCard(int(kind),position);
+        CreateTexture();m_background.texture->Resize(256,256);std::memcpy(m_background.texture->GetBitmap(),image.rgba.data(),image.rgba.size());
+        m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
+        return VALUE(gse::value::Bool,,true);
+    }));
+
     Method(GSE_CALL,"smacworkshoppreview",NATIVE_CALL(this) {
         N_EXPECT_ARGS(2);N_GETVALUE(armor,0,Int);N_GETVALUE(yaw,1,Float);
         if(armor<0 || armor>1 || !std::isfinite(yaw) || std::abs(yaw)>64.0) {throw std::invalid_argument("Unsupported Workshop preview draft");}

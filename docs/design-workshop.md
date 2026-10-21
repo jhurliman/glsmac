@@ -364,3 +364,30 @@ files and the economy, live gameplay and simulation test consumers.
 This supplies retained inputs for occupied-slot allocation. General occupied-bank
 publication, retirement/history handling and the broader component editor remain
 unfinished; the live editor still admits its existing Scout/Synthmetal slice.
+
+## General conventional preview composition
+
+The asset-to-frame renderer now reproduces all 15 full indexed color/depth
+frames in the [general preview contract](behavior/design-workshop-general-visuals.md):
+Infantry/Laser/Synthmetal/Fission, Infantry/Laser/Plasma/Fusion, and
+Rover/Impact/Synthmetal/Fission, including all four separate cards for each.
+The runtime derives the Infantry mount from AVGMTGUN.CVR's two frames, retains
+per-asset direct versus attached transforms, and generates faction materials
+from the actual faction PCX sample and Gamma100 palette. Bounds includes hidden
+Impact objects and root VLIGHTS geometry; drawing skips hidden objects and uses
+the selected detail level. Laser cards use the original clipped kernel and
+Rover lights retain every nonterminal stream record.
+
+The live popup uses the composer for its current draft, with faction art
+supplied by the actual Base owner. Decoded compositions are cached per Surface
+and draft/material identity. The broader tuples are exposed through the same
+Surface API, but remain outside the current live component picker/commit slice.
+This does not establish complete Workshop screen or all-unit parity.
+
+Validation: all 15 new frames match native color, depth, kernel count and
+processed-record count, from owned assets rather than captured runtime operands.
+All 32 selected renderer groups, 28 Workshop groups and six UI scripts pass;
+the 32 renderer groups also pass focused ASan/UBSan. Correctness analysis is
+clean for seven production translation units, including affected consumers.
+An actual hidden software-rendered session opened Workshop, selected Synthmetal,
+used Apply/Done and returned to the Base screen before exiting cleanly.

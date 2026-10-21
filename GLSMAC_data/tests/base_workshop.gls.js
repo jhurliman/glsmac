@@ -6,7 +6,7 @@ const node = (data) => {
     data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; };
     data.measure = () => { return {width: 100}; };
     data.smacworkshopcomponents = (armor) => { data.components_armor = armor; };
-    data.smacworkshoppreview = (armor, yaw) => { data.preview_armor = armor; data.preview_yaw = yaw; };
+    data.smacworkshopdesign = (chassis, weapon, armor, reactor, kind, faction, yaw) => { data.preview_armor = armor; data.preview_yaw = yaw; data.preview_faction = faction; };
     data.on = (event, cb) => { data.handlers[event] = cb; };
     data.listen = (target, event, cb) => { listeners[event] = cb; };
     const child = (properties) => { const value = node(properties); data.children :+ value; return value; };
@@ -17,11 +17,11 @@ const node = (data) => {
 dialog.init({ui: {root: {window: (data) => { const result = node(data); windows :+ result; return result; }}},
     game: {event: (name, data) => { commands :+ {name: name, data: data}; }}});
 const base = {id: 701};
-const selection = {expected_state: 'before', chassis: 'Infantry', weapon: 'Hand Weapons', reactor: 'Fission', scout_name: 'Scout', speed: 1, offense: 1, power: 1,
+const selection = {expected_state: 'before', chassis: 'Infantry', weapon: 'Hand Weapons', reactor: 'Fission', scout_name: 'Scout', faction_art: 'morgan.pcx', speed: 1, offense: 1, power: 1,
     armor: [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, design_name: 'Scout', cost: 10, technology_available: true, available: true}, {id: 1, name: 'Synthmetal', short_name: 'Synthmetal', rating: 2, design_name: 'Synthmetal Garrison', cost: 20, technology_available: true, available: true}, {id: 2, name: 'Unknown', short_name: 'Unknown', rating: 3, design_name: '', cost: 0, technology_available: false, available: false}]};
 test.assert(windows[0].left == 216 && windows[0].top == 168 && windows[0].width == 623 && windows[0].height == 387 && windows[0].children[0].background == 'deswin.pcx:smacsoftware()');
 dialog.open(base, selection); test.assert(dialog.active && !windows[0].hidden && dialog.selected_armor == 0);
-test.assert(dialog.model.preview_armor == 0 && dialog.model.preview_yaw == 0.0);
+test.assert(dialog.model.preview_armor == 0 && dialog.model.preview_yaw == 0.0 && dialog.model.preview_faction == 'morgan.pcx');
 dialog.open_picker(); test.assert(!windows[1].hidden && #sizeof(dialog.cards) == 3 && dialog.picker_canvas.picker_selected == 0 && #sizeof(dialog.picker_canvas.picker_rows) == 3 && #sizeof(dialog.cards[2].children) == 0);
 test.assert(dialog.cards[2].handlers.click({}) == true && dialog.selected_armor == 0 && !windows[1].hidden);
 test.assert(dialog.cards[1].handlers.click({}) == true && dialog.selected_armor == 1 && windows[1].hidden);

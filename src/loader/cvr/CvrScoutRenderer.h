@@ -55,6 +55,12 @@ public:
     static CvrScoutRenderer LoadWorkshop(std::string_view infantry,std::string_view armor,
         std::string_view reactor,std::string_view palette_pcx,std::string_view system);
     CvrScoutImage RenderWorkshop(uint32_t yaw_bits=0) const;
+    using WorkshopReader=std::function<std::string(const std::string&)>;
+    // Asset-derived conventional compositions. kind=-1 is the full model;
+    // 0..3 builds the separate chassis/weapon/shield/reactor scene.
+    static CvrScoutRenderer LoadWorkshopDesign(const WorkshopReader& read,std::string_view faction_pcx,
+        int chassis,int weapon,int armor,int reactor,int kind=-1);
+    CvrScoutImage RenderWorkshopCard(int kind,std::array<uint32_t,3>& position) const;
     static CvrScoutRenderer LoadWorkshopPart(std::string_view part,std::string_view palette,std::string_view system,
         const std::array<uint8_t,24*256>* shades=nullptr,bool direct_locations=false);
     CvrScoutImage RenderWorkshopPart(uint32_t scale,bool centered,std::array<int32_t,2> anchor,
@@ -68,8 +74,11 @@ private:
 	friend class gse::tests::CvrRenderPolicyFixture;
 	// Fixed composition policy is independent of optional palette/material data.
 	enum class Profile { Infantry, SpartanSpeeder, InitializedInfantry, Workshop, WorkshopPart, WorkshopWeapon };
-	static CvrScoutRenderer LoadParts( const std::vector< std::string_view >& parts, Profile profile, const CvrActorMaterial* material );
-	CvrScoutImage RenderView(const scout::View& view,uint8_t clear=9,bool unavailable=false) const;
+    struct WorkshopAttachment {std::array<float,3> offset;bool direct;std::optional<std::array<uint8_t,24*256>> shades;};
+	static CvrScoutRenderer LoadParts( const std::vector< std::string_view >& parts, Profile profile, const CvrActorMaterial* material,
+        const std::vector<WorkshopAttachment>* attachments=nullptr);
+	CvrScoutImage RenderView(const scout::View& view,uint8_t clear=9,bool unavailable=false,
+        std::optional<std::array<int32_t,4>> clip=std::nullopt) const;
     std::array<uint32_t,3> WorkshopPosition(const std::array<uint32_t,9>& rotation,const std::array<uint32_t,3>& previous={0,0,0}) const;
 	struct Assets;
 	explicit CvrScoutRenderer( std::shared_ptr< const Assets > assets );

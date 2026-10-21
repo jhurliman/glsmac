@@ -4,6 +4,7 @@
 #include "fixtures/SmacStartupSource.h"
 #include "fixtures/SmacPrototypePrice.h"
 #include "fixtures/WorkshopAlias.h"
+#include "fixtures/WorkshopGeneral.h"
 #include "task/gsetests/GSETests.h"
 #include <cstdlib>
 #include <fstream>
@@ -128,6 +129,30 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
         GT_ASSERT(Rejects([&]{unit::SmacDesignProductionRows(design,catalog,context);}),"Negative percentage admitted");
         context.percentages=std::array<int32_t,3>{{INT32_MAX,50,50}};
         GT_ASSERT(Rejects([&]{unit::SmacDesignProductionRows(design,catalog,context);}),"Overflowed native signed32 product admitted");GT_OK();
+    });
+    task->AddTest("SMAC Workshop owned general builder compatibility and cleanup match native controls",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);if(!input) {throw std::runtime_error("Missing owned Workshop rules");}
+        const std::string source{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
+        const auto technologies=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,technologies).catalog;auto owner=Owner();owner.owned.fill(true);
+        for(const auto& row:workshop_general_fixture::Builders()) {
+            auto pool=workshop_general_fixture::BasePool();for(const auto& patch:row.patches) {pool.at(patch.first/52).at(patch.first%52)=patch.second;}
+            unit::BuildSmacWorkshopRecord(pool,127,row.draft,catalog,technologies,owner);
+            uint64_t digest=UINT64_C(14695981039346656037);for(const auto& record:pool) {for(const auto byte:record) {digest=(digest^byte)*UINT64_C(1099511628211);}}
+            GT_ASSERT(digest==row.digest,"Complete original design pool differs: " + std::string(row.name));
+        }
+        for(const auto& row:workshop_general_fixture::COMPATIBILITY) {
+            unit::SmacWorkshopDraft draft;draft.chassis=row.chassis;draft.weapon=row.weapon;draft.armor=row.armor;
+            GT_ASSERT(unit::SmacWorkshopAbilityCompatible(row.ability,draft,catalog)==row.compatible,"Original ability compatibility differs");
+        }
+        for(const auto& row:workshop_general_fixture::Cleanups()) {
+            const auto actual=unit::CleanSmacWorkshopAbilities(row.draft,{22,23},row.second,catalog);
+            GT_ASSERT(actual.mask==row.mask && actual.slots==row.slots,"Original ability cleanup differs: " + std::string(row.name));
+        }
+        auto pool=workshop_general_fixture::BasePool();const auto before=pool;unit::SmacWorkshopDraft invalid;invalid.weapon=999;
+        GT_ASSERT(Rejects([&]{unit::BuildSmacWorkshopRecord(pool,127,invalid,catalog,technologies,owner);}) && pool==before,"Invalid builder input changed pool");
+        GT_OK();
     });
     task->AddTest("SMAC Workshop owned original 927 prototype price receipts",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}

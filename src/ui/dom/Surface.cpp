@@ -1,5 +1,6 @@
 #include "Surface.h"
 #include "SmacWorkshopModalText.h"
+#include "SmacPreferencesText.h"
 
 #include <memory>
 
@@ -50,6 +51,25 @@ uint64_t WorkshopNow() {
 
 Surface::Surface( DOM_ARGS_T )
 	: Area( DOM_ARGS_PASS, tag ) {
+
+    Method(GSE_CALL,"smacpreferencestext",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(0);
+        if(!m_preferences_text) {
+            std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath("script.txt"));
+            m_preferences_text=ReadSmacPreferencesText(std::string(bytes.begin(),bytes.end()));
+        }
+        gse::value::array_elements_t pages;
+        for(const auto& page:*m_preferences_text) {
+            gse::value::array_elements_t rows;
+            for(const auto& row:page.rows) {rows.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                {"id",VALUE(gse::value::Int,,row.id)}, {"label",VALUE(gse::value::String,,row.label)}
+            }));}
+            pages.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                {"title",VALUE(gse::value::String,,page.title)}, {"rows",VALUE(gse::value::Array,,rows)}
+            }));
+        }
+        return VALUE(gse::value::Array,,pages);
+    }));
 
     Method(GSE_CALL,"smacworkshopparenttext",NATIVE_CALL(this) {
         N_EXPECT_ARGS(0);return WorkshopParentText(GSE_CALL);

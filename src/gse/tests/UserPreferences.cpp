@@ -8,6 +8,10 @@
 #include "gse/context/GlobalContext.h"
 #include "task/gsetests/GSETests.h"
 #include "util/FinallyGuard.h"
+#include "ui/dom/SmacPreferencesText.h"
+#include "util/FS.h"
+#include <cstdlib>
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -20,6 +24,42 @@ bool Rejects(const std::function<void()>& call) {try {call();}catch(const std::e
 std::string Read(const std::filesystem::path& path) {std::ifstream in(path,std::ios::binary);return std::string(std::istreambuf_iterator<char>(in),{});}
 }
 void AddUserPreferencesTests(task::gsetests::GSETests* task) {
+    task->AddTest("User preferences load all67 constructed controls from installed templates",GT() {
+        std::string source;
+        const std::array<std::string,6> tags{{"BASICPREFS","ADVANCEDPREFS","BASEWARNINGS","AUTOMATIONPREFS","AUDIOVISUALPREFS","MAPPREFS"}};
+        const std::array<int,6> counts{{8,12,17,14,11,8}};
+        for(size_t page=0;page<tags.size();++page) {
+            source+="#"+tags[page]+"\r\n#xs 440\r\n#caption Title"+std::to_string(page)+"\r\n";
+            // Map has explanatory body text; only #itemlist rows are controls.
+            source+="Not a checkbox.\r\n#itemlist\r\n#checkbox 17\r\n";
+            for(int row=0;row<counts[page];++row) {source+="label"+std::to_string(page)+"_"+std::to_string(row)+"\r\n";}
+            source+="; ignored comment\r\n## translator comment\r\n\r\n";
+        }
+        const auto pages=::ui::dom::ReadSmacPreferencesText(source);
+        size_t total=0;std::vector<int> ids;
+        for(const auto& page:pages) {for(const auto& row:page.rows) {++total;ids.push_back(row.id);}}
+        GT_ASSERT(total==67 && std::count(ids.begin(),ids.end(),53)==0,"Constructed control inventory differs");
+        GT_ASSERT(pages[1].rows[5].id==28 && pages[1].rows[5].label=="label1_5"
+            && pages[3].rows[6].id==42 && pages[3].rows[6].label=="label3_6","Nonsequential native IDs lost their template ordinals");
+        GT_ASSERT(pages[4].rows[0].id==64 && pages[4].rows[0].label=="label4_3"
+            && pages[4].rows[7].id==22 && pages[4].rows[7].label=="label4_10","Audio template-only rows became controls");
+        GT_ASSERT(pages[2].rows.size()==13 && pages[2].rows[10].id==54 && pages[2].rows[10].label=="label2_10"
+            && pages[6].rows.size()==4 && pages[6].rows[0].id==57 && pages[6].rows[0].label=="label2_13"
+            && pages[6].title==pages[2].title,"Warning continuation or missing53 shifted labels");
+        GT_ASSERT(pages[5].rows[2].id==78 && pages[5].rows[2].label=="label5_2","Ocean grid control was reordered");
+        GT_ASSERT(Rejects([&]{::ui::dom::ReadSmacPreferencesText(source+"#BASICPREFS\n");}),"Duplicate template was accepted");
+        GT_ASSERT(Rejects([&]{::ui::dom::ReadSmacPreferencesText(source+"extra checkbox\n");}),"Extra checkbox shifted the contract");
+        GT_ASSERT(Rejects([&]{::ui::dom::ReadSmacPreferencesText(source.substr(source.find("#ADVANCEDPREFS")));}),"Missing page was accepted");
+        GT_ASSERT(Rejects([&]{::ui::dom::ReadSmacPreferencesText(source+std::string(1,'\0'));}),"Embedded NUL was accepted");
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");
+        if(assets && *assets) {
+            std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,std::string(assets)+"/script.txt");
+            const auto original=::ui::dom::ReadSmacPreferencesText(std::string(bytes.begin(),bytes.end()));
+            total=0;for(const auto& page:original) {total+=page.rows.size();}
+            GT_ASSERT(total==67 && original[0].rows[1].id==8 && !original[0].rows[1].label.empty(),"Installed original Preferences catalog differs");
+        }
+        GT_OK();
+    });
     task->AddTest("User preferences persist disabled automatic designs and fence retired configuration callbacks",GT() {
         const auto parent=std::filesystem::temp_directory_path();
         const auto path=parent/("glsmac-preferences-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));

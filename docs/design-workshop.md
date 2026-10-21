@@ -1047,3 +1047,50 @@ The weapon picker, manual ability dialog/decorations, preference persistence,
 remaining actions, cost-warning presentation and timer-driven preview still
 need their live implementations. This is not completed Workshop or whole-cell
 pixel parity for every chassis/reactor definition.
+
+### Live manual ability chooser
+
+Both Special Ability cards now open the owner-backed text-list modal. Entry
+checks second-slot technology before the Missile prohibition and displays the
+installed SCRIPT warning with the loaded technology name. None is always first
+and initially selected; unknown/incompatible abilities and the other slot's
+duplicate are omitted. The menu query leaves the complete world unchanged.
+Names/descriptions and cost descriptors come from the installed rules, with
+raw weapon/armor cost bytes and raw chassis speed rather than strength, reactor
+movement or faction mineral prices. Cost/Attack/Defense/Speed/None/OK/Cancel
+and domain tokens use their installed localization identities.
+
+Rows retain the native16px frame,19px stride, Arial Narrow16 bold baseline14
+and clipped left/right spans. Selected/hover/ordinary frame styles29/28/27
+have the original precedence. The recorded1024x768 console profile uses a600px
+drawable list,12 visible rows, source-derived short-list height and300px outer
+minimum. Extra minimum-height space stays below the buttons. Main frame,
+caption, list border and inner console rails follow the source rectangles;
+the scrollbar remains outside the narrowed main frame. See the
+[chooser contract](behavior/design-workshop-manual-ability-chooser.md).
+
+Hover/click and keyboard navigation remain local until OK/Enter; clicking a
+row twice does not commit it. Escape/Cancel does not call the edit adapter.
+Accepted None/ability updates only its requested slot and rebuilds the mask
+without sorting, compaction or automatic suggestions. Arrow keys clamp and
+keep selection visible; printable keys cycle by first character, Left/Right
+leave the one-column selection unchanged, and Tab traverses the modal controls.
+Visible selection repaint reuses row objects; scrolling alone rebuilds them.
+
+Validation:37 selected native groups and six UI scripts pass, including three
+native admitted-value lists and nine cost fragments. Wrapped Base queries
+verify configured owner admission, duplicate exclusion, foreign-bank rejection
+and unchanged full world snapshots. UI controls cover None-first short/long
+layouts, selection/hover without mutation, cancellation, accepted slot gaps and
+reverse order, scrolling, first-character matching and the second-slot warning.
+The37 groups pass focused ASan/UBSan with nine production and two test units
+instrumented. Correctness analysis passes for four production units/consumers.
+An instrumented SDL/OpenGL run opens the real starting owner's None-only menu,
+accepts None, displays the actual Neural Grafting requirement, dismisses it and
+closes with Done; exit0, no sanitizer or tracked GL leaks. Software/no audio.
+
+This does not establish full chooser pixel equality: the17-row layout receipt
+is conditioned on supplied backing boundaries, and live overflow scrollbar
+chrome/repeat timing and keyboard focus decoration still need fidelity work.
+The remaining weapon picker, parent ability-card decoration, other actions,
+preferences, cost warnings and preview animation remain on the Workshop path.

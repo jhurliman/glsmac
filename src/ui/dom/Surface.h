@@ -61,7 +61,9 @@ private:
     void UpdateDialogFrames();
     void EnsureWorkshopComponents();
     gse::Value* WorkshopPickerText(GSE_CALLABLE);
+    gse::Value* WorkshopAbilityText(GSE_CALLABLE,const std::string& technology);
     std::optional<std::array<std::string,6>> m_workshop_picker_text;
+    std::optional<std::array<std::string,12>> m_workshop_ability_text;
 	std::unique_ptr<task::intro::Movie> m_movie;
     std::shared_ptr<const loader::texture::SmacTurnFrames> m_turn_frames;
     std::shared_ptr<const loader::texture::SmacGraphPalette> m_graph_palette;

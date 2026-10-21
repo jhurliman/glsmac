@@ -1,0 +1,146 @@
+{
+  "status": "pass",
+  "row_contexts": 3,
+  "input_controls": 5,
+  "annotation_fragments": 9,
+  "layout_profiles": 1,
+  "scope": "Rows/native input and supplied-raster layout only. No chooser pixel equality or physical Windows mouse delivery.",
+  "rows": [
+    {
+      "slot": 0,
+      "alltech": true,
+      "slots": [
+        9,
+        18
+      ],
+      "values": [
+        24,
+        1,
+        2,
+        3,
+        4,
+        5,
+        8,
+        9,
+        10,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17,
+        20,
+        22
+      ]
+    },
+    {
+      "slot": 1,
+      "alltech": true,
+      "slots": [
+        9,
+        18
+      ],
+      "values": [
+        24,
+        1,
+        2,
+        3,
+        4,
+        5,
+        8,
+        10,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17,
+        18,
+        20,
+        22
+      ]
+    },
+    {
+      "slot": 0,
+      "alltech": false,
+      "slots": [
+        -1,
+        -1
+      ],
+      "values": [
+        24
+      ]
+    }
+  ],
+  "outer": [
+    178,
+    210,
+    878,
+    555
+  ],
+  "input_cases": [
+    {
+      "id": "down",
+      "selected": 1,
+      "returned_value": 1
+    },
+    {
+      "id": "ok",
+      "returned_value": 1,
+      "close_count": 1
+    },
+    {
+      "id": "cancel",
+      "returned_value": -1,
+      "close_count": 1
+    },
+    {
+      "id": "enter",
+      "returned_value": 1,
+      "close_count": 1
+    },
+    {
+      "id": "escape",
+      "returned_value": -1,
+      "close_count": 1
+    }
+  ],
+  "cost_cases": [
+    {
+      "code": -7,
+      "text": "Cost: 2 (Defense+Speed-2)"
+    },
+    {
+      "code": -6,
+      "text": "Cost: 1 (Attack+Speed-2)"
+    },
+    {
+      "code": -5,
+      "text": "Cost: 3 (Attack+Defense-2)"
+    },
+    {
+      "code": -4,
+      "text": "Cost: 0 (Speed-1)"
+    },
+    {
+      "code": -3,
+      "text": "Cost: 2 (Defense-1)"
+    },
+    {
+      "code": -2,
+      "text": "Cost: 1 (Attack-1)"
+    },
+    {
+      "code": -1,
+      "text": "Cost: 0 (Attack/Defense)"
+    },
+    {
+      "code": 0,
+      "text": "Cost: 1 (Land)"
+    },
+    {
+      "code": 1,
+      "text": "Cost: 2 (Land)"
+    }
+  ]
+}

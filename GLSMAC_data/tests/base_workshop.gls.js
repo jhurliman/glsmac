@@ -5,6 +5,7 @@ const node = (data) => {
     data.hide = () => { data.hidden = true; }; data.show = () => { data.hidden = false; }; data.remove = () => {};
     data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi'}; };
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi'}; };
+    data.smacworkshopabilitytext = (technology) => { return {title: 'Select Special Ability', none: 'No special ability', ok: 'OK', cancel: 'Cancel', cost: 'Cost', attack: 'Attack', defense: 'Defense', speed: 'Speed', domains: ['Land', 'Sea', 'Air'], second_title: 'Chief Engineer', second_body: 'Research ' + technology + '.', missile_title: 'Chief Engineer', missile_body: 'Missiles cannot have special abilities.'}; };
     data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
     data.smacworkshopcomponents = (armor, only_armor) => { test.assert(only_armor); data.components_armor = armor; };
     data.smacworkshopstrip = (rows, faction, selected, hovered) => { data.strip_rows = rows; data.strip_faction = faction; data.strip_selected = selected; data.strip_hovered = hovered;
@@ -13,7 +14,7 @@ const node = (data) => {
     data.on = (event, cb) => { data.handlers[event] = cb; };
     data.listen = (target, event, cb) => { listeners[event] = cb; };
     const child = (properties) => { const value = node(properties); data.children :+ value; return value; };
-    data.surface = child; data.button = child; data.input = child; data.panel = child;
+    data.surface = child; data.button = child; data.input = child; data.panel = child; data.scrollbar = child;
     if (!#is_defined(data.text)) { data.text = (properties) => { test.assert(!#is_defined(properties.width)); return child(properties); }; }
     return data;
 };
@@ -25,9 +26,16 @@ const selection = {expected_state: 'before', chassis: 'Infantry', weapon: 'Hand 
     chassis_choices: [{id: 0, name: 'Infantry', domain: 0, value: 1, technology_available: true}, {id: 3, name: 'Foil', domain: 1, value: 4, technology_available: false}],
     reactor_choices: [{id: 1, name: 'Fission', value: 1, technology_available: true}, {id: 2, name: 'Fusion', value: 2, technology_available: true}],
     armor: [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, stat_line: '1-1-1 ', design_name: 'Scout', cost: 10, technology_available: true, available: true}, {id: 1, name: 'Synthmetal', short_name: 'Synthmetal', rating: 2, stat_line: '1-2-1 ', design_name: 'Synthmetal Garrison', cost: 20, technology_available: true, available: true}, {id: 2, name: 'Unknown', short_name: 'Unknown', rating: 3, stat_line: '1-3-1 ', design_name: '', cost: 0, technology_available: false, available: false}]};
+let ability_menu = {guard: '', required_technology: 'Neural', rows: [{id: 24, name: '', description: '', cost: undefined}]};
+base.get_smac_workshop_abilities = (selected, chassis, weapon, armor, reactor, abilities, name, first, second, slot) => { return ability_menu; };
 base.get_smac_workshop_edit = (selected, chassis, weapon, armor, reactor, abilities, name, first, second, kind, choice, automatic) => {
     edits :+ {kind: kind, choice: choice, automatic: automatic, first: first, second: second};
     if (choice >= 0) { if (kind == 0) { chassis = choice; } if (kind == 2) { armor = choice; } if (kind == 3) { reactor = choice; } }
+    if (kind >= 4) {
+        if (kind == 4) { first = choice >= 24 ? (0 - 1) : choice; } else { second = choice >= 24 ? (0 - 1) : choice; }
+        abilities = 0; let bit = 0; let value = 1;
+        while (bit < 24) { if (bit == first || bit == second) { abilities += value; } value *= 2; bit++; }
+    }
     const result = dialog.selection + {};
     result.draft = {selected_design: selected, chassis: chassis, weapon: weapon, armor: armor, reactor: reactor, abilities: abilities, name: name};
     result.ability_slots = [first, second]; return result;
@@ -194,4 +202,42 @@ test.assert(dialog.picker.handlers.keydown({modifiers: {}, code: 'ESCAPE'}) == t
 test.assert(edits[#sizeof(edits) - 1].kind == 3 && edits[#sizeof(edits) - 1].choice == (0 - 1) && edits[#sizeof(edits) - 1].automatic && dialog.selected_reactor == 2 && dialog.picker.hidden);
 dialog.automatic_suggestions = false; dialog.open_picker(); dialog.cards[1].handlers.click({});
 test.assert(!edits[#sizeof(edits) - 1].automatic && edits[#sizeof(edits) - 1].kind == 2 && dialog.selected_armor == 1);
+dialog.hide_view();
+// Manual abilities are modal: selection/hover do not edit, None is always initial.
+dialog.open(base, selection); dialog.ability_buttons[0].handlers.click({});
+const ability = dialog.ability_dialog;
+test.assert(ability.active && ability.selected == 0 && ability.rows[0].id == 24 && ability.window.height == 300 && ability.window.top == 255 && ability.list.height == 16 && ability.ok.top == 69 && ability.scroll.hidden);
+const untouched = #sizeof(edits);
+ability.window.handlers.keydown({code: 'ESCAPE', modifiers: {}}); test.assert(!ability.active && #sizeof(edits) == untouched);
+let menu_rows = [];
+for (id of [24,1,2,3,4,5,8,9,10,11,12,14,15,16,17,20,22]) {
+    menu_rows :+ {id: id, name: 'Ability ' + #to_string(id), description: 'Description', cost: {quantity: 1, formula: 0, domain: 0}};
+}
+ability_menu = {guard: '', required_technology: 'Neural', rows: menu_rows};
+dialog.ability_slots = [9,18]; dialog.selected_abilities = 262656;
+dialog.ability_buttons[0].handlers.click({});
+test.assert(ability.window.height == 345 && ability.window.top == 210 && ability.list.height == 225 && ability.ok.top == 278 && #sizeof(ability.buttons) == 12 && !ability.scroll.hidden && ability.selected == 0);
+ability.buttons[1].handlers.mouseover({}); ability.buttons[1].handlers.click({}); ability.buttons[1].handlers.click({});
+test.assert(ability.active && ability.selected == 1 && #sizeof(edits) == untouched && dialog.ability_slots == [9,18]);
+ability.window.handlers.keydown({code: 'ESCAPE', modifiers: {}}); test.assert(#sizeof(edits) == untouched);
+dialog.ability_buttons[0].handlers.click({}); test.assert(ability.selected == 0);
+ability.window.handlers.keydown({code: 'DOWN', modifiers: {}}); ability.window.handlers.keydown({code: 'ENTER', modifiers: {}});
+test.assert(!ability.active && edits[#sizeof(edits) - 1].kind == 4 && edits[#sizeof(edits) - 1].choice == 1 && dialog.ability_slots == [1,18]);
+dialog.ability_buttons[0].handlers.click({}); ability.finish(true);
+test.assert(dialog.ability_slots == [(0 - 1),18] && dialog.selected_abilities == 262144);
+dialog.ability_buttons[0].handlers.click({}); ability.choose(16);
+test.assert(ability.first == 5 && #sizeof(ability.buttons) == 12 && ability.buttons[11].smac_frame[0][0] == 29);
+ability.buttons[11].handlers.mouseover({}); test.assert(ability.buttons[11].smac_frame[0][0] == 29);
+ability.window.handlers.keydown({code: 'LEFT', modifiers: {}}); test.assert(ability.selected == 16);
+ability.choose(0); ability.window.handlers.keydown({code: 'A', key: 'a', modifiers: {}}); test.assert(ability.selected == 1);
+ability.window.handlers.keydown({code: 'TAB', modifiers: {}}); ability.window.handlers.keydown({code: 'TAB', modifiers: {}});
+const before_tab = #sizeof(edits); ability.window.handlers.keydown({code: 'ENTER', modifiers: {}}); test.assert(!ability.active && #sizeof(edits) == before_tab);
+ability_menu = {guard: '', required_technology: 'Neural', rows: [{id: 24, name: '', description: '', cost: undefined}, {id: 18, name: 'Trance', description: 'Defense', cost: {quantity: 0, formula: (0 - 1), domain: (0 - 1)}}]};
+dialog.ability_slots = [(0 - 1),9]; dialog.selected_abilities = 512;
+dialog.ability_buttons[0].handlers.click({}); ability.key({code: 'DOWN', modifiers: {}}); ability.finish(true);
+test.assert(dialog.ability_slots == [18,9] && dialog.selected_abilities == 262656);
+ability_menu = {guard: 'second_technology', required_technology: 'Neural', rows: []};
+const before_guard = #sizeof(edits); dialog.ability_buttons[1].handlers.click({});
+test.assert(ability.notice && ability.title.text == 'CHIEF ENGINEER' && ability.cancel.hidden && ability.lines[0].text == 'Research Neural.');
+ability.finish(true); test.assert(!ability.active && #sizeof(edits) == before_guard);
 dialog.hide_view();

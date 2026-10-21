@@ -630,6 +630,52 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} )
 	},
 	{
+        "get_smac_workshop_abilities",
+        NATIVE_CALL(this) {
+            N_EXPECT_ARGS(10);
+            N_GETVALUE(selected,0,Int);N_GETVALUE(chassis,1,Int);N_GETVALUE(weapon,2,Int);N_GETVALUE(armor,3,Int);
+            N_GETVALUE(reactor,4,Int);N_GETVALUE(abilities,5,Int);N_GETVALUE(name,6,String);
+            N_GETVALUE(first,7,Int);N_GETVALUE(second,8,Int);N_GETVALUE(slot,9,Int);
+            if(selected<0 || selected>511 || chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9
+                || reactor<1 || reactor>4 || abilities<0 || abilities>0xffffff || first< -1 || first>=24 || second< -1 || second>=24
+                || slot<0 || slot>1 || name.size()>31 || name.find('\0')!=std::string::npos) {THROW("Invalid Workshop ability menu request");}
+            const auto& settings=m_game->GetState()->m_settings.global;const auto& rules=settings.GetSmacPredefinedUnitRules();
+            if(!m_resource_context || !m_allocation || !m_production || !m_owner || m_owner->GetPlayer()!=m_game->GetPlayer()
+                || !rules || rules->catalog.source.ruleset_id!="smac") {return VALUE(gse::value::Undefined);}
+            RequireSmacProductionSelection();
+            const auto* owner=m_game->m_simulation->value.technology.Find(GetSmacResourceContext().owner_simulation_id);
+            if(!owner || (selected>=64 && selected/64!=owner->admission.simulation_id)) {THROW("Workshop ability menu selected a foreign bank");}
+            const auto& catalog=rules->catalog;const auto& technologies=*settings.GetSmacTechnologyRules();
+            const unit::SmacWorkshopEditor editor{{int32_t(selected),uint32_t(chassis),uint32_t(weapon),uint32_t(armor),uint32_t(abilities),uint8_t(reactor),name},{int32_t(first),int32_t(second)}};
+            const auto context=unit::QuerySmacWorkshopEditContext(catalog,technologies,*owner,false);
+            const auto menu=unit::QuerySmacWorkshopAbilities(editor,uint32_t(slot),context,catalog);
+            using Guard=unit::SmacWorkshopAbilityMenu::Guard;
+            gse::value::array_elements_t rows;
+            for(const auto id:menu.choices) {
+                gse::Value* cost=VALUE(gse::value::Undefined);std::string label,description;
+                if(id<24) {
+                    const auto& ability=catalog.abilities.abilities.at(id);label=ability.name;description=ability.description;
+                    uint32_t flags=0;for(const auto bit:ability.flags) {flags=(flags<<1)|uint32_t(bit-'0');}
+                    const auto price=unit::QuerySmacWorkshopAbilityCost(ability.cost,flags,int32_t(catalog.chassis.chassis.at(chassis).triad),
+                        uint8_t(catalog.weapons.weapons.at(weapon).cost),uint8_t(catalog.defenses.defenses.at(armor).cost),uint8_t(catalog.chassis.chassis.at(chassis).speed));
+                    if(price) {cost=VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                        {"quantity",VALUE(gse::value::Int,,price->quantity)}, {"formula",VALUE(gse::value::Int,,price->formula)}, {"domain",VALUE(gse::value::Int,,price->domain)}
+                    });}
+                }
+                rows.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                    {"id",VALUE(gse::value::Int,,id)}, {"name",VALUE(gse::value::String,,label)},
+                    {"description",VALUE(gse::value::String,,description)}, {"cost",cost}
+                }));
+            }
+            std::string required;
+            const auto neural=technologies.ResolveToken("Neural");if(neural.technology_id) {required=technologies.technologies.at(*neural.technology_id).name;}
+            return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                {"guard",VALUE(gse::value::String,,menu.guard==Guard::None?"":menu.guard==Guard::SecondTechnology?"second_technology":"missile")},
+                {"required_technology",VALUE(gse::value::String,,required)}, {"rows",VALUE(gse::value::Array,,rows)}
+            });
+        })
+    },
+    {
         "get_smac_workshop_edit",
         NATIVE_CALL(this) {
             N_EXPECT_ARGS(12);

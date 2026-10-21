@@ -10,6 +10,7 @@
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/SmacWorkshop.h"
+#include "game/backend/unit/SmacWorkshopUpgrade.h"
 #include "game/backend/State.h"
 #include "game/backend/faction/Faction.h"
 #include "gc/Space.h"
@@ -74,6 +75,122 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         }
         removal.emplace(manager->PrepareWorldUnitRemoval(GSE_CALL,ids));
     };
+    if(name=="upgrade_smac_workshop") {
+        const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
+            const auto at=args.find(key);if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop Upgrade command");}
+            return at->second->Deref();
+        };
+        if(args.size()!=8) {THROW("Workshop Upgrade requires source, target, retained name, answer and fence");}
+        const auto integer=[&](const char* key){return static_cast<const gse::value::Int*>(field(key,gse::VT_INT))->value;};
+        const auto* object=static_cast<const gse::value::Object*>(field("base",gse::VT_OBJECT));
+        if(object->object_class!=base::Base::WRAP_CLASS) {THROW("Workshop Upgrade requires an actual Base");}
+        auto* base=base::Base::Unwrap(args.at("base"));const auto source=integer("selected_design"),requested=integer("target_design"),answer=integer("confirm"),request=integer("request_id"),offset=integer("strip_offset");
+        const auto& expected=static_cast<const gse::value::String*>(field("expected_state",gse::VT_STRING))->value;
+        const auto& retained=static_cast<const gse::value::String*>(field("name",gse::VT_STRING))->value;
+        if(!base || base->GetGame()!=this || caller!=m_slot_num || source<0 || source>511 || requested< -1 || requested>511 || answer< -1 || answer>1 || request<1 || offset<0 || offset>512
+            || expected.size()>unit::SmacStartupDesignState::MAX_WIRE_BYTES+89+2*513 || retained.size()>31 || retained.find('\0')!=std::string::npos) {THROW("Invalid Workshop Upgrade authority or selection");}
+        base->RequireSmacProductionSelection();const auto owner=base->GetSmacResourceContext().owner_simulation_id;
+        if((source>=64 && source/64!=owner) || (requested>=0 && (requested<64 || requested/64!=owner))) {THROW("Workshop Upgrade selected a foreign bank or intrinsic target");}
+        if(apply) {CheckRW(GSE_CALL);if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Workshop Upgrade requires its owning accumulation");}}
+        const bool stale=base->SmacWorkshopState()!=expected;bool failed=false,upgraded=false,confirmation=false,affordable=true,unprototyped=false;
+        int32_t count=0,total=0,available=0,target=int32_t(requested);size_t strip_offset=size_t(offset);std::string source_name,target_name,illustration;
+        struct DesignText {std::string name,stats,tokens;int32_t domain=0,reactor=1;uint32_t abilities=0;};DesignText source_text,target_text;
+        struct Choice {int32_t id;std::string name,stats;bool prototype;};std::vector<Choice> choices;
+        unit::SmacWorkshopDraft response_draft;
+        if(!stale) {try {
+            const auto& settings=GetState()->m_settings.global;const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;
+            const auto& state=m_simulation->value.designs;auto& economy=m_simulation->value.economy.at(owner);
+            // This saved campaign capability establishes absence of all project
+            // hosts. Do not infer a missing Nano Factory cache as an unowned one.
+            if(!settings.IsOrdinarySmacCampaign() || m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain
+                || !state.native_registry || !economy.design_counts) {throw std::runtime_error("Workshop Upgrade requires retained registry/count and project authority");}
+            const auto& pool=*state.native_registry;const auto& old=pool.at(source);
+            const auto name_of=[](const auto& row){return std::string(row.begin(),std::find(row.begin(),row.begin()+32,uint8_t(0)));};
+            const auto text_of=[&](int32_t id){const auto& row=pool.at(id);const uint32_t mask=uint32_t(row[32])|(uint32_t(row[33])<<8)|(uint32_t(row[34])<<16)|(uint32_t(row[35])<<24);
+                std::string tokens;for(size_t bit=0;bit<24;++bit) {if(mask&(1u<<bit)) {tokens+=catalog.abilities.abilities.at(bit).abbreviation;}}
+                return DesignText{name_of(row),unit::FormatSmacWorkshopStats({id,row[36],row[37],row[38],mask,row[39],{}},catalog),tokens,int32_t(catalog.chassis.chassis.at(row[36]).triad),row[39],mask};};
+            source_text=text_of(int32_t(source));
+            const auto triad=catalog.chassis.chassis.at(old[36]).triad;
+            illustration=triad==loader::txt::ChassisTriad::Land ? "unit_sm.pcx":triad==loader::txt::ChassisTriad::Sea ? "navun_sm.pcx":"air_sm.pcx";
+            source_name=name_of(old);count=economy.design_counts->at(source);available=economy.credits;
+            const auto candidates=unit::SmacWorkshopUpgradeCandidates(pool,owner,int32_t(source),catalog);
+            for(const auto id:candidates) {const auto& row=pool.at(id);
+                choices.push_back({id,name_of(row),unit::FormatSmacWorkshopStats({id,row[36],row[37],row[38],
+                    uint32_t(row[32])|(uint32_t(row[33])<<8)|(uint32_t(row[34])<<16)|(uint32_t(row[35])<<24),row[39],{}},catalog),bool((old[48]&4) && !(row[48]&4))});
+            }
+            if(target<0 && candidates.size()==1) {target=candidates.front();}
+            if(target>=0) {
+                if(std::find(candidates.begin(),candidates.end(),target)==candidates.end()) {throw std::runtime_error("Workshop Upgrade target is no longer eligible");}
+                target_name=name_of(pool.at(target));target_text=text_of(target);unprototyped=!(pool.at(target)[48]&4);
+                auto prepared=unit::PrepareSmacWorkshopUpgrade(state,owner,target,int32_t(source),catalog,uint8_t(count),false);
+                total=prepared.total_energy;affordable=total==0 || available>=total;
+                confirmation=answer<0 && total>0 && affordable;
+                if(answer!=0 && affordable && !confirmation) {
+                    auto selection=unit::PrepareSmacWorkshopReselection(prepared.state,target,retained,catalog,owner);
+                    const auto& technology=*m_simulation->value.technology.Find(owner);
+                    selection.draft.abilities=unit::CleanSmacWorkshopRetainedAbilities(selection.draft,catalog,*settings.GetSmacTechnologyRules(),technology).mask;
+                    response_draft=selection.draft;
+                    // The browse order and caption are prepared before any live
+                    // mutation. Count deltas can affect excluded ordering only;
+                    // the selected included target is still recentered below.
+                    auto counts=*economy.design_counts;std::vector<std::pair<size_t,unit::ConventionalUnitState>> changes;
+                    for(const auto id:GetUM()->GetUnitRecordOrder()) {
+                        const auto* actor=GetUM()->GetUnit(id);if(!actor) {throw std::runtime_error("Workshop Upgrade has a missing Unit identity");}
+                        if(actor->IsNative()) {if(actor->Native().owner==owner && actor->Native().design==source) {throw std::runtime_error("Native Unit Upgrade conversion is not bound");}continue;}
+                        if(!actor->IsConventional()) {throw std::runtime_error("Workshop Upgrade requires canonical Unit identities");}
+                        const auto& before=actor->Conventional();if(before.owner_simulation_id!=owner || before.design_id!=source) {continue;}
+                        auto next=before;next.design_id=target;next.stored_morale=uint8_t(std::clamp(int(before.stored_morale)+prepared.morale_delta,0,6));
+                        changes.emplace_back(id,next);counts.at(source)=uint8_t(int(counts.at(source))-1);counts.at(target)=uint8_t(int(counts.at(target))+1);
+                    }
+                    const auto list=unit::BrowseSmacWorkshopDesigns(selection.state,catalog,*settings.GetSmacTechnologyRules(),technology,counts);
+                    const auto at=std::find(list.begin(),list.end(),target);if(at!=list.end()) {strip_offset=(size_t(at-list.begin())+list.size()-5)%list.size();}
+                    if(apply) {
+                        std::vector<std::pair<base::Base*,std::optional<base::ProductionState>>> queues;auto updates=GetBM()->m_base_updates;
+                        const auto replacement=MakeSmacProductionItem(base->m_owner,base::ProductionItemKind::Unit,target);
+                        for(const auto& entry:GetBM()->GetBases()) {
+                            auto* affected=entry.second;if(affected->m_owner!=base->m_owner || !affected->m_production || !affected->m_production->queue) {continue;}
+                            auto production=affected->m_production;
+                            const auto convert=[&](base::ProductionItem& item) {
+                                if(item.kind==base::ProductionItemKind::Unit) {if(!item.smac_source_id) {throw std::runtime_error("Workshop Upgrade requires canonical queue identities");}
+                                    if(*item.smac_source_id==source) {item=replacement;}}
+                            };
+                            convert(production->current_item);for(auto& item:*production->queue) {convert(item);}production->Validate();
+                            if(!(*production==*affected->m_production)) {queues.emplace_back(affected,std::move(production));base::BaseManager::QueueBaseUpdateInto(updates,affected,base::BaseManager::BUO_REFRESH);}
+                        }
+                        for(const auto& change:changes) {if(change.second.home_base_id) {auto* home=GetBM()->GetBase(*change.second.home_base_id);
+                            if(!home) {throw std::runtime_error("Upgrading Unit has no registered home");}base::BaseManager::QueueBaseUpdateInto(updates,home,base::BaseManager::BUO_REFRESH);}}
+                        auto units=GetUM()->PrepareDefectionUnits(GSE_CALL,base->m_owner,changes);
+                        static_assert(std::is_nothrow_swappable_v<unit::SmacStartupDesignState> && std::is_nothrow_swappable_v<std::optional<base::ProductionState>>);
+                        // All allocations/resolution precede these nonthrowing
+                        // publications. Unit publication owns byte count deltas.
+                        units.Commit();for(auto& change:queues) {change.first->m_production.swap(change.second);}
+                        GetBM()->m_base_updates.swap(updates);std::swap(m_simulation->value.designs,selection.state);economy.credits-=total;upgraded=true;
+                    }
+                }
+            }
+        }catch(const std::invalid_argument&) {failed=true;}catch(const std::runtime_error&) {failed=true;}}
+        if(apply) {
+            GetState()->TriggerObject(this,"smac_workshop_upgrade",_ARGS_F(this,base,request,answer,stale,failed,upgraded,confirmation,affordable,unprototyped,count,total,available,target,source_name,target_name,source_text,target_text,illustration,choices,strip_offset,response_draft) {
+                gse::value::array_elements_t rows;for(const auto& choice:choices) {rows.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                    {"id",VALUE(gse::value::Int,,choice.id)}, {"stored_name",VALUE(gse::value::String,,choice.name)}, {"stat_line",VALUE(gse::value::String,,choice.stats)}, {"prototype",VALUE(gse::value::Bool,,choice.prototype)}
+                }));}
+                const auto wrap_text=[&](const DesignText& text){return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                    {"name",VALUE(gse::value::String,,text.name)}, {"stats",VALUE(gse::value::String,,text.stats)}, {"ability_tokens",VALUE(gse::value::String,,text.tokens)},
+                    {"domain",VALUE(gse::value::Int,,text.domain)}, {"reactor",VALUE(gse::value::Int,,text.reactor)}, {"abilities",VALUE(gse::value::Int,,text.abilities)}
+                });};
+                out_args={
+                    {"base",base->Wrap(GSE_CALL)}, {"request_id",VALUE(gse::value::Int,,request)}, {"stale",VALUE(gse::value::Bool,,stale)}, {"failed",VALUE(gse::value::Bool,,failed)},
+                    {"upgraded",VALUE(gse::value::Bool,,upgraded)}, {"confirmation",VALUE(gse::value::Bool,,confirmation && !failed)}, {"affordable",VALUE(gse::value::Bool,,affordable)},
+                    {"declined",VALUE(gse::value::Bool,,answer==0 && !stale && !failed)}, {"unprototyped",VALUE(gse::value::Bool,,unprototyped)}, {"count",VALUE(gse::value::Int,,count)},
+                    {"total",VALUE(gse::value::Int,,total)}, {"available",VALUE(gse::value::Int,,available)}, {"target_design",VALUE(gse::value::Int,,target)},
+                    {"source_text",wrap_text(source_text)}, {"target_text",wrap_text(target_text)}, {"illustration",VALUE(gse::value::String,,illustration)},
+                    {"source_name",VALUE(gse::value::String,,source_name)}, {"target_name",VALUE(gse::value::String,,target_name)}, {"choices",VALUE(gse::value::Array,,rows)},
+                    {"zero_count_notice",VALUE(gse::value::Bool,,upgraded && count==0)}, {"expected_state",VALUE(gse::value::String,,base->SmacWorkshopState())},
+                    {"strip_offset",VALUE(gse::value::Int,,strip_offset)}, {"selection",upgraded ? base->CopySmacWorkshop(GSE_CALL,&response_draft):VALUE(gse::value::Undefined)}
+                };
+            });
+        }return true;
+    }
     if(name=="retire_smac_workshop") {
         const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
             const auto at=args.find(key);if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop Retire command");}

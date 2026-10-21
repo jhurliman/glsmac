@@ -1,4 +1,5 @@
 #include "SmacWorkshop.h"
+#include "SmacWorkshopUpgrade.h"
 #include "SmacPredefinedDesigns.h"
 #include "game/backend/faction/SmacTechnologyQuery.h"
 #include <algorithm>
@@ -690,6 +691,63 @@ SmacWorkshopObsolete PrepareSmacWorkshopObsolete(const SmacStartupDesignState& s
     const auto at=std::find(rebuilt.begin(),rebuilt.end(),selection.draft.selected_design);
     if(at!=rebuilt.end()) {strip_offset=(size_t(at-rebuilt.begin())+rebuilt.size()-5)%rebuilt.size();}
     return {std::move(selection),strip_offset};
+}
+namespace {
+void RequireUpgradeSource(int32_t owner,int32_t source) {
+    if(owner<1 || owner>7 || source<0 || source>=512 || (source>=64 && source/64!=owner)) {
+        throw std::invalid_argument("Workshop Upgrade source has no owned registry identity");
+    }
+}
+int32_t UpgradeStrength(int32_t value) {
+    if(value< -128 || value>127) {throw std::invalid_argument("Workshop Upgrade strength is outside signed byte authority");}
+    return value;
+}
+int32_t UpgradeCostByte(int32_t value) {
+    if(value<0 || value>255) {throw std::invalid_argument("Workshop Upgrade cost/speed is outside byte authority");}
+    return value;
+}
+}
+std::vector<int32_t> SmacWorkshopUpgradeCandidates(const SmacOriginalDesignPool& pool,
+    int32_t owner,int32_t source,const SmacPredefinedUnitCatalog& catalog) {
+    RequireUpgradeSource(owner,source);const auto& old=pool.at(source);
+    const auto ow=UpgradeStrength(catalog.weapons.weapons.at(old[37]).offense);
+    const auto oa=UpgradeStrength(catalog.defenses.defenses.at(old[38]).rating);
+    std::vector<int32_t> result;
+    for(int32_t id=64*owner;id<64*(owner+1);++id) {
+        const auto& row=pool.at(id);
+        if(id==source || !(row[48]&1) || (row[44]&(1u<<owner)) || row[36]!=old[36]
+            || ((row[33]^old[33])&0x80) || (row[42]!=old[42] && (row[42]>3 || old[42]>3))) {continue;}
+        const auto nw=UpgradeStrength(catalog.weapons.weapons.at(row[37]).offense);
+        if((ow && ow>nw) || (!ow && row[37]!=old[37])) {continue;}
+        const auto na=UpgradeStrength(catalog.defenses.defenses.at(row[38]).rating);
+        if(oa>na && (na==1 || (ow && nw<=ow))) {continue;}
+        result.push_back(id);
+    }return result;
+}
+int32_t SmacWorkshopUpgradeQuoteRows(const SmacOriginalDesignPool& pool,int32_t target,int32_t source,
+    const SmacPredefinedUnitCatalog& catalog,bool owned_nano_factory) {
+    if(target<0 || target>=512 || source<0 || source>=512) {throw std::invalid_argument("Invalid Workshop Upgrade quote identity");}
+    const auto& old=pool.at(source);const auto& row=pool.at(target);int32_t result=row[41];
+    if(target>=64 && !(row[48]&4)) {result+=(result+1)/2;result*=result+1;}
+    result+=std::max(0,UpgradeCostByte(catalog.weapons.weapons.at(row[37]).cost)-UpgradeCostByte(catalog.weapons.weapons.at(old[37]).cost));
+    result+=std::max(0,UpgradeCostByte(catalog.defenses.defenses.at(row[38]).cost)-UpgradeCostByte(catalog.defenses.defenses.at(old[38]).cost));
+    result+=std::max(0,UpgradeCostByte(catalog.chassis.chassis.at(row[36]).speed)-UpgradeCostByte(catalog.chassis.chassis.at(old[36]).speed));
+    return owned_nano_factory ? result/2:result;
+}
+SmacWorkshopUpgradePreparation PrepareSmacWorkshopUpgrade(const SmacStartupDesignState& state,
+    int32_t owner,int32_t target,int32_t source,const SmacPredefinedUnitCatalog& catalog,
+    uint8_t cached_source_count,bool owned_nano_factory) {
+    state.Validate(catalog);RequireUpgradeSource(owner,source);
+    if(!state.native_registry || !state.Find(owner)) {throw std::invalid_argument("Workshop Upgrade requires retained owner and registry");}
+    auto pool=*state.native_registry;const auto candidates=SmacWorkshopUpgradeCandidates(pool,owner,source,catalog);
+    if(std::find(candidates.begin(),candidates.end(),target)==candidates.end()) {throw std::invalid_argument("Workshop Upgrade target is not a retained candidate");}
+    const auto rows=SmacWorkshopUpgradeQuoteRows(pool,target,source,catalog,owned_nano_factory);
+    const auto charge=rows*int32_t(cached_source_count)*10;
+    const int32_t morale_delta=int32_t(bool(pool.at(target)[33]&0x40))-int32_t(bool(pool.at(source)[33]&0x40));
+    if(charge) {pool.at(target)[48]|=4;}
+    if(source>=64) {pool.at(source)[48]&=uint8_t(~1u);}
+    auto next=state;next.RetainNativeRegistry(pool,catalog);
+    return {std::move(next),rows,charge,morale_delta,cached_source_count};
 }
 SmacStartupDesignState RetireSmacWorkshopDesign(const SmacStartupDesignState& state,int32_t selected,
     const SmacPredefinedUnitCatalog& catalog,int32_t owner) {

@@ -1,0 +1,259 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Two direct WHICHUPGRADE2 templates with supplied target rows65 onward, same native1024 console profile as prior2-row chooser. Stops before modal loop; no model or raster matrix.",
+  "validation": {
+    "native_layouts": 2,
+    "native_last_cell_selections": 2,
+    "row_rects": 76,
+    "source_literals": 10,
+    "key_routes": 4
+  },
+  "cases": [
+    {
+      "count": 13,
+      "grid": {
+        "columns": 2,
+        "rows": 7,
+        "cell_width": 327,
+        "column_stride": 330,
+        "row_stride": 22,
+        "width": 657,
+        "height": 154
+      },
+      "client": [
+        0,
+        0,
+        757,
+        300
+      ],
+      "controls": [
+        {
+          "pointer": "0x404ef9d0",
+          "relative": "0x0",
+          "vtable": "0x68b638",
+          "rect": [
+            149,
+            255,
+            906,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "pointer": "0x404f042c",
+          "relative": "0xa5c",
+          "vtable": "0x68b934",
+          "rect": [
+            34,
+            227,
+            359,
+            247
+          ],
+          "parent": "0x404ef9d0"
+        },
+        {
+          "pointer": "0x404f0f78",
+          "relative": "0x15a8",
+          "vtable": "0x68b934",
+          "rect": [
+            365,
+            227,
+            690,
+            247
+          ],
+          "parent": "0x404ef9d0"
+        },
+        {
+          "pointer": "0x404f1d28",
+          "relative": "0x2358",
+          "vtable": "0x68bdc8",
+          "rect": [
+            33,
+            64,
+            690,
+            218
+          ],
+          "parent": "0x404ef9d0"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            702,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            698,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            695,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            30,
+            35,
+            695,
+            58
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            27,
+            32,
+            698,
+            221
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "last_click": {
+        "x": 335,
+        "y": 115,
+        "selected": 12,
+        "value": 77
+      },
+      "list_data_relative": "0x2d70",
+      "source_rows": "Upgrade Target NN|2-3-1, values65 onward"
+    },
+    {
+      "count": 63,
+      "grid": {
+        "columns": 6,
+        "rows": 11,
+        "cell_width": 177,
+        "column_stride": 180,
+        "row_stride": 22,
+        "width": 1077,
+        "height": 242
+      },
+      "client": [
+        0,
+        0,
+        1177,
+        382
+      ],
+      "controls": [
+        {
+          "pointer": "0x405c9e10",
+          "relative": "0x0",
+          "vtable": "0x68b638",
+          "rect": [
+            -60,
+            173,
+            1117,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "pointer": "0x405ca86c",
+          "relative": "0xa5c",
+          "vtable": "0x68b934",
+          "rect": [
+            34,
+            315,
+            569,
+            335
+          ],
+          "parent": "0x405c9e10"
+        },
+        {
+          "pointer": "0x405cb3b8",
+          "relative": "0x15a8",
+          "vtable": "0x68b934",
+          "rect": [
+            575,
+            315,
+            1110,
+            335
+          ],
+          "parent": "0x405c9e10"
+        },
+        {
+          "pointer": "0x405cc168",
+          "relative": "0x2358",
+          "vtable": "0x68bdc8",
+          "rect": [
+            33,
+            64,
+            1110,
+            306
+          ],
+          "parent": "0x405c9e10"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            1122,
+            387
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            1118,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            1115,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            30,
+            35,
+            1115,
+            58
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            27,
+            32,
+            1118,
+            309
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "last_click": {
+        "x": 905,
+        "y": 159,
+        "selected": 62,
+        "value": 127
+      },
+      "list_data_relative": "0x2d70",
+      "source_rows": "Upgrade Target NN|2-3-1, values65 onward"
+    }
+  ]
+}

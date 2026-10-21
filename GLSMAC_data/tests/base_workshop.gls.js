@@ -7,12 +7,19 @@ const node = (data) => {
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
     data.smacworkshopparenttext = () => { let colors = []; let index = 0; while (index < 256) { colors :+ ('color' + #to_string(index)); index++; }
         return {labels: ['Vehicle Design','Moves:','Type:','Power:','Prototype Cost:','Cost:','Data','Presets','W:','A:','C:','R:','SP1:','SP2:','E:','P:'],
-            minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', obsolete: 'Obsolete', rename: 'Rename', retire: 'Retire', status_title: 'Design Workshop', slot: 'Slot',
+            minimum: 'Min Cost', psi: 'Psi', colors: colors, weapon: 'Weapon', equipment: 'Equipment', obsolete: 'Obsolete', rename: 'Rename', retire: 'Retire', upgrade: 'Upgrade', status_title: 'Design Workshop', slot: 'Slot',
             status_labels: ['Examining Basic Unit','New Design Based On Old','Examining Previous Design','Designing New Unit','Modifying Previous Design']}; };
     data.smacworkshopconsolebacking = () => { data.console_tiled = true; };
     data.smacworkshoprenametext = () => { const words = data.smacworkshopparenttext(); return {title: 'What shall we call this unit type?', label: 'Name:', ok: 'OK', cancel: 'Cancel', colors: words.colors}; };
     data.smacworkshopretiretext = (name, count) => { const words = data.smacworkshopparenttext();
         return {title: 'Chief Engineer', body: count == 0 ? 'Do you wish to retire this design?' : 'Do you wish to retire this design? Units of that type still in operation will be disbanded.', rows: ['Never mind.', 'Retire ' + name + ' design.'], ok: 'OK', colors: words.colors}; };
+    data.smacworkshopupgradetext = (kind, source, target, count, total, available) => {
+        const words = data.smacworkshopparenttext();
+        const body = kind == 5 ? 'Upgrade complete!' : (kind == 0 ? 'Upgrade this to which design:' : 'Upgrade this design at a cost?');
+        let tokens = []; const parts = #split(body, ' '); let at = 0;
+        for (part of parts) { const text = part + (at + 1 < #sizeof(parts) ? ' ' : ''); tokens :+ {text: text, spans: [{text: text, color: 226}]}; at++; }
+        return {title: 'Operations Director', body: body, tokens: tokens, rows: kind == 1 || kind == 2 ? ['No, we cannot afford that.', 'Yes, modernize.'] : [], ok: 'OK', cancel: 'Cancel', colors: words.colors};
+    };
     data.focus = () => { data.focused = true; }; data.select_all = () => { data.all_selected = true; };
     data.smacworkshopabilitytext = (technology) => { return {title: 'Select Special Ability', none: 'No special ability', ok: 'OK', cancel: 'Cancel', cost: 'Cost', attack: 'Attack', defense: 'Defense', speed: 'Speed', domains: ['Land', 'Sea', 'Air'], second_title: 'Chief Engineer', second_body: 'Research ' + technology + '.', missile_title: 'Chief Engineer', missile_body: 'Missiles cannot have special abilities.'}; };
     data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
@@ -435,3 +442,56 @@ test.assert(retire.window.handlers.keydown({modifiers: {shift: true}, code: 'ENT
 listeners.smac_workshop_retire({base: base, request_id: dialog.pending_id, stale: false, failed: false, confirmation: false, retired: false, declined: true, expected_state: 'retire-shift-enter'});
 retire.begin(dialog); const retired_request = dialog.pending_id; dialog.hide_view();
 listeners.smac_workshop_retire({base: base, request_id: retired_request, confirmation: true}); test.assert(!retire.active && !dialog.active);
+
+// Upgrade queries/answers remain separate from editing or applying the draft.
+dialog.open(base, selection); dialog.draft_name = 'Unsaved Draft'; const upgrade = dialog.upgrade_dialog;
+upgrade.begin(dialog); const upgrade_commands = #sizeof(commands); upgrade.begin(dialog);
+test.assert(dialog.pending && #sizeof(commands) == upgrade_commands && commands[upgrade_commands - 1].name == 'upgrade_smac_workshop'
+    && commands[upgrade_commands - 1].data.target_design == (0 - 1) && !#is_defined(commands[upgrade_commands - 1].data.armor));
+let upgrade_reply = {base: base, request_id: dialog.pending_id, expected_state: 'upgrade-quote', stale: false, failed: false, declined: false, upgraded: false,
+    confirmation: false, affordable: true, unprototyped: false, count: 2, total: 100, available: 2000, target_design: (0 - 1),
+    source_name: 'Stored Scout', source_text: {name: 'Stored Scout', stats: '1-1-1', domain: 0, reactor: 1, abilities: 0, ability_tokens: ''}, target_text: {name: 'Guard', stats: '2-3-1', domain: 0, reactor: 1, abilities: 0, ability_tokens: ''}, illustration: 'unit_sm.pcx',
+    choices: [{id: 65, stored_name: 'Guard', stat_line: '2-3-1', prototype: true}, {id: 66, stored_name: 'Better Guard', stat_line: '4-3-1', prototype: false}]};
+listeners.smac_workshop_upgrade(upgrade_reply);
+test.assert(upgrade.rows[0].stats.text == '2-3-1 *' && upgrade.rows[1].stats.text == '4-3-1');
+test.assert(upgrade.active && upgrade.kind == 0 && !dialog.pending && upgrade.window.width == 757 && upgrade.answers[0].left == 34 && upgrade.answers[1].left == 365);
+test.assert(upgrade.rows[1].button.handlers.mousedown({button: 'left'}) == true && upgrade.selected == 1);
+test.assert(upgrade.window.handlers.keydown({modifiers: {}, code: 'ESCAPE'}) == true && !upgrade.active && !dialog.pending && #sizeof(commands) == upgrade_commands);
+upgrade.begin(dialog); upgrade_reply.request_id = dialog.pending_id; listeners.smac_workshop_upgrade(upgrade_reply);
+upgrade.rows[1].button.handlers.dblclick({button: 'left'});
+test.assert(dialog.pending && !upgrade.active && commands[#sizeof(commands) - 1].data.target_design == 66 && commands[#sizeof(commands) - 1].data.confirm == (0 - 1));
+upgrade_reply.request_id = dialog.pending_id; upgrade_reply.target_design = 66; upgrade_reply.confirmation = true; listeners.smac_workshop_upgrade(upgrade_reply);
+test.assert(upgrade.kind == 1 && upgrade.active && upgrade.window.width == 755 && upgrade.rows[0].button.top == 165 && upgrade.answers[0].top == 217 && #sizeof(upgrade.answers) == 1);
+upgrade.window.handlers.keydown({modifiers: {}, code: 'DOWN'}); upgrade.window.handlers.keydown({modifiers: {}, code: 'ESCAPE'});
+test.assert(dialog.pending && commands[#sizeof(commands) - 1].data.confirm == 1);
+upgrade_reply.request_id = dialog.pending_id; upgrade_reply.upgraded = true; upgrade_reply.confirmation = false; upgrade_reply.zero_count_notice = false;
+upgrade_reply.selection = after_retire; upgrade_reply.strip_offset = 3; listeners.smac_workshop_upgrade(upgrade_reply);
+test.assert(!dialog.pending && !upgrade.active && dialog.strip_offset == 3 && dialog.active);
+upgrade.begin(dialog); upgrade_reply.request_id = dialog.pending_id; upgrade_reply.upgraded = false; upgrade_reply.affordable = false; listeners.smac_workshop_upgrade(upgrade_reply);
+test.assert(upgrade.active && upgrade.kind == 3 && upgrade.window.width == 758 && #sizeof(upgrade.rows) == 0 && upgrade.answers[0].top == 167);
+const before_notice = #sizeof(commands); upgrade.window.handlers.keydown({modifiers: {}, code: 'ENTER'}); test.assert(!upgrade.active && #sizeof(commands) == before_notice);
+upgrade.begin(dialog); upgrade_reply.request_id = dialog.pending_id; upgrade_reply.affordable = true; upgrade_reply.upgraded = true; upgrade_reply.zero_count_notice = true; listeners.smac_workshop_upgrade(upgrade_reply);
+test.assert(upgrade.kind == 5 && upgrade.active && dialog.active); upgrade.window.handlers.keydown({modifiers: {shift: true}, code: 'ENTER'}); test.assert(!upgrade.active);
+upgrade.begin(dialog); const upgrade_old = dialog.pending_id; dialog.hide_view(); listeners.smac_workshop_upgrade({base: base, request_id: upgrade_old, confirmation: true}); test.assert(!upgrade.active && !dialog.active);
+
+// Native627740 uses a column-major grid, not a scrollbar. Its width measure
+// includes the literal pipe; this double supplies the native measured174px.
+dialog.open(base, selection); upgrade.begin(dialog); upgrade_reply.request_id = dialog.pending_id;
+upgrade_reply.upgraded = false; upgrade_reply.zero_count_notice = false; upgrade_reply.target_design = (0 - 1); upgrade_reply.choices = [];
+let ordinal = 0; while (ordinal < 13) { upgrade_reply.choices :+ {id: 65 + ordinal, stored_name: 'Upgrade Target ' + #to_string(65 + ordinal), stat_line: '2-3-1', prototype: false}; ordinal++; }
+upgrade.probe.measure = () => { return {width: 174}; };
+listeners.smac_workshop_upgrade(upgrade_reply);
+test.assert(upgrade.rows_per_column == 7 && upgrade.row_width == 327 && upgrade.window.width == 757 && upgrade.window.height == 300
+    && upgrade.answers[0].top == 227 && upgrade.answers[1].left == 365 && #sizeof(upgrade.rows) == 13);
+let i = 0; for (row of upgrade.rows) { test.assert(row.button.left == 33 + (i / 7) * 330 && row.button.top == 65 + (i % 7) * 22); i++; }
+upgrade.window.handlers.keydown({modifiers: {}, code: 'LEFT'}); test.assert(upgrade.selected == 7);
+upgrade.window.handlers.keydown({modifiers: {}, code: 'RIGHT'}); test.assert(upgrade.selected == 0);
+upgrade.rows[12].button.handlers.dblclick({button: 'left'}); test.assert(commands[#sizeof(commands) - 1].data.target_design == 77);
+upgrade_reply.request_id = dialog.pending_id; upgrade_reply.choices = []; ordinal = 0;
+while (ordinal < 63) { upgrade_reply.choices :+ {id: 65 + ordinal, stored_name: 'Upgrade Target ' + #to_string(65 + ordinal), stat_line: '2-3-1', prototype: false}; ordinal++; }
+listeners.smac_workshop_upgrade(upgrade_reply);
+test.assert(upgrade.rows_per_column == 11 && upgrade.row_width == 177 && upgrade.window.width == 1177 && upgrade.window.height == 382 && upgrade.window.left == (0 - 60) && upgrade.window.top == 173
+    && upgrade.answers[0].top == 315 && upgrade.answers[0].width == 535 && upgrade.answers[1].left == 575 && #sizeof(upgrade.rows) == 63);
+i = 0; for (row of upgrade.rows) { test.assert(row.button.left == 33 + (i / 11) * 180 && row.button.top == 65 + (i % 11) * 22); i++; }
+upgrade.rows[62].button.handlers.dblclick({button: 'left'}); test.assert(commands[#sizeof(commands) - 1].data.target_design == 127);
+dialog.hide_view();

@@ -14,7 +14,7 @@ view = {
         view.body = []; view.rows = [];
         for (number of [0, 1]) {
             const index = number;
-            const row = view.window.button({left: 33, width: 655, height: 20, background: 'transparent'});
+            const row = view.window.button({left: 33, width: 655, height: 20, smac_frame_phase: [0,1], background: 'transparent'});
             const label = row.text({left: 3, baseline: 16, font: 'arialn.ttf:16:mono-bold'});
             row.on('mousedown', (e) => { if (e.button == 'left') { view.selected = index; view.paint(); } return true; });
             row.on('click', () => { view.selected = index; view.paint(); return true; });

@@ -435,21 +435,25 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
 	const auto& catalog = units->catalog;
 	simulation.value.designs.Validate( catalog );
 	const auto design = ResolveConventionalDesign( state, simulation );
-	if ( !design.active || design.chassis > 1 || design.defense != 0 || design.reactor != 1
-		|| design.abilities != 0
+	// Existing Units can retain an inactive source after an owner upgrades
+    // that globally indexed design. Active/exclusion checks admit new builds;
+    // they must not invalidate another owner's surviving physical Unit.
+    if ( design.chassis > 1 || design.defense >= catalog.defenses.defenses.size() || design.reactor < 1 || design.reactor > 4
+        || design.reactor > catalog.reactors.reactors.size() || (design.abilities & ~0x4000u)
 		|| catalog.chassis.chassis.size() <= design.chassis || catalog.weapons.weapons.size() <= design.weapon
 		|| catalog.defenses.defenses.empty() || catalog.reactors.reactors.empty() ) {
 		throw std::runtime_error( "Unsupported conventional ground design" );
 	}
 	using namespace loader::txt;
 	const auto& chassis = catalog.chassis.chassis[ design.chassis ];
-	const auto& weapon = catalog.weapons.weapons[ design.weapon ]; const auto& defense = catalog.defenses.defenses[ 0 ];
-	const bool combat = weapon.mode == WeaponMode::Projectile && weapon.offense == 1 && design.plan == 3;
+	const auto& weapon = catalog.weapons.weapons[ design.weapon ]; const auto& defense = catalog.defenses.defenses.at( design.defense );
+	const bool combat = (weapon.mode == WeaponMode::Projectile || weapon.mode == WeaponMode::Energy)
+        && weapon.offense > 0 && weapon.offense < 99 && design.plan <= 3;
 	const bool former = design.chassis == 0 && weapon.mode == WeaponMode::Terraformer && weapon.offense == 0 && design.plan == 9;
 	const bool colony = design.chassis == 0 && weapon.mode == WeaponMode::Colonist && weapon.offense == 0 && design.plan == 8;
 	if ( chassis.triad != ChassisTriad::Land || chassis.missile || chassis.range != 0 || chassis.cargo != 1
-		|| ( !combat && !former && !colony ) || defense.mode != DefenseMode::Projectile
-		|| defense.rating != 1 || catalog.reactors.reactors[ 0 ].power != 1 ) {
+		|| ( !combat && !former && !colony ) || defense.rating <= 0
+        || (defense.mode != DefenseMode::Projectile && defense.mode != DefenseMode::Energy && defense.mode != DefenseMode::Binary) ) {
 		throw std::runtime_error( "Unsupported conventional component semantics" );
 	}
 	if ( !former && ( state.work_order != unit::ConventionalUnitState::WorkOrder::None || state.work_progress != 0 ) ) {

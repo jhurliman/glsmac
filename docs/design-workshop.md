@@ -1114,3 +1114,59 @@ the real instrumented dialog. See the
 [Retire integration evidence](behavior/design-workshop-explicit-upgrade-and-retire.md).
 Upgrade, automatic family controls, persistent preferences, animated preview
 and complete screen parity remain open; this does not complete the Workshop.
+
+### Stored-design Upgrade action
+
+`SmacWorkshopUpgrade.h` owns the original action7 candidate scan,504eb0 quote
+and detached design flags of504cc0. The queued `upgrade_smac_workshop`
+transaction connects these rules to the local human Base caller and suspended
+Colony Screen dispatch. It enumerates retained targets, checks affordability,
+supports decline and zero-charge bypass, and stages Unit states, owned queues,
+refreshes, target reselection and treasury before publication. Existing Unit
+transfer publication owns wrapping count deltas; production-reference caches,
+queue order/minerals/retool baselines and retirement history are preserved.
+The ordinary no-project campaign capability explicitly owns Nano Factory
+absence; missing project authority is not treated as false. No new save format
+is introduced.
+
+Twenty-five compact original dispatcher inputs/results verify candidates and
+per-unit quotes; four original scalars verify prototype/Nano rounding. Thirteen
+actual-world scenarios cover custom/intrinsic sources, cached-zero and stale
+counts, no own Units, prototype surcharge, High Morale gain/loss, multiple
+targets, insufficient funds, late-animation rollback, duplicate queues, foreign
+records and all four reactor health limits. Each resulting world saves/restores.
+
+The live identity binding now resolves retained positive Projectile/Energy
+ground combat weapons, positive armor, reactor1..4 and the passive High Morale
+bit. Another owner's physical Unit can resolve its globally indexed inactive
+source after Upgrade. These identities use existing conventional stat rules;
+this does not remove the separate narrow tactical combat, Speeder provenance,
+native/PSI, other ability or component-rendering restrictions.
+
+The original chooser, confirmation, insufficient-funds, no-target and zero-cache
+completion templates load from installed SCRIPT text. Single-pass substitution
+preserves plural forms, word boundaries and emphasis. Stored labels include
+localized Psi/Sea/Air, reactor suffixes and ascending ability abbreviations;
+[eleven stat strings and three prompt pairs](behavior/design-workshop-upgrade-strings.md)
+are checked against native receipts. The chooser appends the original unprototyped
+` *` marker to the right stats field under its exact source/target flag condition.
+Unsaved draft components do not enter this stored-source action.
+
+The [long-list contract](behavior/design-workshop-upgrade-long-list.md) controls
+column-major layout, native horizontal-key direction, literal-pipe measurement,
+height and placement. Actual SDL harnesses render all13/63 synthetic rows and
+select the last row. Measured maximum widths are166/174; resulting client sizes
+are757x300 and1177x382. The latter reproduces native off-screen overflow. These
+copied-data harnesses do not assert an all-technology campaign or full grid
+pixel parity.
+
+Validation:46 affected native groups passed for the transaction and consumers;
+six focused groups and the UI script pass ASan/UBSan with19 production and two
+test translation units instrumented. Production/consumer correctness analysis
+is clean. The instrumented actual-game capture accepts the live Scout-to-
+Synthmetal upgrade through selected-row Escape, reselects its target and exits0.
+All79,352 compared pixels match the owned original:24,000 illustration,16,056
+caption,13,096 opaque initialized OK pixels and26,200 choice-row pixels with
+glyphs. Four OK corners are transparent. The body contains different live
+names/count/credits and is excluded from this pixel claim. This software,
+no-audio run makes no hardware-performance or audio claim.

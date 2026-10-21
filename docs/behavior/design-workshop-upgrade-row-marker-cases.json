@@ -1,0 +1,21 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "One original442d87..442e52 row-build fragment from retained upgrade_many_cancel arrays; source flag4 explicitly set, target flag4 explicitly clear. Original5932d0 executes. Stops before620600 uses any UI object; no chooser/layout/game mutation.",
+  "row": {
+    "text": "Upgrade Target 65|2-3-1 *",
+    "value": 65,
+    "source_flags": 5,
+    "target_flags": 3
+  },
+  "marker": {
+    "address": "0x6a6fac",
+    "text": " *",
+    "hex": "20 2a",
+    "placement": "After complete5932d0 stats, to right of pipe"
+  },
+  "validation": {
+    "native_row_fragments": 1,
+    "source_literals": 7,
+    "literal_bytes": 2
+  }
+}

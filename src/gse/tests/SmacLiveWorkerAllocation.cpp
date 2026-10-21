@@ -1340,6 +1340,93 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
 
+    task->AddTest("SMAC live Workshop Upgrade atomically converts own Units queues and cached energy authority",[](GSE*,context::Context*)->std::string {
+        for(int scenario=0;scenario<13;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);std::string saved;
+            const int source=scenario==5 ? 2:64,target=scenario==9 ? 66:65;
+            const int cached=scenario==1 || scenario==6 ? 0:scenario==2 || scenario==5 ? 3:2;
+            const int delta=scenario==3 ? 1:scenario==4 ? -1:0;
+            const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {
+                using namespace game::backend::unit;
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();auto* um=game->GetUM();SelectionPresentations(fixture);
+                const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+                fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;
+                    for(int id=64;id<128;++id) {pool[id][48]&=254;}
+                    pool[64]=pool[2];pool[64][48]=source==64 ? 7:0;
+                    pool[65]=pool[2];pool[65][37]=1;pool[65][38]=1;pool[65][41]=3;pool[65][48]=scenario==1 || scenario==7 ? 3:7;
+                    if(scenario>=10) {pool[65][39]=uint8_t(scenario-8);}
+                    if(delta>0) {pool[65][33]|=0x40;}if(delta<0) {pool[source][33]|=0x40;}
+                    if(scenario==9) {pool[66]=pool[65];}
+                    if(source==64) {state.designs.owners[0].starting_scout=64;}
+                    state.designs.RetainNativeRegistry(pool,catalog);
+                });
+                const auto item=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,source);
+                const auto replacement=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,target);
+                const auto stockpile=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Stockpile,38);
+                base->SetProductionState(GSE_CALL,ProductionState{item,17,item,11,std::vector<ProductionItem>{item,stockpile,item},true});
+                auto* foreign_owner=&game->GetState()->m_slots->GetSlot(6);
+                Base::pops_t pops;pops.emplace(19,Pop(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));auto context=base->GetSmacResourceContext();context.owner_simulation_id=2;
+                auto* foreign=new Base(game,702,foreign_owner,foreign_owner->GetPlayer()->GetFaction(),game->GetMap()->GetTile(16,16),"Foreign queue",{},pops,41,3,
+                    ProductionState{item,23,item,19,std::vector<ProductionItem>{item,item},true},context);
+                bm->SpawnBase(GSE_CALL,foreign);foreign->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1,{{},1}},Roles());
+                std::vector<std::pair<size_t,ConventionalUnitState>> own;
+                if(source==2) {own.emplace_back(91,um->GetUnit(91)->Conventional());}
+                if(scenario!=6) {for(const auto entry:std::array<std::pair<size_t,uint8_t>,2>{{{92,2},{94,6}}}) {
+                    ConventionalUnitState record{source,1,entry.second,3,1,true,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};record.order=ConventionalUnitState::Order::Hold;record.order_countdown=2;
+                    auto* actor=um->SpawnConventionalUnit(GSE_CALL,entry.first,um->GetUnitDef("live-scout"),base->m_owner,game->GetMap()->GetTile(entry.first==92 ? 8:12,6),record);own.emplace_back(entry.first,actor->Conventional());}}
+                auto* foreign_unit=um->SpawnConventionalUnit(GSE_CALL,93,um->GetUnitDef("live-scout"),foreign_owner,game->GetMap()->GetTile(10,6),
+                    ConventionalUnitState{source,2,3,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+                const auto foreign_record=foreign_unit->Conventional();const auto local_before=*base->GetProductionState(),foreign_before=*foreign->GetProductionState();
+                fixture.ResourceState([&](auto& state){state.economy.at(1).credits=scenario==8 ? 0:2000;
+                    state.economy.at(1).design_counts->at(source)=uint8_t(cached);state.economy.at(1).design_counts->at(target)=255;
+                    for(int owner=1;owner<=2;++owner) {state.economy.at(owner).production_reference_counts=faction::SmacDesignCounts{};}});
+                auto before=fixture.Snapshot();bool prompt=false,failed=false,upgraded=false,declined=false,affordable=true,notice=false;int count=-1,total=-1,options=-1;
+                game->On(GSE_CALL,"smac_workshop_upgrade",NATIVE_CALL(&){N_EXPECT_ARGS(1);N_GET(view,0,Object);
+                    prompt=static_cast<value::Bool*>(view->Get("confirmation"))->value;failed=static_cast<value::Bool*>(view->Get("failed"))->value;
+                    upgraded=static_cast<value::Bool*>(view->Get("upgraded"))->value;declined=static_cast<value::Bool*>(view->Get("declined"))->value;
+                    affordable=static_cast<value::Bool*>(view->Get("affordable"))->value;notice=static_cast<value::Bool*>(view->Get("zero_count_notice"))->value;
+                    count=int(static_cast<value::Int*>(view->Get("count"))->value);total=int(static_cast<value::Int*>(view->Get("total"))->value);
+                    options=int(static_cast<value::Array*>(view->Get("choices"))->value.size());return VALUE(value::Undefined);}));
+                value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,source)},{"target_design",VALUE(value::Int,,-1)},
+                    {"name",VALUE(value::String,,"Unsaved Draft")},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},
+                    {"request_id",VALUE(value::Int,,1)},{"confirm",VALUE(value::Int,,-1)},{"strip_offset",VALUE(value::Int,,0)}};
+                game->Event(GSE_CALL,"upgrade_smac_workshop",args);GT_ASSERT(fixture.Snapshot()==before,"Upgrade bypassed queued command");fixture.DrainEvents();
+                if(scenario==9) {GT_ASSERT(!failed && !upgraded && !prompt && options==2 && fixture.Snapshot()==before,"Multiple targets auto-selected or changed world");
+                    args["target_design"]=VALUE(value::Int,,target);game->Event(GSE_CALL,"upgrade_smac_workshop",args);fixture.DrainEvents();}
+                if(scenario==8) {GT_ASSERT(!failed && !upgraded && !affordable && !prompt && total==80 && fixture.Snapshot()==before,"Unaffordable Upgrade state: failed="+std::to_string(failed)+" upgraded="+std::to_string(upgraded)+" affordable="+std::to_string(affordable)+" prompt="+std::to_string(prompt)+" total="+std::to_string(total)+" same="+std::to_string(fixture.Snapshot()==before));
+                    fixture.ResourceState([&](auto& state){state.economy.at(1).credits=2000;});before=fixture.Snapshot();
+                    game->Event(GSE_CALL,"upgrade_smac_workshop",args);fixture.DrainEvents();}
+                if(cached) {
+                    GT_ASSERT(prompt && !failed && !upgraded && affordable && count==cached && fixture.Snapshot()==before,"Upgrade quote mutated state or used roster recount");
+                    args["confirm"]=VALUE(value::Int,,0);game->Event(GSE_CALL,"upgrade_smac_workshop",args);fixture.DrainEvents();
+                    GT_ASSERT(declined && !upgraded && fixture.Snapshot()==before,"Declined Upgrade changed world");args["confirm"]=VALUE(value::Int,,1);
+                    um->GetUnit(92)->m_animation_id=999;game->Event(GSE_CALL,"upgrade_smac_workshop",args);fixture.DrainEvents();um->GetUnit(92)->m_animation_id=0;
+                    GT_ASSERT(failed && !upgraded && fixture.Snapshot()==before,"Late Upgrade failure partially charged or converted");
+                    game->Event(GSE_CALL,"upgrade_smac_workshop",args);fixture.DrainEvents();
+                }
+                GT_ASSERT(upgraded && !failed && notice==(cached==0) && total==(scenario==7 ? 31:4)*cached*10,"Upgrade did not complete selected stored design");
+                for(const auto& entry:own) {auto expected=entry.second;expected.design_id=target;expected.stored_morale=uint8_t(std::clamp(int(expected.stored_morale)+delta,0,6));
+                    GT_ASSERT(um->GetUnit(entry.first) && um->GetUnit(entry.first)->Conventional()==expected,"Upgrade changed Unit fields beyond design/morale");
+                    const auto stats=um->GetUnit(entry.first)->QueryStats(SmacMoraleMode::Mode0);
+                    GT_ASSERT(stats.offense_rating && *stats.offense_rating==catalog.weapons.weapons.at(1).offense
+                        && stats.defense_rating && *stats.defense_rating==2 && stats.maximum_hit_points==10*(scenario>=10 ? scenario-8:1),"Upgraded Unit stats did not bind retained components");}
+                auto local_expected=local_before;local_expected.current_item=replacement;local_expected.queue=std::vector<ProductionItem>{replacement,stockpile,replacement};
+                GT_ASSERT(*base->GetProductionState()==local_expected && *foreign->GetProductionState()==foreign_before && foreign_unit->Conventional()==foreign_record,"Upgrade changed foreign state or own queue/minerals/retool history");
+                bool correct=false;fixture.ResourceState([&](const auto& state){const auto& economy=state.economy.at(1);
+                    correct=economy.credits==2000-total && economy.design_counts->at(source)==uint8_t(cached-int(own.size()))
+                        && economy.design_counts->at(target)==uint8_t(255+own.size()) && state.designs.retirement_history[1]->cursor==0
+                        && (source<64 ? bool(state.designs.native_registry->at(source)[48]&1):!(state.designs.native_registry->at(source)[48]&1))
+                        && bool(state.designs.native_registry->at(target)[48]&4)==!(scenario==1);
+                    for(const auto& entry:state.economy) {for(const auto value:*entry.second.production_reference_counts) {correct=correct && value==0;}}
+                });GT_ASSERT(correct,"Upgrade energy/cached counts/design flags/history differ");
+                saved=fixture.Snapshot();game->Event(GSE_CALL,"upgrade_smac_workshop",args);fixture.DrainEvents();GT_ASSERT(fixture.Snapshot()==saved,"Stale Upgrade repeated charge or conversion");
+                args["target_design"]=VALUE(value::Int,,128);GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"upgrade_smac_workshop",args);}) && fixture.Snapshot()==saved,"Upgrade admitted a foreign target bank");GT_OK();
+            });GT_ASSERT(run.empty(),"Upgrade scenario"+std::to_string(scenario)+": "+run);
+            ConventionalUnitFixture restored;restored.ConfigureTwoResourceParticipants(TanksSource,true);restored.ProductionPresentations({"choice-scout","choice-rover","choice-former","choice-colony"});
+            const auto restore=restored.Run([&](GSE_CALLABLE)->std::string {restored.Restore(GSE_CALL,saved,true);
+                GT_ASSERT(ResearchSnapshot(restored.Game(),restored.Snapshot())==ResearchSnapshot(restored.Game(),saved),"Upgrade save/restore changed world");GT_OK();});GT_ASSERT(restore.empty(),"Upgrade restore: "+restore);
+        }GT_OK();
+    });
     task->AddTest("SMAC live Workshop direct Retire confirms cached counts and atomically removes intrinsic and custom users",[](GSE*,context::Context*)->std::string {
         for(const int selected:{2,64}) {
             ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);std::string saved;

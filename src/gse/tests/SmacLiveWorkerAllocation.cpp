@@ -2086,6 +2086,14 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             value::function_arguments_t args{VALUE(value::Int,,2),VALUE(value::Int,,0),VALUE(value::Int,,0),VALUE(value::Int,,1),VALUE(value::Int,,1),
                 VALUE(value::Int,,0),VALUE(value::String,,"Retained Draft"),VALUE(value::Int,,-1),VALUE(value::Int,,-1),VALUE(value::Int,,3),VALUE(value::Int,,2),VALUE(value::Bool,,false)};
             const auto before=fixture.Snapshot();auto* response=static_cast<value::Object*>(edit->Run(GSE_CALL,args));
+            const auto& installed_abilities=fixture.Game()->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog.abilities.abilities;
+            const auto& names=static_cast<value::Array*>(response->Get("ability_names"))->value;
+            const auto& descriptions=static_cast<value::Array*>(response->Get("ability_descriptions"))->value;
+            GT_ASSERT(names.size()==installed_abilities.size() && descriptions.size()==installed_abilities.size(),"Workshop lost installed ability text rows");
+            for(size_t i=0;i<installed_abilities.size();++i) {
+                GT_ASSERT(static_cast<value::String*>(names[i])->value==installed_abilities[i].name
+                    && static_cast<value::String*>(descriptions[i])->value==installed_abilities[i].description,"Workshop altered ability card text");
+            }
             auto* ability_menu=static_cast<value::Callable*>(object->Get("get_smac_workshop_abilities"));
             value::function_arguments_t menu_args(args.begin(),args.begin()+10);menu_args[9]=VALUE(value::Int,,0);
             auto* menu=static_cast<value::Object*>(ability_menu->Run(GSE_CALL,menu_args));auto* choices=static_cast<value::Array*>(menu->Get("rows"));

@@ -18,19 +18,26 @@ return {
             this.component_models :+ {kind: placement.kind, model: frame.surface({left: (0 - 79), top: (0 - placement.offset), width: 256, height: 256})};
         }
         this.window.hide();
-        const window = this.window;
+        const window = this.window; this.centered_captions = [];
         const caption = (left, top, width, height, baseline, size, bold) => {
             const frame = window.panel({left: left, top: top, width: width, height: height, overflow: 'hidden'});
-            return frame.text({class: 'game-popup-text', align: 'top center', baseline: baseline, font: (bold ? 'arialbd.ttf:' : 'arial.ttf:') + #to_string(size) + ':mono', color: bold ? 'rgb(120,164,212)' : 'rgb(176,212,235)'});
+            const label = frame.text({class: 'game-popup-text', align: 'top left', text: '', baseline: baseline, font: (bold ? 'arialbd.ttf:' : 'arial.ttf:') + #to_string(size) + ':mono', color: bold ? 'rgb(120,164,212)' : 'rgb(176,212,235)'});
+            this.centered_captions :+ {label: label, width: width, color: bold ? 224 : 222}; return label;
         };
         const heading = (left, top, text) => { const label = caption(left, top, 99, 85, 11, 12, true); label.text = text; return label; };
-        heading(30, 7, 'CHASSIS'); this.weapon_heading = heading(30, 101, 'WEAPON'); heading(30, 195, 'SHIELDING'); heading(462, 7, 'REACTOR');
-        this.ability_labels = [];
+        this.chassis_heading = heading(30, 7, ''); this.weapon_heading = heading(30, 101, ''); this.armor_heading = heading(30, 195, ''); this.reactor_heading = heading(462, 7, '');
+        this.ability_labels = []; this.ability_frames = []; this.ability_body = []; this.ability_headings = [];
         for (top of [101, 195]) {
-            heading(462, top, 'SPECIAL'); const sub = caption(462, top, 99, 85, 25, 12, true); sub.text = top == 101 ? 'ABILITY 1' : 'ABILITY 2';
-            const none = caption(462, top, 99, 85, 58, 10, false); none.text = 'NONE';
+            const none = caption(462, top, 99, 85, 61, 10, false); none.text = 'NONE';
             this.ability_labels :+ none;
+            this.ability_frames :+ window.panel({left: 462, top: top, width: 99, height: 85, overflow: 'hidden'});
         }
+        this.ability_probe = window.text({font: 'arial.ttf:10:mono', text: ''}); this.ability_probe.hide();
+        this.name_frames = []; this.name_body = [];
+        for (placement of [{left: 30, top: 7}, {left: 30, top: 101}, {left: 30, top: 195}, {left: 462, top: 7}]) {
+            this.name_frames :+ window.panel({left: placement.left, top: placement.top, width: 99, height: 85, overflow: 'hidden'});
+        }
+
         this.chassis = caption(30, 7, 99, 85, 73, 10, false);
         this.chassis_stat = caption(30, 7, 99, 85, 83, 10, false);
         this.weapon = caption(30, 101, 99, 85, 73, 10, false);
@@ -187,6 +194,7 @@ return {
     open: (base, data) => {
         if (!this.active) { this.model.smacworkshopclock(2); }
         if (!#is_defined(this.parent_text)) { this.parent_text = this.components.smacworkshopparenttext(); }
+        for (entry of this.centered_captions) { entry.label.color = this.parent_text.colors[entry.color]; }
         this.mineral_factor = data.mineral_factor;
         this.base = base; this.selection = data; this.active = true; this.pending = false; this.pending_obsolete = false; this.pending_rename = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide();
         this.set_action_caption(this.apply_button, this.parent_text.apply);
@@ -278,19 +286,98 @@ return {
         this.ability_slots = slots;
         if (#is_defined(this.selection.ability_slots)) { this.ability_slots = this.selection.ability_slots; }
     },
+    wrap_card_text: (text, width, font) => {
+        this.ability_probe.font = font; let lines = []; let current = ''; let index = 0; const words = #split(text, ' ');
+        for (word of words) {
+            const token = word + (index < #sizeof(words) - 1 ? ' ' : '');
+            this.ability_probe.text = current + token;
+            if (current != '' && this.ability_probe.measure().width > width) { lines :+ current; current = ''; }
+            current = current + token; index++;
+        }
+        if (current != '') { lines :+ current; }
+        return lines;
+    },
+    paint_component_name: (label, frame, text, bottom, reactor) => {
+        label.text = text; this.ability_probe.font = 'arial.ttf:10:mono'; this.ability_probe.text = text;
+        const wrapped = this.ability_probe.measure().width > 99;
+        if (!reactor && !wrapped) { label.show(); return 1; }
+        label.hide(); const lines = this.wrap_card_text(text, 99, 'arial.ttf:10:mono');
+        let baseline = reactor ? bottom - 10 * (#sizeof(lines) - 1) : bottom - 10;
+        const color = this.parent_text.colors[222];
+        for (line of lines) {
+            this.ability_probe.text = line; const left = #floor(#to_float(99 - this.ability_probe.measure().width) / 2.0);
+            this.name_body :+ frame.text({left: left, baseline: baseline, font: 'arial.ttf:10:mono', color: color, text: line}); baseline += 10;
+        }
+        return #sizeof(lines);
+    },
+    paint_component_names: () => {
+        for (node of this.name_body) { node.remove(); } this.name_body = [];
+        this.paint_component_name(this.chassis, this.name_frames[0], #uppercase(this.selection.chassis), 73, false);
+        this.paint_component_name(this.weapon, this.name_frames[1], #uppercase(this.selection.weapon), 73, false);
+        this.paint_component_name(this.armor_name, this.name_frames[2], this.armor_name.text, 73, false);
+        const lines = this.paint_component_name(this.reactor, this.name_frames[3], #uppercase(this.selection.reactor), 70, true);
+        for (component of this.component_models) { if (component.kind == 3) { component.model.top = (0 - 90) - 5 * (lines - 1); } }
+    },
+    paint_ability_cards: () => {
+        for (label of this.ability_body) { label.remove(); } this.ability_body = [];
+        for (label of this.ability_headings) { label.remove(); } this.ability_headings = [];
+        const colors = this.parent_text.colors; let slot = 0;
+        for (none of this.ability_labels) {
+            const bit = this.ability_slots[slot];
+            const frame = this.ability_frames[slot];
+            const headings = this.wrap_card_text(#uppercase(this.parent_text.special_ability + ' ' + #to_string(slot + 1)), 89, 'arialbd.ttf:12:mono');
+            let heading_baseline = 11;
+            for (line of headings) {
+                this.ability_probe.text = line; const left = #floor(#to_float(99 - this.ability_probe.measure().width) / 2.0);
+                this.ability_headings :+ frame.text({left: left, baseline: heading_baseline, font: 'arialbd.ttf:12:mono', color: colors[224], text: line}); heading_baseline += 14;
+            }
+            this.ability_probe.font = 'arial.ttf:10:mono';
+            if (bit < 0) { none.text = #uppercase(this.parent_text.none); none.baseline = 47 + 7 * #sizeof(headings); none.color = colors[224]; none.show(); }
+            else {
+                none.hide();
+                const tokens = this.components.smacworkshopabilitycardtext(this.selection.ability_names[bit], this.selection.ability_descriptions[bit]);
+                let lines = []; let line = {text: '', spans: []};
+                for (token of tokens) {
+                    this.ability_probe.text = line.text + token.text;
+                    if (line.text != '' && this.ability_probe.measure().width > 99) { lines :+ line; line = {text: '', spans: []}; }
+                    line.text = line.text + token.text;
+                    for (span of token.spans) { line.spans :+ span; }
+                }
+                if (line.text != '') { lines :+ line; }
+                let baseline = 82 - 10 * (#sizeof(lines) - 1);
+                for (row of lines) {
+                    this.ability_probe.text = row.text;
+                    const left = #floor(#to_float(99 - this.ability_probe.measure().width) / 2.0); let prefix = '';
+                    for (span of row.spans) {
+                        this.ability_probe.text = prefix; const x = left + this.ability_probe.measure().width;
+                        const label = frame.text({left: x, baseline: baseline, font: 'arial.ttf:10:mono', color: colors[span.color], text: span.text});
+                        this.ability_body :+ label; prefix = prefix + span.text;
+                    }
+                    baseline += 10;
+                }
+            }
+            slot++;
+        }
+    },
+    layout_captions: () => {
+        for (entry of this.centered_captions) { entry.label.left = #floor(#to_float(entry.width - entry.label.measure().width) / 2.0); }
+    },
     update_labels: () => {
         this.update_status();
         this.chassis.text = #uppercase(this.selection.chassis); this.weapon.text = #uppercase(this.selection.weapon); this.reactor.text = #uppercase(this.selection.reactor);
-        const equipment = this.selection.weapon_mode >= 3;
+        const equipment = this.selection.offense == 0;
         const label = equipment ? this.parent_text.equipment : this.parent_text.weapon;
         this.weapon_heading.text = #uppercase(label);
-        this.chassis_stat.text = 'Land ' + #to_string(this.selection.speed); this.weapon_stat.text = label + ' ' + #to_string(equipment ? this.selection.weapon_cost : this.selection.offense); this.reactor_stat.text = 'Power ' + #to_string(this.selection.power);
+        this.chassis_heading.text = #uppercase(this.parent_text.chassis); this.armor_heading.text = #uppercase(this.parent_text.shielding); this.reactor_heading.text = #uppercase(this.parent_text.reactor);
+
+        this.chassis_stat.text = this.parent_text.domains[0] + ' ' + #to_string(this.selection.speed); this.weapon_stat.text = label + ' ' + #to_string(equipment ? this.selection.weapon_cost : this.selection.offense); this.reactor_stat.text = this.parent_text.power + ' ' + #to_string(this.selection.power);
         if (#is_defined(this.selection.chassis_choices)) { for (row of this.selection.chassis_choices) { if (row.id == this.selected_chassis) {
-            this.chassis_stat.text = ['Land', 'Sea', 'Air'][row.domain] + ' ' + #to_string(row.value);
+            this.chassis_stat.text = this.parent_text.domains[row.domain] + ' ' + #to_string(row.value);
         } } }
-        let slot = 0; for (label of this.ability_labels) { const bit = this.ability_slots[slot];
-            label.text = bit < 0 ? 'NONE' : #uppercase(this.selection.ability_names[bit]); slot++;
-        }
+        this.paint_ability_cards();
+        this.chassis_stat.color = this.parent_text.colors[224]; this.weapon_stat.color = this.parent_text.colors[224];
+        this.armor_stat.color = this.parent_text.colors[224]; this.reactor_stat.color = this.parent_text.colors[224];
+        this.layout_captions();
     },
     update_status: () => {
         if (!#is_defined(this.selection.status)) { this.console.hide(); return; }
@@ -330,7 +417,7 @@ return {
                 (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, this.preview_strength, this.window.is_visible(), this.selected_abilities);
         }
     },
-    armor_strength: (strength) => { return strength < 0 ? 'Psi' : #to_string(strength); },
+    armor_strength: (strength) => { return strength < 0 ? this.parent_text.psi : #to_string(strength); },
     update_armor: () => {
         this.components.smacworkshopcomponents(this.selected_armor, true);
         for (row of this.selection.armor) { if (row.id == this.selected_armor) {
@@ -338,7 +425,7 @@ return {
                 component.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor, component.kind, this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating, this.window.is_visible(), this.selected_abilities);
             }
             this.preview_strength = row.rating; this.paint_main_preview();
-            this.armor_name.text = row.id == 0 ? 'NONE' : #uppercase(row.short_name); this.armor_stat.text = 'Level ' + this.armor_strength(row.rating);
+            this.armor_name.text = row.id == 0 ? #uppercase(this.parent_text.none) : #uppercase(row.short_name); this.armor_stat.text = row.armor_class >= 3 ? '' : this.parent_text.level + ' ' + this.armor_strength(row.rating);
             if (row.design_name != '') { this.title.text = #uppercase(row.design_name); }
             const rows = row.cost_rows < this.selected_reactor ? this.selected_reactor : row.cost_rows;
             const quantity = #to_string(rows * this.mineral_factor);
@@ -351,6 +438,7 @@ return {
             workshop.data_heading.text = #uppercase(text.labels[6]); workshop.data_heading.color = text.colors[224];
             let index = 0; for (label of workshop.data_rows) { label.text = lines[index]; label.color = text.colors[224]; index++; }
             this.stats.text = row.stat_line; } }
+        this.paint_component_names(); this.layout_captions();
     },
     open_picker: () => {
         this.open_component_picker(2);

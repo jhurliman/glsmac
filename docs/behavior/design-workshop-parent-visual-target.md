@@ -123,7 +123,7 @@ Arial requests at1024, independent of the ability modal's Arial Narrow body.
 | Main design name | -16 /700 |53 parent-local, centered in main clip |
 | Main component headings | -12 /700 |18,112,206 for left column |
 | Component names | -10 /0 | See per-card glyph journal; wrapping preserved |
-| Component numeric values | -12 /700 | Separate alignment/metrics from names |
+| Component numeric values | -10 /0 | Actual side-card glyph runs; separate alignment from names |
 | Main DATA heading/rows and ordinary COST | -12 /700 | DATA117; COST glyph journal in the57..73 allocation |
 | Main stat string | -16 /700 |270 parent-local |
 | Action button labels | -14 /700 |15 button-local |

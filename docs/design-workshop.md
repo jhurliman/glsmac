@@ -1482,3 +1482,54 @@ correctness analysis passes for53 production translation units and consumers.
 The full-pool controls finish in seconds through real snapshot decoding.
 The screen, general packages/projects, remote replay and SMAX acceptance remain
 open; this refusal integration is not a completed Workshop or campaign.
+
+
+### Parent card text, native wrapping and Arial10
+
+Parent cards now load their headings/value labels from installed LABELS and
+TRIAD. Component value lines use palette224 and regular Arial10; names use
+palette222. Position each caption with integer measured advances. Empty
+ability NONE follows the wrapped heading's returned body area. Populated
+cards draw the original case-preserving `{name:  }description` inline markup,
+with two spaces, native per-span colors, centered whole lines and bottom
+alignment. Clearing/reselecting removes old text nodes.
+
+Long chassis/weapon/armor names take the native >99px two-line-reservation
+branch, including its unchanged value line and possible later overlap for
+three or more lines. Reactor names reserve their measured total height and
+shift the component preview center accordingly. Unbroken wide words remain
+whole and are clipped by the card. Source/geometry controls are in the
+[card contract](behavior/design-workshop-card-decoration.md) and its
+[long-name supplement](behavior/design-workshop-component-name-wrap-cases.json).
+Long-name geometry has source/scalar/UI controls, not new native long-name
+raster comparisons.
+
+The live scalar projection carries installed ability descriptions beside names.
+The [Arial10 adapter](behavior/design-workshop-arial10.md) closes the measured
+lowercase-c advance and thirteen scan-conversion differences across four other
+glyphs. All95 printable glyph advances/bearings and complete masks match the
+owned-host GDI receipt. The profile is bounded by font hash, size, mode and
+input-mask digests; it is not a new parity claim for every font/size/platform.
+
+All six native ability-card regions across empty, SAM, and Drop+SAM match:
+50,490 pixels, no mask/tolerance. Clearing returns both cards to exact empty
+regions (another16,830 pixels). Ordinary component name/value regions match;
+the complete No Armor and reactor cards also match. The sampled chassis model
+region still differs by198 pixels, and the weapon model by one; these remain
+rendering follow-ups. Main preview phase, background and the entire Workshop
+are not part of this card-text equality claim.
+
+The actual ASan/UBSan SDL capture uses copied UI data with declared display
+slots to reproduce the native card inputs. It does not grant technologies,
+save a normally unavailable design, or prove a complete all-tech campaign.
+It switches all three states, clears and cancels; exit0, no sanitizer reports
+or tracked OpenGL leaks (ordinary allocations were not leak-checked).
+Five affected native groups and three UI scripts pass normally and with13
+production/two test translation units instrumented. Correctness analysis
+passes for14 production translation units/consumers. A small unchanged texture
+argument-error formatter uses append operations to avoid an LLVM15 analyzer
+crash in nested temporary string concatenation; error text is preserved.
+
+This remains a focused card slice. Preset actions, complete parent/help/input
+presentation, remaining model differences, complete human-played/remote
+manufacturing, SMAX and the release platform/hardware gates remain open.

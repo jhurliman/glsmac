@@ -1,12 +1,43 @@
 #include "FreeType.h"
 
 #include "types/Font.h"
+#include "SmacFontLayout.h"
+#include "util/SHA256.h"
 #include "util/FinallyGuard.h"
 #include <cstddef>
 #include FT_SYNTHESIS_H
 
 namespace loader {
 namespace font {
+namespace {
+// Thirteen scan-conversion deltas for the identified Arial10 face. A complete
+// input-mask digest prevents altering unknown/new FreeType raster results.
+void CorrectArial10Raster(types::Font& font) {
+    struct Delta {int x,y;bool ink;};
+    struct Correction {unsigned code;const char* input;std::vector<Delta> deltas;};
+    static const std::array<Correction,4> corrections{{
+        {64,"f61fc80e000b29c4787d699cab71c74ab3a3e09cff4a01560a89131c9010bbc2",{{1,-5,true},{2,-5,false}}},
+        {75,"daa31a99f44caff91620e912e8077cf8f6a7406c41160f779096c345c1e0e079",{{5,-7,true},{6,-7,false},{4,-6,true},{5,-6,false},{3,-5,true},{4,-5,false}}},
+        {86,"25a138580145d96167679e6791f18ca6f66788549ee9d3fdc3a7a9101b416aff",{{4,-1,false}}},
+        {90,"86961ec2e2a3943e848eb96bfbf84fc390a770f07bac0f4e12ae7cfdffdf379b",{{5,-6,true},{4,-5,true},{3,-4,true},{2,-3,true}}},
+    }};
+    for(const auto& fix:corrections) {
+        auto& glyph=font.m_symbols[fix.code];std::array<char,4096> cell{};bool bounded=true;
+        for(unsigned y=0;y<glyph.height;++y) {for(unsigned x=0;x<glyph.width;++x) {
+            const int dx=16+glyph.left+int(x),dy=48-glyph.top+int(y);
+            if(dx<0 || dx>=64 || dy<0 || dy>=64) {bounded=false;continue;}
+            cell[size_t(dy)*64+size_t(dx)]=glyph.data[size_t(y)*glyph.width+x]!=0;
+        }}
+        if(!bounded || util::SHA256(std::string_view(cell.data(),cell.size()))!=fix.input) {continue;}
+        for(const auto& delta:fix.deltas) {
+            const int x=delta.x-glyph.left,y=delta.y+glyph.top;
+            if(x<0 || x>=int(glyph.width) || y<0 || y>=int(glyph.height)) {bounded=false;}
+        }
+        if(!bounded) {continue;}
+        for(const auto& delta:fix.deltas) {glyph.data[size_t(delta.y+glyph.top)*glyph.width+size_t(delta.x-glyph.left)]=delta.ink ? 255:0;}
+    }
+}
+}
 
 void FreeType::Start() {
 	auto res = FT_Init_FreeType( &m_freetype );
@@ -89,6 +120,13 @@ types::Font* FreeType::LoadFontImpl( const std::string& name, const std::vector<
 	}
 
 
+    if(mode==RasterMode::MONOCHROME) {
+        const auto sha=util::SHA256(std::string_view(reinterpret_cast<const char*>(data.data()),data.size()));
+        if(const auto* advances=smac::AsciiAdvances(sha,size)) {
+            for(size_t i=0;i<advances->size();++i) {font->m_symbols[i+32].ax=advances->at(i);}
+            CorrectArial10Raster(*font);
+        }
+    }
 	DEBUG_STAT_INC( fonts_loaded );
 
 	auto* result = font;

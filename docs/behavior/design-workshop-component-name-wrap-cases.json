@@ -1,0 +1,328 @@
+{
+  "scope": "Source-only component name branch supplement; retained short-name receipts checked.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "metrics": {
+    "font_baseline_offset": 7,
+    "font_line_step": 10,
+    "name_width": 99
+  },
+  "short_name_native_journal_rectangles_match": {
+    "chassis": {
+      "mode": "single_center",
+      "name_rect": [
+        30,
+        73,
+        129,
+        80
+      ],
+      "name_baselines": [
+        80
+      ],
+      "value_rect": [
+        30,
+        83,
+        129,
+        90
+      ],
+      "value_baseline": 90
+    },
+    "weapon": {
+      "mode": "single_center",
+      "name_rect": [
+        30,
+        167,
+        129,
+        174
+      ],
+      "name_baselines": [
+        174
+      ],
+      "value_rect": [
+        30,
+        177,
+        129,
+        184
+      ],
+      "value_baseline": 184
+    },
+    "armor": {
+      "mode": "single_center",
+      "name_rect": [
+        30,
+        261,
+        129,
+        268
+      ],
+      "name_baselines": [
+        268
+      ],
+      "value_rect": [
+        30,
+        271,
+        129,
+        278
+      ],
+      "value_baseline": 278
+    },
+    "reactor": {
+      "mode": "wrap",
+      "name_rect": [
+        462,
+        70,
+        561,
+        77
+      ],
+      "name_baselines": [
+        77
+      ],
+      "value_rect": [
+        462,
+        80,
+        561,
+        87
+      ],
+      "value_baseline": 87
+    }
+  },
+  "source_derived_cases": [
+    {
+      "kind": "chassis",
+      "declared_measured_width": 99,
+      "declared_wrapped_lines": 1,
+      "source_derived": {
+        "mode": "single_center",
+        "name_rect": [
+          30,
+          73,
+          129,
+          80
+        ],
+        "name_baselines": [
+          80
+        ],
+        "value_rect": [
+          30,
+          83,
+          129,
+          90
+        ],
+        "value_baseline": 90
+      }
+    },
+    {
+      "kind": "chassis",
+      "declared_measured_width": 100,
+      "declared_wrapped_lines": 2,
+      "source_derived": {
+        "mode": "wrap",
+        "name_rect": [
+          30,
+          63,
+          129,
+          70
+        ],
+        "name_baselines": [
+          70,
+          80
+        ],
+        "value_rect": [
+          30,
+          83,
+          129,
+          90
+        ],
+        "value_baseline": 90
+      }
+    },
+    {
+      "kind": "weapon",
+      "declared_measured_width": 99,
+      "declared_wrapped_lines": 1,
+      "source_derived": {
+        "mode": "single_center",
+        "name_rect": [
+          30,
+          167,
+          129,
+          174
+        ],
+        "name_baselines": [
+          174
+        ],
+        "value_rect": [
+          30,
+          177,
+          129,
+          184
+        ],
+        "value_baseline": 184
+      }
+    },
+    {
+      "kind": "weapon",
+      "declared_measured_width": 100,
+      "declared_wrapped_lines": 2,
+      "source_derived": {
+        "mode": "wrap",
+        "name_rect": [
+          30,
+          157,
+          129,
+          164
+        ],
+        "name_baselines": [
+          164,
+          174
+        ],
+        "value_rect": [
+          30,
+          177,
+          129,
+          184
+        ],
+        "value_baseline": 184
+      }
+    },
+    {
+      "kind": "armor",
+      "declared_measured_width": 99,
+      "declared_wrapped_lines": 1,
+      "source_derived": {
+        "mode": "single_center",
+        "name_rect": [
+          30,
+          261,
+          129,
+          268
+        ],
+        "name_baselines": [
+          268
+        ],
+        "value_rect": [
+          30,
+          271,
+          129,
+          278
+        ],
+        "value_baseline": 278
+      }
+    },
+    {
+      "kind": "armor",
+      "declared_measured_width": 100,
+      "declared_wrapped_lines": 2,
+      "source_derived": {
+        "mode": "wrap",
+        "name_rect": [
+          30,
+          251,
+          129,
+          258
+        ],
+        "name_baselines": [
+          258,
+          268
+        ],
+        "value_rect": [
+          30,
+          271,
+          129,
+          278
+        ],
+        "value_baseline": 278
+      }
+    },
+    {
+      "kind": "reactor",
+      "declared_measured_width": 99,
+      "declared_wrapped_lines": 1,
+      "source_derived": {
+        "mode": "wrap",
+        "name_rect": [
+          462,
+          70,
+          561,
+          77
+        ],
+        "name_baselines": [
+          77
+        ],
+        "value_rect": [
+          462,
+          80,
+          561,
+          87
+        ],
+        "value_baseline": 87
+      }
+    },
+    {
+      "kind": "reactor",
+      "declared_measured_width": 100,
+      "declared_wrapped_lines": 2,
+      "source_derived": {
+        "mode": "wrap",
+        "name_rect": [
+          462,
+          60,
+          561,
+          67
+        ],
+        "name_baselines": [
+          67,
+          77
+        ],
+        "value_rect": [
+          462,
+          80,
+          561,
+          87
+        ],
+        "value_baseline": 87
+      }
+    }
+  ],
+  "guards": [
+    {
+      "pc": "0x43e0e4",
+      "mnemonic": "jle",
+      "operand": "0x43e143"
+    },
+    {
+      "pc": "0x43e5ba",
+      "mnemonic": "jle",
+      "operand": "0x43e61b"
+    },
+    {
+      "pc": "0x43eb29",
+      "mnemonic": "jle",
+      "operand": "0x43eb88"
+    },
+    {
+      "pc": "0x43ef32",
+      "mnemonic": "call",
+      "operand": "0x5f5160"
+    },
+    {
+      "pc": "0x63091d",
+      "mnemonic": "push",
+      "operand": "0x20"
+    },
+    {
+      "pc": "0x6309ae",
+      "mnemonic": "jl",
+      "operand": "0x630aec"
+    },
+    {
+      "pc": "0x630b10",
+      "mnemonic": "lea",
+      "operand": "eax, [ebp + 1]"
+    },
+    {
+      "pc": "0x630a8b",
+      "mnemonic": "mov",
+      "operand": "eax, esi"
+    }
+  ],
+  "native_long_name_controls": 0
+}

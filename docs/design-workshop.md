@@ -1709,10 +1709,12 @@ The session used software OpenGL and no audio, so it is not performance or
 native-platform milestone acceptance.
 
 This strengthens the named-design-to-manufactured-Unit and disk-load evidence,
-but does not close the entire Workshop receipt. The second process's selected
-custom-name card and reopened editable design were not verified in this run;
-advanced designs, SMAX, remote commands and full pixel/input/preference
-acceptance remain open. Legacy terrain picking/camera remains visibly distinct
+but does not close the entire Workshop receipt. A follow-up fresh process reopens the saved Campaign Guard in Workshop
+with its retained name, Synthmetal armor and1-2-1 components, then selects the
+restored manufactured Unit through the normal roster and verifies its custom
+name, home and spent-movement card. This closes that bounded early-Fission
+named-design/manufacture/disk-reopen scenario. Advanced designs, SMAX, remote
+commands and full pixel/input/preference acceptance remain open. Legacy terrain picking/camera remains visibly distinct
 from the original projection and must be corrected as tracked separately.
 
 The regression suite also exposed an obsolete Early-start failure fixture:
@@ -1722,3 +1724,17 @@ record instead, preserving genuine unavailable-design failure and cleanup
 coverage. All eight Early-start groups and three affected Rover groups pass.
 Production code/analysis/sanitizer checks from the component-body slice are
 unchanged by that test-only follow-up.
+
+
+## 2026-10-21 indexed console cards and shadows
+
+The selected and roster panels now use original style21/18 frame sources,
+console-local pattern phase and the66-pixel roster advance. Retained ground
+components render through the original shadow-first/body-second indexed copy.
+The actual scene-cache overlay over the panel matches twelve complete native
+model-plus-panel RGBA crops. The [integration receipt](behavior/live-ground-shadows.md)
+records eight native panel controls, eighteen patterned copy controls and the
+live instrumented saved-world selection run. These bounded crops exclude names,
+statistics, badges and later selection borders; complete decorated-card and
+whole-screen acceptance remain open. Global U/menu, production New/Redesign and
+SMAX caller coverage remain the next Workshop entry-point work.

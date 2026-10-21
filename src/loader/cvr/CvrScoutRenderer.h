@@ -93,6 +93,7 @@ public:
     static CvrScoutRenderer LoadOrdinaryDesign(const WorkshopReader& read,std::string_view faction_pcx,
         int chassis,int weapon,int armor,int reactor,const WorkshopDefinition& definition);
     CvrScoutImage RenderOrdinaryBody(const CvrScoutViewInput& view) const;
+    CvrStripImage RenderOrdinary(const CvrScoutViewInput& view,bool shadow=true) const;
     CvrScoutImage RenderWorkshopCard(int kind,std::array<uint32_t,3>& position,WorkshopAnimation* animation=nullptr) const;
     CvrScoutImage RenderWorkshopPicker(int kind,int ordinal,bool available,std::array<uint32_t,3>& position) const;
     static CvrScoutRenderer LoadWorkshopPart(std::string_view part,std::string_view palette,std::string_view system,

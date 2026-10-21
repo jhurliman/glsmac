@@ -237,13 +237,15 @@ CvrScoutImage CvrScoutRenderer::RenderOrdinaryBody(const CvrScoutViewInput& inpu
 }
 
 CvrStripImage CvrScoutRenderer::RenderStrip() const {
+    return RenderOrdinary({2,-10,0,1,{42,207}});
+}
+CvrStripImage CvrScoutRenderer::RenderOrdinary(const CvrScoutViewInput& input,bool shadow) const {
     if(m_assets->profile!=Profile::StripInfantry && m_assets->profile!=Profile::StripBody
-        && m_assets->profile!=Profile::StripSmallInfantry) {throw std::invalid_argument("Saved-strip rendering requires its ordinary scene");}
-    const CvrScoutViewInput input{2,-10,0,1,{42,207}};
+        && m_assets->profile!=Profile::StripSmallInfantry) {throw std::invalid_argument("Ordinary rendering requires its component scene");}
     const auto view=scout::MakeView(input,m_assets->profile==Profile::StripInfantry ? scout::IdleProfile::InitializedInfantry:
         m_assets->profile==Profile::StripSmallInfantry ? scout::IdleProfile::InitializedSmallInfantry:scout::IdleProfile::SpartanSpeeder);
     auto scene=scout::FlatScoutShadowScene(input);scene.auxiliary_scale=view.scales[0];
-    return {RenderView(view),RenderShadow(scene)};
+    return {RenderView(view),shadow ? RenderShadow(scene):CvrShadowResult{256,256,256,std::vector<uint8_t>(256*256,0)}};
 }
 
 CvrScoutImage CvrScoutRenderer::RenderWorkshopCard(int kind,std::array<uint32_t,3>& position,WorkshopAnimation* animation) const {
@@ -509,7 +511,11 @@ CvrShadowResult CvrScoutRenderer::RenderShadow(const scout::ShadowScene& scene) 
                 int32_t(group.header->vectors[0][i])+group.header->vectors[3][i]:geometry.vectors[2][i]));}
             const auto start=AddVector(MultiplyVector(matrix,header),location);
             Matrix origin{};std::copy(start.begin(),start.end(),origin.begin()+6);
-            draws.push_back({&group.records,(geometry.flags&8)!=0,CvrSampleFootprint::Single,basis,CvrBasisConverter::Convert(origin)[2]});
+            // A binary32-by-binary32 product has at most48 significant
+            // bits, so conversion to double preserves this exact threshold.
+            const auto footprint=ToDouble(Multiply(Decode(geometry.scalar_bits),Decode(scale)))>0.5
+                ? CvrSampleFootprint::Square2:CvrSampleFootprint::Single;
+            draws.push_back({&group.records,(geometry.flags&8)!=0,footprint,basis,CvrBasisConverter::Convert(origin)[2]});
         }
     }
     auto result=CvrIndexedRasterizer::Shadow(scene.width,scene.height,draws);

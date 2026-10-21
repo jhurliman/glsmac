@@ -24,6 +24,7 @@ return {
 			case 'Unit': {
 				type = 'unit-preview';
 				data.unit = object;
+                data.native_console = #is_defined(this.native_console) && this.native_console;
 				data.roster = true;
 				top = 0;
 				break;
@@ -46,12 +47,13 @@ return {
 			id: 'item_' + cls,
 			left: left,
 		});
+        const height = (cls == 'Base' || (#is_defined(this.native_console) && this.native_console)) ? 48 : 38;
 		item.widget({
 			type: type,
 			data: data,
 			class: 'bottombar-objects-list-item-preview',
 			top: top,
-			height: cls == 'Base' ? 48 : 38,
+			height: height,
 		});
 		const key = #to_string(object.id);
 		switch (cls) {
@@ -147,11 +149,12 @@ return {
 		this.is_turn_active = true;
 
 		this.p = p;
+        const native_console = #is_defined(p.native_console) && p.native_console; this.native_console = native_console;
 
-		this.object_width = 65;
+		this.object_width = native_console ? 66 : 65;
 
 		p.ui.class('bottombar-objects-list-item').set({
-			width: parent.object_width,
+			width: 65,
 			height: 48,
 			_hover: {
 				border: 'rgb(14,40,49),1',
@@ -162,7 +165,7 @@ return {
 		});
 
 		p.ui.class('bottombar-objects-list-item-preview').set({
-			width: parent.object_width,
+			width: 65,
 			height: 38,
 		});
 
@@ -173,16 +176,16 @@ return {
 			bottom: 2,
 		});
 
-		const frame_outer = p.el.panel({
-			class: 'bottombar-panel',
+		const frame_outer = p.el.panel((native_console ? {} : {class: 'bottombar-panel'}) + {
 			align: 'bottom',
 			bottom: 9,
 			left: 139,
 			right: 260,
 			height: 56,
 		});
-		this.frame = frame_outer.panel({
-			class: 'bottombar-panel-inner',
+        if (native_console) { frame_outer.surface({left: 0, right: 0, top: 0, bottom: 0,
+          smac_frame_phase: [139,192], smac_frame: [[21,0,0,625,56],[18,3,3,622,53]]}); }
+		this.frame = frame_outer.panel((native_console ? {} : {class: 'bottombar-panel-inner'}) + {
 			left: 4, right: 4, top: 4, bottom: 4,
 		});
 

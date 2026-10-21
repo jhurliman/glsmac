@@ -21,6 +21,7 @@ private:
 	// Expires before the base presenter unregisters. Retained DOM callbacks
 	// must check this before accessing the presenter or its Game.
 	std::shared_ptr< const bool > m_lifetime = std::make_shared< const bool >( true );
+    std::unordered_map<ui::dom::Widget*,ui::geometry_handler_id_t> m_area_handlers;
 
 };
 

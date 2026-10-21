@@ -52,13 +52,14 @@ required before the local conquest milestone can be claimed.
 
 ## Current acceptance dashboard — 2026-10-21
 
-Accepted integration: **`be0e5da021437a6cca133231dfcaba8e89337637`**, through
-[#545](https://github.com/jhurliman/glsmac/pull/545), on `codex/faithful-1.0`.
+Accepted integration: **`5a34fcfa17c3922172f5391188bc413aeab41d6f`**, through
+[#546](https://github.com/jhurliman/glsmac/pull/546), on `codex/faithful-1.0`.
 Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `8e52db718df2621e26719962f5e24703808a9a6f`. This is an integration
+at head `f63613101e07712612a095da79ce34c3a0790655`. This is an integration
 checkpoint, not a release candidate or a statement that all platforms were rerun.
 
-Through#545 current retained names reach Unit cards, production/queue labels and
+Through#546 retained component bodies and current-owner materials reach the map
+and both console cards; bounded original idle-body controls match. Current retained names reach Unit cards, production/queue labels and
 frontend snapshots. Saved supported designs appear in original production candidate order
 with retained names and Base-aware costs, and flow through queued selection and
 manufacture. Normal Workshop opening follows the highlighted production choice
@@ -97,7 +98,9 @@ model frames and the bounded cached-sprite output match complete native buffers.
 #535 adds exact ability-card text regions at the declared native states;
 remaining model pixels and whole-parent rendering remain open. #536/#537 add
 filtered preset and PSI-custom recommendation boundaries with521 original
-submission expectations; the live normal-open/preset commands remain unconnected.
+submission expectations; the later live preset, console-button and normal-entry
+receipts connect those consumers. Global U/menu and production New/Redesign
+entry points remain open.
 These receipts do not establish whole-screen parity or the complete human-played
 manufactured Unit path. First custom prototype completion is now integrated
 in#531: a queued saved design is manufactured with its one-time morale bonus

@@ -45,9 +45,10 @@ return. Cached build; no repeated platform matrix.
 
 The command supports ordinary-1 selection, but the global owner-based menu/U
 caller (including no-Base cases), separate production New/Redesign actions and
-facility Help/Datalinks remain unconnected. The production list still projects
-its existing restricted unit set; exposing all supported saved custom designs
-and completing their usable manufacturing receipt is an immediate next task. Tutorial-2 entry is excluded. Full
+facility Help/Datalinks remain unconnected. Supported retained custom designs now appear in the production list in native
+candidate order; the named early-Fission design/manufacture/disk-reopen scenario
+is recorded in [the Workshop journal](../design-workshop.md). General naval/air/PSI
+physics and advanced manufacture acceptance remain open. Tutorial-2 entry is excluded. Full
 Workshop pixel/input/preference acceptance, SMAX coverage and the complete
 human-played named-design-to-manufactured-Unit/save/remote receipt remain open.
 

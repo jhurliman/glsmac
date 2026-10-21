@@ -1,0 +1,2087 @@
+{
+  "research_id": "RE-SMAC-LIVE-GROUND-SHADOWS-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "18 complete original4d7860 helper draws through shadow/color software copies, cleanup and normal return: Scout, Synthmetal Garrison, Rover x map/selected/roster x shadows enabled/suppressed. Native107-model initialization, faction material producer and429e30 warm cache prefix. Supplied startup-derived Unit/design state, retained custom127 rendering tuple, active Gamma100 palette, controlled patterned software target, bitmap headers and OS rectangle/file-mapping/allocation boundaries. No whole dispatcher/card/map presentation, slope or animation expansion.",
+  "source_receipt_sha256": "5039867bc33c7122dd88dbe48a859e1314c92c4b6a5e617bc9e0976a53f0d9a1",
+  "active_palette_sha256": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6",
+  "shadow_lookup_sha256": "70b3ab988991323661c52a73dd8459d6b06202a9e8c6fec329e4f12b0fb7aa49",
+  "lookup_index6": 177,
+  "cases": [
+    {
+      "id": "scout_map_shadow_body",
+      "inputs": {
+        "design": 2,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "map",
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 3,
+        "clip": [
+          0,
+          0,
+          768,
+          256
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 59,
+        "color_kernels": 65,
+        "shadow_kernels": 65,
+        "scale": 0.08749999850988388,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "body_bounds": [
+          115,
+          93,
+          135,
+          136
+        ],
+        "shadow_bounds": [
+          86,
+          120,
+          128,
+          136
+        ],
+        "body_pixels": 341,
+        "shadow_pixels": 230,
+        "target_stores": {
+          "shadow": 230,
+          "body": 341
+        },
+        "hashes": {
+          "color": "850dc4daadd5c4a0f13ea7c4832397de7b5153e384240bf3c05cf297b735a2b5",
+          "depth": "ce09c6e31936e8918dbeeae07297c3ec761e93279463d44c58fa2c7a3a0927e8",
+          "shadow": "6295072ddb25ba2d2f75c21ef0ea2f473dd3157c5a7cace5d9d570eb84ba1f31",
+          "target": "f1a3dd99bdc6b772e233d9451fa695c630e2c10ed03aada6aa78d6f7b22990f6"
+        },
+        "independent_mask_match": true,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {
+          "33": 65
+        }
+      },
+      "composition": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scout_map_body_only",
+      "inputs": {
+        "design": 2,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "map",
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 8195,
+        "clip": [
+          0,
+          0,
+          768,
+          256
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 59,
+        "color_kernels": 65,
+        "shadow_kernels": 0,
+        "scale": 0.08749999850988388,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "body_bounds": [
+          115,
+          93,
+          135,
+          136
+        ],
+        "shadow_bounds": null,
+        "body_pixels": 341,
+        "shadow_pixels": 0,
+        "target_stores": {
+          "shadow": 0,
+          "body": 341
+        },
+        "hashes": {
+          "color": "850dc4daadd5c4a0f13ea7c4832397de7b5153e384240bf3c05cf297b735a2b5",
+          "depth": "ce09c6e31936e8918dbeeae07297c3ec761e93279463d44c58fa2c7a3a0927e8",
+          "shadow": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+          "target": "f4cb04e46fcd0c9b9dcb765c01bdeef2b86813cba45a4541a314eb6e31195bd7"
+        },
+        "independent_mask_match": false,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {}
+      },
+      "composition": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scout_selected_shadow_body",
+      "inputs": {
+        "design": 2,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "selected",
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 72,
+        "clip": [
+          14,
+          66,
+          130,
+          242
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 59,
+        "color_kernels": 65,
+        "shadow_kernels": 65,
+        "scale": 0.06562500447034836,
+        "wrapper_anchor": [
+          71,
+          103
+        ],
+        "copy_offset": [
+          -57,
+          -25
+        ],
+        "body_bounds": [
+          118,
+          102,
+          133,
+          135
+        ],
+        "shadow_bounds": [
+          96,
+          122,
+          128,
+          135
+        ],
+        "body_pixels": 212,
+        "shadow_pixels": 148,
+        "target_stores": {
+          "shadow": 148,
+          "body": 212
+        },
+        "hashes": {
+          "color": "94698581e92ea4ef24bec3a387be3d74366e763573c9f0bc3685bc5f668a971e",
+          "depth": "698121ade1e67010e94cb8ef7c4647d688b557da1b02834d3d33e9e575047c19",
+          "shadow": "b11f3f7689dd73bc7209f8d9673c75a95ba504eb48cffbbfc7dc0c605160418e",
+          "target": "48d99403909601530dd66bbaf96b5aa9dc9ed9825b41d63f3a118912883aa27a"
+        },
+        "independent_mask_match": true,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {
+          "33": 65
+        }
+      },
+      "composition": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scout_selected_body_only",
+      "inputs": {
+        "design": 2,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "selected",
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 8264,
+        "clip": [
+          14,
+          66,
+          130,
+          242
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 59,
+        "color_kernels": 65,
+        "shadow_kernels": 0,
+        "scale": 0.06562500447034836,
+        "wrapper_anchor": [
+          71,
+          103
+        ],
+        "copy_offset": [
+          -57,
+          -25
+        ],
+        "body_bounds": [
+          118,
+          102,
+          133,
+          135
+        ],
+        "shadow_bounds": null,
+        "body_pixels": 212,
+        "shadow_pixels": 0,
+        "target_stores": {
+          "shadow": 0,
+          "body": 212
+        },
+        "hashes": {
+          "color": "94698581e92ea4ef24bec3a387be3d74366e763573c9f0bc3685bc5f668a971e",
+          "depth": "698121ade1e67010e94cb8ef7c4647d688b557da1b02834d3d33e9e575047c19",
+          "shadow": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+          "target": "dd127283b783ebf189f1f37f60be4efd85413a74eda7213c4a84b2100d6d2c7b"
+        },
+        "independent_mask_match": false,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {}
+      },
+      "composition": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scout_roster_shadow_body",
+      "inputs": {
+        "design": 2,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "roster",
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 1024,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 59,
+        "color_kernels": 65,
+        "shadow_kernels": 65,
+        "scale": 0.04374999925494194,
+        "wrapper_anchor": [
+          181,
+          222
+        ],
+        "copy_offset": [
+          53,
+          94
+        ],
+        "body_bounds": [
+          121,
+          110,
+          132,
+          133
+        ],
+        "shadow_bounds": [
+          107,
+          124,
+          128,
+          133
+        ],
+        "body_pixels": 113,
+        "shadow_pixels": 83,
+        "target_stores": {
+          "shadow": 83,
+          "body": 113
+        },
+        "hashes": {
+          "color": "e9cd0b3fba47e960fef927d525f366c0d5d9db9c4df876447267dc31f54aa9f0",
+          "depth": "a465e34d7cdf13d5441bbb4eb90980049ca9e80e0c727af684d9fb925576ffe5",
+          "shadow": "83aa28b3e8c03826ee7dd822fc2e45b14efa9f922f19979e20f68c1087ccec89",
+          "target": "3827d0a8e915cd250e1a8f963d15fb0271d545f7086bc40e0931e2e02c631d93"
+        },
+        "independent_mask_match": true,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {
+          "33": 65
+        }
+      },
+      "composition": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scout_roster_body_only",
+      "inputs": {
+        "design": 2,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "roster",
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 9216,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 59,
+        "color_kernels": 65,
+        "shadow_kernels": 0,
+        "scale": 0.04374999925494194,
+        "wrapper_anchor": [
+          181,
+          222
+        ],
+        "copy_offset": [
+          53,
+          94
+        ],
+        "body_bounds": [
+          121,
+          110,
+          132,
+          133
+        ],
+        "shadow_bounds": null,
+        "body_pixels": 113,
+        "shadow_pixels": 0,
+        "target_stores": {
+          "shadow": 0,
+          "body": 113
+        },
+        "hashes": {
+          "color": "e9cd0b3fba47e960fef927d525f366c0d5d9db9c4df876447267dc31f54aa9f0",
+          "depth": "a465e34d7cdf13d5441bbb4eb90980049ca9e80e0c727af684d9fb925576ffe5",
+          "shadow": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+          "target": "a08c72af51e90be9aa3fbbb11bd01c7eb121182081a23ba7bbba7ce836be701d"
+        },
+        "independent_mask_match": false,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {}
+      },
+      "composition": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "garrison_map_shadow_body",
+      "inputs": {
+        "design": 127,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "map",
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 3,
+        "clip": [
+          0,
+          0,
+          768,
+          256
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 60,
+        "color_kernels": 66,
+        "shadow_kernels": 66,
+        "scale": 0.08749999850988388,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "body_bounds": [
+          115,
+          93,
+          135,
+          136
+        ],
+        "shadow_bounds": [
+          86,
+          120,
+          128,
+          136
+        ],
+        "body_pixels": 411,
+        "shadow_pixels": 266,
+        "target_stores": {
+          "shadow": 266,
+          "body": 411
+        },
+        "hashes": {
+          "color": "4d6a0bec62d04cd9877b56df6ad482d3220d5d53626de01654714cb3662c1e75",
+          "depth": "bbbe87d01600dd7b9d046d94720c0c9bf44d9fddce414d3d65280d9e197de4be",
+          "shadow": "503d70a1bd3b66f0d4abfea5baeda85d1925bac43103082de57e09eb58237dc6",
+          "target": "bed9719b8417e6ade9e5bc1bd35fd00ad46d88844d09cd5aa5e9f78ccbcdfb02"
+        },
+        "independent_mask_match": true,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {
+          "33": 66
+        }
+      },
+      "composition": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "vipta00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "garrison_map_body_only",
+      "inputs": {
+        "design": 127,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "map",
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 8195,
+        "clip": [
+          0,
+          0,
+          768,
+          256
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 60,
+        "color_kernels": 66,
+        "shadow_kernels": 0,
+        "scale": 0.08749999850988388,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "body_bounds": [
+          115,
+          93,
+          135,
+          136
+        ],
+        "shadow_bounds": null,
+        "body_pixels": 411,
+        "shadow_pixels": 0,
+        "target_stores": {
+          "shadow": 0,
+          "body": 411
+        },
+        "hashes": {
+          "color": "4d6a0bec62d04cd9877b56df6ad482d3220d5d53626de01654714cb3662c1e75",
+          "depth": "bbbe87d01600dd7b9d046d94720c0c9bf44d9fddce414d3d65280d9e197de4be",
+          "shadow": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+          "target": "836bb8e9153fc5f279eca3b1181a80e20368dbe23530c2a128e4ec63c41e4082"
+        },
+        "independent_mask_match": false,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {}
+      },
+      "composition": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "vipta00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "garrison_selected_shadow_body",
+      "inputs": {
+        "design": 127,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "selected",
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 72,
+        "clip": [
+          14,
+          66,
+          130,
+          242
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 60,
+        "color_kernels": 66,
+        "shadow_kernels": 66,
+        "scale": 0.06562500447034836,
+        "wrapper_anchor": [
+          71,
+          103
+        ],
+        "copy_offset": [
+          -57,
+          -25
+        ],
+        "body_bounds": [
+          118,
+          102,
+          133,
+          135
+        ],
+        "shadow_bounds": [
+          96,
+          122,
+          128,
+          135
+        ],
+        "body_pixels": 248,
+        "shadow_pixels": 169,
+        "target_stores": {
+          "shadow": 169,
+          "body": 248
+        },
+        "hashes": {
+          "color": "7d9579b90eec79736ea1a07f65f4d72d9cdcd2149dab82084d06777c1de65a21",
+          "depth": "aa2f3b29bbd340267117bbf367a0b90cb992a9cc57089e49d00881a88096f953",
+          "shadow": "40311e9274db1c8c0daf68f0013a97b9329a6ebb3e006761293ef2e59df479fc",
+          "target": "c8e888c76fcd41ffc470933913355f061b61c1205c6b49e4d4b647823bda210f"
+        },
+        "independent_mask_match": true,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {
+          "33": 66
+        }
+      },
+      "composition": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "vipta00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "garrison_selected_body_only",
+      "inputs": {
+        "design": 127,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "selected",
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 8264,
+        "clip": [
+          14,
+          66,
+          130,
+          242
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 60,
+        "color_kernels": 66,
+        "shadow_kernels": 0,
+        "scale": 0.06562500447034836,
+        "wrapper_anchor": [
+          71,
+          103
+        ],
+        "copy_offset": [
+          -57,
+          -25
+        ],
+        "body_bounds": [
+          118,
+          102,
+          133,
+          135
+        ],
+        "shadow_bounds": null,
+        "body_pixels": 248,
+        "shadow_pixels": 0,
+        "target_stores": {
+          "shadow": 0,
+          "body": 248
+        },
+        "hashes": {
+          "color": "7d9579b90eec79736ea1a07f65f4d72d9cdcd2149dab82084d06777c1de65a21",
+          "depth": "aa2f3b29bbd340267117bbf367a0b90cb992a9cc57089e49d00881a88096f953",
+          "shadow": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+          "target": "b317ced8782d2e47be179350b0b3de7b2a4f99c53b1836540846bae9da41fce6"
+        },
+        "independent_mask_match": false,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {}
+      },
+      "composition": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "vipta00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "garrison_roster_shadow_body",
+      "inputs": {
+        "design": 127,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "roster",
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 1024,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 60,
+        "color_kernels": 66,
+        "shadow_kernels": 66,
+        "scale": 0.04374999925494194,
+        "wrapper_anchor": [
+          181,
+          222
+        ],
+        "copy_offset": [
+          53,
+          94
+        ],
+        "body_bounds": [
+          121,
+          110,
+          132,
+          133
+        ],
+        "shadow_bounds": [
+          107,
+          124,
+          128,
+          133
+        ],
+        "body_pixels": 126,
+        "shadow_pixels": 88,
+        "target_stores": {
+          "shadow": 88,
+          "body": 126
+        },
+        "hashes": {
+          "color": "969ff33d8ee7f147e8416adf1ac4b73daf08868d4b4658eb7eb8c0809badb66c",
+          "depth": "15cb1709296a4f7ab0d1bdee2085f98826bbb7a8861ddb46b434c0e806925a45",
+          "shadow": "469ae6666cdc459590d5acf4117abca20ceb79455fa8318a8278018b7278e459",
+          "target": "ec628fdf427ae56287155e16a07d8aa4e52f5daa35c5aac2488f995b86d73611"
+        },
+        "independent_mask_match": true,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {
+          "33": 66
+        }
+      },
+      "composition": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "vipta00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "garrison_roster_body_only",
+      "inputs": {
+        "design": 127,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "roster",
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 9216,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 60,
+        "color_kernels": 66,
+        "shadow_kernels": 0,
+        "scale": 0.04374999925494194,
+        "wrapper_anchor": [
+          181,
+          222
+        ],
+        "copy_offset": [
+          53,
+          94
+        ],
+        "body_bounds": [
+          121,
+          110,
+          132,
+          133
+        ],
+        "shadow_bounds": null,
+        "body_pixels": 126,
+        "shadow_pixels": 0,
+        "target_stores": {
+          "shadow": 0,
+          "body": 126
+        },
+        "hashes": {
+          "color": "969ff33d8ee7f147e8416adf1ac4b73daf08868d4b4658eb7eb8c0809badb66c",
+          "depth": "15cb1709296a4f7ab0d1bdee2085f98826bbb7a8861ddb46b434c0e806925a45",
+          "shadow": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+          "target": "7cac2fb70a6ff6d7b5d0a748e6cca491f7c8b432ead40246afc31c04ccc812f0"
+        },
+        "independent_mask_match": false,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {}
+      },
+      "composition": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "vipta00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": [
+            -400.0,
+            200.0,
+            0.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rover_map_shadow_body",
+      "inputs": {
+        "design": 64,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "map",
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 3,
+        "clip": [
+          0,
+          0,
+          768,
+          256
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 10,
+        "color_kernels": 24,
+        "shadow_kernels": 24,
+        "scale": 0.07000000029802322,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "body_bounds": [
+          105,
+          109,
+          153,
+          140
+        ],
+        "shadow_bounds": [
+          99,
+          115,
+          152,
+          140
+        ],
+        "body_pixels": 800,
+        "shadow_pixels": 689,
+        "target_stores": {
+          "shadow": 689,
+          "body": 800
+        },
+        "hashes": {
+          "color": "19a1036bce318185fe385a453ccc61390689c6cb8418601e62c7ea17e826f478",
+          "depth": "ec95b58c4521076b56dc2d48407ae8163543a8f77b26c58d9975f8a3f9322a13",
+          "shadow": "3a69b479f1e2b459297f552471bf33991e68e1f0f77ef97f4a75e645b49a5f6b",
+          "target": "3d4f1f9bcf17641231fd7aa5295c8ef44717c0569aa7f84d9ddb20188a903625"
+        },
+        "independent_mask_match": true,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {
+          "0": 1,
+          "33": 23
+        }
+      },
+      "composition": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptf.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ]
+    },
+    {
+      "id": "rover_map_body_only",
+      "inputs": {
+        "design": 64,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "map",
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 8195,
+        "clip": [
+          0,
+          0,
+          768,
+          256
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 10,
+        "color_kernels": 24,
+        "shadow_kernels": 0,
+        "scale": 0.07000000029802322,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "body_bounds": [
+          105,
+          109,
+          153,
+          140
+        ],
+        "shadow_bounds": null,
+        "body_pixels": 800,
+        "shadow_pixels": 0,
+        "target_stores": {
+          "shadow": 0,
+          "body": 800
+        },
+        "hashes": {
+          "color": "19a1036bce318185fe385a453ccc61390689c6cb8418601e62c7ea17e826f478",
+          "depth": "ec95b58c4521076b56dc2d48407ae8163543a8f77b26c58d9975f8a3f9322a13",
+          "shadow": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+          "target": "b5960ab76e3f58f6b08f316da3614a73f4b3bb4e0067c59b0ac8693e2270b565"
+        },
+        "independent_mask_match": false,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {}
+      },
+      "composition": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptf.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ]
+    },
+    {
+      "id": "rover_selected_shadow_body",
+      "inputs": {
+        "design": 64,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "selected",
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 72,
+        "clip": [
+          14,
+          66,
+          130,
+          242
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 10,
+        "color_kernels": 24,
+        "shadow_kernels": 24,
+        "scale": 0.05250000208616257,
+        "wrapper_anchor": [
+          71,
+          103
+        ],
+        "copy_offset": [
+          -57,
+          -25
+        ],
+        "body_bounds": [
+          111,
+          114,
+          147,
+          137
+        ],
+        "shadow_bounds": [
+          106,
+          119,
+          146,
+          137
+        ],
+        "body_pixels": 473,
+        "shadow_pixels": 401,
+        "target_stores": {
+          "shadow": 401,
+          "body": 473
+        },
+        "hashes": {
+          "color": "a93e235d18e83bebeec5fcf09ab11c36e9b37e20c1b7ed55a4c8ded5461f960a",
+          "depth": "82cec99420887d5da8c3f2a8580ee52a3b915e41939905838517b8c132748176",
+          "shadow": "a3bdc28bbc61c4892afeaeb7d3ca874c43023d61d685b2fc48533e5552282a67",
+          "target": "a5a6d631f39ac99ebbe7ea9e5d162be465eace4d7c86e9bcb01b0557e9279381"
+        },
+        "independent_mask_match": true,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {
+          "0": 1,
+          "33": 23
+        }
+      },
+      "composition": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptf.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ]
+    },
+    {
+      "id": "rover_selected_body_only",
+      "inputs": {
+        "design": 64,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "selected",
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 8264,
+        "clip": [
+          14,
+          66,
+          130,
+          242
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 10,
+        "color_kernels": 24,
+        "shadow_kernels": 0,
+        "scale": 0.05250000208616257,
+        "wrapper_anchor": [
+          71,
+          103
+        ],
+        "copy_offset": [
+          -57,
+          -25
+        ],
+        "body_bounds": [
+          111,
+          114,
+          147,
+          137
+        ],
+        "shadow_bounds": null,
+        "body_pixels": 473,
+        "shadow_pixels": 0,
+        "target_stores": {
+          "shadow": 0,
+          "body": 473
+        },
+        "hashes": {
+          "color": "a93e235d18e83bebeec5fcf09ab11c36e9b37e20c1b7ed55a4c8ded5461f960a",
+          "depth": "82cec99420887d5da8c3f2a8580ee52a3b915e41939905838517b8c132748176",
+          "shadow": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+          "target": "9d13a602531cc3b93a615c9a6efa1bbd730d092cfeeb28ae9d0930dec4439e8a"
+        },
+        "independent_mask_match": false,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {}
+      },
+      "composition": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptf.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ]
+    },
+    {
+      "id": "rover_roster_shadow_body",
+      "inputs": {
+        "design": 64,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "roster",
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 1024,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 10,
+        "color_kernels": 24,
+        "shadow_kernels": 24,
+        "scale": 0.03500000014901161,
+        "wrapper_anchor": [
+          181,
+          222
+        ],
+        "copy_offset": [
+          53,
+          94
+        ],
+        "body_bounds": [
+          117,
+          118,
+          141,
+          134
+        ],
+        "shadow_bounds": [
+          113,
+          122,
+          140,
+          134
+        ],
+        "body_pixels": 230,
+        "shadow_pixels": 197,
+        "target_stores": {
+          "shadow": 197,
+          "body": 230
+        },
+        "hashes": {
+          "color": "8f3f17871874aa8e7d3f0728ffaa3f45c6e1a887209b7b46c808eb6c876a5dbe",
+          "depth": "0f82c09305893a1c6ef043303e626d37ecba1e68b636cd3d06d7cf49c723da1d",
+          "shadow": "00c918e1a1e2976b85d43c6b183c247d39f45d5c7f63395ba18d39ef62b8583c",
+          "target": "136ab7c706d34d2b94074e593aa805b4a571b96738bca378c427e8a3e9678427"
+        },
+        "independent_mask_match": true,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {
+          "1": 1,
+          "33": 23
+        }
+      },
+      "composition": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptf.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ]
+    },
+    {
+      "id": "rover_roster_body_only",
+      "inputs": {
+        "design": 64,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "owner": 1,
+        "facing": 0,
+        "phase": 0,
+        "context": "roster",
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 9216,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "target_width": 768,
+        "target_height": 256,
+        "pitch": 776,
+        "backdrop": "(3*x+5*y+37) mod256 including padding"
+      },
+      "expected": {
+        "objects": 10,
+        "color_kernels": 24,
+        "shadow_kernels": 0,
+        "scale": 0.03500000014901161,
+        "wrapper_anchor": [
+          181,
+          222
+        ],
+        "copy_offset": [
+          53,
+          94
+        ],
+        "body_bounds": [
+          117,
+          118,
+          141,
+          134
+        ],
+        "shadow_bounds": null,
+        "body_pixels": 230,
+        "shadow_pixels": 0,
+        "target_stores": {
+          "shadow": 0,
+          "body": 230
+        },
+        "hashes": {
+          "color": "8f3f17871874aa8e7d3f0728ffaa3f45c6e1a887209b7b46c808eb6c876a5dbe",
+          "depth": "0f82c09305893a1c6ef043303e626d37ecba1e68b636cd3d06d7cf49c723da1d",
+          "shadow": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+          "target": "757674b5352da3260aa8c0602ca7dbe4b8183a1714bf2d509dee12b528ed12a4"
+        },
+        "independent_mask_match": false,
+        "ordered_copy_match": true,
+        "cleanup": true,
+        "guards": true,
+        "shadow_kernel_flags": {}
+      },
+      "composition": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptf.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ]
+    }
+  ]
+}

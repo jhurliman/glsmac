@@ -1,0 +1,1196 @@
+{
+  "research_id": "RE-SMAC-CONSOLE-UNIT-PANEL-GOLDENS-001",
+  "scope": "Twelve complete original Unit helper draws over actual original-decoded console2 indexed backing and original-generated/painted style21/18 panels. Actual original software shadow/body copies and normal cleanup. Four native crop stages plus additional native body-only copy control per case. Bitmap allocation/file-wrapper/OS rectangle boundaries supplied. Fixed1024x768 console placement; no text/badges/selection decorations or whole-game screenshot.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "source_receipt_sha256": "d34c893ff11a4a94fd21315353c601f5d7be5081f3e118dc831959851097ab02",
+  "assets": [
+    {
+      "name": "interface.pcx",
+      "sha256": "a787846aaf62a199a9f40a5b36d53c121cfdfae2c4baa7bab4dd525d9f374618",
+      "width": 750,
+      "height": 900,
+      "pitch": 752
+    },
+    {
+      "name": "console2.pcx",
+      "sha256": "7bbf65aa6de2aa03301bc9e1f3b0afbe11263f7670bd760ee4f68b608fd352b0",
+      "width": 1024,
+      "height": 257,
+      "pitch": 1024
+    }
+  ],
+  "palette_sha256": "c7129c7433e5d3028e4e3d7990e696fd9a5b321ebf24694cee6316e5d9a32ba6",
+  "lookup_sha256": "70b3ab988991323661c52a73dd8459d6b06202a9e8c6fec329e4f12b0fb7aa49",
+  "material_sha256": "a8416d9624088092b893b4fe4a49214ef6422b0c56748c1f8f1a47cf9e0d74dc",
+  "loaded_backing_sha256": "3100a823ebfa2e48dd9434b970849d659ffd8f80f89c4980054454d1b0364e80",
+  "framed_backing_sha256": "bbe0bd839d3f3873a977c2cae884d2864934dec187fcc351d021b0b96bc026f2",
+  "rgba_rule": "row-major RGBA8 from active palette RGB and alpha255; opaque panel crop, no transparent indices",
+  "limits": {
+    "shadow_remap_fixes_panel_indices": [
+      65,
+      196
+    ],
+    "all_shadow_only_crops_equal_panel": true,
+    "all_shadow_body_crops_equal_native_body_only": true,
+    "style18_fundamental_period": [
+      1,
+      2
+    ],
+    "roster1_and_roster2_same_local_output": true,
+    "source_phase_still_console_local": true
+  },
+  "cases": [
+    {
+      "id": "scout_selected",
+      "inputs": {
+        "raw_design_id": 2,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "owner": 1,
+        "faction_art": "spartans.pcx",
+        "unit_id": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "caller_flags": 72,
+        "clip": [
+          14,
+          66,
+          130,
+          242
+        ],
+        "crop_origin_console": [
+          14,
+          66
+        ],
+        "crop_origin_screen": [
+          14,
+          577
+        ],
+        "crop_size": [
+          116,
+          176
+        ],
+        "backing_size": [
+          1024,
+          257
+        ],
+        "pitch": 1024,
+        "ratio": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "objects": 59,
+        "color_kernels": 65,
+        "shadow_kernels": 65,
+        "wrapper_anchor": [
+          71,
+          103
+        ],
+        "copy_offset": [
+          -57,
+          -25
+        ],
+        "scale": 0.06562500447034836,
+        "crop_hashes": {
+          "panel_before": {
+            "indexed": "d716644e10a4d4760e9334617695725428bf1197326f22f5bf368777e97a304c",
+            "opaque_rgba": "269c3e27c5b169e603157fd000a945a70c033b8930a5f81f982a8a65cc77000f"
+          },
+          "shadow_only": {
+            "indexed": "d716644e10a4d4760e9334617695725428bf1197326f22f5bf368777e97a304c",
+            "opaque_rgba": "269c3e27c5b169e603157fd000a945a70c033b8930a5f81f982a8a65cc77000f"
+          },
+          "shadow_body": {
+            "indexed": "f461ac90036a5829c027f23a22c761882cac66aba31eb1811a470e30afa800fd",
+            "opaque_rgba": "f4e471acbe269831ea256236803b12f82a666f881e2a23ce5ebe737495c01a18"
+          },
+          "body_only": {
+            "indexed": "f461ac90036a5829c027f23a22c761882cac66aba31eb1811a470e30afa800fd",
+            "opaque_rgba": "f4e471acbe269831ea256236803b12f82a666f881e2a23ce5ebe737495c01a18"
+          }
+        },
+        "full_shadow_body_sha256": "e2662c90329e95c9843db8be7c90c9a55d31dcb2071cc689ad783850485bcda4",
+        "native_ordered_writes_sha256": "4acec5373da7cd3dee029822d79006c4d2cbcd467528cb32db966fa1689ba993",
+        "shadow_stores": 148,
+        "body_stores": 212,
+        "shadow_changed_backdrop_pixels": 0,
+        "body_only_equals_shadow_body": true,
+        "guards": true,
+        "normal_return": true,
+        "internal_hashes": {
+          "color": "94698581e92ea4ef24bec3a387be3d74366e763573c9f0bc3685bc5f668a971e",
+          "depth": "698121ade1e67010e94cb8ef7c4647d688b557da1b02834d3d33e9e575047c19",
+          "shadow": "b11f3f7689dd73bc7209f8d9673c75a95ba504eb48cffbbfc7dc0c605160418e"
+        },
+        "shadow_body_overlap_pixels": 27,
+        "renderer_internal_matches_prior_native": true
+      }
+    },
+    {
+      "id": "scout_roster_0",
+      "inputs": {
+        "raw_design_id": 2,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "owner": 1,
+        "faction_art": "spartans.pcx",
+        "unit_id": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "caller_flags": 1024,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "crop_origin_console": [
+          143,
+          196
+        ],
+        "crop_origin_screen": [
+          143,
+          707
+        ],
+        "crop_size": [
+          65,
+          48
+        ],
+        "backing_size": [
+          1024,
+          257
+        ],
+        "pitch": 1024,
+        "ratio": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "objects": 59,
+        "color_kernels": 65,
+        "shadow_kernels": 65,
+        "wrapper_anchor": [
+          181,
+          222
+        ],
+        "copy_offset": [
+          53,
+          94
+        ],
+        "scale": 0.04374999925494194,
+        "crop_hashes": {
+          "panel_before": {
+            "indexed": "2728c0932e41763402dcf50828f7ae981db8972bd628a97ece1b2a564326e5c9",
+            "opaque_rgba": "3787953a0aff95ad395f923b6f3b75b8a72a7d6aeb15b1dbd4d578e3642fa76d"
+          },
+          "shadow_only": {
+            "indexed": "2728c0932e41763402dcf50828f7ae981db8972bd628a97ece1b2a564326e5c9",
+            "opaque_rgba": "3787953a0aff95ad395f923b6f3b75b8a72a7d6aeb15b1dbd4d578e3642fa76d"
+          },
+          "shadow_body": {
+            "indexed": "b87682d074949400f3f70ad55cd71eb503bb6632208c35dd88088977217abe94",
+            "opaque_rgba": "9fc415d13bd27957b5123f763c725d3876666ce87e5f7434043d71829364541f"
+          },
+          "body_only": {
+            "indexed": "b87682d074949400f3f70ad55cd71eb503bb6632208c35dd88088977217abe94",
+            "opaque_rgba": "9fc415d13bd27957b5123f763c725d3876666ce87e5f7434043d71829364541f"
+          }
+        },
+        "full_shadow_body_sha256": "61ee77d266e2df063bb9003de782e569c781b4a9d903532a84a61cb0234afc79",
+        "native_ordered_writes_sha256": "45d5b347344fcd606ad325f1c3df5f0bb997c02f821c92f8ef2a660a061c3286",
+        "shadow_stores": 83,
+        "body_stores": 113,
+        "shadow_changed_backdrop_pixels": 0,
+        "body_only_equals_shadow_body": true,
+        "guards": true,
+        "normal_return": true,
+        "internal_hashes": {
+          "color": "e9cd0b3fba47e960fef927d525f366c0d5d9db9c4df876447267dc31f54aa9f0",
+          "depth": "a465e34d7cdf13d5441bbb4eb90980049ca9e80e0c727af684d9fb925576ffe5",
+          "shadow": "83aa28b3e8c03826ee7dd822fc2e45b14efa9f922f19979e20f68c1087ccec89"
+        },
+        "shadow_body_overlap_pixels": 16,
+        "renderer_internal_matches_prior_native": true
+      }
+    },
+    {
+      "id": "scout_roster_1",
+      "inputs": {
+        "raw_design_id": 2,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "owner": 1,
+        "faction_art": "spartans.pcx",
+        "unit_id": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          222,
+          197
+        ],
+        "zoom": -8,
+        "caller_flags": 1024,
+        "clip": [
+          209,
+          196,
+          274,
+          244
+        ],
+        "crop_origin_console": [
+          209,
+          196
+        ],
+        "crop_origin_screen": [
+          209,
+          707
+        ],
+        "crop_size": [
+          65,
+          48
+        ],
+        "backing_size": [
+          1024,
+          257
+        ],
+        "pitch": 1024,
+        "ratio": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "objects": 59,
+        "color_kernels": 65,
+        "shadow_kernels": 65,
+        "wrapper_anchor": [
+          247,
+          222
+        ],
+        "copy_offset": [
+          119,
+          94
+        ],
+        "scale": 0.04374999925494194,
+        "crop_hashes": {
+          "panel_before": {
+            "indexed": "ee061aecfdede4511a3cf5abf6b7a130fb996c599471d139fcc5793050dad3bc",
+            "opaque_rgba": "7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24"
+          },
+          "shadow_only": {
+            "indexed": "ee061aecfdede4511a3cf5abf6b7a130fb996c599471d139fcc5793050dad3bc",
+            "opaque_rgba": "7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24"
+          },
+          "shadow_body": {
+            "indexed": "4a36de352e92228000994c1b71bcd54a0c0ce031452c4bee5cafbfda2421a154",
+            "opaque_rgba": "d9635c9b7642860a28c8ee5393592c2a392d44404627c5ae881b5b351cf890c3"
+          },
+          "body_only": {
+            "indexed": "4a36de352e92228000994c1b71bcd54a0c0ce031452c4bee5cafbfda2421a154",
+            "opaque_rgba": "d9635c9b7642860a28c8ee5393592c2a392d44404627c5ae881b5b351cf890c3"
+          }
+        },
+        "full_shadow_body_sha256": "0f87627d77bef4301c53db2710b39933822bebffa2a688142b3596262f5123f9",
+        "native_ordered_writes_sha256": "6541b4c2052361cf62464b3b228ae780004b56b0d63859ec32d3e16d91f8dc65",
+        "shadow_stores": 83,
+        "body_stores": 113,
+        "shadow_changed_backdrop_pixels": 0,
+        "body_only_equals_shadow_body": true,
+        "guards": true,
+        "normal_return": true,
+        "internal_hashes": {
+          "color": "e9cd0b3fba47e960fef927d525f366c0d5d9db9c4df876447267dc31f54aa9f0",
+          "depth": "a465e34d7cdf13d5441bbb4eb90980049ca9e80e0c727af684d9fb925576ffe5",
+          "shadow": "83aa28b3e8c03826ee7dd822fc2e45b14efa9f922f19979e20f68c1087ccec89"
+        },
+        "shadow_body_overlap_pixels": 16,
+        "renderer_internal_matches_prior_native": true
+      }
+    },
+    {
+      "id": "scout_roster_2",
+      "inputs": {
+        "raw_design_id": 2,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "owner": 1,
+        "faction_art": "spartans.pcx",
+        "unit_id": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          288,
+          197
+        ],
+        "zoom": -8,
+        "caller_flags": 1024,
+        "clip": [
+          275,
+          196,
+          340,
+          244
+        ],
+        "crop_origin_console": [
+          275,
+          196
+        ],
+        "crop_origin_screen": [
+          275,
+          707
+        ],
+        "crop_size": [
+          65,
+          48
+        ],
+        "backing_size": [
+          1024,
+          257
+        ],
+        "pitch": 1024,
+        "ratio": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "objects": 59,
+        "color_kernels": 65,
+        "shadow_kernels": 65,
+        "wrapper_anchor": [
+          313,
+          222
+        ],
+        "copy_offset": [
+          185,
+          94
+        ],
+        "scale": 0.04374999925494194,
+        "crop_hashes": {
+          "panel_before": {
+            "indexed": "ee061aecfdede4511a3cf5abf6b7a130fb996c599471d139fcc5793050dad3bc",
+            "opaque_rgba": "7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24"
+          },
+          "shadow_only": {
+            "indexed": "ee061aecfdede4511a3cf5abf6b7a130fb996c599471d139fcc5793050dad3bc",
+            "opaque_rgba": "7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24"
+          },
+          "shadow_body": {
+            "indexed": "4a36de352e92228000994c1b71bcd54a0c0ce031452c4bee5cafbfda2421a154",
+            "opaque_rgba": "d9635c9b7642860a28c8ee5393592c2a392d44404627c5ae881b5b351cf890c3"
+          },
+          "body_only": {
+            "indexed": "4a36de352e92228000994c1b71bcd54a0c0ce031452c4bee5cafbfda2421a154",
+            "opaque_rgba": "d9635c9b7642860a28c8ee5393592c2a392d44404627c5ae881b5b351cf890c3"
+          }
+        },
+        "full_shadow_body_sha256": "d2b478b8bbe11190a081db18f5ffca5f24ea692e50972a4d1f06c9524f7b920a",
+        "native_ordered_writes_sha256": "85ea906338a9f6a2f9362eb8ef58f4fe45160b6f1bf3b0ccc2633cd74d13deed",
+        "shadow_stores": 83,
+        "body_stores": 113,
+        "shadow_changed_backdrop_pixels": 0,
+        "body_only_equals_shadow_body": true,
+        "guards": true,
+        "normal_return": true,
+        "internal_hashes": {
+          "color": "e9cd0b3fba47e960fef927d525f366c0d5d9db9c4df876447267dc31f54aa9f0",
+          "depth": "a465e34d7cdf13d5441bbb4eb90980049ca9e80e0c727af684d9fb925576ffe5",
+          "shadow": "83aa28b3e8c03826ee7dd822fc2e45b14efa9f922f19979e20f68c1087ccec89"
+        },
+        "shadow_body_overlap_pixels": 16,
+        "renderer_internal_matches_prior_native": true
+      }
+    },
+    {
+      "id": "garrison_selected",
+      "inputs": {
+        "raw_design_id": 127,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "abilities": 0,
+        "owner": 1,
+        "faction_art": "spartans.pcx",
+        "unit_id": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "caller_flags": 72,
+        "clip": [
+          14,
+          66,
+          130,
+          242
+        ],
+        "crop_origin_console": [
+          14,
+          66
+        ],
+        "crop_origin_screen": [
+          14,
+          577
+        ],
+        "crop_size": [
+          116,
+          176
+        ],
+        "backing_size": [
+          1024,
+          257
+        ],
+        "pitch": 1024,
+        "ratio": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "objects": 60,
+        "color_kernels": 66,
+        "shadow_kernels": 66,
+        "wrapper_anchor": [
+          71,
+          103
+        ],
+        "copy_offset": [
+          -57,
+          -25
+        ],
+        "scale": 0.06562500447034836,
+        "crop_hashes": {
+          "panel_before": {
+            "indexed": "d716644e10a4d4760e9334617695725428bf1197326f22f5bf368777e97a304c",
+            "opaque_rgba": "269c3e27c5b169e603157fd000a945a70c033b8930a5f81f982a8a65cc77000f"
+          },
+          "shadow_only": {
+            "indexed": "d716644e10a4d4760e9334617695725428bf1197326f22f5bf368777e97a304c",
+            "opaque_rgba": "269c3e27c5b169e603157fd000a945a70c033b8930a5f81f982a8a65cc77000f"
+          },
+          "shadow_body": {
+            "indexed": "25b34f0b3e91400e8c788aa35522b1ad11665fb2ad70910b15d250d383c74837",
+            "opaque_rgba": "da762b2d05f8a92a880e96ee1d53a4629ab7c764260db28bbdc2a53ab7b154dd"
+          },
+          "body_only": {
+            "indexed": "25b34f0b3e91400e8c788aa35522b1ad11665fb2ad70910b15d250d383c74837",
+            "opaque_rgba": "da762b2d05f8a92a880e96ee1d53a4629ab7c764260db28bbdc2a53ab7b154dd"
+          }
+        },
+        "full_shadow_body_sha256": "522350d160fcc48b39e6a4492748cc8a47b3597744696555ae43cb939f76a411",
+        "native_ordered_writes_sha256": "e203722fec91e54595f849b29d0d07cd4fabb4f388e277b502238f799973c3d6",
+        "shadow_stores": 169,
+        "body_stores": 248,
+        "shadow_changed_backdrop_pixels": 0,
+        "body_only_equals_shadow_body": true,
+        "guards": true,
+        "normal_return": true,
+        "internal_hashes": {
+          "color": "7d9579b90eec79736ea1a07f65f4d72d9cdcd2149dab82084d06777c1de65a21",
+          "depth": "aa2f3b29bbd340267117bbf367a0b90cb992a9cc57089e49d00881a88096f953",
+          "shadow": "40311e9274db1c8c0daf68f0013a97b9329a6ebb3e006761293ef2e59df479fc"
+        },
+        "shadow_body_overlap_pixels": 27,
+        "renderer_internal_matches_prior_native": true
+      }
+    },
+    {
+      "id": "garrison_roster_0",
+      "inputs": {
+        "raw_design_id": 127,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "abilities": 0,
+        "owner": 1,
+        "faction_art": "spartans.pcx",
+        "unit_id": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "caller_flags": 1024,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "crop_origin_console": [
+          143,
+          196
+        ],
+        "crop_origin_screen": [
+          143,
+          707
+        ],
+        "crop_size": [
+          65,
+          48
+        ],
+        "backing_size": [
+          1024,
+          257
+        ],
+        "pitch": 1024,
+        "ratio": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "objects": 60,
+        "color_kernels": 66,
+        "shadow_kernels": 66,
+        "wrapper_anchor": [
+          181,
+          222
+        ],
+        "copy_offset": [
+          53,
+          94
+        ],
+        "scale": 0.04374999925494194,
+        "crop_hashes": {
+          "panel_before": {
+            "indexed": "2728c0932e41763402dcf50828f7ae981db8972bd628a97ece1b2a564326e5c9",
+            "opaque_rgba": "3787953a0aff95ad395f923b6f3b75b8a72a7d6aeb15b1dbd4d578e3642fa76d"
+          },
+          "shadow_only": {
+            "indexed": "2728c0932e41763402dcf50828f7ae981db8972bd628a97ece1b2a564326e5c9",
+            "opaque_rgba": "3787953a0aff95ad395f923b6f3b75b8a72a7d6aeb15b1dbd4d578e3642fa76d"
+          },
+          "shadow_body": {
+            "indexed": "2c32997e6751810c8ffccdf8f546b55e186899f425246cf8eee82576e7cb4a64",
+            "opaque_rgba": "f4ef1a74fc3af099df5c9dfbe1104dd2443456215fd831e4edb405a6bec05215"
+          },
+          "body_only": {
+            "indexed": "2c32997e6751810c8ffccdf8f546b55e186899f425246cf8eee82576e7cb4a64",
+            "opaque_rgba": "f4ef1a74fc3af099df5c9dfbe1104dd2443456215fd831e4edb405a6bec05215"
+          }
+        },
+        "full_shadow_body_sha256": "869016571a71f6e8d3d351bb1e39ab3fb6dbb35a235b6702ae427cefb304fe03",
+        "native_ordered_writes_sha256": "fc23ab952221f8d508eee77bdd5c081c86a0e0cfa7e81e81e66c755cb0699766",
+        "shadow_stores": 88,
+        "body_stores": 126,
+        "shadow_changed_backdrop_pixels": 0,
+        "body_only_equals_shadow_body": true,
+        "guards": true,
+        "normal_return": true,
+        "internal_hashes": {
+          "color": "969ff33d8ee7f147e8416adf1ac4b73daf08868d4b4658eb7eb8c0809badb66c",
+          "depth": "15cb1709296a4f7ab0d1bdee2085f98826bbb7a8861ddb46b434c0e806925a45",
+          "shadow": "469ae6666cdc459590d5acf4117abca20ceb79455fa8318a8278018b7278e459"
+        },
+        "shadow_body_overlap_pixels": 18,
+        "renderer_internal_matches_prior_native": true
+      }
+    },
+    {
+      "id": "garrison_roster_1",
+      "inputs": {
+        "raw_design_id": 127,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "abilities": 0,
+        "owner": 1,
+        "faction_art": "spartans.pcx",
+        "unit_id": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          222,
+          197
+        ],
+        "zoom": -8,
+        "caller_flags": 1024,
+        "clip": [
+          209,
+          196,
+          274,
+          244
+        ],
+        "crop_origin_console": [
+          209,
+          196
+        ],
+        "crop_origin_screen": [
+          209,
+          707
+        ],
+        "crop_size": [
+          65,
+          48
+        ],
+        "backing_size": [
+          1024,
+          257
+        ],
+        "pitch": 1024,
+        "ratio": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "objects": 60,
+        "color_kernels": 66,
+        "shadow_kernels": 66,
+        "wrapper_anchor": [
+          247,
+          222
+        ],
+        "copy_offset": [
+          119,
+          94
+        ],
+        "scale": 0.04374999925494194,
+        "crop_hashes": {
+          "panel_before": {
+            "indexed": "ee061aecfdede4511a3cf5abf6b7a130fb996c599471d139fcc5793050dad3bc",
+            "opaque_rgba": "7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24"
+          },
+          "shadow_only": {
+            "indexed": "ee061aecfdede4511a3cf5abf6b7a130fb996c599471d139fcc5793050dad3bc",
+            "opaque_rgba": "7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24"
+          },
+          "shadow_body": {
+            "indexed": "9bca0f934900b0bd61c1f2fd250a0126adb4e1ebda4e314f0818e6ae8193fe3f",
+            "opaque_rgba": "8fb9f730424b8392b73b87a615ae04079099d559c63e9014710be6bacdabd9f7"
+          },
+          "body_only": {
+            "indexed": "9bca0f934900b0bd61c1f2fd250a0126adb4e1ebda4e314f0818e6ae8193fe3f",
+            "opaque_rgba": "8fb9f730424b8392b73b87a615ae04079099d559c63e9014710be6bacdabd9f7"
+          }
+        },
+        "full_shadow_body_sha256": "539035efa5e9b55adecee25bbfd4cf0d8eb280fabd8be6f1e9fd9444215a2752",
+        "native_ordered_writes_sha256": "c4fddf7b39d4c6fc6ada43387a45820b63fdf74a4cda88814ab6cf8209d2cfe1",
+        "shadow_stores": 88,
+        "body_stores": 126,
+        "shadow_changed_backdrop_pixels": 0,
+        "body_only_equals_shadow_body": true,
+        "guards": true,
+        "normal_return": true,
+        "internal_hashes": {
+          "color": "969ff33d8ee7f147e8416adf1ac4b73daf08868d4b4658eb7eb8c0809badb66c",
+          "depth": "15cb1709296a4f7ab0d1bdee2085f98826bbb7a8861ddb46b434c0e806925a45",
+          "shadow": "469ae6666cdc459590d5acf4117abca20ceb79455fa8318a8278018b7278e459"
+        },
+        "shadow_body_overlap_pixels": 18,
+        "renderer_internal_matches_prior_native": true
+      }
+    },
+    {
+      "id": "garrison_roster_2",
+      "inputs": {
+        "raw_design_id": 127,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "abilities": 0,
+        "owner": 1,
+        "faction_art": "spartans.pcx",
+        "unit_id": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          288,
+          197
+        ],
+        "zoom": -8,
+        "caller_flags": 1024,
+        "clip": [
+          275,
+          196,
+          340,
+          244
+        ],
+        "crop_origin_console": [
+          275,
+          196
+        ],
+        "crop_origin_screen": [
+          275,
+          707
+        ],
+        "crop_size": [
+          65,
+          48
+        ],
+        "backing_size": [
+          1024,
+          257
+        ],
+        "pitch": 1024,
+        "ratio": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "objects": 60,
+        "color_kernels": 66,
+        "shadow_kernels": 66,
+        "wrapper_anchor": [
+          313,
+          222
+        ],
+        "copy_offset": [
+          185,
+          94
+        ],
+        "scale": 0.04374999925494194,
+        "crop_hashes": {
+          "panel_before": {
+            "indexed": "ee061aecfdede4511a3cf5abf6b7a130fb996c599471d139fcc5793050dad3bc",
+            "opaque_rgba": "7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24"
+          },
+          "shadow_only": {
+            "indexed": "ee061aecfdede4511a3cf5abf6b7a130fb996c599471d139fcc5793050dad3bc",
+            "opaque_rgba": "7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24"
+          },
+          "shadow_body": {
+            "indexed": "9bca0f934900b0bd61c1f2fd250a0126adb4e1ebda4e314f0818e6ae8193fe3f",
+            "opaque_rgba": "8fb9f730424b8392b73b87a615ae04079099d559c63e9014710be6bacdabd9f7"
+          },
+          "body_only": {
+            "indexed": "9bca0f934900b0bd61c1f2fd250a0126adb4e1ebda4e314f0818e6ae8193fe3f",
+            "opaque_rgba": "8fb9f730424b8392b73b87a615ae04079099d559c63e9014710be6bacdabd9f7"
+          }
+        },
+        "full_shadow_body_sha256": "5a290ad1a4eb405e00917c1fdc59778df1fcb895d8bd5f0e7d67eae8dbe437b4",
+        "native_ordered_writes_sha256": "8fbc32eeab8c7ebfa1732a973eccf50ddf61361076f83107dd4d2138191de5cc",
+        "shadow_stores": 88,
+        "body_stores": 126,
+        "shadow_changed_backdrop_pixels": 0,
+        "body_only_equals_shadow_body": true,
+        "guards": true,
+        "normal_return": true,
+        "internal_hashes": {
+          "color": "969ff33d8ee7f147e8416adf1ac4b73daf08868d4b4658eb7eb8c0809badb66c",
+          "depth": "15cb1709296a4f7ab0d1bdee2085f98826bbb7a8861ddb46b434c0e806925a45",
+          "shadow": "469ae6666cdc459590d5acf4117abca20ceb79455fa8318a8278018b7278e459"
+        },
+        "shadow_body_overlap_pixels": 18,
+        "renderer_internal_matches_prior_native": true
+      }
+    },
+    {
+      "id": "rover_selected",
+      "inputs": {
+        "raw_design_id": 64,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "owner": 1,
+        "faction_art": "spartans.pcx",
+        "unit_id": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "caller_flags": 72,
+        "clip": [
+          14,
+          66,
+          130,
+          242
+        ],
+        "crop_origin_console": [
+          14,
+          66
+        ],
+        "crop_origin_screen": [
+          14,
+          577
+        ],
+        "crop_size": [
+          116,
+          176
+        ],
+        "backing_size": [
+          1024,
+          257
+        ],
+        "pitch": 1024,
+        "ratio": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "objects": 10,
+        "color_kernels": 24,
+        "shadow_kernels": 24,
+        "wrapper_anchor": [
+          71,
+          103
+        ],
+        "copy_offset": [
+          -57,
+          -25
+        ],
+        "scale": 0.05250000208616257,
+        "crop_hashes": {
+          "panel_before": {
+            "indexed": "d716644e10a4d4760e9334617695725428bf1197326f22f5bf368777e97a304c",
+            "opaque_rgba": "269c3e27c5b169e603157fd000a945a70c033b8930a5f81f982a8a65cc77000f"
+          },
+          "shadow_only": {
+            "indexed": "d716644e10a4d4760e9334617695725428bf1197326f22f5bf368777e97a304c",
+            "opaque_rgba": "269c3e27c5b169e603157fd000a945a70c033b8930a5f81f982a8a65cc77000f"
+          },
+          "shadow_body": {
+            "indexed": "d3424af1a8ba42e8d60d58447c615c17e8bb34462ffa981698a594457e13c4ad",
+            "opaque_rgba": "a99613dab6a55ef58b4cdf8d9de572a3a0c62cbd659d9e0bf0b6f6a1686d9aa8"
+          },
+          "body_only": {
+            "indexed": "d3424af1a8ba42e8d60d58447c615c17e8bb34462ffa981698a594457e13c4ad",
+            "opaque_rgba": "a99613dab6a55ef58b4cdf8d9de572a3a0c62cbd659d9e0bf0b6f6a1686d9aa8"
+          }
+        },
+        "full_shadow_body_sha256": "9d4fcfe03862d6a495e06bc61aa30b76c37b2ea6802776e9c8433386c02fdd18",
+        "native_ordered_writes_sha256": "2499e58d18bcbd2dd94cc84ff9980875265fd829c073b1f5a82f5a972034e8c8",
+        "shadow_stores": 401,
+        "body_stores": 473,
+        "shadow_changed_backdrop_pixels": 0,
+        "body_only_equals_shadow_body": true,
+        "guards": true,
+        "normal_return": true,
+        "internal_hashes": {
+          "color": "a93e235d18e83bebeec5fcf09ab11c36e9b37e20c1b7ed55a4c8ded5461f960a",
+          "depth": "82cec99420887d5da8c3f2a8580ee52a3b915e41939905838517b8c132748176",
+          "shadow": "a3bdc28bbc61c4892afeaeb7d3ca874c43023d61d685b2fc48533e5552282a67"
+        },
+        "shadow_body_overlap_pixels": 283,
+        "renderer_internal_matches_prior_native": true
+      }
+    },
+    {
+      "id": "rover_roster_0",
+      "inputs": {
+        "raw_design_id": 64,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "owner": 1,
+        "faction_art": "spartans.pcx",
+        "unit_id": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "caller_flags": 1024,
+        "clip": [
+          143,
+          196,
+          208,
+          244
+        ],
+        "crop_origin_console": [
+          143,
+          196
+        ],
+        "crop_origin_screen": [
+          143,
+          707
+        ],
+        "crop_size": [
+          65,
+          48
+        ],
+        "backing_size": [
+          1024,
+          257
+        ],
+        "pitch": 1024,
+        "ratio": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "objects": 10,
+        "color_kernels": 24,
+        "shadow_kernels": 24,
+        "wrapper_anchor": [
+          181,
+          222
+        ],
+        "copy_offset": [
+          53,
+          94
+        ],
+        "scale": 0.03500000014901161,
+        "crop_hashes": {
+          "panel_before": {
+            "indexed": "2728c0932e41763402dcf50828f7ae981db8972bd628a97ece1b2a564326e5c9",
+            "opaque_rgba": "3787953a0aff95ad395f923b6f3b75b8a72a7d6aeb15b1dbd4d578e3642fa76d"
+          },
+          "shadow_only": {
+            "indexed": "2728c0932e41763402dcf50828f7ae981db8972bd628a97ece1b2a564326e5c9",
+            "opaque_rgba": "3787953a0aff95ad395f923b6f3b75b8a72a7d6aeb15b1dbd4d578e3642fa76d"
+          },
+          "shadow_body": {
+            "indexed": "6e1de42a1e317980ca87c3aa880ddde56e14c2bba9ac294820210245ef820d34",
+            "opaque_rgba": "1c13a6beed9742ef67572bd01bde89c3ee81d09862c3f0a34e9c10461b53eeb9"
+          },
+          "body_only": {
+            "indexed": "6e1de42a1e317980ca87c3aa880ddde56e14c2bba9ac294820210245ef820d34",
+            "opaque_rgba": "1c13a6beed9742ef67572bd01bde89c3ee81d09862c3f0a34e9c10461b53eeb9"
+          }
+        },
+        "full_shadow_body_sha256": "ff90774ef49c4c96e1f286b1ed7ef452fff1b5da0bfe84e94f7ac20be6446d97",
+        "native_ordered_writes_sha256": "4ffd8af39e0cc61e5d184bac9799cc2efe4d23087f2dfda9cb257e29ff8e0ff8",
+        "shadow_stores": 197,
+        "body_stores": 230,
+        "shadow_changed_backdrop_pixels": 0,
+        "body_only_equals_shadow_body": true,
+        "guards": true,
+        "normal_return": true,
+        "internal_hashes": {
+          "color": "8f3f17871874aa8e7d3f0728ffaa3f45c6e1a887209b7b46c808eb6c876a5dbe",
+          "depth": "0f82c09305893a1c6ef043303e626d37ecba1e68b636cd3d06d7cf49c723da1d",
+          "shadow": "00c918e1a1e2976b85d43c6b183c247d39f45d5c7f63395ba18d39ef62b8583c"
+        },
+        "shadow_body_overlap_pixels": 142,
+        "renderer_internal_matches_prior_native": true
+      }
+    },
+    {
+      "id": "rover_roster_1",
+      "inputs": {
+        "raw_design_id": 64,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "owner": 1,
+        "faction_art": "spartans.pcx",
+        "unit_id": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          222,
+          197
+        ],
+        "zoom": -8,
+        "caller_flags": 1024,
+        "clip": [
+          209,
+          196,
+          274,
+          244
+        ],
+        "crop_origin_console": [
+          209,
+          196
+        ],
+        "crop_origin_screen": [
+          209,
+          707
+        ],
+        "crop_size": [
+          65,
+          48
+        ],
+        "backing_size": [
+          1024,
+          257
+        ],
+        "pitch": 1024,
+        "ratio": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "objects": 10,
+        "color_kernels": 24,
+        "shadow_kernels": 24,
+        "wrapper_anchor": [
+          247,
+          222
+        ],
+        "copy_offset": [
+          119,
+          94
+        ],
+        "scale": 0.03500000014901161,
+        "crop_hashes": {
+          "panel_before": {
+            "indexed": "ee061aecfdede4511a3cf5abf6b7a130fb996c599471d139fcc5793050dad3bc",
+            "opaque_rgba": "7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24"
+          },
+          "shadow_only": {
+            "indexed": "ee061aecfdede4511a3cf5abf6b7a130fb996c599471d139fcc5793050dad3bc",
+            "opaque_rgba": "7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24"
+          },
+          "shadow_body": {
+            "indexed": "8dbb4685bd2cd8ff8105d9bc90cfb9432b53a1e1c8e4d98090d097456524870f",
+            "opaque_rgba": "eb1cc73914071e4afc70bb218a3b558749b2200ce7f6b026736b9580f1400e24"
+          },
+          "body_only": {
+            "indexed": "8dbb4685bd2cd8ff8105d9bc90cfb9432b53a1e1c8e4d98090d097456524870f",
+            "opaque_rgba": "eb1cc73914071e4afc70bb218a3b558749b2200ce7f6b026736b9580f1400e24"
+          }
+        },
+        "full_shadow_body_sha256": "1266694dd81760ffa65407abfd33cf12dcbcf7a042311d39992d3bc952ca8dcc",
+        "native_ordered_writes_sha256": "9263f3b752ee0594ee77c931d9d525db3f60d65da89f5f1918ba42e575f7b232",
+        "shadow_stores": 197,
+        "body_stores": 230,
+        "shadow_changed_backdrop_pixels": 0,
+        "body_only_equals_shadow_body": true,
+        "guards": true,
+        "normal_return": true,
+        "internal_hashes": {
+          "color": "8f3f17871874aa8e7d3f0728ffaa3f45c6e1a887209b7b46c808eb6c876a5dbe",
+          "depth": "0f82c09305893a1c6ef043303e626d37ecba1e68b636cd3d06d7cf49c723da1d",
+          "shadow": "00c918e1a1e2976b85d43c6b183c247d39f45d5c7f63395ba18d39ef62b8583c"
+        },
+        "shadow_body_overlap_pixels": 142,
+        "renderer_internal_matches_prior_native": true
+      }
+    },
+    {
+      "id": "rover_roster_2",
+      "inputs": {
+        "raw_design_id": 64,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "owner": 1,
+        "faction_art": "spartans.pcx",
+        "unit_id": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          288,
+          197
+        ],
+        "zoom": -8,
+        "caller_flags": 1024,
+        "clip": [
+          275,
+          196,
+          340,
+          244
+        ],
+        "crop_origin_console": [
+          275,
+          196
+        ],
+        "crop_origin_screen": [
+          275,
+          707
+        ],
+        "crop_size": [
+          65,
+          48
+        ],
+        "backing_size": [
+          1024,
+          257
+        ],
+        "pitch": 1024,
+        "ratio": [
+          0,
+          1
+        ]
+      },
+      "expected": {
+        "objects": 10,
+        "color_kernels": 24,
+        "shadow_kernels": 24,
+        "wrapper_anchor": [
+          313,
+          222
+        ],
+        "copy_offset": [
+          185,
+          94
+        ],
+        "scale": 0.03500000014901161,
+        "crop_hashes": {
+          "panel_before": {
+            "indexed": "ee061aecfdede4511a3cf5abf6b7a130fb996c599471d139fcc5793050dad3bc",
+            "opaque_rgba": "7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24"
+          },
+          "shadow_only": {
+            "indexed": "ee061aecfdede4511a3cf5abf6b7a130fb996c599471d139fcc5793050dad3bc",
+            "opaque_rgba": "7df93d8326befc10962db6c08f81b4bd6aa05d911ab37c12e84eca716d9b5b24"
+          },
+          "shadow_body": {
+            "indexed": "8dbb4685bd2cd8ff8105d9bc90cfb9432b53a1e1c8e4d98090d097456524870f",
+            "opaque_rgba": "eb1cc73914071e4afc70bb218a3b558749b2200ce7f6b026736b9580f1400e24"
+          },
+          "body_only": {
+            "indexed": "8dbb4685bd2cd8ff8105d9bc90cfb9432b53a1e1c8e4d98090d097456524870f",
+            "opaque_rgba": "eb1cc73914071e4afc70bb218a3b558749b2200ce7f6b026736b9580f1400e24"
+          }
+        },
+        "full_shadow_body_sha256": "93cdff05b90f9167f23187456a855e89e6b50d6c43408f30442af3cb824ccf57",
+        "native_ordered_writes_sha256": "ab204e4e480b2ca71f22b1f420070fcea48e028d6261d19d7d4eaf547bda35bf",
+        "shadow_stores": 197,
+        "body_stores": 230,
+        "shadow_changed_backdrop_pixels": 0,
+        "body_only_equals_shadow_body": true,
+        "guards": true,
+        "normal_return": true,
+        "internal_hashes": {
+          "color": "8f3f17871874aa8e7d3f0728ffaa3f45c6e1a887209b7b46c808eb6c876a5dbe",
+          "depth": "0f82c09305893a1c6ef043303e626d37ecba1e68b636cd3d06d7cf49c723da1d",
+          "shadow": "00c918e1a1e2976b85d43c6b183c247d39f45d5c7f63395ba18d39ef62b8583c"
+        },
+        "shadow_body_overlap_pixels": 142,
+        "renderer_internal_matches_prior_native": true
+      }
+    }
+  ]
+}

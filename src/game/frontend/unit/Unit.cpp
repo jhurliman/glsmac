@@ -439,6 +439,9 @@ const bool Unit::IsMoving() const {
 	return m_mover.IsRunning();
 }
 
+std::shared_ptr<types::texture::Texture> Unit::GetConsoleCard(bool roster,const std::array<int,2>& origin) const {
+    return m_visual ? m_def->GetDesignCardImage(*m_visual,m_facing,roster,origin):nullptr;
+}
 sprite::InstancedSprite* Unit::GetCardSprite( bool roster ) const {
     if(m_visual) {return m_def->GetDesignCard(*m_visual,m_facing,roster);}
 	return m_def->GetCardSprite( roster, m_facing );

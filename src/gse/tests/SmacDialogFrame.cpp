@@ -1,3 +1,5 @@
+#include "fixtures/ConsolePanelBackdrop.h"
+#include "util/SHA256.h"
 #include "SmacDialogFrame.h"
 #include "fixtures/SmacDialogFrame.h"
 #include "fixtures/WorkshopStripFrames.h"
@@ -51,6 +53,17 @@ void AddSmacDialogFrameTests(task::gsetests::GSETests* task) {
             std::vector<uint8_t> bitmap(70*50,9);frame::Paint(bitmap,70,50,source,{int(style),0,0,70,50},{0,0,70,50});
             uint64_t hash=14695981039346656037ull;for(auto value:bitmap) {hash=(hash^value)*1099511628211ull;}
             GT_ASSERT(hash==workshop_strip_fixture::FRAMES_STYLE[style],"Complete original Workshop frame style differs: "+std::to_string(style));
+        }
+        const auto digest=[](const auto& bytes){return util::SHA256(std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));};
+        for(const auto& c:console_panel_fixture::Cases) {
+            std::vector<uint8_t> bitmap(1024*257);
+            for(int y=0;y<257;++y) {for(int x=0;x<1024;++x) {bitmap[size_t(y)*1024+x]=(x+y)%3==0?41:23;}}
+            frame::Paint(bitmap,1024,257,source,{21,c.outer[0],c.outer[1],c.outer[2],c.outer[3]},c.clip);
+            frame::Paint(bitmap,1024,257,source,{18,c.inner[0],c.inner[1],c.inner[2],c.inner[3]},c.clip);
+            GT_ASSERT(digest(bitmap)==c.full,"Original complete console panel differs: "+std::string(c.name));
+            std::vector<uint8_t> crop;
+            for(int y=c.crop[1];y<c.crop[3];++y) {crop.insert(crop.end(),bitmap.begin()+size_t(y)*1024+c.crop[0],bitmap.begin()+size_t(y)*1024+c.crop[2]);}
+            GT_ASSERT(digest(crop)==c.cropped,"Original clipped console panel phase differs: "+std::string(c.name));
         }GT_OK();
     });
 }

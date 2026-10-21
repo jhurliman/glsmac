@@ -28,7 +28,7 @@ return {
 			return #to_string(whole) + ' ' + #to_string(remainder) + '/' + #to_string(quantum);
 		};
 		this.message_fade_timer = null;
-		const console_art = p.game.get_ruleset() == 'smac' ? 'console2.pcx' : 'console2_a.pcx';
+		const console_art = p.game.get_ruleset() == 'smac' ? 'console2.pcx:smacsoftware()' : 'console2_a.pcx';
 
 		p.ui.class('bottombar-panel').extend('default-panel');
 		p.ui.class('bottombar-panel-inner').extend('default-panel-inner');
@@ -171,6 +171,7 @@ return {
 
 		this.pp = {
 			game: p.game,
+            native_console: p.game.get_ruleset() == 'smac',
 			map: p.map,
 			ui: p.ui,
 			el: parent.el,

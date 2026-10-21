@@ -1,3 +1,6 @@
+#include "fixtures/ConsoleUnitPanelGoldens.h"
+#include <SDL_image.h>
+#include "fixtures/LiveGroundShadow.h"
 #include "game/frontend/sprite/ConventionalSpriteCache.h"
 #include "fixtures/LiveGroundRender.h"
 #include "CvrScoutRenderer.h"
@@ -233,11 +236,11 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
             for(const auto& entry:std::filesystem::directory_iterator(directory)) {
                 if(!entry.is_regular_file()) {continue;}auto name=entry.path().filename().string();
                 std::transform(name.begin(),name.end(),name.begin(),[](unsigned char c){return char(std::tolower(c));});
-                if((name.size()>=4 && name.substr(name.size()-4)==".cvr") || name=="palette.pcx" || name=="system.txt" || name=="spartans.pcx" || name=="gaians.pcx") {
+                if((name.size()>=4 && name.substr(name.size()-4)==".cvr") || name=="palette.pcx" || name=="system.txt" || name=="spartans.pcx" || name=="gaians.pcx" || name=="console2.pcx" || name=="interface.pcx") {
                     std::filesystem::copy_file(entry.path(),temporary/"default"/name);
                 }
             }
-            resource::ResourceManager resources(temporary.string());std::shared_ptr<types::texture::Texture> held;std::string pixels;
+            resource::ResourceManager resources(temporary.string());std::shared_ptr<types::texture::Texture> held,held_card;std::string pixels,card_pixels;
             {
                 game::frontend::sprite::ConventionalSpriteCache cache;
                 game::ConventionalUnitVisual laser{1,0,1,1,1,4,1,2,0,"spartans.pcx"};const CvrScoutViewInput view{0,0,0,1,{128,128}};
@@ -246,12 +249,45 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
                 GT_ASSERT(other!=held && other->GetBitmapSize()==held->GetBitmapSize() && std::memcmp(other->GetBitmap(),held->GetBitmap(),held->GetBitmapSize())!=0,"Owner materials alias or render identically");
                 auto guard=laser;guard.weapon=0;guard.weapon_power=1;guard.weapon_mode=0;
                 GT_ASSERT(cache.Get(resources,guard,view).texture!=held,"Weapon tuple reused the old design texture");
+                // Compare the actual scene-cache overlay over the verified
+                // native panel to complete original model-plus-panel RGBA crops.
+                const auto read=[&](const char* name) {std::ifstream file(resources.GetCustomPath(name),std::ios::binary);return std::string(std::istreambuf_iterator<char>(file),{});};
+                const auto atlas=read("interface.pcx");
+                std::unique_ptr<SDL_Surface,decltype(&SDL_FreeSurface)> decoded(IMG_Load_RW(SDL_RWFromConstMem(atlas.data(),int(atlas.size())),1),SDL_FreeSurface);
+                GT_ASSERT(decoded && decoded->w==750 && decoded->h==900 && decoded->format->BitsPerPixel==8,"Original console atlas unavailable");
+                loader::texture::SmacDialogSource panel;panel.indexed.resize(750*900);panel.palette=CvrActorMaterial::ReadGamma100Colors(read("palette.pcx"));
+                for(int y=0;y<900;++y) {for(int x=0;x<750;++x) {panel.indexed[size_t(y)*750+x]=uint8_t(static_cast<const uint8_t*>(decoded->pixels)[size_t(y)*decoded->pitch+x]+10);}}
+                auto backdrop=CvrActorMaterial::ReadConsoleBackdrop(read("console2.pcx"));
+                const auto digest=[](const auto& bytes) {return util::SHA256(std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));};
+                GT_ASSERT(digest(backdrop)=="3100a823ebfa2e48dd9434b970849d659ffd8f80f89c4980054454d1b0364e80","Loaded console2 indices differ");
+                for(const auto& call:std::array<loader::texture::smac_dialog_frame::Call,4>{{{21,8,60,136,248},{18,11,63,133,245},{21,139,192,764,248},{18,142,195,761,245}}}) {
+                    loader::texture::smac_dialog_frame::Paint(backdrop,1024,257,panel,call,{0,0,1024,257});
+                }
+                GT_ASSERT(digest(backdrop)=="bbe0bd839d3f3873a977c2cae884d2864934dec187fcc351d021b0b96bc026f2","Complete native panel backing differs");
+                std::shared_ptr<types::texture::Texture> retained_card;
+                for(const auto& c:console_unit_panel_fixture::Cases) {
+                    auto design=guard;design.chassis=c.chassis;design.weapon=c.weapon;design.armor=c.armor;design.reactor=c.reactor;design.armor_strength=c.armor?2:1;
+                    const auto card=cache.GetCard(resources,design,c.facing,c.roster,c.origin,panel);
+                    GT_ASSERT(card->GetWidth()==size_t(c.size[0]) && card->GetHeight()==size_t(c.size[1]) && cache.GetCard(resources,design,c.facing,c.roster,c.origin,panel)==card,"Native card dimensions or texture reuse differ");
+                    std::vector<uint8_t> target;target.reserve(size_t(c.size[0])*c.size[1]*4);
+                    for(int y=0;y<c.size[1];++y) {for(int x=0;x<c.size[0];++x) {
+                        const auto color=panel.palette[backdrop[size_t(y+c.origin[1])*1024+x+c.origin[0]]];
+                        target.insert(target.end(),color.begin(),color.end());target.push_back(255);
+                    }}
+                    GT_ASSERT(digest(target)==c.before,"Actual native panel crop differs: "+std::string(c.name));
+                    for(size_t i=0;i<target.size();i+=4) {if(card->GetBitmap()[i+3]) {std::copy_n(card->GetBitmap()+i,4,target.begin()+i);}}
+                    GT_ASSERT(digest(target)==c.final,"Complete scene-cache native card differs: "+std::string(c.name)+" hash="+digest(target));
+                    retained_card=card;
+                }
+                GT_ASSERT(retained_card && retained_card->GetBitmapSize()==65*48*4,"Compact card surface lost its native clip");
+                held_card=retained_card;card_pixels.assign(reinterpret_cast<const char*>(held_card->GetBitmap()),held_card->GetBitmapSize());
                 pixels.assign(reinterpret_cast<const char*>(held->GetBitmap()),held->GetBitmapSize());
                 {std::ofstream changed(temporary/"default"/"system.txt");changed<<"invalid replacement";}
                 auto facing=view;facing.facing=2;GT_ASSERT(cache.Get(resources,laser,facing).texture!=held,"Facing change reused pixels or reloaded already owned scene");
                 GT_ASSERT(cache.Get(resources,laser,view).texture==held,"Failed asset replacement invalidated published pixels");
             }
-            GT_ASSERT(std::string(reinterpret_cast<const char*>(held->GetBitmap()),held->GetBitmapSize())==pixels,"Cache teardown retired a borrowed preview texture");GT_OK();
+            GT_ASSERT(std::string(reinterpret_cast<const char*>(held->GetBitmap()),held->GetBitmapSize())==pixels,"Cache teardown retired a borrowed preview texture");
+            GT_ASSERT(held_card && std::string(reinterpret_cast<const char*>(held_card->GetBitmap()),held_card->GetBitmapSize())==card_pixels,"Cache teardown retired a borrowed native card");GT_OK();
         }catch(const std::exception& error) {GT_FAIL(std::string("Conventional cache: ")+error.what());}
     });
     task->AddTest("CVR ordinary live designs match nine complete original map and console bodies",GT(){
@@ -272,6 +308,34 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
             for(const auto value:image.indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
             GT_ASSERT(digest(image.indexed.color)==test.color && digest(depth)==test.depth && image.target_anchor==test.target && image.draw_count==size_t(test.kernels),
                 "Original ordinary body differs: "+std::string(test.name)+" color="+digest(image.indexed.color)+" depth="+digest(depth));
+        }GT_OK();
+    });
+    task->AddTest("CVR ordinary ground shadows match eighteen complete original keyed targets",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto read=[&](const std::string& name) {
+            for(const auto& entry:std::filesystem::directory_iterator(directory)) {
+                auto candidate=entry.path().filename().string();std::transform(candidate.begin(),candidate.end(),candidate.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if(candidate==name) {std::ifstream stream(entry.path(),std::ios::binary);return std::string(std::istreambuf_iterator<char>(stream),{});}
+            }throw std::runtime_error("Missing ordinary shadow asset: "+name);
+        };
+        const auto source=read("alpha.txt");const auto weapons=loader::txt::UnitRulesTXTLoader::ParseWeapons(source,"smac");
+        const auto armor=loader::txt::UnitRulesTXTLoader::ParseDefenses(source,"smac");
+        const auto digest=[](const auto& bytes) {return util::SHA256(std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));};
+        const auto lookup=game::frontend::smac_developed_overlay::ShadowLookup(CvrActorMaterial::ReadGamma100Colors(read("palette.pcx")));
+        GT_ASSERT(digest(lookup)=="70b3ab988991323661c52a73dd8459d6b06202a9e8c6fec329e4f12b0fb7aa49","Warm original shadow lookup differs");
+        for(const auto& c:live_ground_shadow_fixture::Cases) {
+            const auto renderer=CvrScoutRenderer::LoadOrdinaryDesign(read,read("spartans.pcx"),c.chassis,c.weapon,c.armor,c.reactor,
+                {weapons.weapons.at(c.weapon).offense,int(weapons.weapons.at(c.weapon).mode),armor.defenses.at(c.armor).rating});
+            const auto image=renderer.RenderOrdinary({c.facing,c.zoom,0,1,c.anchor},c.shadow);std::vector<uint8_t> depth;
+            for(const auto value:image.body.indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
+            const auto name=std::string(c.name);
+            GT_ASSERT(digest(image.body.indexed.color)==c.color && digest(depth)==c.depth && digest(image.shadow.mask)==c.mask,
+                "Original ordinary planes differ: "+name+" color="+digest(image.body.indexed.color)+" shadow="+digest(image.shadow.mask));
+            GT_ASSERT(image.body.target_anchor==c.target && image.body.draw_count==size_t(c.color_kernels) && image.shadow.draw_count==size_t(c.shadow_kernels),"Original shadow view/kernel count differs: "+name);
+            std::vector<uint8_t> target(size_t(c.pitch)*c.height);
+            for(int y=0;y<c.height;++y) {for(int x=0;x<c.pitch;++x) {target[size_t(y)*c.pitch+x]=uint8_t((3*x+5*y+37)%256);}}
+            const auto stores=image.Composite(target,c.width,c.height,c.pitch,lookup,c.origin,c.clip);
+            GT_ASSERT(stores==c.stores && digest(target)==c.target_hash,"Complete keyed shadow/body target differs: "+name+" hash="+digest(target));
         }GT_OK();
     });
     task->AddTest("CVR saved strip matches four full native bodies shadows and clipped copies",GT(){
@@ -628,6 +692,12 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(shadow.processed_records==2 && shadow.written_samples==2 && shadow.mask[4]==128 &&
             std::count(shadow.mask.begin(),shadow.mask.end(),128)==1,"Shadow depth-tested repeated stamps or used color bytes");
         std::array<uint8_t,256> lookup{};for(size_t i=0;i<256;++i) {lookup[i]=uint8_t(i+1);}
+        auto square=draw;square.footprint=CvrSampleFootprint::Square2;
+        const auto wide=CvrIndexedRasterizer::Shadow(3,3,{square});
+        GT_ASSERT(wide.processed_records==2 && wide.written_samples==8 && std::count(wide.mask.begin(),wide.mask.end(),128)==4,
+            "Two-pixel shadow kernel lost its four stores or accumulated overlapping stamps");
+        square.initial[0]=2*256;
+        GT_ASSERT(Rejects([&]{CvrIndexedRasterizer::Shadow(3,3,{square});}),"Two-pixel shadow crossed the target edge");
         shadow.mask[4]=1;std::vector<uint8_t> target(25,10);
         GT_ASSERT(shadow.Blend(target,5,5,5,lookup,{1,1},{0,0,5,5})==1 && target[12]==11 && target[0]==10,
             "Mask is a key discriminator, not alpha or a palette index");

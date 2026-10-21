@@ -134,7 +134,7 @@ CvrShadowResult CvrIndexedRasterizer::Shadow(uint32_t width,uint32_t height,cons
     result.draw_count=draws.size();
     size_t records=0;
     for(const auto& draw:draws) {
-        if(!draw.records || draw.footprint!=CvrSampleFootprint::Single || draw.records->size()<=size_t(draw.terminal)
+        if(!draw.records || (draw.footprint!=CvrSampleFootprint::Single && draw.footprint!=CvrSampleFootprint::Square2) || draw.clip || draw.records->size()<=size_t(draw.terminal)
             || (draw.terminal && draw.records->back().Code()!=26) || draw.records->size()>MAX_RECORDS-records) {Invalid(" unsupported shadow stream");}
         records+=draw.records->size();
         auto coordinates=draw;coordinates.basis[2]={0,0,0};coordinates.initial[2]=0;
@@ -144,8 +144,12 @@ CvrShadowResult CvrIndexedRasterizer::Shadow(uint32_t width,uint32_t height,cons
             const auto code=draw.records->at(i).Code();if(code>=26) {Invalid(" invalid shadow direction");}
             x+=steps[code][0];y+=steps[code][1];Signed32(x);Signed32(y);
             const auto px=Floor256(x),py=Floor256(y);
-            if(px<0 || py<0 || px>=width || py>=height) {Invalid(" shadow sample outside surface");}
-            result.mask[size_t(py)*width+size_t(px)]=128;++result.processed_records;++result.written_samples;
+            const int side=draw.footprint==CvrSampleFootprint::Single?1:2;
+            if(px<0 || py<0 || px+side>width || py+side>height) {Invalid(" shadow sample outside surface");}
+            for(int dy=0;dy<side;++dy) {for(int dx=0;dx<side;++dx) {
+                result.mask[size_t(py+dy)*width+size_t(px+dx)]=128;++result.written_samples;
+            }}
+            ++result.processed_records;
         }
     }
     return result;

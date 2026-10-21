@@ -197,11 +197,13 @@ std::string SmacWorkshopDesignName(const SmacCustomDesign& design,const SmacPred
 // Detached common commit. A confirmation result preserves the input state.
 // Accepting it prepares the old tuple's history and identifies the retirement
 // whose Units/queues the live caller must stage before publishing this state.
+enum class SmacWorkshopNotice { None=0, IntrinsicType=1, IntrinsicName=2, UnchangedIntrinsic=3 };
 struct SmacWorkshopPreparation {
     SmacStartupDesignState state;
     SmacWorkshopCommit result;
     bool success=false,confirmation=false;
     std::optional<int32_t> retirement;
+    SmacWorkshopNotice notice=SmacWorkshopNotice::None;
 };
 SmacWorkshopPreparation PrepareSmacWorkshopCommit(const SmacStartupDesignState& state,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,

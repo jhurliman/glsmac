@@ -2,6 +2,7 @@ const dialog = #include('../default/ui/parts/game/popup/base_screen/workshop');
 let windows = []; let commands = []; let listeners = {}; let edits = [];
 const node = (data) => {
     data.hidden = false; data.removed = false; data.handlers = {}; data.children = [];
+    data.is_hidden = () => { return data.hidden; };
     data.hide = () => { data.hidden = true; }; data.show = () => { data.hidden = false; }; data.remove = () => { data.removed = true; };
     data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi'}; };
     data.smacworkshopcomponentpicker = (kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength) => { data.picker_kind = kind; data.picker_selected = selected; data.picker_rows = rows; return {domains: ['Land', 'Sea', 'Air'], power: 'Power', shielding: 'Shielding', psi: 'Psi', weapon: 'Weapon', equipment: 'Equipment'}; };
@@ -26,6 +27,10 @@ const node = (data) => {
         let tokens = []; const parts = #split(body, ' '); let at = 0;
         for (part of parts) { const text = part + (at + 1 < #sizeof(parts) ? ' ' : ''); tokens :+ {text: text, spans: [{text: text, color: 226}]}; at++; }
         return {title: 'Operations Director', tokens: tokens, rows: ['Never mind.', 'Proceed with redesign.'], ok: 'OK', colors: words.colors};
+    };
+    data.smacworkshopintrinsictext = (kind, name) => {
+        const words = data.smacworkshopparenttext(); const text = 'Intrinsic unit type "' + name + '" cannot be changed.';
+        return {title: 'Operations Director', tokens: [{text: text, spans: [{text: text, color: 226}]}], rows: [], ok: 'OK', colors: words.colors};
     };
     data.focus = () => { data.focused = true; }; data.select_all = () => { data.all_selected = true; };
     data.smacworkshopabilitytext = (technology) => { return {title: 'Select Special Ability', none: 'No special ability', ok: 'OK', cancel: 'Cancel', cost: 'Cost', attack: 'Attack', defense: 'Defense', speed: 'Speed', domains: ['Land', 'Sea', 'Air'], second_title: 'Chief Engineer', second_body: 'Research ' + technology + '.', missile_title: 'Chief Engineer', missile_body: 'Missiles cannot have special abilities.'}; };
@@ -508,3 +513,35 @@ test.assert(upgrade.rows_per_column == 11 && upgrade.row_width == 177 && upgrade
 i = 0; for (row of upgrade.rows) { test.assert(row.button.left == 33 + (i / 11) * 180 && row.button.top == 65 + (i % 11) * 22); i++; }
 upgrade.rows[62].button.handlers.dblclick({button: 'left'}); test.assert(commands[#sizeof(commands) - 1].data.target_design == 127);
 dialog.hide_view();
+
+// Intrinsic warnings are informational: acknowledge once, without another
+// mutation. Successful Done waits for acknowledgement; rejected Done stays open.
+dialog.open(base, selection); dialog.draft_name = 'Different intrinsic'; dialog.submit(true);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 2, stale: false, failed: false,
+    intrinsic_name_warning: true, intrinsic_notice: 2, intrinsic_notice_name: 'Scout Patrol', done: true});
+test.assert(dialog.active && dialog.confirming && dialog.intrinsic_message);
+test.assert(dialog.redesign_dialog.kind == 2);
+test.assert(dialog.redesign_dialog.rows[0].button.is_hidden() && dialog.redesign_dialog.rows[1].button.is_hidden());
+test.assert(dialog.redesign_dialog.ok.top == 167);
+test.assert(dialog.draft_name == '');
+const notice_commands = #sizeof(commands); dialog.answer_overwrite(true); test.assert(#sizeof(commands) == notice_commands && dialog.confirming);
+windows[2].handlers.keydown({modifiers: {}, code: 'ESCAPE'}); dialog.answer_intrinsic();
+test.assert(!dialog.active && !dialog.redesign_dialog.active && #sizeof(commands) == notice_commands);
+dialog.open(base, selection); dialog.submit(false);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 2, stale: false, failed: false,
+    intrinsic_name_warning: true, intrinsic_notice: 2, intrinsic_notice_name: 'Scout Patrol', done: false});
+windows[2].handlers.keydown({modifiers: {shift: true}, code: 'ENTER'}); test.assert(dialog.active && !dialog.confirming);
+dialog.selected_armor = 1; dialog.submit(true);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 2, stale: false, failed: true,
+    intrinsic_name_warning: false, intrinsic_notice: 1, intrinsic_notice_name: 'Scout Patrol', done: false});
+test.assert(dialog.confirming && dialog.redesign_dialog.kind == 1 && dialog.selected_armor == 1 && dialog.message.text == '');
+windows[2].handlers.keydown({modifiers: {}, code: 'ENTER'}); test.assert(dialog.active && !dialog.confirming && dialog.selected_armor == 1);
+dialog.submit(true);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 2, stale: false, failed: true,
+    intrinsic_name_warning: false, intrinsic_notice: 3, intrinsic_notice_name: '', done: false});
+test.assert(dialog.active && !dialog.confirming && !dialog.redesign_dialog.active && dialog.message.text == '' && dialog.selected_armor == 1);
+dialog.submit(true);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 2, stale: false, failed: false,
+    intrinsic_name_warning: true, intrinsic_notice: 2, intrinsic_notice_name: 'Scout Patrol', done: true});
+listeners.turn_status({status: 'please_wait'}); const after_notice_teardown = #sizeof(commands); dialog.answer_intrinsic();
+test.assert(!dialog.active && !dialog.redesign_dialog.active && #sizeof(commands) == after_notice_teardown);

@@ -81,6 +81,12 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
             && replacement.find("\"Guard $NUM0\" type (3 units)")!=std::string::npos
             && overwrite.rows[0]=="Never mind." && overwrite.rows[1]=="Proceed with redesign.",
             "Redesign text did not preserve installed choices or single-pass prototype substitution");
+        for(const auto* tag:{"INTRINSICTYPE","INTRINSICNAME"}) {
+            const auto info=ReadSmacWorkshopModalTemplate(source,tag);
+            const auto body=SubstituteSmacWorkshopModal(info.body,{"Scout $NUM0",""},{7,0,0});
+            GT_ASSERT(info.rows.empty() && info.caption==confirm.caption && body.find("Scout $NUM0")!=std::string::npos
+                && body.find("$PROTONAME0")==std::string::npos,"Intrinsic informational text lost its installed name or acquired choices");
+        }
         GT_ASSERT(Rejects([&]{ReadSmacWorkshopModalTemplate(source+"\n#YESUPGRADE\n#caption Duplicate\nRepeated\n","YESUPGRADE");}),"Duplicate modal template admitted");GT_OK();
     });
     task->AddTest("SMAC Workshop Upgrade matches25 native candidate and cached quote controls",GT(){
@@ -481,6 +487,34 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
         std::array<uint8_t,32> cleared{};std::copy_n(riot_pool[128].begin(),13,cleared.begin());
         GT_ASSERT(std::equal(cleared.begin(),cleared.end(),state.native_registry->at(64).begin()) && state.native_registry->at(64)[47]==0xa5
             && state.native_registry->at(64)[50]==0xa5 && state.native_registry->at(64)[51]==0xa5,"Fresh constructor did not clear name or lost destination opaque/prerequisite bytes");GT_OK();
+    });
+    task->AddTest("SMAC Workshop intrinsic warnings distinguish admitted matches and exhausted-scan fallback",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        const auto read=[&](const char* name) {std::ifstream file(std::string(assets)+"/"+name,std::ios::binary);return std::string(std::istreambuf_iterator<char>(file),{});};
+        const auto source=read("alpha.txt");const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;catalog.workshop_name_labels=unit::ReadSmacWorkshopNameLabels(read("labels.txt"));
+        auto owner=Owner();owner.owned.fill(true);faction::SmacDesignCounts counts{};
+        auto pool=workshop_general_fixture::BasePool();for(size_t id=64;id<128;++id) {pool[id]=pool[2];}
+        auto state=Empty();state.RetainNativeRegistry(pool,catalog);const auto before=state;
+        using Notice=unit::SmacWorkshopNotice;unit::SmacWorkshopDraft draft;draft.armor=2;
+        const auto blocked=unit::PrepareSmacWorkshopCommit(state,draft,catalog,tech,owner,counts,counts);
+        GT_ASSERT(!blocked.success && !blocked.confirmation && blocked.notice==Notice::IntrinsicType && blocked.state==before && !blocked.retirement,"Exhausted intrinsic replacement did not preserve its typed warning and state");
+        draft.armor=0;draft.name="Different intrinsic";
+        const auto named=unit::PrepareSmacWorkshopCommit(state,draft,catalog,tech,owner,counts,counts);
+        GT_ASSERT(named.success && named.notice==Notice::IntrinsicName && named.state==before && named.result.design_id==2,"Admitted selected intrinsic warning incorrectly rejected its successful match");
+        for(const auto& name:{std::string(),catalog.source.units.at(2).name}) {
+            draft.name=name;const auto result=unit::PrepareSmacWorkshopCommit(state,draft,catalog,tech,owner,counts,counts);
+            GT_ASSERT(result.success && result.notice==Notice::None && result.state==before,"Unchanged admitted intrinsic acquired an invented warning");
+        }
+        // The distinct return-zero branch requires exhausting the entire alias
+        // scan. A disabled retained intrinsic and an empty own bank establish it.
+        for(auto& row:catalog.units) {if(row.source_id==2) {row.prerequisite=tech.ResolveToken("Disable");}}
+        pool=workshop_general_fixture::BasePool();for(size_t id=64;id<128;++id) {pool[id]={};}pool[2][50]=254;pool[2][51]=255;
+        state=Empty();state.RetainNativeRegistry(pool,catalog);
+        for(const auto& name:{std::string(),std::string("Different intrinsic")}) {
+            draft.name=name;const auto result=unit::PrepareSmacWorkshopCommit(state,draft,catalog,tech,owner,counts,counts);
+            GT_ASSERT(!result.success && result.notice==(name.empty() ? Notice::UnchangedIntrinsic:Notice::IntrinsicName) && result.state==state && !result.retirement,"Exhausted unchanged intrinsic lost its return-zero/name-warning distinction");
+        }GT_OK();
     });
     task->AddTest("SMAC Workshop intrinsic reactivation matches four native shared-record controls",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}

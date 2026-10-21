@@ -136,8 +136,8 @@ inside OVERWRITEPROTO. All have xs440 and Operations Director caption:
 | Section | Trigger / caller | Substitutions and result |
 | --- | --- | --- |
 | INTRINSICTYPE | Changed intrinsic type cannot obtain a custom slot;44214a..442191 | PROTONAME0 is the intrinsic stored name; unit_sm.pcx, flags0, callback54e8e0;441e20 returns0 |
-| INTRINSICNAME | Exact-match built-in with nonempty draft name differing from intrinsic name;442019..4420b4 | PROTONAME0 is the matched intrinsic stored name; unit_sm.pcx, flags0; message return ignored, intrinsic selection succeeds |
-| INTRINSICNAME | No-change intrinsic branch with attempted differing name;44219e..442226 | Same stored-name substitution/image, through5d63f0;441e20 returns0 |
+| INTRINSICNAME | Initial scan finds an admitted exact-match built-in, **including the selected design**, with nonempty differing draft name;442019..4420b4 | PROTONAME0 is the matched intrinsic stored name; unit_sm.pcx, flags0; message return ignored, intrinsic selection succeeds |
+| INTRINSICNAME | **Initial match scan exhausted**, selected intrinsic tuple unchanged, attempted differing name;44219e..442226 | Same stored-name substitution/image, through5d63f0;441e20 returns0 |
 
 INTRINSICTYPE explains that intrinsic types cannot be replaced and no empty
 slot is available, suggesting redesign of a non-intrinsic type.
@@ -146,3 +146,41 @@ sections have no choice rows. These variants are source-backed only here;
 no additional variant geometry, pixel gate or native modal run is claimed.
 Unchanged/no-warning intrinsic selections and silent zero-unit replacements
 remain governed by the existing commit contract.
+
+### Selected intrinsic name clarification
+
+The initial scan at441e2c..441eed **does not exclude the selected ID** and
+is not skipped when its tuple is unchanged. It scans active built-ins0..63,
+then the owner's custom bank, comparing all five tuple fields. A matching
+built-in also requires5d17b0(prerequisite,owner). The owner's exclusion bit
+is not an additional scan-admission guard.
+
+On any admitted match,441fd0 compares candidate vs selected **after** the
+match is found. Equality only skips reactivation bookkeeping and jumps to
+442019; it does not reject the match or enter44219e. Built-in name handling
+then compares the draft against that matched record's stored name.
+
+| Path | Empty draft name | Equal stored name | Different nonempty name |
+| --- | --- | --- | --- |
+| Admitted built-in match, including selected one | Return1, no warning | Return1, no warning | INTRINSICNAME, then return1 |
+| Scan exhausted, selected intrinsic unchanged tuple | Return0, no warning | Return0, no warning | INTRINSICNAME, then return0 |
+
+The second row is a fallback: the selected record could be inactive or its
+prerequisite could fail, and no other admitted tuple match was found. A
+normal active available Scout2 follows the **first row**. Neither path
+renames the intrinsic stored record. Comparisons are byte-for-byte/case-sensitive.
+In the first row, the informational dialog result is ignored.
+
+The earlier version of the conditional table called44219e simply a
+"no-change intrinsic branch" without its scan-exhaustion guard. That was
+misleading: it did not justify returning0 for an available selected Scout.
+Keeping the selected design in the ordinary reuse scan is correct.
+[Bounded selected-Scout receipt](design-workshop-intrinsic-name-branch-cases.json)
+pins the normal differing-name case independently of a switch from a custom slot.
+It executes candidate2 == selected2 →442019 →INTRINSICNAME, returns1 even
+with supplied message result0, and preserves all captured game arrays and
+the stored Scout Patrol name. Sixteen source literals also pass.
+Additive private freeze: `tmp/reference/independent-workshop-intrinsic-name-branch-evidence-20261021/`,
+seven payloads; manifest
+`f51c421e96b323b0fc2e86fa5a000472d3b2f268e9579abd717bdccc6c0bbd87`.
+This clarification provenance paragraph was added after freezing.

@@ -1,0 +1,53 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "One complete original441e20 call after original4490b0 selects active available Scout2; component tuple unchanged, only draft_name injected as Renamed Scout. Informational modal return0 supplied; no layout or campaign run.",
+  "input": {
+    "selected": 2,
+    "stored_name": "Scout Patrol",
+    "draft_name": "Renamed Scout",
+    "draft": {
+      "0x141f4": 1,
+      "0x141f8": 2,
+      "0x141fc": 0,
+      "0x14200": 0,
+      "0x14204": 0,
+      "0x14208": 0,
+      "0x1420c": 1,
+      "0x14210": 0,
+      "0x14214": 10,
+      "0x14218": -1,
+      "0x1421c": -1
+    }
+  },
+  "return_value": 1,
+  "selected_after": 2,
+  "stored_name_after": "Scout Patrol",
+  "trace": [
+    {
+      "pc": "0x441fd0",
+      "candidate": 2,
+      "selected": 2
+    },
+    {
+      "pc": "0x442019",
+      "candidate": 2,
+      "selected": 2
+    },
+    {
+      "pc": "0x44209d"
+    }
+  ],
+  "messages": [
+    {
+      "pc": "0x499b70",
+      "tag": "INTRINSICNAME",
+      "answer": 0
+    }
+  ],
+  "unchanged_arrays": true,
+  "validation": {
+    "native_selected_intrinsic_calls": 1,
+    "source_literals": 16,
+    "empty_equal_returns": "Source-only: admitted match1; scan-exhausted fallback0"
+  }
+}

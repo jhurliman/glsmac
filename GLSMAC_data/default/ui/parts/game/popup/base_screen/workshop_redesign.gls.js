@@ -31,14 +31,14 @@ view = {
             // Flags-zero generic dialogs return the selected row on Escape
             // as well as Enter; there is no flags40 cancellation conversion.
             if ((e.modifiers == {} && (e.code == 'ESCAPE' || e.code == 'ENTER')) || (e.modifiers == {shift: true} && e.code == 'ENTER')) { view.finish(view.selected); }
-            else if (e.modifiers == {} && (e.code == 'UP' || e.code == 'HOME')) { view.selected = 0; view.paint(); }
-            else if (e.modifiers == {} && (e.code == 'DOWN' || e.code == 'END')) { view.selected = 1; view.paint(); }
+            else if (view.kind == 0 && e.modifiers == {} && (e.code == 'UP' || e.code == 'HOME')) { view.selected = 0; view.paint(); }
+            else if (view.kind == 0 && e.modifiers == {} && (e.code == 'DOWN' || e.code == 'END')) { view.selected = 1; view.paint(); }
             return true;
         }); view.window.hide();
     },
-    open: (workshop, name, count) => {
-        view.workshop = workshop;
-        const words = view.art.smacworkshopredesigntext(name, count); const colors = words.colors;
+    open: (workshop, name, count, kind) => {
+        view.workshop = workshop; view.kind = kind;
+        const words = kind == 0 ? view.art.smacworkshopredesigntext(name, count) : view.art.smacworkshopintrinsictext(kind, name); const colors = words.colors;
         view.colors = colors; view.illustration.background = 'unit_sm.pcx:smacsoftware()';
         view.title.text = #uppercase(words.title); view.title.color = colors[226]; view.title.left = (663 - view.title.measure().width) / 2;
         for (node of view.body) { node.remove(); } view.body = [];
@@ -58,8 +58,10 @@ view = {
         const lines = (baseline - 50) / 20 + 1; const top = #max(164, 44 + 20 * lines);
         view.art.smac_frame = [[9,23,0,700,305],[3,27,4,696,28],[6,30,7,693,25],[0,236,35,693,38 + 20 * lines],[3,233,32,696,41 + 20 * lines]];
         view.rows[0].button.top = top + 1; view.rows[1].button.top = top + 23;
-        view.rows[0].label.text = words.rows[0]; view.rows[1].label.text = words.rows[1];
-        view.ok.top = top + 53; view.ok.text = words.ok; view.ok.color = colors[0];
+        if (kind == 0) { view.rows[0].button.show(); view.rows[1].button.show(); }
+        else { view.rows[0].button.hide(); view.rows[1].button.hide(); }
+        if (kind == 0) { view.rows[0].label.text = words.rows[0]; view.rows[1].label.text = words.rows[1]; }
+        view.ok.top = kind == 0 ? top + 53 : #max(167, 47 + 20 * lines); view.ok.text = words.ok; view.ok.color = colors[0];
         view.selected = 0; view.hovered = (0 - 1); view.active = true; view.paint(); view.window.show();
     },
     paint: () => {
@@ -69,7 +71,7 @@ view = {
         }
     },
     finish: (answer) => {
-        if (!view.active) { return; } view.active = false; view.window.hide(); view.workshop.answer_overwrite(answer == 1);
+        if (!view.active) { return; } view.active = false; view.window.hide(); if (view.kind == 0) { view.workshop.answer_overwrite(answer == 1); } else { view.workshop.answer_intrinsic(); }
     },
     hide: () => { view.active = false; view.workshop = null; view.window.hide(); },
 };

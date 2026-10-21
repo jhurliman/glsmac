@@ -1491,6 +1491,47 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(restore.empty(),"Direct Retire restore: "+restore);
         }GT_OK();
     });
+    task->AddTest("SMAC live Workshop intrinsic warnings retain successful names and rejected full-bank drafts",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {
+            using namespace game::backend::unit;
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+            int32_t notice=-1;std::string shown;bool failed=false,done=false,restored=false;size_t replies=0;
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}});
+            game->On(GSE_CALL,"smac_workshop_commit",NATIVE_CALL(&) {
+                N_EXPECT_ARGS(1);N_GET(view,0,Object);++replies;
+                notice=int32_t(static_cast<value::Int*>(view->Get("intrinsic_notice"))->value);
+                shown=static_cast<value::String*>(view->Get("intrinsic_notice_name"))->value;
+                failed=static_cast<value::Bool*>(view->Get("failed"))->value;done=static_cast<value::Bool*>(view->Get("done"))->value;
+                restored=static_cast<value::Bool*>(view->Get("restore_draft"))->value;return VALUE(value::Undefined);
+            }));
+            std::string stored;fixture.ResourceState([&](const auto& state){const auto& row=state.designs.native_registry->at(2);stored.assign(row.begin(),std::find(row.begin(),row.begin()+32,uint8_t(0)));});
+            int64_t request=0;
+            const auto send=[&](bool close,int armor,const std::string& name) {
+                game->Event(GSE_CALL,"commit_smac_workshop",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},
+                    {"selected_design",VALUE(value::Int,,2)},{"armor",VALUE(value::Int,,armor)},{"name",VALUE(value::String,,name)},
+                    {"done",VALUE(value::Bool,,close)},{"request_id",VALUE(value::Int,,++request)}});fixture.DrainEvents();
+            };
+            const auto before=fixture.Snapshot();
+            for(bool close:{false,true}) {
+                send(close,0,"Different intrinsic");
+                GT_ASSERT(notice==int32_t(SmacWorkshopNotice::IntrinsicName) && shown==stored && !failed && done==close && restored==!close && fixture.Snapshot()==before,"Actual intrinsic name warning lost success/Apply/Done or changed the world");
+            }
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;
+                for(size_t id=64;id<128;++id) {pool[id]=pool[2];pool[id][48]=5;pool[id][44]=0;}
+                state.designs.RetainNativeRegistry(pool,game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog);
+                state.technology.factions[0].owned[1]=true;
+                state.economy.at(1).design_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};
+            });
+            const auto full=fixture.Snapshot();
+            for(bool close:{false,true}) {
+                send(close,1,"");
+                GT_ASSERT(notice==int32_t(SmacWorkshopNotice::IntrinsicType) && shown==stored && failed && !done && restored==!close && fixture.Snapshot()==full,"Full-bank intrinsic rejection lost its original notice, reselect or unchanged world");
+            }
+            GT_ASSERT(replies==4,"Intrinsic warning replies were lost or duplicated");GT_OK();
+        });GT_ASSERT(run.empty(),"live intrinsic warnings: "+run);GT_OK();
+    });
     task->AddTest("SMAC live Workshop confirmed retirement removes global design users and queues atomically",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);std::string saved;
         const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {

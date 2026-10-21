@@ -15,8 +15,10 @@ capability results publish together; failure/stale requests publish neither.
 No Unit, Base queue, allocation ID, air-history recount or RNG change is added.
 
 The production picker's literal Workshop action sends the highlighted raw Unit
-design. Without a changed highlight it uses the current Unit target. A facility
-routes to the still-unimplemented help path, not a fabricated New draft. See
+design. Without a changed highlight it uses the current Unit target. A highlighted facility passes-1 through the normal owner-bank scan,
+which can select an inactive slot or an active full-bank fallback. Help is a
+separate final action; the original intermediate button callback corrects the
+earlier facility-to-Help binding. See
 [the original caller distinction](design-workshop-open-callers.md). The picker
 stays visible until a successful matching response. Manual close returns to a
 fresh production-choice query; turn/teardown hides Workshop without reopening
@@ -44,8 +46,9 @@ return. Cached build; no repeated platform matrix.
 ## Remaining work
 
 The command supports ordinary-1 selection, but the global owner-based menu/U
-caller (including no-Base cases), separate production New/Redesign actions and
-facility Help/Datalinks remain unconnected. Supported retained custom designs now appear in the production list in native
+caller (including no-Base cases) and facility Help/Datalinks remain unconnected.
+The visible production Workshop button follows Redesign; the original normal
+picker does not establish separate visible New/Redesign controls. Supported retained custom designs now appear in the production list in native
 candidate order; the named early-Fission design/manufacture/disk-reopen scenario
 is recorded in [the Workshop journal](../design-workshop.md). General naval/air/PSI
 physics and advanced manufacture acceptance remain open. Tutorial-2 entry is excluded. Full
@@ -61,3 +64,9 @@ exits0 without sanitizer reports or tracked OpenGL leaks. Four affected UI
 scripts pass normally; the live Workshop UI script also passes under the same
 focused sanitizer binary. This is a caller/session receipt, not a complete
 original full-screen visual comparison.
+
+The corrected facility entry passes the affected `base_workshop.gls.js` script
+and four native Workshop opening/full-bank/fresh-authority groups. Both an
+explicit facility highlight and current facility production send selection−1;
+read-only entry remains rejected. No C++ changed, so the previous native
+correctness and sanitizer results remain applicable.

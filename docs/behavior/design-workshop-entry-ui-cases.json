@@ -1,0 +1,295 @@
+{
+  "research_id": "RE-SMAC-WORKSHOP-ENTRY-UI-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Focused original UI logic with supplied presentation primitives; complete button callback/key chains, constructor/context fragments and no-Base wrapper/open prefix plus separate admitted close tail. No desktop delivery, broad redraw or complete449630 modal lifecycle.",
+  "source_receipt_sha256": "15fc7185bd5a2e13e0c0f6f8671599dc12bc87237c490c72946a38a756884865",
+  "input_hashes": {
+    "menu": "29e02c37ae104c7f861810f147e0be7a39d0c70b1a1e3f83ac800fdb68fffc38",
+    "labels": "b6b7057a9f96a29a77e89da143d38e34bec5d93d651ac798b3c27d4efdab2009"
+  },
+  "correction": {
+    "visible_workshop_raw_button_id": 1,
+    "translated_final_action": 2,
+    "help_raw_button_id": 0,
+    "help_final_action": 1,
+    "old_binding_superseded": true
+  },
+  "global_route": {
+    "menu_section": "HQ",
+    "menu_item": "Design &Workshop...|U",
+    "menu_command": 259,
+    "shortcut": "U",
+    "initial_design": -1,
+    "base_required": false,
+    "base_operations_key": "F4"
+  },
+  "cases": [
+    {
+      "id": "button_-2_selected_-1",
+      "kind": "complete_button_to_picker_callback",
+      "raw_button_id": -2,
+      "selected_before": -1,
+      "action_after": 0,
+      "selected_after": -1,
+      "modal_calls": 1
+    },
+    {
+      "id": "button_-1_selected_-1",
+      "kind": "complete_button_to_picker_callback",
+      "raw_button_id": -1,
+      "selected_before": -1,
+      "action_after": 0,
+      "selected_after": -1,
+      "modal_calls": 1
+    },
+    {
+      "id": "button_0_selected_-1",
+      "kind": "complete_button_to_picker_callback",
+      "raw_button_id": 0,
+      "selected_before": -1,
+      "action_after": 99,
+      "selected_after": -1,
+      "modal_calls": 0
+    },
+    {
+      "id": "button_1_selected_-1",
+      "kind": "complete_button_to_picker_callback",
+      "raw_button_id": 1,
+      "selected_before": -1,
+      "action_after": 2,
+      "selected_after": -1,
+      "modal_calls": 1
+    },
+    {
+      "id": "button_3_selected_-1",
+      "kind": "complete_button_to_picker_callback",
+      "raw_button_id": 3,
+      "selected_before": -1,
+      "action_after": 3,
+      "selected_after": -1,
+      "modal_calls": 1
+    },
+    {
+      "id": "button_-2_selected_2",
+      "kind": "complete_button_to_picker_callback",
+      "raw_button_id": -2,
+      "selected_before": 2,
+      "action_after": 0,
+      "selected_after": -1,
+      "modal_calls": 1
+    },
+    {
+      "id": "button_-1_selected_2",
+      "kind": "complete_button_to_picker_callback",
+      "raw_button_id": -1,
+      "selected_before": 2,
+      "action_after": 0,
+      "selected_after": 2,
+      "modal_calls": 1
+    },
+    {
+      "id": "button_0_selected_2",
+      "kind": "complete_button_to_picker_callback",
+      "raw_button_id": 0,
+      "selected_before": 2,
+      "action_after": 1,
+      "selected_after": 2,
+      "modal_calls": 1
+    },
+    {
+      "id": "button_1_selected_2",
+      "kind": "complete_button_to_picker_callback",
+      "raw_button_id": 1,
+      "selected_before": 2,
+      "action_after": 2,
+      "selected_after": 2,
+      "modal_calls": 1
+    },
+    {
+      "id": "button_3_selected_2",
+      "kind": "complete_button_to_picker_callback",
+      "raw_button_id": 3,
+      "selected_before": 2,
+      "action_after": 3,
+      "selected_after": 2,
+      "modal_calls": 1
+    },
+    {
+      "id": "key_13",
+      "kind": "native_generic_key_to_picker",
+      "key": 13,
+      "action_after": 0,
+      "selected_after": 2
+    },
+    {
+      "id": "key_27",
+      "kind": "native_generic_key_to_picker",
+      "key": 27,
+      "action_after": 0,
+      "selected_after": -1
+    },
+    {
+      "id": "key_82",
+      "kind": "native_picker_unbound_letter",
+      "key": 82,
+      "action_after": 99,
+      "modal_calls": 0
+    },
+    {
+      "id": "key_78",
+      "kind": "native_picker_unbound_letter",
+      "key": 78,
+      "action_after": 99,
+      "modal_calls": 0
+    },
+    {
+      "id": "double_click_existing_selection",
+      "kind": "native_activation_callback",
+      "selected": 2,
+      "selection_point_boundary_supplied": true,
+      "action_after": 0
+    },
+    {
+      "id": "normal_picker_button_row",
+      "kind": "native_constructor_fragment",
+      "buttons": [
+        {
+          "text": "Cancel",
+          "raw_id": -2,
+          "caller": "0x4a3e5f"
+        },
+        {
+          "text": "OK",
+          "raw_id": -1,
+          "caller": "0x4a41ae"
+        },
+        {
+          "text": "Workshop",
+          "raw_id": 1,
+          "caller": "0x4a4233"
+        },
+        {
+          "text": "Help",
+          "raw_id": 0,
+          "caller": "0x4a42c5"
+        }
+      ],
+      "omissions": "Widget construction/text case conversion supplied; native label lookup inputs from installed LABELS; no raster or modal delivery."
+    },
+    {
+      "id": "context_2_network_0",
+      "kind": "native_context_builder_to_display",
+      "selected_raw_design": 2,
+      "network_flag": 0,
+      "items": [
+        {
+          "id": 5,
+          "text": "Set production"
+        },
+        {
+          "id": 4,
+          "text": "Add to queue"
+        },
+        {
+          "id": 1,
+          "text": "Obsolete"
+        },
+        {
+          "id": 3,
+          "text": "Cancel all obsolete"
+        },
+        {
+          "id": 2,
+          "text": "Help"
+        }
+      ]
+    },
+    {
+      "id": "context_-1_network_0",
+      "kind": "native_context_builder_to_display",
+      "selected_raw_design": -1,
+      "network_flag": 0,
+      "items": [
+        {
+          "id": 5,
+          "text": "Set production"
+        },
+        {
+          "id": 4,
+          "text": "Add to queue"
+        },
+        {
+          "id": 3,
+          "text": "Cancel all obsolete"
+        },
+        {
+          "id": 2,
+          "text": "Help"
+        }
+      ]
+    },
+    {
+      "id": "context_2_network_1",
+      "kind": "native_context_builder_to_display",
+      "selected_raw_design": 2,
+      "network_flag": 1,
+      "items": [
+        {
+          "id": 5,
+          "text": "Set production"
+        },
+        {
+          "id": 4,
+          "text": "Add to queue"
+        },
+        {
+          "id": 1,
+          "text": "Obsolete"
+        },
+        {
+          "id": 2,
+          "text": "Help"
+        }
+      ]
+    },
+    {
+      "id": "no_base_owner1_fullFalse",
+      "kind": "native_wrapper_open_prefix_and_admitted_close_tail",
+      "owner": 1,
+      "base_count": 0,
+      "current_base_pointer": 0,
+      "bank_full": false,
+      "selected_design": 64,
+      "multiplier": 10,
+      "base_memory_accesses": [],
+      "global_base_authority_unchanged": true,
+      "close_return": 0
+    },
+    {
+      "id": "no_base_owner3_fullFalse",
+      "kind": "native_wrapper_open_prefix_and_admitted_close_tail",
+      "owner": 3,
+      "base_count": 0,
+      "current_base_pointer": 0,
+      "bank_full": false,
+      "selected_design": 192,
+      "multiplier": 10,
+      "base_memory_accesses": [],
+      "global_base_authority_unchanged": true,
+      "close_return": 0
+    },
+    {
+      "id": "no_base_owner1_fullTrue",
+      "kind": "native_wrapper_open_prefix_and_admitted_close_tail",
+      "owner": 1,
+      "base_count": 0,
+      "current_base_pointer": 0,
+      "bank_full": true,
+      "selected_design": 64,
+      "multiplier": 10,
+      "base_memory_accesses": [],
+      "global_base_authority_unchanged": true,
+      "close_return": 0
+    }
+  ]
+}

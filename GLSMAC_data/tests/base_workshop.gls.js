@@ -20,6 +20,13 @@ const node = (data) => {
         for (part of parts) { const text = part + (at + 1 < #sizeof(parts) ? ' ' : ''); tokens :+ {text: text, spans: [{text: text, color: 226}]}; at++; }
         return {title: 'Operations Director', body: body, tokens: tokens, rows: kind == 1 || kind == 2 ? ['No, we cannot afford that.', 'Yes, modernize.'] : [], ok: 'OK', cancel: 'Cancel', colors: words.colors};
     };
+    data.smacworkshopredesigntext = (name, count) => {
+        const words = data.smacworkshopparenttext();
+        const body = 'We have no empty design slots. If we create this design, all units of our old "' + name + '" type (' + #to_string(count) + ' units) will be disbanded.';
+        let tokens = []; const parts = #split(body, ' '); let at = 0;
+        for (part of parts) { const text = part + (at + 1 < #sizeof(parts) ? ' ' : ''); tokens :+ {text: text, spans: [{text: text, color: 226}]}; at++; }
+        return {title: 'Operations Director', tokens: tokens, rows: ['Never mind.', 'Proceed with redesign.'], ok: 'OK', colors: words.colors};
+    };
     data.focus = () => { data.focused = true; }; data.select_all = () => { data.all_selected = true; };
     data.smacworkshopabilitytext = (technology) => { return {title: 'Select Special Ability', none: 'No special ability', ok: 'OK', cancel: 'Cancel', cost: 'Cost', attack: 'Attack', defense: 'Defense', speed: 'Speed', domains: ['Land', 'Sea', 'Air'], second_title: 'Chief Engineer', second_body: 'Research ' + technology + '.', missile_title: 'Chief Engineer', missile_body: 'Missiles cannot have special abilities.'}; };
     data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
@@ -106,8 +113,11 @@ test.assert(!dialog.active && windows[0].hidden);
 dialog.open(base, selection); dialog.selected_design = 64; dialog.selected_armor = 1; dialog.submit(true);
 listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: false, confirmation: true, overwrite_name: 'Old Guard', overwrite_count: 3});
 test.assert(dialog.active && dialog.confirming && !dialog.pending && !windows[2].hidden);
-test.assert(#sizeof(dialog.overwrite_lines) >= 3 && #sizeof(dialog.overwrite_lines) <= 5);
-for (line of dialog.overwrite_lines) { test.assert(line.measure().width <= 410); }
+test.assert(dialog.overwrite_window.width == 755 && dialog.overwrite_window.height == 300 && dialog.redesign_dialog.selected == 0);
+test.assert(#sizeof(dialog.redesign_dialog.body) >= 3 && #sizeof(dialog.redesign_dialog.body) <= 5);
+for (line of dialog.redesign_dialog.body) { test.assert(line.measure().width <= 449); }
+test.assert(dialog.redesign_dialog.rows[0].label.text == 'Never mind.' && dialog.redesign_dialog.rows[1].label.text == 'Proceed with redesign.');
+test.assert(dialog.redesign_dialog.rows[0].button.top == 165 && dialog.redesign_dialog.rows[1].button.top == 187 && dialog.redesign_dialog.ok.top == 217);
 const before_modal = #sizeof(commands); dialog.submit(false); dialog.open_picker(); test.assert(#sizeof(commands) == before_modal && windows[1].hidden);
 test.assert(windows[2].handlers.keydown({modifiers: {}, code: 'ENTER'}) == true && dialog.pending && !dialog.confirming && windows[2].hidden);
 test.assert(commands[before_modal].data.overwrite == 0 && commands[before_modal].data.done && commands[before_modal].data.expected_state == 'before');
@@ -120,7 +130,10 @@ listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selec
 test.assert(dialog.active && dialog.selected_armor == 0 && dialog.selected_design == 64);
 dialog.selected_armor = 1; dialog.submit(true);
 listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: false, confirmation: true, overwrite_name: 'Old Guard', overwrite_count: 3});
-const before_accept = #sizeof(commands); dialog.answer_overwrite(true); dialog.answer_overwrite(true);
+const before_accept = #sizeof(commands);
+test.assert(windows[2].handlers.keydown({modifiers: {shift: true}, code: 'ESCAPE'}) == true && dialog.confirming);
+test.assert(windows[2].handlers.keydown({modifiers: {}, code: 'DOWN'}) == true && dialog.redesign_dialog.selected == 1);
+test.assert(windows[2].handlers.keydown({modifiers: {}, code: 'ESCAPE'}) == true); dialog.answer_overwrite(true);
 test.assert(#sizeof(commands) == before_accept + 1 && commands[before_accept].data.overwrite == 1 && commands[before_accept].data.done);
 listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: false, intrinsic_name_warning: false, done: true});
 test.assert(!dialog.active && windows[2].hidden);

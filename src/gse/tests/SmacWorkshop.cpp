@@ -75,6 +75,12 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
             GT_ASSERT(actual==word.text,"Highlight split lost its indivisible wrap word");flat+=word.text;}
         GT_ASSERT(flat.find('{')==std::string::npos && flat.find('}')==std::string::npos && emphasis=="not yet been prototyped,",
             "Prototype warning highlight escaped or acquired neighboring spaces");
+        const auto overwrite=ReadSmacWorkshopModalTemplate(source,"OVERWRITEPROTO");
+        const auto replacement=SubstituteSmacWorkshopModal(overwrite.body,{"Guard $NUM0",""},{3,0,0});
+        GT_ASSERT(overwrite.caption==confirm.caption && overwrite.rows.size()==2
+            && replacement.find("\"Guard $NUM0\" type (3 units)")!=std::string::npos
+            && overwrite.rows[0]=="Never mind." && overwrite.rows[1]=="Proceed with redesign.",
+            "Redesign text did not preserve installed choices or single-pass prototype substitution");
         GT_ASSERT(Rejects([&]{ReadSmacWorkshopModalTemplate(source+"\n#YESUPGRADE\n#caption Duplicate\nRepeated\n","YESUPGRADE");}),"Duplicate modal template admitted");GT_OK();
     });
     task->AddTest("SMAC Workshop Upgrade matches25 native candidate and cached quote controls",GT(){

@@ -56,8 +56,9 @@ inline std::string SubstituteSmacWorkshopModal(const std::string& source,const s
     std::string result;
     for(size_t i=0;i<source.size();) {
         bool replaced=false;
-        for(size_t n=0;n<names.size();++n) {const auto token="$UNITTYPE"+std::to_string(n);
-            if(source.compare(i,token.size(),token)==0) {result+=names[n];i+=token.size();replaced=true;break;}}
+        for(size_t n=0;n<names.size() && !replaced;++n) {for(const std::string prefix:{"$UNITTYPE","$PROTONAME"}) {
+            const auto token=prefix+std::to_string(n);
+            if(source.compare(i,token.size(),token)==0) {result+=names[n];i+=token.size();replaced=true;break;}}}
         if(replaced) {continue;}
         for(size_t n=0;n<numbers.size();++n) {const auto token="$NUM"+std::to_string(n);
             if(source.compare(i,token.size(),token)==0) {result+=std::to_string(numbers[n]);i+=token.size();replaced=true;break;}}

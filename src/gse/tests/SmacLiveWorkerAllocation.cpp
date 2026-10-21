@@ -1479,6 +1479,47 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_OK();
         });GT_ASSERT(run.empty(),"Live Workshop command: "+run);GT_OK();
     });
+    task->AddTest("SMAC live Workshop queued card selection retains saved tuples and fences world state",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;
+                pool[64]=pool[2];pool[64][36]=1;pool[64][48]=0x83;
+                const std::string name="Retained Rover";std::fill_n(pool[64].begin(),32,0);std::copy(name.begin(),name.end(),pool[64].begin());
+                for(int id=65;id<128;++id) {pool[id][48]&=uint8_t(~1u);}
+                pool[65][36]=255;pool[65][37]=255;pool[65][38]=255;pool[65][39]=255;
+                state.designs.RetainNativeRegistry(pool,catalog);state.technology.factions[0].owned.fill(false);
+                state.economy.at(1).design_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};});
+            bool failed=true,stale=false,restored=false;int32_t selected=-1,chassis=-1;std::string name;
+            game->On(GSE_CALL,"smac_workshop_commit",NATIVE_CALL(&){N_EXPECT_ARGS(1);N_GET(view,0,Object);
+                failed=static_cast<value::Bool*>(view->Get("failed"))->value;stale=static_cast<value::Bool*>(view->Get("stale"))->value;
+                restored=static_cast<value::Bool*>(view->Get("restore_draft"))->value;selected=int32_t(static_cast<value::Int*>(view->Get("design_id"))->value);
+                auto* draft=static_cast<value::Object*>(static_cast<value::Object*>(view->Get("selection"))->Get("draft"));
+                chassis=int32_t(static_cast<value::Int*>(draft->Get("chassis"))->value);name=static_cast<value::String*>(draft->Get("name"))->value;
+                return VALUE(value::Undefined);}));
+            const auto before=fixture.Snapshot();value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},
+                {"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"selected_design",VALUE(value::Int,,64)},
+                {"name",VALUE(value::String,,"Unsaved")},{"request_id",VALUE(value::Int,,1)}};
+            game->Event(GSE_CALL,"select_smac_workshop",args);GT_ASSERT(fixture.Snapshot()==before,"Card selection bypassed event queue");fixture.DrainEvents();
+            GT_ASSERT(!failed && !stale && restored && selected==64 && chassis==1 && name=="Retained Rover","Card selection lost retained design after technology loss");
+            bool cleared=false;fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;cleared=pool[64][48]==3;
+                pool[64][48]|=0x80;state.designs.RetainNativeRegistry(pool,catalog);});
+            GT_ASSERT(cleared && fixture.Snapshot()==before,"Card selection changed world beyond retained flag bookkeeping");
+            args["selected_design"]=VALUE(value::Int,,127);args["request_id"]=VALUE(value::Int,,2);
+            game->Event(GSE_CALL,"select_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(!failed && !stale && restored && selected==65 && chassis==0 && name=="Unsaved" && fixture.Snapshot()==before,
+                "Inactive selection lost basic reset, first-inactive fallback or unsaved name");
+            args["expected_state"]=VALUE(value::String,,"stale");args["selected_design"]=VALUE(value::Int,,64);
+            game->Event(GSE_CALL,"select_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(stale && !restored && fixture.Snapshot()==before,"Stale selection changed world or restored draft");
+            args["expected_state"]=VALUE(value::String,,base->SmacWorkshopState());args["selected_design"]=VALUE(value::Int,,128);
+            bool rejected=false;try {game->Event(GSE_CALL,"select_smac_workshop",args);}catch(const std::exception&) {rejected=true;}
+            GT_ASSERT(rejected && fixture.Snapshot()==before,"Foreign card selection entered queue");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Workshop transports complete drafts through quotes Apply and restore",[](GSE*,context::Context*)->std::string {
         const auto source=[](const std::string& filename) {
             const auto original=TanksSource(filename);if(filename!="alpha.txt") {return original;}

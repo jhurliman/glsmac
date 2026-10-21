@@ -884,3 +884,56 @@ focused ASan/UBSan with eleven production and five test translation units
 instrumented. Targeted correctness analysis is clean for seven changed or
 affected production units. No gameplay/UI script source changed in this slice;
 no platform matrix or new whole-screen acceptance is claimed.
+
+### Live saved-design browser
+
+The Workshop now displays the retained browse projection in the original
+console-local strip rectangle, with ten70-pixel columns, cyclic one-pass
+scrolling and raw-design-ID click routing. The ordinary body/shadow renderer
+is connected to real saved rows. Inactive rows expose no stale components or
+name, and short lists do not repeat. A bounded16-image cache retains completed
+indexed thumbnails rather than decoded model trees; hover/selection repaint
+reuses those images and the installed palette/label/frame sources.
+
+The original parent frame is now captured and independently replayed as a
+whole indexed buffer. Its new handoff supplies installed Empty Slot/Obsolete
+labels, six arrow sprites, generic card/frame styles and caller-specific
+centering. The implementation uses the existing interface.pcx frame painter;
+all four70x50 native frame rasters match. Native scanlines, transparent corners,
+normal/hover/selected precedence and installed label text replace temporary
+flat fills. See [parent capture](behavior/design-workshop-native-parent.md) and
+[strip art](behavior/design-workshop-strip-art-and-centering.md).
+
+Card selection uses a fenced `select_smac_workshop` game event through the
+ordinary and canonical Colony Screen dispatchers. The original argument-zero
+reselector retains saved component/name semantics after technology loss,
+normalizes source selection flags, and chooses the first inactive own slot
+with a basic tuple while retaining the unsaved name. Full-paint compatibility
+and Neural capacity cleanup applies to the editable draft, not the saved
+ability mask. Scroll arrows are read-only; card clicks preserve offset.
+Opening and Apply retain their separate recenter behavior. Stale selection
+responses refresh quotes for the current complete draft.
+
+Chassis, weapon and reactor side previews now consume the selected draft;
+shielding retains its existing indexed/translucent compositor and shared
+centering sequence. The stored tuple is carried into Apply/Done as before.
+
+Validation:37 selected native groups and two owned-asset frame groups pass,
+including the queued card event, technology-loss selection, inactive fallback,
+stale/foreign fences and complete non-design world-state preservation. Six UI
+scripts pass; browser checks cover native columns, short lists, centering,
+the left count sentinel, right-after-sentinel behavior and pending request
+guards. Thirty-six relevant groups pass ASan/UBSan with sixteen production and
+five test units instrumented. Correctness analysis is clean for seven
+production units/consumers; Surface was rechecked after the final compositor
+adjustment. An actual instrumented SDL/OpenGL run opened the strip, selected
+Morgan's saved Synthmetal Garrison, scrolled and selected an inactive slot.
+The final capture repeats saved selection with the corrected component anchors;
+it exits0 with no sanitizer or tracked GL leaks. Software graphics/no audio.
+
+This is a functional saved browser, not completed Workshop parity. General
+picker controls, ability decorations, normal-open recommendation inputs,
+remaining action controls/console panels, full stat/cost presentation and
+timer-driven preview animation remain required. The raw component stat line
+is not yet the complete original5932d0 formatter. The reference uses a blank
+map fixture; live captures retain the current Base Screen behind Workshop.

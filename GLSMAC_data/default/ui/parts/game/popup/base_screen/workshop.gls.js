@@ -4,6 +4,11 @@ return {
         this.window = p.ui.root.window({zindex: 0.9, align: 'top left', left: 216, top: 168, width: 623, height: 387, blocker: 'rgba(0, 0, 0, 180)'});
         this.window.surface({left: 0, top: 0, width: 623, height: 368, background: 'deswin.pcx:smacsoftware()'});
         this.components = this.window.surface({left: 0, top: 0, width: 623, height: 368});
+        this.component_models = [];
+        for (placement of [{kind: 0, left: 30, top: 7, offset: 88}, {kind: 1, left: 30, top: 101, offset: 86}, {kind: 3, left: 462, top: 7, offset: 90}]) {
+            const frame = this.window.panel({left: placement.left, top: placement.top, width: 99, height: 85, overflow: 'hidden'});
+            this.component_models :+ {kind: placement.kind, model: frame.surface({left: (0 - 79), top: (0 - placement.offset), width: 256, height: 256})};
+        }
         this.window.hide();
         const window = this.window;
         const caption = (left, top, width, height, baseline, size, bold) => {
@@ -50,12 +55,20 @@ return {
         this.picker.on('keydown', (e) => { if (e.modifiers == {} && e.code == 'ESCAPE') { this.picker.hide(); } return true; });
         this.window.listen(p.game, 'smac_workshop_commit', (e) => {
             if (!this.active || !this.pending || e.base.id != this.base.id || e.request_id != this.pending_id) { return; }
+            const selecting = this.pending_selection;
             this.pending = false; this.selection = e.selection;
+            if (selecting && e.stale) {
+                const base = this.base; const selected = this.selected_design; const chassis = this.selected_chassis; const weapon = this.selected_weapon;
+                const armor = this.selected_armor; const reactor = this.selected_reactor; const abilities = this.selected_abilities; const name = this.draft_name;
+                this.selection = base.get_smac_workshop(selected, chassis, weapon, armor, reactor, abilities, name);
+            }
             if (#is_defined(e.restore_draft) && e.restore_draft) {
                 this.selected_design = e.design_id; this.selected_armor = e.restored_armor; this.draft_name = e.restored_name;
                 if (#is_defined(e.selection.draft)) { this.read_draft(e.selection.draft); }
+                if (!selecting) { this.recenter_strip(e.design_id); }
             }
             this.update_labels(); this.update_armor();
+            this.render_strip();
             if (e.stale) { this.message.text = 'Game state changed. Please check your design.'; return; }
             if (e.failed) { this.message.text = 'This design cannot be saved.'; return; }
             if (#is_defined(e.confirmation) && e.confirmation) {
@@ -75,13 +88,86 @@ return {
             this.window.listen(p.game, event, (e) => { this.hide_view(); });
         }
         this.window.listen(p.game, 'turn_status', (e) => { if (e.status == 'please_wait') { this.hide_view(); } });
+        this.strip = p.ui.root.window({zindex: 0.91, align: 'top left', left: 8, top: 703, width: 756, height: 56, background: 'black'});
+        this.strip_canvas = this.strip.surface({left: 0, top: 0, width: 756, height: 56});
+        this.strip_cards = []; this.strip_offset = 0; this.strip_hover = (0 - 1); this.strip.hide();
+        p.ui.class('workshop-strip-left').set({
+            background: 'interface.pcx:smacsoftware():crop(397,153,408,194)', _hover: {background: 'interface.pcx:smacsoftware():crop(410,153,421,194)'}, _active: {background: 'interface.pcx:smacsoftware():crop(423,153,434,194)'}});
+        p.ui.class('workshop-strip-right').set({
+            background: 'interface.pcx:smacsoftware():crop(397,196,408,237)', _hover: {background: 'interface.pcx:smacsoftware():crop(410,196,421,237)'}, _active: {background: 'interface.pcx:smacsoftware():crop(423,196,434,237)'}});
+        this.strip_left = this.strip.button({class: 'workshop-strip-left', left: 4, top: 7, width: 12, height: 42});
+        this.strip_right = this.strip.button({class: 'workshop-strip-right', left: 740, top: 7, width: 12, height: 42});
+        this.strip_left.on('click', () => { this.scroll_strip(false); return true; });
+        this.strip_right.on('click', () => { this.scroll_strip(true); return true; });
         return this.window;
     },
     open: (base, data) => {
         this.base = base; this.selection = data; this.active = true; this.pending = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.overwrite_window.hide();
         this.selected_chassis = 0; this.selected_weapon = 0; this.selected_reactor = 1; this.selected_abilities = 0; this.draft_name = '';
         if (#is_defined(data.draft)) { this.read_draft(data.draft); this.selected_design = data.draft.selected_design; }
-        this.update_labels(); this.title.text = #uppercase(data.scout_name); this.message.text = ''; this.update_armor(); this.window.show();
+        this.strip_hover = (0 - 1); this.recenter_strip(this.selected_design);
+        this.update_labels(); this.title.text = #uppercase(data.scout_name); this.message.text = ''; this.update_armor(); this.window.show(); this.render_strip();
+    },
+    render_strip: () => {
+        for (card of this.strip_cards) { card.remove(); } this.strip_cards = [];
+        if (!this.active || !#is_defined(this.selection.designs) || #sizeof(this.selection.designs) == 0) { this.strip.hide(); return; }
+        const count = #sizeof(this.selection.designs);
+        let rows = []; let scanned = 0;
+        while (scanned < count && #sizeof(rows) < 10) { rows :+ this.selection.designs[(this.strip_offset + scanned) % count] + {}; scanned++; }
+        this.visible_designs = rows;
+        const colors = this.paint_strip();
+        let column = 0;
+        for (row of rows) {
+            const id = row.id;
+            const color = row.excluded && row.id >= 64 ? (#is_defined(row.unit_count) && row.unit_count == 0 ? colors.unused : colors.obsolete) : colors.normal;
+            const card = this.strip.button({left: 19 + 72 * column, top: 3, width: 70, height: 50, background: 'transparent', overflow: 'hidden'});
+            const title_box = card.panel({left: 5, top: 2, width: 60, height: 13, overflow: 'hidden'});
+            const title = title_box.text({align: 'top center', baseline: 10, font: 'arial.ttf:10:mono', color: color, text: ''});
+            const slot = row.id % 64 + 1;
+            if (row.active) {
+                let caption = row.id < 64 ? '* ' + row.stored_name : (row.excluded ? colors.obsolete_label + ' (' + #to_string(slot) + ')' : #to_string(slot) + '. ' + row.stored_name);
+                title.text = caption; let limit = 64;
+                while (title.measure().width > 60 && limit > 0) { limit--; title.text = ('' + caption)[0::limit]; }
+                const words = #split(title.text, ' '); if (#sizeof(words) > 2) { title.text = words[0] + ' ' + words[1]; }
+                const stats_box = card.panel({left: 2, top: 35, width: 66, height: 13, overflow: 'hidden'});
+                const components = row.components;
+                const offense = components.offense < 0 ? '?' : #to_string(components.offense);
+                const defense = components.strength < 0 ? '?' : #to_string(components.strength);
+                stats_box.text({align: 'top center', baseline: 10, font: 'arial.ttf:10:mono', color: color, text: offense + '-' + defense + '-' + #to_string(components.speed)});
+            } else {
+                title.text = colors.empty_label;
+                const slot_box = card.panel({left: 2, top: 15, width: 66, height: 13, overflow: 'hidden'});
+                slot_box.text({align: 'top center', baseline: 10, font: 'arial.ttf:10:mono', color: color, text: '#' + #to_string(slot)});
+            }
+            card.on('click', () => { this.select_design(id); return true; }); this.strip_cards :+ card; column++;
+            card.on('mouseover', () => { if (this.active) { this.strip_hover = id; this.paint_strip(); } return true; });
+            card.on('mouseout', () => { if (this.active && this.strip_hover == id) { this.strip_hover = (0 - 1); this.paint_strip(); } return true; });
+        }
+        this.strip.show();
+    },
+    paint_strip: () => {
+        const rows = this.visible_designs; const art = this.selection.faction_art; const selected = this.selected_design; const hovered = this.strip_hover;
+        return this.strip_canvas.smacworkshopstrip(rows, art, selected, hovered);
+    },
+    recenter_strip: (target) => {
+        if (#is_defined(this.selection.designs) && #sizeof(this.selection.designs) >= 5) {
+            const count = #sizeof(this.selection.designs); let index = 0;
+            while (index < count && this.selection.designs[index].id != target) { index++; }
+            if (index < count) { this.strip_offset = (index + count - 5) % count; }
+        }
+    },
+    scroll_strip: (right) => {
+        if (!this.active || this.pending || this.confirming || !#is_defined(this.selection.designs)) { return; }
+        const count = #sizeof(this.selection.designs); if (count == 0) { return; }
+        if (right) { this.strip_offset = this.strip_offset + 1; if (this.strip_offset == count) { this.strip_offset = 0; } }
+        else { this.strip_offset = this.strip_offset - 1; if (this.strip_offset < 0) { this.strip_offset = count; } }
+        this.render_strip();
+    },
+    select_design: (id) => {
+        if (!this.active || this.pending || this.confirming) { return; }
+        this.pending_done = false; this.pending_selection = true; this.pending = true; this.next_request = this.next_request + 1; this.pending_id = this.next_request;
+        const request = this.pending_id; const base = this.base; const expected = this.selection.expected_state; const name = this.draft_name;
+        this.p.game.event('select_smac_workshop', {base: base, selected_design: id, expected_state: expected, name: name, request_id: request});
     },
     read_draft: (draft) => {
         this.selected_chassis = draft.chassis; this.selected_weapon = draft.weapon; this.selected_reactor = draft.reactor; this.selected_abilities = draft.abilities;
@@ -93,8 +179,11 @@ return {
     },
     armor_strength: (strength) => { return strength < 0 ? 'Psi' : #to_string(strength); },
     update_armor: () => {
-        this.components.smacworkshopcomponents(this.selected_armor);
+        this.components.smacworkshopcomponents(this.selected_armor, true);
         for (row of this.selection.armor) { if (row.id == this.selected_armor) {
+            for (component of this.component_models) {
+                component.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor, component.kind, this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating);
+            }
             this.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor, (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating);
             this.armor_name.text = row.id == 0 ? 'NONE' : #uppercase(row.short_name); this.armor_stat.text = 'Level ' + this.armor_strength(row.rating);
             if (row.design_name != '') { this.title.text = #uppercase(row.design_name); }
@@ -152,6 +241,7 @@ return {
     submit_choice: (done, choice) => {
         if (!this.active || this.pending) { return; }
         this.pending_done = done;
+        this.pending_selection = false;
         this.pending = true; this.next_request = this.next_request + 1; this.pending_id = this.next_request;
         const request = this.pending_id;
         const base = this.base; const expected = choice < 0 ? this.selection.expected_state : this.confirm_expected;
@@ -161,5 +251,5 @@ return {
         if (choice >= 0) { fields = fields + {overwrite: choice}; }
         this.p.game.event('commit_smac_workshop', fields);
     },
-    hide_view: () => { this.active = false; this.pending = false; this.base = null; this.confirming = false; this.overwrite_window.hide(); this.picker.hide(); this.window.hide(); },
+    hide_view: () => { this.active = false; this.pending = false; this.base = null; this.confirming = false; this.overwrite_window.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); },
 };

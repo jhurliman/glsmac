@@ -85,6 +85,14 @@ SmacWorkshopAbilitySelection CleanSmacWorkshopAbilities(const SmacWorkshopDraft&
         }
     }return {cleaned.abilities,slots};
 }
+SmacWorkshopAbilitySelection CleanSmacWorkshopRetainedAbilities(const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner) {
+    RequireOwner(owner);RequireComponents(draft,catalog);
+    std::array<int32_t,2> slots{-1,-1};size_t count=0;
+    for(int32_t bit=0;bit<24;++bit) {if(draft.abilities&(1u<<bit)) {if(count<2) {slots[count]=bit;}++count;}}
+    return CleanSmacWorkshopAbilities(draft,slots,count<2 || Available(Prerequisite(technologies.ResolveToken("Neural")),technologies,owner),catalog);
+}
 void ValidateSmacWorkshopEditorAbilities(const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog,
     const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner) {
     RequireOwner(owner);RequireComponents(draft,catalog);

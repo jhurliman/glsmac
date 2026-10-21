@@ -5,9 +5,10 @@
 #include <cstdint>
 #include <vector>
 #include <array>
+#include <optional>
 
 namespace task::intro { class Movie; }
-namespace loader::cvr {class CvrScoutRenderer;class CvrWorkshopComponents;}
+namespace loader::cvr {class CvrScoutRenderer;class CvrWorkshopComponents;struct CvrStripImage;}
 namespace loader::texture {struct SmacDialogSource;struct SmacTurnFrames;struct SmacGraphPalette;}
 
 namespace types {
@@ -67,6 +68,12 @@ private:
     std::shared_ptr<const loader::cvr::CvrScoutRenderer> m_workshop_design;
     std::array<int,8> m_workshop_design_key{{-2,-2,-2,-2,-2,-2,-2,-2}};
     std::string m_workshop_design_faction;
+    struct StripImage {std::array<int,7> key;std::shared_ptr<const loader::cvr::CvrStripImage> image;};
+    std::vector<StripImage> m_workshop_strip_images;
+    std::string m_workshop_strip_faction;
+    std::optional<std::array<std::array<uint8_t,3>,256>> m_workshop_strip_colors;
+    std::array<uint8_t,256> m_workshop_strip_shadow{};
+    std::array<std::string,2> m_workshop_strip_labels;
 	void StopMovie();
 
 private:

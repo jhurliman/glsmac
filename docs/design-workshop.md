@@ -1414,3 +1414,36 @@ text/decorations, preferences, Help/input states, complete human-played and
 remote manufacturing receipts, general gameplay packages, SMAX models and
 complete screen diffs remain open. High Morale manufacturing/state-flag and
 allocation-limit source controls are the next gameplay follow-up.
+
+
+### Manufactured High Morale and newborn state
+
+The live ordinary ground factory now combines local training, High Morale,
+first-prototype and baseline points before one final 0..6 clamp. Current
+MORALE below -1 halves only local training. Successful manufacture also sets
+the produced-state bit, the human GovernorActive + AutomateNewUnits bit,
+and the primary viewing faction's native flag. Viewing faction is independent
+of the faction undergoing upkeep. Generic starting/restart factories retain
+their separate initialization.
+
+The [newborn source contract](behavior/design-workshop-newborn-state.md)
+retains17 complete original Base returns. This implementation uses the15
+successful controls; the two full-pool refusal controls document a remaining
+integration requirement, not implemented refusal behavior. The live fixture
+compares stored morale, retained state word and native flags, checks discarded
+preparation preserves the full world/next ID, and checks publication preserves
+the detached candidate. It maps original owner/viewer equality to port owner1
+or2 with local viewer1; it does not compare entire native Unit records or
+claim a human-context-switch implementation.
+
+Twenty affected native production/consequence groups pass normally and under
+focused ASan/UBSan (15 production and three test translation units instrumented).
+Targeted correctness analysis passes for the changed UnitManager translation
+unit. Unchanged consumer, UI and rendering checks from the preceding receipts
+remain applicable; no new screen or platform matrix is claimed.
+
+High Morale manufacturing and these successful newborn-state stores are now
+connected. The simulation still excludes project ownership and general packages.
+The2048-Unit refusal path still rejects at the factory guard and must retain
+the original debit/history, queue and Base aftermath in a follow-up. Complete
+human-played/remote Workshop acceptance and SMAX manufacturing remain open.

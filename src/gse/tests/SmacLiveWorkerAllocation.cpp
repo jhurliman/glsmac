@@ -30,6 +30,7 @@
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/SmacWorkshop.h"
+#include "fixtures/WorkshopNewborn.h"
 #include "game/backend/unit/StaticDef.h"
 #include "game/backend/unit/MoraleSet.h"
 #include "game/backend/unit/CvrScoutRender.h"
@@ -1690,6 +1691,41 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(fixture.Snapshot()==before,"Obsolete changed Units, queues, currency or non-design state");GT_OK();
         });
     });
+    task->AddTest("SMAC live manufactured morale and flags match15 native newborn controls",[](GSE*,context::Context*)->std::string {
+        for(const auto& expected:workshop_newborn_fixture::CASES) {
+            ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                using namespace game::backend::unit;
+                auto* game=fixture.Game();const int owner=expected.selected ? 1:2;const size_t slot=expected.selected ? 0:6;
+                auto* base=Populate(GSE_CALL,fixture,false,false,slot,owner);auto* um=game->GetUM();
+                auto knowledge=KnowledgeValue(false,true,128,64).CopyData();knowledge.observers[2]=Knowledge::Observer{};
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+                auto context=base->GetSmacResourceContext();context.governor_options=expected.governor;base->SetSmacResourceContext(GSE_CALL,context);
+                for(const auto role:{27,30}) {
+                    const auto id="newborn-training"+std::to_string(role);
+                    game->GetBM()->DefineFacility(new FacilityDef(id,"Training fixture","",1,{"fixture",0,0,1,1},role));
+                    if((role==27 && expected.command) || (role==30 && expected.bio)) {base->m_facilities.emplace(id,game->GetBM()->GetFacilityDef(id));}
+                }
+                const int design=owner*64+63;const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+                fixture.ResourceState([&](auto& state) {
+                    for(auto& social:state.social.factions) {if(social.admission.simulation_id==owner) {social.current[4]=expected.current;}}
+                    if(!state.designs.native_registry) {throw std::runtime_error("Newborn fixture lacks retained design authority");}
+                    auto pool=*state.designs.native_registry;auto& row=pool[design];row=pool[2];row[38]=1;row[32]=0;row[33]=expected.high ? 0x40:0;row[34]=0;row[35]=0;
+                    row[41]=expected.high ? 3:2;row[45]=uint8_t(1u<<owner);row[48]=expected.first ? 3:7;row[49]=0;
+                    state.designs.RetainNativeRegistry(pool,catalog);
+                });
+                const auto before=fixture.Snapshot();const auto next=Unit::GetNextId();
+                {auto discarded=um->PrepareManufacturedConventionalUnit(GSE_CALL,*base,design,um->GetUnitDef("live-scout"),SmacMoraleMode::Mode0);}
+                GT_ASSERT(fixture.Snapshot()==before && Unit::GetNextId()==next,"Discarded newborn published history or flags");
+                auto prepared=um->PrepareManufacturedConventionalUnit(GSE_CALL,*base,design,um->GetUnitDef("live-scout"),SmacMoraleMode::Mode0);
+                const auto candidate=prepared.Candidate().Conventional();
+                GT_ASSERT(candidate.stored_morale==expected.morale && candidate.retained_state_word==expected.state && candidate.native_flags==expected.flags,
+                    "Native newborn morale/state mismatch: "+std::to_string(int(candidate.stored_morale))+"/"+std::to_string(expected.morale));
+                const auto* newborn=prepared.Commit();GT_ASSERT(newborn->Conventional()==candidate,"Newborn publication changed its prepared record");GT_OK();
+            });GT_ASSERT(error.empty(),"Native newborn fixture: "+error);
+        }GT_OK();
+    });
+
     task->AddTest("SMAC live Workshop first prototype stages history and manufactures once with bonus morale",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");std::string checkpoint,completed;
         const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {

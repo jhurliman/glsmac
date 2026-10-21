@@ -52,10 +52,10 @@ required before the local conquest milestone can be claimed.
 
 ## Current acceptance dashboard — 2026-10-21
 
-Accepted integration: **`723da292047b15e8e8254e300a178bb6ba27b639`**, through
-[#531](https://github.com/jhurliman/glsmac/pull/531), on `codex/faithful-1.0`.
+Accepted integration: **`c08d77273af264899eacc1a8292aa55bb91617e2`**, through
+[#532](https://github.com/jhurliman/glsmac/pull/532), on `codex/faithful-1.0`.
 Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `b8ab847bcec26c7b70619b577a4c3b166acb6848`. This is an integration
+at head `f82d0ad8034939d8064f02fc7de217f127aa3d52`. This is an integration
 checkpoint, not a release candidate or a statement that all platforms were rerun.
 
 **Current focus: the complete Design Workshop (M3/M6). M0–M7 remain open.**

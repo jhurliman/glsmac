@@ -471,8 +471,9 @@ void AddLiveRosterTests( task::gsetests::GSETests* task ) {
 		f.Init();
 		Value* retained = nullptr;
 		value::Callable* getter = nullptr;
+        value::Callable* workshop_getter = nullptr;
 		size_t joins = 0;
-		f.With( [ & ]( GSE_CALLABLE ) { f.client->On(GSE_CALL,"player_join",NATIVE_CALL(&joins,&retained,&getter) {
+		f.With( [ & ]( GSE_CALLABLE ) { f.client->On(GSE_CALL,"player_join",NATIVE_CALL(&joins,&retained,&getter,&workshop_getter) {
 				N_EXPECT_ARGS( 1 );
 				N_GET( event, 0, Object );
 				auto* p = static_cast< value::Object* >( event->Get( "player" ) );
@@ -488,6 +489,15 @@ void AddLiveRosterTests( task::gsetests::GSETests* task ) {
 					denied = true;
 				}
 				Check( denied, "notification mutated current Player" );
+                for(const auto* method:{"get_smac_workshop","get_smac_workshop_abilities","get_smac_workshop_edit"}) {
+                    bool rejected=false;
+                    try {static_cast<value::Callable*>(p->Get(method))->Run(GSE_CALL,{});}
+                    catch(const Exception&) {rejected=true;}
+                    Check(rejected,"notification entered owner Workshop queries");
+                }
+                workshop_getter=static_cast<value::Callable*>(p->Get("get_smac_workshop"));
+                ctx->CreateConst("notice_workshop_getter",workshop_getter,si,ep);
+
 				++joins;
 				return VALUE( value::Undefined );
   }));
@@ -504,6 +514,10 @@ void AddLiveRosterTests( task::gsetests::GSETests* task ) {
 			catch ( const Exception& ) {
 				denied = true;
 			}
+            bool workshop_denied=false;
+            try {workshop_getter->Run(GSE_CALL,{});} catch(const Exception&) {workshop_denied=true;}
+            Check(workshop_denied,"Workshop getter dereferenced expired notification");
+
 			Check( denied, "retained method dereferenced expired native notification" );
 		} );
 	} );

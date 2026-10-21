@@ -667,26 +667,139 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
     return true;
 }
 
-namespace base {
-std::string Base::SmacWorkshopState() const {
-    RequireSmacProductionSelection();
-    const auto* technologies=m_game->m_simulation->value.technology.Find(GetSmacResourceContext().owner_simulation_id);
-    const auto& rules=m_game->GetState()->m_settings.global.GetSmacPredefinedUnitRules();
+gse::Value* Game::QuerySmacWorkshop(GSE_CALLABLE,const slot::Slot* owner_slot,const std::string& method,
+    const gse::value::function_arguments_t& arguments) const {
+    const auto owner_id=RequireSmacWorkshopOwner(owner_slot);
+    if(method=="get_smac_workshop") {
+			N_EXPECT_ARGS_MAX(7);
+            if(!arguments.empty() && arguments.size()!=7) {THROW("Workshop preview requires the complete draft tuple");}
+			if(arguments.empty()) {return CopySmacWorkshop(GSE_CALL,owner_slot);}
+            N_GETVALUE(selected,0,Int);N_GETVALUE(chassis,1,Int);N_GETVALUE(weapon,2,Int);N_GETVALUE(armor,3,Int);
+            N_GETVALUE(reactor,4,Int);N_GETVALUE(abilities,5,Int);N_GETVALUE(name,6,String);
+            if(selected<0 || selected>511 || chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9
+                || reactor<1 || reactor>4 || abilities<0 || abilities>0xffffff) {THROW("Invalid Workshop preview tuple");}
+            const unit::SmacWorkshopDraft draft{int32_t(selected),uint32_t(chassis),uint32_t(weapon),uint32_t(armor),uint32_t(abilities),uint8_t(reactor),name};
+            return CopySmacWorkshop(GSE_CALL,owner_slot,&draft);
+
+    }
+    if(method=="get_smac_workshop_abilities") {
+            N_EXPECT_ARGS(10);
+            N_GETVALUE(selected,0,Int);N_GETVALUE(chassis,1,Int);N_GETVALUE(weapon,2,Int);N_GETVALUE(armor,3,Int);
+            N_GETVALUE(reactor,4,Int);N_GETVALUE(abilities,5,Int);N_GETVALUE(name,6,String);
+            N_GETVALUE(first,7,Int);N_GETVALUE(second,8,Int);N_GETVALUE(slot,9,Int);
+            if(selected<0 || selected>511 || chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9
+                || reactor<1 || reactor>4 || abilities<0 || abilities>0xffffff || first< -1 || first>=24 || second< -1 || second>=24
+                || slot<0 || slot>1 || name.size()>31 || name.find('\0')!=std::string::npos) {THROW("Invalid Workshop ability menu request");}
+            const auto& settings=GetState()->m_settings.global;const auto& rules=settings.GetSmacPredefinedUnitRules();
+            const auto* owner=m_simulation->value.technology.Find(owner_id);
+            if(!owner || (selected>=64 && selected/64!=owner->admission.simulation_id)) {THROW("Workshop ability menu selected a foreign bank");}
+            const auto& catalog=rules->catalog;const auto& technologies=*settings.GetSmacTechnologyRules();
+            const unit::SmacWorkshopEditor editor{{int32_t(selected),uint32_t(chassis),uint32_t(weapon),uint32_t(armor),uint32_t(abilities),uint8_t(reactor),name},{int32_t(first),int32_t(second)}};
+            const auto context=unit::QuerySmacWorkshopEditContext(catalog,technologies,*owner,false);
+            const auto menu=unit::QuerySmacWorkshopAbilities(editor,uint32_t(slot),context,catalog);
+            using Guard=unit::SmacWorkshopAbilityMenu::Guard;
+            gse::value::array_elements_t rows;
+            for(const auto id:menu.choices) {
+                gse::Value* cost=VALUE(gse::value::Undefined);std::string label,description;
+                if(id<24) {
+                    const auto& ability=catalog.abilities.abilities.at(id);label=ability.name;description=ability.description;
+                    uint32_t flags=0;for(const auto bit:ability.flags) {flags=(flags<<1)|uint32_t(bit-'0');}
+                    const auto price=unit::QuerySmacWorkshopAbilityCost(ability.cost,flags,int32_t(catalog.chassis.chassis.at(chassis).triad),
+                        uint8_t(catalog.weapons.weapons.at(weapon).cost),uint8_t(catalog.defenses.defenses.at(armor).cost),uint8_t(catalog.chassis.chassis.at(chassis).speed));
+                    if(price) {cost=VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                        {"quantity",VALUE(gse::value::Int,,price->quantity)}, {"formula",VALUE(gse::value::Int,,price->formula)}, {"domain",VALUE(gse::value::Int,,price->domain)}
+                    });}
+                }
+                rows.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                    {"id",VALUE(gse::value::Int,,id)}, {"name",VALUE(gse::value::String,,label)},
+                    {"description",VALUE(gse::value::String,,description)}, {"cost",cost}
+                }));
+            }
+            std::string required;
+            const auto neural=technologies.ResolveToken("Neural");if(neural.technology_id) {required=technologies.technologies.at(*neural.technology_id).name;}
+            return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                {"guard",VALUE(gse::value::String,,menu.guard==Guard::None?"":menu.guard==Guard::SecondTechnology?"second_technology":"missile")},
+                {"required_technology",VALUE(gse::value::String,,required)}, {"rows",VALUE(gse::value::Array,,rows)}
+            });
+
+    }
+    if(method=="get_smac_workshop_edit") {
+            N_EXPECT_ARGS(12);
+            N_GETVALUE(selected,0,Int);N_GETVALUE(chassis,1,Int);N_GETVALUE(weapon,2,Int);N_GETVALUE(armor,3,Int);
+            N_GETVALUE(reactor,4,Int);N_GETVALUE(abilities,5,Int);N_GETVALUE(name,6,String);
+            N_GETVALUE(first,7,Int);N_GETVALUE(second,8,Int);N_GETVALUE(kind,9,Int);N_GETVALUE(choice,10,Int);N_GETVALUE(automatic,11,Bool);
+            if(selected<0 || selected>511 || chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9
+                || reactor<1 || reactor>4 || abilities<0 || abilities>0xffffff || first< -1 || first>=24 || second< -1 || second>=24
+                || kind<0 || kind>5 || choice< -1 || choice>255 || name.size()>31 || name.find('\0')!=std::string::npos) {THROW("Invalid Workshop editor request");}
+            const auto& settings=GetState()->m_settings.global;const auto& rules=settings.GetSmacPredefinedUnitRules();
+            const auto* owner=m_simulation->value.technology.Find(owner_id);
+            if(!owner || (selected>=64 && selected/64!=owner->admission.simulation_id)) {THROW("Workshop editor selected a foreign bank");}
+            const auto& catalog=rules->catalog;const auto& technologies=*settings.GetSmacTechnologyRules();
+            const unit::SmacWorkshopEditor before{{int32_t(selected),uint32_t(chassis),uint32_t(weapon),uint32_t(armor),uint32_t(abilities),uint8_t(reactor),name},{int32_t(first),int32_t(second)}};
+            const auto context=unit::QuerySmacWorkshopEditContext(catalog,technologies,*owner,automatic);
+            auto editor=before;bool admitted=true;
+            if(kind<4) {
+                const auto component=static_cast<unit::SmacWorkshopComponent>(kind);
+                const auto old=std::array<uint32_t,4>{before.draft.chassis,before.draft.weapon,before.draft.armor,before.draft.reactor}.at(size_t(kind));
+                auto accepted=old;
+                if(choice>=0) {for(const auto& row:unit::SmacWorkshopChoices(component,catalog,technologies,*owner)) {
+                    if(row.component_id==uint32_t(choice) && row.technology_available) {accepted=row.component_id;break;}
+                }}
+                editor=unit::ChangeSmacWorkshopComponent(before,component,accepted,context,catalog);
+            } else {
+                const auto slot=uint32_t(kind-4);auto accepted=before.ability_slots[slot];
+                if(choice>=24) {accepted=24;}
+                else if(choice>=0 && context.available_abilities.at(size_t(choice))
+                    && before.ability_slots[1-slot]!=choice && unit::SmacWorkshopAbilityCompatible(uint32_t(choice),before.draft,catalog)) {accepted=int32_t(choice);}
+                auto result=unit::SetSmacWorkshopAbilitySlot(before,slot,accepted,context,catalog);editor=std::move(result.editor);admitted=result.admitted;
+            }
+            auto* result=static_cast<gse::value::Object*>(CopySmacWorkshop(GSE_CALL,owner_slot,&editor.draft));
+            result->Assign("ability_slots",VALUE(gse::value::Array,,gse::value::array_elements_t{
+                VALUE(gse::value::Int,,editor.ability_slots[0]),VALUE(gse::value::Int,,editor.ability_slots[1])}));
+            result->Assign("ability_entry_allowed",VALUE(gse::value::Bool,,admitted));return result;
+
+    }
+    THROW("Unknown Workshop query");
+}
+
+int32_t Game::RequireSmacWorkshopOwner(const slot::Slot* owner) const {
+    RequireSmacLocalHumanOwner(owner);
+    RequireSmacGameplayActive();
+    if(!IsRunning() || m_canonical_turn_failed || m_canonical_turn_in_progress
+        || !owner || owner->GetPlayer()!=GetPlayer()) {
+        THROW("Workshop requires the ready local owner");
+    }
+    const auto& settings=GetState()->m_settings.global;
+    if(!settings.GetSmacPredefinedUnitRules() || settings.GetSmacPredefinedUnitRules()->catalog.source.ruleset_id!="smac"
+        || !settings.GetSmacTechnologyRules()) {THROW("Workshop requires owned SMAC catalogs");}
+    const auto id=RequireSmacProductionOwner(owner).simulation_id;
+    const auto* social=m_simulation->value.social.Find(id);
+    if(!social || social->phase!=faction::SmacFactionSocialState::Phase::Refreshed) {
+        THROW("Workshop requires refreshed social authority");
+    }
+    return id;
+}
+
+std::string Game::SmacWorkshopState(const slot::Slot* owner_slot) const {
+    const auto owner=RequireSmacWorkshopOwner(owner_slot);
+    const auto* technologies=m_simulation->value.technology.Find(owner);
+    const auto& rules=GetState()->m_settings.global.GetSmacPredefinedUnitRules();
     if(!technologies || !rules || rules->catalog.source.ruleset_id!="smac") {THROW("Workshop requires an owned SMAC catalog and technologies");}
-    auto state=m_game->m_simulation->value.designs.Serialize(rules->catalog).ToString();
+    auto state=m_simulation->value.designs.Serialize(rules->catalog).ToString();
     for(const auto owned:technologies->owned) {state.push_back(owned ? '1':'0');}
-    const auto& economy=m_game->m_simulation->value.economy.at(GetSmacResourceContext().owner_simulation_id);
+    const auto& economy=m_simulation->value.economy.at(owner);
     for(const auto* counts:{&economy.design_counts,&economy.production_reference_counts}) {
         state.push_back(*counts ? '1':'0');
         if(*counts) {for(const auto count:**counts) {state.push_back(static_cast<char>(count));}}
     }
     return state;
 }
-gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* supplied) const {
-    const auto expected=SmacWorkshopState();
-    const auto& settings=m_game->GetState()->m_settings.global;
+gse::Value* Game::CopySmacWorkshop(GSE_CALLABLE,const slot::Slot* owner_slot,const unit::SmacWorkshopDraft* supplied) const {
+    const auto owner=RequireSmacWorkshopOwner(owner_slot);
+    const auto expected=SmacWorkshopState(owner_slot);
+    const auto& settings=GetState()->m_settings.global;
     const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;
-    const auto& technology=*m_game->m_simulation->value.technology.Find(GetSmacResourceContext().owner_simulation_id);
+    const auto& technology=*m_simulation->value.technology.Find(owner);
     auto choices=unit::SmacWorkshopChoices(unit::SmacWorkshopComponent::Armor,catalog,*settings.GetSmacTechnologyRules(),technology);
     unit::SmacWorkshopDraft draft=supplied ? *supplied:unit::SmacWorkshopDraft{};
     if(draft.selected_design<0 || draft.selected_design>511 || (draft.selected_design>=64 && draft.selected_design/64!=technology.admission.simulation_id)
@@ -695,11 +808,11 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
     if(catalog.chassis.chassis.at(draft.chassis).missile) {
         choices.erase(std::remove_if(choices.begin(),choices.end(),[](const auto& row){return row.component_id!=0;}),choices.end());
     }
-    const auto mineral_factor=m_game->GetSmacProductionMineralFactor(m_owner);
-    const auto& registry=m_game->m_simulation->value.designs;
+    const auto mineral_factor=GetSmacProductionMineralFactor(owner_slot);
+    const auto& registry=m_simulation->value.designs;
     gse::Value* status=VALUE(gse::value::Undefined);
     if(registry.native_registry) {
-        const auto& economy=m_game->m_simulation->value.economy.at(technology.admission.simulation_id);
+        const auto& economy=m_simulation->value.economy.at(technology.admission.simulation_id);
         const auto result=unit::QuerySmacWorkshopStatus(*registry.native_registry,draft,technology.admission.simulation_id,
             economy.design_counts,economy.production_reference_counts);
         draft.selected_design=result.selected;
@@ -711,11 +824,11 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
         if(!registry.native_registry) {throw std::invalid_argument("Ranked Workshop preview requires retained scratch metadata");}
         // The admitted startup faction profile has no direct MORALE scalar or
         // direct unit-immunity flag. SOCIAL/IMMUNITY axes are not those fields.
-        const auto* social=m_game->m_simulation->value.social.Find(technology.admission.simulation_id);
+        const auto* social=m_simulation->value.social.Find(technology.admission.simulation_id);
         if(!social || !social->retained) {throw std::invalid_argument("Ranked Workshop preview requires owned retained social ratings");}
         const auto plan=registry.native_registry->at(63)[42];int32_t probe_technologies=0;
         if(plan==11) {
-            if(m_game->m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {throw std::invalid_argument("Probe preview requires explicit Telepathic Matrix authority");}
+            if(m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {throw std::invalid_argument("Probe preview requires explicit Telepathic Matrix authority");}
             probe_technologies=unit::SmacWorkshopProbeTechnologyCount(*settings.GetSmacTechnologyRules(),technology);
         }
         preview_variant=unit::SmacWorkshopPreviewRank({plan,int8_t(uint8_t(catalog.weapons.weapons.at(draft.weapon).offense)),0,
@@ -750,7 +863,7 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
         }return VALUE(gse::value::Array,,rows);
     };
     gse::Value* designs=VALUE(gse::value::Undefined);
-    const auto& counts=m_game->m_simulation->value.economy.at(technology.admission.simulation_id).design_counts;
+    const auto& counts=m_simulation->value.economy.at(technology.admission.simulation_id).design_counts;
     if(registry.native_registry) {
         const auto first=64*technology.admission.simulation_id;bool ready=true;
         if(!counts) {for(int id=first;id<first+64;++id) {const auto& row=registry.native_registry->at(id);
@@ -795,14 +908,14 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
         const bool fast_land=chassis.triad==loader::txt::ChassisTriad::Land && uint8_t(chassis.speed)>1
             && int8_t(uint8_t(defense.rating))>1 && uint8_t(weapon.cost)>1;
         if(supported) {
-            auto probe=m_game->m_simulation->value.designs;auto candidate=draft;candidate.armor=choice.component_id;
+            auto probe=m_simulation->value.designs;auto candidate=draft;candidate.armor=choice.component_id;
             try {
                 unit::SmacWorkshopCommit result;
                 if(probe.native_registry) {
                     if(const auto alias=unit::ReuseSmacWorkshopDesign(probe,candidate,catalog,*settings.GetSmacTechnologyRules(),technology)) {result=*alias;}
                     else {
                         unit::ValidateSmacWorkshopEditorAbilities(candidate,catalog,*settings.GetSmacTechnologyRules(),technology);
-                        const auto& economy=m_game->m_simulation->value.economy.at(technology.admission.simulation_id);
+                        const auto& economy=m_simulation->value.economy.at(technology.admission.simulation_id);
                         bool independent=true;for(int id=64*technology.admission.simulation_id;id<64*(technology.admission.simulation_id+1);++id) {const auto& row=probe.native_registry->at(id);
                             independent=independent && !(row[48]&1) && !(row[44]&(1u<<technology.admission.simulation_id));}
                         if((!economy.design_counts || !economy.production_reference_counts) && !independent) {throw std::runtime_error("Workshop quote requires retained counts");}
@@ -858,7 +971,7 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
     }
     return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
         {"expected_state",VALUE(gse::value::String,,expected)},
-        {"preset_state",VALUE(gse::value::String,,WorkshopPresetState(expected,m_game->m_simulation->value,settings,technology.admission.simulation_id))}, {"armor",VALUE(gse::value::Array,,armor)},
+        {"preset_state",VALUE(gse::value::String,,WorkshopPresetState(expected,m_simulation->value,settings,technology.admission.simulation_id))}, {"armor",VALUE(gse::value::Array,,armor)},
         {"mineral_factor",VALUE(gse::value::Int,,mineral_factor)},
         {"movement",VALUE(gse::value::Int,,unit::SmacWorkshopMovement(draft,catalog))},
         {"weapon_cost",VALUE(gse::value::Int,,uint8_t(catalog.weapons.weapons.at(draft.weapon).cost))},
@@ -882,8 +995,18 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
         {"reactor",VALUE(gse::value::String,,catalog.reactors.reactors.at(draft.reactor-1).name)},
         {"power",VALUE(gse::value::Int,,catalog.reactors.reactors.at(draft.reactor-1).power)},
         {"scout_name",VALUE(gse::value::String,,catalog.source.units.at(2).name)},
-        {"faction_art",VALUE(gse::value::String,,m_faction->m_bases_render.file)}
+        {"faction_art",VALUE(gse::value::String,,owner_slot->GetPlayer()->GetFaction()->m_bases_render.file)}
     });
+}
+
+namespace base {
+std::string Base::SmacWorkshopState() const {
+    RequireSmacProductionSelection();
+    return m_game->SmacWorkshopState(m_owner);
+}
+gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* supplied) const {
+    RequireSmacProductionSelection();
+    return m_game->CopySmacWorkshop(GSE_CALL,m_owner,supplied);
 }
 void Base::RequireSmacProductionSelection() const {
     GetSmacResourceContext();

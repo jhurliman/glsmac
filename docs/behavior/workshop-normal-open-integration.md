@@ -43,6 +43,24 @@ The UI script checks request/owner matching, pending/cancelled openings,
 highlighted/current Unit choice, facility separation and manual versus teardown
 return. Cached build; no repeated platform matrix.
 
+## Shared owner queries
+
+The local Player exposes the same preview, ability-menu and read-only edit
+queries as the Base screen. Both paths share the owner-based implementation;
+the Base caller additionally retains its real production/allocation admission.
+Owner reads require a ready current local human, refreshed social state and an
+active game session, with no Base or Unit requirement. Foreign Players,
+notification snapshots and methods retained past session retirement are rejected.
+
+The zero-Base native test exercises all three reads, preserving the complete
+world snapshot and next Base/Unit IDs, then compares results with the real Base
+route. The affected native Workshop and roster-notification groups pass, and
+four production translation units/consumers pass correctness analysis. The same
+affected groups pass focused ASan/UBSan with three production and two test
+translation units instrumented (leak detection disabled). This
+separates the read authority; global U/HQ opening and owner command transport
+remain to be connected.
+
 ## Remaining work
 
 The command supports ordinary-1 selection, but the global owner-based menu/U

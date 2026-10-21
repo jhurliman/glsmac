@@ -3,6 +3,7 @@
 #include "CvrIndexedRasterizer.h"
 
 #include <memory>
+#include <string>
 #include <string_view>
 #include <functional>
 #include <optional>

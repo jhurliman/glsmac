@@ -9,6 +9,7 @@
 #include "game/backend/unit/Def.h"
 #include "game/backend/unit/SmacWorkshop.h"
 #include "game/backend/State.h"
+#include "game/backend/faction/Faction.h"
 #include "gc/Space.h"
 #include "gse/value/Array.h"
 #include "gse/value/Bool.h"
@@ -172,7 +173,8 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE) const {
         {"offense",VALUE(gse::value::Int,,catalog.weapons.weapons.at(0).offense)},
         {"reactor",VALUE(gse::value::String,,catalog.reactors.reactors.at(0).name)},
         {"power",VALUE(gse::value::Int,,catalog.reactors.reactors.at(0).power)},
-        {"scout_name",VALUE(gse::value::String,,catalog.source.units.at(2).name)}
+        {"scout_name",VALUE(gse::value::String,,catalog.source.units.at(2).name)},
+        {"faction_art",VALUE(gse::value::String,,m_faction->m_bases_render.file)}
     });
 }
 void Base::RequireSmacProductionSelection() const {

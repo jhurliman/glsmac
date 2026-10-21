@@ -51,6 +51,7 @@ float Add( const float a, const float b ) {
 }
 
 std::array< float, 3 > Location( const CvrFrame& frame, const CvrFrameSelection& selection ) {
+    if(selection.direct) {return frame.location;}
 	std::array< float, 3 > result;
 	for ( size_t i = 0 ; i < result.size() ; ++i ) { result[ i ] = Add( frame.location[ i ], selection.offset[ i ] ); }
 	return result;

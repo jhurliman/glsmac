@@ -23,6 +23,7 @@ struct CvrFrameSelection {
 	size_t scene_index;
 	int32_t frame;
 	std::array< float, 3 > offset; // Explicit file-component order, with no axis conversion.
+    bool direct = false; // Original direct-copy call preserves stored location bits.
 };
 
 struct CvrAssemblyPosition {

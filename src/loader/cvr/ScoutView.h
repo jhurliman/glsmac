@@ -34,5 +34,17 @@ enum class IdleProfile { Infantry, SpartanSpeeder, InitializedInfantry };
 // Fixed measured installed map-light profile, shared by initialized compositions.
 void ValidateMapLight( std::string_view system );
 View MakeView( const CvrScoutViewInput& input, IdleProfile profile = IdleProfile::Infantry );
+struct WorkshopBoundsInput {
+    Matrix rotation,frame_matrix;
+    Vector position,frame_location;
+    uint32_t object_scale,scalar;
+    std::array<int16_t,3> dimensions,offset;
+};
+struct WorkshopBounds {Vector minimum,maximum;};
+// Original 655210/655540 staged arithmetic and eight-corner walk.
+WorkshopBounds WorkshopObjectBounds(const WorkshopBoundsInput& input);
+
+// Position is derived from decoded object bounds with identity rotation.
+View MakeWorkshopView(const Vector& position,uint32_t yaw_bits);
 
 }

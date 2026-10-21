@@ -11,6 +11,7 @@
 #include "types/texture/Texture.h"
 #include "fixtures/CvrScoutMatrix.h"
 #include "fixtures/ScoutShadow.h"
+#include "fixtures/WorkshopRender.h"
 #include <cstdlib>
 #include "game/backend/unit/CvrScoutRender.h"
 #include "game/frontend/sprite/ScoutSpriteCache.h"
@@ -146,6 +147,28 @@ std::string MakeScoutTestAssetWithGeometry( const std::vector< uint8_t >& geomet
 
 void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
 
+    task->AddTest("CVR Workshop bounds match fourteen complete native corner walks",GT(){
+        for(const auto& row:workshop_render_fixture::BOUNDS) {
+            const auto result=loader::cvr::scout::WorkshopObjectBounds(row.input);
+            GT_ASSERT(result.minimum==row.native.minimum && result.maximum==row.native.maximum,"Workshop staged bounds differ from native controls");
+        }GT_OK();
+    });
+    task->AddTest("CVR Workshop owned Scout and Synthmetal previews match four complete native frames",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto read=[&](const char* name) {std::ifstream stream(std::filesystem::path(directory)/name,std::ios::binary);
+            if(!stream) {throw std::runtime_error("Missing owned Workshop model asset");}return std::string(std::istreambuf_iterator<char>(stream),{});};
+        const auto body=read("VI.cvr"),armor=read("Vipta00.cvr"),reactor=read("Viptr00.cvr"),palette=read("PALETTE.PCX"),system=read("SYSTEM.TXT");
+        const auto scout=CvrScoutRenderer::LoadWorkshop(body,"",reactor,palette,system);
+        const auto synth=CvrScoutRenderer::LoadWorkshop(body,armor,reactor,palette,system);
+        const auto digest=[](const auto& bytes) {uint64_t h=UINT64_C(14695981039346656037);for(const auto byte:bytes) {h=(h^byte)*UINT64_C(1099511628211);}return h;};
+        for(const auto& row:workshop_render_fixture::FRAMES) {
+            const auto image=(row.armor?synth:scout).RenderWorkshop(row.yaw);std::vector<uint8_t> depth;
+            for(const auto value:image.indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
+            GT_ASSERT(digest(image.indexed.color)==row.indexed && digest(depth)==row.depth && image.draw_count==row.draws
+                && image.processed_records==row.records && image.target_anchor[0]==295 && image.target_anchor[1]==164,"Complete Workshop native color/depth frame differs");
+        }
+        GT_ASSERT(Rejects([&]{scout.RenderWorkshop(0x7fc00000);}) && Rejects([&]{scout.RenderWorkshop(0x7f800000);}),"Nonfinite Workshop angle accepted");GT_OK();
+    });
     task->AddTest("CVR initialized console cards match six complete original body draws",GT(){
         const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
         const auto read=[&](const char* name) {std::ifstream stream(std::filesystem::path(directory)/name,std::ios::binary);

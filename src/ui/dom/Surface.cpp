@@ -8,6 +8,8 @@
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "loader/texture/SmacTurnFrames.h"
+#include "loader/cvr/CvrScoutRenderer.h"
+#include "util/FS.h"
 #include "loader/texture/SmacDialogFrame.h"
 #include "ui/SmacDominanceRaster.h"
 #include "gse/value/Array.h"
@@ -118,6 +120,26 @@ Surface::Surface( DOM_ARGS_T )
 	Method( GSE_CALL, "stopmovie", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 0 );StopMovie();return VALUE(gse::value::Undefined);
 	} ) );
+
+    Method(GSE_CALL,"smacworkshoppreview",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(2);N_GETVALUE(armor,0,Int);N_GETVALUE(yaw,1,Float);
+        if(armor<0 || armor>1 || !std::isfinite(yaw) || std::abs(yaw)>64.0) {throw std::invalid_argument("Unsupported Workshop preview draft");}
+        if(!m_workshop_models[armor]) {
+            const auto read=[](const char* name) {
+                std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));
+                return std::string(bytes.begin(),bytes.end());
+            };
+            auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshop(read("VI.cvr"),armor?read("vipta00.cvr"):std::string(),
+                read("viptr00.cvr"),read("palette.pcx"),read("system.txt"));
+            m_workshop_models[armor]=std::make_shared<const loader::cvr::CvrScoutRenderer>(std::move(renderer));
+        }
+        const float angle=static_cast<float>(yaw);uint32_t bits;std::memcpy(&bits,&angle,sizeof(bits));
+        const auto image=m_workshop_models[armor]->RenderWorkshop(bits);
+        CreateTexture();m_background.texture->Resize(256,256);
+        std::memcpy(m_background.texture->GetBitmap(),image.rgba.data(),image.rgba.size());
+        m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
+        return VALUE(gse::value::Bool,,true);
+    }));
 
     Method(GSE_CALL,"smacdominancegraph",NATIVE_CALL(this) {
         N_EXPECT_ARGS(1);N_GET(frame,0,Object);

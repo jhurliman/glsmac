@@ -7,7 +7,7 @@
 #include <array>
 
 namespace task::intro { class Movie; }
-namespace loader::cvr {class CvrScoutRenderer;}
+namespace loader::cvr {class CvrScoutRenderer;class CvrWorkshopComponents;}
 namespace loader::texture {struct SmacDialogSource;struct SmacTurnFrames;struct SmacGraphPalette;}
 
 namespace types {
@@ -58,10 +58,12 @@ private:
     std::vector<std::array<int,5>> m_dialog_frames;
     std::array<int,2> m_dialog_size{{-1,-1}},m_dialog_phase{{0,0}};
     void UpdateDialogFrames();
+    void EnsureWorkshopComponents();
 	std::unique_ptr<task::intro::Movie> m_movie;
     std::shared_ptr<const loader::texture::SmacTurnFrames> m_turn_frames;
     std::shared_ptr<const loader::texture::SmacGraphPalette> m_graph_palette;
 	std::array<std::shared_ptr<const loader::cvr::CvrScoutRenderer>,2> m_workshop_models;
+	std::shared_ptr<const loader::cvr::CvrWorkshopComponents> m_workshop_components;
 	void StopMovie();
 
 private:

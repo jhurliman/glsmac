@@ -155,6 +155,7 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE) const {
             {"rating",VALUE(gse::value::Int,,catalog.defenses.defenses.at(choice.component_id).rating)},
             {"design_name",VALUE(gse::value::String,,design_name)},
             {"cost",VALUE(gse::value::Int,,shown_cost)},
+            {"technology_available",VALUE(gse::value::Bool,,choice.technology_available)},
             {"available",VALUE(gse::value::Bool,,supported)}
         }));
     }

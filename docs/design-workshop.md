@@ -227,3 +227,34 @@ groups pass with five relevant translation units instrumented under ASan/UBSan.
 A live hidden Linux Morgan run selected Synthmetal, used Apply then Done, and
 returned to the unchanged Scout Patrol queue. It exited cleanly. The capture
 uses software graphics and no audio.
+
+### Component models and armor chooser
+
+Workshop side cards now compose the Infantry, standalone Hand Weapons, optional
+Synthmetal, and Fission models at their original scales and clips. A painter
+pass carries scene centering state in the original draw order. The reactor uses
+2-by-2 voxel samples. Model previews and tint construction use the initialized
+Gamma100 palette; existing map/faction rendering policies are unchanged.
+
+The armor chooser uses INTERFACE.PCX small frames (styles0/2), original
+105-by-91 cells, and fixed-yaw armor models. Unknown technologies retain their
+silhouettes without labels. The four colored armor variants derive their shade
+lookups from VBP.CVR and SYSTEM.TXT. Probability Sheath composites indexed
+shades over the actual card backing. Empty page slots receive no card writes.
+Technology visibility is separate from support for committing a draft.
+
+See the [component contract](behavior/design-workshop-components.md) and
+[picker backing contract](behavior/design-workshop-picker-backing.md).
+Numeric expectations cover34 complete original indexed/depth frames, all four
+6144-byte tint tables, the initialized palette and6144-byte translucent lookup.
+These are model/primitive checks, not a complete-screen pixel-match claim.
+Font masks/wrapping, the parent console, rotating previews, other chassis and
+weapons, SMAX-only armor models, and full design editing remain unfinished.
+
+Validation:32 focused native renderer/retained-owner groups and six GSE scripts
+pass. Targeted analysis of five production translation units is clean. The32
+native groups also pass with six relevant translation units instrumented under
+ASan/UBSan. Normal and focused-sanitizer hidden Linux runs displayed the side
+cards and armor chooser, selected Synthmetal, used Apply then Done, and returned
+to the unchanged Scout Patrol queue. Both exited cleanly. These captures use
+software graphics and no audio; no full platform matrix was repeated.

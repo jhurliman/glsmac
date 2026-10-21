@@ -1,0 +1,41 @@
+#pragma once
+namespace gse::tests::workshop_component_fixture {
+// Independent original complete indexed/depth frames. Manifest c626d0ebc17af24f218254a390aff7a75c4fa2e5cb031ad00a76eb4378b8dafa.
+struct Frame {const char* name;int kind,id;bool picker,available,reset;uint64_t indexed,depth;size_t draws,records;};
+inline constexpr std::array<Frame,34> FRAMES{{
+    {"scout_chassis",0,0,false,true,true,UINT64_C(0x2097ebc20e211bf1),UINT64_C(0xd4f0251e8f28e278),64,42810},
+    {"scout_weapon",1,0,false,true,false,UINT64_C(0xc15eb519eb1c92f8),UINT64_C(0xae943f97936174b0),1,2348},
+    {"scout_reactor",3,0,false,true,false,UINT64_C(0xa11ad9ee87aca2aa),UINT64_C(0x1395c1ac9ae32933),1,4673},
+    {"synth_chassis",0,0,false,true,true,UINT64_C(0x2097ebc20e211bf1),UINT64_C(0xd4f0251e8f28e278),64,42810},
+    {"synth_weapon",1,0,false,true,false,UINT64_C(0xc15eb519eb1c92f8),UINT64_C(0xae943f97936174b0),1,2348},
+    {"synth_shielding",2,1,false,true,false,UINT64_C(0x12ad5bc8c5c3ad55),UINT64_C(0xc53de15396d87a55),1,9161},
+    {"synth_reactor",3,0,false,true,false,UINT64_C(0xa11ad9ee87aca2aa),UINT64_C(0x1395c1ac9ae32933),1,4673},
+    {"scout_armor_picker_1",2,1,true,true,true,UINT64_C(0x4a6dad523e96c520),UINT64_C(0x4b879055f9796904),1,9161},
+    {"scout_armor_picker_2",2,2,true,false,false,UINT64_C(0x4cc1252884736d65),UINT64_C(0x4b879055f9796904),1,9161},
+    {"scout_armor_picker_3",2,3,true,false,false,UINT64_C(0x4cc1252884736d65),UINT64_C(0x4b879055f9796904),1,9161},
+    {"scout_armor_picker_4",2,4,true,false,false,UINT64_C(0x64266d7e6f33c885),UINT64_C(0x67b3197d56ac9bf2),2,3500},
+    {"scout_armor_picker_5",2,5,true,false,false,UINT64_C(0x4cc1252884736d65),UINT64_C(0x4b879055f9796904),1,9161},
+    {"scout_armor_picker_6",2,6,true,false,false,UINT64_C(0x4cc1252884736d65),UINT64_C(0x4b879055f9796904),1,9161},
+    {"scout_armor_picker_7",2,7,true,false,false,UINT64_C(0x4cc1252884736d65),UINT64_C(0x4b879055f9796904),1,9161},
+    {"scout_armor_picker_8",2,8,true,false,false,UINT64_C(0x4524240ac9bc5b95),UINT64_C(0xe45435a98f3c2b2b),2,3305},
+    {"scout_armor_picker_9",2,9,true,false,false,UINT64_C(0x064864bd74dcd745),UINT64_C(0xc4059bfa9533932b),2,5368},
+    {"synth_armor_picker_1",2,1,true,true,true,UINT64_C(0x4a6dad523e96c520),UINT64_C(0x4b879055f9796904),1,9161},
+    {"synth_armor_picker_2",2,2,true,false,false,UINT64_C(0x4cc1252884736d65),UINT64_C(0x4b879055f9796904),1,9161},
+    {"synth_armor_picker_3",2,3,true,false,false,UINT64_C(0x4cc1252884736d65),UINT64_C(0x4b879055f9796904),1,9161},
+    {"synth_armor_picker_4",2,4,true,false,false,UINT64_C(0x64266d7e6f33c885),UINT64_C(0x67b3197d56ac9bf2),2,3500},
+    {"synth_armor_picker_5",2,5,true,false,false,UINT64_C(0x4cc1252884736d65),UINT64_C(0x4b879055f9796904),1,9161},
+    {"synth_armor_picker_6",2,6,true,false,false,UINT64_C(0x4cc1252884736d65),UINT64_C(0x4b879055f9796904),1,9161},
+    {"synth_armor_picker_7",2,7,true,false,false,UINT64_C(0x4cc1252884736d65),UINT64_C(0x4b879055f9796904),1,9161},
+    {"synth_armor_picker_8",2,8,true,false,false,UINT64_C(0x4524240ac9bc5b95),UINT64_C(0xe45435a98f3c2b2b),2,3305},
+    {"synth_armor_picker_9",2,9,true,false,false,UINT64_C(0x064864bd74dcd745),UINT64_C(0xc4059bfa9533932b),2,5368},
+    {"alltech_armor_picker_1",2,1,true,true,true,UINT64_C(0x4a6dad523e96c520),UINT64_C(0x4b879055f9796904),1,9161},
+    {"alltech_armor_picker_2",2,2,true,true,false,UINT64_C(0x52d81b02e045cfba),UINT64_C(0x4b879055f9796904),1,9161},
+    {"alltech_armor_picker_3",2,3,true,true,false,UINT64_C(0x817fbd19d73c802b),UINT64_C(0x4b879055f9796904),1,9161},
+    {"alltech_armor_picker_4",2,4,true,true,false,UINT64_C(0x46a52cdf3f799f20),UINT64_C(0x67b3197d56ac9bf2),2,3500},
+    {"alltech_armor_picker_5",2,5,true,true,false,UINT64_C(0xaf85eaae3c74c6a2),UINT64_C(0x4b879055f9796904),1,9161},
+    {"alltech_armor_picker_6",2,6,true,true,false,UINT64_C(0xacb1fabeba6a5bf7),UINT64_C(0x4b879055f9796904),1,9161},
+    {"alltech_armor_picker_7",2,7,true,true,false,UINT64_C(0x2ff84dc0ed0476b5),UINT64_C(0x4b879055f9796904),1,9161},
+    {"alltech_armor_picker_8",2,8,true,true,false,UINT64_C(0xdc99b21c69dd71c1),UINT64_C(0xe45435a98f3c2b2b),2,3305},
+    {"alltech_armor_picker_9",2,9,true,true,false,UINT64_C(0x12b1f75c90e86895),UINT64_C(0xc4059bfa9533932b),2,5368},
+}};
+}

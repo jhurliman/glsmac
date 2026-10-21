@@ -454,6 +454,35 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
             uint64_t digest=UINT64_C(14695981039346656037);for(const auto& row:*result.state.native_registry) {for(const auto byte:row) {digest=(digest^byte)*UINT64_C(1099511628211);}}
             GT_ASSERT(digest==test.digest,"Human producer complete native pool differs: "+std::string(test.name));
             GT_ASSERT(result.state.owners.size()==state.owners.size() && result.state.retirement_history==state.retirement_history,"Preview changed owner/history authority");
+            if(std::string(test.name)=="basic") {
+                // Source caller44301b..4430b2 seeds all five CURRENT tuple fields.
+                // With no air technology an air request must not publish a land
+                // fallback or silently replace the caller's reactor with Fission.
+                auto seed=provisional;seed.reactor=4;seed.abilities=uint32_t(1)<<5;
+                auto excluded=pool;excluded[2][44]|=2;state.RetainNativeRegistry(excluded,catalog);
+                const auto input=state;
+                for(const int filter:{2,3,1,4,10,6,7,8,9,17,13,14,11,12}) {
+                    const auto preset=unit::PrepareSmacWorkshopHumanPreview(state,seed,catalog,tech,owner,test.context,units,production,filter);
+                    const bool scout=filter==2 || filter==3 || filter==10;
+                    GT_ASSERT(state==input && preset.filter==filter && preset.mode==(scout ? 2:1),"Preset changed caller/filter or invented a fallback");
+                    GT_ASSERT(preset.draft.selected_design==seed.selected_design && preset.draft.name==seed.name,"Preset reselected/renamed current draft");
+                    auto expected=excluded;
+                    if(scout) {
+                        expected[2][44]&=uint8_t(~2u);
+                        GT_ASSERT((fields(preset.draft)==std::array<int32_t,5>({0,0,0,0,1})),"Filtered Scout alias did not publish its tuple");
+                    } else {
+                        GT_ASSERT(fields(preset.draft)==fields(seed),"NOPRESET lost current tuple, mask or reactor");
+                    }
+                    GT_ASSERT(*preset.state.native_registry==expected,"Filtered submission changed unrelated records");
+                    auto published=seed;int mode=1;
+                    for(const auto& step:preset.steps) {
+                        GT_ASSERT(step.category==filter || (step.alias==-1 && fields(step.published)==fields(published) && step.mode==mode),"Nonmatching category affected filtered preview");
+                        published=step.published;mode=step.mode;
+                    }
+                }
+                GT_ASSERT(Rejects([&]{unit::PrepareSmacWorkshopHumanPreview(state,seed,catalog,tech,owner,test.context,units,production,18);}),"Invalid preset category was admitted");
+                state=before;
+            }
             auto missing=test.context;missing.fields.erase(0x95d1ac);
             GT_ASSERT(Rejects([&]{unit::PrepareSmacWorkshopHumanPreview(state,provisional,catalog,tech,owner,missing,units,production);}) && state==before,"Missing faction authority became zero or mutated caller");
         }GT_OK();

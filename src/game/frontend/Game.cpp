@@ -454,6 +454,9 @@ void Game::Iterate() {
 
 		bool is_camera_position_updated = false;
 		bool is_camera_scale_updated = false;
+        if(!g_engine->GetConfig()->GetSmacPreference(10)) {
+            m_map_control.edge_scrolling.speed={};m_map_control.edge_scrolling.timer.Stop();
+        }
 		while ( m_map_control.edge_scrolling.timer.HasTicked() ) {
 			m_camera_position.x += m_map_control.edge_scrolling.speed.x;
 			m_camera_position.y += m_map_control.edge_scrolling.speed.y;
@@ -1602,7 +1605,8 @@ void Game::Initialize(
 						m_map_control.last_drag_position = current_drag_position;
 					}
 					else {
-						if ( !m_map_control.mouse_buttons_pressed && g_engine->GetGraphics()->IsFullscreen() ) { // edge scrolling only usable when not dragging and in fullscreen
+						if ( !m_map_control.mouse_buttons_pressed && g_engine->GetGraphics()->IsFullscreen()
+                            && g_engine->GetConfig()->GetSmacPreference(10) ) { // edge scrolling only usable when not dragging and in fullscreen
 							const ssize_t edge_distance = m_viewport.is_fullscreen
 								? Game::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
 								: Game::s_consts.map_scroll.static_scrolling.edge_distance_px.windowed;

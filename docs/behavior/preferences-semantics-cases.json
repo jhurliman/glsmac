@@ -1,0 +1,1045 @@
+{
+  "contract": "RE-SMAC-PREFERENCES-SEMANTICS-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "word_names": [
+    "Preferences",
+    "More Preferences",
+    "Announce"
+  ],
+  "cached_addresses": [
+    "0x95a48c",
+    "0x95a490",
+    "0x95a494"
+  ],
+  "live_addresses": [
+    "0x959f98",
+    "0x959f9c",
+    "0x959fa0"
+  ],
+  "controls": [
+    {
+      "page": 0,
+      "ordinal": 0,
+      "id": 7,
+      "role": "tutorial_messages",
+      "word": 0,
+      "mask": 32,
+      "inverted": false,
+      "collector_getter_call": "0x49f902"
+    },
+    {
+      "page": 0,
+      "ordinal": 1,
+      "id": 8,
+      "role": "automatic_unit_design",
+      "word": 0,
+      "mask": 16384,
+      "inverted": false,
+      "collector_getter_call": "0x49f91d"
+    },
+    {
+      "page": 0,
+      "ordinal": 2,
+      "id": 9,
+      "role": "prune_obsolete_designs",
+      "word": 1,
+      "mask": 1048576,
+      "inverted": false,
+      "collector_getter_call": "0x49f939"
+    },
+    {
+      "page": 0,
+      "ordinal": 3,
+      "id": 10,
+      "role": "edge_scroll",
+      "word": 0,
+      "mask": 4096,
+      "inverted": false,
+      "collector_getter_call": "0x49f950"
+    },
+    {
+      "page": 0,
+      "ordinal": 4,
+      "id": 11,
+      "role": "turn_autosave",
+      "word": 0,
+      "mask": 2,
+      "inverted": false,
+      "collector_getter_call": "0x49f96c"
+    },
+    {
+      "page": 0,
+      "ordinal": 5,
+      "id": 12,
+      "role": "end_turn_pause",
+      "word": 0,
+      "mask": 1,
+      "inverted": false,
+      "collector_getter_call": "0x49f987"
+    },
+    {
+      "page": 0,
+      "ordinal": 6,
+      "id": 13,
+      "role": "fast_enemy_neutral_moves",
+      "word": 0,
+      "mask": 4,
+      "inverted": true,
+      "collector_getter_call": "0x49f9a4"
+    },
+    {
+      "page": 0,
+      "ordinal": 7,
+      "id": 14,
+      "role": "fast_allied_moves",
+      "word": 0,
+      "mask": 32768,
+      "inverted": true,
+      "collector_getter_call": "0x49f9bc"
+    },
+    {
+      "page": 1,
+      "ordinal": 0,
+      "id": 15,
+      "role": "single_click_radio",
+      "word": 0,
+      "mask": 536870912,
+      "inverted": true,
+      "collector_getter_call": "0x49f9da"
+    },
+    {
+      "page": 1,
+      "ordinal": 1,
+      "id": 16,
+      "role": "unit_click_cancels_orders",
+      "word": 1,
+      "mask": 262144,
+      "inverted": false,
+      "collector_getter_call": "0x49f9f1"
+    },
+    {
+      "page": 1,
+      "ordinal": 2,
+      "id": 17,
+      "role": "confirm_combat_odds",
+      "word": 1,
+      "mask": 32768,
+      "inverted": false,
+      "collector_getter_call": "0x49fa08"
+    },
+    {
+      "page": 1,
+      "ordinal": 3,
+      "id": 18,
+      "role": "pause_after_battle",
+      "word": 1,
+      "mask": 16,
+      "inverted": false,
+      "collector_getter_call": "0x49fa1b"
+    },
+    {
+      "page": 1,
+      "ordinal": 4,
+      "id": 19,
+      "role": "fast_combat",
+      "word": 0,
+      "mask": 8,
+      "inverted": false,
+      "collector_getter_call": "0x49fa36"
+    },
+    {
+      "page": 1,
+      "ordinal": 5,
+      "id": 28,
+      "role": "fast_ordered_moves",
+      "word": 1,
+      "mask": 64,
+      "inverted": false,
+      "collector_getter_call": "0x49fa51"
+    },
+    {
+      "page": 1,
+      "ordinal": 6,
+      "id": 20,
+      "role": "fast_all_moves",
+      "word": 1,
+      "mask": 128,
+      "inverted": false,
+      "collector_getter_call": "0x49fa6c"
+    },
+    {
+      "page": 1,
+      "ordinal": 7,
+      "id": 21,
+      "role": "ordered_units_without_centering",
+      "word": 0,
+      "mask": 524288,
+      "inverted": false,
+      "collector_getter_call": "0x49fa87"
+    },
+    {
+      "page": 1,
+      "ordinal": 8,
+      "id": 23,
+      "role": "base_zoom_without_recentering",
+      "word": 1,
+      "mask": 4,
+      "inverted": false,
+      "collector_getter_call": "0x49fa9e"
+    },
+    {
+      "page": 1,
+      "ordinal": 9,
+      "id": 24,
+      "role": "detailed_main_menus",
+      "word": 1,
+      "mask": 2097152,
+      "inverted": false,
+      "collector_getter_call": "0x49fab1"
+    },
+    {
+      "page": 1,
+      "ordinal": 10,
+      "id": 25,
+      "role": "detailed_context_menus",
+      "word": 1,
+      "mask": 1024,
+      "inverted": false,
+      "collector_getter_call": "0x49fac9"
+    },
+    {
+      "page": 1,
+      "ordinal": 11,
+      "id": 26,
+      "role": "right_click_menu",
+      "word": 1,
+      "mask": 256,
+      "inverted": false,
+      "collector_getter_call": "0x49fae5"
+    },
+    {
+      "page": 3,
+      "ordinal": 0,
+      "id": 29,
+      "role": "air_return_at_fuel_limit",
+      "word": 0,
+      "mask": 65536,
+      "inverted": false,
+      "collector_getter_call": "0x49fb07"
+    },
+    {
+      "page": 3,
+      "ordinal": 1,
+      "id": 30,
+      "role": "former_forests",
+      "word": 0,
+      "mask": 16777216,
+      "inverted": false,
+      "collector_getter_call": "0x49fb1e"
+    },
+    {
+      "page": 3,
+      "ordinal": 2,
+      "id": 31,
+      "role": "former_elevation",
+      "word": 0,
+      "mask": 131072,
+      "inverted": false,
+      "collector_getter_call": "0x49fb35"
+    },
+    {
+      "page": 3,
+      "ordinal": 3,
+      "id": 32,
+      "role": "former_advanced_improvements",
+      "word": 0,
+      "mask": 33554432,
+      "inverted": false,
+      "collector_getter_call": "0x49fb4c"
+    },
+    {
+      "page": 3,
+      "ordinal": 4,
+      "id": 33,
+      "role": "former_fungus_removal",
+      "word": 1,
+      "mask": 8,
+      "inverted": false,
+      "collector_getter_call": "0x49fb7b"
+    },
+    {
+      "page": 3,
+      "ordinal": 5,
+      "id": 34,
+      "role": "former_sensors",
+      "word": 1,
+      "mask": 32,
+      "inverted": false,
+      "collector_getter_call": "0x49fb96"
+    },
+    {
+      "page": 3,
+      "ordinal": 6,
+      "id": 42,
+      "role": "former_transport_links",
+      "word": 1,
+      "mask": 4194304,
+      "inverted": true,
+      "collector_getter_call": "0x49fb63"
+    },
+    {
+      "page": 3,
+      "ordinal": 7,
+      "id": 35,
+      "role": "pact_contact_cancels_movement",
+      "word": 0,
+      "mask": 1048576,
+      "inverted": false,
+      "collector_getter_call": "0x49fbb1"
+    },
+    {
+      "page": 3,
+      "ordinal": 8,
+      "id": 36,
+      "role": "treaty_contact_cancels_movement",
+      "word": 0,
+      "mask": 2097152,
+      "inverted": false,
+      "collector_getter_call": "0x49fbc8"
+    },
+    {
+      "page": 3,
+      "ordinal": 9,
+      "id": 37,
+      "role": "truce_contact_cancels_movement",
+      "word": 0,
+      "mask": 4194304,
+      "inverted": false,
+      "collector_getter_call": "0x49fbdb"
+    },
+    {
+      "page": 3,
+      "ordinal": 10,
+      "id": 38,
+      "role": "vendetta_contact_cancels_movement",
+      "word": 0,
+      "mask": 8388608,
+      "inverted": false,
+      "collector_getter_call": "0x49fbee"
+    },
+    {
+      "page": 3,
+      "ordinal": 11,
+      "id": 39,
+      "role": "ignore_other_unit_classes",
+      "word": 0,
+      "mask": 1073741824,
+      "inverted": false,
+      "collector_getter_call": "0x49fc05"
+    },
+    {
+      "page": 3,
+      "ordinal": 12,
+      "id": 40,
+      "role": "wake_landed_passengers",
+      "word": 0,
+      "mask": 2147483648,
+      "inverted": false,
+      "collector_getter_call": "0x49fc1c"
+    },
+    {
+      "page": 3,
+      "ordinal": 13,
+      "id": 41,
+      "role": "automatic_monolith",
+      "word": 1,
+      "mask": 2048,
+      "inverted": false,
+      "collector_getter_call": "0x49fc33"
+    },
+    {
+      "page": 4,
+      "ordinal": 0,
+      "id": 64,
+      "role": "stop_voice_on_popup_close",
+      "word": 1,
+      "mask": 131072,
+      "inverted": false,
+      "collector_getter_call": "0x49fc98"
+    },
+    {
+      "page": 4,
+      "ordinal": 1,
+      "id": 65,
+      "role": "project_movies",
+      "word": 0,
+      "mask": 268435456,
+      "inverted": false,
+      "collector_getter_call": "0x49fcaf"
+    },
+    {
+      "page": 4,
+      "ordinal": 2,
+      "id": 66,
+      "role": "interludes",
+      "word": 0,
+      "mask": 262144,
+      "inverted": true,
+      "collector_getter_call": "0x49fcc6"
+    },
+    {
+      "page": 4,
+      "ordinal": 3,
+      "id": 71,
+      "role": "monuments",
+      "word": 1,
+      "mask": 16777216,
+      "inverted": true,
+      "collector_getter_call": "0x49fcdd"
+    },
+    {
+      "page": 4,
+      "ordinal": 4,
+      "id": 67,
+      "role": "map_animation",
+      "word": 0,
+      "mask": 128,
+      "inverted": false,
+      "collector_getter_call": "0x49fcf4"
+    },
+    {
+      "page": 4,
+      "ordinal": 5,
+      "id": 68,
+      "role": "window_animation",
+      "word": 0,
+      "mask": 134217728,
+      "inverted": false,
+      "collector_getter_call": "0x49fd0f"
+    },
+    {
+      "page": 4,
+      "ordinal": 6,
+      "id": 69,
+      "role": "scrollbar_animation",
+      "word": 1,
+      "mask": 524288,
+      "inverted": false,
+      "collector_getter_call": "0x49fd26"
+    },
+    {
+      "page": 4,
+      "ordinal": 7,
+      "id": 22,
+      "role": "unit_blink",
+      "word": 1,
+      "mask": 512,
+      "inverted": false,
+      "collector_getter_call": "0x49fd3d"
+    },
+    {
+      "page": 2,
+      "ordinal": 0,
+      "id": 43,
+      "role": "facility_completion",
+      "word": 2,
+      "mask": 1,
+      "inverted": false,
+      "collector_getter_call": "0x49fd9d"
+    },
+    {
+      "page": 2,
+      "ordinal": 1,
+      "id": 44,
+      "role": "civilian_completion",
+      "word": 2,
+      "mask": 2,
+      "inverted": false,
+      "collector_getter_call": "0x49fdb8"
+    },
+    {
+      "page": 2,
+      "ordinal": 2,
+      "id": 45,
+      "role": "combat_completion",
+      "word": 2,
+      "mask": 1024,
+      "inverted": false,
+      "collector_getter_call": "0x49fdd3"
+    },
+    {
+      "page": 2,
+      "ordinal": 3,
+      "id": 46,
+      "role": "prototype_completion",
+      "word": 2,
+      "mask": 4,
+      "inverted": false,
+      "collector_getter_call": "0x49fde6"
+    },
+    {
+      "page": 2,
+      "ordinal": 4,
+      "id": 47,
+      "role": "governor_queue_completion",
+      "word": 2,
+      "mask": 8192,
+      "inverted": false,
+      "collector_getter_call": "0x49fe01"
+    },
+    {
+      "page": 2,
+      "ordinal": 5,
+      "id": 48,
+      "role": "riot_start",
+      "word": 2,
+      "mask": 8,
+      "inverted": false,
+      "collector_getter_call": "0x49fe19"
+    },
+    {
+      "page": 2,
+      "ordinal": 6,
+      "id": 49,
+      "role": "riot_end",
+      "word": 2,
+      "mask": 16,
+      "inverted": false,
+      "collector_getter_call": "0x49fe34"
+    },
+    {
+      "page": 2,
+      "ordinal": 7,
+      "id": 50,
+      "role": "golden_age_start",
+      "word": 2,
+      "mask": 32,
+      "inverted": false,
+      "collector_getter_call": "0x49fe4f"
+    },
+    {
+      "page": 2,
+      "ordinal": 8,
+      "id": 51,
+      "role": "golden_age_end",
+      "word": 2,
+      "mask": 64,
+      "inverted": false,
+      "collector_getter_call": "0x49fe6a"
+    },
+    {
+      "page": 2,
+      "ordinal": 9,
+      "id": 52,
+      "role": "low_nutrients",
+      "word": 2,
+      "mask": 128,
+      "inverted": false,
+      "collector_getter_call": "0x49fe85"
+    },
+    {
+      "page": 2,
+      "ordinal": 10,
+      "id": 54,
+      "role": "stale_build_orders",
+      "word": 2,
+      "mask": 512,
+      "inverted": false,
+      "collector_getter_call": "0x49febc"
+    },
+    {
+      "page": 2,
+      "ordinal": 11,
+      "id": 55,
+      "role": "population_cap",
+      "word": 2,
+      "mask": 2048,
+      "inverted": false,
+      "collector_getter_call": "0x49fecf"
+    },
+    {
+      "page": 2,
+      "ordinal": 12,
+      "id": 56,
+      "role": "delayed_transcendence",
+      "word": 2,
+      "mask": 4096,
+      "inverted": false,
+      "collector_getter_call": "0x49feeb"
+    },
+    {
+      "page": 6,
+      "ordinal": 0,
+      "id": 57,
+      "role": "starvation",
+      "word": 2,
+      "mask": 16384,
+      "inverted": false,
+      "collector_getter_call": "0x49ff0d"
+    },
+    {
+      "page": 6,
+      "ordinal": 1,
+      "id": 58,
+      "role": "mineral_shortage",
+      "word": 2,
+      "mask": 32768,
+      "inverted": false,
+      "collector_getter_call": "0x49ff29"
+    },
+    {
+      "page": 6,
+      "ordinal": 2,
+      "id": 59,
+      "role": "energy_shortage",
+      "word": 2,
+      "mask": 65536,
+      "inverted": false,
+      "collector_getter_call": "0x49ff45"
+    },
+    {
+      "page": 6,
+      "ordinal": 3,
+      "id": 60,
+      "role": "random_events",
+      "word": 2,
+      "mask": 131072,
+      "inverted": false,
+      "collector_getter_call": "0x49ff5c"
+    },
+    {
+      "page": 5,
+      "ordinal": 0,
+      "id": 72,
+      "role": "fog",
+      "word": 1,
+      "mask": 1,
+      "inverted": false,
+      "collector_getter_call": "0x49ff79"
+    },
+    {
+      "page": 5,
+      "ordinal": 1,
+      "id": 73,
+      "role": "land_grid",
+      "word": 0,
+      "mask": 256,
+      "inverted": false,
+      "collector_getter_call": "0x49ff94"
+    },
+    {
+      "page": 5,
+      "ordinal": 2,
+      "id": 78,
+      "role": "ocean_grid",
+      "word": 1,
+      "mask": 8388608,
+      "inverted": false,
+      "collector_getter_call": "0x4a000b"
+    },
+    {
+      "page": 5,
+      "ordinal": 3,
+      "id": 74,
+      "role": "base_grid",
+      "word": 0,
+      "mask": 512,
+      "inverted": false,
+      "collector_getter_call": "0x49ffb0"
+    },
+    {
+      "page": 5,
+      "ordinal": 4,
+      "id": 75,
+      "role": "base_names",
+      "word": 1,
+      "mask": 8192,
+      "inverted": false,
+      "collector_getter_call": "0x49ffc3"
+    },
+    {
+      "page": 5,
+      "ordinal": 5,
+      "id": 76,
+      "role": "base_production",
+      "word": 1,
+      "mask": 4096,
+      "inverted": false,
+      "collector_getter_call": "0x49ffd6"
+    },
+    {
+      "page": 5,
+      "ordinal": 6,
+      "id": 77,
+      "role": "flat_terrain",
+      "word": 1,
+      "mask": 65536,
+      "inverted": false,
+      "collector_getter_call": "0x49fff4"
+    },
+    {
+      "page": 5,
+      "ordinal": 7,
+      "id": 79,
+      "role": "active_unit_path",
+      "word": 1,
+      "mask": 33554432,
+      "inverted": true,
+      "collector_getter_call": "0x4a0022"
+    }
+  ],
+  "checkbox_masks": [
+    4227847087,
+    67092477,
+    261887
+  ],
+  "accepted_masks": [
+    4227850159,
+    67108861,
+    261887
+  ],
+  "unchecked_baseline": [
+    537165828,
+    54525952,
+    0
+  ],
+  "audio_controls": [
+    {
+      "role": "sound_effect_playback",
+      "field": "0x1636c",
+      "word": 0,
+      "mask": 1024
+    },
+    {
+      "role": "music_playback",
+      "field": "0x17a04",
+      "word": 0,
+      "mask": 2048
+    },
+    {
+      "role": "voice_playback",
+      "field": "0x16eb8",
+      "word": 1,
+      "mask": 16384
+    }
+  ],
+  "default_variants": [
+    {
+      "laptop": 0,
+      "requested_difficulty": 0,
+      "loaded_mode": 0,
+      "loader_words": [
+        3152141750,
+        3830120,
+        246697
+      ],
+      "reset_words": [
+        3152141718,
+        3830120,
+        246697
+      ]
+    },
+    {
+      "laptop": 0,
+      "requested_difficulty": 1,
+      "loaded_mode": 1,
+      "loader_words": [
+        3152141750,
+        3830120,
+        246697
+      ],
+      "reset_words": [
+        3152141718,
+        3830120,
+        246697
+      ]
+    },
+    {
+      "laptop": 0,
+      "requested_difficulty": 2,
+      "loaded_mode": 2,
+      "loader_words": [
+        3152141718,
+        3830120,
+        246697
+      ],
+      "reset_words": [
+        3152141718,
+        3830120,
+        246697
+      ]
+    },
+    {
+      "laptop": 0,
+      "requested_difficulty": 5,
+      "loaded_mode": 5,
+      "loader_words": [
+        3152141718,
+        3830120,
+        246697
+      ],
+      "reset_words": [
+        3152141718,
+        3830120,
+        246697
+      ]
+    },
+    {
+      "laptop": 1,
+      "requested_difficulty": 0,
+      "loaded_mode": 0,
+      "loader_words": [
+        2749488438,
+        3305832,
+        246697
+      ],
+      "reset_words": [
+        2749488406,
+        3305832,
+        246697
+      ]
+    },
+    {
+      "laptop": 1,
+      "requested_difficulty": 1,
+      "loaded_mode": 1,
+      "loader_words": [
+        2749488438,
+        3305832,
+        246697
+      ],
+      "reset_words": [
+        2749488406,
+        3305832,
+        246697
+      ]
+    },
+    {
+      "laptop": 1,
+      "requested_difficulty": 2,
+      "loaded_mode": 2,
+      "loader_words": [
+        2749488406,
+        3305832,
+        246697
+      ],
+      "reset_words": [
+        2749488406,
+        3305832,
+        246697
+      ]
+    },
+    {
+      "laptop": 1,
+      "requested_difficulty": 5,
+      "loaded_mode": 5,
+      "loader_words": [
+        2749488406,
+        3305832,
+        246697
+      ],
+      "reset_words": [
+        2749488406,
+        3305832,
+        246697
+      ]
+    }
+  ],
+  "roundtrips": [
+    {
+      "input": [
+        0,
+        0,
+        0
+      ],
+      "output": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "input": [
+        4294967295,
+        4294967295,
+        4294967295
+      ],
+      "output": [
+        4227850159,
+        67108861,
+        261887
+      ]
+    },
+    {
+      "input": [
+        3152141750,
+        3830120,
+        246697
+      ],
+      "output": [
+        3152141734,
+        3830120,
+        246441
+      ]
+    },
+    {
+      "input": [
+        2749488438,
+        3305832,
+        246697
+      ],
+      "output": [
+        2749488422,
+        3305832,
+        246441
+      ]
+    }
+  ],
+  "audio_roundtrips": [
+    {
+      "input": [
+        0,
+        0,
+        0
+      ],
+      "output": [
+        0,
+        0,
+        0
+      ],
+      "playback_flags": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "input": [
+        1024,
+        0,
+        0
+      ],
+      "output": [
+        1024,
+        0,
+        0
+      ],
+      "playback_flags": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "input": [
+        2048,
+        0,
+        0
+      ],
+      "output": [
+        2048,
+        0,
+        0
+      ],
+      "playback_flags": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "input": [
+        3072,
+        0,
+        0
+      ],
+      "output": [
+        3072,
+        0,
+        0
+      ],
+      "playback_flags": [
+        1,
+        1,
+        0
+      ]
+    },
+    {
+      "input": [
+        0,
+        16384,
+        0
+      ],
+      "output": [
+        0,
+        16384,
+        0
+      ],
+      "playback_flags": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "input": [
+        1024,
+        16384,
+        0
+      ],
+      "output": [
+        1024,
+        16384,
+        0
+      ],
+      "playback_flags": [
+        1,
+        0,
+        1
+      ]
+    },
+    {
+      "input": [
+        2048,
+        16384,
+        0
+      ],
+      "output": [
+        2048,
+        16384,
+        0
+      ],
+      "playback_flags": [
+        0,
+        1,
+        1
+      ]
+    },
+    {
+      "input": [
+        3072,
+        16384,
+        0
+      ],
+      "output": [
+        3072,
+        16384,
+        0
+      ],
+      "playback_flags": [
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "validation": {
+    "single_checkbox_collections": 67,
+    "initializer_control_checks": 4489,
+    "audio_combinations": 8,
+    "default_variants": 8,
+    "roundtrips": 4
+  },
+  "native_receipt_sha256": "7c30e25333b1009b830ee1af44a149ac150a4bb08714dcc43563b18d25cc558b",
+  "source_packet_sha256": "5dcb31589fa4456e6b041b1bbe7383ca801b378eee4c8a57486ea670fcdd2fd1"
+}

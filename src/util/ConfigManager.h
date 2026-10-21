@@ -4,6 +4,7 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include "config/SmacPreferences.h"
 
 #include "Util.h"
 
@@ -41,6 +42,8 @@ CLASS( ConfigManager, Util )
 	void ParseArgs( const int argc, char* const argv[] );
 
 	void UpdateSetting( const std::string& key, const std::string& value );
+    void UpdateSettings(const std::map<std::string,std::string>& values);
+    config::smac_preferences::Words GetSmacPreferences(bool laptop,int difficulty) const;
 
 private:
 	friend class config::Config;

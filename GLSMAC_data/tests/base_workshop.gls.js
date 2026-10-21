@@ -658,7 +658,18 @@ base.get_smac_workshop = () => { return selection; }; base.get_production_state 
 entry_screen.open_workshop(); test.assert(commands[#sizeof(commands) - 1].data.selected_design == 2); dialog.hide_view();
 entry_screen.production_choice = {source_id: 65}; entry_screen.open_workshop(); test.assert(commands[#sizeof(commands) - 1].data.selected_design == 65); dialog.hide_view();
 const before_facility_workshop = #sizeof(commands); entry_screen.production_selection = null;
-entry_screen.production_choice = {source_id: (0 - 3)}; entry_screen.open_workshop(); test.assert(#sizeof(commands) == before_facility_workshop && !dialog.opening);
+entry_screen.production_choice = {source_id: (0 - 3)}; entry_screen.open_workshop();
+test.assert(#sizeof(commands) == before_facility_workshop + 1 && dialog.opening);
+test.assert(commands[#sizeof(commands) - 1].name == 'open_smac_workshop'
+    && commands[#sizeof(commands) - 1].data.base == base
+    && commands[#sizeof(commands) - 1].data.selected_design == (0 - 1)); dialog.hide_view();
+// Without an explicit changed highlight, a current facility takes the same
+// owner-bank entry; it is not the separate Help branch or a forced empty slot.
+entry_screen.production_choice = #undefined;
+base.get_production_state = () => { return {current_item: {kind: 'facility', smac_source_id: 3}}; };
+entry_screen.open_workshop(); test.assert(dialog.opening && commands[#sizeof(commands) - 1].data.selected_design == (0 - 1)); dialog.hide_view();
+entry_screen.read_only = true; const read_only_commands = #sizeof(commands);
+entry_screen.open_workshop(); test.assert(!dialog.opening && #sizeof(commands) == read_only_commands); entry_screen.read_only = false;
 
 let returned_to_picker = 0; dialog.p.utils = {workshop_closed: () => { returned_to_picker++; }};
 dialog.open(base, selection); test.assert(dialog.cancel_button.handlers.click({}) && returned_to_picker == 1 && !dialog.active);

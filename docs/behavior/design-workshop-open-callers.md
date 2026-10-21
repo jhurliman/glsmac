@@ -1,5 +1,10 @@
 # Workshop open arguments: production picker and global command
 
+> Correction (2026-10-21): the visible Workshop button's raw ID1 is translated
+> by4a3860 into final picker action2. The action1 branch below is Help.
+> [The complete callback/input handoff](design-workshop-entry-ui.md) supersedes
+> the earlier literal-button binding; the frozen earlier source packet is unchanged.
+
 Use the highlighted production-picker unit's raw ID for its literal
 **Workshop** button; use **-1** for the ordinary global Workshop command.
 The captured parent request `(1,2)` was a declared active-Scout fixture,

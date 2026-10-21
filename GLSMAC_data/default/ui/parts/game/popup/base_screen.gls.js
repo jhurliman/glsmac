@@ -334,10 +334,8 @@ return {
             const production = this.base.get_production_state();
             if (#is_defined(production) && production.current_item.kind == 'unit' && #is_defined(production.current_item.smac_source_id)) { selected = production.current_item.smac_source_id; }
         }
-        if (selected < 0) {
-            // Native action1 routes facilities to help, not a New design.
-            if (this.production_selection != null) { this.production_prompt.text = 'Facility help is unavailable.'; } return;
-        }
+        // The visible Workshop button's raw callback1 becomes picker action2.
+        // Its negative facility selection enters the owner's normal -1 scan.
         this.sections.workshop.begin(this.base, data, selected);
     },
 

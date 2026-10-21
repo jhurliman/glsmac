@@ -3372,6 +3372,7 @@ void Game::ResetGame() {
             m_simulation->value.social.PreserveSnapshots(m_smac_cross_world_social);
 			m_smac_cross_world_strategy=m_simulation->value.regional_strategy;
 			m_smac_cross_world_scores=m_simulation->value.ranking_scores;
+            m_smac_cross_world_air=m_simulation->value.air_summary;
 			m_smac_cross_world_ecology=m_simulation->value.ecology_history;
 			m_smac_cross_world_faction_status=m_simulation->value.faction_status;
 			m_smac_cross_world_governor=m_simulation->value.remembered_governor;

@@ -179,6 +179,7 @@ void Game::PrepareNewSimulation() {
 	value.retained_base_totals=faction::SmacBaseTotals{};
 	value.regional_strategy=m_smac_cross_world_strategy;
 	value.ranking_scores=m_smac_cross_world_scores;
+    value.air_summary=m_smac_cross_world_air;
     value.dominance_history.emplace(); // native whole-new-world reset, independent of retained working scores
     value.dominance_native_keys.emplace();
     for(size_t slot=1;slot<8;++slot) {value.dominance_native_keys->at(slot)=settings.GetSmacFactionStartupRules()->factions[slot-1].section;}
@@ -194,6 +195,9 @@ void Game::PrepareNewSimulation() {
 	for(auto& owner:value.regional_military->factions) {owner.unit_phase_flags.emplace();owner.base_phase_flags.emplace();}
 	value.strategy.emplace();
 	for ( const auto& participant : value.roster ) {
+        // Native5c8d5e clears the two own-air counters, not foreign95d9ec.
+        // Absent legacy foreign authority cannot be invented by a new world.
+        if(auto& air=value.air_summary.at(participant.simulation_id)) {air->own_plan0=0;air->own_plan4=0;}
 		value.remembered_governor.at(participant.simulation_id)=base::SmacBaseResourceContext::NewGameGovernorOptions(value.designs.global_difficulty);
 		if(value.ecology_history) {value.ecology_history->Initialize(participant.simulation_id,0);}
 		value.faction_status.Initialize(participant.simulation_id,0);

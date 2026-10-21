@@ -2866,6 +2866,55 @@ public:
 				widget->GetGeometry()->SetHeight( 32 );
 				presenter->Update( widget, unit.get() );
 			}
+            if(!rover && !initialized && installed && *installed) {
+                // Actual FR dispatch replaces graphics independently of the Def.
+                // The installed asset opt-in keeps the ordinary native-control
+                // recipe separate from this fixture's tiny synthetic Scout.
+                const auto prior_facing=unit->GetFacing();const auto prior_name=unit->m_display_name;
+                auto* prior_body=unit->GetSprite();const auto prior_card=unit->GetCardSprite(false)->texture_owner;
+                game::FrontendRequest update(game::FrontendRequest::FR_UNIT_UPDATE);auto& data=update.data.unit_update;
+                data.unit_id=unit->GetId();data.tile_coords={unit->GetTile()->GetCoords().x,unit->GetTile()->GetCoords().y};
+                data.movement=unit->m_movement;data.morale=unit->m_morale;data.health=unit->m_health;data.maximum_hit_points=unit->m_maximum_hit_points;
+                data.conventional=unit->m_conventional;data.has_moves=unit->m_has_moves;data.full_movement=unit->m_full_movement;
+                data.held=unit->m_held;data.order_glyph=unit->m_order_glyph;data.order_color_index=unit->m_order_color_index;
+                data.has_facing=true;data.facing=2;NEW(data.morale_string,std::string,unit->GetMoraleString());
+                NEW(data.display_name,std::string,"Live Guard");
+                NEW(data.visual,game::ConventionalUnitVisual,game::ConventionalUnitVisual{1,0,0,1,1,1,0,2,0,"spartans.pcx"});
+                frontend.ProcessRequest(&update);
+                auto* guard=unit->GetSprite();const auto guard_instance=unit->m_render.instance_id;
+                GT_ASSERT(guard!=prior_body && unit->GetCardSprite(false)->texture_owner!=prior_card && unit->GetNameString()=="Live Guard",
+                    "Actual Unit refresh retained the old role's body/card/name");
+                const auto guard_card=unit->GetCardSprite(false)->texture_owner;
+                {
+                    StaticDef duplicate_source("OTHER_VISUAL_ROLE",manager->GetMoraleSet("SCOUT_TEST"),"Other role",MT_LAND,1,
+                        new CvrScoutRender(0,0,1,1,{2,4},{64,192},profile));
+                    game::frontend::unit::UnitDef duplicate(ism.get(),&duplicate_source);
+                    game::frontend::unit::Unit other(um.get(),badges.get(),990,&duplicate,&slot,&tile,{},true,1,0,"Rank",1);
+                    other.SetFacing(2);other.SetVisual(*data.visual);other.Show();
+                    GT_ASSERT(other.GetCardSprite(false)->texture_owner==guard_card,"Same tuple duplicated pixels across role definitions");
+                    GT_ASSERT(other.GetSprite()->instanced_sprite->actor!=guard->instanced_sprite->actor || other.m_render.instance_id!=guard_instance,
+                        "Independent role counters collided on a shared actor");
+                }
+                GT_ASSERT(guard->instanced_sprite->actor->HasInstance(guard_instance),"Destroying another role removed the surviving model");
+                frontend.ProcessRequest(&update);
+                GT_ASSERT(unit->GetSprite()==guard && unit->GetCardSprite(false)->texture_owner==guard_card,"Unchanged snapshot rebuilt graphics");
+                game::FrontendRequest changed(update);auto tuple=*changed.data.unit_update.visual;tuple.weapon=1;tuple.weapon_power=4;tuple.weapon_mode=1;
+                DELETE(changed.data.unit_update.visual);NEW(changed.data.unit_update.visual,game::ConventionalUnitVisual,tuple);
+                frontend.ProcessRequest(&changed);
+                GT_ASSERT(unit->GetSprite()!=guard && !guard->instanced_sprite->actor->HasInstance(guard_instance)
+                    && unit->GetCardSprite(false)->texture_owner!=guard_card,"Same-ID component refresh left old map/card pixels or live actor");
+                const auto laser=unit->GetCardSprite(false)->texture_owner;
+                tuple.owner=2;tuple.faction_art="gaians.pcx";DELETE(changed.data.unit_update.visual);NEW(changed.data.unit_update.visual,game::ConventionalUnitVisual,tuple);
+                frontend.ProcessRequest(&changed);
+                GT_ASSERT(unit->GetCardSprite(false)->texture_owner!=laser,"Current owner material reused the old controller's card");
+                auto* prior_pose=unit->GetSprite();const auto pose_instance=unit->m_render.instance_id;
+                changed.data.unit_update.facing=5;frontend.ProcessRequest(&changed);
+                GT_ASSERT(unit->GetSprite()!=prior_pose && !prior_pose->instanced_sprite->actor->HasInstance(pose_instance),"Live facing retained previous generic actor instance");
+                DELETE(changed.data.unit_update.visual);changed.data.unit_update.visual=nullptr;
+                changed.data.unit_update.has_facing=prior_facing.has_value();changed.data.unit_update.facing=prior_facing.value_or(0);
+                frontend.ProcessRequest(&changed);unit->SetDisplayName(prior_name);presenter->Update(widget,unit.get());
+                GT_ASSERT(unit->GetSprite()==prior_body && unit->GetCardSprite(false)->texture_owner==prior_card,"Absent graphics snapshot did not retain explicit legacy rendering");
+            }
 			auto* scout_texture = selected_card->texture_owner.get();
 			{
                 // A native static portrait must use the measured independent

@@ -14,6 +14,8 @@
 namespace types::texture {
 class Texture;
 }
+namespace game {struct ConventionalUnitVisual;}
+namespace loader::cvr {struct CvrScoutViewInput;}
 namespace game::backend::unit { class CvrScoutRender; }
 
 namespace scene {
@@ -24,6 +26,7 @@ namespace game {
 namespace frontend {
 namespace sprite {
 class ScoutSpriteCache;
+class ConventionalSpriteCache;
 
 CLASS( InstancedSpriteManager, ::common::Class )
 public:
@@ -46,6 +49,7 @@ public:
 		std::shared_ptr<types::texture::Texture> texture, const types::Vec2<float>& pixel_center );
 	InstancedSprite* GetNativeActorMarker(const std::string& name,bool base,int zoom,uint32_t fill,uint32_t border);
 	InstancedSprite* GetScoutSprite( const std::string& name, const backend::unit::CvrScoutRender& descriptor, bool native_projection = false );
+    InstancedSprite* GetConventionalSprite(const std::string& definition,const ConventionalUnitVisual& design,const loader::cvr::CvrScoutViewInput& view,bool native_projection);
 	InstancedSprite* GetFormerMarkerSprite( const std::string& name );
 	InstancedSprite* GetColonyMarkerSprite( const std::string& name );
 	InstancedSprite* GetRepaintedInstancedSprite( const std::string& name, const InstancedSprite* original, const types::texture::repaint_rules_t& rules );
@@ -57,6 +61,7 @@ private:
 
 	scene::Scene* m_scene = nullptr;
 	std::unique_ptr< ScoutSpriteCache > m_scout_cache;
+    std::unique_ptr<ConventionalSpriteCache> m_conventional_cache;
 
 	std::unordered_map< std::string, InstancedSprite > m_instanced_sprites = {};
 	std::unordered_map< std::string, types::texture::Texture* > m_repainted_textures = {};

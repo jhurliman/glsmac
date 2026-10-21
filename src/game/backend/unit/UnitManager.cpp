@@ -1,3 +1,4 @@
+#include "game/backend/faction/Faction.h"
 #include "UnitManager.h"
 #include "SmacWorkshop.h"
 #include "game/SmacUnitOrder.h"
@@ -81,6 +82,19 @@ std::string UnitManager::GetDisplayName(const Unit& unit) const {
     const auto& catalog=m_game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
     if(design.id<64) {return catalog.source.units.at(design.id).name;}
     return SmacWorkshopDesignName(design,catalog,design.id/64);
+}
+
+std::optional<ConventionalUnitVisual> UnitManager::GetVisual(const Unit& unit) const {
+    if(!unit.IsConventional()) {return std::nullopt;}
+    m_game->ValidateCurrentSimulation();
+    if(!m_game->m_simulation) {return std::nullopt;}
+    const auto* faction=unit.m_owner->GetPlayer()->GetFaction();
+    if(!faction || faction->m_bases_render.file.empty()) {return std::nullopt;}
+    const auto design=m_game->ResolveConventionalDesign(unit.Conventional(),*m_game->m_simulation);
+    const auto& catalog=m_game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+    const auto& weapon=catalog.weapons.weapons.at(design.weapon);const auto& armor=catalog.defenses.defenses.at(design.defense);
+    return ConventionalUnitVisual{unit.Conventional().owner_simulation_id,int32_t(design.chassis),int32_t(design.weapon),int32_t(design.defense),design.reactor,
+        weapon.offense,int32_t(weapon.mode),armor.rating,design.abilities,faction->m_bases_render.file};
 }
 
 void UnitManager::Clear() {
@@ -1362,6 +1376,7 @@ void UnitManager::PushUpdates() {
 				fr.data.unit_spawn.morale = presentation.morale;
 				NEW( fr.data.unit_spawn.morale_string, std::string, unit->GetMoraleString() );
                 NEW(fr.data.unit_spawn.display_name,std::string,unit->GetDisplayName());
+                if(const auto visual=GetVisual(*unit)) {NEW(fr.data.unit_spawn.visual,ConventionalUnitVisual,*visual);}
 				fr.data.unit_spawn.health = presentation.health;
                 fr.data.unit_spawn.maximum_hit_points = presentation.maximum_hit_points;
 				fr.data.unit_spawn.conventional = unit->IsConventional();
@@ -1385,6 +1400,7 @@ void UnitManager::PushUpdates() {
 				fr.data.unit_update.morale = presentation.morale;
 				NEW( fr.data.unit_update.morale_string, std::string, unit->GetMoraleString() );
                 NEW(fr.data.unit_update.display_name,std::string,unit->GetDisplayName());
+                if(const auto visual=GetVisual(*unit)) {NEW(fr.data.unit_update.visual,ConventionalUnitVisual,*visual);}
 				fr.data.unit_update.conventional = unit->IsConventional();
 				fr.data.unit_update.full_movement = presentation.full_movement;
 				fr.data.unit_update.has_moves = unit->HasMovesLeft();

@@ -1,0 +1,749 @@
+{
+  "research_id": "RE-SMAC-ACTOR-COLOR-001",
+  "scope": "Actual original107-asset model initializer and installed map light6/4/15 as prior Recon receipt. Original memory-backed PCX decoder and palette installer load PALETTE.PCX into actual software palette constructor output (graphics guard1/hardware palette flag0); faction PCX decoder and actual sample caller at three coordinates feed original body material generator with original truncation/nearest-palette helper. Seven faction files at owner1 plus Spartan owners1..7 and repeat; independent tint/quantization model checks all6144 bytes each. Actual startup-produced Spartan record transferred as prior receipt, then20 complete idle3D draws with produced actor1 table. File/memory allocation, in-memory bitmap backing and text/rectangle services supplied. Earlier file-cache wrappers/GDI bitmap allocation, hardware/system-palette mode, complete faction graphics cache lifecycle, target copy/native presentation/live game excluded.",
+  "palette_file": "PALETTE.PCX",
+  "colors": [
+    {
+      "id": "ACTOR-COLOR-01",
+      "inputs": {
+        "faction_file": "gaians.pcx",
+        "owner": 1
+      },
+      "expected": {
+        "pcx_sha256": "a2d4214c3857c130586a249adf8c48c27d877f3da8321f5d53155ca5836d0891",
+        "name_color_index": 241,
+        "blend_percent": 50,
+        "vehicle_tint_index": 152,
+        "vehicle_tint_rgb": [
+          116,
+          156,
+          56
+        ],
+        "material_row_sha256": "4b529a7b44785d079f5e00e491a3ffd5e190f419a7c5962a51929bd0a3b6e2a5",
+        "unique_material_indices": 50
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-02",
+      "inputs": {
+        "faction_file": "hive.pcx",
+        "owner": 1
+      },
+      "expected": {
+        "pcx_sha256": "33e6ea743186906a57aefc44a74a479f7964a6c8e0baec6857540c6d34861440",
+        "name_color_index": 252,
+        "blend_percent": 60,
+        "vehicle_tint_index": 4,
+        "vehicle_tint_rgb": [
+          0,
+          0,
+          128
+        ],
+        "material_row_sha256": "68d03ca6dc86ba85cf88528317490ae4004649bba705aefb53299f6a336457f1",
+        "unique_material_indices": 12
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-03",
+      "inputs": {
+        "faction_file": "univ.pcx",
+        "owner": 1
+      },
+      "expected": {
+        "pcx_sha256": "84ccbaa954808a6fe14dc6f3f41850fbb37350f1af34359a21b8820ecf3019a5",
+        "name_color_index": 255,
+        "blend_percent": 50,
+        "vehicle_tint_index": 72,
+        "vehicle_tint_rgb": [
+          173,
+          196,
+          192
+        ],
+        "material_row_sha256": "378b36ec55762ad3f161c9a675650b61185740ead467c03ede0b85d021a3fc2c",
+        "unique_material_indices": 131
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-04",
+      "inputs": {
+        "faction_file": "morgan.pcx",
+        "owner": 1
+      },
+      "expected": {
+        "pcx_sha256": "d9eb422a7326e8b042bc7e22b5071c9170e18e4d846751a82df07e9746ae6f5a",
+        "name_color_index": 251,
+        "blend_percent": 50,
+        "vehicle_tint_index": 251,
+        "vehicle_tint_rgb": [
+          255,
+          255,
+          0
+        ],
+        "material_row_sha256": "d4830e6cfad32f510d2b06322065665ac85d36e1cf5c7ab8ac5dc0a7c4d8254d",
+        "unique_material_indices": 52
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-05",
+      "inputs": {
+        "faction_file": "spartans.pcx",
+        "owner": 1
+      },
+      "expected": {
+        "pcx_sha256": "03223f0985c5c485ede3489f71fabfe437e2011471305572cfbd57b115b0e5a5",
+        "name_color_index": 65,
+        "blend_percent": 60,
+        "vehicle_tint_index": 80,
+        "vehicle_tint_rgb": [
+          64,
+          76,
+          76
+        ],
+        "material_row_sha256": "cf8960d9612c082f18e5411cc03809523c4641361f7ea5a366cebddc9165932b",
+        "unique_material_indices": 46
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-06",
+      "inputs": {
+        "faction_file": "believe.pcx",
+        "owner": 1
+      },
+      "expected": {
+        "pcx_sha256": "5c1cdb7b0c79f0f8756b7a8483cd9f97c424142b5e68ccae2a11ad80c975aab0",
+        "name_color_index": 102,
+        "blend_percent": 50,
+        "vehicle_tint_index": 229,
+        "vehicle_tint_rgb": [
+          208,
+          112,
+          24
+        ],
+        "material_row_sha256": "8f06730ff6b21197ca9b7d46d746249cb9222ee5356c610d34091c64c932f0c1",
+        "unique_material_indices": 38
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-07",
+      "inputs": {
+        "faction_file": "peace.pcx",
+        "owner": 1
+      },
+      "expected": {
+        "pcx_sha256": "0b8ce79edd9ea0d87bddbd6d241e6adbaaf746eb0e9a9f86ac99f7cfa061e772",
+        "name_color_index": 235,
+        "blend_percent": 70,
+        "vehicle_tint_index": 237,
+        "vehicle_tint_rgb": [
+          116,
+          116,
+          200
+        ],
+        "material_row_sha256": "6012343c91ba046f8003ab4bbeca3838a5c3c7a1f53835ed2a446a34af2a732b",
+        "unique_material_indices": 78
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-08",
+      "inputs": {
+        "faction_file": "spartans.pcx",
+        "owner": 1
+      },
+      "expected": {
+        "pcx_sha256": "03223f0985c5c485ede3489f71fabfe437e2011471305572cfbd57b115b0e5a5",
+        "name_color_index": 65,
+        "blend_percent": 60,
+        "vehicle_tint_index": 80,
+        "vehicle_tint_rgb": [
+          64,
+          76,
+          76
+        ],
+        "material_row_sha256": "cf8960d9612c082f18e5411cc03809523c4641361f7ea5a366cebddc9165932b",
+        "unique_material_indices": 46
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-09",
+      "inputs": {
+        "faction_file": "spartans.pcx",
+        "owner": 2
+      },
+      "expected": {
+        "pcx_sha256": "03223f0985c5c485ede3489f71fabfe437e2011471305572cfbd57b115b0e5a5",
+        "name_color_index": 65,
+        "blend_percent": 60,
+        "vehicle_tint_index": 80,
+        "vehicle_tint_rgb": [
+          64,
+          76,
+          76
+        ],
+        "material_row_sha256": "cf8960d9612c082f18e5411cc03809523c4641361f7ea5a366cebddc9165932b",
+        "unique_material_indices": 46
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-10",
+      "inputs": {
+        "faction_file": "spartans.pcx",
+        "owner": 3
+      },
+      "expected": {
+        "pcx_sha256": "03223f0985c5c485ede3489f71fabfe437e2011471305572cfbd57b115b0e5a5",
+        "name_color_index": 65,
+        "blend_percent": 60,
+        "vehicle_tint_index": 80,
+        "vehicle_tint_rgb": [
+          64,
+          76,
+          76
+        ],
+        "material_row_sha256": "cf8960d9612c082f18e5411cc03809523c4641361f7ea5a366cebddc9165932b",
+        "unique_material_indices": 46
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-11",
+      "inputs": {
+        "faction_file": "spartans.pcx",
+        "owner": 4
+      },
+      "expected": {
+        "pcx_sha256": "03223f0985c5c485ede3489f71fabfe437e2011471305572cfbd57b115b0e5a5",
+        "name_color_index": 65,
+        "blend_percent": 60,
+        "vehicle_tint_index": 80,
+        "vehicle_tint_rgb": [
+          64,
+          76,
+          76
+        ],
+        "material_row_sha256": "cf8960d9612c082f18e5411cc03809523c4641361f7ea5a366cebddc9165932b",
+        "unique_material_indices": 46
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-12",
+      "inputs": {
+        "faction_file": "spartans.pcx",
+        "owner": 5
+      },
+      "expected": {
+        "pcx_sha256": "03223f0985c5c485ede3489f71fabfe437e2011471305572cfbd57b115b0e5a5",
+        "name_color_index": 65,
+        "blend_percent": 60,
+        "vehicle_tint_index": 80,
+        "vehicle_tint_rgb": [
+          64,
+          76,
+          76
+        ],
+        "material_row_sha256": "cf8960d9612c082f18e5411cc03809523c4641361f7ea5a366cebddc9165932b",
+        "unique_material_indices": 46
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-13",
+      "inputs": {
+        "faction_file": "spartans.pcx",
+        "owner": 6
+      },
+      "expected": {
+        "pcx_sha256": "03223f0985c5c485ede3489f71fabfe437e2011471305572cfbd57b115b0e5a5",
+        "name_color_index": 65,
+        "blend_percent": 60,
+        "vehicle_tint_index": 80,
+        "vehicle_tint_rgb": [
+          64,
+          76,
+          76
+        ],
+        "material_row_sha256": "cf8960d9612c082f18e5411cc03809523c4641361f7ea5a366cebddc9165932b",
+        "unique_material_indices": 46
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-14",
+      "inputs": {
+        "faction_file": "spartans.pcx",
+        "owner": 7
+      },
+      "expected": {
+        "pcx_sha256": "03223f0985c5c485ede3489f71fabfe437e2011471305572cfbd57b115b0e5a5",
+        "name_color_index": 65,
+        "blend_percent": 60,
+        "vehicle_tint_index": 80,
+        "vehicle_tint_rgb": [
+          64,
+          76,
+          76
+        ],
+        "material_row_sha256": "cf8960d9612c082f18e5411cc03809523c4641361f7ea5a366cebddc9165932b",
+        "unique_material_indices": 46
+      }
+    },
+    {
+      "id": "ACTOR-COLOR-15",
+      "inputs": {
+        "faction_file": "spartans.pcx",
+        "owner": 1
+      },
+      "expected": {
+        "pcx_sha256": "03223f0985c5c485ede3489f71fabfe437e2011471305572cfbd57b115b0e5a5",
+        "name_color_index": 65,
+        "blend_percent": 60,
+        "vehicle_tint_index": 80,
+        "vehicle_tint_rgb": [
+          64,
+          76,
+          76
+        ],
+        "material_row_sha256": "cf8960d9612c082f18e5411cc03809523c4641361f7ea5a366cebddc9165932b",
+        "unique_material_indices": 46
+      }
+    }
+  ],
+  "views": [
+    {
+      "id": "COLORED-facing_0",
+      "inputs": {
+        "name": "facing_0",
+        "facing": 0,
+        "zoom": 0,
+        "ratio": [
+          1,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "19a1036bce318185fe385a453ccc61390689c6cb8418601e62c7ea17e826f478",
+        "depth_sha256": "ec95b58c4521076b56dc2d48407ae8163543a8f77b26c58d9975f8a3f9322a13",
+        "kernel_count": 24,
+        "view_scale": 0.07000000029802322
+      }
+    },
+    {
+      "id": "COLORED-facing_1",
+      "inputs": {
+        "name": "facing_1",
+        "facing": 1,
+        "zoom": 0,
+        "ratio": [
+          1,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "5926b9515cd6f45cbb885d465f048fb69fe47839da70de7bd371a18203268437",
+        "depth_sha256": "3f424b3b408244f9f8097893e671e10e6e414cdd72efba7fdbc420ed57a08871",
+        "kernel_count": 24,
+        "view_scale": 0.07000000029802322
+      }
+    },
+    {
+      "id": "COLORED-facing_2",
+      "inputs": {
+        "name": "facing_2",
+        "facing": 2,
+        "zoom": 0,
+        "ratio": [
+          1,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "268de19926048645bbaca590a641bdee452d7dc073600427586e212c448dce60",
+        "depth_sha256": "c207eb29ef0d3c78b774e6643ea7893d9437cacd23403e5bdc7ddec3311835ca",
+        "kernel_count": 24,
+        "view_scale": 0.07000000029802322
+      }
+    },
+    {
+      "id": "COLORED-facing_3",
+      "inputs": {
+        "name": "facing_3",
+        "facing": 3,
+        "zoom": 0,
+        "ratio": [
+          1,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "e8779537999c5c0c219b3d862839bf912d9765c275eeb9a634dbc925531a0b68",
+        "depth_sha256": "0fe3b371917cf0a37300d9a71ee69cbc651f3e8768a33e50971ed3d593509caf",
+        "kernel_count": 24,
+        "view_scale": 0.07000000029802322
+      }
+    },
+    {
+      "id": "COLORED-facing_4",
+      "inputs": {
+        "name": "facing_4",
+        "facing": 4,
+        "zoom": 0,
+        "ratio": [
+          1,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "950f4498a4d2472a6594cdeef200041f025a719e3d773297a8dbd5019029672d",
+        "depth_sha256": "1e5779b0b10d63faa345596c688f7af9094988cb91820f7b5c43f38a75ea513f",
+        "kernel_count": 24,
+        "view_scale": 0.07000000029802322
+      }
+    },
+    {
+      "id": "COLORED-facing_5",
+      "inputs": {
+        "name": "facing_5",
+        "facing": 5,
+        "zoom": 0,
+        "ratio": [
+          1,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "d2021fb9c32617171c95fd25a8612a754c74a93882824992ebe12fe968852c95",
+        "depth_sha256": "fe6cf81a8cef9c4bf67e801344011503583f0ca27ea35c4fb453d648dad78acb",
+        "kernel_count": 24,
+        "view_scale": 0.07000000029802322
+      }
+    },
+    {
+      "id": "COLORED-facing_6",
+      "inputs": {
+        "name": "facing_6",
+        "facing": 6,
+        "zoom": 0,
+        "ratio": [
+          1,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "1fc54e7ecf3a31dd27722d1d2614518a1541ee79fb6152187ad91fe0157ca721",
+        "depth_sha256": "674c8c57597c913617bca85f1aa31590be06d0fc45270114c854d03c6094f2c6",
+        "kernel_count": 24,
+        "view_scale": 0.07000000029802322
+      }
+    },
+    {
+      "id": "COLORED-facing_7",
+      "inputs": {
+        "name": "facing_7",
+        "facing": 7,
+        "zoom": 0,
+        "ratio": [
+          1,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "d99eb0c25ea4cc418452fb0b76feed7243b2a25536b06d5616029c90a933b6d1",
+        "depth_sha256": "39c8b1d2615dd97d6c735f78a9096adaf9032d2d2fdf5814ea76eeba9aeb3a27",
+        "kernel_count": 24,
+        "view_scale": 0.07000000029802322
+      }
+    },
+    {
+      "id": "COLORED-zoom_-8",
+      "inputs": {
+        "name": "zoom_-8",
+        "facing": 0,
+        "zoom": -8,
+        "ratio": [
+          0,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "8f3f17871874aa8e7d3f0728ffaa3f45c6e1a887209b7b46c808eb6c876a5dbe",
+        "depth_sha256": "0f82c09305893a1c6ef043303e626d37ecba1e68b636cd3d06d7cf49c723da1d",
+        "kernel_count": 24,
+        "view_scale": 0.03500000014901161
+      }
+    },
+    {
+      "id": "COLORED-zoom_-1",
+      "inputs": {
+        "name": "zoom_-1",
+        "facing": 0,
+        "zoom": -1,
+        "ratio": [
+          0,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "0090f98af5e7a2b76011a9634bcb6f7319918cff9c502f498071d085f598b35e",
+        "depth_sha256": "90f965596d3f7b495a2bf5185d7892dc2563e6a9374551278507aa95d3beffd4",
+        "kernel_count": 24,
+        "view_scale": 0.06562499701976776
+      }
+    },
+    {
+      "id": "COLORED-zoom_0",
+      "inputs": {
+        "name": "zoom_0",
+        "facing": 0,
+        "zoom": 0,
+        "ratio": [
+          0,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "19a1036bce318185fe385a453ccc61390689c6cb8418601e62c7ea17e826f478",
+        "depth_sha256": "ec95b58c4521076b56dc2d48407ae8163543a8f77b26c58d9975f8a3f9322a13",
+        "kernel_count": 24,
+        "view_scale": 0.07000000029802322
+      }
+    },
+    {
+      "id": "COLORED-zoom_4",
+      "inputs": {
+        "name": "zoom_4",
+        "facing": 0,
+        "zoom": 4,
+        "ratio": [
+          0,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "11132c9d4e222cea052893df3d436212695404436eb751f2fea2ebf63ffe06cf",
+        "depth_sha256": "a4834630a2e2b8ea394f6bb300759adf5602f851650b78699c64bd24d6be8988",
+        "kernel_count": 24,
+        "view_scale": 0.08749999850988388
+      }
+    },
+    {
+      "id": "COLORED-zoom_8",
+      "inputs": {
+        "name": "zoom_8",
+        "facing": 0,
+        "zoom": 8,
+        "ratio": [
+          0,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "946d13f93b8fb42f26b4c9be4ff52e55ac8a2cc962c51fae2545a4c00566edae",
+        "depth_sha256": "a9236e38ce21333f665c615da7d327dc0bee807ad8cc7ea685b524359b638a26",
+        "kernel_count": 24,
+        "view_scale": 0.10500000417232513
+      }
+    },
+    {
+      "id": "COLORED-ratio_1_2",
+      "inputs": {
+        "name": "ratio_1_2",
+        "facing": 0,
+        "zoom": 5,
+        "ratio": [
+          1,
+          2
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "8f3f17871874aa8e7d3f0728ffaa3f45c6e1a887209b7b46c808eb6c876a5dbe",
+        "depth_sha256": "0f82c09305893a1c6ef043303e626d37ecba1e68b636cd3d06d7cf49c723da1d",
+        "kernel_count": 24,
+        "view_scale": 0.03500000014901161
+      }
+    },
+    {
+      "id": "COLORED-ratio_3_2",
+      "inputs": {
+        "name": "ratio_3_2",
+        "facing": 0,
+        "zoom": 5,
+        "ratio": [
+          3,
+          2
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "946d13f93b8fb42f26b4c9be4ff52e55ac8a2cc962c51fae2545a4c00566edae",
+        "depth_sha256": "a9236e38ce21333f665c615da7d327dc0bee807ad8cc7ea685b524359b638a26",
+        "kernel_count": 24,
+        "view_scale": 0.10500000417232513
+      }
+    },
+    {
+      "id": "COLORED-ratio_2_1",
+      "inputs": {
+        "name": "ratio_2_1",
+        "facing": 0,
+        "zoom": 5,
+        "ratio": [
+          2,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "ea5da30d5f5a81e517f5822cf43defa688d9e9d8190477ce0c20429977f5ca67",
+        "depth_sha256": "8e0f111974aafde79cecb1ff3b385a310a93a17d4e32d9c5b48778589899b555",
+        "kernel_count": 24,
+        "view_scale": 0.14000000059604645
+      }
+    },
+    {
+      "id": "COLORED-anchor_0_0",
+      "inputs": {
+        "name": "anchor_0_0",
+        "facing": 0,
+        "zoom": 0,
+        "ratio": [
+          1,
+          1
+        ],
+        "anchor": [
+          0,
+          0
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "19a1036bce318185fe385a453ccc61390689c6cb8418601e62c7ea17e826f478",
+        "depth_sha256": "ec95b58c4521076b56dc2d48407ae8163543a8f77b26c58d9975f8a3f9322a13",
+        "kernel_count": 24,
+        "view_scale": 0.07000000029802322
+      }
+    },
+    {
+      "id": "COLORED-anchor_10_20",
+      "inputs": {
+        "name": "anchor_10_20",
+        "facing": 0,
+        "zoom": 0,
+        "ratio": [
+          1,
+          1
+        ],
+        "anchor": [
+          10,
+          20
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "19a1036bce318185fe385a453ccc61390689c6cb8418601e62c7ea17e826f478",
+        "depth_sha256": "ec95b58c4521076b56dc2d48407ae8163543a8f77b26c58d9975f8a3f9322a13",
+        "kernel_count": 24,
+        "view_scale": 0.07000000029802322
+      }
+    },
+    {
+      "id": "COLORED-anchor_500_500",
+      "inputs": {
+        "name": "anchor_500_500",
+        "facing": 0,
+        "zoom": 0,
+        "ratio": [
+          1,
+          1
+        ],
+        "anchor": [
+          500,
+          500
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "83c57546e5a31f700e7adc9edc55118bf2677bd04f0fc9089c6477b1646ffa1f",
+        "depth_sha256": "b5a41c3758763bbec72769fab4a2533bf2db0b6312d93d25a695f9e4b9e02260",
+        "kernel_count": 0,
+        "view_scale": 0.07000000029802322
+      }
+    },
+    {
+      "id": "COLORED-facing_minus_one",
+      "inputs": {
+        "name": "facing_minus_one",
+        "facing": -1,
+        "zoom": 0,
+        "ratio": [
+          0,
+          1
+        ],
+        "anchor": [
+          128,
+          128
+        ]
+      },
+      "expected": {
+        "indexed_sha256": "19a1036bce318185fe385a453ccc61390689c6cb8418601e62c7ea17e826f478",
+        "depth_sha256": "ec95b58c4521076b56dc2d48407ae8163543a8f77b26c58d9975f8a3f9322a13",
+        "kernel_count": 24,
+        "view_scale": 0.07000000029802322
+      }
+    }
+  ]
+}

@@ -1671,3 +1671,16 @@ and owned spawn/update payloads, then restores through Start. Legacy saves with
 no retained name authority keep their existing presentation names. Generalized
 map/card model composition remains the next rendering integration; this name
 change does not claim custom silhouettes or complete Workshop acceptance.
+
+## 2026-10-21 ordinary live component bodies
+
+Retained components and the actual controller's faction art now drive map and
+selected/roster card bodies. The ordinary compositor and independent view inputs
+replace fixed Scout silhouettes and explicit Former/Colony markers when graphics
+authority is available. Nine full original body controls match indexed/depth
+buffers, target anchors and kernel counts. Live updates, same-ID tuple/material
+changes, cross-role instance counters and retained texture lifetimes are covered.
+Combat Rover admission now uses its actual profile rather than a Spartan startup
+marker. See [the source contract and bounded integration receipt](behavior/live-ground-design-render.md).
+Map/console shadow composition, broader animation/slope views and complete
+Workshop/SMAX/campaign acceptance remain open.

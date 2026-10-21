@@ -5,6 +5,7 @@
 #include "gse/value/Object.h"
 
 #include "Types.h"
+#include "game/ConventionalUnitVisual.h"
 #include "ConventionalUnitState.h"
 #include "PreparedConventionalSight.h"
 #include "SmacNativeUnitRecord.h"
@@ -52,6 +53,7 @@ public:
 	~UnitManager();
 
     std::string GetDisplayName(const Unit& unit) const;
+    std::optional<ConventionalUnitVisual> GetVisual(const Unit& unit) const;
 	void Clear();
 	void DefineMoraleSet( MoraleSet* moraleset );
 	void UndefineMoraleSet( const std::string& id );

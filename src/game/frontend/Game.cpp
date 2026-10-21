@@ -1206,6 +1206,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				d.health, d.conventional, d.has_moves, d.full_movement, d.native,
                 d.has_facing ? std::optional<uint8_t>(d.facing) : std::nullopt
 			);
+            m_um->GetUnitById(d.unit_id)->SetVisual(d.visual ? std::optional<ConventionalUnitVisual>(*d.visual):std::nullopt);
             m_um->GetUnitById(d.unit_id)->SetDisplayName(d.display_name ? std::optional<std::string>(*d.display_name):std::nullopt);
             m_um->GetUnitById(d.unit_id)->SetMaximumHitPoints(d.maximum_hit_points);
             m_um->GetUnitById(d.unit_id)->SetHeld(d.held);
@@ -1222,7 +1223,8 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			const auto& d = request->data.unit_update;
 			auto* unit = m_um->GetUnitById( d.unit_id );
 			ASSERT( unit, "unit is null" );
-			unit->SetDisplayName(d.display_name ? std::optional<std::string>(*d.display_name):std::nullopt);
+			unit->SetVisual(d.visual ? std::optional<ConventionalUnitVisual>(*d.visual):std::nullopt);
+            unit->SetDisplayName(d.display_name ? std::optional<std::string>(*d.display_name):std::nullopt);
             unit->SetFacing(d.has_facing ? std::optional<uint8_t>(d.facing) : std::nullopt);
 			unit->SetMovement( d.movement );
             unit->SetMaximumHitPoints(d.maximum_hit_points);

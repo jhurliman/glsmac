@@ -83,6 +83,10 @@ CvrScoutRenderer CvrScoutRenderer::LoadWorkshopPickerWeapon(const WorkshopReader
 }
 CvrScoutRenderer CvrScoutRenderer::LoadStripDesign(const WorkshopReader& read,std::string_view faction_pcx,
     int chassis,int weapon,int armor,int reactor,const WorkshopDefinition& definition) {
+    return LoadOrdinaryDesign(read,faction_pcx,chassis,weapon,armor,reactor,definition);
+}
+CvrScoutRenderer CvrScoutRenderer::LoadOrdinaryDesign(const WorkshopReader& read,std::string_view faction_pcx,
+    int chassis,int weapon,int armor,int reactor,const WorkshopDefinition& definition) {
     // Original4d8420 selects this before the later Probe body remap and does
     // not consult armor or weapon mode. Preserve the stored component IDs.
     const auto profile=chassis==0 ? ((weapon>=0 && weapon<=2) || weapon==18 ? Profile::StripInfantry:Profile::StripSmallInfantry)
@@ -223,6 +227,13 @@ size_t CvrStripImage::Composite(std::vector<uint8_t>& target,uint32_t width,uint
         const int64_t px=int64_t(origin[0])+x,py=int64_t(origin[1])+y;const auto color=source.color[size_t(y)*source.pitch+x];
         if(color!=9 && px>=clip[0] && px<clip[2] && py>=clip[1] && py<clip[3]) {target[size_t(py)*pitch+size_t(px)]=color;++stores;}
     }}return stores;
+}
+
+CvrScoutImage CvrScoutRenderer::RenderOrdinaryBody(const CvrScoutViewInput& input) const {
+    if(m_assets->profile!=Profile::StripInfantry && m_assets->profile!=Profile::StripBody
+        && m_assets->profile!=Profile::StripSmallInfantry) {throw std::invalid_argument("Ordinary body requires its retained component scene");}
+    return RenderView(scout::MakeView(input,m_assets->profile==Profile::StripInfantry ? scout::IdleProfile::InitializedInfantry:
+        m_assets->profile==Profile::StripSmallInfantry ? scout::IdleProfile::InitializedSmallInfantry:scout::IdleProfile::SpartanSpeeder));
 }
 
 CvrStripImage CvrScoutRenderer::RenderStrip() const {

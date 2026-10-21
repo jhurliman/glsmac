@@ -1,0 +1,653 @@
+{
+  "research_id": "RE-SMAC-SCOUT-TARGET-COPY-001",
+  "scope": "Complete actual Scout idle-render caller through original unit/design selection/assembly/group-light-raster path, original software shadow/color target copies and caller cleanup/return. Actual buffer fill/key9, indexed source, original bitmap-lock/copy/clear bodies; supplied software bitmap state and OS rectangle services, loaderI/O/alloc and resolved unit/view inputs inherited. Four explicit post-render data controls isolate index-key versus depth; no live display/DirectDraw/palette lifecycle/native RGBA claim.",
+  "conventions": "Same admitted reactor1 design2/unit0/owner1/idlefacing0/zoom0 inputs as SCOUT-IDLE-RENDER. Actual native fill initializes color9 and shadow0; depth65535. Supplied bitmap headers use top-down signed height and positive pitch. Render internal256x256; mapcalleranchor128,128\u2192surfaceanchor178,178\u2192copyoffset50,50. Patterned software target512x512; unused padding retained. Shadow source blank0, no shadow lookup table; no active shadow geometry in this Scout case. Clip rectangles halfopen. Explicit source overrides apply after full3D draw, before original copy.",
+  "cases": [
+    {
+      "id": "baseline",
+      "inputs": {
+        "target_width": 512,
+        "target_height": 512,
+        "target_pitch": 512,
+        "clip": [
+          0,
+          0,
+          512,
+          512
+        ],
+        "initial_target_index": "(3*x+5*y+37) mod256 including row padding",
+        "source_overrides_after_render": []
+      },
+      "expected": {
+        "target_sha256": "947751115c4bc94b213d1c3a41f3085e226ce8b4f839864c54cb6bf9bf9faf4f",
+        "key": 9,
+        "target_copy_offset": [
+          50,
+          50
+        ],
+        "copied_eligible_pixels": 341,
+        "complete_target_matches": true,
+        "cleanup_calls": [
+          {
+            "keep_depth": true,
+            "rect": [
+              110,
+              88,
+              137,
+              139
+            ]
+          },
+          {
+            "keep_depth": false,
+            "rect": [
+              110,
+              88,
+              137,
+              139
+            ]
+          }
+        ],
+        "cleanup_matches_dirty_rect_model": true,
+        "remaining_nonkey_source_pixels": [],
+        "remaining_written_depth": [],
+        "target_guards_preserved": true
+      }
+    },
+    {
+      "id": "padded_pitch",
+      "inputs": {
+        "target_width": 512,
+        "target_height": 512,
+        "target_pitch": 520,
+        "clip": [
+          0,
+          0,
+          512,
+          512
+        ],
+        "initial_target_index": "(3*x+5*y+37) mod256 including row padding",
+        "source_overrides_after_render": []
+      },
+      "expected": {
+        "target_sha256": "7054dfeaf6ca02ce11bf6056abeedf0df50a3467ab678674045144786edcd20c",
+        "key": 9,
+        "target_copy_offset": [
+          50,
+          50
+        ],
+        "copied_eligible_pixels": 341,
+        "complete_target_matches": true,
+        "cleanup_calls": [
+          {
+            "keep_depth": true,
+            "rect": [
+              110,
+              88,
+              137,
+              139
+            ]
+          },
+          {
+            "keep_depth": false,
+            "rect": [
+              110,
+              88,
+              137,
+              139
+            ]
+          }
+        ],
+        "cleanup_matches_dirty_rect_model": true,
+        "remaining_nonkey_source_pixels": [],
+        "remaining_written_depth": [],
+        "target_guards_preserved": true
+      }
+    },
+    {
+      "id": "clip_narrow",
+      "inputs": {
+        "target_width": 512,
+        "target_height": 512,
+        "target_pitch": 520,
+        "clip": [
+          174,
+          150,
+          180,
+          160
+        ],
+        "initial_target_index": "(3*x+5*y+37) mod256 including row padding",
+        "source_overrides_after_render": []
+      },
+      "expected": {
+        "target_sha256": "3f9588c0d7a17230d353d53f5bb45097e742650391057f4aaca09cbadc032b64",
+        "key": 9,
+        "target_copy_offset": [
+          50,
+          50
+        ],
+        "copied_eligible_pixels": 45,
+        "complete_target_matches": true,
+        "cleanup_calls": [
+          {
+            "keep_depth": true,
+            "rect": [
+              124,
+              100,
+              131,
+              111
+            ]
+          },
+          {
+            "keep_depth": false,
+            "rect": [
+              124,
+              100,
+              131,
+              111
+            ]
+          }
+        ],
+        "cleanup_matches_dirty_rect_model": true,
+        "remaining_nonkey_source_pixels": [],
+        "remaining_written_depth": [],
+        "target_guards_preserved": true
+      }
+    },
+    {
+      "id": "clip_left",
+      "inputs": {
+        "target_width": 512,
+        "target_height": 512,
+        "target_pitch": 520,
+        "clip": [
+          0,
+          0,
+          174,
+          512
+        ],
+        "initial_target_index": "(3*x+5*y+37) mod256 including row padding",
+        "source_overrides_after_render": []
+      },
+      "expected": {
+        "target_sha256": "ce45ea267b83cdb29477284a045c174623b99c8db59c283bbdf22749832e5bba",
+        "key": 9,
+        "target_copy_offset": [
+          50,
+          50
+        ],
+        "copied_eligible_pixels": 238,
+        "complete_target_matches": true,
+        "cleanup_calls": [
+          {
+            "keep_depth": true,
+            "rect": [
+              110,
+              88,
+              125,
+              139
+            ]
+          },
+          {
+            "keep_depth": false,
+            "rect": [
+              110,
+              88,
+              125,
+              139
+            ]
+          }
+        ],
+        "cleanup_matches_dirty_rect_model": true,
+        "remaining_nonkey_source_pixels": [],
+        "remaining_written_depth": [],
+        "target_guards_preserved": true
+      }
+    },
+    {
+      "id": "clip_right",
+      "inputs": {
+        "target_width": 512,
+        "target_height": 512,
+        "target_pitch": 520,
+        "clip": [
+          174,
+          0,
+          512,
+          512
+        ],
+        "initial_target_index": "(3*x+5*y+37) mod256 including row padding",
+        "source_overrides_after_render": []
+      },
+      "expected": {
+        "target_sha256": "6620bdc1d562e70264a8458b5b1324516bbcd1b866f6e1364c827601c2831a5a",
+        "key": 9,
+        "target_copy_offset": [
+          50,
+          50
+        ],
+        "copied_eligible_pixels": 103,
+        "complete_target_matches": true,
+        "cleanup_calls": [
+          {
+            "keep_depth": true,
+            "rect": [
+              124,
+              88,
+              137,
+              132
+            ]
+          },
+          {
+            "keep_depth": false,
+            "rect": [
+              124,
+              88,
+              137,
+              132
+            ]
+          }
+        ],
+        "cleanup_matches_dirty_rect_model": true,
+        "remaining_nonkey_source_pixels": [],
+        "remaining_written_depth": [],
+        "target_guards_preserved": true
+      }
+    },
+    {
+      "id": "clip_top",
+      "inputs": {
+        "target_width": 512,
+        "target_height": 512,
+        "target_pitch": 520,
+        "clip": [
+          0,
+          0,
+          512,
+          160
+        ],
+        "initial_target_index": "(3*x+5*y+37) mod256 including row padding",
+        "source_overrides_after_render": []
+      },
+      "expected": {
+        "target_sha256": "efea96c80690fe242d640f10b7068ad03c6a5f88e4f1a02a00b75792dc70a551",
+        "key": 9,
+        "target_copy_offset": [
+          50,
+          50
+        ],
+        "copied_eligible_pixels": 190,
+        "complete_target_matches": true,
+        "cleanup_calls": [
+          {
+            "keep_depth": true,
+            "rect": [
+              110,
+              88,
+              137,
+              111
+            ]
+          },
+          {
+            "keep_depth": false,
+            "rect": [
+              110,
+              88,
+              137,
+              111
+            ]
+          }
+        ],
+        "cleanup_matches_dirty_rect_model": true,
+        "remaining_nonkey_source_pixels": [],
+        "remaining_written_depth": [],
+        "target_guards_preserved": true
+      }
+    },
+    {
+      "id": "clip_bottom",
+      "inputs": {
+        "target_width": 512,
+        "target_height": 512,
+        "target_pitch": 520,
+        "clip": [
+          0,
+          160,
+          512,
+          512
+        ],
+        "initial_target_index": "(3*x+5*y+37) mod256 including row padding",
+        "source_overrides_after_render": []
+      },
+      "expected": {
+        "target_sha256": "c92d7d1fb7bf603830933f44e70cead5391424d0b46f5b16bc973693a12de4f9",
+        "key": 9,
+        "target_copy_offset": [
+          50,
+          50
+        ],
+        "copied_eligible_pixels": 151,
+        "complete_target_matches": true,
+        "cleanup_calls": [
+          {
+            "keep_depth": true,
+            "rect": [
+              110,
+              110,
+              137,
+              139
+            ]
+          },
+          {
+            "keep_depth": false,
+            "rect": [
+              110,
+              110,
+              137,
+              139
+            ]
+          }
+        ],
+        "cleanup_matches_dirty_rect_model": true,
+        "remaining_nonkey_source_pixels": [],
+        "remaining_written_depth": [],
+        "target_guards_preserved": true
+      }
+    },
+    {
+      "id": "clip_outside",
+      "inputs": {
+        "target_width": 512,
+        "target_height": 512,
+        "target_pitch": 520,
+        "clip": [
+          0,
+          0,
+          10,
+          10
+        ],
+        "initial_target_index": "(3*x+5*y+37) mod256 including row padding",
+        "source_overrides_after_render": []
+      },
+      "expected": {
+        "target_sha256": "d858ebdeeacbe30a999b53a4a3786cb1e44421c2d1d3fdc7e26867b97a3193f7",
+        "key": 9,
+        "target_copy_offset": [
+          50,
+          50
+        ],
+        "copied_eligible_pixels": 0,
+        "complete_target_matches": true,
+        "cleanup_calls": [
+          {
+            "keep_depth": true,
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "keep_depth": false,
+            "rect": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "cleanup_matches_dirty_rect_model": true,
+        "remaining_nonkey_source_pixels": [],
+        "remaining_written_depth": [],
+        "target_guards_preserved": true
+      }
+    },
+    {
+      "id": "key9_hole",
+      "inputs": {
+        "target_width": 512,
+        "target_height": 512,
+        "target_pitch": 520,
+        "clip": [
+          0,
+          0,
+          512,
+          512
+        ],
+        "initial_target_index": "(3*x+5*y+37) mod256 including row padding",
+        "source_overrides_after_render": [
+          [
+            122,
+            93,
+            9,
+            null
+          ]
+        ]
+      },
+      "expected": {
+        "target_sha256": "531bfab04b6490b3352f80beed7b6de4bbf7d53ba0bd768af5c2e60a1cf0a96d",
+        "key": 9,
+        "target_copy_offset": [
+          50,
+          50
+        ],
+        "copied_eligible_pixels": 340,
+        "complete_target_matches": true,
+        "cleanup_calls": [
+          {
+            "keep_depth": true,
+            "rect": [
+              110,
+              88,
+              137,
+              139
+            ]
+          },
+          {
+            "keep_depth": false,
+            "rect": [
+              110,
+              88,
+              137,
+              139
+            ]
+          }
+        ],
+        "cleanup_matches_dirty_rect_model": true,
+        "remaining_nonkey_source_pixels": [],
+        "remaining_written_depth": [],
+        "target_guards_preserved": true
+      }
+    },
+    {
+      "id": "index0_clear_depth",
+      "inputs": {
+        "target_width": 512,
+        "target_height": 512,
+        "target_pitch": 520,
+        "clip": [
+          0,
+          0,
+          512,
+          512
+        ],
+        "initial_target_index": "(3*x+5*y+37) mod256 including row padding",
+        "source_overrides_after_render": [
+          [
+            0,
+            0,
+            0,
+            null
+          ]
+        ]
+      },
+      "expected": {
+        "target_sha256": "f96d4d7ab61cf97db71067e58380f462b72b938c082b746615721bd53fcd406d",
+        "key": 9,
+        "target_copy_offset": [
+          50,
+          50
+        ],
+        "copied_eligible_pixels": 342,
+        "complete_target_matches": true,
+        "cleanup_calls": [
+          {
+            "keep_depth": true,
+            "rect": [
+              110,
+              88,
+              137,
+              139
+            ]
+          },
+          {
+            "keep_depth": false,
+            "rect": [
+              110,
+              88,
+              137,
+              139
+            ]
+          }
+        ],
+        "cleanup_matches_dirty_rect_model": true,
+        "remaining_nonkey_source_pixels": [
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "remaining_written_depth": [],
+        "target_guards_preserved": true
+      }
+    },
+    {
+      "id": "nonkey_clear_depth",
+      "inputs": {
+        "target_width": 512,
+        "target_height": 512,
+        "target_pitch": 520,
+        "clip": [
+          0,
+          0,
+          512,
+          512
+        ],
+        "initial_target_index": "(3*x+5*y+37) mod256 including row padding",
+        "source_overrides_after_render": [
+          [
+            1,
+            0,
+            77,
+            null
+          ]
+        ]
+      },
+      "expected": {
+        "target_sha256": "bc71d95030cf210b55d72ceaa7aa80f6f8a437a22220cd6d7f568f5dd4bc0904",
+        "key": 9,
+        "target_copy_offset": [
+          50,
+          50
+        ],
+        "copied_eligible_pixels": 342,
+        "complete_target_matches": true,
+        "cleanup_calls": [
+          {
+            "keep_depth": true,
+            "rect": [
+              110,
+              88,
+              137,
+              139
+            ]
+          },
+          {
+            "keep_depth": false,
+            "rect": [
+              110,
+              88,
+              137,
+              139
+            ]
+          }
+        ],
+        "cleanup_matches_dirty_rect_model": true,
+        "remaining_nonkey_source_pixels": [
+          [
+            1,
+            0,
+            77
+          ]
+        ],
+        "remaining_written_depth": [],
+        "target_guards_preserved": true
+      }
+    },
+    {
+      "id": "key9_written_depth",
+      "inputs": {
+        "target_width": 512,
+        "target_height": 512,
+        "target_pitch": 520,
+        "clip": [
+          0,
+          0,
+          512,
+          512
+        ],
+        "initial_target_index": "(3*x+5*y+37) mod256 including row padding",
+        "source_overrides_after_render": [
+          [
+            2,
+            0,
+            9,
+            42
+          ]
+        ]
+      },
+      "expected": {
+        "target_sha256": "7054dfeaf6ca02ce11bf6056abeedf0df50a3467ab678674045144786edcd20c",
+        "key": 9,
+        "target_copy_offset": [
+          50,
+          50
+        ],
+        "copied_eligible_pixels": 341,
+        "complete_target_matches": true,
+        "cleanup_calls": [
+          {
+            "keep_depth": true,
+            "rect": [
+              110,
+              88,
+              137,
+              139
+            ]
+          },
+          {
+            "keep_depth": false,
+            "rect": [
+              110,
+              88,
+              137,
+              139
+            ]
+          }
+        ],
+        "cleanup_matches_dirty_rect_model": true,
+        "remaining_nonkey_source_pixels": [],
+        "remaining_written_depth": [
+          [
+            2,
+            0,
+            42
+          ]
+        ],
+        "target_guards_preserved": true
+      }
+    }
+  ]
+}

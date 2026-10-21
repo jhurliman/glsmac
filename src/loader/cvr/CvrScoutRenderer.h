@@ -88,6 +88,11 @@ public:
     static CvrScoutRenderer LoadStripDesign(const WorkshopReader& read,std::string_view faction_pcx,
         int chassis,int weapon,int armor,int reactor,const WorkshopDefinition& definition);
     CvrStripImage RenderStrip() const;
+    // Same ordinary composition, with the live map/card caller's view rather
+    // than the saved Workshop strip's fixed facing2/zoom-10 scratch view.
+    static CvrScoutRenderer LoadOrdinaryDesign(const WorkshopReader& read,std::string_view faction_pcx,
+        int chassis,int weapon,int armor,int reactor,const WorkshopDefinition& definition);
+    CvrScoutImage RenderOrdinaryBody(const CvrScoutViewInput& view) const;
     CvrScoutImage RenderWorkshopCard(int kind,std::array<uint32_t,3>& position,WorkshopAnimation* animation=nullptr) const;
     CvrScoutImage RenderWorkshopPicker(int kind,int ordinal,bool available,std::array<uint32_t,3>& position) const;
     static CvrScoutRenderer LoadWorkshopPart(std::string_view part,std::string_view palette,std::string_view system,

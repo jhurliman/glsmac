@@ -1,3 +1,4 @@
+namespace game {struct ConventionalUnitVisual;}
 #pragma once
 
 #include <vector>
@@ -183,6 +184,7 @@ public:
             uint8_t facing;
 			backend::unit::movement_t full_movement;
             const std::string* display_name; // owned event snapshot; null only on legacy/manual requests
+            const ConventionalUnitVisual* visual; // owned, absent when graphics authority is unavailable
 		} unit_spawn;
 		struct {
 			size_t unit_id;
@@ -211,6 +213,7 @@ public:
 				float z;
 			} render_coords; // TODO: store render coords of tiles on frontend
             const std::string* display_name; // owned event snapshot; null only on legacy/manual requests
+            const ConventionalUnitVisual* visual; // owned, absent when graphics authority is unavailable
 		} unit_update;
 		struct {
 			size_t unit_id;

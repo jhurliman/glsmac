@@ -1,0 +1,990 @@
+{
+  "scope": "Private complete original Scout asset loading/constructor/composition development.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope_limits": "State transferred from prior startup harness; custom127 draw tuples declared, not a new Workshop save. No slope or nonzero phase. Existing original107-model initializer and actual material producer; shadow/final2D copy reuse existing contracts. All new outputs are internal indexed/depth at631613.",
+  "cases": [
+    {
+      "id": "scout_map",
+      "inputs": {
+        "raw_design_id": 2,
+        "unit_id": 0,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 0
+      },
+      "expected": {
+        "operations": [
+          {
+            "asset": "vi.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          },
+          {
+            "asset": "viptr00.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          }
+        ],
+        "objects": 59,
+        "kernels": 65,
+        "scale": 0.08749999850988388,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "internal_bounds": [
+          115,
+          93,
+          135,
+          136
+        ],
+        "translated_bounds_before_target_clip": [
+          165,
+          143,
+          185,
+          186
+        ],
+        "nonkey_pixels": 341,
+        "indexed_sha256": "850dc4daadd5c4a0f13ea7c4832397de7b5153e384240bf3c05cf297b735a2b5",
+        "depth_sha256": "ce09c6e31936e8918dbeeae07297c3ec761e93279463d44c58fa2c7a3a0927e8",
+        "view_matrix": [
+          -0.061879001557826996,
+          0.06186468526721001,
+          0.0,
+          -0.030960777774453163,
+          -0.030967941507697105,
+          -0.07575398683547974,
+          0.3060569167137146,
+          0.30612775683403015,
+          -0.2502298057079315
+        ]
+      }
+    },
+    {
+      "id": "guard_map",
+      "inputs": {
+        "raw_design_id": 127,
+        "unit_id": 0,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "abilities": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 0
+      },
+      "expected": {
+        "operations": [
+          {
+            "asset": "vi.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          },
+          {
+            "asset": "vipta00.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          },
+          {
+            "asset": "viptr00.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          }
+        ],
+        "objects": 60,
+        "kernels": 66,
+        "scale": 0.08749999850988388,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "internal_bounds": [
+          115,
+          93,
+          135,
+          136
+        ],
+        "translated_bounds_before_target_clip": [
+          165,
+          143,
+          185,
+          186
+        ],
+        "nonkey_pixels": 411,
+        "indexed_sha256": "4d6a0bec62d04cd9877b56df6ad482d3220d5d53626de01654714cb3662c1e75",
+        "depth_sha256": "bbbe87d01600dd7b9d046d94720c0c9bf44d9fddce414d3d65280d9e197de4be",
+        "view_matrix": [
+          -0.061879001557826996,
+          0.06186468526721001,
+          0.0,
+          -0.030960777774453163,
+          -0.030967941507697105,
+          -0.07575398683547974,
+          0.3060569167137146,
+          0.30612775683403015,
+          -0.2502298057079315
+        ]
+      }
+    },
+    {
+      "id": "laser_guard_map",
+      "inputs": {
+        "raw_design_id": 127,
+        "unit_id": 0,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 1,
+        "armor": 1,
+        "reactor": 1,
+        "abilities": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 0
+      },
+      "expected": {
+        "operations": [
+          {
+            "asset": "vi.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          },
+          {
+            "asset": "vw01.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              3.069639205932617e-06,
+              70.45306396484375,
+              136.67886352539062
+            ]
+          },
+          {
+            "asset": "vgmt.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vgmtp.cvr",
+            "kind": "copy",
+            "material": "owner:1",
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vipta00.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          },
+          {
+            "asset": "viptr00.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          }
+        ],
+        "objects": 64,
+        "kernels": 71,
+        "scale": 0.08749999850988388,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "internal_bounds": [
+          115,
+          84,
+          175,
+          136
+        ],
+        "translated_bounds_before_target_clip": [
+          165,
+          134,
+          225,
+          186
+        ],
+        "nonkey_pixels": 1313,
+        "indexed_sha256": "a9a4c993e02a602bd1e869544d67cdc0d637e27c9328eb2149f73fc28fd49ac5",
+        "depth_sha256": "1df378e9265de56fdd90fbefd1dd582ab04cf3e15e9e518d9d8aa6f236db2808",
+        "view_matrix": [
+          -0.061879001557826996,
+          0.06186468526721001,
+          0.0,
+          -0.030960777774453163,
+          -0.030967941507697105,
+          -0.07575398683547974,
+          0.3060569167137146,
+          0.30612775683403015,
+          -0.2502298057079315
+        ]
+      }
+    },
+    {
+      "id": "former_map",
+      "inputs": {
+        "raw_design_id": 1,
+        "unit_id": 0,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 15,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 0
+      },
+      "expected": {
+        "operations": [
+          {
+            "asset": "vb.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vbp.cvr",
+            "kind": "copy",
+            "material": "owner:1",
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vcl.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vclt00.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vlights.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vt.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vwntu.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vr00.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          }
+        ],
+        "objects": 21,
+        "kernels": 33,
+        "scale": 0.0560000017285347,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "internal_bounds": [
+          98,
+          94,
+          162,
+          142
+        ],
+        "translated_bounds_before_target_clip": [
+          148,
+          144,
+          212,
+          192
+        ],
+        "nonkey_pixels": 1716,
+        "indexed_sha256": "90e43baf12a81807a673ef7fe91109c965eedc26369d1231f55334a6245d2d5b",
+        "depth_sha256": "ddfa5ced2aebc84e353712a1d24daa0518c0b4ddd59ee62d87b8695ef5fba252",
+        "view_matrix": [
+          -0.03960256278514862,
+          0.0395934022963047,
+          0.0,
+          -0.019814899191260338,
+          -0.019819483160972595,
+          -0.04848255217075348,
+          0.3060569167137146,
+          0.30612775683403015,
+          -0.2502298057079315
+        ]
+      }
+    },
+    {
+      "id": "colony_map",
+      "inputs": {
+        "raw_design_id": 0,
+        "unit_id": 0,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 14,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 0
+      },
+      "expected": {
+        "operations": [
+          {
+            "asset": "vb.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vbp.cvr",
+            "kind": "copy",
+            "material": "owner:1",
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vcl.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vclt00.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vlights.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "drop.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "droplet.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vr00.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          }
+        ],
+        "objects": 8,
+        "kernels": 20,
+        "scale": 0.0560000017285347,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "internal_bounds": [
+          98,
+          98,
+          162,
+          142
+        ],
+        "translated_bounds_before_target_clip": [
+          148,
+          148,
+          212,
+          192
+        ],
+        "nonkey_pixels": 1698,
+        "indexed_sha256": "3e8be8e51f40bc698719baa003eed51a6c64e4623f2d9a768e3de5280981c547",
+        "depth_sha256": "58cfcde7f052634b8c506866c1b00ac26e1aace5075cdfda670a325cd5f8254b",
+        "view_matrix": [
+          -0.03960256278514862,
+          0.0395934022963047,
+          0.0,
+          -0.019814899191260338,
+          -0.019819483160972595,
+          -0.04848255217075348,
+          0.3060569167137146,
+          0.30612775683403015,
+          -0.2502298057079315
+        ]
+      }
+    },
+    {
+      "id": "rover_map",
+      "inputs": {
+        "raw_design_id": 64,
+        "unit_id": 0,
+        "owner": 1,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 0
+      },
+      "expected": {
+        "operations": [
+          {
+            "asset": "vrcp00.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vgmc.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vgmcp.cvr",
+            "kind": "copy",
+            "material": "owner:1",
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vb.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vbp.cvr",
+            "kind": "copy",
+            "material": "owner:1",
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vsp.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vsptb.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vsptf.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vlights.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vr00.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          }
+        ],
+        "objects": 10,
+        "kernels": 24,
+        "scale": 0.07000000029802322,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "internal_bounds": [
+          105,
+          109,
+          153,
+          140
+        ],
+        "translated_bounds_before_target_clip": [
+          155,
+          159,
+          203,
+          190
+        ],
+        "nonkey_pixels": 800,
+        "indexed_sha256": "19a1036bce318185fe385a453ccc61390689c6cb8418601e62c7ea17e826f478",
+        "depth_sha256": "ec95b58c4521076b56dc2d48407ae8163543a8f77b26c58d9975f8a3f9322a13",
+        "view_matrix": [
+          -0.049503203481435776,
+          0.049491748213768005,
+          0.0,
+          -0.02476862259209156,
+          -0.024774352088570595,
+          -0.06060319021344185,
+          0.3060569167137146,
+          0.30612775683403015,
+          -0.2502298057079315
+        ]
+      }
+    },
+    {
+      "id": "guard_selected",
+      "inputs": {
+        "raw_design_id": 127,
+        "unit_id": 0,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "abilities": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          34,
+          66
+        ],
+        "zoom": -4,
+        "flags": 72
+      },
+      "expected": {
+        "operations": [
+          {
+            "asset": "vi.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          },
+          {
+            "asset": "vipta00.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          },
+          {
+            "asset": "viptr00.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          }
+        ],
+        "objects": 60,
+        "kernels": 66,
+        "scale": 0.06562500447034836,
+        "wrapper_anchor": [
+          71,
+          103
+        ],
+        "copy_offset": [
+          -57,
+          -25
+        ],
+        "internal_bounds": [
+          118,
+          102,
+          133,
+          135
+        ],
+        "translated_bounds_before_target_clip": [
+          61,
+          77,
+          76,
+          110
+        ],
+        "nonkey_pixels": 248,
+        "indexed_sha256": "7d9579b90eec79736ea1a07f65f4d72d9cdcd2149dab82084d06777c1de65a21",
+        "depth_sha256": "aa2f3b29bbd340267117bbf367a0b90cb992a9cc57089e49d00881a88096f953",
+        "view_matrix": [
+          -0.046409256756305695,
+          0.04639851674437523,
+          0.0,
+          -0.02322058565914631,
+          -0.02322595752775669,
+          -0.0568154938519001,
+          0.3060569167137146,
+          0.30612775683403015,
+          -0.2502298057079315
+        ]
+      }
+    },
+    {
+      "id": "guard_roster",
+      "inputs": {
+        "raw_design_id": 127,
+        "unit_id": 0,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "reactor": 1,
+        "abilities": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          156,
+          197
+        ],
+        "zoom": -8,
+        "flags": 1024
+      },
+      "expected": {
+        "operations": [
+          {
+            "asset": "vi.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          },
+          {
+            "asset": "vipta00.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          },
+          {
+            "asset": "viptr00.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          }
+        ],
+        "objects": 60,
+        "kernels": 66,
+        "scale": 0.04374999925494194,
+        "wrapper_anchor": [
+          181,
+          222
+        ],
+        "copy_offset": [
+          53,
+          94
+        ],
+        "internal_bounds": [
+          121,
+          110,
+          132,
+          133
+        ],
+        "translated_bounds_before_target_clip": [
+          174,
+          204,
+          185,
+          227
+        ],
+        "nonkey_pixels": 126,
+        "indexed_sha256": "969ff33d8ee7f147e8416adf1ac4b73daf08868d4b4658eb7eb8c0809badb66c",
+        "depth_sha256": "15cb1709296a4f7ab0d1bdee2085f98826bbb7a8861ddb46b434c0e806925a45",
+        "view_matrix": [
+          -0.030939500778913498,
+          0.030932342633605003,
+          0.0,
+          -0.015480388887226582,
+          -0.015483970753848553,
+          -0.03787699341773987,
+          0.3060569167137146,
+          0.30612775683403015,
+          -0.2502298057079315
+        ]
+      }
+    },
+    {
+      "id": "laser_guard_gaian_owner2",
+      "inputs": {
+        "raw_design_id": 127,
+        "unit_id": 0,
+        "owner": 2,
+        "chassis": 0,
+        "weapon": 1,
+        "armor": 1,
+        "reactor": 1,
+        "abilities": 0,
+        "facing": 0,
+        "phase": 0,
+        "anchor": [
+          128,
+          128
+        ],
+        "zoom": 0,
+        "flags": 0
+      },
+      "expected": {
+        "operations": [
+          {
+            "asset": "vi.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          },
+          {
+            "asset": "vw01.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              3.069639205932617e-06,
+              70.45306396484375,
+              136.67886352539062
+            ]
+          },
+          {
+            "asset": "vgmt.cvr",
+            "kind": "copy",
+            "material": null,
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vgmtp.cvr",
+            "kind": "copy",
+            "material": "owner:2",
+            "frame": 0,
+            "offset": null
+          },
+          {
+            "asset": "vipta00.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          },
+          {
+            "asset": "viptr00.cvr",
+            "kind": "attach",
+            "material": null,
+            "frame": 0,
+            "offset": [
+              -400.0,
+              200.0,
+              0.0
+            ]
+          }
+        ],
+        "objects": 64,
+        "kernels": 71,
+        "scale": 0.08749999850988388,
+        "wrapper_anchor": [
+          178,
+          178
+        ],
+        "copy_offset": [
+          50,
+          50
+        ],
+        "internal_bounds": [
+          115,
+          84,
+          175,
+          136
+        ],
+        "translated_bounds_before_target_clip": [
+          165,
+          134,
+          225,
+          186
+        ],
+        "nonkey_pixels": 1313,
+        "indexed_sha256": "f39aa85c203f5a75e4d8d05e536ca4b3c23cad14a3f5dd3aca305b5908689b53",
+        "depth_sha256": "1df378e9265de56fdd90fbefd1dd582ab04cf3e15e9e518d9d8aa6f236db2808",
+        "view_matrix": [
+          -0.061879001557826996,
+          0.06186468526721001,
+          0.0,
+          -0.030960777774453163,
+          -0.030967941507697105,
+          -0.07575398683547974,
+          0.3060569167137146,
+          0.30612775683403015,
+          -0.2502298057079315
+        ]
+      }
+    }
+  ],
+  "material_rows": {
+    "spartan": "cf8960d9612c082f18e5411cc03809523c4641361f7ea5a366cebddc9165932b",
+    "gaian": "4b529a7b44785d079f5e00e491a3ffd5e190f419a7c5962a51929bd0a3b6e2a5"
+  },
+  "native_control_sha256": "e9bc220530755e321d0d14d068fe0eda14f70656f75d2e4e1ccb6e525e299911",
+  "independent_checks": "All9 source-derived ordered compositions, scales, flat view matrices, auxiliary matrices, translations and anchors match; renderer guards preserved. New full color/depth are original output controls, not a new independent raster implementation."
+}

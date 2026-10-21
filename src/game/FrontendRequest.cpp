@@ -1,3 +1,4 @@
+#include "ConventionalUnitVisual.h"
 #include "FrontendRequest.h"
 #include "ScoutBattlePresentation.h"
 #include "ActorVisibilitySnapshot.h"
@@ -76,11 +77,13 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.unit_spawn.unitdef_id, std::string, *other.data.unit_spawn.unitdef_id );
 			NEW( data.unit_spawn.morale_string, std::string, *other.data.unit_spawn.morale_string );
             if(other.data.unit_spawn.display_name) {NEW(data.unit_spawn.display_name,std::string,*other.data.unit_spawn.display_name);}
+            if(other.data.unit_spawn.visual) {NEW(data.unit_spawn.visual,ConventionalUnitVisual,*other.data.unit_spawn.visual);}
 			break;
 		}
 		case FR_UNIT_UPDATE: {
 			NEW( data.unit_update.morale_string, std::string, *other.data.unit_update.morale_string );
             if(other.data.unit_update.display_name) {NEW(data.unit_update.display_name,std::string,*other.data.unit_update.display_name);}
+            if(other.data.unit_update.visual) {NEW(data.unit_update.visual,ConventionalUnitVisual,*other.data.unit_update.visual);}
 			break;
 		}
 		case FR_BASE_POP_DEFINE: {
@@ -180,11 +183,13 @@ FrontendRequest::~FrontendRequest() {
 			DELETE( data.unit_spawn.unitdef_id );
 			DELETE( data.unit_spawn.morale_string );
             if(data.unit_spawn.display_name) {DELETE(data.unit_spawn.display_name);}
+            if(data.unit_spawn.visual) {DELETE(data.unit_spawn.visual);}
 			break;
 		}
 		case FR_UNIT_UPDATE: {
 			DELETE( data.unit_update.morale_string );
             if(data.unit_update.display_name) {DELETE(data.unit_update.display_name);}
+            if(data.unit_update.visual) {DELETE(data.unit_update.visual);}
 			break;
 		}
 		case FR_BASE_POP_DEFINE: {

@@ -47,6 +47,9 @@
 #include "types/Buffer.h"
 #include "ui/BaseResourcePresentation.h"
 #include <sstream>
+#include <cstdlib>
+#include <fstream>
+#include <iterator>
 #include <set>
 #include <stdexcept>
 
@@ -1459,7 +1462,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             args["expected_state"]=VALUE(value::String,,base->SmacWorkshopState());args["name"]=VALUE(value::String,,"Other name");
             game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
             GT_ASSERT(fixture.Snapshot()==applied,"Unsupported custom rename replaced an applied design");
-            args["armor"]=VALUE(value::Int,,2);
+            args["armor"]=VALUE(value::Int,,10);
             GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"commit_smac_workshop",args);}) && fixture.Snapshot()==applied,"Invalid armor reached the registry");
             args["armor"]=VALUE(value::Int,,1);args["request_id"]=VALUE(value::Int,,0);
             GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"commit_smac_workshop",args);}) && fixture.Snapshot()==applied,"Invalid UI request changed the registry");
@@ -1474,6 +1477,68 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             game->GetUM()->UpdateConventionalUnit(GSE_CALL,existing,existing->Conventional());
             GT_OK();
         });GT_ASSERT(run.empty(),"Live Workshop command: "+run);GT_OK();
+    });
+    task->AddTest("SMAC live Workshop researched shielding remains available in occupied banks and saves all stock armor",[](GSE*,context::Context*)->std::string {
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);if(!input) {throw std::runtime_error("Missing owned shielding rules");}
+        const std::string owned{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
+        const auto defenses=loader::txt::UnitRulesTXTLoader::ParseDefenses(owned,"smac");
+        // Preserve the stock defense metadata while binding prerequisites to
+        // this live fixture's synthetic technology namespace.
+        const auto source=[&](const std::string& filename) {
+            const auto original=TanksSource(filename);if(filename!="alpha.txt") {return original;}
+            std::istringstream lines(original);std::string line,section,result;size_t row=0;
+            while(std::getline(lines,line)) {
+                if(!line.empty() && line.front()=='#') {section=line;row=0;}
+                else if(section=="#DEFENSES") {const auto& defense=defenses.defenses.at(row);
+                    line=defense.name+","+defense.short_name+","+std::to_string(defense.rating)+","+std::to_string(int32_t(defense.mode))+","+std::to_string(defense.cost)+","+(row==0 ? "None":"Tech1");++row;}
+                else if(section=="#UNITS" && line.find(',')!=std::string::npos) {
+                    std::istringstream columns(line);std::vector<std::string> fields;std::string field;while(std::getline(columns,field,',')) {fields.push_back(field);}
+                    fields.at(3)=defenses.defenses.at(std::stoul(fields.at(3).substr(1))).short_name;line.clear();
+                    for(const auto& value:fields) {if(!line.empty()) {line+=',';}line+=value;}
+                }
+                result+=line+'\n';
+            }return result;
+        };
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS");std::string saved;
+        const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned.fill(true);
+                state.economy.at(1).design_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};});
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            int32_t selected=-1;bool failed=true;
+            game->On(GSE_CALL,"smac_workshop_commit",NATIVE_CALL(&selected,&failed){N_EXPECT_ARGS(1);N_GET(data,0,Object);
+                selected=int32_t(static_cast<value::Int*>(data->Get("design_id"))->value);failed=static_cast<value::Bool*>(data->Get("failed"))->value;return VALUE(value::Undefined);}));
+            for(int32_t armor=1;armor<10;++armor) {
+                const auto before=fixture.Snapshot();auto* menu=static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL));bool offered=false;
+                const auto factor=game->GetSmacProductionMineralFactor(base->m_owner);
+                const auto rows=unit::SmacPredefinedUnitCatalog::CalculateCost(catalog.chassis.chassis.at(0),catalog.weapons.weapons.at(0),catalog.defenses.defenses.at(armor),1,0,catalog.abilities);
+                for(auto* value:static_cast<value::Array*>(menu->Get("armor"))->value) {
+                    auto* row=static_cast<gse::value::Object*>(value);
+                    if(static_cast<value::Int*>(row->Get("id"))->value==armor) {
+                        offered=static_cast<value::Bool*>(row->Get("available"))->value && !static_cast<value::String*>(row->Get("design_name"))->value.empty()
+                            && static_cast<value::Int*>(row->Get("cost"))->value==int64_t(rows)*factor;
+                    }
+                }
+                GT_ASSERT(offered && fixture.Snapshot()==before,"Researched armor query hid a valid occupied-bank draft, mispriced it or mutated the world: "+std::to_string(armor));
+                unit::SmacStartupDesignState old;fixture.ResourceState([&](const auto& state){old=state.designs;});
+                value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},
+                    {"armor",VALUE(value::Int,,armor)},{"selected_design",VALUE(value::Int,,2)},{"name",VALUE(value::String,,"")},
+                    {"done",VALUE(value::Bool,,false)},{"request_id",VALUE(value::Int,,armor)}};
+                game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();bool retained=false;unit::SmacStartupDesignState edited;
+                fixture.ResourceState([&](auto& state){edited=state.designs;
+                    const auto& raw=edited.native_registry->at(selected);retained=selected>=64 && raw[36]==0 && raw[37]==0 && raw[38]==armor && raw[39]==1 && raw[41]==rows && (raw[48]&1);
+                    state.designs=old;});
+                GT_ASSERT(!failed && retained && fixture.Snapshot()==before,"Live shielding save failed or changed state outside designs: "+std::to_string(armor));
+                fixture.ResourceState([&](auto& state){state.designs=std::move(edited);});
+            }
+            saved=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(run.empty(),"Live researched shielding: "+run);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(source,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string {restored.Restore(GSE_CALL,saved,true);
+            const auto snapshot=restored.Snapshot();GT_ASSERT(ResearchSnapshot(restored.Game(),snapshot)==ResearchSnapshot(restored.Game(),saved),"Saved shielding designs changed on whole-world restore");GT_OK();});
     });
     task->AddTest("SMAC live Workshop reuses and reactivates actual named Morgan startup design with restore",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"MORGANITES");std::string saved,startup_name;

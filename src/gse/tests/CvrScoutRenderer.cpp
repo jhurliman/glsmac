@@ -217,6 +217,13 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(bank.Composite(uint8_t(source),uint8_t(destination))==materials.translucency[source*256+destination],"Indexed composite uses wrong lookup");
         }}
         for(int destination=0;destination<256;++destination) {GT_ASSERT(bank.Composite(24,uint8_t(destination))==destination,"Transparent key changed destination");}
+        std::vector<uint8_t> backdrop;backdrop.reserve(623*368);
+        for(size_t y=0;y<368;++y) {for(size_t x=0;x<623;++x) {backdrop.push_back(bank.CompositeBackdrop(24,x,y));}}
+        GT_ASSERT(digest(backdrop)==UINT64_C(0xf7036e0478f9197f),"Complete owned deswin indexed backdrop differs");
+        for(size_t y:{size_t(195),size_t(234),size_t(235),size_t(279)}) {for(size_t x:{size_t(30),size_t(79),size_t(128)}) {
+            for(uint8_t shade=0;shade<24;++shade) {GT_ASSERT(bank.CompositeBackdrop(shade,x,y)==bank.Composite(shade,backdrop[y*623+x]),"Translucent side card discarded its actual destination");}
+        }}
+        GT_ASSERT(Rejects([&]{bank.CompositeBackdrop(0,623,0);}) && Rejects([&]{bank.CompositeBackdrop(0,0,368);}),"Out-of-range backdrop coordinate accepted");
         std::array<uint32_t,3> empty_position{1,2,3};
         GT_ASSERT(!bank.Render(2,0,false,true,empty_position) && (empty_position==std::array<uint32_t,3>({1,2,3})),"No Armor drew or changed shared scene state");
         GT_ASSERT(Rejects([&]{bank.Composite(25,0);}) && Rejects([&]{bank.Render(4,0,false,true,empty_position);}),"Unsupported component input accepted");

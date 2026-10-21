@@ -404,6 +404,7 @@ CvrWorkshopComponents CvrWorkshopComponents::Load(const Reader& read) {
     CvrWorkshopComponents result;const auto palette=read("palette.pcx"),system=read("system.txt");
     const auto materials=CvrActorMaterial::ReadWorkshop(palette,read("vbp.cvr"),system);
     result.m_colors=materials.colors;result.m_translucency=materials.translucency;
+    result.m_backdrop=CvrActorMaterial::ReadWorkshopBackdrop(read("deswin.pcx"));
     const auto armor=read("vipta00.cvr");
     result.m_side[0]=CvrScoutRenderer::LoadWorkshopPart(read("vi.cvr"),palette,system);
     result.m_side[1]=CvrScoutRenderer::LoadWorkshopPart(read("vw00.cvr"),palette,system,nullptr,true);
@@ -428,6 +429,10 @@ std::optional<CvrScoutImage> CvrWorkshopComponents::Render(int kind,int id,bool 
     const std::array<uint32_t,4> scale{0x3d4ccccd,0x3e19999a,0x3d8f5c29,0x3e4ccccd};
     const std::array<std::array<int32_t,2>,4> anchor{{{79,47},{79,143},{79,235},{511,45}}};
     return (kind==2 ? m_armor[id]:m_side[kind])->RenderWorkshopPart(scale[kind],kind!=0,anchor[kind],!available,kind==2 && id==5,position);
+}
+uint8_t CvrWorkshopComponents::CompositeBackdrop(uint8_t source,size_t x,size_t y) const {
+    if(x>=623 || y>=368 || m_backdrop.size()!=623*368) {throw std::invalid_argument("Workshop backdrop coordinate exceeds its original image");}
+    return Composite(source,m_backdrop[y*623+x]);
 }
 uint8_t CvrWorkshopComponents::Composite(uint8_t source,uint8_t destination) const {
     if(source==24) {return destination;}if(source>23) {throw std::invalid_argument("Invalid Workshop translucent shade index");}

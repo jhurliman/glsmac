@@ -28,6 +28,8 @@ struct CvrActorMaterial {
     static std::array<CvrPalette::Color,256> ReadGamma100Colors(std::string_view palette_pcx);
     static std::array<uint8_t,24*256> Tint(const std::array<CvrPalette::Color,256>& colors,
         const std::array<uint8_t,24*256>& source,uint8_t tint);
+    // Original623x368 deswin.pcx pixels installed at palette offset10.
+    static std::vector<uint8_t> ReadWorkshopBackdrop(std::string_view deswin_pcx);
     static CvrWorkshopMaterials ReadWorkshop(std::string_view palette_pcx,std::string_view vbp,std::string_view system);
 	static CvrActorMaterial Read( std::string_view palette_pcx, std::string_view faction_pcx,
 		const std::array< uint8_t, 24 * 256 >& body_shades );

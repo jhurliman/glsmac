@@ -1605,3 +1605,12 @@ counts until the owner pass completes, then reproduce the same recount. See
 [the integration contract](behavior/air-summary-integration.md), including the
 corrected original call order and remaining broader Native/AI lifecycle limits.
 Live Workshop recommendation and preset commands are the next consumers.
+
+
+## 2026-10-21 queued live presets
+
+The new authenticated preset command consumes retained Fight and air-summary
+authority. It refreshes capabilities once, preserves air history and publishes
+only the prepared registry/capability result. Stale, missing-input and foreign
+requests are rejected without mutation. See the [live command contract](behavior/workshop-live-presets.md).
+The visible console buttons and normal-open recommendation path remain next.

@@ -2130,6 +2130,111 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(rejected && fixture.Snapshot()==before,"Foreign editor request passed authority checks");GT_OK();
         });
     });
+    task->AddTest("SMAC preset command rejects stale missing and foreign authority without installed assets",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+            const auto fence=[&]() {return static_cast<value::String*>(static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL))->Get("preset_state"))->value;};
+            bool stale=false,failed=false;
+            game->On(GSE_CALL,"smac_workshop_preset",NATIVE_CALL(&){N_EXPECT_ARGS(1);N_GET(view,0,Object);
+                stale=static_cast<value::Bool*>(view->Get("stale"))->value;failed=static_cast<value::Bool*>(view->Get("failed"))->value;return VALUE(value::Undefined);}));
+            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,2)},
+                {"chassis",VALUE(value::Int,,0)},{"weapon",VALUE(value::Int,,0)},{"armor",VALUE(value::Int,,0)},{"reactor",VALUE(value::Int,,1)},
+                {"abilities",VALUE(value::Int,,0)},{"name",VALUE(value::String,,"")},{"action",VALUE(value::Int,,13)},
+                {"request_id",VALUE(value::Int,,1)},{"expected_state",VALUE(value::String,,fence())}};
+            fixture.ResourceState([](auto& state){state.air_summary[1]=faction::SmacAirSummary{1,2,3};state.strategy->at(1).fight.reset();});
+            auto before=fixture.Snapshot();game->Event(GSE_CALL,"preset_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(stale && !failed && fixture.Snapshot()==before,"Asset-free stale command published state");
+            args["expected_state"]=VALUE(value::String,,fence());game->Event(GSE_CALL,"preset_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(!stale && failed && fixture.Snapshot()==before,"Missing retained inputs became invented defaults");
+            args["selected_design"]=VALUE(value::Int,,128);bool rejected=false;
+            try {game->Event(GSE_CALL,"preset_smac_workshop",args);}catch(const std::exception&) {rejected=true;}
+            GT_ASSERT(rejected && fixture.Snapshot()==before,"Asset-free foreign selector entered queue");GT_OK();
+        });
+    });
+    task->AddTest("SMAC live Workshop presets refresh capabilities retain air history and fence faction inputs",[](GSE*,context::Context*)->std::string {
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        const auto source=[&](const std::string& filename) {
+            std::ifstream file(std::string(assets)+"/"+filename,std::ios::binary);
+            if(!file) {throw std::runtime_error("Missing owned live preset rules");}
+            return std::string(std::istreambuf_iterator<char>(file),{});
+        };
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
+            const auto& settings=game->GetState()->m_settings.global;const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;
+            fixture.ResourceState([&](auto& state){
+                state.rank_order=faction::SmacRankOrder::Update({1,0,0,0,0,0,0},2);
+                state.air_summary[1]=faction::SmacAirSummary{31,32,33};
+                state.economy.at(1).design_counts=faction::SmacDesignCounts{};state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};
+                state.technology.factions[0].owned.fill(false);state.technology.factions[0].owned[6]=true;
+                auto pool=*state.designs.native_registry;pool[2][44]|=2;state.designs.RetainNativeRegistry(pool,catalog);
+            });
+            bool stale=false,failed=false,matched=false;int32_t feedback=0;value::Object* selection=nullptr;
+            game->On(GSE_CALL,"smac_workshop_preset",NATIVE_CALL(&){N_EXPECT_ARGS(1);N_GET(view,0,Object);
+                stale=static_cast<value::Bool*>(view->Get("stale"))->value;failed=static_cast<value::Bool*>(view->Get("failed"))->value;
+                matched=static_cast<value::Bool*>(view->Get("matched"))->value;feedback=int32_t(static_cast<value::Int*>(view->Get("feedback"))->value);
+                selection=view->Get("selection")->type==VT_OBJECT ? static_cast<value::Object*>(view->Get("selection")):nullptr;
+                return VALUE(value::Undefined);}));
+            const unit::SmacWorkshopDraft draft{65,4,1,1,32,3,"Inherited"};
+            const auto fence=[&]() {return static_cast<value::String*>(static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL,&draft))->Get("preset_state"))->value;};
+            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,65)},
+                {"chassis",VALUE(value::Int,,4)},{"weapon",VALUE(value::Int,,1)},{"armor",VALUE(value::Int,,1)},
+                {"reactor",VALUE(value::Int,,3)},{"abilities",VALUE(value::Int,,32)},{"name",VALUE(value::String,,"Inherited")},
+                {"action",VALUE(value::Int,,16)},{"request_id",VALUE(value::Int,,1)},{"expected_state",VALUE(value::String,,fence())}};
+            fixture.ResourceState([](auto& state){state.air_summary[1]->own_plan4=34;});
+            auto before=fixture.Snapshot();game->Event(GSE_CALL,"preset_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(stale && !failed && !matched && !selection && fixture.Snapshot()==before,"Air-history change did not fence preset without mutation");
+            args["expected_state"]=VALUE(value::String,,fence());args["request_id"]=VALUE(value::Int,,2);
+            std::optional<faction::SmacSimulationState> expected;
+            fixture.ResourceState([&](auto& state){expected=state;expected->RefreshCapabilities(1,*settings.GetSmacTechnologyRules(),*settings.GetSmacPredefinedUnitRules(),*settings.GetSmacCombatRules(),false);});
+            const auto base_before=Base::Serialize(base).ToString();const auto next=game::backend::unit::Unit::GetNextId();const auto jsf=game->GetRandom()->GetStateString();
+            game->Event(GSE_CALL,"preset_smac_workshop",args);fixture.DrainEvents();bool exact=false;
+            fixture.ResourceState([&](auto& state){exact=state==*expected;});
+            GT_ASSERT(!stale && !failed && !matched && feedback==39 && selection && exact,"Unmatched air preset lost its original response or refreshed air counts");
+            auto* returned=static_cast<value::Object*>(selection->Get("draft"));
+            GT_ASSERT(static_cast<value::Int*>(returned->Get("reactor"))->value==3 && static_cast<value::Int*>(returned->Get("abilities"))->value==32
+                && static_cast<value::String*>(returned->Get("name"))->value=="Inherited","NOPRESET replaced the inherited draft/reactor/name");
+            args["action"]=VALUE(value::Int,,13);args["request_id"]=VALUE(value::Int,,3);args["expected_state"]=VALUE(value::String,,fence());
+            fixture.ResourceState([&](auto& state){expected=state;expected->RefreshCapabilities(1,*settings.GetSmacTechnologyRules(),*settings.GetSmacPredefinedUnitRules(),*settings.GetSmacCombatRules(),false);
+                auto pool=*expected->designs.native_registry;pool[2][44]&=uint8_t(~2u);expected->designs.RetainNativeRegistry(pool,catalog);});
+            game->Event(GSE_CALL,"preset_smac_workshop",args);fixture.DrainEvents();fixture.ResourceState([&](auto& state){exact=state==*expected;});
+            GT_ASSERT(!stale && !failed && matched && feedback==43 && selection && exact,"Scout preset did not publish the original alias/unexclusion effect");
+            returned=static_cast<value::Object*>(selection->Get("draft"));
+            for(const char* key:{"chassis","weapon","armor","abilities"}) {GT_ASSERT(static_cast<value::Int*>(returned->Get(key))->value==0,"Scout preset lost its original tuple");}
+            GT_ASSERT(static_cast<value::Int*>(returned->Get("reactor"))->value==1 && Base::Serialize(base).ToString()==base_before
+                && game::backend::unit::Unit::GetNextId()==next && game->GetRandom()->GetStateString()==jsf,"Preset changed Base/Unit allocation, queue, RNG or reactor");
+            before=fixture.Snapshot();game->Event(GSE_CALL,"preset_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(stale && fixture.Snapshot()==before,"Old preset fence replayed a changed registry");
+            fixture.ResourceState([&](auto& state){
+                state.technology.factions[0].owned.fill(true);state.strategy->at(1).priorities={0,0,1,0};
+                auto pool=*state.designs.native_registry;
+                unit::SmacWorkshopDraft defender{64,0,1,8,512,4,""};
+                unit::BuildSmacWorkshopRecord(pool,64,defender,catalog,*settings.GetSmacTechnologyRules(),state.technology.factions[0]);
+                pool[64][44]=6;pool[64][48]|=1;state.designs.RetainNativeRegistry(pool,catalog);
+                state.economy.at(1).design_counts->at(64)=1; // retained distinguishing native-control input
+            });
+            args["action"]=VALUE(value::Int,,9);args["request_id"]=VALUE(value::Int,,4);args["expected_state"]=VALUE(value::String,,fence());
+            fixture.ResourceState([&](auto& state){expected=state;expected->RefreshCapabilities(1,*settings.GetSmacTechnologyRules(),*settings.GetSmacPredefinedUnitRules(),*settings.GetSmacCombatRules(),false);
+                auto pool=*expected->designs.native_registry;pool[64][44]=4;expected->designs.RetainNativeRegistry(pool,catalog);});
+            game->Event(GSE_CALL,"preset_smac_workshop",args);fixture.DrainEvents();fixture.ResourceState([&](auto& state){exact=state==*expected;});
+            GT_ASSERT(!stale && !failed && matched && selection && exact,"Advanced defender preset lost alias64 or changed another owner exclusion bit");
+            returned=static_cast<value::Object*>(selection->Get("draft"));
+            GT_ASSERT(static_cast<value::Int*>(returned->Get("weapon"))->value==1 && static_cast<value::Int*>(returned->Get("armor"))->value==8
+                && static_cast<value::Int*>(returned->Get("reactor"))->value==4 && static_cast<value::Int*>(returned->Get("abilities"))->value==512,"Advanced defender preset differs from the native tuple");
+            fixture.ResourceState([](auto& state){state.strategy->at(1).fight.reset();});
+            args["expected_state"]=VALUE(value::String,,fence());args["request_id"]=VALUE(value::Int,,5);before=fixture.Snapshot();
+            game->Event(GSE_CALL,"preset_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(!stale && failed && !selection && fixture.Snapshot()==before,"Missing Fight became default authority or partially published capabilities");
+            args["selected_design"]=VALUE(value::Int,,128);bool rejected=false;
+            try {game->Event(GSE_CALL,"preset_smac_workshop",args);}catch(const std::exception&) {rejected=true;}
+            GT_ASSERT(rejected && fixture.Snapshot()==before,"Foreign preset selector entered the queue");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Workshop queued card selection retains saved tuples and fences world state",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {

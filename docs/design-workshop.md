@@ -999,3 +999,51 @@ baseline; it exits0 with no sanitizer or tracked GL leaks. Software graphics,
 no audio. An earlier capture remained in the production dialog and is excluded;
 the successful retry waits for the button to settle and checks the Workshop
 backdrop. No whole-screen pixel-parity or platform release claim is made.
+
+### Live chassis/reactor pickers and accepted shielding edits
+
+Chassis and reactor side cards now open their original5x4 component grids.
+The live owner determines configured and known choices: unknown configured
+definitions remain as unavailable silhouettes without labels, while disabled
+definitions are omitted. Chassis uses its raw speed and source triad; reactors
+display ratings1..4. The native frame painter, clipping, scale/yaw and shared
+centering sequence replace whole-unit thumbnail substitutes. Installed TRIAD
+and LABELS supply domain, Power, Shielding and Psi captions. The picker stores
+at most16 completed images and their centering carry, not decoded model trees.
+
+Chassis, shielding and reactor acceptance now call the live read-only edit
+adapter, refresh the complete editable tuple/quotes, and retain the browse
+offset. Escape returns the old choice through its accepted caller, including
+the original cleanup/suggestion behavior. Automatic suggestions use the source
+fresh-store enabled default and an explicit controller boolean; a preference
+screen, persistence and original INI import remain unfinished. Ability slots
+survive refresh and their names follow the draft mask. Missile shielding offers
+only No Armor. Save/Apply remains the existing fenced queued transaction.
+
+The new chassis path also exposes legitimate empty component scenes. The
+[weapon side-card trace](behavior/design-workshop-weapon-side-card-empty-scenes.md)
+establishes that Missile payload cards deliberately have no model. Empty parts
+now retain transparent color and untouched depth/centering instead of throwing.
+The ordinary Probe card requests independent ptmod.cvr; whole-unit Probe
+composition and the explicit cached-body context retain their separate policy.
+Hand Weapons keeps its direct scene ahead of chassis handling.
+
+Validation:45 selected native groups and six UI scripts pass. Forty-five groups
+also pass focused ASan/UBSan with seven production and three test translation
+units instrumented. The existing full native model/component/strip receipts
+remain unchanged; reactor picker internal planes match the existing native
+component scene. Additional checks cover intentional empty parts, independent
+Probe admission, configured-vs-disabled rows and the Missile shielding guard.
+Correctness analysis passes on three production files/consumers, with Surface
+and the renderer rechecked after the empty-scene correction. An instrumented
+SDL/OpenGL session opens/cancels chassis selection, opens/accepts reactor
+selection, selects shielding and applies the design, exiting0 without sanitizer
+or tracked GL leaks. The observer resumed the same running process after a
+cold-load timeout; incomplete frames were excluded. Software graphics/no audio;
+this capture is not a performance measurement. The final renderer-only change
+retains the captured ordinary scenes, as checked by the native frame receipts.
+
+The weapon picker, manual ability dialog/decorations, preference persistence,
+remaining actions, cost-warning presentation and timer-driven preview still
+need their live implementations. This is not completed Workshop or whole-cell
+pixel parity for every chassis/reactor definition.

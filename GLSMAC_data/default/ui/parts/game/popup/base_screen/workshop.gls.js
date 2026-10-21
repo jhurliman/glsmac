@@ -1,6 +1,8 @@
 return {
     init: (p) => {
         this.p = p; this.active = false; this.pending = false; this.next_request = 0;
+        this.automatic_suggestions = true; // Original fresh preference-store default.
+        this.ability_slots = [(0 - 1), (0 - 1)];
         this.window = p.ui.root.window({zindex: 0.9, align: 'top left', left: 216, top: 168, width: 623, height: 387, blocker: 'rgba(0, 0, 0, 180)'});
         this.window.surface({left: 0, top: 0, width: 623, height: 368, background: 'deswin.pcx:smacsoftware()'});
         this.components = this.window.surface({left: 0, top: 0, width: 623, height: 368});
@@ -17,9 +19,11 @@ return {
         };
         const heading = (left, top, text) => { const label = caption(left, top, 99, 85, 11, 12, true); label.text = text; };
         heading(30, 7, 'CHASSIS'); heading(30, 101, 'WEAPON'); heading(30, 195, 'SHIELDING'); heading(462, 7, 'REACTOR');
+        this.ability_labels = [];
         for (top of [101, 195]) {
             heading(462, top, 'SPECIAL'); const sub = caption(462, top, 99, 85, 25, 12, true); sub.text = top == 101 ? 'ABILITY 1' : 'ABILITY 2';
             const none = caption(462, top, 99, 85, 58, 10, false); none.text = 'NONE';
+            this.ability_labels :+ none;
         }
         this.chassis = caption(30, 7, 99, 85, 73, 10, false);
         this.chassis_stat = caption(30, 7, 99, 85, 83, 10, false);
@@ -39,6 +43,10 @@ return {
         this.draft_name = '';
         this.armor = this.window.button({left: 30, top: 195, width: 99, height: 85, background: 'transparent', overflow: 'hidden'});
         this.armor.on('click', () => { this.open_picker(); return true; });
+        this.chassis_button = this.window.button({left: 30, top: 7, width: 99, height: 85, background: 'transparent'});
+        this.chassis_button.on('click', () => { this.open_component_picker(0); return true; });
+        this.reactor_button = this.window.button({left: 462, top: 7, width: 99, height: 85, background: 'transparent'});
+        this.reactor_button.on('click', () => { this.open_component_picker(3); return true; });
         this.window.button({class: 'game-popup-button', left: 27, top: 321, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Apply'}).on('click', () => { this.submit(false); return true; });
         this.window.button({class: 'game-popup-button', left: 27, top: 347, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Done'}).on('click', () => { this.submit(true); return true; });
         this.window.button({class: 'game-popup-button', left: 459, top: 347, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Cancel'}).on('click', () => { this.hide_view(); return true; });
@@ -54,7 +62,7 @@ return {
         this.overwrite_window.button({class: 'game-popup-button', align: 'bottom right', right: 12, width: 200, bottom: 12, height: 28, text: 'Proceed with redesign.'}).on('click', () => { this.answer_overwrite(true); return true; });
         this.overwrite_window.on('keydown', (e) => { if (e.modifiers == {} && (e.code == 'ESCAPE' || e.code == 'ENTER')) { this.answer_overwrite(false); } return true; });
         this.overwrite_window.hide();
-        this.picker.on('keydown', (e) => { if (e.modifiers == {} && e.code == 'ESCAPE') { this.picker.hide(); } return true; });
+        this.picker.on('keydown', (e) => { if (e.modifiers == {} && e.code == 'ESCAPE') { this.accept_component(this.picker_kind, (0 - 1)); } return true; });
         this.window.listen(p.game, 'smac_workshop_commit', (e) => {
             if (!this.active || !this.pending || e.base.id != this.base.id || e.request_id != this.pending_id) { return; }
             const selecting = this.pending_selection;
@@ -106,6 +114,7 @@ return {
     open: (base, data) => {
         this.base = base; this.selection = data; this.active = true; this.pending = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.overwrite_window.hide();
         this.selected_chassis = 0; this.selected_weapon = 0; this.selected_reactor = 1; this.selected_abilities = 0; this.draft_name = '';
+        this.ability_slots = [(0 - 1), (0 - 1)];
         if (#is_defined(data.draft)) { this.read_draft(data.draft); this.selected_design = data.draft.selected_design; }
         this.strip_hover = (0 - 1); this.recenter_strip(this.selected_design);
         this.update_labels(); this.title.text = #uppercase(data.scout_name); this.message.text = ''; this.update_armor(); this.window.show(); this.render_strip();
@@ -172,10 +181,21 @@ return {
     read_draft: (draft) => {
         this.selected_chassis = draft.chassis; this.selected_weapon = draft.weapon; this.selected_reactor = draft.reactor; this.selected_abilities = draft.abilities;
         this.selected_armor = draft.armor; this.draft_name = draft.name;
+        let mask = draft.abilities; let bit = 0; let slots = [];
+        while (bit < 24) { if (mask % 2 == 1 && #sizeof(slots) < 2) { slots :+ bit; } mask = #floor(#to_float(mask) / 2.0); bit++; }
+        while (#sizeof(slots) < 2) { slots :+ (0 - 1); }
+        this.ability_slots = slots;
+        if (#is_defined(this.selection.ability_slots)) { this.ability_slots = this.selection.ability_slots; }
     },
     update_labels: () => {
         this.chassis.text = #uppercase(this.selection.chassis); this.weapon.text = #uppercase(this.selection.weapon); this.reactor.text = #uppercase(this.selection.reactor);
         this.chassis_stat.text = 'Land ' + #to_string(this.selection.speed); this.weapon_stat.text = 'Weapon ' + #to_string(this.selection.offense); this.reactor_stat.text = 'Power ' + #to_string(this.selection.power);
+        if (#is_defined(this.selection.chassis_choices)) { for (row of this.selection.chassis_choices) { if (row.id == this.selected_chassis) {
+            this.chassis_stat.text = ['Land', 'Sea', 'Air'][row.domain] + ' ' + #to_string(row.value);
+        } } }
+        let slot = 0; for (label of this.ability_labels) { const bit = this.ability_slots[slot];
+            label.text = bit < 0 ? 'NONE' : #uppercase(this.selection.ability_names[bit]); slot++;
+        }
     },
     armor_strength: (strength) => { return strength < 0 ? 'Psi' : #to_string(strength); },
     update_armor: () => {
@@ -191,12 +211,35 @@ return {
             this.stats.text = row.stat_line; } }
     },
     open_picker: () => {
+        this.open_component_picker(2);
+    },
+    accept_component: (kind, choice) => {
         if (!this.active || this.pending || this.confirming) { return; }
+        const base = this.base; const selected = this.selected_design; const chassis = this.selected_chassis; const weapon = this.selected_weapon;
+        const armor = this.selected_armor; const reactor = this.selected_reactor; const abilities = this.selected_abilities; const name = this.draft_name;
+        const first = this.ability_slots[0]; const second = this.ability_slots[1]; const automatic = this.automatic_suggestions;
+        const result = base.get_smac_workshop_edit(selected, chassis, weapon, armor, reactor, abilities, name, first, second, kind, choice, automatic);
+        if (!#is_defined(result)) { this.picker.hide(); this.message.text = 'Workshop is no longer available.'; return; }
+        this.selection = result; this.read_draft(result.draft); this.update_labels(); this.update_armor(); this.picker.hide();
+    },
+    open_component_picker: (kind) => {
+        if (!this.active || this.pending || this.confirming) { return; }
+        this.picker_kind = kind;
         for (card of this.cards) { card.remove(); } this.cards = [];
-        this.picker_canvas.smacworkshoparmorpicker(this.selected_armor, this.selection.armor);
+        let rows = this.selection.armor;
+        if (kind == 2) { this.picker_text = this.picker_canvas.smacworkshoparmorpicker(this.selected_armor, rows); }
+        else {
+            rows = kind == 0 ? this.selection.chassis_choices : this.selection.reactor_choices;
+            const selected = kind == 0 ? this.selected_chassis : this.selected_reactor;
+            const chassis = this.selected_chassis; const weapon = this.selected_weapon; const reactor = this.selected_reactor;
+            const faction = this.selection.faction_art; const power = this.selection.offense; const mode = this.selection.weapon_mode;
+            let strength = 1; for (row of this.selection.armor) { if (row.id == this.selected_armor) { strength = row.rating; } }
+            this.picker_text = this.picker_canvas.smacworkshopcomponentpicker(kind, selected, rows, chassis, weapon, reactor, faction, power, mode, strength);
+        }
         let i = 0;
-        for (row of this.selection.armor) {
-            const id = row.id; const available = row.available; const strength = this.armor_strength(row.rating);
+        for (row of rows) {
+            const id = row.id; const available = row.technology_available;
+            const strength = kind == 2 ? (row.rating < 0 ? this.picker_text.psi : #to_string(row.rating)) : #to_string(row.value);
             const card = this.picker.button({background: 'transparent', overflow: 'hidden', left: 27 + (i % 5) * 108, top: 4 + #floor(#to_float(i) / 5.0) * 94, width: 105, height: 91});
             if (row.technology_available) {
                 const name = card.text({align: 'top center', baseline: 10, font: 'arial.ttf:10:mono', color: 'rgb(176,212,235)', text: ''});
@@ -208,10 +251,11 @@ return {
                 }
                 lines :+ line; name.remove(); let baseline = 10;
                 for (text of lines) { card.text({align: 'top center', baseline: baseline, font: 'arial.ttf:10:mono', color: 'rgb(176,212,235)', text: text}); baseline += 13; }
-                card.text({align: 'top left', left: 3, baseline: 85, font: 'arial.ttf:10:mono', color: 'rgb(176,212,235)', text: 'Shielding'});
+                const description = kind == 2 ? this.picker_text.shielding : (kind == 3 ? this.picker_text.power : this.picker_text.domains[row.domain]);
+                card.text({align: 'top left', left: 3, baseline: 85, font: 'arial.ttf:10:mono', color: 'rgb(176,212,235)', text: description});
                 card.text({align: 'top right', right: 3, baseline: 86, font: 'arialbd.ttf:12:mono', color: 'rgb(176,212,235)', text: strength});
             }
-            card.on('click', () => { if (available) { this.selected_armor = id; this.update_armor(); this.picker.hide(); } return true; });
+            card.on('click', () => { if (available) { this.accept_component(kind, id); } return true; });
             this.cards :+ card; i++;
         }
         this.picker.show();

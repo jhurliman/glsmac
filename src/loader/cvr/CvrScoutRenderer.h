@@ -69,7 +69,7 @@ public:
     // 0..3 builds the separate chassis/weapon/shield/reactor scene.
     static CvrScoutRenderer LoadWorkshopDesign(const WorkshopReader& read,std::string_view faction_pcx,
         int chassis,int weapon,int armor,int reactor,int kind=-1);
-    struct WorkshopDefinition {int weapon_power,weapon_mode,armor_strength;};
+    struct WorkshopDefinition {int weapon_power,weapon_mode,armor_strength;bool independent_probe=false;};
     // Phase-zero stock SMAC composer. Definition fields come from the active
     // installed rules, not an inferred weapon-ID/power mapping. No abilities yet.
     static CvrScoutRenderer LoadWorkshopDesign(const WorkshopReader& read,std::string_view faction_pcx,
@@ -80,6 +80,7 @@ public:
         int chassis,int weapon,int armor,int reactor,const WorkshopDefinition& definition);
     CvrStripImage RenderStrip() const;
     CvrScoutImage RenderWorkshopCard(int kind,std::array<uint32_t,3>& position) const;
+    CvrScoutImage RenderWorkshopPicker(int kind,int ordinal,bool available,std::array<uint32_t,3>& position) const;
     static CvrScoutRenderer LoadWorkshopPart(std::string_view part,std::string_view palette,std::string_view system,
         const std::array<uint8_t,24*256>* shades=nullptr,bool direct_locations=false);
     CvrScoutImage RenderWorkshopPart(uint32_t scale,bool centered,std::array<int32_t,2> anchor,

@@ -248,6 +248,26 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
         }GT_OK();
     });
 
+    task->AddTest("CVR Workshop intentional empty side scenes and independent Probe remain safe",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto read=[&](const std::string& name) {
+            for(const auto& entry:std::filesystem::directory_iterator(directory)) {
+                auto candidate=entry.path().filename().string();std::transform(candidate.begin(),candidate.end(),candidate.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if(candidate==name) {std::ifstream stream(entry.path(),std::ios::binary);return std::string(std::istreambuf_iterator<char>(stream),{});}
+            }throw std::runtime_error("Missing owned side-card asset: "+name);
+        };
+        for(const auto& ids:std::array<std::array<int,4>,4>{{{8,20,0,1},{8,13,0,1},{0,18,0,1},{0,19,0,0}}}) {
+            auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,read("spartans.pcx"),ids[0],ids[1],ids[2],1,ids[3],{ids[1]==13?99:0,ids[1]==18?11:ids[1]==19?12:0,1});
+            std::array<uint32_t,3> position{};const auto before=position;const auto image=renderer.RenderWorkshopCard(ids[3],position);
+            GT_ASSERT(image.draw_count==0 && position==before
+                && std::all_of(image.indexed.color.begin(),image.indexed.color.end(),[](auto color){return color==9;})
+                && std::all_of(image.indexed.depth.begin(),image.indexed.depth.end(),[](auto depth){return depth==65535;}),"Empty native component invented geometry or changed scene position");
+            for(size_t i=3;i<image.rgba.size();i+=4) {GT_ASSERT(image.rgba[i]==0,"Empty card became opaque");}
+        }
+        const auto probe=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,read("spartans.pcx"),0,18,0,1,1,{0,11,1,true});
+        std::array<uint32_t,3> position{};GT_ASSERT(probe.RenderWorkshopCard(1,position).draw_count>0,"Independent Probe equipment was hidden by infantry body policy");
+        GT_OK();
+    });
     task->AddTest("CVR Workshop components match thirty-four complete original frames",GT(){
         const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
         const auto read=[&](const std::string& name) {
@@ -282,6 +302,14 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
         for(const auto& row:workshop_component_fixture::FRAMES) {
             if(row.reset) {position={};}
             const auto image=bank.Render(row.kind,row.id,row.picker,row.available,position);
+            if(row.kind==3 && !row.picker) {
+                const auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,read("spartans.pcx"),0,0,0,1,3,{1,0,1});
+                // Reactor uses the same source scene, angle, scale and centering
+                // on both paths; only its destination anchor changes.
+                std::array<uint32_t,3> picker_position{};const auto picker=renderer.RenderWorkshopPicker(3,3,row.available,picker_position);
+                GT_ASSERT(picker.indexed.color==image->indexed.color && picker.indexed.depth==image->indexed.depth
+                    && (picker.target_anchor==std::array<int32_t,2>{403,49}),"Reactor picker changed native internal planes or anchor");
+            }
             GT_ASSERT(image.has_value(),"Frame " + std::string(row.name));std::vector<uint8_t> depth;
             for(const auto value:image->indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
             GT_ASSERT(digest(image->indexed.color)==row.indexed && digest(depth)==row.depth && image->draw_count==row.draws && image->processed_records==row.records,"Frame " + std::string(row.name) + " indexed=" + std::to_string(digest(image->indexed.color)) + " depth=" + std::to_string(digest(depth)) + " draws=" + std::to_string(image->draw_count) + " records=" + std::to_string(image->processed_records));

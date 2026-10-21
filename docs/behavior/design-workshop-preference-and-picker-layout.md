@@ -154,3 +154,58 @@ first ordinal p=0 and advances p by5 until the initial ordinal is below
 scroll integration call `46ac10` is conditional on count>20 (`43d413..430`).
 These two thresholds are distinct original branches. With the fixed tables,
 only the weapon picker can actually need a second page.
+
+## Addendum: chassis, reactor and armor picker text
+
+2026-10-21, source-only caller clarification. No new component matrix.
+These callbacks receive the **inset model clip**, e.g. first card
+`C=(30,7,129,92)`. Shared small font `picker+45f4` is initialized by
+`43d0e5..43d0f2`: global face `6affac`, size10, normal. Numeric font
+`picker+461c` is initialized at `43d0f7..43d107`: the same face, size12,
+bold. Existing component receipts identify the face as Arial. These fonts
+are independent of the generic ability modal's MainFontSize/Arial Narrow font.
+
+Let H be small font's effective height: first DWORD + field10 if first>=0,
+otherwise fieldc. After creation these small fonts retain first=-1. In the
+existing Arial profile H=13, with small-font ink height7 and numeric ink
+height9. Each callback puts its header at the clip top, and reserves a bottom
+row **[C.left,C.bottom-H,C.right,C.bottom)**. The left bottom caption uses
+`5f5d40`; the right value uses `5f6250`. Both center vertically in that row,
+while aligning horizontally left and right respectively. With those metrics:
+
+* Header first baseline14; subsequent wrapped baseline27, etc.
+* Bottom caption baseline89; bold value baseline90.
+* Add108*column to X and94*row to Y for later cells. Left caption starts at
+  C.left; numeric text ends at C.right, after measuring the actual string.
+
+These are the existing profile's metric-derived positions, not new raster
+measurements. Header names are uppercased before the centered wrapping helper
+`5f68b0`; chassis uses `5f4a00`, which temporarily selects the passed small
+font and calls that same helper. Long names can wrap; bottom text positions
+continue to come from the original clip bottom.
+
+| Callback | Header localization token | Bottom left | Bottom right |
+| --- | --- | --- | --- |
+| Chassis `43b8d0` | `9b70f8+144*chassis` | resolved triad token at `9595c4+4*triad` | unsigned raw speed byte `9b7140+144*chassis` |
+| Reactor `43c510` | `9b6c2c+12*rating` (rating1..4) | LABELS offset1e4, **Power**, installed line132 | decimal reactor **rating1..4** |
+| Armor `43c100` | `9b6f08+16*armor` | LABELS offset1f8, **Shielding**, line137, only armor class byte<3 | signed raw strength, or LABELS310 **Psi**, line207 for negative strength |
+
+Chassis source is `43ba55..43bc1d`, reactor `43c6b3..43c859`, armor
+`43c30e..43c4ef`. All tokens resolve via `62e860`; the per-definition token
+addresses are not LABELS-array offsets. The triad labels are the loaded domain
+names (Land/Sea/Air), not hard-coded chassis descriptions.
+
+The chassis picker prints raw speed: a Needlejet prints **8** under stock
+rules, not the main stat formatter's reactor-adjusted Fission10/Fusion12.
+Reactor prints **Power 1**, **Power 2**, **Power 3**, **Power 4** across the
+two aligned bottom fields; no colon, `*2` suffix or multiplication by10 is
+present. Its header comes from the reactor definition, not the Power label.
+Armor prints raw0 as0 rather than main-stat clamping it to1, and negative
+strength as localized Psi rather than a question mark. Reuse the existing
+[strength-text contract](design-workshop-strength-text.md) for these distinctions.
+
+The small header uses theme text pair `8d0a44/48`; bottom text uses `8d0a4c/50`.
+Unavailable callbacks take the silhouette return path before these headers and
+bottom labels. No Armor is text-only and still gets its normal label/value.
+All of this is caller presentation; it adds no new composition or availability
+rules to the already accepted component matrices.

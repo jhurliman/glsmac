@@ -235,12 +235,28 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
     const auto& settings=m_game->GetState()->m_settings.global;
     const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;
     const auto& technology=*m_game->m_simulation->value.technology.Find(GetSmacResourceContext().owner_simulation_id);
-    const auto choices=unit::SmacWorkshopChoices(unit::SmacWorkshopComponent::Armor,catalog,*settings.GetSmacTechnologyRules(),technology);
+    auto choices=unit::SmacWorkshopChoices(unit::SmacWorkshopComponent::Armor,catalog,*settings.GetSmacTechnologyRules(),technology);
     const unit::SmacWorkshopDraft draft=supplied ? *supplied:unit::SmacWorkshopDraft{};
     if(draft.selected_design<0 || draft.selected_design>511 || (draft.selected_design>=64 && draft.selected_design/64!=technology.admission.simulation_id)
         || draft.chassis>=catalog.chassis.chassis.size() || draft.weapon>=catalog.weapons.weapons.size() || draft.armor>=catalog.defenses.defenses.size()
         || draft.reactor<1 || draft.reactor>catalog.reactors.reactors.size() || draft.abilities>0xffffff || draft.name.size()>31 || draft.name.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop preview draft");}
+    if(catalog.chassis.chassis.at(draft.chassis).missile) {
+        choices.erase(std::remove_if(choices.begin(),choices.end(),[](const auto& row){return row.component_id!=0;}),choices.end());
+    }
     const auto mineral_factor=m_game->GetSmacProductionMineralFactor(m_owner);
+    const auto component_choices=[&](unit::SmacWorkshopComponent kind) {
+        gse::value::array_elements_t rows;
+        for(const auto& choice:unit::SmacWorkshopChoices(kind,catalog,*settings.GetSmacTechnologyRules(),technology)) {
+            const bool chassis=kind==unit::SmacWorkshopComponent::Chassis;
+            const auto id=choice.component_id;
+            rows.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                {"id",VALUE(gse::value::Int,,id)}, {"technology_available",VALUE(gse::value::Bool,,choice.technology_available)},
+                {"name",VALUE(gse::value::String,,chassis ? catalog.chassis.chassis.at(id).names[0].name:catalog.reactors.reactors.at(id-1).name)},
+                {"value",VALUE(gse::value::Int,,chassis ? catalog.chassis.chassis.at(id).speed:int32_t(id))},
+                {"domain",VALUE(gse::value::Int,,chassis ? int(catalog.chassis.chassis.at(id).triad):-1)}
+            }));
+        }return VALUE(gse::value::Array,,rows);
+    };
     gse::Value* designs=VALUE(gse::value::Undefined);
     const auto& registry=m_game->m_simulation->value.designs;
     const auto& counts=m_game->m_simulation->value.economy.at(technology.admission.simulation_id).design_counts;
@@ -337,8 +353,13 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
             {"available",VALUE(gse::value::Bool,,supported)}
         }));
     }
+    gse::value::array_elements_t ability_names;
+    for(const auto& row:catalog.abilities.abilities) {ability_names.push_back(VALUE(gse::value::String,,row.name));}
     return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
         {"expected_state",VALUE(gse::value::String,,expected)}, {"armor",VALUE(gse::value::Array,,armor)},
+        {"chassis_choices",component_choices(unit::SmacWorkshopComponent::Chassis)},
+        {"reactor_choices",component_choices(unit::SmacWorkshopComponent::Reactor)},
+        {"ability_names",VALUE(gse::value::Array,,ability_names)},
         {"designs",designs},
         {"draft",VALUE(gse::value::Object,,GSE_CALL_NOGC,{
             {"selected_design",VALUE(gse::value::Int,,draft.selected_design)}, {"chassis",VALUE(gse::value::Int,,draft.chassis)},

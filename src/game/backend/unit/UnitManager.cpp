@@ -1,4 +1,5 @@
 #include "UnitManager.h"
+#include "SmacWorkshop.h"
 #include "game/SmacUnitOrder.h"
 
 #include "MoraleSet.h"
@@ -233,6 +234,7 @@ struct UnitManager::PreparedConventionalUnit::Data {
 	std::pair< SmacMovementHistory*, size_t > history;
 	std::vector< std::pair<Unit*,ConventionalUnitState> > homes;
     StackChanges stacks;
+    std::unique_ptr<SmacStartupDesignState> prototype_designs;
 	Unit* published = nullptr;
 	size_t id = 0;
 	bool notified = false;
@@ -244,6 +246,10 @@ UnitManager::PreparedConventionalUnit& UnitManager::PreparedConventionalUnit::op
 const Unit& UnitManager::PreparedConventionalUnit::Candidate() const {
 	if ( !m_data || !m_data->candidate ) { THROW( "Prepared unit candidate is unavailable" ); }
 	return *m_data->candidate;
+}
+const SmacStartupDesignState* UnitManager::PreparedConventionalUnit::PrototypeDesigns() const {
+    if(!m_data || !m_data->candidate) {THROW("Prototype history requires its uncommitted factory");}
+    return m_data->prototype_designs.get();
 }
 void UnitManager::PreparedConventionalUnit::PrepareBaseAbandonment( const base::Base& abandoned,
     const base::Base& replacement, const map::SmacWorkerKnowledge& territory ) {
@@ -297,6 +303,8 @@ Unit* UnitManager::PreparedConventionalUnit::Commit() noexcept {
 	auto& data = *m_data;
 	static_assert( std::is_nothrow_copy_assignable_v<ConventionalUnitState> );
 	for ( const auto& home : data.homes ) { std::get<ConventionalUnitState>( home.first->m_state ) = home.second; }
+    static_assert(std::is_nothrow_swappable_v<SmacStartupDesignState>);
+    if(data.prototype_designs) {using std::swap;swap(data.manager->m_game->m_simulation->value.designs,*data.prototype_designs);}
     CommitStackChanges(data.stacks);
 	data.published = data.candidate.release();
     data.manager->AdjustDesignCount(*data.published,1);
@@ -990,15 +998,28 @@ UnitManager::PreparedConventionalUnit UnitManager::PrepareManufacturedConvention
 		THROW( "Ordinary manufacturing requires current MORALE" );
 	}
 	// The saved campaign excludes Command Nexus/Cyborg Factory. The admitted
-	// conventional designs have no abilities and are already prototyped, so only
+	// conventional designs have no training ability; first-prototype morale is
+	// added separately below. Only
 	// these two local training categories precede the ordinary baseline one.
 	int32_t training = ( command_center ? 2 : 0 ) + ( bioenhancement ? 2 : 0 );
 	if ( social->current[ 4 ] < -1 ) { training /= 2; }
 	ConventionalUnitState state{ design_id, context.owner_simulation_id, static_cast< uint8_t >( 1 + training ), 0, 0, false, ConventionalUnitState::Home::Base, mode, home.m_id };
 	state.retained_state_word=0; // new manufactured record; no legacy state reconstruction
 	const auto design = m_game->ResolveConventionalDesign( state, *m_game->m_simulation );
-	if ( design.id >= 64 && !design.prototyped ) { THROW( "First custom prototype completion is not yet admitted" ); }
-	return PrepareConventionalUnit( GSE_CALL, Unit::GetNextId(), def, home.m_owner, home.GetTile(), state );
+    std::unique_ptr<SmacStartupDesignState> prototype_designs;
+    if(design.id>=64 && !design.prototyped) {
+        const auto& global=m_game->GetState()->m_settings.global;
+        const auto* technology=m_game->m_simulation->value.technology.Find(context.owner_simulation_id);
+        if(!technology || !m_game->m_simulation->value.designs.native_registry) {THROW("First prototype requires retained owner technology and design records");}
+        prototype_designs=std::make_unique<SmacStartupDesignState>(m_game->m_simulation->value.designs);
+        auto& pool=*prototype_designs->native_registry;
+        const bool initial=CompleteSmacWorkshopPrototype(pool,design.id,global.GetSmacPredefinedUnitRules()->catalog,*global.GetSmacTechnologyRules(),*technology);
+        prototype_designs->RetainNativeRegistry(pool,global.GetSmacPredefinedUnitRules()->catalog);
+        state.stored_morale=static_cast<uint8_t>(std::clamp(int32_t(state.stored_morale)+(initial ? 1:0),0,6));
+    }
+    auto prepared=PrepareConventionalUnit(GSE_CALL,Unit::GetNextId(),def,home.m_owner,home.GetTile(),state);
+    prepared.m_data->prototype_designs=std::move(prototype_designs);
+    return prepared;
 }
 
 Unit* UnitManager::SpawnConventionalUnit( GSE_CALLABLE, size_t id, Def* def, slot::Slot* owner, map::tile::Tile* tile, const ConventionalUnitState& state ) {

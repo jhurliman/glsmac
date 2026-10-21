@@ -67,7 +67,10 @@ Base::SmacProductionResult Base::CompleteSmacRiotDefection(GSE_CALLABLE,SmacProd
     auto all_removed=attempt.removed;
     const SmacWorkerRadiusMap radius{{static_cast<int32_t>(GetTile()->coord.x),static_cast<int32_t>(GetTile()->coord.y)},
         static_cast<int32_t>(m_game->GetMap()->GetWidth()),static_cast<int32_t>(m_game->GetMap()->GetHeight()),true};
-    auto designs=simulation.designs;
+    // A first prototype precedes riot transfer. Compose from its detached
+    // history so the recipient transition cannot overwrite those flag stores.
+    const auto* manufactured=attempt.created ? attempt.created->PrototypeDesigns():nullptr;
+    auto designs=manufactured ? *manufactured:simulation.designs;
     std::set<size_t> converted;
     auto initial=um->PrepareRemovalForQuery(all_removed,attempt.created);
     um->QueryDefectionUnits(attempt.created,initial,[&] {

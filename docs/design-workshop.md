@@ -1323,3 +1323,51 @@ cached-idle alias remains explicitly unsupported, ranked legacy states require
 retained scratch metadata, and the admitted Probe profile requires explicit
 no-project authority until project ownership is implemented. Special-ability
 model artwork and remaining complete UI/gameplay behavior still need work.
+
+
+### First custom prototype manufacturing
+
+The ordinary ground manufacturing caller now stages the original first-completion
+flag, human component-history propagation and newborn morale with its prepared
+Unit. The existing prototype price is admitted before those flags change, so
+this build keeps its original debit while later builds see the ordinary cost.
+The first newborn receives one extra stored morale point, clamped to six; repeat
+builds do not. Exempt charges do not replace the old prototype-bit predicate.
+
+Component history reuses the constructor's source-derived weapon, armor and
+same-domain chassis coverage. The completed record gets bit4; covered active
+unprototyped own records retain their other bytes and gain word0x0104. Stored
+inactive completion references do not acquire an invented active-record guard.
+The detached full design state publishes with the newborn, and later riot
+transfer composes from that state rather than overwriting it with an earlier
+snapshot. A discarded factory or later rejected queue publishes neither flags
+nor a Unit.
+
+The six complete original design-pool returns in
+[first-prototype evidence](behavior/design-workshop-first-prototype.md) match.
+The live fixture saves a named design through the queued Workshop command,
+checks detached/discarded preparation and a late queue failure, manufactures
+first and repeat Units with the expected identity/home/morale and prices, then
+restores the first-completion checkpoint and reproduces the uninterrupted
+second-completion world. Existing definition-registry ordering is normalized;
+remaining serialized world bytes are compared.
+
+Validation covers59 selected Workshop/manufacturing groups and nine additional
+consequence groups (riot/defection, abandonment and restart), with the enhanced
+prototype/checkpoint test rerun separately. The same scope passes focused
+ASan/UBSan with15 production and three test translation units instrumented.
+Targeted correctness analysis covers35 production translation units and known
+consumers; the history helper is rechecked after removing the unsupported
+active-record guard. The unchanged UI/script and rendering results from#530
+remain applicable. LLVM15's full-debug assembler crashes in one unchanged test
+translation unit; line-table-only debug output avoids that compiler crash while
+retaining sanitizer instrumentation.
+
+This closes a manufacturing rejection, not the complete human-played Workshop
+receipt. The simulation still admits its documented ordinary ground packages;
+High Morale and other currently unsupported packages are not enabled by this
+change. No original allocation-limit refund/aftermath is inferred: the captured
+2048-Unit prefix already stores prototype flags and debits minerals before
+allocation refusal, while the current port rejects at its factory guard.
+Original full newborn production-state flags, complete UI gameplay acceptance,
+remote replay and general SMAX manufacturing remain separate open checks.

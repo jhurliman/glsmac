@@ -20,6 +20,7 @@
 #include "game/backend/unit/SmacWorkshopUpgrade.h"
 #include "fixtures/WorkshopAllocation.h"
 #include "fixtures/WorkshopCachedRank.h"
+#include "fixtures/WorkshopPrototypeCompletion.h"
 #include "fixtures/SmacIntrinsicOverlays.h"
 #include "task/gsetests/GSETests.h"
 #include <cstdlib>
@@ -36,6 +37,34 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop first prototype complete pools match six native returns",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);const std::string source(std::istreambuf_iterator<char>(file),{});
+        auto technologies=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,technologies).catalog;
+        for(size_t id=0;id<89;++id) {
+            const auto token=[&](int value){return value== -2 ? std::string("Disable"):value== -1 ? std::string("None"):technologies.technologies.at(size_t(value)).key;};
+            const auto pair=workshop_prototype_fixture::PREREQUISITES[id];technologies.technologies[id].prerequisites={token(pair[0]),token(pair[1])};
+        }
+        auto owner=Owner();owner.owned.fill(false);owner.owned[6]=true;
+        for(const auto& test:workshop_prototype_fixture::CASES) {
+            auto pool=workshop_general_fixture::BasePool();
+            for(const auto& input:test.rows) {
+                auto& record=pool.at(size_t(input.id));record.fill(0);const auto name="Fixture "+std::to_string(input.id);
+                std::copy(name.begin(),name.end(),record.begin());std::copy(input.metadata.begin(),input.metadata.end(),record.begin()+32);
+            }
+            const auto before=pool;
+            GT_ASSERT(unit::CompleteSmacWorkshopPrototype(pool,127,catalog,technologies,owner)==test.first,"First-completion predicate differs");
+            uint64_t digest=UINT64_C(14695981039346656037);for(const auto& record:pool) {for(const auto byte:record) {digest=(digest^byte)*UINT64_C(1099511628211);}}
+            GT_ASSERT(digest==test.digest,"Complete native prototype history differs: "+std::string(test.id));
+            if(test.first) {
+                pool=before;pool[127][48]&=uint8_t(~1u);
+                GT_ASSERT(unit::CompleteSmacWorkshopPrototype(pool,127,catalog,technologies,owner)
+                    && !(pool[127][48]&1) && (pool[127][48]&4),"Retained inactive completion invented an active guard or reactivated its record");
+            }
+        }GT_OK();
+    });
+
     task->AddTest("SMAC Workshop scratch preview ranks match38 native Psi conventional and Probe controls",GT(){
         for(const auto& row:workshop_cached_rank_fixture::RANKS) {
             GT_ASSERT(unit::SmacWorkshopPreviewRank({uint8_t(row.plan),int8_t(row.power),row.direct,row.morale,row.probe,row.immune,row.matrix,row.technologies})==row.expected,"Native scratch rank differs");

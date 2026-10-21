@@ -1849,6 +1849,71 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         }GT_OK();
     });
 
+    task->AddTest("SMAC retained Unit names publish independently of shared Def and refresh after Workshop Apply",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");std::string saved;
+        const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+            using namespace game::backend::unit;
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);SelectionPresentations(fixture);auto* manager=game->GetUM();
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}});
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;
+                for(const auto& row:std::array<std::pair<int,const char*>,2>{{{64,"Old Guard"},{65,"Other Guard"}}}) {
+                    pool[row.first]=pool[2];pool[row.first][38]=1;pool[row.first][48]=3;
+                    std::fill(pool[row.first].begin(),pool[row.first].begin()+32,uint8_t(0));const std::string name=row.second;
+                    std::copy(name.begin(),name.end(),pool[row.first].begin());
+                }
+                state.designs.RetainNativeRegistry(pool,catalog);state.technology.factions[0].owned[1]=true;});
+            auto* first=manager->SpawnConventionalUnit(GSE_CALL,92,manager->GetUnitDef("live-scout"),base->m_owner,game->GetMap()->GetTile(4,2),
+                {64,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+            auto* second=manager->SpawnConventionalUnit(GSE_CALL,93,manager->GetUnitDef("live-scout"),base->m_owner,game->GetMap()->GetTile(4,2),
+                {65,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+            const auto current=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,64);
+            const auto queued=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,65);
+            base->SetProductionState(GSE_CALL,ProductionState{current,2,current,2,std::vector<ProductionItem>{queued}});
+            const auto production_name=[&] {
+                auto* view=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation"));
+                auto* queue=static_cast<value::Object*>(base->CopySmacQueueEditor(GSE_CALL));
+                auto* items=static_cast<value::Array*>(queue->Get("items"));
+                if(items->value.size()!=1 || static_cast<value::String*>(static_cast<value::Object*>(items->value[0])->Get("name"))->value!="Other Guard") {return std::string("Wrong queued design name");}
+                return static_cast<value::String*>(view->Get("name"))->value;
+            };
+            GT_ASSERT(production_name()=="Old Guard","Production/queue text followed the shared Def name");
+            auto* wrapper=static_cast<value::Object*>(first->Wrap(GSE_CALL));
+            GT_ASSERT(first->m_def==second->m_def && first->GetDisplayName()=="Old Guard" && second->GetDisplayName()=="Other Guard"
+                && static_cast<value::String*>(Call(GSE_CALL,wrapper,"get_name"))->value=="Old Guard","Unit names followed shared presentation role");
+            const auto& birth=fixture.Updates();const auto found=std::find_if(birth.begin(),birth.end(),[](const auto& row){return row.type==game::FrontendRequest::FR_UNIT_SPAWN && row.data.unit_spawn.unit_id==92;});
+            GT_ASSERT(found!=birth.end() && found->data.unit_spawn.display_name && *found->data.unit_spawn.display_name=="Old Guard","Spawn omitted retained design name");
+            game::FrontendRequest copy(*found);
+            GT_ASSERT(copy.data.unit_spawn.display_name!=found->data.unit_spawn.display_name,"Spawn name payload aliases source request");
+            auto* initialize=static_cast<value::Callable*>(fixture.Script(GSE_CALL,"./GLSMAC_data/tests/_conventional_unit_preview"));
+            auto* inspect=static_cast<value::Callable*>(initialize->Run(GSE_CALL,{game->Wrap(GSE_CALL)}));
+            const auto show=[&] {auto* wrapped=first->Wrap(GSE_CALL);auto* tile=first->GetTile()->Wrap(GSE_CALL);
+                game->GetState()->TriggerObject(game->GetMap(),"tile_preview",ARGS_F(&tile){{"tile",tile}};});
+                game->GetState()->TriggerObject(game->GetMap(),"unit_preview",ARGS_F(&wrapped){{"unit",wrapped}};});
+                game->GetState()->TriggerObject(game,"unit_select",ARGS_F(&wrapped){{"unit",wrapped}};});
+                inspect->Run(GSE_CALL,{wrapped,new value::Object(GSE_CALL,{{"stats",VALUE(value::String,,"1-2-1")},
+                    {"morale",VALUE(value::String,,first->GetMoraleString())},{"moves",VALUE(value::String,,"Moves: 1")}})});
+            };show();
+            game->Event(GSE_CALL,"commit_smac_workshop",{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},
+                {"armor",VALUE(value::Int,,1)},{"selected_design",VALUE(value::Int,,64)},{"name",VALUE(value::String,,"New Guard")},
+                {"done",VALUE(value::Bool,,false)},{"request_id",VALUE(value::Int,,1)}});fixture.DrainEvents();
+            GT_ASSERT(first->GetDisplayName()=="New Guard" && second->GetDisplayName()=="Other Guard"
+                && static_cast<value::String*>(Call(GSE_CALL,wrapper,"get_name"))->value=="New Guard","Workshop Apply did not update the retained design name");
+            const auto& updates=fixture.Updates();const auto changed=std::find_if(updates.begin(),updates.end(),[](const auto& row){return row.type==game::FrontendRequest::FR_UNIT_UPDATE && row.data.unit_update.unit_id==92;});
+            GT_ASSERT(changed!=updates.end() && changed->data.unit_update.display_name && *changed->data.unit_update.display_name=="New Guard"
+                && *copy.data.unit_spawn.display_name=="Old Guard","Rename update missing or altered an earlier owned request");
+            game::FrontendRequest update_copy(*changed);GT_ASSERT(update_copy.data.unit_update.display_name!=changed->data.unit_update.display_name
+                && *update_copy.data.unit_update.display_name=="New Guard","Refresh name payload borrowed source request");
+            GT_ASSERT(std::none_of(updates.begin(),updates.end(),[](const auto& row){return row.type==game::FrontendRequest::FR_UNIT_UPDATE && row.data.unit_update.unit_id==93;}),"Renaming one design refreshed unrelated shared-Def Unit");
+            GT_ASSERT(production_name()=="New Guard","Production name stayed stale after Workshop Apply");
+            show();saved=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(setup.empty(),"Retained Unit name delivery: "+setup);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(TanksSource,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string {restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
+            GT_ASSERT(restored.Game()->GetUM()->GetUnit(92)->GetDisplayName()=="New Guard" && restored.Game()->GetUM()->GetUnit(93)->GetDisplayName()=="Other Guard","Start restore regenerated shared Def names");GT_OK();});
+    });
+
     task->AddTest("SMAC saved Workshop design selects manufactures moves and replays through Start",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");std::string checkpoint,completed;
         const auto finish=[&](GSE_CALLABLE,ConventionalUnitFixture& active)->std::string {

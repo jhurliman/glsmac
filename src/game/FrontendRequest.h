@@ -182,6 +182,7 @@ public:
             bool has_facing;
             uint8_t facing;
 			backend::unit::movement_t full_movement;
+            const std::string* display_name; // owned event snapshot; null only on legacy/manual requests
 		} unit_spawn;
 		struct {
 			size_t unit_id;
@@ -209,6 +210,7 @@ public:
 				float y;
 				float z;
 			} render_coords; // TODO: store render coords of tiles on frontend
+            const std::string* display_name; // owned event snapshot; null only on legacy/manual requests
 		} unit_update;
 		struct {
 			size_t unit_id;

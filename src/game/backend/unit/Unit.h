@@ -78,6 +78,7 @@ public:
     char VisibleOrderGlyph(size_t viewer_slot) const;
 
 	const std::string& GetMoraleString() const;
+    std::string GetDisplayName() const;
 
 	void SetTile( GSE_CALLABLE, map::tile::Tile* tile );
 

@@ -130,6 +130,8 @@ Unit::Presentation Unit::GetPresentation( int32_t native_viewer ) const {
 		static_cast< float >( stats.hit_points ) / stats.maximum_hit_points, static_cast< float >( stats.full_allowance ) / stats.quantum, stats.maximum_hit_points };
 }
 
+std::string Unit::GetDisplayName() const {return m_um->GetDisplayName(*this);}
+
 const movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.025f;
 const movement_t Unit::MINIMUM_HEALTH_TO_KEEP = 0.025f;
 
@@ -374,6 +376,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 	WRAPIMPL_GET_CUSTOM( "is_land", Bool, m_def->GetMovementType() == MT_LAND )
 	WRAPIMPL_GET_CUSTOM( "is_water", Bool, m_def->GetMovementType() == MT_WATER )
 	WRAPIMPL_GET_CUSTOM( "is_air", Bool, m_def->GetMovementType() == MT_AIR )
+    { "get_name", NATIVE_CALL(this) {N_EXPECT_ARGS(0);return VALUE(gse::value::String,,GetDisplayName());})},
 	WRAPIMPL_LINK( "get_def", m_def )
 	{ "get_owner", NATIVE_CALL(this) {N_EXPECT_ARGS(0);return IsNative() ? static_cast<gse::Value*>(VALUE(gse::value::Undefined)) : m_owner->Wrap(GSE_CALL);} ) },
 	WRAPIMPL_LINK( "get_tile", m_tile )

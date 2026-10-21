@@ -132,7 +132,7 @@ sprite::Sprite* Unit::GetBadgeHealthbarSprite() const {
 }
 
 const std::string Unit::GetNameString() const {
-	return m_def->GetNameString();
+	return m_display_name ? *m_display_name:m_def->GetNameString();
 }
 
 const std::string Unit::GetStatsString() const {

@@ -1648,3 +1648,26 @@ Unit argument. Manual closing rebuilds production choices without changing the
 queue. See the [live integration scope](behavior/workshop-normal-open-integration.md)
 and [source caller audit](behavior/design-workshop-open-callers.md). Global U,
 New/Redesign actions and complete Workshop/manufacturing acceptance remain open.
+
+## 2026-10-21 retained Unit names
+
+Unit descriptions now resolve the current retained raw design name, independently
+of the shared presentation Def. Authenticated Workshop Apply stages name-refresh
+notifications before committing design changes; retirement and surviving updates
+share one prepared publication. Both the GSE selected card and legacy frontend
+consume the resolved name, as do Forces Supported and combat messages. Frontend
+requests own their text snapshots across deferred delivery and copies.
+
+The unmodified-data SDL session selects Morgan's Synthmetal Garrison, holds its
+Scout, advances five ordinary turns, handles the intervening research choice,
+and produces the Garrison at Mission Year2106. The selected card shows its
+retained name, 1-2-1 tuple and Morgan Industries home. This session uses mouse
+and keyboard input only, with no injected minerals or completion event. It
+does not establish original silhouette parity, disk-save or remote acceptance.
+
+A live fixture distinguishes two named designs sharing one Def, applies a saved
+rename without changing the other Unit, verifies the actual bottom-bar callbacks
+and owned spawn/update payloads, then restores through Start. Legacy saves with
+no retained name authority keep their existing presentation names. Generalized
+map/card model composition remains the next rendering integration; this name
+change does not claim custom silhouettes or complete Workshop acceptance.

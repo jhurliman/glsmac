@@ -3,6 +3,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/unit/Def.h"
+#include "game/backend/unit/SmacProductionDesigns.h"
 #include <algorithm>
 #include "gc/Space.h"
 #include "gse/value/Array.h"
@@ -75,7 +76,9 @@ gse::Value* Base::CopySmacQueueEditor(GSE_CALLABLE) const {
     const auto& rules=m_game->GetState()->m_settings.global;
     for(size_t i=0;i<m_production->queue->size();++i) {
         const auto& item=m_production->queue->at(i);const auto id=*item.smac_source_id;
-        const auto label=item.kind==ProductionItemKind::Unit ? m_game->ResolveSmacProductionPresentation(m_owner,id)->m_name
+        const auto label=item.kind==ProductionItemKind::Unit ? (m_game->m_simulation && m_game->m_simulation->value.designs.native_registry
+            ? *unit::ReadSmacProductionDesign(m_game->m_simulation->value.designs.native_registry->at(id),id).name
+            : m_game->ResolveSmacProductionPresentation(m_owner,id)->m_name)
             : rules.GetSmacProductionRules()->facilities.at(id-1).name;
         items.push_back(VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
             {"existing",VALUE(gse::value::Int,,i)}, {"name",VALUE(gse::value::String,,label)}})));

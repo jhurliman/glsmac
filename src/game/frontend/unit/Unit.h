@@ -86,6 +86,7 @@ public:
 	sprite::Sprite* GetBadgeHealthbarSprite() const;
 
 	const std::string GetNameString() const;
+    void SetDisplayName(std::optional<std::string> name) {m_display_name=std::move(name);}
 	const std::string GetStatsString() const;
 	const std::string& GetMoraleString() const;
 	const std::string GetMovesString() const;
@@ -181,6 +182,7 @@ private:
 	backend::unit::movement_t m_movement = 0.0f;
 	backend::unit::morale_t m_morale = 0;
 	std::string m_morale_string = "";
+    std::optional<std::string> m_display_name;
 	backend::unit::health_t m_health = 0;
     int32_t m_maximum_hit_points = 0;
 	bool m_held = false;

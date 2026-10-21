@@ -124,7 +124,7 @@ void UnitManager::ApplyConventionalAttack(GSE_CALLABLE,PreparedConventionalAttac
 	if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating()) {throw std::runtime_error("Scout attack requires its owning accumulation");}
 	auto removal=PrepareConventionalRemoval(GSE_CALL,{prepared.loser->m_id},nullptr,prepared.survivor);
 	if(prepared.defeated_base) {removal.DiscoverDefendedBase(prepared.defeated_base,prepared.survivor_state.owner_simulation_id);}
-	const auto message=prepared.survivor->m_def->m_name+" defeated "+prepared.loser->m_def->m_name+".";
+	const auto message=prepared.survivor->GetDisplayName()+" defeated "+prepared.loser->GetDisplayName()+".";
     FrontendRequest playback(FrontendRequest::FR_SCOUT_BATTLE);
     NEW(playback.data.scout_battle.plan,scout_presentation::Plan,scout_presentation::Prepare(prepared.result));
     auto frontend=*m_game->m_pending_frontend_requests;frontend.push_back(playback);

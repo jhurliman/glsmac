@@ -111,7 +111,7 @@ return {
 			case 'Unit': {
 				const def = object.get_def();
 
-				f_line(def.name, 16, 'center');
+				f_line(object.get_name(), 16, 'center');
 
 				const tuple = this.p.get_stats_str(object);
 				// Retain the legacy artillery offense decoration without nesting it.

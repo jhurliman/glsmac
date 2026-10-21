@@ -427,7 +427,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
                 :unit::OpenSmacWorkshopRename(m_simulation->value.designs,draft,catalog,owner);
             default_name=result.default_name;result_name=result.draft.name;
             display_name=unit::DisplaySmacWorkshopName(*result.state.native_registry,result.draft,catalog,owner);
-            if(apply) {static_assert(std::is_nothrow_swappable_v<unit::SmacStartupDesignState>);std::swap(m_simulation->value.designs,result.state);}
+            if(apply) {static_assert(std::is_nothrow_swappable_v<unit::SmacStartupDesignState>);std::swap(m_simulation->value.designs,result.state); }
         }catch(const std::invalid_argument&) {failed=true;}catch(const std::runtime_error&) {failed=true;}}
         if(apply) {GetState()->TriggerObject(this,"smac_workshop_rename",ARGS_F(this,base,request,answer,stale,failed,default_name,display_name,result_name) {
             {"base",base->Wrap(GSE_CALL)}, {"request_id",VALUE(gse::value::Int,,request)}, {"answer",VALUE(gse::value::Bool,,answer)},
@@ -598,12 +598,27 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
             }
             if(apply && !confirmation && ((!failed && !declined) || reselected)) {
                 static_assert(std::is_nothrow_swappable_v<unit::SmacStartupDesignState> && std::is_nothrow_swappable_v<std::optional<base::ProductionState>>);
+                auto* manager=GetUM();auto updates=manager->m_unit_updates;
+                if(m_simulation->value.designs.native_registry && next.native_registry) {
+                    for(const auto& entry:manager->GetUnits()) {
+                        const auto* actor=entry.second;if(!actor->IsConventional()) {continue;}
+                        const auto id=actor->Conventional().design_id;
+                        const auto& before=m_simulation->value.designs.native_registry->at(id);const auto& after=next.native_registry->at(id);
+                        if(std::equal(before.begin(),before.begin()+32,after.begin())) {continue;}
+                        if(removal && !failed && !declined) {removal->RefreshSurvivor(actor);}
+                        else {
+                            auto& update=updates.try_emplace(actor->m_id,unit::UnitManager::unit_update_t{unit::UnitManager::UUO_NONE,actor}).first->second;
+                            update.ops=static_cast<unit::UnitManager::unit_update_op_t>(update.ops|unit::UnitManager::UUO_REFRESH);
+                        }
+                    }
+                }
                 if(!failed && !declined) {
                     if(removal) {removal->Commit();retired=true;}
                     for(auto& change:queues) {change.first->m_production.swap(change.second);}
                     if(base_updates) {GetBM()->m_base_updates.swap(*base_updates);}
                 }
                 std::swap(m_simulation->value.designs,next);
+                if(!retired) {manager->m_unit_updates.swap(updates);}
             }
         }
         if(apply) {

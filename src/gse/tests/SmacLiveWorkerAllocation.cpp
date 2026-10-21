@@ -1908,10 +1908,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             base->SetProductionState(GSE_CALL,ProductionState{custom,7,custom,7,std::vector<ProductionItem>{custom,scout}});
             const auto unprototyped=fixture.Snapshot();
             auto* unsupported=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_production_presentation",{VALUE(value::Int,,4)}));
-            GT_ASSERT(unsupported->value.count("cost")==0 && unsupported->value.count("forecast")==0
+            GT_ASSERT(unsupported->value.count("cost")==1 && unsupported->value.count("forecast")==1
+                && static_cast<value::Int*>(unsupported->Get("cost"))->value==game->GetSmacProductionCost(base->m_owner,custom,base)
                 && static_cast<value::Array*>(unsupported->Get("queue"))->value.size()==2
                 && !static_cast<value::String*>(unsupported->Get("name"))->value.empty()
-                && fixture.Snapshot()==unprototyped && fixture.GameplayRandom()==random,"unavailable custom cost hid a retained target/queue or changed authority");GT_OK();
+                && fixture.Snapshot()==unprototyped && fixture.GameplayRandom()==random,"Prototype quote hid a retained target/queue or changed authority");GT_OK();
         });
     });
 

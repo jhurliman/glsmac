@@ -103,7 +103,7 @@ void AddSmacProductionRulesTests( task::gsetests::GSETests* task ) {
 		GT_OK();
 	} );
 	task->AddTest( "SMAC production profile codec rejects malformed framing and preserves all metadata", GT() {
-		const auto expected = fixture::Production();
+		const auto expected = fixture::LegacyProduction();
 		GT_ASSERT( expected.Serialize().ToString() == Wire( expected ).ToString(), "production frame schema changed" );
 		GT_ASSERT( SmacProductionRules::Deserialize( expected.Serialize() ) == expected, "profile roundtrip lost signed/text fields" );
 		for ( const int32_t endpoint : { INT32_MIN, INT32_MAX } ) {
@@ -143,8 +143,8 @@ void AddSmacProductionRulesTests( task::gsetests::GSETests* task ) {
         auto expected=fixture::Production();expected.prototype_percentages=std::array<int32_t,3>{{20,70,110}};
         GT_ASSERT(SmacRulesTXTLoader::ParseProductionRules(Source(source,facilities))==expected,"Prototype domain order changed");
         GT_ASSERT(SmacProductionRules::Deserialize(expected.Serialize())==expected,"V2 lost domain percentages");
-        auto legacy=SmacProductionRules::Deserialize(Wire(fixture::Production()));
-        GT_ASSERT(!legacy.prototype_percentages && legacy.Serialize().ToString()==Wire(fixture::Production()).ToString(),"V1 gained invented percentages or changed bytes");
+        auto legacy=SmacProductionRules::Deserialize(Wire(fixture::LegacyProduction()));
+        GT_ASSERT(!legacy.prototype_percentages && legacy.Serialize().ToString()==Wire(fixture::LegacyProduction()).ToString(),"V1 gained invented percentages or changed bytes");
         const auto bytes=expected.Serialize().ToString();const auto legacy_size=legacy.Serialize().ToString().size();
         for(size_t n=legacy_size;n<bytes.size();++n) {GT_ASSERT(Rejects([&]{SmacProductionRules::Deserialize(types::Buffer(bytes.substr(0,n)));}),"Truncated V2 accepted");}
         for(int32_t endpoint:{INT32_MIN,INT32_MAX}) {

@@ -47,7 +47,7 @@ inline std::string TechnologySource() {
 	return source + "#END\n";
 }
 
-inline game::backend::settings::SmacProductionRules Production() {
+inline game::backend::settings::SmacProductionRules LegacyProduction() {
 	game::backend::settings::SmacProductionRules result{ 123, -50, INT32_MAX, INT32_MIN, {} };
 	for ( size_t i = 0 ; i < result.facilities.size() ; ++i ) {
 		result.facilities[ i ] = { static_cast< int32_t >( i + 1 ), i < 2 ? "Repeated display name" : "Facility " + std::to_string( i + 1 ),
@@ -55,6 +55,12 @@ inline game::backend::settings::SmacProductionRules Production() {
 			i == 0 || i == 37 ? "None" : i == 70 ? "Disable" : i == 2 ? "Tech2" : "UnknownTech" + std::to_string( i ) };
 	}
 	return result;
+}
+
+// Fresh source supplies explicit zero prototype percentages in this fixture.
+// Keep LegacyProduction separate for exact V1 codec compatibility tests.
+inline game::backend::settings::SmacProductionRules Production() {
+    auto result=LegacyProduction();result.prototype_percentages=std::array<int32_t,3>{{0,0,0}};return result;
 }
 
 inline game::backend::settings::SmacMovementRules Movement() { return game::backend::settings::SmacMovementRules( -1 ); }

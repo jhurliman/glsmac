@@ -124,6 +124,12 @@ Surface::Surface( DOM_ARGS_T )
 		N_EXPECT_ARGS( 0 );StopMovie();return VALUE(gse::value::Undefined);
 	} ) );
 
+    Method(GSE_CALL,"smacworkshopabilitytext",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(1);N_GETVALUE(technology,0,String);
+        if(technology.size()>128 || technology.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid ability guard technology text");}
+        return WorkshopAbilityText(GSE_CALL,technology);
+    }));
+
     Method(GSE_CALL,"smacworkshopcomponents",NATIVE_CALL(this) {
         N_EXPECT_ARGS_MIN_MAX(1,2);N_GETVALUE(armor,0,Int);
         bool armor_only=false;if(arguments.size()==2) {N_GETVALUE(only,1,Bool);armor_only=only;}
@@ -679,6 +685,45 @@ types::texture::Texture* Surface::GetOwnedTexturePtr() {
 }
 
 namespace ui::dom {
+
+gse::Value* Surface::WorkshopAbilityText(GSE_CALLABLE,const std::string& technology) {
+    if(!m_workshop_ability_text) {
+        const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;
+            util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));return std::string(bytes.begin(),bytes.end());};
+        const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
+        const auto script=read("script.txt");if(script.size()>2*1024*1024 || labels.size()<711) {throw std::invalid_argument("Incomplete Workshop ability text source");}
+        const auto section=[&](const std::string& tag) {
+            std::array<std::string,2> result;bool inside=false,found=false;
+            for(const auto& raw:util::String::Split(script,'\n')) {
+                const auto line=util::String::TrimCopy(raw);if(line.empty() || line.front()==';') {continue;}
+                if(line.front()=='#' && line.find_first_of(" \t")==std::string::npos) {
+                    inside=line=="#"+tag;if(inside) {if(found) {throw std::invalid_argument("Repeated Workshop SCRIPT section");}found=true;}
+                } else if(inside) {
+                    if(line.compare(0,9,"#caption ")==0) {result[0]=line.substr(9);}
+                    else if(line.front()!='#') {if(!result[1].empty()) {result[1]+='\n';}result[1]+=line;}
+                }
+            }
+            if(!found || result[0].empty() || result[0].size()>256 || result[1].size()>4096) {throw std::invalid_argument("Invalid Workshop SCRIPT template");}
+            return result;
+        };
+        const auto chooser=section("UNITSPECIAL"),second=section("TWOSPECIAL"),missile=section("MISSILESPECIAL");
+        std::array<std::string,12> text{chooser[0],labels[137],labels[102],labels[103],labels[89],labels[125],labels[86],labels[710],second[0],second[1],missile[0],missile[1]};
+        for(const auto& item:text) {if(item.empty() || item.find('\0')!=std::string::npos) {throw std::invalid_argument("Missing Workshop ability label");}}
+        m_workshop_ability_text=std::move(text);
+    }
+    const auto& text=*m_workshop_ability_text;auto second=text[9];size_t at=0;
+    while((at=second.find("$TECH0",at))!=std::string::npos) {second.replace(at,6,technology);at+=technology.size();}
+    auto* picker=static_cast<gse::value::Object*>(WorkshopPickerText(GSE_CALL));
+    return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+        {"title",VALUE(gse::value::String,,text[0])}, {"none",VALUE(gse::value::String,,text[1])},
+        {"ok",VALUE(gse::value::String,,text[2])}, {"cancel",VALUE(gse::value::String,,text[3])},
+        {"cost",VALUE(gse::value::String,,text[4])}, {"attack",VALUE(gse::value::String,,text[5])},
+        {"defense",VALUE(gse::value::String,,text[6])}, {"speed",VALUE(gse::value::String,,text[7])},
+        {"second_title",VALUE(gse::value::String,,text[8])}, {"second_body",VALUE(gse::value::String,,second)},
+        {"missile_title",VALUE(gse::value::String,,text[10])}, {"missile_body",VALUE(gse::value::String,,text[11])},
+        {"domains",picker->Get("domains")}
+    });
+}
 
 gse::Value* Surface::WorkshopPickerText(GSE_CALLABLE) {
     if(!m_workshop_picker_text) {

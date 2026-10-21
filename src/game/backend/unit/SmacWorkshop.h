@@ -66,6 +66,17 @@ struct SmacWorkshopEditContext {
 SmacWorkshopEditContext QuerySmacWorkshopEditContext(const SmacPredefinedUnitCatalog& catalog,
     const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner,
     bool automatic_suggestions);
+struct SmacWorkshopAbilityMenu {
+    enum class Guard { None, SecondTechnology, Missile } guard;
+    std::vector<uint32_t> choices; // Stored modal values, beginning with24 (None).
+};
+SmacWorkshopAbilityMenu QuerySmacWorkshopAbilities(const SmacWorkshopEditor& editor,uint32_t slot,
+    const SmacWorkshopEditContext& context,const SmacPredefinedUnitCatalog& catalog);
+struct SmacWorkshopAbilityCost {int64_t quantity;int32_t formula,domain;};
+// formula=-1..-7 selects localized arithmetic tokens,0 has no formula;
+// domain=-1 means no domain suffix. No mineral-factor or strength substitution.
+std::optional<SmacWorkshopAbilityCost> QuerySmacWorkshopAbilityCost(int32_t code,uint32_t flags,
+    int32_t triad,uint32_t weapon_cost,uint32_t armor_cost,uint32_t chassis_speed);
 // Accepted mapped-picker caller bodies, including same-value modal returns.
 // Does not allocate, save, recenter the browse list or alter the selected record.
 SmacWorkshopEditor ChangeSmacWorkshopComponent(const SmacWorkshopEditor& before,SmacWorkshopComponent kind,

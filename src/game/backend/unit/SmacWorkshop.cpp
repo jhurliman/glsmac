@@ -157,6 +157,31 @@ std::array<int32_t,2> WorkshopSlots(uint32_t mask) {
     return result;
 }
 }
+SmacWorkshopAbilityMenu QuerySmacWorkshopAbilities(const SmacWorkshopEditor& editor,uint32_t slot,
+    const SmacWorkshopEditContext& context,const SmacPredefinedUnitCatalog& catalog) {
+    RequireEditor(editor,catalog);if(slot>=2) {throw std::invalid_argument("Invalid Workshop ability slot");}
+    using Guard=SmacWorkshopAbilityMenu::Guard;
+    if(slot==1 && !context.second_ability) {return {Guard::SecondTechnology,{}};}
+    if(catalog.chassis.chassis.at(editor.draft.chassis).missile) {return {Guard::Missile,{}};}
+    SmacWorkshopAbilityMenu result{Guard::None,{24}};
+    for(uint32_t bit=0;bit<24;++bit) {
+        if(context.available_abilities[bit] && editor.ability_slots[1-slot]!=int32_t(bit)
+            && SmacWorkshopAbilityCompatible(bit,editor.draft,catalog)) {result.choices.push_back(bit);}
+    }return result;
+}
+std::optional<SmacWorkshopAbilityCost> QuerySmacWorkshopAbilityCost(int32_t code,uint32_t flags,
+    int32_t triad,uint32_t weapon_cost,uint32_t armor_cost,uint32_t chassis_speed) {
+    if(triad<0 || triad>2 || weapon_cost>255 || armor_cost>255 || chassis_speed>255) {throw std::invalid_argument("Ability cost requires raw component bytes");}
+    const int64_t w=weapon_cost,a=armor_cost,s=chassis_speed;
+    if(code< -7) {return std::nullopt;}
+    SmacWorkshopAbilityCost result{code,code<0?code:0,-1};
+    switch(code) {
+        case -1:if(!a) {throw std::domain_error("Ability ratio has zero armor cost");}result.quantity=std::clamp<int64_t>(w/a,0,2);break;
+        case -2:result.quantity=w-1;break;case -3:result.quantity=a-1;break;case -4:result.quantity=s-1;break;
+        case -5:result.quantity=w+a-2;break;case -6:result.quantity=w+s-2;break;case -7:result.quantity=a+s-2;break;
+        default:if(flags&0x400) {result.domain=triad;if(triad==0) {++result.quantity;}}break;
+    }return result;
+}
 SmacWorkshopEditor ChangeSmacWorkshopComponent(const SmacWorkshopEditor& before,SmacWorkshopComponent kind,
     uint32_t accepted,const SmacWorkshopEditContext& context,const SmacPredefinedUnitCatalog& catalog) {
     RequireEditor(before,catalog);auto result=before;auto& draft=result.draft;

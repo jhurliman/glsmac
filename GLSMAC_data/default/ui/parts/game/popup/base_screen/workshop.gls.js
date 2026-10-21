@@ -3,6 +3,7 @@ return {
         this.p = p; this.active = false; this.pending = false; this.next_request = 0;
         this.automatic_suggestions = true; // Original fresh preference-store default.
         this.ability_slots = [(0 - 1), (0 - 1)];
+        this.ability_dialog = #include('./workshop_abilities'); this.ability_dialog.init(p);
         this.window = p.ui.root.window({zindex: 0.9, align: 'top left', left: 216, top: 168, width: 623, height: 387, blocker: 'rgba(0, 0, 0, 180)'});
         this.window.surface({left: 0, top: 0, width: 623, height: 368, background: 'deswin.pcx:smacsoftware()'});
         this.components = this.window.surface({left: 0, top: 0, width: 623, height: 368});
@@ -47,6 +48,13 @@ return {
         this.chassis_button.on('click', () => { this.open_component_picker(0); return true; });
         this.reactor_button = this.window.button({left: 462, top: 7, width: 99, height: 85, background: 'transparent'});
         this.reactor_button.on('click', () => { this.open_component_picker(3); return true; });
+        this.ability_buttons = [];
+        const workshop = this;
+        for (slot of [0, 1]) {
+            const index = slot;
+            const button = this.window.button({left: 462, top: 101 + 94 * slot, width: 99, height: 85, background: 'transparent'});
+            button.on('click', () => { this.ability_dialog.open(workshop, index); return true; }); this.ability_buttons :+ button;
+        }
         this.window.button({class: 'game-popup-button', left: 27, top: 321, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Apply'}).on('click', () => { this.submit(false); return true; });
         this.window.button({class: 'game-popup-button', left: 27, top: 347, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Done'}).on('click', () => { this.submit(true); return true; });
         this.window.button({class: 'game-popup-button', left: 459, top: 347, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Cancel'}).on('click', () => { this.hide_view(); return true; });
@@ -295,5 +303,5 @@ return {
         if (choice >= 0) { fields = fields + {overwrite: choice}; }
         this.p.game.event('commit_smac_workshop', fields);
     },
-    hide_view: () => { this.active = false; this.pending = false; this.base = null; this.confirming = false; this.overwrite_window.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); },
+    hide_view: () => { this.ability_dialog.hide(); this.active = false; this.pending = false; this.base = null; this.confirming = false; this.overwrite_window.hide(); this.picker.hide(); this.window.hide(); this.strip.hide(); },
 };

@@ -9,6 +9,7 @@
 #include "fixtures/WorkshopDomain.h"
 #include "fixtures/WorkshopPicker.h"
 #include "fixtures/WorkshopStats.h"
+#include "fixtures/WorkshopAbilities.h"
 #include "fixtures/WorkshopSavedCommits.h"
 #include "fixtures/WorkshopAllocation.h"
 #include "fixtures/SmacIntrinsicOverlays.h"
@@ -27,6 +28,33 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop ability chooser matches three native lists and nine cost fragments",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);if(!input) {throw std::runtime_error("Missing owned ability rules");}
+        const std::string source{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
+        const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;
+        for(const auto& row:workshop_ability_fixture::Rows) {
+            auto owner=Owner();owner.owned.fill(row.alltech);const auto context=unit::QuerySmacWorkshopEditContext(catalog,tech,owner,false);
+            const unit::SmacWorkshopEditor editor{{64,0,1,2,262656,1,"Retained Draft"},row.slots};
+            const auto result=unit::QuerySmacWorkshopAbilities(editor,row.slot,context,catalog);
+            GT_ASSERT(result.guard==unit::SmacWorkshopAbilityMenu::Guard::None && result.choices==row.values,"Native ability row order/admission differs");
+        }
+        for(const auto& row:workshop_ability_fixture::Costs) {
+            const auto cost=unit::QuerySmacWorkshopAbilityCost(row.code,0x400,0,2,3,1);GT_ASSERT(cost.has_value(),"Native cost fragment omitted");
+            const std::array<const char*,7> formulas{"Attack/Defense","Attack-1","Defense-1","Speed-1","Attack+Defense-2","Attack+Speed-2","Defense+Speed-2"};
+            auto text="Cost: "+std::to_string(cost->quantity);
+            if(cost->formula<0) {text+=" ("+std::string(formulas.at(size_t(-cost->formula-1)))+")";}
+            else if(cost->domain>=0) {text+=" (Land)";}
+            GT_ASSERT(text==row.text,"Native ability cost differs: "+text);
+        }
+        auto owner=Owner();owner.owned.fill(false);auto context=unit::QuerySmacWorkshopEditContext(catalog,tech,owner,false);
+        const unit::SmacWorkshopEditor missile{{64,8,20,0,0,1,"Missile"},{-1,-1}};
+        GT_ASSERT(unit::QuerySmacWorkshopAbilities(missile,1,context,catalog).guard==unit::SmacWorkshopAbilityMenu::Guard::SecondTechnology
+            && unit::QuerySmacWorkshopAbilities(missile,0,context,catalog).guard==unit::SmacWorkshopAbilityMenu::Guard::Missile,"Ability entry guard precedence differs");
+        GT_ASSERT(!unit::QuerySmacWorkshopAbilityCost(-8,0,0,2,3,1)
+            && Rejects([&]{unit::QuerySmacWorkshopAbilityCost(-1,0,0,2,0,1);}),"Invalid ratio/unknown annotation was normalized");GT_OK();
+    });
     task->AddTest("SMAC Workshop stat formatter matches24 native strings and four main captions",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);if(!input) {throw std::runtime_error("Missing owned stat rules");}

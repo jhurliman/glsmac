@@ -1490,6 +1490,10 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 if(!line.empty() && line.front()=='#') {section=line;row=0;}
                 else if(section=="#REACTORS") {
                     if(row==1) {line.replace(line.rfind(',')+1,std::string::npos,"Tech1");}++row;
+                } else if(section=="#ABILITIES") {
+                    if(row==9 || row==18) {const auto token=line.find(',',line.find(',')+1)+1;
+                        line.replace(token,line.find(',',token)-token,"Tech1");
+                        line.replace(line.find("00000000000"),11,"00000001111");}++row;
                 }result+=line+'\n';
             }return result;
         };
@@ -1504,6 +1508,18 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             value::function_arguments_t args{VALUE(value::Int,,2),VALUE(value::Int,,0),VALUE(value::Int,,0),VALUE(value::Int,,1),VALUE(value::Int,,1),
                 VALUE(value::Int,,0),VALUE(value::String,,"Retained Draft"),VALUE(value::Int,,-1),VALUE(value::Int,,-1),VALUE(value::Int,,3),VALUE(value::Int,,2),VALUE(value::Bool,,false)};
             const auto before=fixture.Snapshot();auto* response=static_cast<value::Object*>(edit->Run(GSE_CALL,args));
+            auto* ability_menu=static_cast<value::Callable*>(object->Get("get_smac_workshop_abilities"));
+            value::function_arguments_t menu_args(args.begin(),args.begin()+10);menu_args[9]=VALUE(value::Int,,0);
+            auto* menu=static_cast<value::Object*>(ability_menu->Run(GSE_CALL,menu_args));auto* choices=static_cast<value::Array*>(menu->Get("rows"));
+            GT_ASSERT(choices->value.size()==3 && static_cast<value::String*>(menu->Get("guard"))->value.empty()
+                && static_cast<value::Int*>(static_cast<value::Object*>(choices->value[0])->Get("id"))->value==24
+                && static_cast<value::Int*>(static_cast<value::Object*>(choices->value[1])->Get("id"))->value==9
+                && static_cast<value::Int*>(static_cast<value::Object*>(choices->value[2])->Get("id"))->value==18
+                && fixture.Snapshot()==before,"Wrapped ability menu lost owner admission, None-first order or changed world");
+            menu_args[8]=VALUE(value::Int,,9);menu=static_cast<value::Object*>(ability_menu->Run(GSE_CALL,menu_args));
+            GT_ASSERT(static_cast<value::Array*>(menu->Get("rows"))->value.size()==2 && fixture.Snapshot()==before,"Ability menu admitted the other slot's duplicate");
+            auto foreign_menu=menu_args;foreign_menu[0]=VALUE(value::Int,,128);
+            GT_ASSERT(Rejects([&]{ability_menu->Run(GSE_CALL,foreign_menu);}) && fixture.Snapshot()==before,"Foreign ability menu escaped authority fence");
             auto* draft=static_cast<value::Object*>(response->Get("draft"));
             GT_ASSERT(static_cast<value::Int*>(draft->Get("reactor"))->value==2 && static_cast<value::String*>(draft->Get("name"))->value=="Retained Draft"
                 && static_cast<value::Array*>(response->Get("ability_slots"))->value.size()==2 && fixture.Snapshot()==before,"Read-only edit lost reactor/name/slots or changed world state");

@@ -41,6 +41,7 @@ namespace base { class Base; class BaseManager; class SmacNativeSpawnPlan; }
 
 namespace unit {
 
+struct SmacStartupDesignState;
 class MoraleSet;
 class Def;
 class Unit;
@@ -119,6 +120,7 @@ public:
 		PreparedConventionalUnit( PreparedConventionalUnit&& ) noexcept;
 		PreparedConventionalUnit& operator=( PreparedConventionalUnit&& ) noexcept;
 		const Unit& Candidate() const; // prepared immutable record, before Commit only
+        const SmacStartupDesignState* PrototypeDesigns() const; // detached history for later Base consequences
 		Unit* Commit() noexcept;
 		void Notify( GSE_CALLABLE ); // after all caller-owned authority is committed
 	private:

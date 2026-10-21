@@ -324,16 +324,12 @@ int32_t ResolveSmacWorkshopPickerResult(int32_t old_choice,int32_t mapped_hover,
         return mapped_hover+1;
     }return mapped_hover;
 }
-void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
+namespace {
+bool PrototypeComponentsKnown(const SmacOriginalDesignPool& pool,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
     const faction::SmacFactionTechnologyState& owner) {
-    RequireOwner(owner);RequireComponents(draft,catalog);
-    if(index<64 || index>=512 || int32_t(index/64)!=owner.admission.simulation_id) {throw std::invalid_argument("Workshop record requires its owner's custom slot");}
-    const auto& chassis=catalog.chassis.chassis.at(draft.chassis);const auto& weapon=catalog.weapons.weapons.at(draft.weapon);
-    const auto& armor=catalog.defenses.defenses.at(draft.armor);
-    const auto cost=SmacPredefinedUnitCatalog::CalculateCost(chassis,weapon,armor,draft.reactor,draft.abilities,catalog.abilities);
-    const auto carry=weapon.mode==loader::txt::WeaponMode::Transport ? SmacPredefinedUnitCatalog::CalculateCapacity(chassis,draft.reactor,draft.abilities):0;
-    const auto [plan,category]=Classify(draft,catalog);
+    const auto& chassis=catalog.chassis.chassis.at(draft.chassis);
+    const auto& weapon=catalog.weapons.weapons.at(draft.weapon);const auto& armor=catalog.defenses.defenses.at(draft.armor);
     std::array<bool,3> covered{};const size_t first=size_t(owner.admission.simulation_id)*64;
     for(size_t i=0;i<512;++i) {
         if(i>=64 && (i<first || i>=first+64)) {continue;}
@@ -347,7 +343,38 @@ void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const Sma
         covered[1]=covered[1] || row[38]==draft.armor || (armor.rating>0 && prior_armor.rating>=armor.rating);
         covered[2]=covered[2] || row[36]==draft.chassis || (prior_chassis.triad==chassis.triad && prior_chassis.speed>=chassis.speed);
     }
-    const uint16_t flags=std::all_of(covered.begin(),covered.end(),[](bool known){return known;}) ? (pool[first+63][48]&16 ? 0x115:0x105):1;
+    return std::all_of(covered.begin(),covered.end(),[](bool known){return known;});
+}
+}
+bool CompleteSmacWorkshopPrototype(SmacOriginalDesignPool& pool,int32_t design,
+    const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner) {
+    RequireOwner(owner);
+    const auto first=size_t(owner.admission.simulation_id)*64;
+    if(design<0 || size_t(design)<first || size_t(design)>=first+64) {
+        throw std::invalid_argument("Prototype completion requires its owned custom design");
+    }
+    auto& completed=pool.at(size_t(design));const bool initial=!(completed[48]&4);completed[48]|=4;
+    if(!initial) {return false;}
+    for(size_t id=first;id<first+64;++id) {
+        auto& row=pool[id];if(!(row[48]&1) || (row[48]&4)) {continue;}
+        const SmacWorkshopDraft draft{int32_t(id),row[36],row[37],row[38],0,row[39],""};
+        if(PrototypeComponentsKnown(pool,draft,catalog,technologies,owner)) {row[48]|=4;row[49]|=1;}
+    }
+    return true;
+}
+void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner) {
+    RequireOwner(owner);RequireComponents(draft,catalog);
+    if(index<64 || index>=512 || int32_t(index/64)!=owner.admission.simulation_id) {throw std::invalid_argument("Workshop record requires its owner's custom slot");}
+    const auto& chassis=catalog.chassis.chassis.at(draft.chassis);const auto& weapon=catalog.weapons.weapons.at(draft.weapon);
+    const auto& armor=catalog.defenses.defenses.at(draft.armor);
+    const auto cost=SmacPredefinedUnitCatalog::CalculateCost(chassis,weapon,armor,draft.reactor,draft.abilities,catalog.abilities);
+    const auto carry=weapon.mode==loader::txt::WeaponMode::Transport ? SmacPredefinedUnitCatalog::CalculateCapacity(chassis,draft.reactor,draft.abilities):0;
+    const auto [plan,category]=Classify(draft,catalog);
+    const size_t first=size_t(owner.admission.simulation_id)*64;
+    const uint16_t flags=PrototypeComponentsKnown(pool,draft,catalog,technologies,owner) ? (pool[first+63][48]&16 ? 0x115:0x105):1;
     auto record=pool[index];for(unsigned i=0;i<4;++i) {record[32+i]=uint8_t(draft.abilities>>(8*i));}
     record[36]=uint8_t(draft.chassis);record[37]=uint8_t(draft.weapon);record[38]=uint8_t(draft.armor);record[39]=draft.reactor;
     record[40]=uint8_t(carry);record[41]=uint8_t(cost);record[42]=plan;record[43]=category;

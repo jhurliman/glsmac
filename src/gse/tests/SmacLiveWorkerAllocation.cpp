@@ -1690,6 +1690,62 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(fixture.Snapshot()==before,"Obsolete changed Units, queues, currency or non-design state");GT_OK();
         });
     });
+    task->AddTest("SMAC live Workshop first prototype stages history and manufactures once with bonus morale",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");std::string checkpoint,completed;
+        const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {
+            using namespace game::backend::unit;
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* um=game->GetUM();
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}});
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,128,64));
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[1]=true;});
+            game->Event(GSE_CALL,"commit_smac_workshop",{{"base",base->Wrap(GSE_CALL)},
+                {"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"armor",VALUE(value::Int,,1)},
+                {"selected_design",VALUE(value::Int,,2)},{"name",VALUE(value::String,,"Factory Guard")},
+                {"done",VALUE(value::Bool,,false)},{"request_id",VALUE(value::Int,,1)}});
+            fixture.DrainEvents();
+            const auto custom=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,127);
+            const auto old=fixture.Snapshot();
+            {
+                auto pending=um->PrepareManufacturedConventionalUnit(GSE_CALL,*base,127,um->GetUnitDef("live-scout"),SmacMoraleMode::Mode0);
+                GT_ASSERT(pending.Candidate().Conventional().stored_morale==2 && pending.PrototypeDesigns(),"First factory lacks detached history or bonus");
+                GT_ASSERT(fixture.Snapshot()==old,"Uncommitted factory published prototype history");
+            }
+            GT_ASSERT(fixture.Snapshot()==old,"Discarded factory changed the world");
+            int factories=0;const auto resolver=[&](int32_t){++factories;return um->GetUnitDef("live-scout");};
+            const auto initial_cost=game->GetSmacProductionCost(base->m_owner,custom,base);
+            const auto facility=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Facility,2);
+            base->SetProductionState(GSE_CALL,ProductionState{custom,initial_cost,custom,17,std::vector<ProductionItem>{facility}});
+            fixture.Updates();const auto rejection=fixture.Snapshot();const auto next_id=Unit::GetNextId();
+            GT_ASSERT(Rejects([&]{base->ProcessSmacProduction(GSE_CALL,Roles(),resolver,SmacMoraleMode::Mode0);})
+                && factories==1 && fixture.Snapshot()==rejection && Unit::GetNextId()==next_id,"Late queue failure published first-prototype flags or newborn");
+            for(int pass=0;pass<2;++pass) {
+                const auto cost=game->GetSmacProductionCost(base->m_owner,custom,base);
+                base->SetProductionState(GSE_CALL,ProductionState{custom,cost-3,custom,cost-3,std::vector<ProductionItem>{}});
+                const auto result=base->ProcessSmacProduction(GSE_CALL,Roles(),resolver,SmacMoraleMode::Mode0);
+                GT_ASSERT(result.completed_unit,"Custom prototype did not manufacture");
+                const auto* newborn=um->GetUnit(*result.completed_unit);
+                GT_ASSERT(newborn->Conventional().design_id==127 && newborn->Conventional().stored_morale==(pass ? 1:2)
+                    && newborn->Conventional().home_base_id==base->m_id && newborn->GetTile()==base->GetTile(),"Manufactured prototype identity morale or home differs");
+                bool marked=false;fixture.ResourceState([&](auto& state){marked=state.designs.Find(1)->designs.at(0).prototyped
+                    && (state.designs.native_registry->at(127)[48]&4);});
+                GT_ASSERT(marked && game->GetSmacProductionCost(base->m_owner,custom,base)==2*game->GetSmacProductionMineralFactor(base->m_owner),"Completion lost prototype flags or repeat price");
+                if(!pass) {checkpoint=fixture.Snapshot();}
+            }
+            completed=fixture.Snapshot();GT_OK();
+        });GT_ASSERT(run.empty(),"First prototype production: "+run);
+        ConventionalUnitFixture restored;restored.ConfigureProduction(TanksSource,"GAIANS");
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.Restore(GSE_CALL,checkpoint,true);auto* game=restored.Game();auto* base=game->GetBM()->GetBase(701);
+            const auto custom=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,127);
+            const auto cost=game->GetSmacProductionCost(base->m_owner,custom,base);
+            base->SetProductionState(GSE_CALL,ProductionState{custom,cost-3,custom,cost-3,std::vector<ProductionItem>{}});
+            const auto made=base->ProcessSmacProduction(GSE_CALL,Roles(),[&](int32_t){return game->GetUM()->GetUnitDef("live-scout");},unit::SmacMoraleMode::Mode0);
+            GT_ASSERT(made.completed_unit && game->GetUM()->GetUnit(*made.completed_unit)->Conventional().stored_morale==1
+                && ResearchSnapshot(game,restored.Snapshot())==ResearchSnapshot(game,completed),"Prototype checkpoint replay differs from uninterrupted manufacture");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC live Workshop commits through owned Base commands without altering production",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction([](const std::string& filename) {
             auto source=TanksSource(filename);if(filename!="alpha.txt") {return source;}

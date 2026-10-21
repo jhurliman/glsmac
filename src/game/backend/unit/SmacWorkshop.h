@@ -17,6 +17,12 @@ struct SmacPrototypePrice {int32_t rows;bool surcharge_present;};
 SmacPrototypePrice SmacDesignProductionRows(const SmacCustomDesign& design,
     const SmacPredefinedUnitCatalog& catalog,const SmacPrototypePriceContext& context);
 
+// Original first-completion flag and human component-history propagation.
+// Caller supplies detached storage and publishes with its manufacturing transaction.
+bool CompleteSmacWorkshopPrototype(SmacOriginalDesignPool& pool,int32_t design,
+    const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner);
+
 enum class SmacWorkshopComponent { Chassis, Weapon, Armor, Reactor };
 struct SmacWorkshopChoice {
     uint32_t component_id; // source identity, not the visible card ordinal

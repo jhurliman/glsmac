@@ -52,10 +52,10 @@ required before the local conquest milestone can be claimed.
 
 ## Current acceptance dashboard — 2026-10-21
 
-Accepted integration: **`6205fb50307c224c9c96d950663dbceaa5b96c5c`**, through
-[#523](https://github.com/jhurliman/glsmac/pull/523), on `codex/faithful-1.0`.
+Accepted integration: **`5759b4b7cd29919be56cbce5a1f62171936b6828`**, through
+[#530](https://github.com/jhurliman/glsmac/pull/530), on `codex/faithful-1.0`.
 Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `0e5fb514465604cb1e90be4897d6826db951a285`. This is an integration
+at head `5432f1aaeead012b0cb038b00d8310eca7e51e36`. This is an integration
 checkpoint, not a release candidate or a statement that all platforms were rerun.
 
 **Current focus: the complete Design Workshop (M3/M6). M0–M7 remain open.**
@@ -78,16 +78,16 @@ Evidence classes are deliberately separate:
   setup, UI/gameplay, save/reload and result. The Workshop receipt and M2
   local/network match have **not run to completion** at this checkpoint.
 
-The all-stock shielding path is now integrated in #503:27 selected native
-groups and six UI scripts pass;30 relevant groups pass focused sanitizers and
-eight production files/consumers pass correctness analysis. The live fixture
-uses owned stock defense metadata with explicitly mapped synthetic prerequisites;
-it verifies queued saves/quotes in occupied banks and whole-world restore.
-The rendered card harness separately overrides availability in copied UI data.
-Neither receipt is a complete interactive Workshop or original screen diff.
-The PSI label follow-up [#505](https://github.com/jhurliman/glsmac/pull/505) remains
-a candidate at this accepted checkpoint; do not count its pending state as
-integrated acceptance.
+Workshop selection, saved-design browsing, component/ability pickers, Rename,
+Obsolete, Retire, Upgrade, redesign/intrinsic confirmations and the live preview
+controller now have implementation receipts in the [Workshop journal](design-workshop.md).
+The ordinary action buttons match all 14,700 compared native pixels. Live
+rotation, stop and reopen pass an actual instrumented SDL session; five declared
+model frames and the bounded cached-sprite output match complete native buffers.
+These receipts do not establish whole-screen parity or the complete manufactured
+Unit path. In particular, `PrepareManufacturedConventionalUnit` still rejects
+first custom prototype completion at this accepted checkpoint. That live caller
+is the next gameplay integration; a correct editor price is not a usable Unit.
 
 | Acceptance | Status at the accepted head | Evidence and remaining exit requirement |
 | --- | --- | --- |
@@ -101,8 +101,8 @@ integrated acceptance.
 | M2.6: second Base and Pod consumption | Partial | Founding and [colony-choice continuation](smac-colony-choice-continuation.md) have live fixtures. Verify population/ownership/support together in the complete scenario. |
 | M2.7: combat, capture, elimination and valid conquest | Partial | [Hostile movement](smac-live-scout-combat.md), [defended capture](smac-defended-base-combat.md) and the [conquest-controller contract](behavior/conquest-controller.md) cover bounded paths. A legal opponent, full remaining-Unit/Pod disposition and actual match ending remain required. |
 | M2.8: every checkpoint reload, remote repeat and late join | Not run as the complete acceptance | Local restoration fixtures are not the numbered uninterrupted-vs-restored match or its network repeat. Retain this as an explicit M2 exit gate. |
-| WS1: open, browse/New, rename, reselect, Apply/Done/Cancel | Partial | [Custom-edit](behavior/design-workshop-custom-edit.md) and [fresh-draft](behavior/design-workshop-fresh-draft.md) reference contracts exist; queued save/retirement paths pass. The live UI still opens hardcoded Scout and lacks the complete saved-design browser and original reselect/rename behavior. |
-| WS2: all legal components, previews, costs and abilities | Partial | [Workshop journal](design-workshop.md) separates exact static compositions, card controls, general record construction and live integration. All stock shielding is connected through the live editor. Full chassis/weapon/reactor/ability pickers, cleanup order, PSI formatting (#505 candidate), animation and SMAX content remain open. |
+| WS1: open, browse/New, rename, reselect, Apply/Done/Cancel | Partial | [Custom-edit](behavior/design-workshop-custom-edit.md) and [fresh-draft](behavior/design-workshop-fresh-draft.md) reference contracts exist; queued save/retirement paths pass. Normal-open/browse and fenced reselection/Rename paths are connected; Apply/Done/Cancel and original warnings have live receipts. Complete the combined named-design gameplay receipt, preference persistence and original input/screen inventory. |
+| WS2: all legal components, previews, costs and abilities | Partial | [Workshop journal](design-workshop.md) separates exact static compositions, card controls, general record construction and live integration. Stock component/ability pickers, cleanup, PSI formatting, DATA/COST and live animation are connected. Ability-dependent model composition, advanced/SMAX cases, preferences and complete pixel/interaction comparisons remain open. |
 | WS3: new named design to usable manufactured Unit | Not run as the complete acceptance | Follow the journal's minimum receipt through Apply, close/reopen, save/reload, Base production, first prototype and a playable Unit. Price/registry tests alone do not close general production admission. |
 | WS4: original full Workshop screen and interaction diff | Not run as the complete acceptance | Exact declared CVR buffers and UI layout previews are supporting evidence only. Match the original parent/console, artwork, glyph advances, all picker/confirmation states and fixed animation phase at logical4:3 before claiming screen parity. |
 | M3: complete SMAC rule/content inventory | Partial | Many bounded rule families are implemented; Workshop WS1–WS3 and the full inventory/interaction reconciliation remain open. No full campaign receipt. |
@@ -190,23 +190,24 @@ finished single-player or satisfy the 1.0 AI gate.
 
 ## Next three tasks and their acceptance targets
 
-1. **Connect Workshop selection and reselect — WS1.** Replace the hardcoded
-   Scout opening with the measured normal-open recommendation and original
-   saved-design/New browse policy. Preserve native name/flag/ability-selector
-   semantics across card choice, Rename, Apply, Done and Cancel. Test ordinary
-   opening and reselection through live callers, including stale responses.
-2. **Complete component editing — WS2.** After the shielding slice, connect
-   chassis, weapon, reactor and both ability pickers to the common installed
-   catalog, legality/cleanup and construction path. Use the frozen picker
-   transition ordering; extend model/native controls where a composition is
-   still unverified. Include PSI/noncombat display formatting and animation
-   rather than treating a static Scout preview as a complete editor.
-3. **Close the playable and visual Workshop receipts — WS3/WS4, contributing
-   to M2.3/M1/M6.** Take a newly named edited design through close/reopen,
-   save/reload, production selection, first prototype and an actually usable
-   manufactured Unit. Then compare matched original/engine Workshop screens
-   and interactions at the same logical4:3 resolution and preview phase.
-   Targeted tests do not substitute for this normal gameplay/UI receipt.
+1. **Connect first-prototype manufacturing — WS3/M2.3.** Remove the live
+   first-completion rejection by staging original prototype/history flags with
+   the actual newborn Unit and Base transaction. Preserve the admitted debit,
+   apply the first-completion morale bonus once, and test repeated production,
+   failure/rollback, inferred component history and save/reload. Carry the
+   staged design state through later riot/abandonment/restart consequences.
+   Resolve the original allocation-limit boundary separately; its executed
+   prefix does not prove a refund or atomic rollback.
+2. **Complete Workshop rendering and interactions — WS2/WS4.** Connect the
+   source-confirmed ability models and Artillery composition ordering in main
+   and saved-strip scenes. Match selected/hovered picker/modal states, parent
+   ability decoration, preference persistence and remaining Help/input behavior.
+   Compare complete native frames at fixed phase and logical 4:3 resolution.
+3. **Close the playable Workshop receipt — WS3, contributing to M1/M6.** Take
+   a newly named edited design through Apply, close/reopen, save/reload,
+   production selection, first prototype and an actually usable manufactured
+   Unit. Repeat the relevant network path. Targeted tests do not substitute
+   for this normal gameplay/UI receipt.
 
 The complete M2 local/network conquest scenario and the M0–M7 release gates
 remain required after this focused Workshop work. Do not restart obsolete

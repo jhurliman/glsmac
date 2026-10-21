@@ -286,8 +286,12 @@ std::optional<SmacWorkshopCommit> ReuseSmacWorkshopDesign(SmacStartupDesignState
         selected_named=(state.IntrinsicState(*selected).flags&2)!=0;
     } else {
         const auto selected=std::find_if(bank->designs.begin(),bank->designs.end(),[&](const auto& row){return row.id==draft.selected_design;});
-        if(selected==bank->designs.end() || !selected->active) {throw std::invalid_argument("Workshop alias selected a foreign or inactive design");}
-        selected_named=selected->explicitly_named;
+        if(state.native_registry && draft.selected_design>=64*owner.admission.simulation_id && draft.selected_design<64*(owner.admission.simulation_id+1)) {
+            selected_named=((*state.native_registry)[draft.selected_design][48]&2)!=0;
+        } else {
+            if(selected==bank->designs.end() || !selected->active) {throw std::invalid_argument("Workshop alias selected a foreign or inactive design");}
+            selected_named=selected->explicitly_named;
+        }
     }
     const auto matches=[&](uint32_t ch,uint32_t we,uint32_t ar,uint8_t reactor,uint32_t abilities) {
         return ch==draft.chassis && we==draft.weapon && ar==draft.armor && reactor==draft.reactor && abilities==draft.abilities;
@@ -317,6 +321,43 @@ std::optional<SmacWorkshopCommit> ReuseSmacWorkshopDesign(SmacStartupDesignState
         if(selected_named && !draft.name.empty()) {design.name=draft.name;design.explicitly_named=true;}
     }}
     next.SynchronizeNativeRegistry();next.Validate(catalog);state=std::move(next);return SmacWorkshopCommit{id,false};
+}
+
+SmacWorkshopPreparation PrepareSmacWorkshopCommit(const SmacStartupDesignState& state,const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner,const faction::SmacDesignCounts& units,
+    const faction::SmacDesignCounts& production,bool confirm) {
+    RequireOwner(owner);state.Validate(catalog);RequireComponents(draft,catalog);
+    if(!state.native_registry || !catalog.workshop_name_labels || !state.Find(owner.admission.simulation_id)
+        || draft.name.size()>31 || draft.name.find('\0')!=std::string::npos) {throw std::invalid_argument("Workshop common commit requires retained records, naming text and owned draft");}
+    SmacWorkshopPreparation prepared{state,{draft.selected_design,false}};
+    if(const auto reused=ReuseSmacWorkshopDesign(prepared.state,draft,catalog,technologies,owner)) {prepared.result=*reused;prepared.success=true;return prepared;}
+    const auto require=[&](SmacWorkshopComponent kind,uint32_t id) {
+        const auto choices=SmacWorkshopChoices(kind,catalog,technologies,owner);
+        if(std::none_of(choices.begin(),choices.end(),[&](const auto& row){return row.component_id==id && row.technology_available;})) {throw std::invalid_argument("Workshop component technology is unavailable");}
+    };
+    require(SmacWorkshopComponent::Chassis,draft.chassis);require(SmacWorkshopComponent::Weapon,draft.weapon);
+    require(SmacWorkshopComponent::Armor,draft.armor);require(SmacWorkshopComponent::Reactor,draft.reactor);
+    const auto slot=ChooseSmacWorkshopSlot(*state.native_registry,draft,units,production,technologies,owner);
+    prepared.result.design_id=slot.selected;prepared.confirmation=slot.confirmation;
+    if(slot.kind==SmacWorkshopSlotKind::IntrinsicFailure) {prepared.result.intrinsic_name_warning=true;return prepared;}
+    if(slot.kind!=SmacWorkshopSlotKind::Build) {throw std::runtime_error("Workshop allocation and alias passes disagree");}
+    if(slot.confirmation && !confirm) {return prepared;}
+    auto pool=*state.native_registry;
+    if(slot.confirmation) {
+        auto& history=prepared.state.retirement_history.at(owner.admission.simulation_id);
+        if(!history) {throw std::runtime_error("Confirmed Workshop retirement requires retained tuple history");}
+        SmacRetirementTuple tuple{};std::copy_n(pool.at(slot.selected).begin()+32,8,tuple.begin());history->Record(tuple);prepared.retirement=slot.selected;
+    }
+    BuildSmacWorkshopRecord(pool,size_t(slot.selected),draft,catalog,technologies,owner);
+    auto automatic=NameSmacWorkshopDesign(pool,size_t(slot.selected),draft,catalog,owner.admission.simulation_id);
+    const auto& name=draft.name.empty() ? automatic:draft.name;auto& row=pool.at(slot.selected);
+    const auto length=std::min<size_t>(31,name.size());std::copy_n(name.begin(),length,row.begin());row[length]=0;
+    auto flags=uint16_t(uint16_t(row[48])|(uint16_t(row[49])<<8));flags&=uint16_t(~2u);
+    if(!draft.name.empty() && draft.name!=automatic) {flags|=2;}row[48]=uint8_t(flags);row[49]=uint8_t(flags>>8);
+    // This is a new component tuple, not the old riot-copy lineage.
+    for(auto& bank:prepared.state.owners) {for(auto& design:bank.designs) {if(design.id==slot.selected) {design.riot.reset();}}}
+    prepared.state.RetainNativeRegistry(pool,catalog);prepared.success=true;return prepared;
 }
 
 SmacWorkshopCommit CommitSmacWorkshopFirstDesign(SmacStartupDesignState& state,const SmacWorkshopDraft& draft,

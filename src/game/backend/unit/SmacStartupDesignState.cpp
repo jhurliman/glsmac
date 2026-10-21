@@ -118,7 +118,7 @@ SmacCustomDesign DecodeRegistryDesign(const SmacOriginalDesign& row,int id) {
 }
 void EncodeRegistryDesign(SmacOriginalDesign& row,const SmacCustomDesign& d) {
     if(d.chassis>255 || d.weapon>255 || d.defense>255 || d.faction_exclusion>255) {throw std::invalid_argument("Native design field exceeds byte");}
-    if(d.name && *d.name!=RecordName(row)) {std::fill_n(row.begin(),32,0);std::copy(d.name->begin(),d.name->end(),row.begin());}
+    if(d.name && *d.name!=RecordName(row)) {std::copy(d.name->begin(),d.name->end(),row.begin());row[d.name->size()]=0;}
     for(unsigned i=0;i<4;++i) {row[32+i]=uint8_t(d.abilities>>(8*i));}
     row[36]=uint8_t(d.chassis);row[37]=uint8_t(d.weapon);row[38]=uint8_t(d.defense);row[39]=d.reactor;
     row[40]=d.carry;row[41]=d.cost;row[42]=d.plan;row[44]=uint8_t(d.faction_exclusion);
@@ -353,6 +353,8 @@ int32_t SmacStartupDesignState::RequestRiotPrototype(int32_t source,int32_t reci
     if(next.native_registry) {
         const auto components=RegistryComponents(catalog);
         BuildSmacFissionDesign(*next.native_registry,size_t(allocated.id),components,int32_t(allocated.chassis),0,int32_t(allocated.defense),0,uint8_t(1u<<recipient));
+        // Unlike an ordinary Workshop copy, 597390 clears the full name field.
+        std::fill_n(next.native_registry->at(allocated.id).begin(),32,0);
         allocated.auxiliary_flags=0xc0;owner->designs.back().auxiliary_flags=0xc0;
     }
     next.SynchronizeNativeRegistry();next.Validate(catalog);*this=std::move(next);return allocated.id;

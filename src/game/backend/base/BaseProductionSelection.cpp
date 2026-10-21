@@ -59,7 +59,26 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
             const auto& settings=GetState()->m_settings.global;
             const auto* owner=m_simulation->value.technology.Find(base->GetSmacResourceContext().owner_simulation_id);
             try {
-                const auto result=unit::CommitSmacWorkshopFirstDesign(next,draft,settings.GetSmacPredefinedUnitRules()->catalog,*settings.GetSmacTechnologyRules(),*owner);
+                const auto& economy=m_simulation->value.economy.at(owner->admission.simulation_id);
+                unit::SmacWorkshopCommit result;
+                if(next.native_registry) {
+                    const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;
+                    if(const auto alias=unit::ReuseSmacWorkshopDesign(next,draft,catalog,*settings.GetSmacTechnologyRules(),*owner)) {result=*alias;}
+                    else {
+                        // A wholly inactive, included bank makes both cached rows
+                        // irrelevant to the original provisional-slot scan. Do
+                        // not initialize missing saved caches as a side effect.
+                        const auto first=size_t(64*owner->admission.simulation_id);bool independent=true;
+                        for(size_t id=first;id<first+64;++id) {const auto& row=next.native_registry->at(id);
+                            independent=independent && !(row[48]&1) && !(row[44]&(1u<<owner->admission.simulation_id));}
+                        if((!economy.design_counts || !economy.production_reference_counts) && !independent) {throw std::runtime_error("Workshop allocation requires retained unit and production counts");}
+                        const faction::SmacDesignCounts zero{};
+                        auto prepared=unit::PrepareSmacWorkshopCommit(next,draft,catalog,*settings.GetSmacTechnologyRules(),*owner,
+                            economy.design_counts.value_or(zero),economy.production_reference_counts.value_or(zero));
+                        if(!prepared.success || prepared.retirement) {throw std::runtime_error("Workshop overwrite requires its live confirmation transaction");}
+                        result=prepared.result;next=std::move(prepared.state);
+                    }
+                } else {result=unit::CommitSmacWorkshopFirstDesign(next,draft,settings.GetSmacPredefinedUnitRules()->catalog,*settings.GetSmacTechnologyRules(),*owner);}
                 warning=result.intrinsic_name_warning;design_id=result.design_id;
             } catch(const std::invalid_argument&) {failed=true;}
             catch(const std::runtime_error&) {failed=true;}

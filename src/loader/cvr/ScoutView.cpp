@@ -117,7 +117,8 @@ View MakeView( const CvrScoutViewInput& input, const IdleProfile profile ) {
 		base = Multiply( Multiply( Decode( 0x3d8f5c29 ), Integer( input.zoom + 16 ) ), Decode( 0x3d800000 ) );
 		delta = int64_t{ 50 } * ( input.zoom + 16 ) / 16;
 	}
-	result.scales = { profile == IdleProfile::SpartanSpeeder ? Store( base ) : Store( Multiply( Decode( Store( base ) ), Decode( 0x3fa00000 ) ) ), 0x3f000000 };
+	const auto multiplier = profile == IdleProfile::InitializedSmallInfantry ? 0x3f4ccccdU : 0x3fa00000U;
+	result.scales = { profile == IdleProfile::SpartanSpeeder ? Store( base ) : Store( Multiply( Decode( Store( base ) ), Decode( multiplier ) ) ), 0x3f000000 };
 	result.projection = MultiplyMatrix( result.auxiliary, rotation );
 	for ( size_t i = 0; i < 9; ++i ) { result.projection[ i ] = Store( Multiply( Decode( result.projection[ i ] ), Decode( result.scales[ i < 6 ? 0 : 1 ] ) ) ); }
 	result.translation = { 0x43008000, 0x43008000, 0x47138780 };

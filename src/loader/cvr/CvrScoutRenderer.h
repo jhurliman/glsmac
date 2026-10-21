@@ -36,6 +36,15 @@ struct CvrScoutImage {
 	CvrScoutTexture CreateTexture() const;
 };
 
+struct CvrStripImage {
+    CvrScoutImage body;CvrShadowResult shadow;
+    // Original key0 shadow lookup followed by key9 body copy. Origin and
+    // half-open clip belong to the caller's console canvas; validate before stores.
+    size_t Composite(std::vector<uint8_t>& target,uint32_t width,uint32_t height,uint32_t pitch,
+        const std::array<uint8_t,256>& lookup,const std::array<int32_t,2>& origin,
+        const std::array<int32_t,4>& clip) const;
+};
+
 class CvrScoutRenderer {
 public:
 	// Own and decode explicit user-supplied VI/viptr00 assets. No executable or
@@ -65,6 +74,11 @@ public:
     // installed rules, not an inferred weapon-ID/power mapping. No abilities yet.
     static CvrScoutRenderer LoadWorkshopDesign(const WorkshopReader& read,std::string_view faction_pcx,
         int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition);
+    // Ordinary idle/facing2/zoom-10 scene used by the saved Workshop strip.
+    // Body and shadow remain separate indexed sources for the native keyed copy.
+    static CvrScoutRenderer LoadStripDesign(const WorkshopReader& read,std::string_view faction_pcx,
+        int chassis,int weapon,int armor,int reactor,const WorkshopDefinition& definition);
+    CvrStripImage RenderStrip() const;
     CvrScoutImage RenderWorkshopCard(int kind,std::array<uint32_t,3>& position) const;
     static CvrScoutRenderer LoadWorkshopPart(std::string_view part,std::string_view palette,std::string_view system,
         const std::array<uint8_t,24*256>* shades=nullptr,bool direct_locations=false);
@@ -78,8 +92,10 @@ private:
 	friend class CvrSpartanRoverRenderer;
 	friend class gse::tests::CvrRenderPolicyFixture;
 	// Fixed composition policy is independent of optional palette/material data.
-	enum class Profile { Infantry, SpartanSpeeder, InitializedInfantry, Workshop, WorkshopPart, WorkshopWeapon };
+	enum class Profile { Infantry, SpartanSpeeder, InitializedInfantry, Workshop, WorkshopPart, WorkshopWeapon, StripInfantry, StripBody, StripSmallInfantry };
     struct WorkshopAttachment {std::array<float,3> offset;bool direct;std::optional<std::array<uint8_t,24*256>> shades;};
+    static CvrScoutRenderer LoadDesign(const WorkshopReader& read,std::string_view faction_pcx,
+        int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition,Profile profile);
 	static CvrScoutRenderer LoadParts( const std::vector< std::string_view >& parts, Profile profile, const CvrActorMaterial* material,
         const std::vector<WorkshopAttachment>* attachments=nullptr,int workshop_weapon_mode=0);
 	CvrScoutImage RenderView(const scout::View& view,uint8_t clear=9,bool unavailable=false,

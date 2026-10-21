@@ -15,6 +15,8 @@
 #include "fixtures/WorkshopComponents.h"
 #include "fixtures/WorkshopGeneralVisual.h"
 #include "fixtures/WorkshopStockVisual.h"
+#include "fixtures/WorkshopStrip.h"
+#include "game/frontend/SmacDevelopedOverlay.h"
 #include "loader/txt/UnitRulesTXTLoader.h"
 #include <cstdlib>
 #include "game/backend/unit/CvrScoutRender.h"
@@ -150,6 +152,55 @@ std::string MakeScoutTestAssetWithGeometry( const std::vector< uint8_t >& geomet
 }
 
 void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
+    task->AddTest("CVR saved strip matches four full native bodies shadows and clipped copies",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto read=[&](const std::string& name) {
+            for(const auto& entry:std::filesystem::directory_iterator(directory)) {
+                auto candidate=entry.path().filename().string();std::transform(candidate.begin(),candidate.end(),candidate.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if(candidate==name) {std::ifstream stream(entry.path(),std::ios::binary);return std::string(std::istreambuf_iterator<char>(stream),{});}
+            }throw std::runtime_error("Missing owned strip asset: "+name);
+        };
+        const auto source=read("alpha.txt");
+        const auto weapons=loader::txt::UnitRulesTXTLoader::ParseWeapons(source,"smac");
+        const auto armor=loader::txt::UnitRulesTXTLoader::ParseDefenses(source,"smac");
+        const auto digest=[](const auto& bytes) {uint64_t h=UINT64_C(14695981039346656037);for(const auto byte:bytes) {h=(h^byte)*UINT64_C(1099511628211);}return h;};
+        const auto lookup=game::frontend::smac_developed_overlay::ShadowLookup(CvrActorMaterial::ReadGamma100Colors(read("palette.pcx")));
+        auto expected_lookup=fixtures::SCOUT_SHADOW_LOOKUP;expected_lookup[6]=177;
+        GT_ASSERT(lookup==expected_lookup,"Owned palette shadow producer differs from declared native027f initialization");
+        for(const auto& row:workshop_strip_fixture::FRAMES) {
+            const auto renderer=CvrScoutRenderer::LoadStripDesign(read,read("spartans.pcx"),row.chassis,row.weapon,row.armor,row.reactor,
+                {weapons.weapons.at(row.weapon).offense,int(weapons.weapons.at(row.weapon).mode),armor.defenses.at(row.armor).rating});
+            const auto image=renderer.RenderStrip();std::vector<uint8_t> depth;
+            for(const auto value:image.body.indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
+            GT_ASSERT(digest(image.body.indexed.color)==row.color && digest(depth)==row.depth && digest(image.shadow.mask)==row.shadow,
+                "Strip frame "+std::string(row.name)+" color="+std::to_string(digest(image.body.indexed.color))+" depth="+std::to_string(digest(depth))+" shadow="+std::to_string(digest(image.shadow.mask)));
+            GT_ASSERT((image.body.target_anchor==std::array<int32_t,2>{60,225}),"Native strip anchor changed");
+            for(const bool extended:{false,true}) {
+                // The native initializer has two declared x87 precision states;
+                // only entry6 differs. Exercise both caller-supplied tables.
+                auto active=lookup;if(extended) {active[6]=178;}
+                std::vector<uint8_t> target(1024*257);for(size_t y=0;y<257;++y) {for(size_t x=0;x<1024;++x) {target[y*1024+x]=uint8_t((3*x+5*y+37)%256);}}
+                image.Composite(target,1024,257,1024,active,{-68,97},{29,197,95,243});
+                GT_ASSERT(digest(target)==(extended?row.target_37f:row.target_27f),"Strip frame "+std::string(row.name)+" native clipped copy differs: "+std::to_string(digest(target)));
+            }
+        }GT_OK();
+    });
+    task->AddTest("CVR saved strip keyed copy rejects invalid planes atomically",GT(){
+        CvrStripImage image;image.body.indexed={2,2,3,{9,42,99,7,9,99},{}};
+        image.shadow={2,2,2,{128,128,0,128}};
+        std::array<uint8_t,256> lookup;for(size_t i=0;i<lookup.size();++i) {lookup[i]=uint8_t(i+10);}
+        std::vector<uint8_t> target(12,1);
+        const auto before=target;
+        GT_ASSERT(Rejects([&](){image.Composite(target,4,3,4,lookup,{0,0},{0,0,5,3});}) && target==before,"Invalid clip mutated target");
+        image.body.indexed.color.pop_back();
+        GT_ASSERT(Rejects([&](){image.Composite(target,4,3,4,lookup,{0,0},{0,0,4,3});}) && target==before,"Truncated body mutated target");
+        image.body.indexed.color.push_back(99);
+        GT_ASSERT(Rejects([&](){image.Composite(image.body.indexed.color,2,2,3,lookup,{0,0},{0,0,2,2});}),"Aliased body accepted");
+        GT_ASSERT(image.Composite(target,4,3,4,lookup,{1,1},{0,0,4,3})==5,"Key-zero/key-nine stores changed");
+        GT_ASSERT((target==std::vector<uint8_t>{1,1,1,1,1,11,42,1,1,7,11,1}),"Shadow-before-body copy or source pitch changed");
+        target=before;image.Composite(target,4,3,4,lookup,{-1,-1},{0,0,4,3});
+        GT_ASSERT(target[0]==11 && std::count(target.begin(),target.end(),1)==11,"Negative-origin clip changed");GT_OK();
+    });
     task->AddTest("CVR general Workshop compositions match fifteen full native frames",GT(){
         const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
         const auto read=[&](const std::string& name) {
@@ -318,7 +369,11 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
         auto invalid=draw;invalid.initial[0]=INT32_MAX;invalid.basis[0][2]=1;
         GT_ASSERT(Rejects([&]{CvrIndexedRasterizer::Shadow(3,3,{draw,invalid});}),"Shadow accepted coordinate overflow");
         invalid=draw;invalid.terminal=false;
-        GT_ASSERT(Rejects([&]{CvrIndexedRasterizer::Shadow(3,3,{invalid});}),"Shadow inferred an unobserved nonterminal profile");
+        GT_ASSERT(Rejects([&]{CvrIndexedRasterizer::Shadow(3,3,{invalid});}),"Nonterminal shadow accepted a terminal record as a direction");
+        auto counted=records;counted.pop_back();invalid.records=&counted;
+        const auto counted_shadow=CvrIndexedRasterizer::Shadow(3,3,{invalid});
+        GT_ASSERT(counted_shadow.mask[4]==128 && std::count(counted_shadow.mask.begin(),counted_shadow.mask.end(),128)==1
+            && counted_shadow.processed_records==2,"Counted shadow stream dropped its last sample");
         invalid=draw;invalid.basis[0][0]=32768;
         GT_ASSERT(Rejects([&]{CvrIndexedRasterizer::Shadow(3,3,{invalid});}),"Shadow admitted a wider native coefficient");
         const auto before=target;

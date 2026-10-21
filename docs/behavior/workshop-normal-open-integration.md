@@ -59,13 +59,11 @@ four production translation units/consumers pass correctness analysis. The same
 affected groups pass focused ASan/UBSan with three production and two test
 translation units instrumented (leak detection disabled). This
 separates the read authority. The queued transport now accepts an actual local
-Player as well as the production caller's real Base; global U/HQ UI entry remains
-to be connected.
+Player as well as the production caller's real Base; global U/HQ now enters that owner route from the map.
 
 ## Remaining work
 
-The command supports ordinary-1 selection, but the global owner-based menu/U
-caller (including no-Base cases) and facility Help/Datalinks remain unconnected.
+Facility Help/Datalinks remains unconnected.
 The visible production Workshop button follows Redesign; the original normal
 picker does not establish separate visible New/Redesign controls. Supported retained custom designs now appear in the production list in native
 candidate order; the named early-Fission design/manufacture/disk-reopen scenario
@@ -100,3 +98,15 @@ preset and selection assertions run for both caller types; Upgrade/Retire tables
 include both routes. All68 selected native Workshop/roster groups pass normally
 and under the same focused sanitizer scope. Two affected production translation
 units/consumers pass correctness analysis; unchanged query checks are reused.
+
+The ordinary unmodified U shortcut and Menu → HQ → Design Workshop now share the
+same controller and send the actual current Player with hint−1. They reuse the
+existing editor; neither displays nor allocates a Base. Other modifiers/F4,
+SMAX and active modal/turn-choice views do not enter this SMAC route. Native
+admission still decides whether the current owner can issue the queued command.
+The focused controller script covers both entry paths, duplicate/modal admission,
+modifier separation and unavailable-owner recovery. The Base Workshop script
+continues to pass. A saved Campaign Guard world is loaded in a fresh instrumented
+process: U opens Workshop over the map; Escape returns directly to the map. Exit0,
+no sanitizer reports or tracked OpenGL leaks. Software GL/no audio; no performance
+or full original-screen pixel-parity claim.

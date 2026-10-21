@@ -6,6 +6,7 @@ return {
 	available_menus: [
 		'left_menu',
 		'left_menu_game',
+        'left_menu_hq',
 		'right_menu',
 	],
 
@@ -55,6 +56,7 @@ return {
 			ui: p.ui,
 			menu: parent,
 			maybe_quit: p.maybe_quit,
+            open_workshop: () => { p.modules.workshop.open(); },
 			save_campaign: () => { p.modules.popup.show('save_campaign'); },
 			create: (entries) => {
 

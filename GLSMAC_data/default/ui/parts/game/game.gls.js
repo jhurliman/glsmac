@@ -8,6 +8,7 @@ return (m) => {
 		'research',
 		'colony',
 		'outcome',
+        'workshop',
 	];
 
 	m.ui.class('default-panel').set({

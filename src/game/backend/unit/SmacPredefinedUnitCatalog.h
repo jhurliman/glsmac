@@ -17,8 +17,9 @@ struct SmacPredefinedUnit {
 	uint32_t faction_exclusion = 0;
 };
 
-// Original LABELS slots: Scout, Recon, Artillery, Battery, Marines, Invaders, Mk.
-using SmacWorkshopNameLabels=std::array<std::string,7>;
+// Original LABELS: Scout, Recon, Artillery, Battery, Marines, Invaders, Mk, Sea.
+// Sea is empty only in retained V2 profiles; never replace it with guessed English.
+using SmacWorkshopNameLabels=std::array<std::string,8>;
 SmacWorkshopNameLabels ReadSmacWorkshopNameLabels(const std::string& source);
 
 // Owns source metadata as well as final positional records. Component indices

@@ -47,7 +47,8 @@ SmacWorkshopAbilitySelection CleanSmacWorkshopAbilities(const SmacWorkshopDraft&
 void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
     const faction::SmacFactionTechnologyState& owner);
-// Post-build conventional land naming, including own-bank/intrinsic collisions.
+// Installed-component naming (including PSI), retained selected plan/chassis/reactor context
+// and own-bank/intrinsic collisions. Draft operands need not match that record.
 // Returns the untruncated native buffer; saving owns the31-byte boundary.
 std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,int32_t owner);

@@ -1,0 +1,404 @@
+{
+  "scope": "Expectation index; complete design pools and resolved component/language fields remain explicit inputs in the frozen private receipt. Negative overrides are intentionally synthetic distinguishing controls.",
+  "cases": [
+    {
+      "input": {
+        "id": "inf_psi_weapon",
+        "chassis": 0,
+        "weapon": 12,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Psi Infantry"
+    },
+    {
+      "input": {
+        "id": "rover_psi_weapon",
+        "chassis": 1,
+        "weapon": 12,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Psi Speeder"
+    },
+    {
+      "input": {
+        "id": "foil_psi_weapon",
+        "chassis": 3,
+        "weapon": 12,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Psi Foil"
+    },
+    {
+      "input": {
+        "id": "jet_psi_weapon",
+        "chassis": 5,
+        "weapon": 12,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Psi Needlejet"
+    },
+    {
+      "input": {
+        "id": "missile_psi_weapon",
+        "chassis": 8,
+        "weapon": 12,
+        "armor": 0,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Psi Missile"
+    },
+    {
+      "input": {
+        "id": "inf_psi_armor_scout",
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 9,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Scout Infantry"
+    },
+    {
+      "input": {
+        "id": "rover_psi_armor_recon",
+        "chassis": 1,
+        "weapon": 1,
+        "armor": 9,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Recon Rover"
+    },
+    {
+      "input": {
+        "id": "inf_psi_armor_attack",
+        "chassis": 0,
+        "weapon": 2,
+        "armor": 9,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Impact Squad"
+    },
+    {
+      "input": {
+        "id": "foil_psi_armor",
+        "chassis": 3,
+        "weapon": 2,
+        "armor": 9,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Impact Skimship"
+    },
+    {
+      "input": {
+        "id": "jet_psi_armor",
+        "chassis": 5,
+        "weapon": 2,
+        "armor": 9,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Impact Penetrator"
+    },
+    {
+      "input": {
+        "id": "both_psi_inf",
+        "chassis": 0,
+        "weapon": 12,
+        "armor": 9,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Psi Infantry"
+    },
+    {
+      "input": {
+        "id": "both_psi_foil",
+        "chassis": 3,
+        "weapon": 12,
+        "armor": 9,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Psi Skimship"
+    },
+    {
+      "input": {
+        "id": "both_psi_jet",
+        "chassis": 5,
+        "weapon": 12,
+        "armor": 9,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Psi Needlejet"
+    },
+    {
+      "input": {
+        "id": "psi_jet_intercept",
+        "chassis": 5,
+        "weapon": 12,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 32
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Psi Needlejet"
+    },
+    {
+      "input": {
+        "id": "psi_jet_clean_intercept",
+        "chassis": 5,
+        "weapon": 12,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 65568
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Clean Psi Needlejet"
+    },
+    {
+      "input": {
+        "id": "psi_armor_jet_intercept",
+        "chassis": 5,
+        "weapon": 2,
+        "armor": 9,
+        "reactor": 1,
+        "mask": 32
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Impact Tactical"
+    },
+    {
+      "input": {
+        "id": "psi_weapon_artillery",
+        "chassis": 0,
+        "weapon": 12,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 32768
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Psi Artillery"
+    },
+    {
+      "input": {
+        "id": "psi_weapon_amphibious",
+        "chassis": 0,
+        "weapon": 12,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 8
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Amphibious Psi Infantry"
+    },
+    {
+      "input": {
+        "id": "psi_armor_amphibious",
+        "chassis": 0,
+        "weapon": 2,
+        "armor": 9,
+        "reactor": 1,
+        "mask": 8
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Impact Invaders"
+    },
+    {
+      "input": {
+        "id": "psi_armor_former",
+        "chassis": 3,
+        "weapon": 15,
+        "armor": 9,
+        "reactor": 2,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Fusion Sea Formers"
+    },
+    {
+      "input": {
+        "id": "psi_weapon_owner2",
+        "chassis": 0,
+        "weapon": 12,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 2,
+      "selected": 191,
+      "rule_overrides": {},
+      "expected_name": "Psi Squad"
+    },
+    {
+      "input": {
+        "id": "psi_collision_both",
+        "chassis": 0,
+        "weapon": 12,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Psi Infantry Mk2"
+    },
+    {
+      "input": {
+        "id": "psi_armor_police_compact",
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 9,
+        "reactor": 1,
+        "mask": 4194304
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {},
+      "expected_name": "Police Infantry"
+    },
+    {
+      "input": {
+        "id": "psi_minus2_weapon",
+        "chassis": 0,
+        "weapon": 12,
+        "armor": 0,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {
+        "weapon_strength": -2
+      },
+      "expected_name": "Psi Squad"
+    },
+    {
+      "input": {
+        "id": "psi_minus2_armor",
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 9,
+        "reactor": 1,
+        "mask": 0
+      },
+      "owner": 1,
+      "selected": 127,
+      "rule_overrides": {
+        "armor_strength": -2
+      },
+      "expected_name": "Scout Infantry"
+    }
+  ],
+  "commits": [
+    {
+      "id": "inf_psi_weapon",
+      "name": "Psi Infantry",
+      "whole_design_pool_match": true,
+      "other_arrays_unchanged": true,
+      "production_eligible": true
+    },
+    {
+      "id": "inf_psi_armor_scout",
+      "name": "Scout Infantry",
+      "whole_design_pool_match": true,
+      "other_arrays_unchanged": true,
+      "production_eligible": true
+    },
+    {
+      "id": "inf_psi_armor_attack",
+      "name": "Impact Squad",
+      "whole_design_pool_match": true,
+      "other_arrays_unchanged": true,
+      "production_eligible": true
+    },
+    {
+      "id": "both_psi_inf",
+      "name": "Mind Worms",
+      "alias_index": 8,
+      "whole_design_pool_match": true,
+      "all_arrays_unchanged": true,
+      "production_eligible": true
+    },
+    {
+      "id": "psi_jet_clean_intercept",
+      "name": "Clean Psi Needlejet",
+      "whole_design_pool_match": true,
+      "other_arrays_unchanged": true,
+      "production_eligible": true
+    },
+    {
+      "id": "psi_armor_jet_intercept",
+      "name": "Impact Tactical",
+      "whole_design_pool_match": true,
+      "other_arrays_unchanged": true,
+      "production_eligible": true
+    }
+  ]
+}

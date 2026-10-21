@@ -67,8 +67,9 @@ return {
             button.on('click', () => { this.ability_dialog.open(workshop, index); return true; }); this.ability_buttons :+ button;
         }
         window.surface({left: 0, top: 0, width: 623, height: 387, smac_frame: [[3,24,344,567,370]]});
-        p.ui.class('workshop-main-action').set({font: 'arialbd.ttf:14:mono', color: 'rgb(0,0,0)', textalign: 'top center', textbaseline: 15,
-            smac_frame: [[27,0,0,105,20]], _hover: {smac_frame: [[28,0,0,105,20]]}, _active: {smac_frame: [[29,0,0,105,20]]}});
+        p.ui.class('workshop-main-action').set({font: 'arialbd.ttf:14:mono', color: 'rgb(0,0,0)', textalign: 'top left', textbaseline: 15,
+            smac_frame: [[27,0,0,105,20]], _hover: {smac_frame: [[29,0,0,105,20]]}, _active: {smac_frame: [[29,0,0,105,20]]}});
+        this.action_probe = window.text({font: 'arialbd.ttf:14:mono', text: ''}); this.action_probe.hide();
         this.obsolete_button = window.button({class: 'workshop-main-action', left: 243, top: 347, width: 105, height: 20, text: ''});
         this.obsolete_button.on('click', () => { this.obsolete(); return true; });
         this.rename_button = window.button({class: 'workshop-main-action', left: 135, top: 347, width: 105, height: 20, text: ''});
@@ -77,9 +78,12 @@ return {
         this.retire_button.on('click', () => { workshop.retire_dialog.begin(workshop); return true; });
         this.upgrade_button = window.button({class: 'workshop-main-action', left: 351, top: 347, width: 105, height: 20, text: ''});
         this.upgrade_button.on('click', () => { workshop.upgrade_dialog.begin(workshop); return true; });
-        this.window.button({class: 'game-popup-button', left: 27, top: 321, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Apply'}).on('click', () => { this.submit(false); return true; });
-        this.window.button({class: 'game-popup-button', left: 27, top: 347, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Done'}).on('click', () => { this.submit(true); return true; });
-        this.window.button({class: 'game-popup-button', left: 459, top: 347, width: 105, height: 20, font: 'arialbd.ttf:14:mono', text: 'Cancel'}).on('click', () => { this.hide_view(); return true; });
+        this.apply_button = this.window.button({class: 'workshop-main-action', left: 27, top: 321, width: 105, height: 20, text: ''});
+        this.apply_button.on('click', () => { this.submit(false); return true; });
+        this.done_button = this.window.button({class: 'workshop-main-action', left: 27, top: 347, width: 105, height: 20, text: ''});
+        this.done_button.on('click', () => { this.submit(true); return true; });
+        this.cancel_button = this.window.button({class: 'workshop-main-action', left: 459, top: 347, width: 105, height: 20, text: ''});
+        this.cancel_button.on('click', () => { this.hide_view(); return true; });
         this.window.on('keydown', (e) => { if (e.modifiers == {} && e.code == 'ESCAPE') { this.hide_view(); } if (e.modifiers == {} && e.code == 'ENTER') { this.submit(true); } return true; });
         this.picker = p.ui.root.window({zindex: 0.95, align: 'top left', left: 216, top: 168, width: 623, height: 387, background: 'rgb(0,0,0)', blocker: 'rgba(0, 0, 0, 180)'});
         this.picker_canvas = this.picker.surface({left: 0, top: 0, width: 623, height: 387});
@@ -151,8 +155,8 @@ return {
             this.window.listen(p.game, event, (e) => { this.hide_view(); });
         }
         this.window.listen(p.game, 'turn_status', (e) => { if (e.status == 'please_wait') { this.hide_view(); } });
-        // Console composites after the parent: it must escape the parent's
-        // modal dimmer, and its upper rail overlaps the bottom of DESWIN.
+        // The keyed console shell leaves the parent action row visible.
+        // Its layer also keeps the console above the parent's modal dimmer.
         this.console = p.ui.root.window({zindex: 0.905, align: 'top left', left: 0, top: 511, width: 1024, height: 257});
         this.console_backing = this.console.surface({left: 0, top: 50, width: 1024, height: 207});
         this.console.surface({left: 0, top: 0, width: 1024, height: 257, background: 'console2.pcx:smacsoftware()'});
@@ -173,14 +177,23 @@ return {
         this.strip_right.on('click', () => { this.scroll_strip(true); return true; });
         return this.window;
     },
+    set_action_caption: (button, caption) => {
+        const text = #uppercase(caption); this.action_probe.text = text;
+        // Native main controls truncate the centered advance to an integer.
+        button.text = text; button.textleft = 3 + (99 - this.action_probe.measure().width) / 2;
+        button.color = this.parent_text.colors[65];
+    },
     open: (base, data) => {
         if (!#is_defined(this.parent_text)) { this.parent_text = this.components.smacworkshopparenttext(); }
         this.mineral_factor = data.mineral_factor;
         this.base = base; this.selection = data; this.active = true; this.pending = false; this.pending_obsolete = false; this.pending_rename = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.intrinsic_message = false; this.redesign_dialog.hide();
-        this.obsolete_button.text = #uppercase(this.parent_text.obsolete); this.obsolete_button.color = this.parent_text.colors[65];
-        this.rename_button.text = #uppercase(this.parent_text.rename); this.rename_button.color = this.parent_text.colors[65];
-        this.pending_upgrade = false; this.upgrade_button.text = #uppercase(this.parent_text.upgrade); this.upgrade_button.color = this.parent_text.colors[65];
-        this.pending_retire = false; this.retire_button.text = #uppercase(this.parent_text.retire); this.retire_button.color = this.parent_text.colors[65];
+        this.set_action_caption(this.apply_button, this.parent_text.apply);
+        this.set_action_caption(this.done_button, this.parent_text.done);
+        this.set_action_caption(this.cancel_button, this.parent_text.cancel);
+        this.set_action_caption(this.obsolete_button, this.parent_text.obsolete);
+        this.set_action_caption(this.rename_button, this.parent_text.rename);
+        this.pending_upgrade = false; this.set_action_caption(this.upgrade_button, this.parent_text.upgrade);
+        this.pending_retire = false; this.set_action_caption(this.retire_button, this.parent_text.retire);
         this.selected_chassis = 0; this.selected_weapon = 0; this.selected_reactor = 1; this.selected_abilities = 0; this.draft_name = '';
         this.ability_slots = [(0 - 1), (0 - 1)];
         if (#is_defined(data.draft)) { this.read_draft(data.draft); this.selected_design = data.draft.selected_design; }

@@ -1,0 +1,674 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Two complete original442600 editor-only actions with bit40 set. Original preparation/commit/select/list/reset run; modal return1, UI boundaries supplied. No real game/UI or pixel matrix.",
+  "validation": {
+    "native_actions": 2,
+    "source_literals": 18,
+    "label_identities": 6,
+    "retained_button_regions": 7
+  },
+  "labels": [
+    {
+      "control": "Apply",
+      "byte_offset": "0xe58",
+      "zero_based_token": 918,
+      "count_prefixed_index": 919,
+      "installed_text": "APPLY"
+    },
+    {
+      "control": "Done",
+      "byte_offset": "0x438",
+      "zero_based_token": 270,
+      "count_prefixed_index": 271,
+      "installed_text": "Done"
+    },
+    {
+      "control": "Cancel",
+      "byte_offset": "0x198",
+      "zero_based_token": 102,
+      "count_prefixed_index": 103,
+      "installed_text": "Cancel"
+    },
+    {
+      "control": "Auto Off",
+      "byte_offset": "0x864",
+      "zero_based_token": 537,
+      "count_prefixed_index": 538,
+      "installed_text": "Auto Off"
+    },
+    {
+      "control": "PROTO",
+      "byte_offset": "0x1024",
+      "zero_based_token": 1033,
+      "count_prefixed_index": 1034,
+      "installed_text": "PROTO"
+    },
+    {
+      "control": "RETIRE ALL",
+      "byte_offset": "0x1034",
+      "zero_based_token": 1037,
+      "count_prefixed_index": 1038,
+      "installed_text": "RETIRE ALL"
+    }
+  ],
+  "cases": [
+    {
+      "id": "prototype_changed_draft",
+      "action": 2,
+      "answer": 1,
+      "before_state": {
+        "selected": 64,
+        "result": 0,
+        "draft": {
+          "0x141f4": 1,
+          "0x141f8": 64,
+          "0x141fc": 0,
+          "0x14200": 0,
+          "0x14204": 2,
+          "0x14208": 0,
+          "0x1420c": 1,
+          "0x14210": 0,
+          "0x14214": 10,
+          "0x14218": -1,
+          "0x1421c": -1
+        },
+        "draft_name": "Editor Draft",
+        "closed": false,
+        "unit_count": 2,
+        "base_count": 3,
+        "list": [
+          0,
+          2,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122,
+          123,
+          124,
+          125,
+          126,
+          127
+        ]
+      },
+      "after_state": {
+        "selected": 65,
+        "result": 1,
+        "draft": {
+          "0x141f4": 1,
+          "0x141f8": 65,
+          "0x141fc": 0,
+          "0x14200": 0,
+          "0x14204": 2,
+          "0x14208": 0,
+          "0x1420c": 1,
+          "0x14210": 0,
+          "0x14214": 10,
+          "0x14218": -1,
+          "0x1421c": -1
+        },
+        "draft_name": "Editor Draft",
+        "closed": false,
+        "unit_count": 2,
+        "base_count": 3,
+        "list": [
+          0,
+          2,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122,
+          123,
+          124,
+          125,
+          126,
+          127
+        ]
+      },
+      "delta": {
+        "designs": {
+          "changed_bytes": 20,
+          "first_offsets": [
+            3380,
+            3381,
+            3382,
+            3383,
+            3384,
+            3385,
+            3386,
+            3387,
+            3388,
+            3389,
+            3390,
+            3391,
+            3418,
+            3419,
+            3421,
+            3422,
+            3423,
+            3425,
+            3426,
+            3428
+          ],
+          "before_sha256": "0daa1599de086f90f4f6b133e7384ca9e63cdff84435b7239023ab1766fb9be6",
+          "after_sha256": "a0941bcafcdbedc849ce7b8e068bc6db92f5b3052e3d63bcfc30964d73e45f2a"
+        },
+        "factions": {
+          "changed_bytes": 0,
+          "first_offsets": [],
+          "before_sha256": "58e875f3ca46155cb17bb186f75a20525659ce0ff6d4de7ae7ef922654b276ac",
+          "after_sha256": "58e875f3ca46155cb17bb186f75a20525659ce0ff6d4de7ae7ef922654b276ac"
+        },
+        "bases": {
+          "changed_bytes": 0,
+          "first_offsets": [],
+          "before_sha256": "ae1ec14edd062115caf06eeab20f3f23365eb05a8594a9e1d601566681ecc972",
+          "after_sha256": "ae1ec14edd062115caf06eeab20f3f23365eb05a8594a9e1d601566681ecc972"
+        },
+        "units": {
+          "changed_bytes": 0,
+          "first_offsets": [],
+          "before_sha256": "32c95340089e863271fb9b2bb5679e57c2a28485ef4b10367043e358889c2b7d",
+          "after_sha256": "32c95340089e863271fb9b2bb5679e57c2a28485ef4b10367043e358889c2b7d"
+        },
+        "history": {
+          "changed_bytes": 0,
+          "first_offsets": [],
+          "before_sha256": "ee71b4d3e85b77fc348adc7f78396478790314e188a313a60100551e8eb127e0",
+          "after_sha256": "ee71b4d3e85b77fc348adc7f78396478790314e188a313a60100551e8eb127e0"
+        }
+      },
+      "events": [
+        {
+          "pc": "0x441e20",
+          "caller": "0x44278b",
+          "args": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x5bd4f0",
+          "caller": "0x4424c3",
+          "args": [
+            65,
+            0,
+            0,
+            2,
+            0,
+            1
+          ]
+        },
+        {
+          "pc": "0x5aaa00",
+          "caller": "0x4425d7",
+          "args": [
+            65,
+            0,
+            0,
+            7594552,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x595db0",
+          "caller": "0x4425ec",
+          "args": [
+            1,
+            65,
+            1,
+            65,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x5ee890",
+          "service": "window_repaint"
+        }
+      ]
+    },
+    {
+      "id": "retireall_own",
+      "action": 3,
+      "answer": 1,
+      "before_state": {
+        "selected": 64,
+        "result": 0,
+        "draft": {
+          "0x141f4": 1,
+          "0x141f8": 64,
+          "0x141fc": 0,
+          "0x14200": 0,
+          "0x14204": 2,
+          "0x14208": 0,
+          "0x1420c": 1,
+          "0x14210": 0,
+          "0x14214": 10,
+          "0x14218": -1,
+          "0x1421c": -1
+        },
+        "draft_name": "Editor Draft",
+        "closed": false,
+        "unit_count": 2,
+        "base_count": 3,
+        "list": [
+          0,
+          2,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122,
+          123,
+          124,
+          125,
+          126,
+          127
+        ]
+      },
+      "after_state": {
+        "selected": 0,
+        "result": 0,
+        "draft": {
+          "0x141f4": 1,
+          "0x141f8": 0,
+          "0x141fc": 0,
+          "0x14200": 14,
+          "0x14204": 0,
+          "0x14208": 0,
+          "0x1420c": 1,
+          "0x14210": 0,
+          "0x14214": 10,
+          "0x14218": -1,
+          "0x1421c": -1
+        },
+        "draft_name": "",
+        "closed": false,
+        "unit_count": 2,
+        "base_count": 3,
+        "list": [
+          0,
+          2,
+          64,
+          65,
+          66,
+          67,
+          68,
+          69,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          88,
+          89,
+          90,
+          91,
+          92,
+          93,
+          94,
+          95,
+          96,
+          97,
+          98,
+          99,
+          100,
+          101,
+          102,
+          103,
+          104,
+          105,
+          106,
+          107,
+          108,
+          109,
+          110,
+          111,
+          112,
+          113,
+          114,
+          115,
+          116,
+          117,
+          118,
+          119,
+          120,
+          121,
+          122,
+          123,
+          124,
+          125,
+          126,
+          127
+        ]
+      },
+      "delta": {
+        "designs": {
+          "changed_bytes": 1,
+          "first_offsets": [
+            3376
+          ],
+          "before_sha256": "0daa1599de086f90f4f6b133e7384ca9e63cdff84435b7239023ab1766fb9be6",
+          "after_sha256": "edadf2cdbb4e0a2b6df26be80e48c0709e707db18cd24bddb86bfe492f1f6bcb"
+        },
+        "factions": {
+          "changed_bytes": 0,
+          "first_offsets": [],
+          "before_sha256": "58e875f3ca46155cb17bb186f75a20525659ce0ff6d4de7ae7ef922654b276ac",
+          "after_sha256": "58e875f3ca46155cb17bb186f75a20525659ce0ff6d4de7ae7ef922654b276ac"
+        },
+        "bases": {
+          "changed_bytes": 0,
+          "first_offsets": [],
+          "before_sha256": "ae1ec14edd062115caf06eeab20f3f23365eb05a8594a9e1d601566681ecc972",
+          "after_sha256": "ae1ec14edd062115caf06eeab20f3f23365eb05a8594a9e1d601566681ecc972"
+        },
+        "units": {
+          "changed_bytes": 0,
+          "first_offsets": [],
+          "before_sha256": "32c95340089e863271fb9b2bb5679e57c2a28485ef4b10367043e358889c2b7d",
+          "after_sha256": "32c95340089e863271fb9b2bb5679e57c2a28485ef4b10367043e358889c2b7d"
+        },
+        "history": {
+          "changed_bytes": 512,
+          "first_offsets": [
+            512,
+            513,
+            514,
+            515,
+            516,
+            517,
+            518,
+            519,
+            520,
+            521,
+            522,
+            523,
+            524,
+            525,
+            526,
+            527,
+            528,
+            529,
+            530,
+            531
+          ],
+          "before_sha256": "ee71b4d3e85b77fc348adc7f78396478790314e188a313a60100551e8eb127e0",
+          "after_sha256": "7a9af4e2a46b95b6c2feda00ae8d32695dfaa966ca2075bee12aab10d38b732e"
+        }
+      },
+      "events": [
+        {
+          "pc": "0x499b70",
+          "tag": "RETIREALL",
+          "answer": 1
+        },
+        {
+          "pc": "0x5ee890",
+          "service": "window_repaint"
+        }
+      ]
+    }
+  ],
+  "retained_frame_regions": [
+    {
+      "control": "Apply",
+      "screen_rect": [
+        243,
+        489,
+        348,
+        509
+      ],
+      "indexed_sha256": "b7f6811f2e682fb5669026a164924a389d02d816b9a6d7d00c1db3a4fb93b4a2",
+      "foreground65_pixels": 190
+    },
+    {
+      "control": "Retire",
+      "screen_rect": [
+        675,
+        489,
+        780,
+        509
+      ],
+      "indexed_sha256": "1357e0ca5e09f6509740c015cc00e0142a9d4d9a8a2330d77a79498752a971cf",
+      "foreground65_pixels": 264
+    },
+    {
+      "control": "Done",
+      "screen_rect": [
+        243,
+        515,
+        348,
+        535
+      ],
+      "indexed_sha256": "3c2b6fee95981201a07681eac166d7c028e1c3101914d15997c6d11ebcc98a59",
+      "foreground65_pixels": 210
+    },
+    {
+      "control": "Rename",
+      "screen_rect": [
+        351,
+        515,
+        456,
+        535
+      ],
+      "indexed_sha256": "9536d9c43824b12803d1a6f28b9e42e1c6c8c0b928a164667c11cdfccb36e0d9",
+      "foreground65_pixels": 324
+    },
+    {
+      "control": "Obsolete",
+      "screen_rect": [
+        459,
+        515,
+        564,
+        535
+      ],
+      "indexed_sha256": "cf6074e1526e55f2a5fc8ca5f866b0f9ea039e21d6e4292dbbed6146c42fb8d0",
+      "foreground65_pixels": 377
+    },
+    {
+      "control": "Upgrade",
+      "screen_rect": [
+        567,
+        515,
+        672,
+        535
+      ],
+      "indexed_sha256": "8873c53e7d81adff3def668bafe27643beb8858fa4df6fe5614a04b3c42f64f0",
+      "foreground65_pixels": 341
+    },
+    {
+      "control": "Cancel",
+      "screen_rect": [
+        675,
+        515,
+        780,
+        535
+      ],
+      "indexed_sha256": "f7e994403dccc5de9301a273dac806b54e9e55657e815343d4f0ae367dfde3ed",
+      "foreground65_pixels": 264
+    }
+  ]
+}

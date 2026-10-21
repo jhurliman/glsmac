@@ -134,13 +134,13 @@ CvrShadowResult CvrIndexedRasterizer::Shadow(uint32_t width,uint32_t height,cons
     result.draw_count=draws.size();
     size_t records=0;
     for(const auto& draw:draws) {
-        if(!draw.records || !draw.terminal || draw.footprint!=CvrSampleFootprint::Single || draw.records->size()<2
-            || draw.records->back().Code()!=26 || draw.records->size()>MAX_RECORDS-records) {Invalid(" unsupported shadow stream");}
+        if(!draw.records || draw.footprint!=CvrSampleFootprint::Single || draw.records->size()<=size_t(draw.terminal)
+            || (draw.terminal && draw.records->back().Code()!=26) || draw.records->size()>MAX_RECORDS-records) {Invalid(" unsupported shadow stream");}
         records+=draw.records->size();
         auto coordinates=draw;coordinates.basis[2]={0,0,0};coordinates.initial[2]=0;
         const auto steps=MakeSteps(coordinates,false);
         int64_t x=coordinates.initial[0],y=coordinates.initial[1];
-        for(size_t i=0;i+1<draw.records->size();++i) {
+        for(size_t i=0;i<draw.records->size()-size_t(draw.terminal);++i) {
             const auto code=draw.records->at(i).Code();if(code>=26) {Invalid(" invalid shadow direction");}
             x+=steps[code][0];y+=steps[code][1];Signed32(x);Signed32(y);
             const auto px=Floor256(x),py=Floor256(y);

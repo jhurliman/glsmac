@@ -15,8 +15,9 @@ comes from truncating `50*(zoom+16)/16`. Its 256-square surface is copied at
 **(-68,97)**, under the card's half-open clip **(29,197)-(95,243)**.
 
 Ordinary scale is binary32 `0.07*(zoom+16)/16`, giving
-`0.026250001043081284` at zoom-10. Infantry applies another factor1.25, yielding
-`0.03281250223517418`. Reuse the checked ordinary view and shadow-camera
+`0.026250001043081284` at zoom-10. This chassis0/weapon0 Scout applies another factor1.25, yielding
+`0.03281250223517418`. The [exact stored-component multiplier predicate](ordinary-actor-scale-predicate.md)
+distinguishes Infantry weapons, noncombat designs and Speeder Probes. Reuse the checked ordinary view and shadow-camera
 references; the main Workshop camera scale0.14 is a separate path.
 
 The original copies shadow first (`5f1ce0`, source9c1ba8, key0), then body

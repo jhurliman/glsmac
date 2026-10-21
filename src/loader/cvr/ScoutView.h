@@ -30,7 +30,7 @@ struct ShadowView {Matrix projection;Vector translation;};
 ShadowScene FlatScoutShadowScene(const CvrScoutViewInput& input);
 ShadowView MakeShadowView(const ShadowScene& scene);
 
-enum class IdleProfile { Infantry, SpartanSpeeder, InitializedInfantry };
+enum class IdleProfile { Infantry, SpartanSpeeder, InitializedInfantry, InitializedSmallInfantry };
 // Fixed measured installed map-light profile, shared by initialized compositions.
 void ValidateMapLight( std::string_view system );
 View MakeView( const CvrScoutViewInput& input, IdleProfile profile = IdleProfile::Infantry );

@@ -846,3 +846,41 @@ side-card art, normal-open host inputs and whole-screen pixel acceptance remain
 required. The separately frozen [strip raster](behavior/design-workshop-strip-raster.md)
 provides the next thumbnail implementation evidence; this PR does not claim new
 model pixels or repeat a platform matrix.
+
+
+### Saved-strip ordinary renderer
+
+`CvrScoutRenderer::LoadStripDesign` now shares the owned-asset component recipe
+while retaining the ordinary idle scene used by the saved-design strip. It does
+not shrink the main Workshop camera. Stored chassis/weapon IDs select the entry
+scale before the Probe body remap; the exact predicate is retained in
+[ordinary actor scale](behavior/ordinary-actor-scale-predicate.md).
+
+`RenderStrip` produces separate indexed body/depth and shadow planes at facing2,
+zoom-10, phase0. Component offsets, direct attachment frames, grouped detail
+selection and frame80 exclusion apply to both paths. The shadow kernel now
+accepts counted streams as well as explicitly terminal-delimited streams.
+`CvrStripImage::Composite` validates source/target/clip/alias bounds before any
+target mutation, applies destination-index shadow lookup first, then keys body
+index9. It retains caller origin and half-open clipping, including negative
+origins; there is no alpha approximation or RGB shadow blend.
+
+Four complete original bodies, depth planes and shadow masks match from owned
+assets: Scout, Rover, armed Foil and armed Needlejet. Eight complete indexed
+target copies match the two explicitly supplied native lookup precision states.
+The existing owned-palette shadow producer matches the declared027f table; only
+entry6 differs from037f. This does not establish the precision state reached by
+the original full parent initializer. See the [raster handoff](behavior/design-workshop-strip-raster.md).
+
+This is the renderer connection for the next live browser slice. It does not yet
+display/select saved cards, initialize the original whole parent, render ability
+decorations or native creatures, or establish other faction/animation parity.
+The PSI reopen handoff is now available separately for the human producer.
+
+Validation:39 selected native groups pass, including the four complete native
+plane sets, eight copied targets, existing main/component previews and prior
+Scout shadow receipts. Fifty-two renderer/decoder/frame/texture groups pass
+focused ASan/UBSan with eleven production and five test translation units
+instrumented. Targeted correctness analysis is clean for seven changed or
+affected production units. No gameplay/UI script source changed in this slice;
+no platform matrix or new whole-screen acceptance is claimed.

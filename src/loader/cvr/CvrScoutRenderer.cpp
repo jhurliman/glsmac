@@ -73,6 +73,18 @@ CvrScoutRenderer CvrScoutRenderer::LoadWorkshopDesign(const WorkshopReader& read
 
 CvrScoutRenderer CvrScoutRenderer::LoadWorkshopDesign(const WorkshopReader& read,std::string_view faction_pcx,
     int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition) {
+    return LoadDesign(read,faction_pcx,chassis,weapon,armor,reactor,kind,definition,kind<0 ? Profile::Workshop:Profile::WorkshopPart);
+}
+CvrScoutRenderer CvrScoutRenderer::LoadStripDesign(const WorkshopReader& read,std::string_view faction_pcx,
+    int chassis,int weapon,int armor,int reactor,const WorkshopDefinition& definition) {
+    // Original4d8420 selects this before the later Probe body remap and does
+    // not consult armor or weapon mode. Preserve the stored component IDs.
+    const auto profile=chassis==0 ? ((weapon>=0 && weapon<=2) || weapon==18 ? Profile::StripInfantry:Profile::StripSmallInfantry)
+        :chassis==1 && weapon==18 ? Profile::StripInfantry:Profile::StripBody;
+    return LoadDesign(read,faction_pcx,chassis,weapon,armor,reactor,-1,definition,profile);
+}
+CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::string_view faction_pcx,
+    int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition,Profile profile) {
     if(chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9 || reactor<1 || reactor>4 || kind< -1 || kind>3
         || !((definition.weapon_mode>=0 && definition.weapon_mode<=2) || (definition.weapon_mode>=7 && definition.weapon_mode<=12))) {
         throw std::invalid_argument("Workshop composition requires stock component identities and supported modes");
@@ -169,7 +181,32 @@ CvrScoutRenderer CvrScoutRenderer::LoadWorkshopDesign(const WorkshopReader& read
     }
     if(bytes.empty()) {throw std::invalid_argument("Workshop component has no model");}
     std::vector<std::string_view> parts;for(const auto& part:bytes) {parts.push_back(part);}
-    return LoadParts(parts,kind<0 ? Profile::Workshop:Profile::WorkshopPart,&faction,&attachments,definition.weapon_mode);
+    return LoadParts(parts,profile,&faction,&attachments,definition.weapon_mode);
+}
+
+size_t CvrStripImage::Composite(std::vector<uint8_t>& target,uint32_t width,uint32_t height,uint32_t pitch,
+    const std::array<uint8_t,256>& lookup,const std::array<int32_t,2>& origin,const std::array<int32_t,4>& clip) const {
+    const auto& source=body.indexed;
+    if(&target==&source.color || !source.width || !source.height || source.pitch<source.width
+        || uint64_t(source.pitch)*source.height!=source.color.size() || source.color.size()>CvrIndexedRasterizer::MAX_SURFACE_SAMPLES
+        || source.width!=shadow.width || source.height!=shadow.height) {throw std::invalid_argument("Invalid saved-strip color source");}
+    // Blend validates every target/mask/clip bound before its first write. No
+    // remaining color-copy operation can allocate or fail after this boundary.
+    size_t stores=shadow.Blend(target,width,height,pitch,lookup,origin,clip);
+    for(uint32_t y=0;y<source.height;++y) {for(uint32_t x=0;x<source.width;++x) {
+        const int64_t px=int64_t(origin[0])+x,py=int64_t(origin[1])+y;const auto color=source.color[size_t(y)*source.pitch+x];
+        if(color!=9 && px>=clip[0] && px<clip[2] && py>=clip[1] && py<clip[3]) {target[size_t(py)*pitch+size_t(px)]=color;++stores;}
+    }}return stores;
+}
+
+CvrStripImage CvrScoutRenderer::RenderStrip() const {
+    if(m_assets->profile!=Profile::StripInfantry && m_assets->profile!=Profile::StripBody
+        && m_assets->profile!=Profile::StripSmallInfantry) {throw std::invalid_argument("Saved-strip rendering requires its ordinary scene");}
+    const CvrScoutViewInput input{2,-10,0,1,{42,207}};
+    const auto view=scout::MakeView(input,m_assets->profile==Profile::StripInfantry ? scout::IdleProfile::InitializedInfantry:
+        m_assets->profile==Profile::StripSmallInfantry ? scout::IdleProfile::InitializedSmallInfantry:scout::IdleProfile::SpartanSpeeder);
+    auto scene=scout::FlatScoutShadowScene(input);scene.auxiliary_scale=view.scales[0];
+    return {RenderView(view),RenderShadow(scene)};
 }
 
 CvrScoutImage CvrScoutRenderer::RenderWorkshopCard(int kind,std::array<uint32_t,3>& position) const {
@@ -261,7 +298,9 @@ template< size_t N > std::array< uint32_t, N > Bits( const std::array< float, N 
 
 CvrScoutImage CvrScoutRenderer::Render( const CvrScoutViewInput& input ) const {
 	using namespace scout;
-	if(m_assets->profile==Profile::Workshop || m_assets->profile==Profile::WorkshopPart || m_assets->profile==Profile::WorkshopWeapon) {throw std::invalid_argument("Workshop composition requires its own view");}
+	if(m_assets->profile==Profile::Workshop || m_assets->profile==Profile::WorkshopPart || m_assets->profile==Profile::WorkshopWeapon
+        || m_assets->profile==Profile::StripInfantry || m_assets->profile==Profile::StripBody
+        || m_assets->profile==Profile::StripSmallInfantry) {throw std::invalid_argument("Dialog composition requires its own view");}
 	const bool speeder = m_assets->profile == Profile::SpartanSpeeder;
 	const auto profile = speeder ? IdleProfile::SpartanSpeeder :
 		m_assets->profile == Profile::InitializedInfantry ? IdleProfile::InitializedInfantry : IdleProfile::Infantry;
@@ -376,13 +415,15 @@ CvrShadowResult CvrScoutRenderer::RenderShadow(const scout::ShadowScene& scene) 
     using namespace scout;
     if(m_assets->profile==Profile::SpartanSpeeder) {throw std::invalid_argument("CVR shadow: Speeder detail path is not admitted");}
     const auto view=MakeShadowView(scene);
-    std::vector<CvrFrameSelection> requests;
-    for(size_t i=0;i<m_assets->geometry.size();++i) {requests.push_back({i,0,{-400,200,0}});}
-    const auto frames=CvrFrameAssembler::Assemble(m_assets->frames,requests);
+    const auto frames=CvrFrameAssembler::Assemble(m_assets->frames,m_assets->selections);
     if(frames.first_omitted) {throw std::invalid_argument("CVR shadow: incomplete frame assembly");}
     std::vector<CvrIndexedDraw> draws;
     for(const auto& frame:frames.records) {
-        const auto& geometry=std::get<CvrGeometry>(m_assets->geometry[frame.scene_index][frame.object_index]);
+        if(frame.value.flags&0x80) {continue;}
+        const auto& source=m_assets->geometry[frame.scene_index][frame.object_index];
+        const auto* chain=std::get_if<CvrSimpleDetailChain>(&source);
+        const auto scale=Store(Multiply(Decode(scene.auxiliary_scale),Decode(scene.object_scale)));
+        const auto& geometry=chain ? chain->Levels()[chain->Select(scale)]:std::get<CvrGeometry>(source);
         auto matrix=MultiplyMatrix(view.projection,Bits(frame.value.matrix));
         for(size_t i=0;i<6;++i) {matrix[i]=Store(Multiply(Decode(matrix[i]),Decode(geometry.scalar_bits)));}
         const auto location=AddVector(MultiplyVector(view.projection,Bits(frame.value.location)),view.translation);

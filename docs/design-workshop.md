@@ -1533,3 +1533,36 @@ crash in nested temporary string concatenation; error text is preserved.
 This remains a focused card slice. Preset actions, complete parent/help/input
 presentation, remaining model differences, complete human-played/remote
 manufacturing, SMAX and the release platform/hardware gates remain open.
+
+
+## 2026-10-21 filtered preset controller boundary
+
+`PrepareSmacWorkshopHumanPreview` now accepts the caller's category filter,
+while retaining -1 for ordinary opening. The source caller's14 action/filter
+pairs are recorded in [the action audit](behavior/design-workshop-action-contract-audit.md#autodesign922-caller-filter-and-seeded-tuple).
+Filtering remains inside each ordered submission, so alias/unexclusion effects
+are visible to subsequent proposal generation. No preliminary commit, normal
+open, selector change or automatic name replaces the current draft.
+
+A source-derived basic-technology check exercises all14 preset categories:
+defensive land, offensive land and Scout resolve to the intrinsic Scout;
+unavailable categories preserve the entire supplied draft, including a reactor4
+and nonzero ability mask. Whole registry equality checks distinguish the Scout
+exclusion-bit change from no-match preservation. The existing22 native controls
+still match all414 proposals and transitions. Three additional complete original597de0 calls now supply23 ordered
+submissions: basic unmatched air8, basic Scout10 alias and advanced defender2
+alias. All proposal/published tuples, aliases, modes, filters and complete
+resulting Design pools match. The advanced alias clears only owner1 exclusion
+from custom64 (byte44 changes6 to4), and later categories preserve selection.
+The full focused group now covers437 native submissions. These are controller
+captures, not14 original button runs or live UI completion. See the
+[case index](behavior/design-workshop-filtered-producer-cases.json).
+The immutable private bundle is `independent-workshop-filtered-producer-evidence-20261021`,
+manifest SHA256 `ea6ea93740c73a0cb497e156a7041de04a33992dfb7bfb4168c56e51422ebe91`.
+Faction context in the C++ fixture is independently refreshed from input pools;
+it is not extracted from the native expected outputs.
+
+The live Vehicle Presets panel remains unconnected pending the retained summary
+and AI-priority inputs. These cannot be replaced with zero-valued counters or
+immutable personality defaults. The existing PSI-custom admission restriction
+also remains an integration gap, pending the source-backed extension.

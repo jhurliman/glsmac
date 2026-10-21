@@ -1,0 +1,966 @@
+{
+  "scope": "Three complete original597de0 human controller calls with entry mode1 and source-seeded category filters8/10/2. Existing accepted component/rules/cached inputs; explicit inherited threat-stage0 at59855c/local2c. No UI/model matrix or full summary refresh. All native proposal order, interleaved policy states and complete resulting pools match independent references.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "cases": [
+    {
+      "inputs": {
+        "id": "basic_unmatched_air8",
+        "techs": [
+          6
+        ],
+        "filter": 8,
+        "initial": {
+          "chassis": 4,
+          "weapon": 1,
+          "armor": 1,
+          "reactor": 3,
+          "mask": 32
+        },
+        "technology_hex": "8010080040200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "personality": 0,
+        "declared_threat": 0
+      },
+      "initial_state": {
+        "mode": 1,
+        "filter": 8,
+        "fields": {
+          "chassis": 4,
+          "weapon": 1,
+          "armor": 1,
+          "reactor": 3,
+          "mask": 32
+        }
+      },
+      "final_state": {
+        "mode": 1,
+        "filter": 8,
+        "fields": {
+          "chassis": 4,
+          "weapon": 1,
+          "armor": 1,
+          "mask": 32,
+          "reactor": 3
+        }
+      },
+      "input_pool_sha256": "d3d02e11afc153dbd7a9b288ec389277eb8c1f1b4bdcf865c0e5fecbc7eb611d",
+      "output_pool_sha256": "d3d02e11afc153dbd7a9b288ec389277eb8c1f1b4bdcf865c0e5fecbc7eb611d",
+      "changed_design_bytes": [],
+      "ordered_native_steps": [
+        {
+          "category": 2,
+          "proposal": {
+            "owner": 1,
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 1
+          },
+          "returned": -1,
+          "before": {
+            "mode": 1,
+            "filter": 8,
+            "fields": {
+              "chassis": 4,
+              "weapon": 1,
+              "armor": 1,
+              "mask": 32,
+              "reactor": 3
+            }
+          },
+          "after": {
+            "mode": 1,
+            "filter": 8,
+            "fields": {
+              "chassis": 4,
+              "weapon": 1,
+              "armor": 1,
+              "mask": 32,
+              "reactor": 3
+            }
+          }
+        },
+        {
+          "category": 3,
+          "proposal": {
+            "owner": 1,
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 1
+          },
+          "returned": -1,
+          "before": {
+            "mode": 1,
+            "filter": 8,
+            "fields": {
+              "chassis": 4,
+              "weapon": 1,
+              "armor": 1,
+              "mask": 32,
+              "reactor": 3
+            }
+          },
+          "after": {
+            "mode": 1,
+            "filter": 8,
+            "fields": {
+              "chassis": 4,
+              "weapon": 1,
+              "armor": 1,
+              "mask": 32,
+              "reactor": 3
+            }
+          }
+        },
+        {
+          "category": 10,
+          "proposal": {
+            "owner": 1,
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 1
+          },
+          "returned": -1,
+          "before": {
+            "mode": 1,
+            "filter": 8,
+            "fields": {
+              "chassis": 4,
+              "weapon": 1,
+              "armor": 1,
+              "mask": 32,
+              "reactor": 3
+            }
+          },
+          "after": {
+            "mode": 1,
+            "filter": 8,
+            "fields": {
+              "chassis": 4,
+              "weapon": 1,
+              "armor": 1,
+              "mask": 32,
+              "reactor": 3
+            }
+          }
+        }
+      ],
+      "output_array_hashes": {
+        "designs": "d3d02e11afc153dbd7a9b288ec389277eb8c1f1b4bdcf865c0e5fecbc7eb611d",
+        "factions": "1c324784eccf0731138048469ccf7dced99daf460826cb44b47a6594b3a4bfb2",
+        "bases": "5fbeaa84d39a94adc62e76e2a051ce41f900664b7d84fa05480f436af8243a86",
+        "units": "a614ba5421c41e37d3d368129b3102585986f0d7ca80527f8ac3ba0054c842b2",
+        "history": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+      },
+      "independent_whole_pool_state_and_proposals_match": true
+    },
+    {
+      "inputs": {
+        "id": "basic_scout10_alias",
+        "techs": [
+          6
+        ],
+        "filter": 10,
+        "initial": {
+          "chassis": 3,
+          "weapon": 0,
+          "armor": 1,
+          "reactor": 2,
+          "mask": 16
+        },
+        "technology_hex": "8010080040200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "personality": 0,
+        "declared_threat": 0
+      },
+      "initial_state": {
+        "mode": 1,
+        "filter": 10,
+        "fields": {
+          "chassis": 3,
+          "weapon": 0,
+          "armor": 1,
+          "reactor": 2,
+          "mask": 16
+        }
+      },
+      "final_state": {
+        "mode": 2,
+        "filter": 10,
+        "fields": {
+          "chassis": 0,
+          "weapon": 0,
+          "armor": 0,
+          "mask": 0,
+          "reactor": 1
+        }
+      },
+      "input_pool_sha256": "d3d02e11afc153dbd7a9b288ec389277eb8c1f1b4bdcf865c0e5fecbc7eb611d",
+      "output_pool_sha256": "d3d02e11afc153dbd7a9b288ec389277eb8c1f1b4bdcf865c0e5fecbc7eb611d",
+      "changed_design_bytes": [],
+      "ordered_native_steps": [
+        {
+          "category": 2,
+          "proposal": {
+            "owner": 1,
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 1
+          },
+          "returned": -1,
+          "before": {
+            "mode": 1,
+            "filter": 10,
+            "fields": {
+              "chassis": 3,
+              "weapon": 0,
+              "armor": 1,
+              "mask": 16,
+              "reactor": 2
+            }
+          },
+          "after": {
+            "mode": 1,
+            "filter": 10,
+            "fields": {
+              "chassis": 3,
+              "weapon": 0,
+              "armor": 1,
+              "mask": 16,
+              "reactor": 2
+            }
+          }
+        },
+        {
+          "category": 3,
+          "proposal": {
+            "owner": 1,
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 1
+          },
+          "returned": -1,
+          "before": {
+            "mode": 1,
+            "filter": 10,
+            "fields": {
+              "chassis": 3,
+              "weapon": 0,
+              "armor": 1,
+              "mask": 16,
+              "reactor": 2
+            }
+          },
+          "after": {
+            "mode": 1,
+            "filter": 10,
+            "fields": {
+              "chassis": 3,
+              "weapon": 0,
+              "armor": 1,
+              "mask": 16,
+              "reactor": 2
+            }
+          }
+        },
+        {
+          "category": 10,
+          "proposal": {
+            "owner": 1,
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 1
+          },
+          "returned": 2,
+          "before": {
+            "mode": 1,
+            "filter": 10,
+            "fields": {
+              "chassis": 3,
+              "weapon": 0,
+              "armor": 1,
+              "mask": 16,
+              "reactor": 2
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 10,
+            "fields": {
+              "chassis": 0,
+              "weapon": 0,
+              "armor": 0,
+              "mask": 0,
+              "reactor": 1
+            }
+          }
+        }
+      ],
+      "output_array_hashes": {
+        "designs": "d3d02e11afc153dbd7a9b288ec389277eb8c1f1b4bdcf865c0e5fecbc7eb611d",
+        "factions": "1c324784eccf0731138048469ccf7dced99daf460826cb44b47a6594b3a4bfb2",
+        "bases": "5fbeaa84d39a94adc62e76e2a051ce41f900664b7d84fa05480f436af8243a86",
+        "units": "a614ba5421c41e37d3d368129b3102585986f0d7ca80527f8ac3ba0054c842b2",
+        "history": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+      },
+      "independent_whole_pool_state_and_proposals_match": true
+    },
+    {
+      "inputs": {
+        "id": "advanced_defender2_alias",
+        "alltech": true,
+        "filter": 2,
+        "initial": {
+          "chassis": 4,
+          "weapon": 1,
+          "armor": 1,
+          "reactor": 3,
+          "mask": 32
+        },
+        "bank": [
+          {
+            "chassis": 0,
+            "weapon": 1,
+            "armor": 8,
+            "reactor": 4,
+            "mask": 512
+          }
+        ],
+        "exclude": true,
+        "units": 1,
+        "technology_hex": "82120a0242220202020202020202020202020202020202020202020202020202020202020202020202020206020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202",
+        "personality": 0,
+        "declared_threat": 0
+      },
+      "initial_state": {
+        "mode": 1,
+        "filter": 2,
+        "fields": {
+          "chassis": 4,
+          "weapon": 1,
+          "armor": 1,
+          "reactor": 3,
+          "mask": 32
+        }
+      },
+      "final_state": {
+        "mode": 2,
+        "filter": 2,
+        "fields": {
+          "chassis": 0,
+          "weapon": 1,
+          "armor": 8,
+          "mask": 512,
+          "reactor": 4
+        }
+      },
+      "input_pool_sha256": "d13ee35756a62a76c5c099790cfb3198a33f6b0c4e212a1c2f3712d2a140f874",
+      "output_pool_sha256": "686d84d2772aca571f53bef56107594986a447351a8dcc8bb2f88c822ea410c3",
+      "changed_design_bytes": [
+        {
+          "record": 64,
+          "offset": "0x2c",
+          "before": 6,
+          "after": 4
+        }
+      ],
+      "ordered_native_steps": [
+        {
+          "category": 2,
+          "proposal": {
+            "owner": 1,
+            "chassis": 0,
+            "weapon": 1,
+            "armor": 8,
+            "mask": 512,
+            "reactor": 4
+          },
+          "returned": 64,
+          "before": {
+            "mode": 1,
+            "filter": 2,
+            "fields": {
+              "chassis": 4,
+              "weapon": 1,
+              "armor": 1,
+              "mask": 32,
+              "reactor": 3
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 3,
+          "proposal": {
+            "owner": 1,
+            "chassis": 0,
+            "weapon": 11,
+            "armor": 8,
+            "mask": 17408,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 11,
+          "proposal": {
+            "owner": 1,
+            "chassis": 0,
+            "weapon": 11,
+            "armor": 8,
+            "mask": 16400,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 12,
+          "proposal": {
+            "owner": 1,
+            "chassis": 0,
+            "weapon": 11,
+            "armor": 8,
+            "mask": 16392,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 1,
+          "proposal": {
+            "owner": 1,
+            "chassis": 1,
+            "weapon": 11,
+            "armor": 2,
+            "mask": 163840,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 4,
+          "proposal": {
+            "owner": 1,
+            "chassis": 2,
+            "weapon": 11,
+            "armor": 0,
+            "mask": 1024,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 10,
+          "proposal": {
+            "owner": 1,
+            "chassis": 2,
+            "weapon": 0,
+            "armor": 0,
+            "mask": 1026,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 6,
+          "proposal": {
+            "owner": 1,
+            "chassis": 4,
+            "weapon": 11,
+            "armor": 0,
+            "mask": 258,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 7,
+          "proposal": {
+            "owner": 1,
+            "chassis": 4,
+            "weapon": 16,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 15,
+          "proposal": {
+            "owner": 1,
+            "chassis": 3,
+            "weapon": 15,
+            "armor": 0,
+            "mask": 8193,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 16,
+          "proposal": {
+            "owner": 1,
+            "chassis": 3,
+            "weapon": 14,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 8,
+          "proposal": {
+            "owner": 1,
+            "chassis": 5,
+            "weapon": 11,
+            "armor": 0,
+            "mask": 2,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 9,
+          "proposal": {
+            "owner": 1,
+            "chassis": 5,
+            "weapon": 11,
+            "armor": 0,
+            "mask": 34,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 17,
+          "proposal": {
+            "owner": 1,
+            "chassis": 6,
+            "weapon": 11,
+            "armor": 0,
+            "mask": 2,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 13,
+          "proposal": {
+            "owner": 1,
+            "chassis": 8,
+            "weapon": 20,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": 14,
+          "proposal": {
+            "owner": 1,
+            "chassis": 8,
+            "weapon": 13,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        },
+        {
+          "category": -1,
+          "proposal": {
+            "owner": 1,
+            "chassis": 1,
+            "weapon": 15,
+            "armor": 0,
+            "mask": 8193,
+            "reactor": 4
+          },
+          "returned": -1,
+          "before": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          },
+          "after": {
+            "mode": 2,
+            "filter": 2,
+            "fields": {
+              "chassis": 0,
+              "weapon": 1,
+              "armor": 8,
+              "mask": 512,
+              "reactor": 4
+            }
+          }
+        }
+      ],
+      "output_array_hashes": {
+        "designs": "686d84d2772aca571f53bef56107594986a447351a8dcc8bb2f88c822ea410c3",
+        "factions": "072bef1da469b64e71e41aaceb33f0d138ee45912f8d588d4f74f3f9aa08297a",
+        "bases": "5fbeaa84d39a94adc62e76e2a051ce41f900664b7d84fa05480f436af8243a86",
+        "units": "a614ba5421c41e37d3d368129b3102585986f0d7ca80527f8ac3ba0054c842b2",
+        "history": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7"
+      },
+      "independent_whole_pool_state_and_proposals_match": true
+    }
+  ]
+}

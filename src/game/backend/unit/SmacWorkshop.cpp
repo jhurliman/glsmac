@@ -477,9 +477,10 @@ SmacWorkshopHumanPreview PrepareSmacWorkshopHumanPreview(const SmacStartupDesign
     const SmacWorkshopDraft& provisional,const SmacPredefinedUnitCatalog& catalog,
     const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner,
     const SmacWorkshopHumanContext& context,const faction::SmacDesignCounts& units,
-    const faction::SmacDesignCounts& production) {
+    const faction::SmacDesignCounts& production,int32_t category_filter) {
     RequireOwner(owner);RequireComponents(provisional,catalog);state.Validate(catalog);
     if(!state.native_registry || !state.Find(owner.admission.simulation_id) || context.threat>3
+        || category_filter< -1 || category_filter>17
         || catalog.chassis.chassis.size()!=9 || catalog.weapons.weapons.size()!=21
         || catalog.defenses.defenses.size()!=10 || catalog.reactors.reactors.size()!=4) {
         throw std::invalid_argument("Human Workshop preview requires retained stock records and explicit entry state");
@@ -496,7 +497,7 @@ SmacWorkshopHumanPreview PrepareSmacWorkshopHumanPreview(const SmacStartupDesign
     for(int r=4;r>=1;--r) {if(known(catalog.reactors.reactors.at(r-1).prerequisite)) {reactor=r;break;}}
     const int64_t power=2<<reactor;const int first=64*owner.admission.simulation_id;
     const uint8_t excluded=uint8_t(1u<<owner.admission.simulation_id);
-    auto pool=*state.native_registry;SmacWorkshopHumanPreview result{state,provisional,1,-1,{}};
+    auto pool=*state.native_registry;SmacWorkshopHumanPreview result{state,provisional,1,category_filter,{}};
     const auto read=[&](int id) {const auto& row=pool.at(id);SmacWorkshopDraft draft=provisional;
         draft.chassis=row[36];draft.weapon=row[37];draft.armor=row[38];draft.reactor=row[39];draft.abilities=0;
         for(unsigned k=0;k<4;++k) {draft.abilities|=uint32_t(row[32+k])<<(8*k);}RequireComponents(draft,catalog);return draft;};

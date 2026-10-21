@@ -164,11 +164,13 @@ struct SmacWorkshopHumanPreview {
 };
 // Original597de0 + preview597390, conventional stock-human domain.
 // Caller owns capability refresh, provisional tuple and selector readback.
+// Normal open seeds filter=-1. AutoDesign actions9..22 seed the requested
+// category and the CURRENT draft, including its reactor; no match preserves it.
 SmacWorkshopHumanPreview PrepareSmacWorkshopHumanPreview(const SmacStartupDesignState& state,
     const SmacWorkshopDraft& provisional,const SmacPredefinedUnitCatalog& catalog,
     const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner,
     const SmacWorkshopHumanContext& context,const faction::SmacDesignCounts& units,
-    const faction::SmacDesignCounts& production);
+    const faction::SmacDesignCounts& production,int32_t category_filter=-1);
 
 // Original5bdb60 ordering: active included, every inactive own slot,
 // excluded own with/without cached Units, then excluded intrinsics.

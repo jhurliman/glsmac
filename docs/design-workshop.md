@@ -138,7 +138,8 @@ and closes only on success; Escape dismisses the picker or draft.
 This remains the bounded Infantry / Hand Weapons / No Armor-or-Synthmetal /
 Fission / no-ability path, with automatic naming in the UI. Native Rename,
 existing-custom editing, browsing/categories and other component controls are
-still required. Main and small CVR previews are absent. Saved Workshop designs
+still required. The main CVR preview is implemented; small component previews
+and animation remain absent. Saved Workshop designs
 are not yet offered by the production chooser; prototype completion and
 runtime armored-unit identity remain required for the first end-to-end playable
 receipt. The current popup overlays Base management; the original full parent /
@@ -171,3 +172,30 @@ component data; 26 focused native groups (including three complete-screen
 cases), six affected GSE scripts, targeted correctness analysis of ten production
 translation units, and the same 26 groups with eight relevant translation units
 instrumented under ASan/UBSan. See [the native pricing contract](behavior/design-workshop-first-prototype.md).
+
+### Main Workshop model preview
+
+The live shielding selection renders the assembled Infantry / Fission model,
+with Synthmetal inserted when selected. It uses decoded user-owned CVR files,
+per-part shade tables and the initialized software palette. The original
+Workshop camera and geometry-bounds centering are separate from map/card
+presentation; the shared indexed rasterizer remains the same. The 256-square
+internal result is blitted at native client center (295,164), without stretching
+it to the enclosing 311-square panel. The UI currently presents yaw zero;
+rotation and component-card models still need their native timing/views.
+
+All four complete original indexed/depth frames match (Scout and Synthmetal,
+yaw 0 and approximately 0.05), along with 14 independent synthetic bounds
+controls. These are decoded-asset-to-frame tests, with frozen native outputs as
+expectations rather than runtime inputs. See [the renderer contract](behavior/design-workshop-renderer.md)
+and [the exact bounds store schedule](behavior/design-workshop-bounds.md).
+
+Validation: cached incremental WSL build; 31 relevant native renderer groups
+with owned assets; six affected GSE scripts; five production translation units
+under targeted C++ analysis; the same 31 groups with five relevant translation
+units instrumented under ASan/UBSan. Actual hidden Linux normal and focused
+sanitizer runs displayed Scout, opened the armor picker, and closed cleanly.
+This software/no-audio capture does not establish hardware or audio performance.
+The existing first-design commit restrictions still disable some otherwise
+known-technology armor edits in occupied startup banks; full custom editing,
+production admission, other models and the original parent console remain.

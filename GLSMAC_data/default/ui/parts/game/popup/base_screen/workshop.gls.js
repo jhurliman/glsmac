@@ -23,6 +23,7 @@ return {
         this.reactor_stat = caption(462, 7, 99, 85, 80, 10, false);
         this.armor_name = caption(30, 195, 99, 85, 73, 10, false);
         this.armor_stat = caption(30, 195, 99, 85, 83, 10, false);
+        this.model = window.surface({left: 167, top: 36, width: 256, height: 256});
         this.title = caption(140, 9, 311, 311, 44, 16, true);
         this.stats = caption(140, 9, 311, 311, 293, 16, true);
         this.cost = caption(140, 9, 311, 311, 60, 12, true);
@@ -59,6 +60,7 @@ return {
         this.title.text = #uppercase(data.scout_name); this.draft_name = ''; this.message.text = ''; this.update_armor(); this.window.show();
     },
     update_armor: () => {
+        this.model.smacworkshoppreview(this.selected_armor, 0.0);
         for (row of this.selection.armor) { if (row.id == this.selected_armor) { this.armor_name.text = row.id == 0 ? 'NONE' : #uppercase(row.short_name); this.armor_stat.text = 'Level ' + #to_string(row.rating);
             if (row.design_name != '') { this.title.text = #uppercase(row.design_name); }
             this.cost.text = 'COST:  ' + #to_string(row.cost);

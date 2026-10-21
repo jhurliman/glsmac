@@ -3,6 +3,7 @@ let windows = []; let commands = []; let listeners = {};
 const node = (data) => {
     data.hidden = false; data.handlers = {}; data.children = [];
     data.hide = () => { data.hidden = true; }; data.show = () => { data.hidden = false; }; data.remove = () => {};
+    data.smacworkshoppreview = (armor, yaw) => { data.preview_armor = armor; data.preview_yaw = yaw; };
     data.on = (event, cb) => { data.handlers[event] = cb; };
     data.listen = (target, event, cb) => { listeners[event] = cb; };
     const child = (properties) => { const value = node(properties); data.children :+ value; return value; };
@@ -17,9 +18,11 @@ const selection = {expected_state: 'before', chassis: 'Infantry', weapon: 'Hand 
     armor: [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, design_name: 'Scout', cost: 10, available: true}, {id: 1, name: 'Synthmetal', short_name: 'Synthmetal', rating: 2, design_name: 'Synthmetal Garrison', cost: 20, available: true}, {id: 2, name: 'Unknown', short_name: 'Unknown', rating: 3, design_name: '', cost: 0, available: false}]};
 test.assert(windows[0].left == 216 && windows[0].top == 168 && windows[0].width == 623 && windows[0].height == 387 && windows[0].children[0].background == 'deswin.pcx:smacsoftware()');
 dialog.open(base, selection); test.assert(dialog.active && !windows[0].hidden && dialog.selected_armor == 0);
+test.assert(dialog.model.preview_armor == 0 && dialog.model.preview_yaw == 0.0);
 dialog.open_picker(); test.assert(!windows[1].hidden && #sizeof(dialog.cards) == 3);
 test.assert(dialog.cards[2].handlers.click({}) == true && dialog.selected_armor == 0 && !windows[1].hidden);
 test.assert(dialog.cards[1].handlers.click({}) == true && dialog.selected_armor == 1 && windows[1].hidden);
+test.assert(dialog.model.preview_armor == 1 && dialog.model.preview_yaw == 0.0);
 test.assert(dialog.title.text == 'SYNTHMETAL GARRISON' && dialog.stats.text == '1-2-1' && dialog.cost.text == 'COST:  20' && dialog.chassis.text == 'INFANTRY' && dialog.armor_name.text == 'SYNTHMETAL' && dialog.armor_stat.text == 'Level 2');
 dialog.submit(false); dialog.submit(false);
 test.assert(dialog.pending && #sizeof(commands) == 1 && commands[0].name == 'commit_smac_workshop'

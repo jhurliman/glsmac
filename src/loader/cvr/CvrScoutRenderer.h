@@ -10,7 +10,7 @@ namespace gse::tests { class CvrRenderPolicyFixture; }
 
 namespace loader::cvr {
 
-namespace scout {struct ShadowScene;}
+namespace scout {struct ShadowScene;struct View;}
 struct CvrActorMaterial;
 class CvrSpartanRoverRenderer;
 
@@ -48,6 +48,11 @@ public:
 	// Produces a256-square internal image; final target clipping/blitting and
 	// gameplay unit selection are separate. Input anchors affect metadata only.
 	CvrScoutImage Render( const CvrScoutViewInput& view ) const;
+    // Original Workshop composition: optional Synthmetal is inserted between
+    // Infantry and Fission reactor. Camera/bounds differ from map/card policy.
+    static CvrScoutRenderer LoadWorkshop(std::string_view infantry,std::string_view armor,
+        std::string_view reactor,std::string_view palette_pcx,std::string_view system);
+    CvrScoutImage RenderWorkshop(uint32_t yaw_bits=0) const;
     // Explicit orthographic scene producer, not inferred initialized map light.
     // On demand: normal color/card rendering does not generate unused masks.
     CvrShadowResult RenderShadow(const scout::ShadowScene& scene) const;
@@ -56,8 +61,9 @@ private:
 	friend class CvrSpartanRoverRenderer;
 	friend class gse::tests::CvrRenderPolicyFixture;
 	// Fixed composition policy is independent of optional palette/material data.
-	enum class Profile { Infantry, SpartanSpeeder, InitializedInfantry };
+	enum class Profile { Infantry, SpartanSpeeder, InitializedInfantry, Workshop };
 	static CvrScoutRenderer LoadParts( const std::vector< std::string_view >& parts, Profile profile, const CvrActorMaterial* material );
+	CvrScoutImage RenderView(const scout::View& view) const;
 	struct Assets;
 	explicit CvrScoutRenderer( std::shared_ptr< const Assets > assets );
 	std::shared_ptr< const Assets > m_assets;

@@ -44,6 +44,14 @@ CvrScoutRenderer CvrScoutRenderer::LoadInitialized( const std::string_view infan
 	return LoadParts( { infantry, reactor }, Profile::InitializedInfantry, &palette );
 }
 
+CvrScoutRenderer CvrScoutRenderer::LoadWorkshop(std::string_view infantry,std::string_view armor,
+    std::string_view reactor,std::string_view palette_pcx,std::string_view system) {
+    scout::ValidateMapLight(system);
+    CvrActorMaterial palette{};palette.colors=CvrActorMaterial::ReadSoftwareColors(palette_pcx);
+    return LoadParts(armor.empty()?std::vector<std::string_view>{infantry,reactor}:
+        std::vector<std::string_view>{infantry,armor,reactor},Profile::Workshop,&palette);
+}
+
 CvrScoutRenderer CvrScoutRenderer::LoadParts( const std::vector< std::string_view >& parts, const Profile profile, const CvrActorMaterial* material ) {
 	constexpr size_t MAX_ASSET_BYTES = 32 * 1024 * 1024;
 	size_t total_bytes = 0;
@@ -117,10 +125,44 @@ template< size_t N > std::array< uint32_t, N > Bits( const std::array< float, N 
 
 CvrScoutImage CvrScoutRenderer::Render( const CvrScoutViewInput& input ) const {
 	using namespace scout;
+	if(m_assets->profile==Profile::Workshop) {throw std::invalid_argument("Workshop composition requires its own view");}
 	const bool speeder = m_assets->profile == Profile::SpartanSpeeder;
 	const auto profile = speeder ? IdleProfile::SpartanSpeeder :
 		m_assets->profile == Profile::InitializedInfantry ? IdleProfile::InitializedInfantry : IdleProfile::Infantry;
-	const auto view = MakeView( input, profile );
+    return RenderView(MakeView(input,profile));
+}
+
+CvrScoutImage CvrScoutRenderer::RenderWorkshop(const uint32_t yaw_bits) const {
+    using namespace scout;
+    if(m_assets->profile!=Profile::Workshop) {throw std::invalid_argument("Workshop preview requires its assembled assets");}
+    std::vector<CvrFrameSelection> requests;
+    for(size_t i=0;i<m_assets->geometry.size();++i) {requests.push_back({i,0,{-400,200,0}});}
+    const auto frames=CvrFrameAssembler::Assemble(m_assets->frames,requests);
+    if(frames.first_omitted || frames.records.empty()) {throw std::invalid_argument("Workshop preview has incomplete frames");}
+    const Matrix identity{0x3f800000,0,0,0,0x3f800000,0,0,0,0x3f800000};
+    std::optional<WorkshopBounds> scene;
+    for(const auto& frame:frames.records) {
+        const auto& geometry=std::get<CvrGeometry>(m_assets->geometry[frame.scene_index][frame.object_index]);
+        const auto bounds=WorkshopObjectBounds({identity,Bits(frame.value.matrix),{0,0,0},Bits(frame.value.location),
+            0x3f800000,geometry.scalar_bits,geometry.vectors[0],geometry.vectors[1]});
+        if(!scene) {scene=bounds;} else {
+            for(size_t i=0;i<3;++i) {
+                if(ToDouble(Decode(bounds.minimum[i]))<ToDouble(Decode(scene->minimum[i]))) {scene->minimum[i]=bounds.minimum[i];}
+                if(ToDouble(Decode(bounds.maximum[i]))>ToDouble(Decode(scene->maximum[i]))) {scene->maximum[i]=bounds.maximum[i];}
+            }
+        }
+    }
+    Vector position;
+    for(size_t i=0;i<3;++i) {
+        const auto midpoint=Store(Multiply(Add(Decode(scene->minimum[i]),Decode(scene->maximum[i])),Decode(0x3f000000)));
+        position[i]=Store(Subtract(Integer(0),Decode(midpoint)));
+    }
+    return RenderView(MakeWorkshopView(position,yaw_bits));
+}
+
+CvrScoutImage CvrScoutRenderer::RenderView(const scout::View& view) const {
+    using namespace scout;
+    const bool speeder=m_assets->profile==Profile::SpartanSpeeder;
 	std::vector< CvrFrameSelection > requests;
 	// Speeder assembly uses each part's asset location directly. The Infantry
 	// attachment offset belongs only to its distinct VI/reactor composition.

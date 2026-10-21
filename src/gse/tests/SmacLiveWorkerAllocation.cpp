@@ -3683,6 +3683,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 fixture.ResourceState([&](auto& state){
                     state.ecology_world=game::backend::faction::SmacEcologyWorld{1,1,0};
                     state.strategy->at(1).priorities={2,-1,0,3};
+                    state.air_summary[1]=faction::SmacAirSummary{31,32,33};
                     auto& tech=state.technology.factions.front();tech.labs=scenario>=2 && scenario<=4 ? 99:0;tech.score=scenario==6 ? 2:0;
                     tech.target=scenario>=2 && scenario<=4 ? std::optional<int32_t>(scenario==2 ? 0:1):std::nullopt;
                     tech.cached_threshold=scenario==3 ? 10000:1;tech.pending_secrets=scenario==3;
@@ -3714,6 +3715,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                             "Saving an invalid late Blind question drew RNG or accepted an automatic-selection boundary");
                         fixture.ResourceState([](auto& state){state.technology.factions.front().score=2;});
                     }
+                    bool stale_air=false;fixture.ResourceState([&](const auto& state){stale_air=state.air_summary[1] && state.air_summary[1]->foreign_threats==31;});
+                    GT_ASSERT(stale_air,"Owner air summary ran before the suspended Base/research pass completed");
                     paused.push_back(fixture.Snapshot());
                     const auto id=request->Get("request_id");
                     const value::object_properties_t answer{{"request_id",id},{"mask",scenario==1 ? static_cast<Value*>(VALUE(value::Null)):VALUE(value::Int,,0)}};
@@ -3727,7 +3730,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 }
                 GT_ASSERT(questions==(scenario==5 ? 0:scenario==4 ? 2:1),"Blind discovery/Secrets selected an incorrect number of times at scenario "+std::to_string(scenario));
                 bool exact=false;fixture.ResourceState([&](const auto& state){const auto& tech=state.technology.factions.front();
-                    exact=tech.target.has_value() && tech.score==(scenario==4 ? 4:(scenario>=2 && scenario<=3) || scenario==6 ? 2:0)
+                    exact=state.air_summary[1] && *state.air_summary[1]==faction::SmacAirSummary{} && tech.target.has_value() && tech.score==(scenario==4 ? 4:(scenario>=2 && scenario<=3) || scenario==6 ? 2:0)
                         && (scenario==1 || scenario==5 ? state.strategy->at(1).priorities==std::array<int32_t,4>{2,-1,0,3}:state.strategy->at(1).priorities==std::array<int32_t,4>{0,0,0,0})
                         && (scenario==2 || scenario==4 ? tech.labs==0:tech.labs>0) && (scenario!=3 || tech.pending_secrets);
                 });GT_ASSERT(exact,"Blind selection lost cancellation, labs, bounded Secrets or score at scenario "+std::to_string(scenario));
@@ -6149,7 +6152,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             std::map<size_t,std::string> expected_units;
             fixture.ResourceState([&](auto& state){
                 state.do_or_die=scenario==3;state.roster[0].restart_prohibited=scenario==4;
-                state.strategy->at(1).fight=-17;state.strategy->at(1).priorities={7,-3,11,0};
+                state.strategy->at(1).fight=-17;state.strategy->at(1).priorities={7,-3,11,0};state.air_summary[1]=faction::SmacAirSummary{31,32,33};
                 state.capabilities.emplace();
                 state.capabilities->factions[0].available.fill(70000);
                 state.capabilities->factions[0].foreign.fill(-73);
@@ -6198,6 +6201,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 bool exact=false;fixture.ResourceState([&](auto& state){const auto& e=state.economy.at(1);const auto& t=state.technology.factions[0];
                     const std::array<int32_t,4> priorities{{7,-3,11,0}};
                     exact=state.strategy->at(1).fight==-17 && state.strategy->at(1).priorities==priorities
+                        && state.air_summary[1] && state.air_summary[1]->own_plan4==33
                         && state.roster[0].active==restarted && state.human_defeat_request==(restarted ? std::nullopt : std::optional<int32_t>(1))
                         && state.capabilities && state.capabilities->factions[0]==faction::SmacCapabilityState::Faction{}
                         && state.capabilities->factions[1].available[0]==12345
@@ -6210,7 +6214,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 // a restarted owner with surviving Units does not initialize again.
                 fixture.ResourceState([&](auto& state){state.capabilities->factions[0].available.fill(70000);});
                 fixture.SettleEconomy(1);
-                fixture.ResourceState([&](auto& state){exact=state.strategy->at(1).fight==-17
+                fixture.ResourceState([&](auto& state){exact=state.strategy->at(1).fight==-17 && state.air_summary[1] && state.air_summary[1]->foreign_threats==31
                     && state.economy.at(1).credits==(restarted ? 110 : 120)
                     && state.capabilities->factions[0].available[0]==(restarted ? 70000 : 0)
                     && state.capabilities->factions[1].available[0]==12345;});

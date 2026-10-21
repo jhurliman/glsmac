@@ -320,15 +320,23 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
 	capability_candidate.RefreshCapabilities(owner,*settings.GetSmacTechnologyRules(),*settings.GetSmacPredefinedUnitRules(),
 		*settings.GetSmacCombatRules(),settings.GetSmacCampaignRules() && (settings.GetSmacCampaignRules()->primary&0x00400000u)!=0);
     faction::SmacDesignCounts design_counts{};
+    std::vector<faction::SmacAirSummaryUnit> air_units;
+    air_units.reserve(m_um->GetUnits().size());
     if(recount_military) {auto& row=military->factions.at(owner-1);row.units={};row.attack={};row.unit_phase_flags.emplace();}
     std::set<size_t> seen;
     const auto& order=m_um->GetUnitRecordOrder();
     for(size_t cursor=order.size();cursor>0;--cursor) {
         const auto id=order[cursor-1];const auto* unit=m_um->GetUnit(id);
         if(!unit || !seen.insert(id).second) {throw std::runtime_error("Faction summary requires complete ordered Unit records");}
-        if(unit->IsNative()) {(void)m_um->QueryNativeUnit(unit->Native());continue;}
+        if(unit->IsNative()) {
+            air_units.push_back(faction::ProjectSmacAirSummaryUnit(capability_candidate.designs,settings.GetSmacPredefinedUnitRules()->catalog,
+                unit->Native().design,unit->Native().owner));
+            (void)m_um->QueryNativeUnit(unit->Native());continue;
+        }
         if(!unit->IsConventional()) {throw std::runtime_error("Faction summary requires typed Unit authority");}
         const auto& record=unit->Conventional();
+        air_units.push_back(faction::ProjectSmacAirSummaryUnit(capability_candidate.designs,settings.GetSmacPredefinedUnitRules()->catalog,
+            record.design_id,record.owner_simulation_id));
         if(record.owner_simulation_id!=owner) {continue;}
         ++design_counts.at(record.design_id);
         if(!recount_military) {continue;}
@@ -356,6 +364,16 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
             region,design.plan,0,!square->is_water_tile,power,armor,morale,0,false,valid_base});
     }
     if(seen.size()!=m_um->GetUnits().size()) {throw std::runtime_error("Faction summary omitted a registered Unit");}
+    if(capability_candidate.capabilities) {
+        std::array<uint32_t,8> relations{};
+        const auto& directions=capability_candidate.hostility.owners.at(owner).directions;
+        for(size_t i=0;i<relations.size();++i) {relations[i]=directions[i].primary;}
+        std::optional<std::array<int32_t,2>> ratio;
+        if(settings.GetSmacCombatRules()->psi_ratios) {ratio=settings.GetSmacCombatRules()->psi_ratios->at(0);}
+        // Same admitted no-project, PSI0 definition context as577140 above.
+        capability_candidate.air_summary.at(owner)=faction::CountSmacAirSummary(air_units,{owner,
+            capability_candidate.capabilities->factions.at(owner-1).foreign.at(faction::SmacCapabilityState::Armor),relations,ratio,0,false});
+    } // Legacy missing capability history cannot invent a new threat count.
     // The final strategy phase sees this owner's newly recounted inputs and
     // every peer's retained row. Prepare it before publishing any summary.
     capability_candidate.regional_military=std::move(military);
@@ -365,6 +383,7 @@ void Game::RefreshCanonicalPopulationAggregate( int32_t owner ) {
     const auto regional=PrepareCanonicalRegionalStrategy(owner,capability_candidate);
     if(regional) {capability_candidate.regional_strategy->at(owner)=*regional;}
     m_simulation->value.capabilities.swap(capability_candidate.capabilities);
+    m_simulation->value.air_summary.swap(capability_candidate.air_summary);
     m_simulation->value.regional_military.swap(capability_candidate.regional_military);
     m_simulation->value.regional_strategy.swap(capability_candidate.regional_strategy);
     m_simulation->value.economy.at(owner).production_reference_counts=economy.production_reference_counts;

@@ -56,10 +56,16 @@ void AddSmacDominanceHistoryTests(task::gsetests::GSETests* task) {
                 if(state.strategy) {for(const auto& entry:*state.strategy) {
                     tail.WriteBool(entry.second.fight.has_value());if(entry.second.fight) {tail.WriteInt(*entry.second.fight);}
                 }}
+                for(const auto& summary:state.air_summary) {
+                    tail.WriteBool(summary.has_value());if(summary) {
+                        tail.WriteInt(summary->foreign_threats);tail.WriteInt(summary->own_plan0);tail.WriteInt(summary->own_plan4);
+                    }
+                }
                 const auto old=old_header.ToString()+wire.substr(header.lenr,wire.size()-header.lenr-tail.lenw);
                 const auto legacy=restore(old);bool missing_fight=legacy.strategy.has_value();
                 if(legacy.strategy) {for(const auto& entry:*legacy.strategy) {missing_fight=missing_fight && !entry.second.fight;}}
-                exact=exact && !legacy.dominance_history && missing_fight;
+                bool missing_air=true;for(const auto& summary:legacy.air_summary) {missing_air=missing_air && !summary;}
+                exact=exact && !legacy.dominance_history && missing_fight && missing_air;
                 bool rejected=false;try {restore(wire.substr(0,wire.size()-1));}catch(const std::exception&) {rejected=true;}
                 exact=exact && rejected;
             });

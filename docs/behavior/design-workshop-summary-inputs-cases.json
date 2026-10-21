@@ -1,0 +1,687 @@
+{
+  "scope": "Bounded complete helper/summary fragments; no complete5773c0 mutation pass.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "attack_helpers": [
+    {
+      "id": "conventional",
+      "offense": 4,
+      "peer_defense": 5,
+      "psi_percent": 0,
+      "project": false,
+      "native": 4,
+      "component_helper": 4,
+      "expected": 4
+    },
+    {
+      "id": "psi",
+      "offense": -1,
+      "peer_defense": 5,
+      "psi_percent": 0,
+      "project": false,
+      "native": 7,
+      "component_helper": 7,
+      "expected": 7
+    },
+    {
+      "id": "psi_percent",
+      "offense": -1,
+      "peer_defense": 5,
+      "psi_percent": 25,
+      "project": false,
+      "native": 8,
+      "component_helper": 8,
+      "expected": 8
+    },
+    {
+      "id": "psi_project",
+      "offense": -1,
+      "peer_defense": 5,
+      "psi_percent": 25,
+      "project": true,
+      "native": 12,
+      "component_helper": 12,
+      "expected": 12
+    },
+    {
+      "id": "psi_full_width",
+      "offense": -1,
+      "peer_defense": 70000,
+      "psi_percent": 0,
+      "project": false,
+      "native": 105000,
+      "component_helper": 105000,
+      "expected": 105000
+    },
+    {
+      "id": "psi_negative",
+      "offense": -1,
+      "peer_defense": -5,
+      "psi_percent": 25,
+      "project": true,
+      "native": -12,
+      "component_helper": -12,
+      "expected": -12
+    },
+    {
+      "id": "psi_zero",
+      "offense": -1,
+      "peer_defense": 0,
+      "psi_percent": 0,
+      "project": false,
+      "native": 0,
+      "component_helper": 0,
+      "expected": 0
+    },
+    {
+      "id": "psi_discount",
+      "offense": -1,
+      "peer_defense": 5,
+      "psi_percent": -50,
+      "project": false,
+      "native": 3,
+      "component_helper": 3,
+      "expected": 3
+    }
+  ],
+  "armor_helpers": [
+    {
+      "owner": 1,
+      "armor": 2,
+      "peer_attack": 9,
+      "bonus": 0,
+      "project": false,
+      "native": 4,
+      "expected": 4
+    },
+    {
+      "owner": 1,
+      "armor": -1,
+      "peer_attack": 9,
+      "bonus": 0,
+      "project": false,
+      "native": 12,
+      "expected": 12
+    },
+    {
+      "owner": 1,
+      "armor": -1,
+      "peer_attack": 9,
+      "bonus": 25,
+      "project": true,
+      "native": 20,
+      "expected": 20
+    },
+    {
+      "owner": -1,
+      "armor": -1,
+      "peer_attack": 9,
+      "bonus": 25,
+      "project": true,
+      "native": -2,
+      "expected": -2
+    }
+  ],
+  "summary_fragments": [
+    {
+      "inputs": {
+        "id": "foreign_equal",
+        "unit_owner": 2,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 0,
+        "plan": 0,
+        "offense": 4,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 1,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 1,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x577ab3"
+      ],
+      "base_at_service": null
+    },
+    {
+      "inputs": {
+        "id": "foreign_below",
+        "unit_owner": 2,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 0,
+        "plan": 0,
+        "offense": 4,
+        "peer_defense": 5,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x577ab3"
+      ],
+      "base_at_service": null
+    },
+    {
+      "inputs": {
+        "id": "no_contact",
+        "unit_owner": 2,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 0,
+        "plan": 0,
+        "offense": 4,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x0"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x57800c"
+      ],
+      "base_at_service": null
+    },
+    {
+      "inputs": {
+        "id": "excluded_rel1",
+        "unit_owner": 2,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 0,
+        "plan": 0,
+        "offense": 4,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x9"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x57800c"
+      ],
+      "base_at_service": null
+    },
+    {
+      "inputs": {
+        "id": "excluded_rel2",
+        "unit_owner": 2,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 0,
+        "plan": 0,
+        "offense": 4,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0xa"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x57800c"
+      ],
+      "base_at_service": null
+    },
+    {
+      "inputs": {
+        "id": "rel_override",
+        "unit_owner": 2,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 0,
+        "plan": 0,
+        "offense": 4,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x29"
+      },
+      "actual": {
+        "foreign_air": 1,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 1,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x577ab3"
+      ],
+      "base_at_service": null
+    },
+    {
+      "inputs": {
+        "id": "foreign_plan4",
+        "unit_owner": 2,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 0,
+        "plan": 4,
+        "offense": 4,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x577ab3"
+      ],
+      "base_at_service": null
+    },
+    {
+      "inputs": {
+        "id": "foreign_special",
+        "unit_owner": 2,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 1,
+        "plan": 0,
+        "offense": 4,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x577ab3"
+      ],
+      "base_at_service": null
+    },
+    {
+      "inputs": {
+        "id": "foreign_land",
+        "unit_owner": 2,
+        "design": 127,
+        "chassis": 0,
+        "domain": 0,
+        "special": 0,
+        "plan": 0,
+        "offense": 4,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x57800c"
+      ],
+      "base_at_service": null
+    },
+    {
+      "inputs": {
+        "id": "foreign_psi",
+        "unit_owner": 2,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 0,
+        "plan": 0,
+        "offense": -1,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 1,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 1,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x577ab3"
+      ],
+      "base_at_service": null
+    },
+    {
+      "inputs": {
+        "id": "foreign_psi_discount",
+        "unit_owner": 2,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 0,
+        "plan": 0,
+        "offense": -1,
+        "peer_defense": 4,
+        "psi_percent": -50,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x577ab3"
+      ],
+      "base_at_service": null
+    },
+    {
+      "inputs": {
+        "id": "own_air0",
+        "unit_owner": 1,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 0,
+        "plan": 0,
+        "offense": 4,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 1,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 1,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x5787e5"
+      ],
+      "base_at_service": "-1 on own-unit no-Base path"
+    },
+    {
+      "inputs": {
+        "id": "own_air4",
+        "unit_owner": 1,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 0,
+        "plan": 4,
+        "offense": 4,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 1
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 1
+      },
+      "stop": [
+        "0x5787e5"
+      ],
+      "base_at_service": "-1 on own-unit no-Base path"
+    },
+    {
+      "inputs": {
+        "id": "own_air1",
+        "unit_owner": 1,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 0,
+        "plan": 1,
+        "offense": 4,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x5787e5"
+      ],
+      "base_at_service": "-1 on own-unit no-Base path"
+    },
+    {
+      "inputs": {
+        "id": "own_special_air4",
+        "unit_owner": 1,
+        "design": 127,
+        "chassis": 5,
+        "domain": 2,
+        "special": 1,
+        "plan": 4,
+        "offense": 4,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 1
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 1
+      },
+      "stop": [
+        "0x5787e5"
+      ],
+      "base_at_service": "-1 on own-unit no-Base path"
+    },
+    {
+      "inputs": {
+        "id": "own_native_locust",
+        "unit_owner": 1,
+        "design": 10,
+        "chassis": 7,
+        "domain": 2,
+        "special": 0,
+        "plan": 4,
+        "offense": -1,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 1
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 1
+      },
+      "stop": [
+        "0x5787e5"
+      ],
+      "base_at_service": "-1 on own-unit no-Base path"
+    },
+    {
+      "inputs": {
+        "id": "own_native_mindworm",
+        "unit_owner": 1,
+        "design": 8,
+        "chassis": 0,
+        "domain": 0,
+        "special": 0,
+        "plan": 1,
+        "offense": -1,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x5787e5"
+      ],
+      "base_at_service": "-1 on own-unit no-Base path"
+    },
+    {
+      "inputs": {
+        "id": "foreign_native_locust",
+        "unit_owner": 2,
+        "design": 10,
+        "chassis": 7,
+        "domain": 2,
+        "special": 0,
+        "plan": 4,
+        "offense": -1,
+        "peer_defense": 4,
+        "psi_percent": 0,
+        "relation": "0x8"
+      },
+      "actual": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "expected": {
+        "foreign_air": 0,
+        "own_air_plan0": 0,
+        "own_air_plan4": 0
+      },
+      "stop": [
+        "0x577ab3"
+      ],
+      "base_at_service": null
+    }
+  ],
+  "fight_copy": [
+    {
+      "definition_fight": -1,
+      "current_fight": -1
+    },
+    {
+      "definition_fight": 0,
+      "current_fight": 0
+    },
+    {
+      "definition_fight": 1,
+      "current_fight": 1
+    }
+  ],
+  "startup_zero_slice": {
+    "foreign_air": 17,
+    "own_air_plan0": 0,
+    "own_air_plan4": 0
+  },
+  "capability_then_clear": [
+    {
+      "stage": "capability_call",
+      "counters": [
+        17,
+        19,
+        23
+      ]
+    },
+    {
+      "stage": "after_clear",
+      "counters": [
+        0,
+        0,
+        0
+      ],
+      "peer_defense": 27
+    }
+  ],
+  "capability_result_supplied_in_order_control": true
+}

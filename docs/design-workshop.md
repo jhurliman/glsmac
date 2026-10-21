@@ -1592,3 +1592,16 @@ saves retain absence; research priorities and social ratings do not replace it.
 The [current-fight contract](behavior/faction-current-fight.md) records source
 authority, random-personality limits and focused codec/live-restore evidence.
 Air-summary lifecycle and live recommendations/preset commands remain open.
+
+
+## 2026-10-21 live air-summary authority
+
+The three5773c0 air counters are now calculated at the existing post-Base owner
+checkpoint and retained by simulation V36. The original18 predicate fragments
+and eight attack-helper pairs match. The67-group focused run passes normally
+and under eight-production/four-test ASan/UBSan instrumentation; nine-production
+correctness analysis is clean. Actual saved research continuations preserve old
+counts until the owner pass completes, then reproduce the same recount. See
+[the integration contract](behavior/air-summary-integration.md), including the
+corrected original call order and remaining broader Native/AI lifecycle limits.
+Live Workshop recommendation and preset commands are the next consumers.

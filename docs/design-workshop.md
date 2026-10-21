@@ -1736,5 +1736,45 @@ model-plus-panel RGBA crops. The [integration receipt](behavior/live-ground-shad
 records eight native panel controls, eighteen patterned copy controls and the
 live instrumented saved-world selection run. These bounded crops exclude names,
 statistics, badges and later selection borders; complete decorated-card and
-whole-screen acceptance remain open. Global U/menu, production New/Redesign and
-SMAX caller coverage remain the next Workshop entry-point work.
+whole-screen acceptance remain open. At that checkpoint, global U/menu and
+SMAX caller coverage remained the next entry-point work. The subsequent native
+entry handoff corrected the earlier New/Redesign button binding as recorded below.
+
+
+## 2026-10-21 owner entry and ordinary map access
+
+The [original entry/UI handoff](behavior/design-workshop-entry-ui.md) corrects
+the normal production picker's visible Workshop button: its raw callback1
+becomes final action2, Redesign. A highlighted/current facility passes−1 into
+the owner's ordinary bank scan. Help is the separate action1. No separate
+visible New/Redesign buttons or R/N shortcuts were established for this picker.
+
+Shared preview, ability-menu and edit reads now take the real local owner.
+The actual Player also submits queued opening, presets, selection, Apply,
+Rename, Obsolete, Retire and Upgrade. Base callers keep their actual production
+admission; global entry creates no hidden Base or fabricated production state.
+A no-Base/no-Unit fixture opens with−1 and applies a named design, preserving
+actor IDs and RNG and rejecting stale replay. Existing operation tables cover
+both typed callers. All68 selected native Workshop/roster groups pass normally
+and under focused ASan/UBSan (three production/two test translation units;
+leak detection disabled). Targeted correctness analysis covers changed files
+and known consumers; unchanged checks are reused.
+
+Candidate [#551](https://github.com/jhurliman/glsmac/pull/551) connects unmodified
+U and Menu → HQ → Design Workshop to that owner route. The two
+focused UI scripts cover modal/duplicate guards, modifier separation, HQ
+registration, immediate query/queue rejection and asynchronous failed/stale
+opening messages. A fresh instrumented process loads the saved Campaign Guard
+world through the title menu, opens Workshop with U and closes with Escape to
+the map. Exit0 has no sanitizer reports or tracked OpenGL leaks. Software GL/no
+audio is not hardware performance or cross-platform acceptance.
+
+The actual map-opened capture matches all43,804 Vehicle Presets pixels and all
+3,552 compared opaque DESWIN shell pixels against the pinned original window-tree
+reference. The Scout DATA region differs by one pixel among8,232. These regions
+exclude varying cost/status/strip state, the moving main model and uncovered
+map. Full parent/console pixel parity is still open. Automatic-ability preference
+persistence and its original Preferences UI, complete advanced/SMAX behavior,
+Help/Datalinks and remote/campaign acceptance remain required. The existing RE
+task is tracing the original preferences control; an invented Workshop-only
+checkbox is not a substitute for the original screen.

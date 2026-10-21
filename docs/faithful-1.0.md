@@ -33,9 +33,10 @@ to load them from a user-supplied installation. See
 
 The [Design Workshop implementation plan](design-workshop.md) tracks the user's
 request for the complete functional, pixel-faithful unit customization screen.
-A live editor now opens from Base production and saves retained designs through
-authenticated commands. Its complete playable and pixel-faithful acceptance is
-still open; see the current dashboard and the dated implementation receipts.
+A live editor opens from Base production and uses shared owner-based queries
+and authenticated queued commands. The ordinary global U/HQ caller is recorded
+in the latest Workshop journal receipt. Its complete playable and pixel-faithful
+acceptance is still open; see the current dashboard and the dated implementation receipts.
 
 The user's honey playthrough exposed startup/menu, logical-resolution, terrain
 seam and main-map visibility gaps. They are tracked with original asset sections
@@ -52,14 +53,22 @@ required before the local conquest milestone can be claimed.
 
 ## Current acceptance dashboard — 2026-10-21
 
-Accepted integration: **`5a34fcfa17c3922172f5391188bc413aeab41d6f`**, through
-[#546](https://github.com/jhurliman/glsmac/pull/546), on `codex/faithful-1.0`.
+Accepted integration: **`c444f5437a584f7d615928e5c162f384df9130a7`**, through
+[#550](https://github.com/jhurliman/glsmac/pull/550), on `codex/faithful-1.0`.
 Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `f63613101e07712612a095da79ce34c3a0790655`. This is an integration
+at head `1676ca3c42141bd38cc994af3dc22c8900d4aaa9`. This is an integration
 checkpoint, not a release candidate or a statement that all platforms were rerun.
 
-Through#546 retained component bodies and current-owner materials reach the map
-and both console cards; bounded original idle-body controls match. Current retained names reach Unit cards, production/queue labels and
+Additional tested candidate [#551](https://github.com/jhurliman/glsmac/pull/551)
+connects the ordinary global U/HQ caller and opening-failure feedback. Its
+saved-world capture and focused UI checks are supporting evidence; this accepted
+checkpoint remains pinned to#550.
+
+Through#550 retained component bodies and current-owner materials reach the map
+and both console cards; bounded original idle-body controls match. Native
+style21/18 console panels and indexed ground shadows have twelve matching
+complete model-plus-panel crops; live map shadows remain open. Workshop queries
+and queued commands now accept the actual local owner without a Base proxy. Current retained names reach Unit cards, production/queue labels and
 frontend snapshots. Saved supported designs appear in original production candidate order
 with retained names and Base-aware costs, and flow through queued selection and
 manufacture. Normal Workshop opening follows the highlighted production choice
@@ -86,8 +95,9 @@ Evidence classes are deliberately separate:
   disclosed. The #502 example confirmation capture proves layout, not an
   interactive full-bank retirement or whole-screen original pixel parity.
 - **End-to-end playable acceptance:** the complete named scenario through normal
-  setup, UI/gameplay, save/reload and result. The Workshop receipt and M2
-  local/network match have **not run to completion** at this checkpoint.
+  setup, UI/gameplay, save/reload and result. The bounded early-Fission
+  named-design/manufacture/disk-reopen scenario is complete in [the journal](design-workshop.md). The full advanced/SMAX/remote
+  Workshop receipt and M2 local/network match have **not run to completion**.
 
 Workshop selection, saved-design browsing, component/ability pickers, Rename,
 Obsolete, Retire, Upgrade, redesign/intrinsic confirmations and the live preview
@@ -99,11 +109,13 @@ model frames and the bounded cached-sprite output match complete native buffers.
 remaining model pixels and whole-parent rendering remain open. #536/#537 add
 filtered preset and PSI-custom recommendation boundaries with521 original
 submission expectations; the later live preset, console-button and normal-entry
-receipts connect those consumers. Global U/menu and production New/Redesign
-entry points remain open.
-These receipts do not establish whole-screen parity or the complete human-played
-manufactured Unit path. First custom prototype completion is now integrated
-in#531: a queued saved design is manufactured with its one-time morale bonus
+receipts connect those consumers. The shared owner backend and production Workshop/Redesign entry are connected;
+the global U/HQ UI route has the candidate receipt above. The original normal picker has no established separate visible
+New/Redesign controls; Help/Datalinks and preference persistence remain open.
+These receipts do not establish whole-screen parity or general advanced/remote
+manufacture acceptance. The bounded early-Fission human-played path and its
+remaining limits are recorded in the journal. First custom prototype completion
+is now integrated in#531: a queued saved design is manufactured with its one-time morale bonus
 and native design-history changes, and checkpoint replay matches uninterrupted
 repeat production. #533 connects admitted High Morale and the successful
 newborn-state stores against15 native controls. #534 retains debit/history,
@@ -123,10 +135,10 @@ equality and complete human-played/remote manufacturing receipt remain open.
 | M2.6: second Base and Pod consumption | Partial | Founding and [colony-choice continuation](smac-colony-choice-continuation.md) have live fixtures. Verify population/ownership/support together in the complete scenario. |
 | M2.7: combat, capture, elimination and valid conquest | Partial | [Hostile movement](smac-live-scout-combat.md), [defended capture](smac-defended-base-combat.md) and the [conquest-controller contract](behavior/conquest-controller.md) cover bounded paths. A legal opponent, full remaining-Unit/Pod disposition and actual match ending remain required. |
 | M2.8: every checkpoint reload, remote repeat and late join | Not run as the complete acceptance | Local restoration fixtures are not the numbered uninterrupted-vs-restored match or its network repeat. Retain this as an explicit M2 exit gate. |
-| WS1: open, browse/New, rename, reselect, Apply/Done/Cancel | Partial | [Custom-edit](behavior/design-workshop-custom-edit.md) and [fresh-draft](behavior/design-workshop-fresh-draft.md) reference contracts exist; queued save/retirement paths pass. Normal-open/browse and fenced reselection/Rename paths are connected; Apply/Done/Cancel and original warnings have live receipts. Complete the combined named-design gameplay receipt, preference persistence and original input/screen inventory. |
+| WS1: open, browse/New, rename, reselect, Apply/Done/Cancel | Partial | [Custom-edit](behavior/design-workshop-custom-edit.md) and [fresh-draft](behavior/design-workshop-fresh-draft.md) reference contracts exist; queued save/retirement paths pass. Normal-open/browse and fenced reselection/Rename paths are connected; Apply/Done/Cancel and original warnings have live receipts. Zero-Base opening/Apply is merged; global U/HQ has a tested candidate caller receipt. The bounded early-Fission named-design gameplay/disk-reopen scenario is complete; preference persistence, advanced/remote acceptance and the full original input/screen inventory remain open. |
 | WS2: all legal components, previews, costs and abilities | Partial | [Workshop journal](design-workshop.md) separates exact static compositions, card controls, general record construction and live integration. Stock component/ability pickers, cleanup, PSI formatting, DATA/COST and live animation are connected. Ability-dependent model composition, advanced/SMAX cases, preferences and complete pixel/interaction comparisons remain open. |
-| WS3: new named design to usable manufactured Unit | Not run as the complete acceptance | Follow the journal's minimum receipt through Apply, close/reopen, save/reload, Base production, first prototype and a playable Unit. Price/registry tests alone do not close general production admission. |
-| WS4: original full Workshop screen and interaction diff | Not run as the complete acceptance | Exact declared CVR buffers and UI layout previews are supporting evidence only. Match the original parent/console, artwork, glyph advances, all picker/confirmation states and fixed animation phase at logical4:3 before claiming screen parity. |
+| WS3: new named design to usable manufactured Unit | Partial; bounded early-Fission scenario complete | The actual Campaign Guard receipt covers component selection, Rename/Apply/Done, production, a usable manufactured Unit, disk save/load and Workshop/roster reopen. Advanced/SMAX/remote manufacturing and complete interaction acceptance remain open; do not generalize this one supported scenario. |
+| WS4: original full Workshop screen and interaction diff | Not run as the complete acceptance | Exact declared CVR buffers and UI layout previews are supporting evidence only. The ordinary map-opened capture matches43,804 Presets pixels and3,552 opaque DESWIN shell pixels; Scout DATA differs by1/8,232 pixels. Match the complete parent/console, remaining glyph/model/control states and fixed animation phase at logical4:3 before claiming screen parity. |
 | M3: complete SMAC rule/content inventory | Partial | Many bounded rule families are implemented; Workshop WS1–WS3 and the full inventory/interaction reconciliation remain open. No full campaign receipt. |
 | M4: AI, diplomacy and all SMAC outcomes | Not run as complete campaigns | [Local controller plan](local-faction-controller.md) still requires live per-owner dispatch and legal decisions. Seeded AI campaign/hidden-information/automation/victory quality gates remain open. |
 | M5: complete Planetary Pack/SMAX | Not run as complete campaigns | A distinct ruleset route is not full expansion gameplay. Expansion content inventory, alien rules, scenarios, complete campaigns and SMAC nonregression remain required. |

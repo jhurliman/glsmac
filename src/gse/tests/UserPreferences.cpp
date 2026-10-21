@@ -88,7 +88,7 @@ void AddUserPreferencesTests(task::gsetests::GSETests* task) {
         GT_OK();
     });
     task->AddTest("User preferences persist disabled automatic designs and fence retired configuration callbacks",GT() {
-        const auto parent=std::filesystem::temp_directory_path();
+        const auto parent=std::filesystem::canonical(std::filesystem::temp_directory_path());
         const auto path=parent/("glsmac-preferences-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
         if(path.parent_path()!=parent || !std::filesystem::create_directory(path)) {GT_FAIL("Cannot create isolated preference profile");}
         util::FinallyGuard cleanup([&] {std::error_code ignored;std::filesystem::remove_all(path,ignored);});

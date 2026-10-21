@@ -13,6 +13,21 @@ namespace gse::tests {
 using loader::texture::SmacDialogSource;
 namespace frame=loader::texture::smac_dialog_frame;
 void AddSmacDialogFrameTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Preferences checkbox preserves producer-local palette keys",GT(){
+        SmacDialogSource source;source.indexed.assign(750*900,23);
+        source.indexed[20*750+227]=6;source.indexed[20*750+228]=7;source.indexed[20*750+229]=9;
+        source.indexed[39*750+227]=224;
+        const auto unchecked=frame::Checkbox(source,false),checked=frame::Checkbox(source,true);
+        GT_ASSERT(unchecked.size()==324 && unchecked[0]==9 && unchecked[1]==9 && unchecked[2]==9 && unchecked[3]==23,
+            "Checkbox did not replace loaded6/7 after source rebasing");
+        GT_ASSERT(checked[0]==224 && source.indexed[20*750+227]==6 && source.indexed[20*750+228]==7,
+            "Checkbox mutated the shared frame atlas or used the first sprite");
+        source.palette[9]={1,2,3};const auto rgba=frame::Rgba(unchecked,source);
+        GT_ASSERT(rgba[3]==0 && rgba[7]==0 && rgba[11]==0 && rgba[15]==255,"Checkbox key9 alpha differs");
+        source.indexed.pop_back();bool rejected=false;
+        try {frame::Checkbox(source,false);} catch(const std::invalid_argument&) {rejected=true;}
+        GT_ASSERT(rejected,"Malformed checkbox atlas was accepted");GT_OK();
+    });
     task->AddTest("SMAC small dialog frame distinguishes source9 from destination7 and final copy",GT(){
         SmacDialogSource source;source.indexed.assign(750*900,9);source.palette[7]={192,192,192};source.palette[9]={9,0,0};
         source.indexed[229*750+1]=7; // TL pixel; null center suppresses overlays
@@ -55,6 +70,15 @@ void AddSmacDialogFrameTests(task::gsetests::GSETests* task) {
             GT_ASSERT(hash==workshop_strip_fixture::FRAMES_STYLE[style],"Complete original Workshop frame style differs: "+std::to_string(style));
         }
         const auto digest=[](const auto& bytes){return util::SHA256(std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));};
+        // Independent original unpacked sprite receipts, not hashes generated
+        // by this implementation. See RE-SMAC-PREFERENCES-PIXELS-001.
+        const auto unchecked=frame::Checkbox(source,false),checked=frame::Checkbox(source,true);
+        GT_ASSERT(digest(unchecked)=="1a6d30f88e13f776079bb0a643d0ee941aa694c34f8ede052b423a0a34dcc578",
+            "Original unchecked Preferences sprite differs");
+        GT_ASSERT(digest(checked)=="73353010a3e5c51dee75f2354775e6830683e31cafd46c9fdfc8280db093c7d9",
+            "Original checked Preferences sprite differs");
+        size_t changed=0;for(size_t i=0;i<checked.size();++i) {changed+=checked[i]!=unchecked[i];}
+        GT_ASSERT(changed==324,"Original checkbox transition must replace all324 pixels");
         for(const auto& c:console_panel_fixture::Cases) {
             std::vector<uint8_t> bitmap(1024*257);
             for(int y=0;y<257;++y) {for(int x=0;x<1024;++x) {bitmap[size_t(y)*1024+x]=(x+y)%3==0?41:23;}}

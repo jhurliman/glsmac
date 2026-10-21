@@ -1,0 +1,515 @@
+{
+  "contract": "RE-SMAC-PREFERENCES-PIXELS-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "source_packet_sha256": "b2ced013f1822d37d713e1d97cd2cf21be2f98d351ade1079bcd173541bcc374",
+  "scope": "Controlled 1024x768 page0 original window-tree composite, stock profile defaults, ID8 false/true, corrected original Arial bootstrap; blank map and in-memory OS services.",
+  "frames": [
+    {
+      "id": "unchecked",
+      "indexed_sha256": "78c2ee60c1e5ef37449aad72a365897df73dffd9e1254ac6eb19f75abcd38a43",
+      "dimensions": [
+        1024,
+        768
+      ]
+    },
+    {
+      "id": "checked",
+      "indexed_sha256": "1f2b2d9af07575f412276572033f4ef3d0e56f7b3ceb53fd4c97fcce63a729f5",
+      "dimensions": [
+        1024,
+        768
+      ]
+    }
+  ],
+  "frame_diff": {
+    "pixels": 324,
+    "rect": [
+      418,
+      187,
+      436,
+      205
+    ]
+  },
+  "row": {
+    "client": [
+      457,
+      376
+    ],
+    "pitch": 460,
+    "screen_origin": [
+      418,
+      160
+    ],
+    "stride": 24,
+    "minimum_height": 18,
+    "gap": 6,
+    "column_width": 451,
+    "horizontal_step": 457,
+    "id8_hit_rect": [
+      0,
+      24,
+      457,
+      48
+    ],
+    "id8_sprite_rect": [
+      0,
+      27,
+      18,
+      45
+    ],
+    "id8_text_request": [
+      18,
+      31
+    ],
+    "id8_text_baseline": 43,
+    "native_baseline_increment": 12,
+    "id8_label_ink_bounds_in_row_crop": [
+      24,
+      8,
+      205,
+      22
+    ],
+    "label_foreground_pixels": 737,
+    "glyph_foreground_index": 224,
+    "glyph_rgb": [
+      120,
+      164,
+      212
+    ],
+    "shadow_index": -1,
+    "row_hashes": {
+      "row_False": "bcd78d38c0d954151553190d06f3e340d7a542aabb017ae9a04f82fbb26124de",
+      "row_True": "a973a3f5feea0de949bcd9273756622f598cacd695fa6ca53c36ce06ce35d979"
+    }
+  },
+  "sprites": [
+    {
+      "state": "unused_first",
+      "address": "0x7c68a8",
+      "atlas_xywh": [
+        227,
+        1,
+        18,
+        18
+      ],
+      "sha256": "85587a297de1e41ff920a9781bba7798dccde6a45b1ccd0214c451373ccd1502",
+      "different_pixels": 0,
+      "transparent_pixels": 0
+    },
+    {
+      "state": "unchecked",
+      "address": "0x7c68d4",
+      "atlas_xywh": [
+        227,
+        20,
+        18,
+        18
+      ],
+      "sha256": "1a6d30f88e13f776079bb0a643d0ee941aa694c34f8ede052b423a0a34dcc578",
+      "different_pixels": 0,
+      "transparent_pixels": 0
+    },
+    {
+      "state": "checked",
+      "address": "0x7c6900",
+      "atlas_xywh": [
+        227,
+        39,
+        18,
+        18
+      ],
+      "sha256": "73353010a3e5c51dee75f2354775e6830683e31cafd46c9fdfc8280db093c7d9",
+      "different_pixels": 0,
+      "transparent_pixels": 0
+    }
+  ],
+  "source_index_remap": {
+    "add_mod256": 10,
+    "loaded_replacements": {
+      "6": 9,
+      "7": 9
+    },
+    "native_key_operand": 265,
+    "key_index": 9
+  },
+  "fonts": [
+    {
+      "role": "checkbox_labels",
+      "resolved_face": "Arial Narrow",
+      "font_data_sha256": "e17b243cbf2e194890c561dbb63e515dc34e941ee1a7923748b336199b812f52",
+      "height": -16,
+      "weight": 700,
+      "space_advance": 5,
+      "metrics": {
+        "text_height": 20,
+        "ascent": 16,
+        "descent": 4,
+        "internal_leading": 4
+      }
+    },
+    {
+      "role": "visible_buttons",
+      "resolved_face": "Arial",
+      "font_data_sha256": "b3658eadae55e682b5f69eb64c439c1ecc8f196c0bb8d4756d145d13bc86476a",
+      "height": -12,
+      "weight": 0,
+      "space_advance": 3,
+      "metrics": {
+        "text_height": 15,
+        "ascent": 12,
+        "descent": 3,
+        "internal_leading": 3
+      }
+    }
+  ],
+  "buttons": [
+    {
+      "id": 0,
+      "rect": [
+        33,
+        10,
+        247,
+        30
+      ],
+      "font_pointer": "0x7f0968",
+      "glyphs": [
+        {
+          "text": "Preferences",
+          "x": 73,
+          "baseline": 14,
+          "color": 285147136
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "rect": [
+        33,
+        32,
+        247,
+        52
+      ],
+      "font_pointer": "0x7f0968",
+      "glyphs": [
+        {
+          "text": "Adv. Preferences",
+          "x": 61,
+          "baseline": 14,
+          "color": 285147136
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "rect": [
+        33,
+        54,
+        247,
+        74
+      ],
+      "font_pointer": "0x7f0968",
+      "glyphs": [
+        {
+          "text": "Warning Preferences",
+          "x": 49,
+          "baseline": 14,
+          "color": 285147136
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "rect": [
+        33,
+        76,
+        247,
+        96
+      ],
+      "font_pointer": "0x7f0968",
+      "glyphs": [
+        {
+          "text": "Automation Preferences",
+          "x": 41,
+          "baseline": 14,
+          "color": 285147136
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "rect": [
+        33,
+        98,
+        247,
+        118
+      ],
+      "font_pointer": "0x7f0968",
+      "glyphs": [
+        {
+          "text": "Audio/Visual Preferences",
+          "x": 38,
+          "baseline": 14,
+          "color": 285147136
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "rect": [
+        33,
+        120,
+        247,
+        140
+      ],
+      "font_pointer": "0x7f0968",
+      "glyphs": [
+        {
+          "text": "Map Preferences",
+          "x": 60,
+          "baseline": 14,
+          "color": 285147136
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "rect": [
+        33,
+        164,
+        247,
+        184
+      ],
+      "font_pointer": "0x7f0968",
+      "glyphs": [
+        {
+          "text": "Gamma Correction",
+          "x": 54,
+          "baseline": 14,
+          "color": 285147136
+        }
+      ]
+    },
+    {
+      "id": 90,
+      "rect": [
+        33,
+        314,
+        247,
+        334
+      ],
+      "font_pointer": "0x7f0968",
+      "glyphs": [
+        {
+          "text": "Restore Defaults",
+          "x": 60,
+          "baseline": 14,
+          "color": 285147136
+        }
+      ]
+    },
+    {
+      "id": 92,
+      "rect": [
+        33,
+        337,
+        247,
+        357
+      ],
+      "font_pointer": "0x7f0968",
+      "glyphs": [
+        {
+          "text": "OK",
+          "x": 98,
+          "baseline": 14,
+          "color": 285147136
+        }
+      ]
+    },
+    {
+      "id": 91,
+      "rect": [
+        33,
+        360,
+        247,
+        380
+      ],
+      "font_pointer": "0x7f0968",
+      "glyphs": [
+        {
+          "text": "Cancel",
+          "x": 87,
+          "baseline": 14,
+          "color": 285147136
+        }
+      ]
+    }
+  ],
+  "native_hit_samples": [
+    {
+      "x": 0,
+      "y": 0,
+      "checked_ids": [
+        7
+      ]
+    },
+    {
+      "x": 0,
+      "y": 23,
+      "checked_ids": [
+        7
+      ]
+    },
+    {
+      "x": 0,
+      "y": 24,
+      "checked_ids": [
+        8
+      ]
+    },
+    {
+      "x": 17,
+      "y": 24,
+      "checked_ids": [
+        8
+      ]
+    },
+    {
+      "x": 18,
+      "y": 24,
+      "checked_ids": [
+        8
+      ]
+    },
+    {
+      "x": 300,
+      "y": 24,
+      "checked_ids": [
+        8
+      ]
+    },
+    {
+      "x": 456,
+      "y": 24,
+      "checked_ids": [
+        8
+      ]
+    },
+    {
+      "x": 0,
+      "y": 47,
+      "checked_ids": [
+        8
+      ]
+    },
+    {
+      "x": 0,
+      "y": 48,
+      "checked_ids": [
+        9
+      ]
+    },
+    {
+      "x": 0,
+      "y": 191,
+      "checked_ids": [
+        14
+      ]
+    },
+    {
+      "x": 0,
+      "y": 192,
+      "checked_ids": [
+        14
+      ]
+    },
+    {
+      "x": 0,
+      "y": 375,
+      "checked_ids": [
+        14
+      ]
+    }
+  ],
+  "font_bootstrap": {
+    "object": "0x7f0968",
+    "face": "Arial",
+    "height": -12,
+    "flags": 0,
+    "source": "46c339..46c34d ->630600 ->630450",
+    "private_registration_reused": true
+  },
+  "button_foreground_index": 0,
+  "button_foreground_rgb": [
+    0,
+    0,
+    0
+  ],
+  "gdi_indexed_color_operands": {
+    "checkbox": "0x10ff00e0",
+    "button": "0x10ff0000"
+  },
+  "source_files": {
+    "interface.pcx": "a787846aaf62a199a9f40a5b36d53c121cfdfae2c4baa7bab4dd525d9f374618",
+    "arialn.ttf": "e17b243cbf2e194890c561dbb63e515dc34e941ee1a7923748b336199b812f52"
+  },
+  "verification": {
+    "status": "PASS",
+    "interface_pcx_sha256": "a787846aaf62a199a9f40a5b36d53c121cfdfae2c4baa7bab4dd525d9f374618",
+    "sprites": [
+      {
+        "state": "unused_first",
+        "address": "0x7c68a8",
+        "atlas_xywh": [
+          227,
+          1,
+          18,
+          18
+        ],
+        "sha256": "85587a297de1e41ff920a9781bba7798dccde6a45b1ccd0214c451373ccd1502",
+        "different_pixels": 0,
+        "transparent_pixels": 0
+      },
+      {
+        "state": "unchecked",
+        "address": "0x7c68d4",
+        "atlas_xywh": [
+          227,
+          20,
+          18,
+          18
+        ],
+        "sha256": "1a6d30f88e13f776079bb0a643d0ee941aa694c34f8ede052b423a0a34dcc578",
+        "different_pixels": 0,
+        "transparent_pixels": 0
+      },
+      {
+        "state": "checked",
+        "address": "0x7c6900",
+        "atlas_xywh": [
+          227,
+          39,
+          18,
+          18
+        ],
+        "sha256": "73353010a3e5c51dee75f2354775e6830683e31cafd46c9fdfc8280db093c7d9",
+        "different_pixels": 0,
+        "transparent_pixels": 0
+      }
+    ],
+    "frame_different_pixels": 324,
+    "frame_difference_bounds": [
+      418,
+      187,
+      436,
+      205
+    ],
+    "row_different_pixels": 324,
+    "native_hit_samples": 12,
+    "visible_buttons": 10,
+    "independent_recipe_matches": true,
+    "expected_frame_hashes": [
+      "78c2ee60c1e5ef37449aad72a365897df73dffd9e1254ac6eb19f75abcd38a43",
+      "1f2b2d9af07575f412276572033f4ef3d0e56f7b3ceb53fd4c97fcce63a729f5"
+    ]
+  }
+}

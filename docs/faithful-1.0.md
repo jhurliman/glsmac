@@ -52,13 +52,15 @@ required before the local conquest milestone can be claimed.
 
 ## Current acceptance dashboard — 2026-10-21
 
-Accepted integration: **`91ffd4a88943721d40f545f0bb7559999c6897b3`**, through
-[#543](https://github.com/jhurliman/glsmac/pull/543), on `codex/faithful-1.0`.
+Accepted integration: **`ada16c35630723a4e7a91af40c39bc94326ba1b4`**, through
+[#544](https://github.com/jhurliman/glsmac/pull/544), on `codex/faithful-1.0`.
 Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `2fa4c72c29427e6bff4bbdcae1c50ad819bce18e`. This is an integration
+at head `b762d4947671622c51a19c1b03393ca9550e58c6`. This is an integration
 checkpoint, not a release candidate or a statement that all platforms were rerun.
 
-Through#543 normal Workshop opening follows the highlighted production choice
+Through#544 saved supported designs appear in original production candidate order
+with retained names and Base-aware costs, and flow through queued selection and
+manufacture. Normal Workshop opening follows the highlighted production choice
 and rebuilds the picker on return. Fresh/reset air counters preserve explicit
 foreign history. The console Vehicle Presets panel is connected to authenticated
 commands and matches all43,804 pixels in its bounded original region. Retained

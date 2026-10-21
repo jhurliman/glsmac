@@ -2725,6 +2725,8 @@ public:
 				const auto refresh = std::find_if( updates.begin(), updates.end(), []( const auto& fr ) { return fr.type == game::FrontendRequest::FR_UNIT_UPDATE; } );
 				GT_ASSERT( refresh != updates.end(), "selected Rover did not publish its actual refresh" );
 				frontend.ProcessRequest( &*refresh );
+                GT_ASSERT(refresh->data.unit_update.display_name && unit->GetNameString()==*refresh->data.unit_update.display_name,
+                    "Actual frontend request did not replace the shared Def name");
 				GT_ASSERT( unit->CanMove() && unit->GetStatsString() == ( rover ? "? - ? - 2" : "? - ? - 1" ) && refresh->data.unit_update.morale == ( rover ? 2 : 0 )
 					&& unit->GetSprite()->instanced_sprite->texture_owner == instanced->texture_owner,
 					"actual selected Rover refresh lost stats or changed composition pixels" );

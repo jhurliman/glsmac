@@ -26,6 +26,7 @@
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/SmacWorkshop.h"
+#include "game/backend/unit/SmacProductionDesigns.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/Def.h"
 #include "Pop.h"
@@ -745,6 +746,9 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 					if ( id < 1 || id > 71 ) { THROW( "Production presentation facility identity is out of range" ); }
 					return settings.GetSmacProductionRules()->facilities.at( id - 1 ).name;
 				}
+                if(m_game->m_simulation && m_game->m_simulation->value.designs.native_registry) {
+                    return *unit::ReadSmacProductionDesign(m_game->m_simulation->value.designs.native_registry->at(id),id).name;
+                }
 				if ( id >= 0 && id < 64 ) {
 					const auto& rows = settings.GetSmacPredefinedUnitRules()->catalog.source.units;
 					if ( static_cast< size_t >( id ) >= rows.size() ) { THROW( "Production presentation predefined identity is unavailable" ); }
@@ -1282,7 +1286,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 				}
 				units.push_back( VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
 					{ "id", VALUE( gse::value::Int,, unit->m_id ) },
-					{ "name", VALUE( gse::value::String,, unit->m_def->m_name ) },
+					{ "name", VALUE( gse::value::String,, unit->GetDisplayName() ) },
 					{ "home", VALUE( gse::value::Int,, m_id ) },
 					{ "x", VALUE( gse::value::Int,, unit->GetTile()->coord.x ) },
 					{ "y", VALUE( gse::value::Int,, unit->GetTile()->coord.y ) },

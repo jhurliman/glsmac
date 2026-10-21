@@ -51,6 +51,7 @@ public:
 	UnitManager( Game* game );
 	~UnitManager();
 
+    std::string GetDisplayName(const Unit& unit) const;
 	void Clear();
 	void DefineMoraleSet( MoraleSet* moraleset );
 	void UndefineMoraleSet( const std::string& id );
@@ -168,6 +169,7 @@ public:
 		PreparedConventionalRemoval( PreparedConventionalRemoval&& ) noexcept;
 		PreparedConventionalRemoval& operator=( PreparedConventionalRemoval&& ) noexcept;
 		bool Removes( size_t id ) const;
+        void RefreshSurvivor(const Unit* actor); // stage alongside a shared design edit, before Commit
 		void Commit() noexcept;
 		void Notify( GSE_CALLABLE );
 	private:

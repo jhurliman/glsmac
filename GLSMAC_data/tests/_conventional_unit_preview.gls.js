@@ -22,6 +22,7 @@ return (game) => {
 		result.was_removed = () => { return removed; };
 		result.clear = () => { result.children = []; };
 		result.smacturnframe = (frame) => { return true; };
+        result.smacdominancegraph = (frame) => { result.graph_frame = frame; return true; };
 		result.timer = (delay, callback) => { return { stop: () => {} }; };
 		result.sound = (properties) => { return { play: () => {} }; };
 		const child = (props) => {
@@ -82,7 +83,7 @@ return (game) => {
 		check(lines[0].top + lines[0].measure().height == 73 && lines[1].top + lines[1].measure().height == 86, 'unit card baselines drifted');
 		if (unit.is_conventional) { check(lines[3].text == (#is_defined(expected.home) ? expected.home : 'Independent'), 'unit home row is stale: ' + lines[3].text); }
 		if (held) { check(lines[5].text == 'Hold', 'live Hold order row missing'); }
-		check(lines[0].text == unit.get_def().name, 'wrong unit name');
+		check(lines[0].text == unit.get_name(), 'wrong unit name');
 		const legacy_artillery = !unit.is_conventional && !unit.is_native && unit.get_def().id == 'SporeLauncher';
 		check(lines[1].text == (legacy_artillery ? expected.stats : '(' + expected.stats + ')'), 'wrong preview stats: ' + lines[1].text);
 		check(lines[2].text == expected.morale, 'wrong preview morale: ' + lines[2].text);

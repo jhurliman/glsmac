@@ -75,10 +75,12 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 		case FR_UNIT_SPAWN: {
 			NEW( data.unit_spawn.unitdef_id, std::string, *other.data.unit_spawn.unitdef_id );
 			NEW( data.unit_spawn.morale_string, std::string, *other.data.unit_spawn.morale_string );
+            if(other.data.unit_spawn.display_name) {NEW(data.unit_spawn.display_name,std::string,*other.data.unit_spawn.display_name);}
 			break;
 		}
 		case FR_UNIT_UPDATE: {
 			NEW( data.unit_update.morale_string, std::string, *other.data.unit_update.morale_string );
+            if(other.data.unit_update.display_name) {NEW(data.unit_update.display_name,std::string,*other.data.unit_update.display_name);}
 			break;
 		}
 		case FR_BASE_POP_DEFINE: {
@@ -177,10 +179,12 @@ FrontendRequest::~FrontendRequest() {
 		case FR_UNIT_SPAWN: {
 			DELETE( data.unit_spawn.unitdef_id );
 			DELETE( data.unit_spawn.morale_string );
+            if(data.unit_spawn.display_name) {DELETE(data.unit_spawn.display_name);}
 			break;
 		}
 		case FR_UNIT_UPDATE: {
 			DELETE( data.unit_update.morale_string );
+            if(data.unit_update.display_name) {DELETE(data.unit_update.display_name);}
 			break;
 		}
 		case FR_BASE_POP_DEFINE: {

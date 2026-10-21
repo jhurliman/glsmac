@@ -261,7 +261,9 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
                     {"offense",VALUE(gse::value::Int,,catalog.weapons.weapons.at(raw[37]).offense)},
                     {"weapon_mode",VALUE(gse::value::Int,,int(catalog.weapons.weapons.at(raw[37]).mode))},
                     {"strength",VALUE(gse::value::Int,,catalog.defenses.defenses.at(raw[38]).rating)},
-                    {"speed",VALUE(gse::value::Int,,catalog.chassis.chassis.at(raw[36]).speed)}
+                    {"speed",VALUE(gse::value::Int,,catalog.chassis.chassis.at(raw[36]).speed)},
+                    {"stat_line",VALUE(gse::value::String,,unit::FormatSmacWorkshopStats({id,raw[36],raw[37],raw[38],
+                        uint32_t(raw[32])|(uint32_t(raw[33])<<8)|(uint32_t(raw[34])<<16)|(uint32_t(raw[35])<<24),raw[39],{}},catalog))}
                 });}
                 rows.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
                     {"id",VALUE(gse::value::Int,,id)}, {"active",VALUE(gse::value::Bool,,active)},
@@ -322,11 +324,13 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
         // the Base's separate first-prototype surcharge.
         const int64_t shown_cost=int64_t(cost_rows)*mineral_factor;
         if(shown_cost<0 || shown_cost>INT32_MAX) {throw std::overflow_error("Workshop displayed cost exceeds signed32");}
+        auto displayed=draft;displayed.armor=choice.component_id;
         armor.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
             {"id",VALUE(gse::value::Int,,choice.component_id)},
             {"name",VALUE(gse::value::String,,catalog.defenses.defenses.at(choice.component_id).name)},
             {"short_name",VALUE(gse::value::String,,catalog.defenses.defenses.at(choice.component_id).short_name)},
             {"rating",VALUE(gse::value::Int,,catalog.defenses.defenses.at(choice.component_id).rating)},
+            {"stat_line",VALUE(gse::value::String,,unit::FormatSmacWorkshopStats(displayed,catalog,true))},
             {"design_name",VALUE(gse::value::String,,design_name)},
             {"cost",VALUE(gse::value::Int,,shown_cost)},
             {"technology_available",VALUE(gse::value::Bool,,choice.technology_available)},

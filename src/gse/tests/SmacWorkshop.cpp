@@ -8,6 +8,7 @@
 #include "fixtures/WorkshopHuman.h"
 #include "fixtures/WorkshopDomain.h"
 #include "fixtures/WorkshopPicker.h"
+#include "fixtures/WorkshopStats.h"
 #include "fixtures/WorkshopSavedCommits.h"
 #include "fixtures/WorkshopAllocation.h"
 #include "fixtures/SmacIntrinsicOverlays.h"
@@ -26,6 +27,20 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop stat formatter matches24 native strings and four main captions",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);if(!input) {throw std::runtime_error("Missing owned stat rules");}
+        const std::string source{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
+        const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;
+        for(const auto& row:workshop_stats_fixture::Cases) {
+            const auto actual=unit::FormatSmacWorkshopStats(row.draft,catalog);
+            GT_ASSERT(actual==row.text,"Native stat string differs: "+actual+" expected "+row.text);
+        }
+        for(const auto& row:workshop_stats_fixture::Captions) {
+            GT_ASSERT(unit::FormatSmacWorkshopStats(row.draft,catalog,true)==row.text,"Main stat ability caption differs");
+        }GT_OK();
+    });
     task->AddTest("SMAC Workshop accepted picker mutations match fifteen native drafts and two entry guards",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);

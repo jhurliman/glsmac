@@ -71,14 +71,14 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
         // Flat, non-Planet geometry and retained raw climate codes exercise the
         // common adapter independently of the wrapped installed container.
         meta.width=16;meta.height=8;meta.horizontal_wrap=false;meta.categories[0]=0;
-        std::string small(64*44,0);for(size_t i=0;i<64;++i) {small[44*i]=char(255);small[44*i+2]=char(0xaf);small[44*i+3]=1;small[44*i+7]=char(0xe7);}
-        const auto initial=Policy::GeneratedTerrainV3(Authority::GeneratedRetained(meta,small));auto climate=initial.NativeTerrainSource()->ExportClimateTerrain();
+        std::string flat_records(64*44,0);for(size_t i=0;i<64;++i) {flat_records[44*i]=char(255);flat_records[44*i+2]=char(0xaf);flat_records[44*i+3]=1;flat_records[44*i+7]=char(0xe7);}
+        const auto initial=Policy::GeneratedTerrainV3(Authority::GeneratedRetained(meta,flat_records));auto climate=initial.NativeTerrainSource()->ExportClimateTerrain();
         GT_ASSERT(!climate.horizontal_wrap && climate.tiles.front().temperature==7 && climate.tiles.front().moisture==3,"Raw retained climate codes were normalized");
         climate.tiles[0]={6,7,3,255,129,0x81234567u,0xefa98765u,3,2,{{1,2,3,4,5,6,UINT32_MAX}}};
         const auto current=initial.WithClimateTerrain(climate,-11,7);const auto bytes=current.NativeTerrainSource()->RecordBytes();
         GT_ASSERT(uint8_t(bytes[0])==223 && uint8_t(bytes[2])==0xa3 && bytes[3]==1 && uint8_t(bytes[7])==0xe7
             && current.NativeTerrainSource()->Info().sea_offset==-11 && current.NativeTerrainSource()->Info().climate_extra==7
-            && Policy::Deserialize(current.Serialize().ToString())==current && initial.NativeTerrainSource()->RecordBytes()==small,
+            && Policy::Deserialize(current.Serialize().ToString())==current && initial.NativeTerrainSource()->RecordBytes()==flat_records,
             "Generated climate changed unrelated fields, topology, metadata or queued source");
         rejected=false;climate.horizontal_wrap=true;
         try {(void)initial.WithClimateTerrain(climate,0,0);}catch(const std::exception&) {rejected=true;}

@@ -9,6 +9,9 @@
 #include "loader/texture/TextureLoader.h"
 #include "loader/texture/SmacTurnFrames.h"
 #include "loader/cvr/CvrScoutRenderer.h"
+#include "loader/cvr/CvrActorMaterial.h"
+#include "game/frontend/SmacDevelopedOverlay.h"
+#include "loader/txt/TXTLoader.h"
 #include "util/FS.h"
 #include "loader/texture/SmacDialogFrame.h"
 #include "ui/SmacDominanceRaster.h"
@@ -122,7 +125,8 @@ Surface::Surface( DOM_ARGS_T )
 	} ) );
 
     Method(GSE_CALL,"smacworkshopcomponents",NATIVE_CALL(this) {
-        N_EXPECT_ARGS(1);N_GETVALUE(armor,0,Int);
+        N_EXPECT_ARGS_MIN_MAX(1,2);N_GETVALUE(armor,0,Int);
+        bool armor_only=false;if(arguments.size()==2) {N_GETVALUE(only,1,Bool);armor_only=only;}
         if(armor<0 || armor>9) {throw std::invalid_argument("Unsupported Workshop side-card draft");}
         EnsureWorkshopComponents();
         // One original painter pass shares centering state in component order.
@@ -130,6 +134,7 @@ Surface::Surface( DOM_ARGS_T )
         const std::array<std::array<int,4>,4> clips{{{30,7,129,92},{30,101,129,186},{30,195,129,280},{462,7,561,92}}};
         for(int kind=0;kind<4;++kind) {
             const auto image=m_workshop_components->Render(kind,kind==2 ? int(armor):0,false,true,position);
+            if(armor_only && kind!=2) {continue;}
             if(!image) {continue;}const auto& clip=clips[kind];
             for(int y=clip[1];y<clip[3];++y) {for(int x=clip[0];x<clip[2];++x) {
                 const int sx=x-image->target_anchor[0]+128,sy=y-image->target_anchor[1]+128;
@@ -210,6 +215,74 @@ Surface::Surface( DOM_ARGS_T )
         return VALUE(gse::value::Bool,,true);
     }));
 
+    Method(GSE_CALL,"smacworkshopstrip",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(4);N_GETVALUE(rows,0,Array);N_GETVALUE(faction,1,String);N_GETVALUE(selected,2,Int);N_GETVALUE(hovered,3,Int);
+        if(rows.size()>10 || faction.empty() || faction.size()>256 || faction.find_first_of("/\\:\0",0,4)!=std::string::npos) {
+            throw std::invalid_argument("Invalid Workshop strip projection");
+        }
+        if(selected< -1 || selected>511 || hovered< -1 || hovered>511) {throw std::invalid_argument("Invalid Workshop strip selection");}
+        std::vector<std::optional<std::array<int,7>>> keys;std::vector<int32_t> ids;
+        for(auto* value:rows) {
+            if(!value || value->Deref()->type!=gse::VT_OBJECT) {throw std::invalid_argument("Invalid Workshop strip row");}
+            auto* row=static_cast<gse::value::Object*>(value->Deref());const auto* active=row->Get("active")->Deref();
+            const auto* id=row->Get("id")->Deref();if(id->type!=gse::VT_INT || static_cast<const gse::value::Int*>(id)->value<0
+                || static_cast<const gse::value::Int*>(id)->value>511) {throw std::invalid_argument("Invalid Workshop strip raw ID");}
+            ids.push_back(int32_t(static_cast<const gse::value::Int*>(id)->value));
+            if(active->type!=gse::VT_BOOL) {throw std::invalid_argument("Invalid Workshop strip activity");}
+            if(!static_cast<const gse::value::Bool*>(active)->value) {keys.push_back(std::nullopt);continue;}
+            auto* components=row->Get("components")->Deref();if(components->type!=gse::VT_OBJECT) {throw std::invalid_argument("Missing Workshop strip components");}
+            std::array<int,7> key;size_t at=0;
+            for(const auto* name:{"chassis","weapon","armor","reactor","offense","weapon_mode","strength"}) {
+                const auto* field=static_cast<gse::value::Object*>(components)->Get(name)->Deref();
+                if(field->type!=gse::VT_INT) {throw std::invalid_argument("Invalid Workshop strip component");}
+                const auto number=static_cast<const gse::value::Int*>(field)->value;
+                if(number<INT32_MIN || number>INT32_MAX) {throw std::invalid_argument("Workshop strip component exceeds signed32");}key[at++]=int(number);
+            }
+            if(key[0]<0 || key[0]>8 || key[1]<0 || key[1]>20 || key[2]<0 || key[2]>9 || key[3]<1 || key[3]>4) {
+                throw std::invalid_argument("Workshop strip component identity outside stock catalog");
+            }keys.push_back(key);
+        }
+        const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;
+            util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));return std::string(bytes.begin(),bytes.end());};
+        if(!m_workshop_strip_colors) {
+            auto colors=loader::cvr::CvrActorMaterial::ReadGamma100Colors(read("palette.pcx"));
+            const auto labels=loader::txt::TXTLoader::ReadUniqueSection(read("labels.txt"),"LABELS");
+            if(labels.size()<=913 || labels[111].empty() || labels[913].empty()) {throw std::invalid_argument("Incomplete Workshop strip labels");}
+            m_workshop_strip_labels={labels[111],labels[913]};m_workshop_strip_shadow=game::frontend::smac_developed_overlay::ShadowLookup(colors);
+            m_workshop_strip_colors=std::move(colors);
+        }
+        const auto& colors=*m_workshop_strip_colors;const auto& lookup=m_workshop_strip_shadow;
+        if(!m_dialog_source) {m_dialog_source=g_engine->GetTextureLoader()->GetSmacDialogSource();}
+        if(!m_dialog_source) {throw std::runtime_error("Workshop strip frame source unavailable");}
+        if(faction!=m_workshop_strip_faction) {m_workshop_strip_images.clear();m_workshop_strip_faction=faction;}
+        std::vector<uint8_t> indexed(756*56);
+        for(size_t y=0;y<56;++y) {std::fill_n(indexed.begin()+y*756,756,y%2?65:198);}
+        loader::texture::smac_dialog_frame::Paint(indexed,756,56,*m_dialog_source,{3,0,0,756,56},{0,0,756,56});
+        for(size_t i=0;i<keys.size();++i) {
+            const int x=int(72*i)+19;const int style=ids[i]==selected?2:ids[i]==hovered?1:0;
+            loader::texture::smac_dialog_frame::Paint(indexed,756,56,*m_dialog_source,{style,x,3,x+70,53},{0,0,756,56},{8,192});
+        }
+        for(size_t i=0;i<keys.size();++i) {if(keys[i]) {
+            const auto key=*keys[i];auto found=std::find_if(m_workshop_strip_images.begin(),m_workshop_strip_images.end(),[&](const auto& item){return item.key==key;});
+            std::shared_ptr<const loader::cvr::CvrStripImage> image;
+            if(found!=m_workshop_strip_images.end()) {image=found->image;}
+            else {
+                const auto renderer=loader::cvr::CvrScoutRenderer::LoadStripDesign(read,read(faction),key[0],key[1],key[2],key[3],{key[4],key[5],key[6]});
+                image=std::make_shared<const loader::cvr::CvrStripImage>(renderer.RenderStrip());
+                if(m_workshop_strip_images.size()==16) {m_workshop_strip_images.erase(m_workshop_strip_images.begin());}
+                m_workshop_strip_images.push_back({key,image});
+            }
+            const auto x=int32_t(72*i);image->Composite(indexed,756,56,756,lookup,{x-76,-95},{x+21,5,x+87,51});
+        }}
+        CreateTexture();m_background.texture->Resize(756,56);auto* target=m_background.texture->GetBitmap();
+        for(size_t i=0;i<indexed.size();++i) {const auto& rgb=colors[indexed[i]];target[4*i]=rgb[0];target[4*i+1]=rgb[1];target[4*i+2]=rgb[2];target[4*i+3]=255;}
+        m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
+        const auto color=[&](uint8_t index) {const auto& rgb=colors[index];return "rgb("+std::to_string(rgb[0])+","+std::to_string(rgb[1])+","+std::to_string(rgb[2])+")";};
+        return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+            {"normal",VALUE(gse::value::String,,color(159))},{"unused",VALUE(gse::value::String,,color(248))},{"obsolete",VALUE(gse::value::String,,color(255))},
+            {"empty_label",VALUE(gse::value::String,,m_workshop_strip_labels[0])},{"obsolete_label",VALUE(gse::value::String,,m_workshop_strip_labels[1])}
+        });
+    }));
     Method(GSE_CALL,"smacworkshoppreview",NATIVE_CALL(this) {
         N_EXPECT_ARGS(2);N_GETVALUE(armor,0,Int);N_GETVALUE(yaw,1,Float);
         if(armor<0 || armor>1 || !std::isfinite(yaw) || std::abs(yaw)>64.0) {throw std::invalid_argument("Unsupported Workshop preview draft");}

@@ -1,5 +1,6 @@
 #include "SmacDialogFrame.h"
 #include "fixtures/SmacDialogFrame.h"
+#include "fixtures/WorkshopStripFrames.h"
 #include "loader/texture/SmacDialogFrame.h"
 #include "task/gsetests/GSETests.h"
 #include "util/FinallyGuard.h"
@@ -45,7 +46,12 @@ void AddSmacDialogFrameTests(task::gsetests::GSETests* task) {
             GT_ASSERT(hash==c.hash,"Original small-frame indexed control differs: "+std::string(c.name));
             pixels+=bitmap.size();
         }
-        GT_ASSERT(pixels==43431,"Original frame control coverage changed");GT_OK();
+        GT_ASSERT(pixels==43431,"Original frame control coverage changed");
+        for(size_t style=0;style<4;++style) {
+            std::vector<uint8_t> bitmap(70*50,9);frame::Paint(bitmap,70,50,source,{int(style),0,0,70,50},{0,0,70,50});
+            uint64_t hash=14695981039346656037ull;for(auto value:bitmap) {hash=(hash^value)*1099511628211ull;}
+            GT_ASSERT(hash==workshop_strip_fixture::FRAMES_STYLE[style],"Complete original Workshop frame style differs: "+std::to_string(style));
+        }GT_OK();
     });
 }
 }

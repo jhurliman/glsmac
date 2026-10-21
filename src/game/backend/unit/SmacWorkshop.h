@@ -42,6 +42,11 @@ struct SmacWorkshopAbilitySelection {uint32_t mask;std::array<int32_t,2> slots;}
 // Original ascending removal preserves selector slots when no removal occurs.
 SmacWorkshopAbilitySelection CleanSmacWorkshopAbilities(const SmacWorkshopDraft& draft,
     std::array<int32_t,2> slots,bool second_ability,const SmacPredefinedUnitCatalog& catalog);
+// Full-paint cleanup after retained selection. Availability loss alone does not
+// discard saved abilities; Neural capacity and component compatibility still apply.
+SmacWorkshopAbilitySelection CleanSmacWorkshopRetainedAbilities(const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner);
 // Original custom-record construction. Preserves name, byte47 and prerequisite;
 // technology/picker legality and automatic naming belong to the caller.
 void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,

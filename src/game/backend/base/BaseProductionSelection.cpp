@@ -26,7 +26,8 @@ namespace game::backend {
 
 bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
     const gse::value::object_properties_t& args, size_t caller, bool apply ) {
-    if(name=="commit_smac_workshop") {
+    if(name=="commit_smac_workshop" || name=="select_smac_workshop") {
+        const bool selecting=name=="select_smac_workshop";
         const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
             const auto at=args.find(key);
             if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop command");}
@@ -34,15 +35,16 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         };
         const bool complete=args.find("chassis")!=args.end() || args.find("weapon")!=args.end() || args.find("reactor")!=args.end() || args.find("abilities")!=args.end();
         const bool answered=args.find("overwrite")!=args.end();
-        if(args.size()!=(complete ? 11u:7u)+(answered ? 1u:0u)) {THROW("Workshop command requires its complete draft/fence and optional overwrite answer");}
+        if((selecting && (complete || answered || args.size()!=5))
+            || (!selecting && args.size()!=(complete ? 11u:7u)+(answered ? 1u:0u))) {THROW("Workshop command requires its complete draft/fence and optional overwrite answer");}
         const auto* object=static_cast<const gse::value::Object*>(field("base",gse::VT_OBJECT));
         if(object->object_class!=base::Base::WRAP_CLASS) {THROW("Workshop requires an actual Base");}
         auto* base=base::Base::Unwrap(args.at("base"));
         const auto& expected=static_cast<const gse::value::String*>(field("expected_state",gse::VT_STRING))->value;
-        const auto armor=static_cast<const gse::value::Int*>(field("armor",gse::VT_INT))->value;
+        const auto armor=selecting ? 0:static_cast<const gse::value::Int*>(field("armor",gse::VT_INT))->value;
         const auto selected=static_cast<const gse::value::Int*>(field("selected_design",gse::VT_INT))->value;
         const auto& supplied=static_cast<const gse::value::String*>(field("name",gse::VT_STRING))->value;
-        const auto done=static_cast<const gse::value::Bool*>(field("done",gse::VT_BOOL))->value;
+        const auto done=selecting ? false:static_cast<const gse::value::Bool*>(field("done",gse::VT_BOOL))->value;
         const auto chassis=complete ? static_cast<const gse::value::Int*>(field("chassis",gse::VT_INT))->value:0;
         const auto weapon=complete ? static_cast<const gse::value::Int*>(field("weapon",gse::VT_INT))->value:0;
         const auto reactor=complete ? static_cast<const gse::value::Int*>(field("reactor",gse::VT_INT))->value:1;
@@ -79,7 +81,8 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
             try {
                 const auto& economy=m_simulation->value.economy.at(owner->admission.simulation_id);
                 unit::SmacWorkshopCommit result;
-                if(next.native_registry) {
+                if(selecting) {result={int32_t(selected),false};}
+                else if(next.native_registry) {
                     const auto& catalog=settings.GetSmacPredefinedUnitRules()->catalog;
                     if(const auto alias=unit::ReuseSmacWorkshopDesign(next,draft,catalog,*settings.GetSmacTechnologyRules(),*owner)) {result=*alias;}
                     else {
@@ -151,6 +154,8 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
                     // a tentative record into the reselect source.
                     const auto& source=failed || declined ? m_simulation->value.designs:next;
                     auto selection=unit::PrepareSmacWorkshopReselection(source,design_id,supplied,settings.GetSmacPredefinedUnitRules()->catalog,owner->admission.simulation_id);
+                    selection.draft.abilities=unit::CleanSmacWorkshopRetainedAbilities(selection.draft,settings.GetSmacPredefinedUnitRules()->catalog,
+                        *settings.GetSmacTechnologyRules(),*owner).mask;
                     next=std::move(selection.state);design_id=selection.draft.selected_design;
                     response_draft=selection.draft;restored_armor=int32_t(selection.draft.armor);restored_name=std::move(selection.draft.name);reselected=true;
                 } catch(const std::exception&) {failed=true;}
@@ -249,11 +254,21 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
                 const auto& raw=registry.native_registry->at(id);const bool active=(raw[48]&1)!=0;
                 // Stored metadata is not the selector's editable draft or a
                 // generated display caption. Inactive records supply neither.
+                gse::Value* components=VALUE(gse::value::Undefined);
+                if(active) {components=VALUE(gse::value::Object,,GSE_CALL_NOGC,{
+                    {"chassis",VALUE(gse::value::Int,,raw[36])}, {"weapon",VALUE(gse::value::Int,,raw[37])},
+                    {"armor",VALUE(gse::value::Int,,raw[38])}, {"reactor",VALUE(gse::value::Int,,raw[39])},
+                    {"offense",VALUE(gse::value::Int,,catalog.weapons.weapons.at(raw[37]).offense)},
+                    {"weapon_mode",VALUE(gse::value::Int,,int(catalog.weapons.weapons.at(raw[37]).mode))},
+                    {"strength",VALUE(gse::value::Int,,catalog.defenses.defenses.at(raw[38]).rating)},
+                    {"speed",VALUE(gse::value::Int,,catalog.chassis.chassis.at(raw[36]).speed)}
+                });}
                 rows.push_back(VALUE(gse::value::Object,,GSE_CALL_NOGC,{
                     {"id",VALUE(gse::value::Int,,id)}, {"active",VALUE(gse::value::Bool,,active)},
                     {"excluded",VALUE(gse::value::Bool,,(raw[44]&(1u<<technology.admission.simulation_id))!=0)},
                     {"flags",VALUE(gse::value::Int,,uint16_t(uint16_t(raw[48])|(uint16_t(raw[49])<<8)))},
                     {"stored_name",VALUE(gse::value::String,,active ? std::string(raw.begin(),std::find(raw.begin(),raw.begin()+32,uint8_t(0))):std::string())},
+                    {"components",components},
                     {"unit_count",counts ? static_cast<gse::Value*>(VALUE(gse::value::Int,,counts->at(id))):VALUE(gse::value::Undefined)}
                 }));
             }designs=VALUE(gse::value::Array,,rows);

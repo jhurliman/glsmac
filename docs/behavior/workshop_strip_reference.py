@@ -26,6 +26,22 @@ def arrow(offset,count,right):
     return count if offset<0 else offset
 
 
+def recenter(browse,offset,opening_target):
+    """449740..449772; target is the open routine's local EDI, not readback.
+
+    Constructor starts at0; left-arrow wrap can retain count. Negative starting
+    offsets are outside the admitted real64-slot-bank entry state.
+    """
+    assert offset>=0
+    count=len(browse)
+    for k in range(offset,offset+count):
+        position=k%count
+        if browse[position]==opening_target:
+            value=position+count-5
+            return value-truncdiv(value,count)*count
+    return offset
+
+
 def hit(rows,x,y):
     for index in range(len(rows)-1,-1,-1):
         l,t,r,b,kind,value=rows[index]

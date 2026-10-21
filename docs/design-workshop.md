@@ -1549,8 +1549,18 @@ defensive land, offensive land and Scout resolve to the intrinsic Scout;
 unavailable categories preserve the entire supplied draft, including a reactor4
 and nonzero ability mask. Whole registry equality checks distinguish the Scout
 exclusion-bit change from no-match preservation. The existing22 native controls
-still match all414 proposals and transitions. New filtered native controls are
-being collected separately; this check is not a claim of14 original button runs.
+still match all414 proposals and transitions. Three additional complete original597de0 calls now supply23 ordered
+submissions: basic unmatched air8, basic Scout10 alias and advanced defender2
+alias. All proposal/published tuples, aliases, modes, filters and complete
+resulting Design pools match. The advanced alias clears only owner1 exclusion
+from custom64 (byte44 changes6 to4), and later categories preserve selection.
+The full focused group now covers437 native submissions. These are controller
+captures, not14 original button runs or live UI completion. See the
+[case index](behavior/design-workshop-filtered-producer-cases.json).
+The immutable private bundle is `independent-workshop-filtered-producer-evidence-20261021`,
+manifest SHA256 `ea6ea93740c73a0cb497e156a7041de04a33992dfb7bfb4168c56e51422ebe91`.
+Faction context in the C++ fixture is independently refreshed from input pools;
+it is not extracted from the native expected outputs.
 
 The live Vehicle Presets panel remains unconnected pending the retained summary
 and AI-priority inputs. These cannot be replaced with zero-valued counters or

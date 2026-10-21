@@ -6,6 +6,7 @@
 #include "fixtures/WorkshopAlias.h"
 #include "fixtures/WorkshopGeneral.h"
 #include "fixtures/WorkshopHuman.h"
+#include "fixtures/WorkshopFiltered.h"
 #include "fixtures/WorkshopDomain.h"
 #include "fixtures/WorkshopPicker.h"
 #include "fixtures/WorkshopStats.h"
@@ -432,18 +433,21 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
         GT_ASSERT(sea_checked,"Missing native Sea Former control");
         GT_OK();
     });
-    task->AddTest("SMAC Workshop human proposal producer matches414 original submissions and all policy transitions",GT(){
+    task->AddTest("SMAC Workshop human proposal producer matches437 original submissions and all policy transitions",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);if(!file) {throw std::runtime_error("Missing owned human Workshop rules");}
         const std::string source{std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>()};const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
         const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;
-        for(const auto& test:workshop_human_fixture::Cases()) {
+        std::vector<workshop_filtered_fixture::Case> inputs;
+        for(const auto& test:workshop_human_fixture::Cases()) {inputs.push_back({test,{65,1,1,1,0,1,"Retained draft"},-1});}
+        for(const auto& test:workshop_filtered_fixture::Cases()) {inputs.push_back(test);}
+        for(const auto& input:inputs) {const auto& test=input.control;
             auto owner=Owner();owner.owned.fill(false);for(const auto id:test.technologies) {owner.owned.at(id)=true;}
             auto pool=workshop_general_fixture::BasePool();for(const auto& group:test.records) {for(const auto id:group.first) {pool.at(id)=group.second;}}
             auto state=Empty();state.RetainNativeRegistry(pool,catalog);const auto before=state;
             faction::SmacDesignCounts units{},production{};for(const auto& entry:test.units) {units.at(entry.first)=uint8_t(entry.second);}for(const auto& entry:test.production) {production.at(entry.first)=uint8_t(entry.second);}
-            unit::SmacWorkshopDraft provisional{65,1,1,1,0,1,"Retained draft"};
-            const auto result=unit::PrepareSmacWorkshopHumanPreview(state,provisional,catalog,tech,owner,test.context,units,production);
+            const auto provisional=input.draft;
+            const auto result=unit::PrepareSmacWorkshopHumanPreview(state,provisional,catalog,tech,owner,test.context,units,production,input.filter);
             GT_ASSERT(state==before && result.steps.size()==test.steps.size(),"Human producer changed caller or proposal count: "+std::string(test.name));
             const auto fields=[](const auto& draft) {return std::array<int32_t,5>{{int32_t(draft.chassis),int32_t(draft.weapon),int32_t(draft.armor),int32_t(draft.abilities),draft.reactor}};};
             for(size_t i=0;i<test.steps.size();++i) {const auto& actual=result.steps[i];const auto& expected=test.steps[i];

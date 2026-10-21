@@ -1447,3 +1447,38 @@ connected. The simulation still excludes project ownership and general packages.
 The2048-Unit refusal path still rejects at the factory guard and must retain
 the original debit/history, queue and Base aftermath in a follow-up. Complete
 human-played/remote Workshop acceptance and SMAX manufacturing remain open.
+
+
+### Full Unit-pool production refusal
+
+Production at2048 registered Units now follows the original refusal tail:
+retain the admitted mineral debit and first-prototype/component-history changes,
+allocate no newborn, preserve current/pending production, then continue ordinary
+Base aftermath and baseline updates. Prepare history through the same helper
+as successful manufacturing. Pending history composes with later riot transfer;
+publication remains detached until the complete Base attempt commits.
+
+Colony population loss and abandonment follow successful allocation. At the
+limit, size two and easy size one retain their Base/population. Hard size one's
+question still precedes allocation: Delay keeps posted minerals, while Accept
+charges them and then retains the Base after refusal. The actual queued choice
+controller bypasses the abandonment provider only for a full pool. A later
+former-owner question can retain/reload the accepted-refusal continuation;
+that combined save/replay path still needs its own end-to-end receipt.
+
+The [Colony source contract](behavior/design-workshop-colony-limit.md) adds four
+complete native returns to the two Infantry refusal controls. Native fixtures
+use a supplied sparse global count; port boundary fixtures instead load2048
+self-authored, valid, linked Unit records and explicit knowledge through the real
+snapshot decoder. They check all2048 serialized records remain unchanged,
+first/repeat prototype flags, debit, target/queue, baselines and next ID. Colony
+checks use controlled port resource profiles and queued Accept/Delay callers;
+the size-two port fixture retains10 food to isolate production from independent
+starvation. They do not claim complete native Base-record byte equality.
+
+Forty-one affected native groups pass normally and under focused ASan/UBSan
+(17 production and three test translation units instrumented). Targeted
+correctness analysis passes for53 production translation units and consumers.
+The full-pool controls finish in seconds through real snapshot decoding.
+The screen, general packages/projects, remote replay and SMAX acceptance remain
+open; this refusal integration is not a completed Workshop or campaign.

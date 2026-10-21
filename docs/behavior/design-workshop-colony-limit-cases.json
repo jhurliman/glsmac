@@ -1,0 +1,946 @@
+{
+  "scope": "Full size-one base caller with native choice-wrapper return and supplied UI.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "checks": {
+    "complete_base_returns": 4,
+    "allocator_refusals": 3,
+    "preallocation_deferrals": 1,
+    "full_unit_records_per_case": 2048
+  },
+  "cases": [
+    {
+      "inputs": {
+        "id": "size_two",
+        "population": 2,
+        "stored_difficulty": 3,
+        "answer": null
+      },
+      "cost": 30,
+      "surplus": 5,
+      "before": {
+        "base_count": 1,
+        "unit_count": 2048,
+        "population": 2,
+        "food": 0,
+        "minerals": 25,
+        "baseline_minerals": 25,
+        "target": 0,
+        "baseline_target": 0,
+        "queue": [
+          1,
+          2,
+          0
+        ],
+        "mineral_surplus": 5
+      },
+      "after": {
+        "base_count": 1,
+        "unit_count": 2048,
+        "population": 2,
+        "food": 0,
+        "minerals": 0,
+        "baseline_minerals": 0,
+        "target": 0,
+        "baseline_target": 0,
+        "queue": [
+          1,
+          2,
+          0
+        ],
+        "mineral_surplus": 5
+      },
+      "prompt_count": 0,
+      "allocation_attempts": 1,
+      "full_unit_array_unchanged": true,
+      "unit_array_sha256": "1998d7496138ecb0dacac59ab66415cd3784080a400477fb7388f9f6746b8e67",
+      "design_array_unchanged": true,
+      "events": [
+        {
+          "pc": "0x5059b0",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 2,
+            "food": 0,
+            "minerals": 25,
+            "baseline_minerals": 25,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 5
+          }
+        },
+        {
+          "pc": "0x505e50",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 2,
+            "food": 0,
+            "minerals": 30,
+            "baseline_minerals": 25,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 5
+          }
+        },
+        {
+          "pc": "0x506275",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 2,
+            "food": 0,
+            "minerals": 30,
+            "baseline_minerals": 25,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 5
+          }
+        },
+        {
+          "pc": "0x506311",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 2,
+            "food": 0,
+            "minerals": 30,
+            "baseline_minerals": 25,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 5
+          }
+        },
+        {
+          "pc": "0x5d8520",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 2,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 5
+          },
+          "args": [
+            0,
+            1,
+            16,
+            16
+          ]
+        },
+        {
+          "pc": "0x506390",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 2,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 5
+          },
+          "allocator_return": 4294967295
+        },
+        {
+          "pc": "0x50639d",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 2,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 5
+          }
+        },
+        {
+          "pc": "0x50c7cf",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 2,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 5
+          }
+        },
+        {
+          "pc": "0x5044a0",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 2,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 5
+          }
+        },
+        {
+          "pc": "0x50c83c",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 2,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 5
+          }
+        }
+      ],
+      "presentation_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "owned_UI_storage_cleanup",
+        "widget_destructor"
+      ]
+    },
+    {
+      "inputs": {
+        "id": "size_one_easy",
+        "population": 1,
+        "stored_difficulty": 1,
+        "answer": null
+      },
+      "cost": 30,
+      "surplus": 3,
+      "before": {
+        "base_count": 1,
+        "unit_count": 2048,
+        "population": 1,
+        "food": 0,
+        "minerals": 27,
+        "baseline_minerals": 27,
+        "target": 0,
+        "baseline_target": 0,
+        "queue": [
+          1,
+          2,
+          0
+        ],
+        "mineral_surplus": 3
+      },
+      "after": {
+        "base_count": 1,
+        "unit_count": 2048,
+        "population": 1,
+        "food": 1,
+        "minerals": 0,
+        "baseline_minerals": 0,
+        "target": 0,
+        "baseline_target": 0,
+        "queue": [
+          1,
+          2,
+          0
+        ],
+        "mineral_surplus": 3
+      },
+      "prompt_count": 0,
+      "allocation_attempts": 1,
+      "full_unit_array_unchanged": true,
+      "unit_array_sha256": "1998d7496138ecb0dacac59ab66415cd3784080a400477fb7388f9f6746b8e67",
+      "design_array_unchanged": true,
+      "events": [
+        {
+          "pc": "0x5059b0",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 27,
+            "baseline_minerals": 27,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x505e50",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 30,
+            "baseline_minerals": 27,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x506275",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 30,
+            "baseline_minerals": 27,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x506311",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 30,
+            "baseline_minerals": 27,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x5d8520",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          },
+          "args": [
+            0,
+            1,
+            16,
+            16
+          ]
+        },
+        {
+          "pc": "0x506390",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          },
+          "allocator_return": 4294967295
+        },
+        {
+          "pc": "0x50639d",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x50c7cf",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x5044a0",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x50c83c",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 1,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        }
+      ],
+      "presentation_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "owned_UI_storage_cleanup",
+        "widget_destructor"
+      ]
+    },
+    {
+      "inputs": {
+        "id": "size_one_accept_abandonment",
+        "population": 1,
+        "stored_difficulty": 3,
+        "answer": 2
+      },
+      "cost": 30,
+      "surplus": 3,
+      "before": {
+        "base_count": 1,
+        "unit_count": 2048,
+        "population": 1,
+        "food": 0,
+        "minerals": 27,
+        "baseline_minerals": 27,
+        "target": 0,
+        "baseline_target": 0,
+        "queue": [
+          1,
+          2,
+          0
+        ],
+        "mineral_surplus": 3
+      },
+      "after": {
+        "base_count": 1,
+        "unit_count": 2048,
+        "population": 1,
+        "food": 1,
+        "minerals": 0,
+        "baseline_minerals": 0,
+        "target": 0,
+        "baseline_target": 0,
+        "queue": [
+          1,
+          2,
+          0
+        ],
+        "mineral_surplus": 3
+      },
+      "prompt_count": 1,
+      "allocation_attempts": 1,
+      "full_unit_array_unchanged": true,
+      "unit_array_sha256": "1998d7496138ecb0dacac59ab66415cd3784080a400477fb7388f9f6746b8e67",
+      "design_array_unchanged": true,
+      "events": [
+        {
+          "pc": "0x5059b0",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 27,
+            "baseline_minerals": 27,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x505e50",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 30,
+            "baseline_minerals": 27,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x506275",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 30,
+            "baseline_minerals": 27,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x506311",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 30,
+            "baseline_minerals": 27,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x5d8520",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          },
+          "args": [
+            0,
+            1,
+            16,
+            16
+          ]
+        },
+        {
+          "pc": "0x506390",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          },
+          "allocator_return": 4294967295
+        },
+        {
+          "pc": "0x50639d",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x50c7cf",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x5044a0",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x50c83c",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 1,
+            "minerals": 0,
+            "baseline_minerals": 0,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        }
+      ],
+      "presentation_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "explicit_modal_answer",
+        "owned_UI_storage_cleanup",
+        "question_UI_cleanup:0x40a2c0",
+        "question_UI_cleanup:0x40a460",
+        "question_UI_cleanup:0x5ed2b0",
+        "question_UI_cleanup:0x5fc630",
+        "question_UI_cleanup:0x613870",
+        "question_UI_cleanup:0x61a210",
+        "question_UI_cleanup:0x621450",
+        "question_UI_cleanup:0x6221f0",
+        "question_UI_cleanup:0x6232f0",
+        "question_bitmap_absent",
+        "question_template_UI",
+        "widget_destructor"
+      ]
+    },
+    {
+      "inputs": {
+        "id": "size_one_delay",
+        "population": 1,
+        "stored_difficulty": 3,
+        "answer": 0
+      },
+      "cost": 30,
+      "surplus": 3,
+      "before": {
+        "base_count": 1,
+        "unit_count": 2048,
+        "population": 1,
+        "food": 0,
+        "minerals": 27,
+        "baseline_minerals": 27,
+        "target": 0,
+        "baseline_target": 0,
+        "queue": [
+          1,
+          2,
+          0
+        ],
+        "mineral_surplus": 3
+      },
+      "after": {
+        "base_count": 1,
+        "unit_count": 2048,
+        "population": 1,
+        "food": 1,
+        "minerals": 30,
+        "baseline_minerals": 30,
+        "target": 0,
+        "baseline_target": 0,
+        "queue": [
+          1,
+          2,
+          0
+        ],
+        "mineral_surplus": 3
+      },
+      "prompt_count": 1,
+      "allocation_attempts": 0,
+      "full_unit_array_unchanged": true,
+      "unit_array_sha256": "1998d7496138ecb0dacac59ab66415cd3784080a400477fb7388f9f6746b8e67",
+      "design_array_unchanged": true,
+      "events": [
+        {
+          "pc": "0x5059b0",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 27,
+            "baseline_minerals": 27,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x505e50",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 30,
+            "baseline_minerals": 27,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x50c7cf",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 30,
+            "baseline_minerals": 27,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x5044a0",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 0,
+            "minerals": 30,
+            "baseline_minerals": 30,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        },
+        {
+          "pc": "0x50c83c",
+          "state": {
+            "base_count": 1,
+            "unit_count": 2048,
+            "population": 1,
+            "food": 1,
+            "minerals": 30,
+            "baseline_minerals": 30,
+            "target": 0,
+            "baseline_target": 0,
+            "queue": [
+              1,
+              2,
+              0
+            ],
+            "mineral_surplus": 3
+          }
+        }
+      ],
+      "presentation_services": [
+        "completion_dialog_destructor",
+        "dialog_base_destructor",
+        "dialog_storage_destructor",
+        "explicit_modal_answer",
+        "owned_UI_storage_cleanup",
+        "question_UI_cleanup:0x40a2c0",
+        "question_UI_cleanup:0x40a460",
+        "question_UI_cleanup:0x5ed2b0",
+        "question_UI_cleanup:0x5fc630",
+        "question_UI_cleanup:0x613870",
+        "question_UI_cleanup:0x61a210",
+        "question_UI_cleanup:0x621450",
+        "question_UI_cleanup:0x6221f0",
+        "question_UI_cleanup:0x6232f0",
+        "question_bitmap_absent",
+        "question_template_UI",
+        "widget_destructor"
+      ]
+    }
+  ]
+}

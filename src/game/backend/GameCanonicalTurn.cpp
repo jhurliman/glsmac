@@ -502,7 +502,7 @@ bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 	ValidateCanonicalColony();
 	// Joined with the distinct prepared abandonment provider before the default
 	// controller uses BeginCanonicalBaseUpkeep. Never manufacture a substitute.
-	if(answer=="accept") {m_bm->ValidateSmacAbandonment(*m_bm->GetBase(m_colony_request->base));}
+	if(answer=="accept" && m_um->GetUnits().size()<2048) {m_bm->ValidateSmacAbandonment(*m_bm->GetBase(m_colony_request->base));}
 	if(!apply) {return true;}
 	if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {throw std::runtime_error("Colony choice requires its owning accumulation");}
 	m_canonical_turn_in_progress=true;
@@ -512,7 +512,7 @@ bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 		auto* base=m_bm->GetBase(pending.base);
 		base::Base::SmacAllocationRoles roles;const auto& configured=GetSmacBasePresentations();roles.worker=configured[0];
 		for(size_t i=0;i<7;++i) {roles.specialists[i]=configured[i+1];}
-		if(answer=="accept") {
+		if(answer=="accept" && m_um->GetUnits().size()<2048) {
 			// Prepare traversal storage before the provider publishes and retires the
 			// old Base. Its returned stable successor owns the remaining tail.
 			auto remaining=next.owners.at(next.owner_index).second;
@@ -551,7 +551,7 @@ bool Game::HandleSmacColonyEvent(GSE_CALLABLE,const std::string& name,
 			return true;
 		}
         PrepareCanonicalOwnershipContinuation();
-		const auto selected=answer=="screen"?base::SmacColonyChoice::Screen:base::SmacColonyChoice::Delay;
+		const auto selected=answer=="accept" ? base::SmacColonyChoice::Accept : answer=="screen" ? base::SmacColonyChoice::Screen:base::SmacColonyChoice::Delay;
 		const auto result=base->ResumeSmacColonyUpkeep(GSE_CALL,*next.colony,selected,roles,[&](int32_t design){
 			return ResolveSmacProductionPresentation(base->m_owner,design);
 		});
@@ -608,7 +608,8 @@ void Game::ValidateCanonicalFormerOwner() const {
         throw std::runtime_error("Former faction question lost its committed successor cache");
     }
     if(next.colony) {
-        if(*next.former_colony_choice!=base::SmacColonyChoice::Delay && *next.former_colony_choice!=base::SmacColonyChoice::Screen) {
+        if(*next.former_colony_choice!=base::SmacColonyChoice::Delay && *next.former_colony_choice!=base::SmacColonyChoice::Screen
+            && !(*next.former_colony_choice==base::SmacColonyChoice::Accept && m_um->GetUnits().size()>=2048)) {
             throw std::runtime_error("Former faction question lost the accepted Colony continuation");
         }
         base->ValidateSmacColonyPause(*next.colony);
@@ -647,7 +648,7 @@ bool Game::HandleSmacFormerOwnerEvent(GSE_CALLABLE,const std::string& name,const
         const auto result=base->ProcessSmacProductionAndPopulation(GSE_CALL,roles,[&](int32_t design){
             return ResolveSmacProductionPresentation(base->m_owner,design);
         },next.colony ? next.colony->morale_mode:next.former_abandonment_tail.value_or(unit::SmacMoraleMode::Mode0),true,!next.colony && !next.former_abandonment_tail,
-            next.colony ? &*next.colony:nullptr,next.former_abandonment_tail ? &*base->m_smac_upkeep_cache:nullptr,static_cast<int32_t>(answer),&publication);
+            next.colony ? &*next.colony:nullptr,next.former_abandonment_tail ? &*base->m_smac_upkeep_cache:nullptr,static_cast<int32_t>(answer),&publication,next.former_colony_choice==base::SmacColonyChoice::Accept);
         if(result.needs_former_owner || result.colony_pause || (!result.removed_base && !result.final_calculation)) {
             throw std::runtime_error("Former faction answer did not complete its Base attempt");
         }

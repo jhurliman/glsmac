@@ -231,3 +231,9 @@ MORALE are declared input grants. No interactive executable is launched, and
 no gameplay helper, cost, training, history or queue result is substituted.
 Earlier evidence bundles are unchanged. Production code and Git references
 are untouched.
+
+
+The [Colony limit supplement](design-workshop-colony-limit.md) separately
+captures size two, easy size one, accepted abandonment and Delay. Refusal
+precedes population loss/Base removal, while the size-one decision precedes
+the debit and allocation attempt.

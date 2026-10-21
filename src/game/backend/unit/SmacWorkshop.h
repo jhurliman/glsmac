@@ -3,6 +3,7 @@
 #include "SmacOpeningDesigns.h"
 #include "game/backend/faction/SmacDesignCounts.h"
 #include <map>
+#include <memory>
 #include <utility>
 
 namespace game::backend::unit {
@@ -21,6 +22,12 @@ SmacPrototypePrice SmacDesignProductionRows(const SmacCustomDesign& design,
 // Caller supplies detached storage and publishes with its manufacturing transaction.
 bool CompleteSmacWorkshopPrototype(SmacOriginalDesignPool& pool,int32_t design,
     const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
+    const faction::SmacFactionTechnologyState& owner);
+
+// Prepare first-completion history before allocation; a refused allocation still
+// publishes this state with the producing Base. Null means no first completion.
+std::unique_ptr<SmacStartupDesignState> PrepareSmacManufacturedPrototype(const SmacStartupDesignState& state,
+    int32_t design,const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
     const faction::SmacFactionTechnologyState& owner);
 
 enum class SmacWorkshopComponent { Chassis, Weapon, Armor, Reactor };

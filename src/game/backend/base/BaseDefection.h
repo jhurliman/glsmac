@@ -19,5 +19,6 @@ struct Base::SmacDefectionAttempt {
     SmacGameplayRandomState random;
     bool& committed;
     bool* publication;
+    const unit::SmacStartupDesignState* prototype_only=nullptr;
 };
 }

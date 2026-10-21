@@ -1566,3 +1566,19 @@ The live Vehicle Presets panel remains unconnected pending the retained summary
 and AI-priority inputs. These cannot be replaced with zero-valued counters or
 immutable personality defaults. The existing PSI-custom admission restriction
 also remains an integration gap, pending the source-backed extension.
+
+
+## 2026-10-21 human PSI reopen producer
+
+Removed the blanket active-PSI custom rejection from the human recommendation
+producer. Retained hybrid-plan weapon power may be negative: C++ signed
+division now follows the original truncation and existing minimum-budget rule,
+while zero remains rejected. Human preview does not gain the AI-only strength
+comparison veto. Fifteen original caller contexts match84 ordered submissions
+and states; with the existing controls the focused group checks521 native
+expectations. Complete pool comparisons account explicitly for the separate
+normal-open selected-record flag clear. See the [scope and native receipt](behavior/design-workshop-psi-reopen.md).
+
+Live recommendations/presets still need retained summary and current AI-policy
+inputs. Admitting PSI here closes a backend restriction; it does not claim the
+buttons or the complete normal-open path are connected.

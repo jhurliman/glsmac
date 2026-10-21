@@ -1,0 +1,844 @@
+{
+  "scope": "Expectation index; complete pool and stage operands are retained in the additive private freeze. They are inputs to independent rules; native proposals/returns/final fields are only expectations.",
+  "cases": [
+    {
+      "input": {
+        "id": "psi_weapon_basic",
+        "techs": [
+          6
+        ],
+        "bank": [
+          {
+            "chassis": 0,
+            "weapon": 12,
+            "armor": 0,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "owner": 1,
+        "selected": 65,
+        "technology_hex": "8010080040200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": {
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "mask": 0,
+        "reactor": 1
+      },
+      "checks": {
+        "id": "psi_weapon_basic",
+        "proposal_count": 4,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 0,
+        "preview_psi_evaluations": 0,
+        "all_psi_bonus_checks": 0,
+        "final_state": {
+          "mode": 2,
+          "filter": -1,
+          "fields": {
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 1
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_armor_basic",
+        "techs": [
+          6
+        ],
+        "bank": [
+          {
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 9,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "owner": 1,
+        "selected": 65,
+        "technology_hex": "8010080040200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": {
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "mask": 0,
+        "reactor": 1
+      },
+      "checks": {
+        "id": "psi_armor_basic",
+        "proposal_count": 4,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 0,
+        "preview_psi_evaluations": 1,
+        "all_psi_bonus_checks": 1,
+        "final_state": {
+          "mode": 2,
+          "filter": -1,
+          "fields": {
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 1
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_both_basic",
+        "techs": [
+          6
+        ],
+        "bank": [
+          {
+            "chassis": 0,
+            "weapon": 12,
+            "armor": 9,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "owner": 1,
+        "selected": 65,
+        "technology_hex": "8010080040200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": {
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 9,
+        "mask": 0,
+        "reactor": 1
+      },
+      "checks": {
+        "id": "psi_both_basic",
+        "proposal_count": 4,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 64,
+        "preview_psi_evaluations": 3,
+        "all_psi_bonus_checks": 3,
+        "final_state": {
+          "mode": 3,
+          "filter": 1,
+          "fields": {
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 9,
+            "reactor": 1,
+            "mask": 0
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_weapon_upgrade",
+        "techs": [
+          6,
+          3,
+          8
+        ],
+        "bank": [
+          {
+            "chassis": 0,
+            "weapon": 12,
+            "armor": 0,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "owner": 1,
+        "selected": 65,
+        "technology_hex": "8010080240200200020000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": {
+        "chassis": 0,
+        "weapon": 2,
+        "armor": 0,
+        "mask": 0,
+        "reactor": 1
+      },
+      "checks": {
+        "id": "psi_weapon_upgrade",
+        "proposal_count": 4,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 64,
+        "preview_psi_evaluations": 1,
+        "all_psi_bonus_checks": 1,
+        "final_state": {
+          "mode": 3,
+          "filter": 2,
+          "fields": {
+            "chassis": 0,
+            "weapon": 2,
+            "armor": 0,
+            "reactor": 1,
+            "mask": 0
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_armor_upgrade",
+        "techs": [
+          6,
+          1,
+          13,
+          3
+        ],
+        "bank": [
+          {
+            "chassis": 0,
+            "weapon": 1,
+            "armor": 9,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "owner": 1,
+        "selected": 65,
+        "technology_hex": "8012080240200200000000000002000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": {
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 2,
+        "mask": 0,
+        "reactor": 1
+      },
+      "checks": {
+        "id": "psi_armor_upgrade",
+        "proposal_count": 4,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 64,
+        "preview_psi_evaluations": 2,
+        "all_psi_bonus_checks": 2,
+        "final_state": {
+          "mode": 3,
+          "filter": 2,
+          "fields": {
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 2,
+            "mask": 0,
+            "reactor": 1
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_sea",
+        "alltech": true,
+        "bank": [
+          {
+            "chassis": 3,
+            "weapon": 12,
+            "armor": 9,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "owner": 1,
+        "selected": 65,
+        "technology_hex": "82120a0242220202020202020202020202020202020202020202020202020202020202020202020202020206020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": {
+        "chassis": 3,
+        "weapon": 11,
+        "armor": 8,
+        "mask": 0,
+        "reactor": 4
+      },
+      "checks": {
+        "id": "psi_sea",
+        "proposal_count": 18,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 128,
+        "preview_psi_evaluations": 0,
+        "all_psi_bonus_checks": 4,
+        "final_state": {
+          "mode": 3,
+          "filter": 6,
+          "fields": {
+            "chassis": 3,
+            "weapon": 11,
+            "armor": 8,
+            "reactor": 4,
+            "mask": 0
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_air",
+        "alltech": true,
+        "bank": [
+          {
+            "chassis": 5,
+            "weapon": 12,
+            "armor": 9,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "owner": 1,
+        "selected": 65,
+        "technology_hex": "82120a0242220202020202020202020202020202020202020202020202020202020202020202020202020206020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": {
+        "chassis": 5,
+        "weapon": 11,
+        "armor": 9,
+        "mask": 0,
+        "reactor": 4
+      },
+      "checks": {
+        "id": "psi_air",
+        "proposal_count": 18,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 128,
+        "preview_psi_evaluations": 1,
+        "all_psi_bonus_checks": 5,
+        "final_state": {
+          "mode": 3,
+          "filter": 8,
+          "fields": {
+            "chassis": 5,
+            "weapon": 11,
+            "armor": 9,
+            "reactor": 4,
+            "mask": 0
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_excluded_unused",
+        "techs": [
+          6,
+          3
+        ],
+        "bank": [
+          {
+            "chassis": 0,
+            "weapon": 12,
+            "armor": 0,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "exclude": true,
+        "owner": 1,
+        "selected": 65,
+        "technology_hex": "8010080240200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": {
+        "chassis": 0,
+        "weapon": 1,
+        "armor": 0,
+        "mask": 0,
+        "reactor": 1
+      },
+      "checks": {
+        "id": "psi_excluded_unused",
+        "proposal_count": 3,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 64,
+        "preview_psi_evaluations": 0,
+        "all_psi_bonus_checks": 0,
+        "final_state": {
+          "mode": 3,
+          "filter": 3,
+          "fields": {
+            "chassis": 0,
+            "weapon": 1,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 1
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_excluded_live",
+        "techs": [
+          6,
+          3
+        ],
+        "bank": [
+          {
+            "chassis": 0,
+            "weapon": 12,
+            "armor": 0,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "exclude": true,
+        "unit_count": 1,
+        "owner": 1,
+        "selected": 65,
+        "technology_hex": "8010080240200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": {
+        "chassis": 0,
+        "weapon": 1,
+        "armor": 0,
+        "mask": 0,
+        "reactor": 1
+      },
+      "checks": {
+        "id": "psi_excluded_live",
+        "proposal_count": 3,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 63,
+        "preview_psi_evaluations": 1,
+        "all_psi_bonus_checks": 1,
+        "final_state": {
+          "mode": 3,
+          "filter": 3,
+          "fields": {
+            "chassis": 0,
+            "weapon": 1,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 1
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_hybrid_retained_plan",
+        "techs": [
+          6,
+          1
+        ],
+        "bank": [
+          {
+            "chassis": 0,
+            "weapon": 12,
+            "armor": 0,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "plan": 1,
+        "owner": 1,
+        "selected": 65,
+        "technology_hex": "8012080040200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": {
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 1,
+        "mask": 0,
+        "reactor": 1
+      },
+      "checks": {
+        "id": "psi_hybrid_retained_plan",
+        "proposal_count": 4,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 128,
+        "preview_psi_evaluations": 2,
+        "all_psi_bonus_checks": 2,
+        "final_state": {
+          "mode": 3,
+          "filter": 2,
+          "fields": {
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 1,
+            "reactor": 1,
+            "mask": 0
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_bonus_foreign",
+        "techs": [
+          6,
+          3
+        ],
+        "bank": [
+          {
+            "chassis": 0,
+            "weapon": 12,
+            "armor": 9,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "psi_percent": 25,
+        "foreign": [
+          9,
+          8
+        ],
+        "owner": 1,
+        "selected": 65,
+        "technology_hex": "8010080240200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": {
+        "chassis": 0,
+        "weapon": 1,
+        "armor": 9,
+        "mask": 0,
+        "reactor": 1
+      },
+      "checks": {
+        "id": "psi_bonus_foreign",
+        "proposal_count": 4,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 64,
+        "preview_psi_evaluations": 3,
+        "all_psi_bonus_checks": 3,
+        "final_state": {
+          "mode": 3,
+          "filter": 1,
+          "fields": {
+            "chassis": 0,
+            "weapon": 1,
+            "armor": 9,
+            "reactor": 1,
+            "mask": 0
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_bonus_projects",
+        "techs": [
+          6,
+          3
+        ],
+        "bank": [
+          {
+            "chassis": 0,
+            "weapon": 12,
+            "armor": 9,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "psi_percent": 25,
+        "foreign": [
+          9,
+          8
+        ],
+        "projects": true,
+        "owner": 1,
+        "selected": 65,
+        "technology_hex": "8010080240200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "dream_twister_owner": 1,
+        "neural_amplifier_owner": 1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": {
+        "chassis": 0,
+        "weapon": 1,
+        "armor": 9,
+        "mask": 0,
+        "reactor": 1
+      },
+      "checks": {
+        "id": "psi_bonus_projects",
+        "proposal_count": 4,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 64,
+        "preview_psi_evaluations": 3,
+        "all_psi_bonus_checks": 3,
+        "final_state": {
+          "mode": 3,
+          "filter": 1,
+          "fields": {
+            "chassis": 0,
+            "weapon": 1,
+            "armor": 9,
+            "reactor": 1,
+            "mask": 0
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_full_locked_no_prefix",
+        "techs": [
+          6,
+          1
+        ],
+        "full": true,
+        "plan": 3,
+        "unit_count": 255,
+        "production_count": 255,
+        "category": 99,
+        "owner": 1,
+        "selected": null,
+        "technology_hex": "8012080040200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": null,
+      "checks": {
+        "id": "psi_full_locked_no_prefix",
+        "proposal_count": 3,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 0,
+        "preview_psi_evaluations": 256,
+        "all_psi_bonus_checks": 256,
+        "final_state": {
+          "mode": 2,
+          "filter": -1,
+          "fields": {
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 0,
+            "mask": 0,
+            "reactor": 1
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_full_same_category_score1",
+        "techs": [
+          6,
+          1
+        ],
+        "full": true,
+        "plan": 3,
+        "unit_count": 255,
+        "production_count": 255,
+        "category": 2,
+        "owner": 1,
+        "selected": null,
+        "technology_hex": "8012080040200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": null,
+      "checks": {
+        "id": "psi_full_same_category_score1",
+        "proposal_count": 3,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 64,
+        "preview_psi_evaluations": 128,
+        "all_psi_bonus_checks": 128,
+        "final_state": {
+          "mode": 3,
+          "filter": 2,
+          "fields": {
+            "chassis": 0,
+            "weapon": 0,
+            "armor": 1,
+            "mask": 0,
+            "reactor": 1
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "id": "psi_prefix_negative_divisor",
+        "techs": [
+          6,
+          1
+        ],
+        "bank": [
+          {
+            "chassis": 0,
+            "weapon": 12,
+            "armor": 0,
+            "reactor": 1,
+            "mask": 0
+          }
+        ],
+        "plan": 1,
+        "bare_registry": true,
+        "controller_only": true,
+        "owner": 1,
+        "selected": null,
+        "technology_hex": "8012080040200200000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "psi_percent": 0,
+        "dream_twister_owner": -1,
+        "neural_amplifier_owner": -1,
+        "ratio": [
+          3,
+          2
+        ],
+        "personality": 0
+      },
+      "expected_draft_fields": null,
+      "checks": {
+        "id": "psi_prefix_negative_divisor",
+        "proposal_count": 4,
+        "all_requests_returns_and_states_match": true,
+        "full_design_and_faction_pools_match": true,
+        "other_arrays_unchanged": true,
+        "score_checks": 128,
+        "preview_psi_evaluations": 3,
+        "all_psi_bonus_checks": 3,
+        "final_state": {
+          "mode": 3,
+          "filter": 2,
+          "fields": {
+            "chassis": 0,
+            "weapon": 12,
+            "armor": 1,
+            "reactor": 1,
+            "mask": 0
+          }
+        }
+      }
+    }
+  ]
+}

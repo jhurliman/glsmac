@@ -4,7 +4,7 @@ namespace gse::tests::workshop_filtered_fixture {
 // Three complete original597de0 calls,23 ordered native submissions.
 // Freeze manifest ea6ea93740c73a0cb497e156a7041de04a33992dfb7bfb4168c56e51422ebe91.
 // Scalar context comes from independent capability refresh of INPUT arrays.
-struct Case {workshop_human_fixture::Case control;game::backend::unit::SmacWorkshopDraft draft;int32_t filter;};
+struct Case {workshop_human_fixture::Case control;game::backend::unit::SmacWorkshopDraft draft;int32_t filter;int32_t caller_clear_selected=-1;};
 inline std::vector<Case> Cases() {return {
 {{"basic_unmatched_air8",{6},{{{0x95d1ac,0},{0x95d584,-1},{0x95d588,1},{0x95d58c,0},{0x95d590,0},{0x95d594,0},{0x95e200,1},{0x95d9d8,2},{0x95d9d0,1},{0x95d9c8,1},{0x95d418,0},{0x95d9ec,0},{0x95f230,0},{0x95f22c,0}},0,0},
 {{{127},{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}},{{256},{83,121,110,116,104,109,101,116,97,108,32,83,101,110,116,105,110,101,108,115,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,2,2,2,0,16,255,0,197,0,0,0}},{{320},{83,99,111,117,116,32,82,111,118,101,114,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,2,3,4,0,32,255,0,197,0,0,0}}},

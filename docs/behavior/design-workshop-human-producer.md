@@ -188,10 +188,10 @@ scope. The supplied personality parameter and observed late Clean Reactor
 fields are supported; arbitrary strategic-field combinations have source-derived
 branches but only the stated distinctions have native controls.
 
-Negative/PSI **custom records** explicitly raise in the producer: their597390
-strategic evaluation/scoring needs a separate extension. Known Psi technologies
-and stock intrinsic native units remain valid inputs to the existing capability
-refresh under its established scope; they do not make a Psi custom bank admitted.
+The initial conventional-only boundary rejected negative/PSI custom records.
+The additive [PSI-reopen extension](design-workshop-psi-reopen.md) now admits
+them and preserves signed prefix arithmetic. The original22 controls remain
+unchanged; their conventional scope is not relabeled as PSI evidence.
 Modified component tables, alternate rules, project overrides, custom faction
 policies and category-filtered AutoDesign menu callers remain unsupported by
 the high-level composition. Do not silently substitute Scout for those cases.

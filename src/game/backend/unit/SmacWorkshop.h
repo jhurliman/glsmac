@@ -162,7 +162,7 @@ struct SmacWorkshopHumanPreview {
     int32_t mode=1,filter=-1;
     std::vector<SmacWorkshopHumanStep> steps;
 };
-// Original597de0 + preview597390, conventional stock-human domain.
+// Original597de0 + preview597390, stock-human preview including PSI customs.
 // Caller owns capability refresh, provisional tuple and selector readback.
 // Normal open seeds filter=-1. AutoDesign actions9..22 seed the requested
 // category and the CURRENT draft, including its reactor; no match preserves it.

@@ -65,7 +65,7 @@ private:
 	std::array<std::shared_ptr<const loader::cvr::CvrScoutRenderer>,2> m_workshop_models;
 	std::shared_ptr<const loader::cvr::CvrWorkshopComponents> m_workshop_components;
     std::shared_ptr<const loader::cvr::CvrScoutRenderer> m_workshop_design;
-    std::array<int,5> m_workshop_design_key{{-2,-2,-2,-2,-2}};
+    std::array<int,8> m_workshop_design_key{{-2,-2,-2,-2,-2,-2,-2,-2}};
     std::string m_workshop_design_faction;
 	void StopMovie();
 

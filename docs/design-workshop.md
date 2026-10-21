@@ -590,3 +590,38 @@ matching and complete screen pixel parity remain unfinished. The port also lacks
 the original separate raw Faction aggregate total-Unit field; this slice updates
 its actual roster and ordinary per-design counts rather than claiming that raw
 buffer parity.
+
+
+### Complete stock shielding path
+
+The live shielding editor now admits all ten SMAC armor source IDs when their
+technologies are available. Its read-only quote uses the shared retained
+constructor instead of the obsolete first-design-only path, so a partially
+occupied bank no longer hides otherwise valid researched armor. A pending
+replacement is previewed on detached records without retiring Units or consuming
+history. The existing live commit owns explicit overwrite consent.
+
+The model surface consumes installed weapon power/mode and armor strength as
+part of its cache identity. It no longer infers armor strength from source ID.
+The side card admits the same stock armor IDs as the picker. Probability Sheath
+blends its shade operands against the actual623x368 indexed deswin backdrop;
+a real render caught the incorrect flat-background blend before commit.
+
+Validation:27 selected native groups and six UI scripts pass. The live shielding
+test preserves the owned stock defense metadata while explicitly remapping
+prerequisites into its synthetic technology namespace. It saves armor1..9
+through actual queued commands in increasingly occupied banks, verifies quotes,
+checks unchanged non-design world state and restores the whole saved world.
+Together with the existing basic path, every stock armor ID is exercised.
+Thirty relevant native groups pass focused ASan/UBSan with fifteen production
+and four test files instrumented; all34 component frames,29 general/stock model
+frames and the complete indexed backdrop checksum remain verified. Targeted
+correctness analysis is clean for eight production files/consumers.
+
+An isolated software-rendered UI harness revealed all ten cards and cycled every
+selection under sanitizers, then verified the corrected Probability Sheath card.
+This harness overrides card availability only in copied UI data; backend legality
+and save/restore are separate live fixtures. Its preview is not a full-bank
+interactive save or native whole-screen pixel comparison. Other component
+pickers, normal-open/browse/reselect, PSI text formatting, general production
+admission and full Workshop screen parity remain required.

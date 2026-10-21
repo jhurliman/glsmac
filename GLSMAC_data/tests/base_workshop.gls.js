@@ -6,7 +6,7 @@ const node = (data) => {
     data.smacworkshoparmorpicker = (selected, rows) => { data.picker_selected = selected; data.picker_rows = rows; };
     data.measure = () => { return {width: #sizeof(#split(data.text, ' ')) * 40}; };
     data.smacworkshopcomponents = (armor) => { data.components_armor = armor; };
-    data.smacworkshopdesign = (chassis, weapon, armor, reactor, kind, faction, yaw) => { data.preview_armor = armor; data.preview_yaw = yaw; data.preview_faction = faction; };
+    data.smacworkshopdesign = (chassis, weapon, armor, reactor, kind, faction, yaw, power, mode, strength) => { data.preview_strength = strength; data.preview_power = power; data.preview_mode = mode; data.preview_armor = armor; data.preview_yaw = yaw; data.preview_faction = faction; };
     data.on = (event, cb) => { data.handlers[event] = cb; };
     data.listen = (target, event, cb) => { listeners[event] = cb; };
     const child = (properties) => { const value = node(properties); data.children :+ value; return value; };
@@ -17,7 +17,7 @@ const node = (data) => {
 dialog.init({ui: {root: {window: (data) => { const result = node(data); windows :+ result; return result; }}},
     game: {event: (name, data) => { commands :+ {name: name, data: data}; }}});
 const base = {id: 701};
-const selection = {expected_state: 'before', chassis: 'Infantry', weapon: 'Hand Weapons', reactor: 'Fission', scout_name: 'Scout', faction_art: 'morgan.pcx', speed: 1, offense: 1, power: 1,
+const selection = {expected_state: 'before', chassis: 'Infantry', weapon: 'Hand Weapons', reactor: 'Fission', scout_name: 'Scout', faction_art: 'morgan.pcx', speed: 1, offense: 1, weapon_mode: 0, power: 1,
     armor: [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, design_name: 'Scout', cost: 10, technology_available: true, available: true}, {id: 1, name: 'Synthmetal', short_name: 'Synthmetal', rating: 2, design_name: 'Synthmetal Garrison', cost: 20, technology_available: true, available: true}, {id: 2, name: 'Unknown', short_name: 'Unknown', rating: 3, design_name: '', cost: 0, technology_available: false, available: false}]};
 test.assert(windows[0].left == 216 && windows[0].top == 168 && windows[0].width == 623 && windows[0].height == 387 && windows[0].children[0].background == 'deswin.pcx:smacsoftware()');
 dialog.open(base, selection); test.assert(dialog.active && !windows[0].hidden && dialog.selected_armor == 0);
@@ -85,3 +85,14 @@ dialog.open(base, selection); dialog.submit(false);
 listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 64, stale: false, failed: false, confirmation: true, overwrite_name: 'Old Guard', overwrite_count: 3});
 listeners.turn_status({status: 'please_wait'}); const after_close = #sizeof(commands); dialog.answer_overwrite(true);
 test.assert(!dialog.active && windows[2].hidden && #sizeof(commands) == after_close);
+
+// Researched advanced/PSI shielding keeps source identities through preview and Apply.
+const advanced = selection + {unused: true};
+advanced.armor = [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, design_name: 'Scout', cost: 10, technology_available: true, available: true},
+    {id: 9, name: 'Resonance', short_name: 'PSI', rating: (0 - 1), design_name: 'Psi Infantry', cost: 60, technology_available: true, available: true}];
+dialog.open(base, advanced); dialog.open_picker(); test.assert(#sizeof(dialog.cards) == 2);
+dialog.cards[1].handlers.click({});
+test.assert(dialog.selected_armor == 9 && dialog.model.preview_armor == 9 && dialog.model.preview_strength == (0 - 1)
+    && dialog.model.preview_power == 1 && dialog.model.preview_mode == 0 && dialog.components.components_armor == 9);
+dialog.submit(false); test.assert(commands[#sizeof(commands) - 1].data.armor == 9);
+dialog.hide_view();

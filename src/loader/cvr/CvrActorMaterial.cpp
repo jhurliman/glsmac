@@ -62,6 +62,12 @@ Pcx ReadPcx( const std::string_view bytes ) {
 
 }
 
+std::vector<uint8_t> CvrActorMaterial::ReadWorkshopBackdrop(std::string_view deswin_pcx) {
+    auto image=ReadPcx(deswin_pcx);
+    if(image.width!=623 || image.height!=368) {throw std::invalid_argument("Workshop requires its original623x368 backdrop");}
+    for(auto& pixel:image.pixels) {pixel=uint8_t(pixel+10);}return std::move(image.pixels);
+}
+
 std::array< CvrPalette::Color, 256 > CvrActorMaterial::ReadSoftwareColors( const std::string_view palette_pcx ) {
 	const auto palette = ReadPcx( palette_pcx );
 	std::array< CvrPalette::Color, 256 > colors{};

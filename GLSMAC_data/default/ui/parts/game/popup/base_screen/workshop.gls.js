@@ -80,9 +80,10 @@ return {
         this.title.text = #uppercase(data.scout_name); this.draft_name = ''; this.message.text = ''; this.update_armor(); this.window.show();
     },
     update_armor: () => {
-        this.model.smacworkshopdesign(0, 0, this.selected_armor, 1, (0 - 1), this.selection.faction_art, 0.0);
         this.components.smacworkshopcomponents(this.selected_armor);
-        for (row of this.selection.armor) { if (row.id == this.selected_armor) { this.armor_name.text = row.id == 0 ? 'NONE' : #uppercase(row.short_name); this.armor_stat.text = 'Level ' + #to_string(row.rating);
+        for (row of this.selection.armor) { if (row.id == this.selected_armor) {
+            this.model.smacworkshopdesign(0, 0, this.selected_armor, 1, (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating);
+            this.armor_name.text = row.id == 0 ? 'NONE' : #uppercase(row.short_name); this.armor_stat.text = 'Level ' + #to_string(row.rating);
             if (row.design_name != '') { this.title.text = #uppercase(row.design_name); }
             this.cost.text = 'COST:  ' + #to_string(row.cost);
             this.stats.text = #to_string(this.selection.offense) + '-' + #to_string(row.rating) + '-' + #to_string(this.selection.speed); } }

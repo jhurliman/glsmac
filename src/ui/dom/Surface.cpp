@@ -123,7 +123,7 @@ Surface::Surface( DOM_ARGS_T )
 
     Method(GSE_CALL,"smacworkshopcomponents",NATIVE_CALL(this) {
         N_EXPECT_ARGS(1);N_GETVALUE(armor,0,Int);
-        if(armor<0 || armor>1) {throw std::invalid_argument("Unsupported Workshop side-card draft");}
+        if(armor<0 || armor>9) {throw std::invalid_argument("Unsupported Workshop side-card draft");}
         EnsureWorkshopComponents();
         // One original painter pass shares centering state in component order.
         std::array<uint32_t,3> position{};std::vector<uint8_t> rgba(623*368*4,0);
@@ -135,7 +135,13 @@ Surface::Surface( DOM_ARGS_T )
                 const int sx=x-image->target_anchor[0]+128,sy=y-image->target_anchor[1]+128;
                 if(sx<0 || sx>=256 || sy<0 || sy>=256) {throw std::invalid_argument("Workshop component clip exceeds internal image");}
                 const size_t source=(size_t(sy)*256+sx)*4,destination=(size_t(y)*623+x)*4;
-                std::copy_n(image->rgba.begin()+source,4,rgba.begin()+destination);
+                if(kind==2 && armor==5) {
+                    // Probability Sheath stores a shade operand, not a palette
+                    // index. Blend against each original deswin backdrop pixel.
+                    const auto color=m_workshop_components->CompositeBackdrop(image->indexed.color[size_t(sy)*256+sx],size_t(x),size_t(y));
+                    const auto& rgb=m_workshop_components->Colors().at(color);
+                    for(size_t channel=0;channel<3;++channel) {rgba[destination+channel]=rgb[channel];}rgba[destination+3]=255;
+                } else {std::copy_n(image->rgba.begin()+source,4,rgba.begin()+destination);}
             }}
         }
         CreateTexture();m_background.texture->Resize(623,368);std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());
@@ -181,16 +187,20 @@ Surface::Surface( DOM_ARGS_T )
     }));
 
     Method(GSE_CALL,"smacworkshopdesign",NATIVE_CALL(this) {
-        N_EXPECT_ARGS(7);N_GETVALUE(chassis,0,Int);N_GETVALUE(weapon,1,Int);N_GETVALUE(armor,2,Int);N_GETVALUE(reactor,3,Int);
+        N_EXPECT_ARGS(10);N_GETVALUE(chassis,0,Int);N_GETVALUE(weapon,1,Int);N_GETVALUE(armor,2,Int);N_GETVALUE(reactor,3,Int);
         N_GETVALUE(kind,4,Int);N_GETVALUE(faction,5,String);N_GETVALUE(yaw,6,Float);
-        if(chassis<0 || chassis>1 || weapon<0 || weapon>2 || armor<0 || armor>3 || reactor<1 || reactor>2 || kind< -1 || kind>3
+        N_GETVALUE(power,7,Int);N_GETVALUE(mode,8,Int);N_GETVALUE(strength,9,Int);
+        if(chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9 || reactor<1 || reactor>4 || kind< -1 || kind>3
+            || power< -127 || power>127 || mode<0 || mode>12 || strength< -127 || strength>127
             || faction.empty() || faction.size()>256 || faction.find_first_of("/\\:\0",0,4)!=std::string::npos
             || !std::isfinite(yaw) || std::abs(yaw)>64.0) {throw std::invalid_argument("Unsupported Workshop composition request");}
-        const std::array<int,5> key{int(chassis),int(weapon),int(armor),int(reactor),int(kind)};
+        const std::array<int,8> key{int(chassis),int(weapon),int(armor),int(reactor),int(kind),int(power),int(mode),int(strength)};
         if(!m_workshop_design || key!=m_workshop_design_key || faction!=m_workshop_design_faction) {
             const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;
                 util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));return std::string(bytes.begin(),bytes.end());};
-            auto next=std::make_shared<const loader::cvr::CvrScoutRenderer>(loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,read(faction),key[0],key[1],key[2],key[3],key[4]));
+            const auto faction_bytes=read(faction);
+            auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,faction_bytes,key[0],key[1],key[2],key[3],key[4],{key[5],key[6],key[7]});
+            auto next=std::make_shared<const loader::cvr::CvrScoutRenderer>(std::move(renderer));
             m_workshop_design=std::move(next);m_workshop_design_key=key;m_workshop_design_faction=faction;
         }
         const float angle=static_cast<float>(yaw);uint32_t bits;std::memcpy(&bits,&angle,sizeof(bits));std::array<uint32_t,3> position{};

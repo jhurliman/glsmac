@@ -96,12 +96,14 @@ public:
     static CvrWorkshopComponents Load(const Reader& read);
     std::optional<CvrScoutImage> Render(int kind,int id,bool picker,bool available,std::array<uint32_t,3>& position,int ordinal=-1) const;
     uint8_t Composite(uint8_t source,uint8_t destination) const;
+    uint8_t CompositeBackdrop(uint8_t source,size_t x,size_t y) const;
     const std::array<std::array<uint8_t,3>,256>& Colors() const {return m_colors;}
 private:
     std::array<std::optional<CvrScoutRenderer>,4> m_side;
     std::array<std::optional<CvrScoutRenderer>,10> m_armor;
     std::array<std::array<uint8_t,3>,256> m_colors;
     std::array<uint8_t,24*256> m_translucency;
+    std::vector<uint8_t> m_backdrop;
 };
 
 }

@@ -46,7 +46,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         // below authorize the edit. Old acknowledgements must not close a new UI.
         const auto request=static_cast<const gse::value::Int*>(field("request_id",gse::VT_INT))->value;
         if(!base || base->GetGame()!=this || caller!=m_slot_num || expected.size()>unit::SmacStartupDesignState::MAX_WIRE_BYTES+89+2*513
-            || selected<0 || selected>511 || request<1 || armor<0 || armor>1 || supplied.size()>31 || supplied.find('\0')!=std::string::npos) {THROW("Invalid Workshop command authority or draft");}
+            || selected<0 || selected>511 || request<1 || armor<0 || armor>9 || supplied.size()>31 || supplied.find('\0')!=std::string::npos) {THROW("Invalid Workshop command authority or draft");}
         // Current narrow UI has the same printable-byte rendering boundary as
         // Base Rename. Do not install a name that its renderer cannot display.
         for(const unsigned char c:supplied) {if(c<32 || c>126) {THROW("Workshop name requires printable display bytes");}}
@@ -214,15 +214,30 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE) const {
     const auto mineral_factor=m_game->GetSmacProductionMineralFactor(m_owner);
     gse::value::array_elements_t armor;
     for(const auto& choice:choices) {
-        bool supported=choice.component_id<=1 && choice.technology_available;
+        bool supported=choice.technology_available;
         std::string design_name;
         int32_t cost_rows=0;
         if(supported) {
             auto probe=m_game->m_simulation->value.designs;unit::SmacWorkshopDraft draft;draft.armor=choice.component_id;
             try {
-                const auto result=unit::CommitSmacWorkshopFirstDesign(probe,draft,catalog,*settings.GetSmacTechnologyRules(),technology);
+                unit::SmacWorkshopCommit result;
+                if(probe.native_registry) {
+                    const auto& economy=m_game->m_simulation->value.economy.at(technology.admission.simulation_id);
+                    auto prepared=unit::PrepareSmacWorkshopCommit(probe,draft,catalog,*settings.GetSmacTechnologyRules(),technology,
+                        economy.design_counts.value_or(faction::SmacDesignCounts{}),economy.production_reference_counts.value_or(faction::SmacDesignCounts{}));
+                    result=prepared.result;
+                    if(!prepared.success && !prepared.confirmation) {throw std::runtime_error("Workshop preview allocation failed");}
+                    if(prepared.confirmation) {
+                        // Preview the replacement without retiring anything or
+                        // consuming the saved history. The live command owns consent.
+                        auto pool=*probe.native_registry;pool.at(result.design_id)[48]&=uint8_t(~1u);
+                        unit::BuildSmacWorkshopRecord(pool,size_t(result.design_id),draft,catalog,*settings.GetSmacTechnologyRules(),technology);
+                        design_name=unit::NameSmacWorkshopDesign(pool,size_t(result.design_id),draft,catalog,technology.admission.simulation_id);
+                        cost_rows=pool.at(result.design_id)[41];
+                    } else {probe=std::move(prepared.state);}
+                } else {result=unit::CommitSmacWorkshopFirstDesign(probe,draft,catalog,*settings.GetSmacTechnologyRules(),technology);}
                 if(result.design_id<64) {design_name=catalog.source.units.at(result.design_id).name;cost_rows=catalog.units.at(result.design_id).cost;}
-                else {
+                else if(design_name.empty()) {
                     const auto* bank=probe.Find(technology.admission.simulation_id);
                     if(!bank) {throw std::runtime_error("Workshop preview has no owned bank");}
                     const auto design=std::find_if(bank->designs.begin(),bank->designs.end(),[&](const auto& row){return row.id==result.design_id;});
@@ -254,6 +269,7 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE) const {
         {"speed",VALUE(gse::value::Int,,catalog.chassis.chassis.at(0).speed)},
         {"weapon",VALUE(gse::value::String,,catalog.weapons.weapons.at(0).name)},
         {"offense",VALUE(gse::value::Int,,catalog.weapons.weapons.at(0).offense)},
+        {"weapon_mode",VALUE(gse::value::Int,,int32_t(catalog.weapons.weapons.at(0).mode))},
         {"reactor",VALUE(gse::value::String,,catalog.reactors.reactors.at(0).name)},
         {"power",VALUE(gse::value::Int,,catalog.reactors.reactors.at(0).power)},
         {"scout_name",VALUE(gse::value::String,,catalog.source.units.at(2).name)},

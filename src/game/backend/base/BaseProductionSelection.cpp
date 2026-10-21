@@ -28,19 +28,20 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
             if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop command");}
             return at->second->Deref();
         };
-        if(args.size()!=6) {THROW("Workshop command requires Base, expected state, armor, name, Done flag and UI request");}
+        if(args.size()!=7) {THROW("Workshop command requires Base, selected design, expected state, armor, name, Done flag and UI request");}
         const auto* object=static_cast<const gse::value::Object*>(field("base",gse::VT_OBJECT));
         if(object->object_class!=base::Base::WRAP_CLASS) {THROW("Workshop requires an actual Base");}
         auto* base=base::Base::Unwrap(args.at("base"));
         const auto& expected=static_cast<const gse::value::String*>(field("expected_state",gse::VT_STRING))->value;
         const auto armor=static_cast<const gse::value::Int*>(field("armor",gse::VT_INT))->value;
+        const auto selected=static_cast<const gse::value::Int*>(field("selected_design",gse::VT_INT))->value;
         const auto& supplied=static_cast<const gse::value::String*>(field("name",gse::VT_STRING))->value;
         const auto done=static_cast<const gse::value::Bool*>(field("done",gse::VT_BOOL))->value;
         // Client correlation only: ownership and the complete saved-state fence
         // below authorize the edit. Old acknowledgements must not close a new UI.
         const auto request=static_cast<const gse::value::Int*>(field("request_id",gse::VT_INT))->value;
         if(!base || base->GetGame()!=this || caller!=m_slot_num || expected.size()>unit::SmacStartupDesignState::MAX_WIRE_BYTES+89
-            || request<1 || armor<0 || armor>1 || supplied.size()>31 || supplied.find('\0')!=std::string::npos) {THROW("Invalid Workshop command authority or draft");}
+            || selected<0 || selected>511 || request<1 || armor<0 || armor>1 || supplied.size()>31 || supplied.find('\0')!=std::string::npos) {THROW("Invalid Workshop command authority or draft");}
         // Current narrow UI has the same printable-byte rendering boundary as
         // Base Rename. Do not install a name that its renderer cannot display.
         for(const unsigned char c:supplied) {if(c<32 || c>126) {THROW("Workshop name requires printable display bytes");}}
@@ -53,7 +54,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         bool warning=false,failed=false;int32_t design_id=2;
         if(!stale) {
             auto next=m_simulation->value.designs;
-            unit::SmacWorkshopDraft draft;draft.armor=uint32_t(armor);draft.name=supplied;
+            unit::SmacWorkshopDraft draft;draft.selected_design=static_cast<int32_t>(selected);draft.armor=uint32_t(armor);draft.name=supplied;
             const auto& settings=GetState()->m_settings.global;
             const auto* owner=m_simulation->value.technology.Find(base->GetSmacResourceContext().owner_simulation_id);
             try {
@@ -136,8 +137,8 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE) const {
                     const auto* bank=probe.Find(technology.admission.simulation_id);
                     if(!bank) {throw std::runtime_error("Workshop preview has no owned bank");}
                     const auto design=std::find_if(bank->designs.begin(),bank->designs.end(),[&](const auto& row){return row.id==result.design_id;});
-                    if(design==bank->designs.end() || !design->name) {throw std::runtime_error("Workshop preview has no retained design name");}
-                    design_name=*design->name;
+                    if(design==bank->designs.end()) {throw std::runtime_error("Workshop preview has no retained design name");}
+                    design_name=unit::SmacWorkshopDesignName(*design,catalog,technology.admission.simulation_id);
                     cost_rows=design->cost;
                 }
             }

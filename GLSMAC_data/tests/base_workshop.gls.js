@@ -26,16 +26,16 @@ test.assert(dialog.model.preview_armor == 1 && dialog.model.preview_yaw == 0.0);
 test.assert(dialog.title.text == 'SYNTHMETAL GARRISON' && dialog.stats.text == '1-2-1' && dialog.cost.text == 'COST:  20' && dialog.chassis.text == 'INFANTRY' && dialog.armor_name.text == 'SYNTHMETAL' && dialog.armor_stat.text == 'Level 2');
 dialog.submit(false); dialog.submit(false);
 test.assert(dialog.pending && #sizeof(commands) == 1 && commands[0].name == 'commit_smac_workshop'
-    && commands[0].data.base == base && commands[0].data.armor == 1 && commands[0].data.name == ''
+    && commands[0].data.base == base && commands[0].data.selected_design == 2 && commands[0].data.armor == 1 && commands[0].data.name == ''
     && commands[0].data.expected_state == 'before' && !commands[0].data.done);
-listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, stale: false, failed: false, intrinsic_name_warning: false, done: false});
-test.assert(dialog.active && !dialog.pending);
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 127, stale: false, failed: false, intrinsic_name_warning: false, done: false});
+test.assert(dialog.active && !dialog.pending && dialog.selected_design == 127);
 dialog.hide_view(); test.assert(!dialog.active && windows[0].hidden && windows[1].hidden && #sizeof(commands) == 1);
 dialog.open(base, selection); dialog.submit(true);
 listeners.smac_workshop_commit({base: {id: 702}}); test.assert(dialog.pending);
-listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, stale: true}); test.assert(dialog.active && !dialog.pending);
-dialog.submit(true); listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, stale: false, failed: true}); test.assert(dialog.active && !dialog.pending);
-dialog.submit(true); listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, stale: false, failed: false, intrinsic_name_warning: true, done: true});
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 127, stale: true}); test.assert(dialog.active && !dialog.pending && dialog.selected_design == 2);
+dialog.submit(true); listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 127, stale: false, failed: true}); test.assert(dialog.active && !dialog.pending && dialog.selected_design == 2);
+dialog.submit(true); listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 127, stale: false, failed: false, intrinsic_name_warning: true, done: true});
 test.assert(!dialog.active && windows[0].hidden && dialog.draft_name == '');
 dialog.open(base, selection); dialog.open_picker();
 test.assert(windows[1].handlers.keydown({modifiers: {}, code: 'ESCAPE'}) == true && windows[1].hidden && dialog.active);
@@ -45,13 +45,13 @@ dialog.open(base, selection); listeners.turn_status({status: 'please_wait'}); te
 // An older Done response must not close a newer session on the same Base.
 dialog.open(base, selection); dialog.submit(true); const old_request = dialog.pending_id; dialog.hide_view();
 dialog.open(base, selection); dialog.submit(false); const current_request = dialog.pending_id;
-listeners.smac_workshop_commit({base: base, request_id: old_request, selection: selection, stale: false, failed: false, intrinsic_name_warning: false, done: true});
+listeners.smac_workshop_commit({base: base, request_id: old_request, selection: selection, design_id: 127, stale: false, failed: false, intrinsic_name_warning: false, done: true});
 test.assert(dialog.active && dialog.pending && current_request != old_request);
-listeners.smac_workshop_commit({base: base, request_id: current_request, selection: selection, stale: false, failed: false, intrinsic_name_warning: false, done: false});
-test.assert(dialog.active && !dialog.pending);
+listeners.smac_workshop_commit({base: base, request_id: current_request, selection: selection, design_id: 127, stale: false, failed: false, intrinsic_name_warning: false, done: false});
+test.assert(dialog.active && !dialog.pending && dialog.selected_design == 127);
 
 const before_keys = #sizeof(commands);
 test.assert(windows[0].handlers.keydown({modifiers: {shift: true}, code: 'ENTER'}) == true && #sizeof(commands) == before_keys);
 test.assert(windows[0].handlers.keydown({modifiers: {}, code: 'ENTER'}) == true && dialog.pending && #sizeof(commands) == before_keys + 1 && commands[before_keys].data.done);
-listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, stale: false, failed: false, intrinsic_name_warning: false, done: true});
+listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: selection, design_id: 127, stale: false, failed: false, intrinsic_name_warning: false, done: true});
 test.assert(!dialog.active && windows[0].hidden);

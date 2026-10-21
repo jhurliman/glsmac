@@ -43,6 +43,7 @@ return {
             this.pending = false; this.selection = e.selection; this.update_armor();
             if (e.stale) { this.message.text = 'Game state changed. Please check your design.'; return; }
             if (e.failed) { this.message.text = 'This design cannot be saved.'; return; }
+            this.selected_design = e.design_id;
             if (e.intrinsic_name_warning) { this.draft_name = ''; this.message.text = 'The original unit name is retained.'; }
             else { this.message.text = ''; }
             if (e.done) { this.hide_view(); }
@@ -54,7 +55,7 @@ return {
         return this.window;
     },
     open: (base, data) => {
-        this.base = base; this.selection = data; this.active = true; this.pending = false; this.selected_armor = 0;
+        this.base = base; this.selection = data; this.active = true; this.pending = false; this.selected_armor = 0; this.selected_design = 2;
         this.chassis.text = #uppercase(data.chassis); this.weapon.text = #uppercase(data.weapon); this.reactor.text = #uppercase(data.reactor);
         this.chassis_stat.text = 'Land ' + #to_string(data.speed); this.weapon_stat.text = 'Weapon ' + #to_string(data.offense); this.reactor_stat.text = 'Power ' + #to_string(data.power);
         this.title.text = #uppercase(data.scout_name); this.draft_name = ''; this.message.text = ''; this.update_armor(); this.window.show();
@@ -84,8 +85,8 @@ return {
         this.pending = true; this.next_request = this.next_request + 1; this.pending_id = this.next_request;
         const request = this.pending_id;
         const base = this.base; const expected = this.selection.expected_state;
-        const armor = this.selected_armor; const name = this.draft_name;
-        this.p.game.event('commit_smac_workshop', {base: base, expected_state: expected, armor: armor, name: name, done: done, request_id: request});
+        const armor = this.selected_armor; const name = this.draft_name; const selected = this.selected_design;
+        this.p.game.event('commit_smac_workshop', {base: base, selected_design: selected, expected_state: expected, armor: armor, name: name, done: done, request_id: request});
     },
     hide_view: () => { this.active = false; this.pending = false; this.base = null; this.picker.hide(); this.window.hide(); },
 };

@@ -1,0 +1,172 @@
+{
+  "scope": "Bounded native chassis/shielding caller arguments and Probe body dispatch; no raster matrix.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "cases": [
+    {
+      "kind": "chassis",
+      "draft": {
+        "owner": 1,
+        "chassis": 1,
+        "weapon": 18,
+        "armor": 0,
+        "reactor": 1
+      },
+      "entry": "0x43df8e",
+      "composer": "0x4d88e0",
+      "args": [
+        1,
+        1,
+        18,
+        0,
+        1,
+        7670228
+      ]
+    },
+    {
+      "kind": "chassis",
+      "draft": {
+        "owner": 1,
+        "chassis": 1,
+        "weapon": 18,
+        "armor": 1,
+        "reactor": 1
+      },
+      "entry": "0x43df8e",
+      "composer": "0x4d88e0",
+      "args": [
+        1,
+        1,
+        18,
+        0,
+        1,
+        7670228
+      ]
+    },
+    {
+      "kind": "chassis",
+      "draft": {
+        "owner": 1,
+        "chassis": 1,
+        "weapon": 18,
+        "armor": 4,
+        "reactor": 1
+      },
+      "entry": "0x43df8e",
+      "composer": "0x4d88e0",
+      "args": [
+        1,
+        1,
+        18,
+        0,
+        1,
+        7670228
+      ]
+    },
+    {
+      "kind": "shielding",
+      "draft": {
+        "owner": 1,
+        "chassis": 1,
+        "weapon": 18,
+        "armor": 1,
+        "reactor": 1
+      },
+      "entry": "0x43e97e",
+      "composer": "0x4d9130",
+      "args": [
+        1,
+        18,
+        1,
+        1,
+        7670228
+      ]
+    },
+    {
+      "kind": "shielding",
+      "draft": {
+        "owner": 1,
+        "chassis": 1,
+        "weapon": 18,
+        "armor": 4,
+        "reactor": 1
+      },
+      "entry": "0x43e97e",
+      "composer": "0x4d9130",
+      "args": [
+        1,
+        18,
+        4,
+        1,
+        7670228
+      ]
+    },
+    {
+      "kind": "shielding",
+      "draft": {
+        "owner": 1,
+        "chassis": 1,
+        "weapon": 18,
+        "armor": 5,
+        "reactor": 1
+      },
+      "entry": "0x43e97e",
+      "composer": "0x4d9130",
+      "args": [
+        1,
+        18,
+        5,
+        1,
+        7670228
+      ]
+    }
+  ],
+  "helper_controls": [
+    {
+      "composer": "0x4d88e0",
+      "args": [
+        1,
+        1,
+        18,
+        0,
+        1,
+        7670228
+      ],
+      "operations": [
+        {
+          "pc": "0x631a60",
+          "args": [
+            8058776,
+            6987816,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "composer": "0x4d9130",
+      "args": [
+        1,
+        18,
+        1,
+        1,
+        7670228
+      ],
+      "operations": [
+        {
+          "pc": "0x632060",
+          "args": [
+            8058696,
+            0
+          ]
+        },
+        {
+          "pc": "0x632060",
+          "args": [
+            8058184,
+            0
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -75,9 +75,9 @@ public:
     // 0..3 builds the separate chassis/weapon/shield/reactor scene.
     static CvrScoutRenderer LoadWorkshopDesign(const WorkshopReader& read,std::string_view faction_pcx,
         int chassis,int weapon,int armor,int reactor,int kind=-1);
-    struct WorkshopDefinition {int weapon_power,weapon_mode,armor_strength;bool independent_probe=false;};
+    struct WorkshopDefinition {int weapon_power,weapon_mode,armor_strength;bool independent_probe=false;uint32_t abilities=0;};
     // Stock SMAC composer with explicit per-part animation selection. Definition
-    // fields come from the active installed rules, not an inferred weapon-ID/power mapping. No abilities yet.
+    // fields come from the active installed rules; abilities retain their source composition order and own materials.
     static CvrScoutRenderer LoadWorkshopDesign(const WorkshopReader& read,std::string_view faction_pcx,
         int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition);
     // Generic chooser4d8e40(owner,-1,weapon), distinct from main side cards.

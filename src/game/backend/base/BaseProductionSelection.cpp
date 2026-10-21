@@ -605,6 +605,7 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
                 if(active) {components=VALUE(gse::value::Object,,GSE_CALL_NOGC,{
                     {"chassis",VALUE(gse::value::Int,,raw[36])}, {"weapon",VALUE(gse::value::Int,,raw[37])},
                     {"armor",VALUE(gse::value::Int,,raw[38])}, {"reactor",VALUE(gse::value::Int,,raw[39])},
+                    {"abilities",VALUE(gse::value::Int,,uint32_t(raw[32])|(uint32_t(raw[33])<<8)|(uint32_t(raw[34])<<16)|(uint32_t(raw[35])<<24))},
                     {"offense",VALUE(gse::value::Int,,catalog.weapons.weapons.at(raw[37]).offense)},
                     {"weapon_mode",VALUE(gse::value::Int,,int(catalog.weapons.weapons.at(raw[37]).mode))},
                     {"strength",VALUE(gse::value::Int,,catalog.defenses.defenses.at(raw[38]).rating)},

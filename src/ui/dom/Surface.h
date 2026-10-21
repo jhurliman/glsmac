@@ -86,13 +86,14 @@ private:
     std::shared_ptr<const ui::SmacWorkshopCachedPreview> m_workshop_cached;
     std::array<int,2> m_workshop_cached_key{{-1,-1}};
     std::shared_ptr<const loader::cvr::CvrScoutRenderer> m_workshop_design;
+    uint32_t m_workshop_design_abilities=0;
     std::array<int,8> m_workshop_design_key{{-2,-2,-2,-2,-2,-2,-2,-2}};
     std::string m_workshop_design_faction;
     struct PickerImage {std::array<int,8> key;bool known;std::array<uint32_t,3> before,after;std::shared_ptr<const std::vector<uint8_t>> colors;};
     std::vector<PickerImage> m_workshop_picker_images;
     std::optional<std::array<std::vector<uint8_t>,10>> m_workshop_weapon_sprites;
     std::string m_workshop_picker_faction;
-    struct StripImage {std::array<int,7> key;std::shared_ptr<const loader::cvr::CvrStripImage> image;};
+    struct StripImage {std::array<int64_t,8> key;std::shared_ptr<const loader::cvr::CvrStripImage> image;};
     std::vector<StripImage> m_workshop_strip_images;
     std::string m_workshop_strip_faction;
     std::optional<std::array<std::array<uint8_t,3>,256>> m_workshop_strip_colors;

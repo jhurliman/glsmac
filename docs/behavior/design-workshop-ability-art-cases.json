@@ -1,0 +1,2605 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Source-derived operation order/material/offset checks; owned CVR frame assembly for both views and independently recomputed main bounds/center. Separate checked-contract.json is staged projection/raster verification from native kernel-entry inputs, not a fully independent asset-to-kernel renderer.",
+  "checks": {
+    "full_color_depth_frames": 32,
+    "assembled_objects": 1190,
+    "main_bounds_and_centers": 16,
+    "kernel_calls": 1548,
+    "decorator_controls": 50,
+    "reactor_controls": 14
+  },
+  "admission": [
+    {
+      "id": "super_former",
+      "bit": 0,
+      "compatible": 1,
+      "prerequisite_id": 62,
+      "owned": 1
+    },
+    {
+      "id": "fungicide",
+      "bit": 13,
+      "compatible": 1,
+      "prerequisite_id": 38,
+      "owned": 1
+    },
+    {
+      "id": "air_superiority",
+      "bit": 5,
+      "compatible": 1,
+      "prerequisite_id": 39,
+      "owned": 1
+    },
+    {
+      "id": "carrier",
+      "bit": 7,
+      "compatible": 1,
+      "prerequisite_id": 15,
+      "owned": 1
+    },
+    {
+      "id": "antigrav",
+      "bit": 10,
+      "compatible": 1,
+      "prerequisite_id": 21,
+      "owned": 1
+    },
+    {
+      "id": "artillery_rover",
+      "bit": 15,
+      "compatible": 1,
+      "prerequisite_id": 22,
+      "owned": 1
+    },
+    {
+      "id": "repair_bay",
+      "bit": 21,
+      "compatible": 1,
+      "prerequisite_id": 15,
+      "owned": 1
+    },
+    {
+      "id": "drop",
+      "bit": 4,
+      "compatible": 1,
+      "prerequisite_id": 41,
+      "owned": 1
+    },
+    {
+      "id": "jammer",
+      "bit": 9,
+      "compatible": 1,
+      "prerequisite_id": 12,
+      "owned": 1
+    },
+    {
+      "id": "trance",
+      "bit": 18,
+      "compatible": 1,
+      "prerequisite_id": 48,
+      "owned": 1
+    },
+    {
+      "id": "artillery_infantry",
+      "bit": 15,
+      "compatible": 1,
+      "prerequisite_id": 22,
+      "owned": 1
+    },
+    {
+      "id": "sam_drop_order",
+      "bit": 4,
+      "compatible": 1,
+      "prerequisite_id": 41,
+      "owned": 1
+    },
+    {
+      "id": "sam_drop_order",
+      "bit": 5,
+      "compatible": 1,
+      "prerequisite_id": 39,
+      "owned": 1
+    }
+  ],
+  "assets": {
+    "AVGMTGUN.CVR": {
+      "sha256": "42a68bfc39934fe2ad240facd50578815e4071e31f5c1f544e2a73bfe557e816",
+      "frames": 2,
+      "objects": 1
+    },
+    "vb.cvr": {
+      "sha256": "1466afd2cd9757b07de7a2e1512534e4639888e8a6f7ec6d7dc134cd3766270c",
+      "frames": 1,
+      "objects": 1
+    },
+    "vbp.cvr": {
+      "sha256": "00eedcd3a2a666d704dffc42551be497150b666343cc10819ae5a66a1fae9c8b",
+      "frames": 1,
+      "objects": 1
+    },
+    "vcl.cvr": {
+      "sha256": "407cfb8177386dcef4b01e5154da0edda9cde368d889123086e880976520f08b",
+      "frames": 1,
+      "objects": 1
+    },
+    "vclt00.cvr": {
+      "sha256": "05a74b01cb5f6257850fe8ffd2bff0372f362edfaa672e380bc9534024adf25e",
+      "frames": 1,
+      "objects": 1
+    },
+    "vlights.cvr": {
+      "sha256": "7b90c70683e0afe1a6ac2677e7a3d008e6714ae98d575db69176a1100f9570f1",
+      "frames": 1,
+      "objects": 1
+    },
+    "vt.cvr": {
+      "sha256": "076df434678a92b0de70965a0c3c1a400de31924d9365c8c96998f0bb2e13c19",
+      "frames": 1,
+      "objects": 1
+    },
+    "vwntu.cvr": {
+      "sha256": "8cd9d1039c1c071d08b4a2f2fdd551892cc2158e4b26cac72a5ba8d5f79a608f",
+      "frames": 1,
+      "objects": 14
+    },
+    "vr00.cvr": {
+      "sha256": "bc9fe00983763206f693a25715081d50d8e0ae3c9e40a6332aded1eb3f167f92",
+      "frames": 1,
+      "objects": 1
+    },
+    "ssf.cvr": {
+      "sha256": "3c317b9233f80aac2dc380e330c07db87b13f4d7a71b6d2d67d63f2dd14bbaf7",
+      "frames": 1,
+      "objects": 1
+    },
+    "sft.cvr": {
+      "sha256": "bb6b5dc965dc9ed3d51841108e6b94ac9c2df9b6a19f1681aaa90e75d269e876",
+      "frames": 1,
+      "objects": 1
+    },
+    "vi.cvr": {
+      "sha256": "d2044c1f77a0e0377bc79c2dcbedc7fc3813d9c5e434a042a0e52fc9f0b779f1",
+      "frames": 17,
+      "objects": 58
+    },
+    "viptr00.cvr": {
+      "sha256": "572ca9d55ad49c2ab32a90ae8d3e1b1bc9a78e7901cf4387d26d0dde205a4cee",
+      "frames": 32,
+      "objects": 1
+    },
+    "sas.cvr": {
+      "sha256": "aad79b931b8d96eb7164d1f4fce2d994c37c8c841d81cd827ceec1b1a75dd7f4",
+      "frames": 1,
+      "objects": 1
+    },
+    "vrcp00.cvr": {
+      "sha256": "68c65a7a0bbf41c694be4129435ad7b16553d17aef532a527e06f563b3890c85",
+      "frames": 1,
+      "objects": 1
+    },
+    "vgmc.cvr": {
+      "sha256": "cd9b5966c3cb18e2a052b584ef40d7a4c214dc38ea8e79cccd5ed53093124d8f",
+      "frames": 1,
+      "objects": 1
+    },
+    "vgmcp.cvr": {
+      "sha256": "517312a18c5d53c10c96dde96d8cbc33cbb5c9ae001068f2cf707190dc0f5da3",
+      "frames": 1,
+      "objects": 1
+    },
+    "vfl.cvr": {
+      "sha256": "de5b1966718248550a2a127e88054ed3a40cf724a0be393957f9a7aaa645d8d2",
+      "frames": 1,
+      "objects": 1
+    },
+    "vwntt.cvr": {
+      "sha256": "8ade7c692df90667a4fecc6f8678774f1eaacdb8465786014da65f52621d08d2",
+      "frames": 1,
+      "objects": 1
+    },
+    "scd.cvr": {
+      "sha256": "d3784419db6761f677c7bdd21d998171fe3c297382f4fb7ade83093aa35ebc24",
+      "frames": 1,
+      "objects": 1
+    },
+    "sags.cvr": {
+      "sha256": "13ac6747d1851cf7934d1ee224b226c5e2615a062490313a2726ce36a90f8e12",
+      "frames": 1,
+      "objects": 1
+    },
+    "vsp.cvr": {
+      "sha256": "6748dd59107229fbce04b283fc777d47913fc2b6239606c955bdf14a86c5dd3f",
+      "frames": 1,
+      "objects": 1
+    },
+    "vsptb.cvr": {
+      "sha256": "c9423247215c0c2785bcca8a66addf6e0079e8f3ab1ab3c70208513b4f85118f",
+      "frames": 17,
+      "objects": 1
+    },
+    "vsptf.cvr": {
+      "sha256": "76fb3d08bc1d1a331389a692ae6912e332798e95ce964fa05d6020d4649d6648",
+      "frames": 17,
+      "objects": 1
+    },
+    "vhr.cvr": {
+      "sha256": "e10fa3aebcf6a9b3f2e0c86f9d6f4862377726ed8bf7a4ee0f504b23032939ab",
+      "frames": 1,
+      "objects": 1
+    },
+    "srb.cvr": {
+      "sha256": "7351bf4d0e63b026f4efecdea6dabe1f5e9d61198eae78cfec5a26caf9f86746",
+      "frames": 1,
+      "objects": 1
+    },
+    "sdp.cvr": {
+      "sha256": "e2e0b160e73b6ede4454b243714b8771f06fe0005c7c6bd5a6ae66a6baada4ae",
+      "frames": 1,
+      "objects": 2
+    },
+    "scj.cvr": {
+      "sha256": "d54058f20e08936c1c4b287040d7993ded07e81cfff2bc40292bf9ada9c9d343",
+      "frames": 1,
+      "objects": 1
+    },
+    "sht.cvr": {
+      "sha256": "547cc0cabb1deaed3f8b6134d4256146702ac5ee3f6374c7eac6dbc3f4e241ad",
+      "frames": 1,
+      "objects": 1
+    }
+  },
+  "alpha_sha256": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4",
+  "cases": [
+    {
+      "fixture": {
+        "id": "super_former_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 15,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 1,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "super_former_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vcl.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vclt00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vwntu.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "ssf.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 22,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "e03f1c286e99b26a4c7f484a082eed1fcbd352e45e36283e97e4c96e200b075f",
+      "depth_sha256": "3210bd11980e8b233a80f1853e55f7983fab6153e34b87c27af4dd176daa81d3"
+    },
+    {
+      "fixture": {
+        "id": "super_former_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 15,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 1,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "super_former_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vcl.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vclt00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vwntu.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "ssf.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 22,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "c90bcc1d07160292f56677aa71823920f9447f991e1ee7b952cce2382f3900c9",
+      "depth_sha256": "9363f41fcf5d5e7fd2c6ce0282d1de089428988419b107cb0e32afdfa90fc3fe"
+    },
+    {
+      "fixture": {
+        "id": "fungicide_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 15,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 8192,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "fungicide_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vcl.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vclt00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vwntu.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "sft.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 22,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "70a2d0efe564776f80f80bcf5f57572f0d6245b598efc1e5ce7fb4cf03fe25f8",
+      "depth_sha256": "28f03e59cf30cee61a1e0abbad6934b83d48355a025103c0b848a7a5c2b04191"
+    },
+    {
+      "fixture": {
+        "id": "fungicide_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 15,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 8192,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "fungicide_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vcl.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vclt00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vwntu.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "sft.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 22,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "0ef28ff2f26f9839dedee10858059abbcd49a9eee6b4d2f69892a82dea26e5de",
+      "depth_sha256": "4f04ed111951b9c837163323afb71635b47bb7efc072df2f9b53800b38c3da66"
+    },
+    {
+      "fixture": {
+        "id": "air_superiority_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 32,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "air_superiority_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "sas.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 60,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "80cc31adc6891ca5c3291d6ed6913286ae33ca76d0b25afaf32eae69f3cf33fd",
+      "depth_sha256": "797a75afaf908ce618d289546bf3c3a68cde1db772405551ce2c2084be1531cf"
+    },
+    {
+      "fixture": {
+        "id": "air_superiority_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 32,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "air_superiority_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "sas.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        }
+      ],
+      "assembled_objects": 60,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "7de7c8b500cb59e844f4b3539388e08c12db6ac4a4f65c777bd0ae833ca9d7e6",
+      "depth_sha256": "956e47fe04a388a3a3cdda4a3067de96a536f8305ecb470c44302c28511d0303"
+    },
+    {
+      "fixture": {
+        "id": "carrier_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 3,
+        "weapon": 16,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 128,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "carrier_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vfl.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vwntt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "scd.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 9,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "ed1be63953fe91b43d8c94466221ee8f2e206fecc12722de4168201dc15b4506",
+      "depth_sha256": "0c83bae4ef4879c3e92760c26344428e734bd5837282ab751cb8d3e20a5a251b"
+    },
+    {
+      "fixture": {
+        "id": "carrier_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 3,
+        "weapon": 16,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 128,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "carrier_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vfl.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vwntt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "scd.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 9,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "789443a12232dce88e3525b412b94df799348905167ff37535b7efc2ec638364",
+      "depth_sha256": "813a89442182a4d5b902ec2342265270f411d0ce4203ac188d6bd561292a2461"
+    },
+    {
+      "fixture": {
+        "id": "antigrav_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 1024,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "antigrav_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "sags.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 60,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "85c641362bbb01dffbb1119a30a9726a2718ceabf3159d004c8e478bf887ea83",
+      "depth_sha256": "f00aa49c0c8b768483508c3ff2f0e4399f4b6a8885420a41949111025ff6b5dd"
+    },
+    {
+      "fixture": {
+        "id": "antigrav_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 1024,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "antigrav_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "sags.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        }
+      ],
+      "assembled_objects": 60,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "e8d0bea5c2946379ae67eaacfb6c7f39d3d64d9dabd7aae18775ab774ea6645f",
+      "depth_sha256": "72b9a086af455eabe0a974a95d9a0f7b89ffe92ec3ea10bad2f70ad2fae84354"
+    },
+    {
+      "fixture": {
+        "id": "artillery_rover_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 32768,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "artillery_rover_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptf.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vhr.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vhr.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 12,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "49cc432959aff22a971790415f78a91e969955dec65581f4b1dcc9b315c9f82d",
+      "depth_sha256": "3247c8e8be07681aa826b38d437116c8979f05e21b2d6848b93751015f5949c9"
+    },
+    {
+      "fixture": {
+        "id": "artillery_rover_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 32768,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "artillery_rover_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptf.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vhr.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vhr.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 12,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "d8021cdb28dec757e4324e2566607e7c8e8f99a1de1e695b5361cf1f5cd35405",
+      "depth_sha256": "4e20e63b7ca40a9e989187ec04ff4900da23934c82182b2b3279919abc22a946"
+    },
+    {
+      "fixture": {
+        "id": "repair_bay_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 3,
+        "weapon": 16,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 2097152,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "repair_bay_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vfl.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vwntt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "srb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 9,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "edd9df15a3cb6e1117ee6940834ff24797635e9c002a51a5298f4b65ac199b30",
+      "depth_sha256": "1ca9cf854925a24814f3a6f4c5f7e76b5bcecbaab9edb0b836ab3b415bf0128f"
+    },
+    {
+      "fixture": {
+        "id": "repair_bay_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 3,
+        "weapon": 16,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 2097152,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "repair_bay_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vfl.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vwntt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "srb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 9,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "cf9cc9043e7ef99f571f131b77d682b432cf45fee2403f1e9f99e078c8cfa6cb",
+      "depth_sha256": "f0059917f4afcb3c2a483e62563d104ddf38c3c50b38c91cc14ebad8b5a509f0"
+    },
+    {
+      "fixture": {
+        "id": "drop_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 16,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "drop_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "sdp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 61,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "dd12e664d3173c70aa8c1269bd9cabc100e5060cbe61b76ab0f3409fe8c9aa7b",
+      "depth_sha256": "b712f17ce6ec43c1e4ffe340fcd6b42f1f9161a3768d5f5f4b100ebb86e4f90d"
+    },
+    {
+      "fixture": {
+        "id": "drop_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 16,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "drop_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "sdp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        }
+      ],
+      "assembled_objects": 61,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "9e4291e5de4ef99beaec25724879f55cba5e7f019d29683df4ed4b9f4ceec25a",
+      "depth_sha256": "2a28bfbe3b7ec349097bfd971e78348e7177833d21418a5baeb5895291d76b47"
+    },
+    {
+      "fixture": {
+        "id": "jammer_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 512,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "jammer_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "scj.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 60,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "a67b344b6d372f187ba03c078be24c771dd023ed75a9c01564b53202e4392e91",
+      "depth_sha256": "b697589bf17351442995fc2e9cade5a39581e8d795c1a1ae29cc7d76332a444c"
+    },
+    {
+      "fixture": {
+        "id": "jammer_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 512,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "jammer_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "scj.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        }
+      ],
+      "assembled_objects": 60,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "09ad6870461f198af42578c738171afbca20302a150be8ca495864ab58ccc56b",
+      "depth_sha256": "442c5d2d10f606dd8df95b41d4ffcecf5a9be5bc99bfaa27918a861484834158"
+    },
+    {
+      "fixture": {
+        "id": "trance_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 262144,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "trance_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "sht.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 60,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "327674c5a5a558f651b35d18b6b3af83b9f345c9dfe1143e5f5c78b9ef360ab3",
+      "depth_sha256": "dbfb24c7be3d2c7d89037a1d3cbfc42cb77b19fd00998853ddb432d828a32a28"
+    },
+    {
+      "fixture": {
+        "id": "trance_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 262144,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "trance_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "sht.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        }
+      ],
+      "assembled_objects": 60,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "7edf63cdc86a95ca502e3c17250b3fedfa12703ec5b32bc1e1993c0577e144e3",
+      "depth_sha256": "5e2a936408ce14919fef653e3338469a7062e5185b60de8760fc342575168120"
+    },
+    {
+      "fixture": {
+        "id": "artillery_infantry_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 32768,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "artillery_infantry_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "vhr.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 60,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "ab2500a798482fb15cbffc47360505632c8234a4b6039991dd4ce98efbc1e573",
+      "depth_sha256": "7051f34a3d6554bbf7b433b110f768b3d2221e05f747c0da9e5b36fa99909673"
+    },
+    {
+      "fixture": {
+        "id": "artillery_infantry_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 32768,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "artillery_infantry_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "vhr.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        }
+      ],
+      "assembled_objects": 60,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "028bfbaafccc1fd868671e95b83f4f11f3a064da15e2028804aa8796fb8f3c2c",
+      "depth_sha256": "a1173fff6fd253e03c7c5132759bb02a770f139ddfc1699c1f07ab60d6815b69"
+    },
+    {
+      "fixture": {
+        "id": "sam_drop_order_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 48,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "sam_drop_order_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "sas.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "sdp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 62,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "1ad0b4b0239f029f7269f61aa6ef99cbe7750104eae01227523614556fa0da31",
+      "depth_sha256": "305bf8ae1ca2299590801cd88f5356d5d42c41abd81e0b95a192a593c555cddb"
+    },
+    {
+      "fixture": {
+        "id": "sam_drop_order_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 48,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "sam_drop_order_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "sas.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "sdp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        }
+      ],
+      "assembled_objects": 62,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "4806cc43e473907daad25fa8d1103a27e20ff66715e07b8df90d5c185ec77155",
+      "depth_sha256": "2450f59f3a44a31a35cc5e9c4d4124e2c3da840a90c581cc96bbd2bf0080ac7c"
+    },
+    {
+      "fixture": {
+        "id": "baseline_former_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 15,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "baseline_former_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vcl.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vclt00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vwntu.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 21,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "f243d442eae4c3c4388acc8726ee1d8be7f2a9b31e5ea9436077d83e5ed24800",
+      "depth_sha256": "96c3bd6518bdd7e8e874e0740fdb0bb136e11993a28875b93f697c26b5f1c954"
+    },
+    {
+      "fixture": {
+        "id": "baseline_former_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 15,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "baseline_former_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vcl.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vclt00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vwntu.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 21,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "fdb9483d265dfe36ae21abe4c9da1e8f9dca36ddb13587360ebdeab72787b774",
+      "depth_sha256": "daca0b61b61af1eab839367ca875be081cbe2ec62ea6c95fac99e251fef66677"
+    },
+    {
+      "fixture": {
+        "id": "baseline_foil_transport_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 3,
+        "weapon": 16,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "baseline_foil_transport_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vfl.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vwntt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 8,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "6a3e12c8d9194f58c959bb0f4eaad68c9950037dcdecb4a80133151c8d2892da",
+      "depth_sha256": "f6c933565998cb7a326311813f11fe67d74472b7d626c07028d26b4d21d8956e"
+    },
+    {
+      "fixture": {
+        "id": "baseline_foil_transport_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 3,
+        "weapon": 16,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "baseline_foil_transport_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vfl.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vwntt.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 8,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "e02a558b2e2bb3c6840b48d1b2356489b52f1ecaed5e39fff05e9fee12ae113a",
+      "depth_sha256": "8c6b43a4ac03fe6f6c7550c3f550f78eee219060892710dda31e304071f2f47d"
+    },
+    {
+      "fixture": {
+        "id": "baseline_rover_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "baseline_rover_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptf.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 10,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "0f624cd53e8b4a8a7fe6763b666950ae68b526c1b24bc1dbb89f0a484250a5ca",
+      "depth_sha256": "9c6fe03d3457ff308ff617b0df0813c4d02d0a4eb9d6d0fb22b3fc274715ec81"
+    },
+    {
+      "fixture": {
+        "id": "baseline_rover_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 1,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "baseline_rover_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vrcp00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmc.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vgmcp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vbp.cvr",
+          "kind": "copy",
+          "material": "owner:1",
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsp.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptb.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vsptf.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vlights.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        },
+        {
+          "asset": "vr00.cvr",
+          "kind": "copy",
+          "material": null,
+          "frame": 0,
+          "offset": null
+        }
+      ],
+      "assembled_objects": 10,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "1ce5da47f4f88274ee0c10d04463f08649e0be140bd1add9842876902b59521a",
+      "depth_sha256": "b2269d1dc052629f4a5f202a7527c1ec8d1ff17f0ac4d2eb7d7e3fb5a64ac72a"
+    },
+    {
+      "fixture": {
+        "id": "baseline_scout_main",
+        "kind": "main",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "phase": 0,
+        "yaw_bits": "0x0",
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "baseline_scout_main",
+      "kind": "main",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        }
+      ],
+      "assembled_objects": 59,
+      "asset_frames_match": true,
+      "bounds_and_center_match": true,
+      "indexed_sha256": "0e75d4f02c26fd845e7120c405af7518d8184ff3a16de8a089a34dae4463c670",
+      "depth_sha256": "fdead0e225fd61882635dddfde47b452dd1bdd979bf98fb15246cc2ab9857282"
+    },
+    {
+      "fixture": {
+        "id": "baseline_scout_strip",
+        "kind": "strip",
+        "selected": 127,
+        "owner": 1,
+        "chassis": 0,
+        "weapon": 0,
+        "armor": 0,
+        "reactor": 1,
+        "abilities": 0,
+        "phase": 0,
+        "yaw_bits": null,
+        "render_cw": "037f",
+        "shadow_initializer_cw": "027f"
+      },
+      "id": "baseline_scout_strip",
+      "kind": "strip",
+      "operations": [
+        {
+          "asset": "vi.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        },
+        {
+          "asset": "viptr00.cvr",
+          "kind": "attach",
+          "material": null,
+          "frame": 0,
+          "offset": "infantry"
+        }
+      ],
+      "assembled_objects": 59,
+      "asset_frames_match": true,
+      "bounds_and_center_match": false,
+      "indexed_sha256": "09ad6870461f198af42578c738171afbca20302a150be8ca495864ab58ccc56b",
+      "depth_sha256": "442c5d2d10f606dd8df95b41d4ffcecf5a9be5bc99bfaa27918a861484834158"
+    }
+  ],
+  "differences": [
+    {
+      "id": "super_former_main",
+      "baseline": "baseline_former_main",
+      "indexed_cells_changed": 2285,
+      "depth_cells_changed": 2609
+    },
+    {
+      "id": "super_former_strip",
+      "baseline": "baseline_former_strip",
+      "indexed_cells_changed": 36,
+      "depth_cells_changed": 36
+    },
+    {
+      "id": "fungicide_main",
+      "baseline": "baseline_former_main",
+      "indexed_cells_changed": 509,
+      "depth_cells_changed": 510
+    },
+    {
+      "id": "fungicide_strip",
+      "baseline": "baseline_former_strip",
+      "indexed_cells_changed": 13,
+      "depth_cells_changed": 13
+    },
+    {
+      "id": "air_superiority_main",
+      "baseline": "baseline_scout_main",
+      "indexed_cells_changed": 775,
+      "depth_cells_changed": 838
+    },
+    {
+      "id": "air_superiority_strip",
+      "baseline": "baseline_scout_strip",
+      "indexed_cells_changed": 8,
+      "depth_cells_changed": 8
+    },
+    {
+      "id": "carrier_main",
+      "baseline": "baseline_foil_transport_main",
+      "indexed_cells_changed": 913,
+      "depth_cells_changed": 913
+    },
+    {
+      "id": "carrier_strip",
+      "baseline": "baseline_foil_transport_strip",
+      "indexed_cells_changed": 19,
+      "depth_cells_changed": 20
+    },
+    {
+      "id": "antigrav_main",
+      "baseline": "baseline_scout_main",
+      "indexed_cells_changed": 1936,
+      "depth_cells_changed": 2013
+    },
+    {
+      "id": "antigrav_strip",
+      "baseline": "baseline_scout_strip",
+      "indexed_cells_changed": 84,
+      "depth_cells_changed": 84
+    },
+    {
+      "id": "artillery_rover_main",
+      "baseline": "baseline_rover_main",
+      "indexed_cells_changed": 3064,
+      "depth_cells_changed": 3596
+    },
+    {
+      "id": "artillery_rover_strip",
+      "baseline": "baseline_rover_strip",
+      "indexed_cells_changed": 49,
+      "depth_cells_changed": 49
+    },
+    {
+      "id": "repair_bay_main",
+      "baseline": "baseline_foil_transport_main",
+      "indexed_cells_changed": 1132,
+      "depth_cells_changed": 3370
+    },
+    {
+      "id": "repair_bay_strip",
+      "baseline": "baseline_foil_transport_strip",
+      "indexed_cells_changed": 14,
+      "depth_cells_changed": 14
+    },
+    {
+      "id": "drop_main",
+      "baseline": "baseline_scout_main",
+      "indexed_cells_changed": 1768,
+      "depth_cells_changed": 1801
+    },
+    {
+      "id": "drop_strip",
+      "baseline": "baseline_scout_strip",
+      "indexed_cells_changed": 89,
+      "depth_cells_changed": 89
+    },
+    {
+      "id": "jammer_main",
+      "baseline": "baseline_scout_main",
+      "indexed_cells_changed": 5,
+      "depth_cells_changed": 5
+    },
+    {
+      "id": "jammer_strip",
+      "baseline": "baseline_scout_strip",
+      "indexed_cells_changed": 0,
+      "depth_cells_changed": 0
+    },
+    {
+      "id": "trance_main",
+      "baseline": "baseline_scout_main",
+      "indexed_cells_changed": 1200,
+      "depth_cells_changed": 1208
+    },
+    {
+      "id": "trance_strip",
+      "baseline": "baseline_scout_strip",
+      "indexed_cells_changed": 13,
+      "depth_cells_changed": 13
+    },
+    {
+      "id": "artillery_infantry_main",
+      "baseline": "baseline_scout_main",
+      "indexed_cells_changed": 1471,
+      "depth_cells_changed": 1550
+    },
+    {
+      "id": "artillery_infantry_strip",
+      "baseline": "baseline_scout_strip",
+      "indexed_cells_changed": 75,
+      "depth_cells_changed": 75
+    },
+    {
+      "id": "sam_drop_order_main",
+      "baseline": "baseline_scout_main",
+      "indexed_cells_changed": 1835,
+      "depth_cells_changed": 1868
+    },
+    {
+      "id": "sam_drop_order_strip",
+      "baseline": "baseline_scout_strip",
+      "indexed_cells_changed": 97,
+      "depth_cells_changed": 97
+    }
+  ]
+}

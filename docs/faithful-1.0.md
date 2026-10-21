@@ -52,10 +52,10 @@ required before the local conquest milestone can be claimed.
 
 ## Current acceptance dashboard — 2026-10-21
 
-Accepted integration: **`5759b4b7cd29919be56cbce5a1f62171936b6828`**, through
-[#530](https://github.com/jhurliman/glsmac/pull/530), on `codex/faithful-1.0`.
+Accepted integration: **`723da292047b15e8e8254e300a178bb6ba27b639`**, through
+[#531](https://github.com/jhurliman/glsmac/pull/531), on `codex/faithful-1.0`.
 Its selected Linux regression/lifecycle and correctness-analysis checks passed
-at head `5432f1aaeead012b0cb038b00d8310eca7e51e36`. This is an integration
+at head `b8ab847bcec26c7b70619b577a4c3b166acb6848`. This is an integration
 checkpoint, not a release candidate or a statement that all platforms were rerun.
 
 **Current focus: the complete Design Workshop (M3/M6). M0–M7 remain open.**
@@ -84,10 +84,12 @@ controller now have implementation receipts in the [Workshop journal](design-wor
 The ordinary action buttons match all 14,700 compared native pixels. Live
 rotation, stop and reopen pass an actual instrumented SDL session; five declared
 model frames and the bounded cached-sprite output match complete native buffers.
-These receipts do not establish whole-screen parity or the complete manufactured
-Unit path. In particular, `PrepareManufacturedConventionalUnit` still rejects
-first custom prototype completion at this accepted checkpoint. That live caller
-is the next gameplay integration; a correct editor price is not a usable Unit.
+These receipts do not establish whole-screen parity or the complete human-played
+manufactured Unit path. First custom prototype completion is now integrated
+in#531: a queued saved design is manufactured with its one-time morale bonus
+and native design-history changes, and checkpoint replay matches uninterrupted
+repeat production. High Morale's admitted manufacturing contribution, complete
+newborn state flags and allocation-limit aftermath still need follow-up.
 
 | Acceptance | Status at the accepted head | Evidence and remaining exit requirement |
 | --- | --- | --- |
@@ -190,14 +192,12 @@ finished single-player or satisfy the 1.0 AI gate.
 
 ## Next three tasks and their acceptance targets
 
-1. **Connect first-prototype manufacturing — WS3/M2.3.** Remove the live
-   first-completion rejection by staging original prototype/history flags with
-   the actual newborn Unit and Base transaction. Preserve the admitted debit,
-   apply the first-completion morale bonus once, and test repeated production,
-   failure/rollback, inferred component history and save/reload. Carry the
-   staged design state through later riot/abandonment/restart consequences.
-   Resolve the original allocation-limit boundary separately; its executed
-   prefix does not prove a refund or atomic rollback.
+1. **Close manufactured Unit-state gaps — WS3/M2.3.** Connect the admitted
+   High Morale bonus with training/current MORALE/prototype ordering and clamp,
+   retain the original produced-state flags, and establish allocation-limit
+   aftermath. The successful first/repeat/history/checkpoint path is integrated
+   in#531. The captured allocation-failure prefix still does not prove a refund
+   or atomic rollback. Extend actual gameplay package admission independently.
 2. **Complete Workshop rendering and interactions — WS2/WS4.** Connect the
    source-confirmed ability models and Artillery composition ordering in main
    and saved-strip scenes. Match selected/hovered picker/modal states, parent

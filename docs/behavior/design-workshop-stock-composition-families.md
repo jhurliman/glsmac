@@ -76,6 +76,49 @@ temporarily changes the draft chassis so weapon/armor/reactor also see Infantry,
 then restores the original chassis at `4467b2`. Preserve that temporary scope;
 this painter does not permanently change the saved design or draft chassis.
 
+### Probe substitutions are scoped to each painter
+
+Do not normalize Speeder Probe chassis globally before constructing all cards.
+The chassis card `43de60@43dfd6` calls:
+
+```text
+4d88e0(draft.owner, draft.chassis, draft.weapon, 0,
+       draft.reactor, Workshop + 1279c)
+```
+
+It passes raw chassis/weapon and **forces armor zero**, independent of selected
+draft armor. The body helper's local test at `4d8926..4d893d` then remaps
+Speeder Probe to Infantry because the installed armor-zero strength is one.
+Thus even a draft with Photon Wall selected displays the Infantry Probe body
+in its chassis card. It does not write that substituted chassis into the draft.
+
+Shielding card `43e850@43e9cd` calls:
+
+```text
+4d9130(draft.chassis, draft.weapon, draft.armor, 1,
+       Workshop + 1279c)
+```
+
+This also passes raw chassis/weapon, with selected armor and preview one.
+`4d9130` does not apply the body helper's Probe remap. For Speeder Probe with
+Synthmetal, the standalone shielding card copies `VA01.cvr` and `VSPA01.CVR`,
+rather than the Infantry attachment. Armor zero skips the shielding composer
+and model draw (`43e999..43e99f` branches to `43ea67`). Armor five retains
+the already documented preview-one material behavior.
+
+The reactor card also retains raw chassis/weapon, as pinned in the
+[reactor caller clarification](design-workshop-ability-art.md#reactor-side-card-caller-clarification).
+Weapon card Probe handling is its separate chassis-minus-one branch, not a
+shared remap for other cards. Main assembled model remapping remains scoped
+to `4466c0` and its selected armor-strength condition above.
+
+[Six bounded caller controls and two complete helper controls](design-workshop-side-card-probe-cases.json)
+verify these arguments and the resulting Probe body / Synthmetal operations.
+They supply preceding layout-stage values and final model-copy services;
+they add no raster claims. Private additive bundle
+`tmp/reference/independent-workshop-side-card-probe-evidence-20261021`, manifest
+SHA256 `1efb212ea0fa8dd3259615011fe29b58b109c8a98f06491ea9d00b97a9d9969f`.
+
 ## Weapons and packages: 4d8e40
 
 Chassis 8 adds no separate weapon asset: its body already carries the missile.
@@ -227,8 +270,14 @@ or phase%15 as listed above. Copter also calls `610d10` on the Workshop object
 at `4d8d89..4d8d97` and increments global phase when that predicate succeeds.
 The new controls do not establish timer scheduling, active-window behavior,
 nonzero-frame motion or frame rollover. They must not be used as permission
-to freeze animated models at frame zero. Remaining SMAX/ability models are
-outside this pass.
+to freeze animated models at frame zero. SMAX models remain outside this pass.
+The later [stock ability artwork contract](design-workshop-ability-art.md)
+establishes ten decorator bits, the extra Artillery reactor model, main/strip
+ordering and 32 independently checked full indexed/depth views.
+
+The [animation-controller handoff](design-workshop-animation-controller.md)
+now establishes timer delivery, hierarchy visibility, paint-dependent phase
+and yaw advancement, and the precise nonzero-frame raster checks still needed.
 
 Private opcode/address disassembly covers `4466c0`, all four composers,
 `45cb80`, all four copy/attachment methods, `641f10`, main/weapon painters and
@@ -237,14 +286,3 @@ armor class `4d8df4`, armor material `4d959c`, armor chassis+1 `4d95c4`, and
 package mode-7 `4d9118`. `stock-model-map.json` maps original loaded model
 pointers to owned filenames and file hashes, including otherwise easy-to-miss
 dynamic `viptr`, `VRCP`, `VR` and `vpbr` arrays.
-
-
-## Weapon-card scale branch
-
-`43e2b0@43e481..43e4b0` reads the selected weapon mode from installed definitions:
-mode below 3 selects `3e19999a` (.15), mode 9 selects `3d75c28f` (.06), and other
-noncombat modes select `3da3d70a` (.08). The fourteen-frame controls include
-Former, Transport, Supply and Artifact weapon cards, proving those noncombat
-scale paths in addition to their separate model compositions. The card's
-clipping context applies to clipped Single streams; the observed ordinary
-Square2 kernels do not acquire that clip.

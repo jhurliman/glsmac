@@ -20,6 +20,7 @@
 #include "fixtures/WorkshopStockVisual.h"
 #include "fixtures/WorkshopStrip.h"
 #include "fixtures/WorkshopAnimation.h"
+#include "fixtures/WorkshopAbilityArt.h"
 #include "game/frontend/SmacDevelopedOverlay.h"
 #include "loader/txt/UnitRulesTXTLoader.h"
 #include <cstdlib>
@@ -271,6 +272,29 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
         target=before;image.Composite(target,4,3,4,lookup,{-1,-1},{0,0,4,3});
         GT_ASSERT(target[0]==11 && std::count(target.begin(),target.end(),1)==11,"Negative-origin clip changed");GT_OK();
     });
+    task->AddTest("CVR Workshop ability art matches32 complete native main and strip frames",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto root=std::filesystem::path(directory);size_t reads=0;
+        const auto read=[&](const std::string& name){++reads;std::ifstream file(root/name,std::ios::binary);if(!file) {throw std::runtime_error("Missing owned ability-art source: "+name);}return std::string(std::istreambuf_iterator<char>(file),{});};
+        const auto source=read("alpha.txt");const auto weapons=loader::txt::UnitRulesTXTLoader::ParseWeapons(source,"smac");
+        const auto armor=loader::txt::UnitRulesTXTLoader::ParseDefenses(source,"smac");
+        const auto sha=[](const auto& bytes){return util::SHA256(std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size()));};
+        for(const auto& row:workshop_ability_art_fixture::CASES) {
+            const CvrScoutRenderer::WorkshopDefinition definition{weapons.weapons.at(row.weapon).offense,int(weapons.weapons.at(row.weapon).mode),armor.defenses.at(row.armor).rating,false,row.abilities};
+            const auto renderer=row.strip ? CvrScoutRenderer::LoadStripDesign(read,read("spartans.pcx"),row.chassis,row.weapon,row.armor,row.reactor,definition)
+                :CvrScoutRenderer::LoadWorkshopDesign(read,read("spartans.pcx"),row.chassis,row.weapon,row.armor,row.reactor,-1,definition);
+            const auto loaded=reads;const auto image=row.strip ? renderer.RenderStrip().body:renderer.RenderWorkshop();
+            std::vector<uint8_t> depth;for(const auto value:image.indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
+            GT_ASSERT(reads==loaded && sha(image.indexed.color)==row.color && sha(depth)==row.depth,
+                "Native ability frame "+std::string(row.name)+" color="+sha(image.indexed.color)+" depth="+sha(depth));
+            GT_ASSERT(image.draw_count==row.kernels && image.processed_records==row.records,"Native ability draw order/count differs: "+std::string(row.name));
+            if(const auto* output=std::getenv("GLSMAC_WORKSHOP_CAPTURE_DIR")) {
+                std::filesystem::create_directories(output);std::ofstream file(std::filesystem::path(output)/(std::string(row.name)+".rgba"),std::ios::binary);
+                file.write(reinterpret_cast<const char*>(image.rgba.data()),image.rgba.size());
+            }
+        }GT_OK();
+    });
+
     task->AddTest("CVR Workshop cached sprite matches isolated original initialized shadow blit",GT(){
         const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
         const auto read=[&](const std::string& name) {

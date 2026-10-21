@@ -1,0 +1,89 @@
+{
+  "scope": "Bounded native reactor-card call-argument slice; no UI/raster capture.",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "painter": "0x43ed10",
+  "weapon_painter": "0x43e2b0",
+  "calls_decorator": false,
+  "cases": [
+    {
+      "chassis": 1,
+      "weapon": 0,
+      "reactor": 1,
+      "abilities": 32768,
+      "args": [
+        1,
+        0,
+        1,
+        32768,
+        7670228
+      ],
+      "entry": "0x43ef37",
+      "call": "0x43ef7d",
+      "boundary": "0x4d95f0"
+    },
+    {
+      "chassis": 0,
+      "weapon": 0,
+      "reactor": 1,
+      "abilities": 32768,
+      "args": [
+        0,
+        0,
+        1,
+        32768,
+        7670228
+      ],
+      "entry": "0x43ef37",
+      "call": "0x43ef7d",
+      "boundary": "0x4d95f0"
+    },
+    {
+      "chassis": 1,
+      "weapon": 18,
+      "reactor": 1,
+      "abilities": 0,
+      "args": [
+        1,
+        18,
+        1,
+        0,
+        7670228
+      ],
+      "entry": "0x43ef37",
+      "call": "0x43ef7d",
+      "boundary": "0x4d95f0"
+    },
+    {
+      "chassis": 2,
+      "weapon": 0,
+      "reactor": 3,
+      "abilities": 32768,
+      "args": [
+        2,
+        0,
+        3,
+        32768,
+        7670228
+      ],
+      "entry": "0x43ef37",
+      "call": "0x43ef7d",
+      "boundary": "0x4d95f0"
+    },
+    {
+      "chassis": 1,
+      "weapon": 0,
+      "reactor": 1,
+      "abilities": 0,
+      "args": [
+        1,
+        0,
+        1,
+        0,
+        7670228
+      ],
+      "entry": "0x43ef37",
+      "call": "0x43ef7d",
+      "boundary": "0x4d95f0"
+    }
+  ]
+}

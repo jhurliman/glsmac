@@ -95,8 +95,9 @@ CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::st
         || (independent_weapon && kind!=1) || !((definition.weapon_mode>=0 && definition.weapon_mode<=2) || (definition.weapon_mode>=7 && definition.weapon_mode<=12))) {
         throw std::invalid_argument("Workshop composition requires stock component identities and supported modes");
     }
-    // The original temporarily remaps this Probe design for all four composers.
-    if(weapon==18 && chassis==1 && definition.armor_strength<=1) {chassis=0;}
+    // Only the main wrapper remaps all stages; component callers retain their
+    // draft IDs. The body helper has its own local Probe substitution below.
+    if(profile==Profile::Workshop && kind<0 && weapon==18 && chassis==1 && definition.armor_strength<=1) {chassis=0;}
     // The live weapon side-card caller substitutes chassis-1 for Probe when
     // its ordinary-unit cache flag is zero. Whole-unit composition does not.
     if(independent_weapon || (kind==1 && weapon==18 && definition.independent_probe)) {chassis=-1;}
@@ -123,12 +124,14 @@ CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::st
     };
     const auto number=[](const std::string& prefix,int index) {return prefix+(index<10 ? "0":"")+std::to_string(index)+".cvr";};
     const bool infantry_actor=chassis==0 && (definition.weapon_mode<3 || definition.weapon_mode==11);
-    const bool body_armored=armor==1 || armor==2 || armor==3 || armor==4 || armor==5 || armor==6 || armor==7 || armor==8;
+    const int body_armor=kind==0 ? 0:armor; // original chassis card passes No Armor
+    const bool body_armored=body_armor==1 || body_armor==2 || body_armor==3 || body_armor==4 || body_armor==5 || body_armor==6 || body_armor==7 || body_armor==8;
     const auto base=[&] {append("vb.cvr");append("vbp.cvr",&faction.shades);};
     const auto gunbase=[&] {append("vgmc.cvr");append("vgmcp.cvr",&faction.shades);};
     const auto powerbase=[&] {append(number("vrcp",reactor-1));};
     const auto body=[&] {
-        switch(chassis) {
+        const int local_chassis=weapon==18 && chassis==1 && (kind==0 || definition.armor_strength<=1) ? 0:chassis;
+        switch(local_chassis) {
         case 0:
             if(definition.weapon_mode<3) {if(weapon!=14) {append("vi.cvr",nullptr,infantry,false,Phase::Modulo15);}}
             else if(weapon==18) {append("vpt.cvr",nullptr,infantry,false,Phase::Modulo15);}
@@ -186,8 +189,20 @@ CvrScoutRenderer CvrScoutRenderer::LoadDesign(const WorkshopReader& read,std::st
         case 6:if(structure && armor!=5) {append("vct00.cvr");append("va01.cvr");}else if(ordinary) {append("vct01.cvr",tint);append("va01.cvr",tint);}break;
         }
     };
-    const auto power=[&] {append(number(infantry_actor ? "viptr":chassis==8 ? "vpbr":"vr",reactor-1),nullptr,infantry_actor ? infantry:zero,!infantry_actor);};
-    if(kind<0) {body();gun();shield();power();}else {
+    const auto power=[&] {
+        append(number(infantry_actor ? "viptr":chassis==8 ? "vpbr":"vr",reactor-1),nullptr,infantry_actor ? infantry:zero,!infantry_actor);
+        if(!infantry_actor && chassis!=8 && (definition.abilities&0x8000u)) {append("vhr.cvr");}
+    };
+    const auto abilities=[&] {
+        // Original4d8700 execution order, not ascending ability bit order.
+        for(const auto& entry:std::array<std::pair<uint32_t,const char*>,10>{{
+            {1u<<0,"ssf.cvr"},{1u<<13,"sft.cvr"},{1u<<5,"sas.cvr"},{1u<<7,"scd.cvr"},{1u<<10,"sags.cvr"},
+            {1u<<15,"vhr.cvr"},{1u<<21,"srb.cvr"},{1u<<4,"sdp.cvr"},{1u<<9,"scj.cvr"},{1u<<18,"sht.cvr"}}}) {
+            if(definition.abilities&entry.first) {append(entry.second);}
+        }
+    };
+    const bool strip=profile==Profile::StripInfantry || profile==Profile::StripBody || profile==Profile::StripSmallInfantry;
+    if(kind<0) {body();gun();if(strip) {abilities();}shield();power();if(!strip) {abilities();}}else {
         switch(kind) {case 0:body();break;case 1:gun();break;case 2:shield();break;case 3:power();break;}
     }
     if(bytes.empty() && kind<0) {throw std::invalid_argument("Workshop unit has no model");}

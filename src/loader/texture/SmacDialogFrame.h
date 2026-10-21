@@ -13,6 +13,21 @@ struct SmacDialogSource {
 namespace smac_dialog_frame {
 using Rect=std::array<int,4>;
 using Call=std::array<int,5>; // style,L,T,R,B
+// Original460720 loads the second/third interface sprites for checklists.
+// Source indices are already rebased by10; replacement is local to this
+// sprite producer, since the frame painter still distinguishes loaded7.
+inline std::vector<uint8_t> Checkbox(const SmacDialogSource& source,bool checked) {
+    if(source.indexed.size()!=size_t(SmacDialogSource::Width)*SmacDialogSource::Height) {
+        throw std::invalid_argument("Checkbox requires the original indexed interface atlas");
+    }
+    std::vector<uint8_t> pixels(18*18);
+    const int top=checked?39:20;
+    for(int y=0;y<18;++y) {for(int x=0;x<18;++x) {
+        const auto index=source.indexed[size_t(top+y)*SmacDialogSource::Width+227+x];
+        pixels[size_t(y)*18+x]=(index==6 || index==7)?9:index;
+    }}
+    return pixels;
+}
 inline void Paint(std::vector<uint8_t>& dst,int width,int height,const SmacDialogSource& source,
     const Call& call,const Rect& clip,std::array<int,2> phase={0,0}) {
     if(width<=0 || height<=0 || width>2048 || height>2048 || dst.size()!=size_t(width)*height

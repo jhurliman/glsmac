@@ -152,6 +152,15 @@ Surface::Surface( DOM_ARGS_T )
         m_geometry->AsRectangle()->SetStretched();
         return VALUE(gse::value::Undefined);
     }));
+    Property(GSE_CALL,"smac_checkbox",gse::VT_BOOL,nullptr,PF_NONE,[this](GSE_CALLABLE,gse::Value* const value) {
+        if(!m_dialog_source) {m_dialog_source=g_engine->GetTextureLoader()->GetSmacDialogSource();}
+        if(!m_dialog_source) {GSE_ERROR(gse::EC.LOADER_ERROR,"Original checkbox atlas unavailable");}
+        const auto indexed=loader::texture::smac_dialog_frame::Checkbox(*m_dialog_source,static_cast<const gse::value::Bool*>(value)->value);
+        const auto rgba=loader::texture::smac_dialog_frame::Rgba(indexed,*m_dialog_source);
+        CreateTexture();m_background.texture->Resize(18,18);
+        std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());
+        m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
+    },[this](GSE_CALLABLE){ClearTexture();});
     Property(GSE_CALL,"smac_button_sprite",gse::VT_ARRAY,nullptr,PF_NONE,[this](GSE_CALLABLE,gse::Value* const value) {
         const auto& fields=static_cast<gse::value::Array*>(value)->value;
         if(fields.size()!=2 || !fields[0] || !fields[1] || fields[0]->type!=gse::VT_INT || fields[1]->type!=gse::VT_INT) {GSE_ERROR(gse::EC.UI_ERROR,"Modal button sprite requires [state,width]");}

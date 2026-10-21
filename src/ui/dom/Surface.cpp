@@ -400,23 +400,26 @@ Surface::Surface( DOM_ARGS_T )
     }));
 
     Method(GSE_CALL,"smacworkshopdesign",NATIVE_CALL(this) {
-        N_EXPECT_ARGS_MIN_MAX(10,11);N_GETVALUE(chassis,0,Int);N_GETVALUE(weapon,1,Int);N_GETVALUE(armor,2,Int);N_GETVALUE(reactor,3,Int);
+        N_EXPECT_ARGS_MIN_MAX(10,12);N_GETVALUE(chassis,0,Int);N_GETVALUE(weapon,1,Int);N_GETVALUE(armor,2,Int);N_GETVALUE(reactor,3,Int);
         N_GETVALUE(kind,4,Int);N_GETVALUE(faction,5,String);N_GETVALUE(yaw,6,Float);
         N_GETVALUE(power,7,Int);N_GETVALUE(mode,8,Int);N_GETVALUE(strength,9,Int);
         if(chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9 || reactor<1 || reactor>4 || kind< -1 || kind>3
             || power< -127 || power>127 || mode<0 || mode>12 || strength< -127 || strength>127
             || faction.empty() || faction.size()>256 || faction.find_first_of("/\\:\0",0,4)!=std::string::npos
             || !std::isfinite(yaw) || !std::isfinite(static_cast<float>(yaw))) {throw std::invalid_argument("Unsupported Workshop composition request");}
-        bool visible=false;if(arguments.size()==11) {N_GETVALUE(show,10,Bool);visible=show;}
-        const bool animated=arguments.size()==11;
+        bool visible=false;if(arguments.size()>=11) {N_GETVALUE(show,10,Bool);visible=show;}
+        const bool animated=arguments.size()>=11;
+        uint32_t abilities=0;if(arguments.size()==12) {N_GETVALUE(mask,11,Int);
+            if(mask<0 || uint64_t(mask)>UINT32_MAX) {throw std::invalid_argument("Invalid Workshop ability mask");}abilities=uint32_t(mask);
+        }
         const std::array<int,8> key{int(chassis),int(weapon),int(armor),int(reactor),int(kind),int(power),int(mode),int(strength)};
-        if(!m_workshop_design || key!=m_workshop_design_key || faction!=m_workshop_design_faction) {
+        if(!m_workshop_design || key!=m_workshop_design_key || faction!=m_workshop_design_faction || abilities!=m_workshop_design_abilities) {
             const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;
                 util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath(name));return std::string(bytes.begin(),bytes.end());};
             const auto faction_bytes=read(faction);
-            auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,faction_bytes,key[0],key[1],key[2],key[3],key[4],{key[5],key[6],key[7],kind==1 && weapon==18});
+            auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,faction_bytes,key[0],key[1],key[2],key[3],key[4],{key[5],key[6],key[7],kind==1 && weapon==18,abilities});
             auto next=std::make_shared<const loader::cvr::CvrScoutRenderer>(std::move(renderer));
-            m_workshop_design=std::move(next);m_workshop_design_key=key;m_workshop_design_faction=faction;
+            m_workshop_design=std::move(next);m_workshop_design_key=key;m_workshop_design_faction=faction;m_workshop_design_abilities=abilities;
         }
         const float angle=static_cast<float>(yaw);uint32_t bits;std::memcpy(&bits,&angle,sizeof(bits));std::array<uint32_t,3> position{};
         if(animated && kind<0) {bits=m_workshop_preview.BeginPaint(false);}
@@ -435,7 +438,7 @@ Surface::Surface( DOM_ARGS_T )
             throw std::invalid_argument("Invalid Workshop strip projection");
         }
         if(selected< -1 || selected>511 || hovered< -1 || hovered>511) {throw std::invalid_argument("Invalid Workshop strip selection");}
-        std::vector<std::optional<std::array<int,7>>> keys;std::vector<int32_t> ids;
+        std::vector<std::optional<std::array<int64_t,8>>> keys;std::vector<int32_t> ids;
         for(auto* value:rows) {
             if(!value || value->Deref()->type!=gse::VT_OBJECT) {throw std::invalid_argument("Invalid Workshop strip row");}
             auto* row=static_cast<gse::value::Object*>(value->Deref());const auto* active=row->Get("active")->Deref();
@@ -445,12 +448,12 @@ Surface::Surface( DOM_ARGS_T )
             if(active->type!=gse::VT_BOOL) {throw std::invalid_argument("Invalid Workshop strip activity");}
             if(!static_cast<const gse::value::Bool*>(active)->value) {keys.push_back(std::nullopt);continue;}
             auto* components=row->Get("components")->Deref();if(components->type!=gse::VT_OBJECT) {throw std::invalid_argument("Missing Workshop strip components");}
-            std::array<int,7> key;size_t at=0;
-            for(const auto* name:{"chassis","weapon","armor","reactor","offense","weapon_mode","strength"}) {
+            std::array<int64_t,8> key;size_t at=0;
+            for(const auto* name:{"chassis","weapon","armor","reactor","offense","weapon_mode","strength","abilities"}) {
                 const auto* field=static_cast<gse::value::Object*>(components)->Get(name)->Deref();
                 if(field->type!=gse::VT_INT) {throw std::invalid_argument("Invalid Workshop strip component");}
                 const auto number=static_cast<const gse::value::Int*>(field)->value;
-                if(number<INT32_MIN || number>INT32_MAX) {throw std::invalid_argument("Workshop strip component exceeds signed32");}key[at++]=int(number);
+                if(at==7 ? (number<0 || uint64_t(number)>UINT32_MAX):(number<INT32_MIN || number>INT32_MAX)) {throw std::invalid_argument("Workshop strip component exceeds signed32");}key[at++]=number;
             }
             if(key[0]<0 || key[0]>8 || key[1]<0 || key[1]>20 || key[2]<0 || key[2]>9 || key[3]<1 || key[3]>4) {
                 throw std::invalid_argument("Workshop strip component identity outside stock catalog");
@@ -481,7 +484,7 @@ Surface::Surface( DOM_ARGS_T )
             std::shared_ptr<const loader::cvr::CvrStripImage> image;
             if(found!=m_workshop_strip_images.end()) {image=found->image;}
             else {
-                const auto renderer=loader::cvr::CvrScoutRenderer::LoadStripDesign(read,read(faction),key[0],key[1],key[2],key[3],{key[4],key[5],key[6]});
+                const auto renderer=loader::cvr::CvrScoutRenderer::LoadStripDesign(read,read(faction),key[0],key[1],key[2],key[3],{int(key[4]),int(key[5]),int(key[6]),false,uint32_t(key[7])});
                 image=std::make_shared<const loader::cvr::CvrStripImage>(renderer.RenderStrip());
                 if(m_workshop_strip_images.size()==16) {m_workshop_strip_images.erase(m_workshop_strip_images.begin());}
                 m_workshop_strip_images.push_back({key,image});

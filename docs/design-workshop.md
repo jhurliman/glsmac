@@ -1321,8 +1321,9 @@ record the original-game sources and private evidence hashes.
 This does not establish whole-screen Workshop parity. Reserved scratch63's
 cached-idle alias remains explicitly unsupported, ranked legacy states require
 retained scratch metadata, and the admitted Probe profile requires explicit
-no-project authority until project ownership is implemented. Special-ability
-model artwork and remaining complete UI/gameplay behavior still need work.
+no-project authority until project ownership is implemented. The ability-art
+follow-up below connects the stock decorations; remaining complete UI/gameplay
+behavior still needs work.
 
 
 ### First custom prototype manufacturing
@@ -1365,9 +1366,51 @@ retaining sanitizer instrumentation.
 
 This closes a manufacturing rejection, not the complete human-played Workshop
 receipt. The simulation still admits its documented ordinary ground packages;
-High Morale and other currently unsupported packages are not enabled by this
-change. No original allocation-limit refund/aftermath is inferred: the captured
+The ground resolver admits High Morale, but its manufacturing training
+contribution still needs integration; other package restrictions remain. No original allocation-limit refund/aftermath is inferred: the captured
 2048-Unit prefix already stores prototype flags and debits minerals before
 allocation refusal, while the current port rejects at its factory guard.
 Original full newborn production-state flags, complete UI gameplay acceptance,
 remote replay and general SMAX manufacturing remain separate open checks.
+
+
+### Stock ability models in the main preview and saved strip
+
+The live draft and retained saved-design projection now carry their actual
+unsigned ability mask into model composition and cache identity. Ten stock bits
+append owned models in native helper order, preserving asset transforms and
+own shade tables. Main order is body, weapon, armor, reactor, decorations;
+ordinary strip order inserts decorations before armor and reactor. Heavy
+Artillery adds a reactor-stage VHR for the general-reactor branch as well as
+its decorator copy. Neither duplicate nor fully occluded geometry is discarded.
+Ability art stays at frame0 while body animation and yaw retain their controller.
+
+Standalone cards keep their original callers: the reactor card passes selected
+abilities and raw draft chassis/weapon, without the main Probe remap. The
+chassis card passes No Armor and its body helper can locally remap Probe;
+shielding retains raw draft IDs. The main wrapper's temporary Probe substitution
+is no longer applied globally to independent cards and the ordinary strip.
+These caller corrections have bounded source/helper receipts, not new complete
+side-card raster receipts.
+
+All32 complete native main/strip color and depth buffers match, including
+kernel and processed-record counts. The counts preserve the Comm Jammer model
+even when it changes no sampled strip pixels, and preserve both Rover artillery
+VHR copies. Decoded models are reused across paints. The
+[ability-art contract](behavior/design-workshop-ability-art.md) declares inputs,
+source operations and native evidence boundaries; the associated montage shows
+port renderer samples, not an all-tech campaign or whole-screen comparison.
+
+Validation:72 affected native groups and three UI scripts pass. Focused
+ASan/UBSan instruments27 production and three test translation units and passes
+the same groups/scripts. Correctness analysis passes for20 changed/affected
+production translation units. An actual instrumented SDL session exercises the
+new model/strip bindings,187 timer deliveries, Cancel and fresh reopen; exit0,
+no sanitizer or tracked OpenGL leaks. Rendering samples use the stated Spartan
+material; the live session uses its actual starting faction and ordinary choices.
+
+This does not finish the Workshop screen or ability gameplay. Full parent-card
+text/decorations, preferences, Help/input states, complete human-played and
+remote manufacturing receipts, general gameplay packages, SMAX models and
+complete screen diffs remain open. High Morale manufacturing/state-flag and
+allocation-limit source controls are the next gameplay follow-up.

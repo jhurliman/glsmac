@@ -327,7 +327,7 @@ return {
         } else {
             this.model.left = 167; this.model.top = 36; this.model.width = 256; this.model.height = 256;
             this.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor,
-                (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, this.preview_strength, this.window.is_visible());
+                (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, this.preview_strength, this.window.is_visible(), this.selected_abilities);
         }
     },
     armor_strength: (strength) => { return strength < 0 ? 'Psi' : #to_string(strength); },
@@ -335,7 +335,7 @@ return {
         this.components.smacworkshopcomponents(this.selected_armor, true);
         for (row of this.selection.armor) { if (row.id == this.selected_armor) {
             for (component of this.component_models) {
-                component.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor, component.kind, this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating, this.window.is_visible());
+                component.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor, component.kind, this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating, this.window.is_visible(), this.selected_abilities);
             }
             this.preview_strength = row.rating; this.paint_main_preview();
             this.armor_name.text = row.id == 0 ? 'NONE' : #uppercase(row.short_name); this.armor_stat.text = 'Level ' + this.armor_strength(row.rating);

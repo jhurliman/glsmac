@@ -41,7 +41,7 @@ const node = (data) => {
     data.smacworkshopcomponents = (armor, only_armor) => { test.assert(only_armor); data.components_armor = armor; };
     data.smacworkshopstrip = (rows, faction, selected, hovered) => { data.strip_rows = rows; data.strip_faction = faction; data.strip_selected = selected; data.strip_hovered = hovered;
         return {normal: 'rgb(1,2,3)', unused: 'rgb(4,5,6)', obsolete: 'rgb(7,8,9)', empty_label: 'Empty Slot', obsolete_label: 'Obsolete'}; };
-    data.smacworkshopdesign = (chassis, weapon, armor, reactor, kind, faction, yaw, power, mode, strength, visible) => { data.preview_visible = visible; data.preview_paints = data.preview_paints + 1; data.preview_chassis = chassis; data.preview_weapon = weapon; data.preview_reactor = reactor; data.preview_strength = strength; data.preview_power = power; data.preview_mode = mode; data.preview_armor = armor; data.preview_yaw = yaw; data.preview_faction = faction; };
+    data.smacworkshopdesign = (chassis, weapon, armor, reactor, kind, faction, yaw, power, mode, strength, visible, abilities) => { data.preview_abilities = abilities; data.preview_visible = visible; data.preview_paints = data.preview_paints + 1; data.preview_chassis = chassis; data.preview_weapon = weapon; data.preview_reactor = reactor; data.preview_strength = strength; data.preview_power = power; data.preview_mode = mode; data.preview_armor = armor; data.preview_yaw = yaw; data.preview_faction = faction; };
     data.on = (event, cb) => { data.handlers[event] = cb; };
     data.listen = (target, event, cb) => { listeners[event] = cb; };
     const child = (properties) => { const value = node(properties); data.children :+ value; return value; };
@@ -217,6 +217,7 @@ restored_full.draft = {selected_design: 65, chassis: 2, weapon: 2, armor: 0, rea
 listeners.smac_workshop_commit({base: base, request_id: dialog.pending_id, selection: restored_full, design_id: 65, stale: false, failed: true, done: false,
     restore_draft: true, restored_armor: 0, restored_name: 'Retained Hover'});
 test.assert(dialog.selected_design == 65 && dialog.selected_chassis == 2 && dialog.selected_weapon == 2 && dialog.selected_reactor == 3 && dialog.selected_abilities == 262144 && dialog.draft_name == 'Retained Hover');
+test.assert(dialog.model.preview_abilities == 262144 && dialog.component_models[2].model.preview_abilities == 262144);
 test.assert(dialog.model.preview_chassis == 2 && dialog.model.preview_weapon == 2 && dialog.model.preview_reactor == 3);
 dialog.hide_view();
 
@@ -566,7 +567,7 @@ test.assert(classes['workshop-main-action'].smac_frame == [[27,0,0,105,20]] && c
 // Timer delivery paints only the main preview. Close fences later deliveries.
 dialog.open(base, selection); test.assert(dialog.model.clock_operation == 1);
 const paints = dialog.model.preview_paints; const old_component = dialog.component_models[0].model.preview_paints;
-dialog.model.handlers.workshopframe({}); test.assert(dialog.component_models[0].model.preview_paints == old_component && dialog.model.preview_paints == paints + 1 && dialog.model.preview_visible);
+dialog.model.handlers.workshopframe({}); test.assert(dialog.component_models[0].model.preview_paints == old_component && dialog.model.preview_paints == paints + 1 && dialog.model.preview_visible && dialog.model.preview_abilities == dialog.selected_abilities);
 selection.preview_icon = 3; selection.preview_variant = 2;
 dialog.model.handlers.workshopframe({}); test.assert(dialog.model.cached_icon == 3 && dialog.model.cached_variant == 2 && dialog.model.width == 311);
 selection.preview_icon = (0 - 1); dialog.model.handlers.workshopframe({}); test.assert(dialog.model.width == 256);

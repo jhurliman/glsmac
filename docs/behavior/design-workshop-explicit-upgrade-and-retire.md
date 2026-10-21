@@ -198,6 +198,13 @@ becomes `[current-38,pending64]`, count1. This is a reproduced original edge,
 not a fully filtered queue. Empty retirement still records history/deactivates
 the custom source, and zero cached count does not itself prove no live units.
 
+The live overwrite-retirement caller now preserves this forward-shift rule
+instead of filtering every pending match. Its queued atomicity fixture covers
+adjacent pairs at both ends of an owned queue and in a foreign Base queue,
+alongside separated matches, Stockpile current production, unchanged mineral
+and retool state, rollback after a late Unit-removal failure, and save/restore.
+This connects the shared595ac0 behavior; standalone Retire UI remains separate.
+
 After acceptance the caller reselects the same raw ID via4490b0(id,0), rebuilds
 the browse list, recenters when found, and requests a full repaint. It does
 not select the Upgrade destination or allocate a replacement design.

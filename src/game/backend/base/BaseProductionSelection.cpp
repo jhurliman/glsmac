@@ -227,7 +227,15 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
                                     return *item.smac_source_id==retired;
                                 };
                                 if(matches(production->current_item)) {production->current_item=MakeSmacProductionItem(affected->m_owner,base::ProductionItemKind::Stockpile,38);}
-                                if(production->queue) {auto& pending=*production->queue;pending.erase(std::remove_if(pending.begin(),pending.end(),matches),pending.end());}
+                                if(production->queue) {
+                                    auto& pending=*production->queue;
+                                    // Original595ac0 advances even after shifting a removed
+                                    // entry. Keep the newly shifted neighbor when adjacent
+                                    // entries name the same retired design.
+                                    for(size_t i=0;i<pending.size();++i) {
+                                        if(matches(pending[i])) {pending.erase(pending.begin()+i);}
+                                    }
+                                }
                                 production->Validate();
                                 if(!(*production==*affected->m_production)) {
                                     queues.emplace_back(affected,std::move(production));

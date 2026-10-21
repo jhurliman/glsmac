@@ -51,6 +51,7 @@ struct SmacWorkshopEditor {
     SmacWorkshopDraft draft;
     std::array<int32_t,2> ability_slots{{-1,-1}};
 };
+int32_t SmacWorkshopMovement(const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog);
 // Original5932d0 formatting from the editable tuple, with the main painter's
 // optional trailing space and ascending installed ability abbreviations.
 std::string FormatSmacWorkshopStats(const SmacWorkshopDraft& draft,

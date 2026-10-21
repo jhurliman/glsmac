@@ -2,6 +2,7 @@ return {
     init: (p) => {
         this.p = p; this.active = false; this.pending = false; this.next_request = 0;
         this.picker_active = false; this.picker_input = #include('./workshop_picker_input');
+        this.data_formatter = #include('./workshop_data');
         this.automatic_suggestions = true; // Original fresh preference-store default.
         this.ability_slots = [(0 - 1), (0 - 1)];
         this.ability_dialog = #include('./workshop_abilities'); this.ability_dialog.init(p);
@@ -19,8 +20,8 @@ return {
             const frame = window.panel({left: left, top: top, width: width, height: height, overflow: 'hidden'});
             return frame.text({class: 'game-popup-text', align: 'top center', baseline: baseline, font: (bold ? 'arialbd.ttf:' : 'arial.ttf:') + #to_string(size) + ':mono', color: bold ? 'rgb(120,164,212)' : 'rgb(176,212,235)'});
         };
-        const heading = (left, top, text) => { const label = caption(left, top, 99, 85, 11, 12, true); label.text = text; };
-        heading(30, 7, 'CHASSIS'); heading(30, 101, 'WEAPON'); heading(30, 195, 'SHIELDING'); heading(462, 7, 'REACTOR');
+        const heading = (left, top, text) => { const label = caption(left, top, 99, 85, 11, 12, true); label.text = text; return label; };
+        heading(30, 7, 'CHASSIS'); this.weapon_heading = heading(30, 101, 'WEAPON'); heading(30, 195, 'SHIELDING'); heading(462, 7, 'REACTOR');
         this.ability_labels = [];
         for (top of [101, 195]) {
             heading(462, top, 'SPECIAL'); const sub = caption(462, top, 99, 85, 25, 12, true); sub.text = top == 101 ? 'ABILITY 1' : 'ABILITY 2';
@@ -42,6 +43,10 @@ return {
         this.stats = caption(140, 9, 311, 311, 261, 16, true);
         this.cost = caption(140, 9, 311, 311, 60, 12, true);
         this.message = caption(140, 260, 311, 40, 13, 12, true); this.message.text = '';
+        const data_frame = window.panel({left: 140, top: 9, width: 311, height: 311, overflow: 'hidden'});
+        this.data_heading = data_frame.text({left: 20, baseline: 108, font: 'arialbd.ttf:12:mono', color: 'rgb(120,164,212)', text: ''});
+        this.data_rows = []; let data_index = 0;
+        while (data_index < 6) { this.data_rows :+ data_frame.text({left: 20, baseline: 122 + 14 * data_index, font: 'arialbd.ttf:12:mono', color: 'rgb(120,164,212)', text: ''}); data_index++; }
         this.draft_name = '';
         this.armor = this.window.button({left: 30, top: 195, width: 99, height: 85, background: 'transparent', overflow: 'hidden'});
         this.armor.on('click', () => { this.open_picker(); return true; });
@@ -132,6 +137,8 @@ return {
         return this.window;
     },
     open: (base, data) => {
+        if (!#is_defined(this.parent_text)) { this.parent_text = this.components.smacworkshopparenttext(); }
+        this.mineral_factor = data.mineral_factor;
         this.base = base; this.selection = data; this.active = true; this.pending = false; this.selected_armor = 0; this.selected_design = 2; this.confirming = false; this.overwrite_window.hide();
         this.selected_chassis = 0; this.selected_weapon = 0; this.selected_reactor = 1; this.selected_abilities = 0; this.draft_name = '';
         this.ability_slots = [(0 - 1), (0 - 1)];
@@ -209,7 +216,10 @@ return {
     },
     update_labels: () => {
         this.chassis.text = #uppercase(this.selection.chassis); this.weapon.text = #uppercase(this.selection.weapon); this.reactor.text = #uppercase(this.selection.reactor);
-        this.chassis_stat.text = 'Land ' + #to_string(this.selection.speed); this.weapon_stat.text = 'Weapon ' + #to_string(this.selection.offense); this.reactor_stat.text = 'Power ' + #to_string(this.selection.power);
+        const equipment = this.selection.weapon_mode >= 3;
+        const label = equipment ? this.parent_text.equipment : this.parent_text.weapon;
+        this.weapon_heading.text = #uppercase(label);
+        this.chassis_stat.text = 'Land ' + #to_string(this.selection.speed); this.weapon_stat.text = label + ' ' + #to_string(equipment ? this.selection.weapon_cost : this.selection.offense); this.reactor_stat.text = 'Power ' + #to_string(this.selection.power);
         if (#is_defined(this.selection.chassis_choices)) { for (row of this.selection.chassis_choices) { if (row.id == this.selected_chassis) {
             this.chassis_stat.text = ['Land', 'Sea', 'Air'][row.domain] + ' ' + #to_string(row.value);
         } } }
@@ -227,7 +237,16 @@ return {
             this.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor, (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating);
             this.armor_name.text = row.id == 0 ? 'NONE' : #uppercase(row.short_name); this.armor_stat.text = 'Level ' + this.armor_strength(row.rating);
             if (row.design_name != '') { this.title.text = #uppercase(row.design_name); }
-            this.cost.text = 'COST:  ' + #to_string(row.cost);
+            const rows = row.cost_rows < this.selected_reactor ? this.selected_reactor : row.cost_rows;
+            const quantity = #to_string(rows * this.mineral_factor);
+            const price = row.cost_rows < this.selected_reactor ? '(' + this.parent_text.minimum + ': ' + quantity + ')' : quantity;
+            this.cost.text = #uppercase(this.parent_text.labels[5] + '  ' + price + (row.fast_land_warning ? '!' : ''));
+            this.cost.color = this.parent_text.colors[row.fast_land_warning ? 249 : 224];
+            const formatter = this.data_formatter; const text = this.parent_text; const data = this.selection;
+            const slots = this.ability_slots; const reactor = this.selected_reactor; const workshop = this;
+            const lines = formatter(text.labels, text.psi, data, row, slots, reactor);
+            workshop.data_heading.text = #uppercase(text.labels[6]); workshop.data_heading.color = text.colors[224];
+            let index = 0; for (label of workshop.data_rows) { label.text = lines[index]; label.color = text.colors[224]; index++; }
             this.stats.text = row.stat_line; } }
     },
     open_picker: () => {

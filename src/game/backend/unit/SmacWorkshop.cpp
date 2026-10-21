@@ -104,6 +104,17 @@ void ValidateSmacWorkshopEditorAbilities(const SmacWorkshopDraft& draft,const Sm
     }}
     if(CleanSmacWorkshopAbilities(draft,slots,count<2 || known("Neural"),catalog).mask!=draft.abilities) {throw std::invalid_argument("Workshop abilities require editor cleanup");}
 }
+int32_t SmacWorkshopMovement(const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog) {
+    RequireComponents(draft,catalog);
+    const auto& chassis=catalog.chassis.chassis.at(draft.chassis);const auto& weapon=catalog.weapons.weapons.at(draft.weapon);
+    const auto mask=draft.abilities;
+    const bool air=chassis.triad==loader::txt::ChassisTriad::Air,transport=weapon.mode==loader::txt::WeaponMode::Transport;
+    int64_t movement=int64_t(chassis.speed)+(air ? 2*int64_t(draft.reactor):0);
+    if(transport) {--movement;}if(mask&0x800000) {--movement;}
+    if(mask&0x400) {movement+=air ? 2*int64_t(draft.reactor):1;}
+    if(air && (mask&0x20)) {movement=4*movement/5;}if(air && transport) {movement/=2;}
+    return int32_t(std::clamp<int64_t>(movement,1,99));
+}
 std::string FormatSmacWorkshopStats(const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog,bool main_caption) {
     RequireComponents(draft,catalog);
     const auto& chassis=catalog.chassis.chassis.at(draft.chassis);const auto& weapon=catalog.weapons.weapons.at(draft.weapon);
@@ -125,12 +136,7 @@ std::string FormatSmacWorkshopStats(const SmacWorkshopDraft& draft,const SmacPre
         armor=std::to_string(std::clamp(strength,1,9999));
         if(mask&0x200) {armor+='+';}if(mask&0x40000) {armor+='t';}if(mask&0x100) {armor='<'+armor+'>';}
     }
-    const bool air=chassis.triad==Domain::Air,transport=weapon.mode==loader::txt::WeaponMode::Transport;
-    int64_t movement=int64_t(chassis.speed)+(air ? 2*int64_t(draft.reactor):0);
-    if(transport) {--movement;}if(mask&0x800000) {--movement;}
-    if(mask&0x400) {movement+=air ? 2*int64_t(draft.reactor):1;}
-    if(air && (mask&0x20)) {movement=4*movement/5;}if(air && transport) {movement/=2;}
-    std::string result=attack+'-'+armor+'-'+std::to_string(std::clamp<int64_t>(movement,1,99));
+    std::string result=attack+'-'+armor+'-'+std::to_string(SmacWorkshopMovement(draft,catalog));
     if(draft.reactor>1) {result+='*'+std::to_string(draft.reactor);}
     if(main_caption) {
         result+=' ';bool first=true;

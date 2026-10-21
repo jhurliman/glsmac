@@ -9,6 +9,7 @@
 #include "fixtures/WorkshopDomain.h"
 #include "fixtures/WorkshopPicker.h"
 #include "fixtures/WorkshopStats.h"
+#include "fixtures/WorkshopData.h"
 #include "fixtures/WorkshopAbilities.h"
 #include "fixtures/WorkshopSavedCommits.h"
 #include "fixtures/WorkshopAllocation.h"
@@ -55,12 +56,19 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
         GT_ASSERT(!unit::QuerySmacWorkshopAbilityCost(-8,0,0,2,3,1)
             && Rejects([&]{unit::QuerySmacWorkshopAbilityCost(-1,0,0,2,0,1);}),"Invalid ratio/unknown annotation was normalized");GT_OK();
     });
-    task->AddTest("SMAC Workshop stat formatter matches24 native strings and four main captions",GT(){
+    task->AddTest("SMAC Workshop stat formatter matches24 native strings four captions and eleven DATA movements",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);if(!input) {throw std::runtime_error("Missing owned stat rules");}
         const std::string source{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
         const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
         const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;
+        for(const auto& row:workshop_data_fixture::Cases) {
+            auto declared=catalog;
+            declared.chassis.chassis.at(row.draft.chassis).speed=row.speed;
+            declared.chassis.chassis.at(row.draft.chassis).triad=loader::txt::ChassisTriad(row.triad);
+            declared.weapons.weapons.at(row.draft.weapon).mode=loader::txt::WeaponMode(row.mode);
+            GT_ASSERT(unit::SmacWorkshopMovement(row.draft,declared)==row.expected,"Native DATA movement differs");
+        }
         for(const auto& row:workshop_stats_fixture::Cases) {
             const auto actual=unit::FormatSmacWorkshopStats(row.draft,catalog);
             GT_ASSERT(actual==row.text,"Native stat string differs: "+actual+" expected "+row.text);

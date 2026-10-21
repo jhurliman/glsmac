@@ -1,0 +1,1358 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Original native fragments, supplied stock DESIGNLABELS/font metrics. No new modal frame or full startup.",
+  "theme_scope": "This rules-only bootstrap does not initialize theme globals. Numerical color operands are independently decoded from text.pcx in theme-samples.json.",
+  "labels": {
+    "0xe44": "EXAMINING BASIC UNIT",
+    "0xe48": "Slot",
+    "0xe4c": "DESIGN WORKSHOP",
+    "0xe50": "EXAMINING PREVIOUS DESIGN",
+    "0xe54": "NEW DESIGN BASED ON OLD",
+    "0xc34": "DESIGNING NEW UNIT",
+    "0xc38": "MODIFYING PREVIOUS DESIGN"
+  },
+  "literals": {
+    "0x6a68e4": "(",
+    "0x6a6f3c": " #",
+    "0x6a68e0": ")"
+  },
+  "data": [
+    {
+      "name": "scout",
+      "tuple": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "slots": [
+        -1,
+        -1
+      ],
+      "definitions": {
+        "offense": 1,
+        "defense": 1,
+        "armor_class": 0,
+        "weapon_mode": 0,
+        "weapon_cost": 1,
+        "speed": 1,
+        "triad": 0
+      },
+      "rows": [
+        {
+          "text": "{W:} 1",
+          "x": 160,
+          "y": 122
+        },
+        {
+          "text": "{A:} 1",
+          "x": 160,
+          "y": 136
+        },
+        {
+          "text": "{C:} 1",
+          "x": 160,
+          "y": 150
+        },
+        {
+          "text": "{R:} 1",
+          "x": 160,
+          "y": 164
+        },
+        {
+          "text": "{SP1:} -",
+          "x": 160,
+          "y": 178
+        },
+        {
+          "text": "{SP2:} -",
+          "x": 160,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "name": "colony",
+      "tuple": [
+        0,
+        14,
+        0,
+        1,
+        0
+      ],
+      "slots": [
+        -1,
+        -1
+      ],
+      "definitions": {
+        "offense": 0,
+        "defense": 1,
+        "armor_class": 0,
+        "weapon_mode": 8,
+        "weapon_cost": 10,
+        "speed": 1,
+        "triad": 0
+      },
+      "rows": [
+        {
+          "text": "{E:} 10",
+          "x": 160,
+          "y": 122
+        },
+        {
+          "text": "{A:} 1",
+          "x": 160,
+          "y": 136
+        },
+        {
+          "text": "{C:} 1",
+          "x": 160,
+          "y": 150
+        },
+        {
+          "text": "{R:} 1",
+          "x": 160,
+          "y": 164
+        },
+        {
+          "text": "{SP1:} -",
+          "x": 160,
+          "y": 178
+        },
+        {
+          "text": "{SP2:} -",
+          "x": 160,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "name": "air_super",
+      "tuple": [
+        5,
+        0,
+        0,
+        2,
+        32
+      ],
+      "slots": [
+        -1,
+        -1
+      ],
+      "definitions": {
+        "offense": 1,
+        "defense": 1,
+        "armor_class": 0,
+        "weapon_mode": 0,
+        "weapon_cost": 1,
+        "speed": 8,
+        "triad": 2
+      },
+      "rows": [
+        {
+          "text": "{W:} 1",
+          "x": 160,
+          "y": 122
+        },
+        {
+          "text": "{A:} 1",
+          "x": 160,
+          "y": 136
+        },
+        {
+          "text": "{C:} 9",
+          "x": 160,
+          "y": 150
+        },
+        {
+          "text": "{R:} 2",
+          "x": 160,
+          "y": 164
+        },
+        {
+          "text": "{SP1:} -",
+          "x": 160,
+          "y": 178
+        },
+        {
+          "text": "{SP2:} -",
+          "x": 160,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "name": "slots_0_1",
+      "tuple": [
+        0,
+        0,
+        0,
+        1,
+        3
+      ],
+      "slots": [
+        0,
+        1
+      ],
+      "definitions": {
+        "offense": 1,
+        "defense": 1,
+        "armor_class": 0,
+        "weapon_mode": 0,
+        "weapon_cost": 1,
+        "speed": 1,
+        "triad": 0
+      },
+      "rows": [
+        {
+          "text": "{W:} 1",
+          "x": 160,
+          "y": 122
+        },
+        {
+          "text": "{A:} 1",
+          "x": 160,
+          "y": 136
+        },
+        {
+          "text": "{C:} 1",
+          "x": 160,
+          "y": 150
+        },
+        {
+          "text": "{R:} 1",
+          "x": 160,
+          "y": 164
+        },
+        {
+          "text": "{SP1:}F",
+          "x": 160,
+          "y": 178
+        },
+        {
+          "text": "{SP2:}R",
+          "x": 160,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "name": "slots_1_0",
+      "tuple": [
+        0,
+        0,
+        0,
+        1,
+        3
+      ],
+      "slots": [
+        1,
+        0
+      ],
+      "definitions": {
+        "offense": 1,
+        "defense": 1,
+        "armor_class": 0,
+        "weapon_mode": 0,
+        "weapon_cost": 1,
+        "speed": 1,
+        "triad": 0
+      },
+      "rows": [
+        {
+          "text": "{W:} 1",
+          "x": 160,
+          "y": 122
+        },
+        {
+          "text": "{A:} 1",
+          "x": 160,
+          "y": 136
+        },
+        {
+          "text": "{C:} 1",
+          "x": 160,
+          "y": 150
+        },
+        {
+          "text": "{R:} 1",
+          "x": 160,
+          "y": 164
+        },
+        {
+          "text": "{SP1:}R",
+          "x": 160,
+          "y": 178
+        },
+        {
+          "text": "{SP2:}F",
+          "x": 160,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "name": "slot_gap",
+      "tuple": [
+        0,
+        0,
+        0,
+        1,
+        2
+      ],
+      "slots": [
+        -1,
+        1
+      ],
+      "definitions": {
+        "offense": 1,
+        "defense": 1,
+        "armor_class": 0,
+        "weapon_mode": 0,
+        "weapon_cost": 1,
+        "speed": 1,
+        "triad": 0
+      },
+      "rows": [
+        {
+          "text": "{W:} 1",
+          "x": 160,
+          "y": 122
+        },
+        {
+          "text": "{A:} 1",
+          "x": 160,
+          "y": 136
+        },
+        {
+          "text": "{C:} 1",
+          "x": 160,
+          "y": 150
+        },
+        {
+          "text": "{R:} 1",
+          "x": 160,
+          "y": 164
+        },
+        {
+          "text": "{SP1:} -",
+          "x": 160,
+          "y": 178
+        },
+        {
+          "text": "{SP2:}R",
+          "x": 160,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "name": "psi",
+      "tuple": [
+        0,
+        12,
+        9,
+        2,
+        0
+      ],
+      "slots": [
+        -1,
+        -1
+      ],
+      "definitions": {
+        "offense": -1,
+        "defense": -1,
+        "armor_class": 2,
+        "weapon_mode": 2,
+        "weapon_cost": 10,
+        "speed": 1,
+        "triad": 0
+      },
+      "rows": [
+        {
+          "text": "{W:} Psi",
+          "x": 160,
+          "y": 122
+        },
+        {
+          "text": "{A:} Psi",
+          "x": 160,
+          "y": 136
+        },
+        {
+          "text": "{C:} 1",
+          "x": 160,
+          "y": 150
+        },
+        {
+          "text": "{R:} 2",
+          "x": 160,
+          "y": 164
+        },
+        {
+          "text": "{SP1:} -",
+          "x": 160,
+          "y": 178
+        },
+        {
+          "text": "{SP2:} -",
+          "x": 160,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "name": "declared_zero",
+      "tuple": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "slots": [
+        -1,
+        -1
+      ],
+      "definitions": {
+        "offense": 0,
+        "defense": 0,
+        "armor_class": 0,
+        "weapon_mode": 0,
+        "weapon_cost": 1,
+        "speed": 1,
+        "triad": 0
+      },
+      "rows": [
+        {
+          "text": "{W:} 0",
+          "x": 160,
+          "y": 122
+        },
+        {
+          "text": "{A:} 0",
+          "x": 160,
+          "y": 136
+        },
+        {
+          "text": "{C:} 1",
+          "x": 160,
+          "y": 150
+        },
+        {
+          "text": "{R:} 1",
+          "x": 160,
+          "y": 164
+        },
+        {
+          "text": "{SP1:} -",
+          "x": 160,
+          "y": 178
+        },
+        {
+          "text": "{SP2:} -",
+          "x": 160,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "name": "declared_negative_two",
+      "tuple": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "slots": [
+        -1,
+        -1
+      ],
+      "definitions": {
+        "offense": -2,
+        "defense": -2,
+        "armor_class": 0,
+        "weapon_mode": 0,
+        "weapon_cost": 1,
+        "speed": 1,
+        "triad": 0
+      },
+      "rows": [
+        {
+          "text": "{W:} Psi",
+          "x": 160,
+          "y": 122
+        },
+        {
+          "text": "{A:} Psi",
+          "x": 160,
+          "y": 136
+        },
+        {
+          "text": "{C:} 1",
+          "x": 160,
+          "y": 150
+        },
+        {
+          "text": "{R:} 1",
+          "x": 160,
+          "y": 164
+        },
+        {
+          "text": "{SP1:} -",
+          "x": 160,
+          "y": 178
+        },
+        {
+          "text": "{SP2:} -",
+          "x": 160,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "name": "declared_99",
+      "tuple": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "slots": [
+        -1,
+        -1
+      ],
+      "definitions": {
+        "offense": 99,
+        "defense": 99,
+        "armor_class": 0,
+        "weapon_mode": 0,
+        "weapon_cost": 1,
+        "speed": 1,
+        "triad": 0
+      },
+      "rows": [
+        {
+          "text": "{W:} *",
+          "x": 160,
+          "y": 122
+        },
+        {
+          "text": "{A:} 99",
+          "x": 160,
+          "y": 136
+        },
+        {
+          "text": "{C:} 1",
+          "x": 160,
+          "y": 150
+        },
+        {
+          "text": "{R:} 1",
+          "x": 160,
+          "y": 164
+        },
+        {
+          "text": "{SP1:} -",
+          "x": 160,
+          "y": 178
+        },
+        {
+          "text": "{SP2:} -",
+          "x": 160,
+          "y": 192
+        }
+      ]
+    },
+    {
+      "name": "declared_armor_class3",
+      "tuple": [
+        0,
+        0,
+        0,
+        1,
+        0
+      ],
+      "slots": [
+        -1,
+        -1
+      ],
+      "definitions": {
+        "offense": 1,
+        "defense": 1,
+        "armor_class": 3,
+        "weapon_mode": 0,
+        "weapon_cost": 1,
+        "speed": 1,
+        "triad": 0
+      },
+      "rows": [
+        {
+          "text": "{W:} 1",
+          "x": 160,
+          "y": 122
+        },
+        {
+          "text": "{C:} 1",
+          "x": 160,
+          "y": 150
+        },
+        {
+          "text": "{R:} 1",
+          "x": 160,
+          "y": 164
+        },
+        {
+          "text": "{SP1:} -",
+          "x": 160,
+          "y": 178
+        },
+        {
+          "text": "{SP2:} -",
+          "x": 160,
+          "y": 192
+        }
+      ]
+    }
+  ],
+  "status": [
+    {
+      "name": "basic_same",
+      "selected_before": 2,
+      "selected_after": 2,
+      "text": "EXAMINING BASIC UNIT"
+    },
+    {
+      "name": "basic_changed",
+      "selected_before": 2,
+      "selected_after": 2,
+      "text": "NEW DESIGN BASED ON OLD"
+    },
+    {
+      "name": "custom_same",
+      "selected_before": 64,
+      "selected_after": 64,
+      "text": "EXAMINING PREVIOUS DESIGN"
+    },
+    {
+      "name": "inactive",
+      "selected_before": 64,
+      "selected_after": 64,
+      "text": "DESIGNING NEW UNIT (SLOT #1)"
+    },
+    {
+      "name": "excluded",
+      "selected_before": 64,
+      "selected_after": 64,
+      "text": "DESIGNING NEW UNIT (SLOT #1)"
+    },
+    {
+      "name": "changed_first_inactive",
+      "selected_before": 64,
+      "selected_after": 67,
+      "text": "NEW DESIGN BASED ON OLD"
+    },
+    {
+      "name": "changed_full",
+      "selected_before": 64,
+      "selected_after": 64,
+      "text": "MODIFYING PREVIOUS DESIGN"
+    },
+    {
+      "name": "changed_queued",
+      "selected_before": 64,
+      "selected_after": 66,
+      "text": "NEW DESIGN BASED ON OLD"
+    },
+    {
+      "name": "changed_many_unused",
+      "selected_before": 64,
+      "selected_after": 68,
+      "text": "NEW DESIGN BASED ON OLD"
+    }
+  ],
+  "theme": {
+    "source": "4d01f0@4d0282..4d030c",
+    "asset_sha256": "7beca9cc3440dc8bef187dfc676152a5fe057f3e7f1b1f158b74f9ff0814bff8",
+    "pairs": {
+      "0x8d0a04": {
+        "x": [
+          371,
+          381
+        ],
+        "y": 52,
+        "operands": [
+          224,
+          -1
+        ]
+      },
+      "0x8d0a0c": {
+        "x": [
+          371,
+          381
+        ],
+        "y": 68,
+        "operands": [
+          224,
+          -1
+        ]
+      },
+      "0x8d0a24": {
+        "x": [
+          371,
+          381
+        ],
+        "y": 116,
+        "operands": [
+          224,
+          -1
+        ]
+      },
+      "0x8d0a2c": {
+        "x": [
+          371,
+          381
+        ],
+        "y": 132,
+        "operands": [
+          224,
+          -1
+        ]
+      },
+      "0x8d0a34": {
+        "x": [
+          371,
+          381
+        ],
+        "y": 148,
+        "operands": [
+          224,
+          -1
+        ]
+      },
+      "0x8d0ac4": {
+        "x": [
+          205,
+          215
+        ],
+        "y": 260,
+        "operands": [
+          249,
+          -1
+        ]
+      }
+    }
+  },
+  "retained_frame_glyphs": [
+    {
+      "id": "morgan_scout",
+      "glyphs": [
+        {
+          "text": "DATA",
+          "x": 160,
+          "baseline": 117,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "W:",
+          "x": 160,
+          "baseline": 131,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " 1",
+          "x": 175,
+          "baseline": 131,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "A:",
+          "x": 160,
+          "baseline": 145,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " 1",
+          "x": 171,
+          "baseline": 145,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "C:",
+          "x": 160,
+          "baseline": 159,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " 1",
+          "x": 171,
+          "baseline": 159,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "R:",
+          "x": 160,
+          "baseline": 173,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " 1",
+          "x": 171,
+          "baseline": 173,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "SP1:",
+          "x": 160,
+          "baseline": 187,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " -",
+          "x": 186,
+          "baseline": 187,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "SP2:",
+          "x": 160,
+          "baseline": 201,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " -",
+          "x": 186,
+          "baseline": 201,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "DESIGN WORKSHOP",
+          "x": 421,
+          "baseline": 94,
+          "color": 285147360,
+          "font": 164,
+          "clip": [
+            266,
+            70,
+            759,
+            168
+          ]
+        },
+        {
+          "text": "EXAMINING BASIC UNIT",
+          "x": 407,
+          "baseline": 154,
+          "color": 285147360,
+          "font": 164,
+          "clip": [
+            266,
+            70,
+            759,
+            168
+          ]
+        }
+      ]
+    },
+    {
+      "id": "morgan_colony",
+      "glyphs": [
+        {
+          "text": "DATA",
+          "x": 160,
+          "baseline": 117,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "E:",
+          "x": 160,
+          "baseline": 131,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " 10",
+          "x": 170,
+          "baseline": 131,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "A:",
+          "x": 160,
+          "baseline": 145,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " 1",
+          "x": 171,
+          "baseline": 145,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "C:",
+          "x": 160,
+          "baseline": 159,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " 1",
+          "x": 171,
+          "baseline": 159,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "R:",
+          "x": 160,
+          "baseline": 173,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " 1",
+          "x": 171,
+          "baseline": 173,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "SP1:",
+          "x": 160,
+          "baseline": 187,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " -",
+          "x": 186,
+          "baseline": 187,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "SP2:",
+          "x": 160,
+          "baseline": 201,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " -",
+          "x": 186,
+          "baseline": 201,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "DESIGN WORKSHOP",
+          "x": 421,
+          "baseline": 94,
+          "color": 285147360,
+          "font": 167,
+          "clip": [
+            266,
+            70,
+            759,
+            168
+          ]
+        },
+        {
+          "text": "EXAMINING BASIC UNIT",
+          "x": 407,
+          "baseline": 154,
+          "color": 285147360,
+          "font": 167,
+          "clip": [
+            266,
+            70,
+            759,
+            168
+          ]
+        }
+      ]
+    },
+    {
+      "id": "morgan_rover",
+      "glyphs": [
+        {
+          "text": "DATA",
+          "x": 160,
+          "baseline": 117,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "W:",
+          "x": 160,
+          "baseline": 131,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " 1",
+          "x": 175,
+          "baseline": 131,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "A:",
+          "x": 160,
+          "baseline": 145,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " 1",
+          "x": 171,
+          "baseline": 145,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "C:",
+          "x": 160,
+          "baseline": 159,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " 2",
+          "x": 171,
+          "baseline": 159,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "R:",
+          "x": 160,
+          "baseline": 173,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " 1",
+          "x": 171,
+          "baseline": 173,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "SP1:",
+          "x": 160,
+          "baseline": 187,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " -",
+          "x": 186,
+          "baseline": 187,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "SP2:",
+          "x": 160,
+          "baseline": 201,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": " -",
+          "x": 186,
+          "baseline": 201,
+          "color": 285147360,
+          "font": 159,
+          "clip": [
+            140,
+            9,
+            451,
+            320
+          ]
+        },
+        {
+          "text": "DESIGN WORKSHOP",
+          "x": 421,
+          "baseline": 94,
+          "color": 285147360,
+          "font": 170,
+          "clip": [
+            266,
+            70,
+            759,
+            168
+          ]
+        },
+        {
+          "text": "EXAMINING BASIC UNIT",
+          "x": 407,
+          "baseline": 154,
+          "color": 285147360,
+          "font": 170,
+          "clip": [
+            266,
+            70,
+            759,
+            168
+          ]
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "native_data_fragments": 11,
+    "native_status_fragments": 9,
+    "theme_pairs": 6,
+    "retained_frames": 3,
+    "glyph_source_sha256": "bc25ffb91b61279fd2c4d7fc3e36a0db4c579006e333012ef3926c75f90d6d5b"
+  }
+}

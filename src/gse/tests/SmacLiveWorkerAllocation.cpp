@@ -1427,7 +1427,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     affordable=static_cast<value::Bool*>(view->Get("affordable"))->value;notice=static_cast<value::Bool*>(view->Get("zero_count_notice"))->value;
                     count=int(static_cast<value::Int*>(view->Get("count"))->value);total=int(static_cast<value::Int*>(view->Get("total"))->value);
                     options=int(static_cast<value::Array*>(view->Get("choices"))->value.size());return VALUE(value::Undefined);}));
-                value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,source)},{"target_design",VALUE(value::Int,,-1)},
+                value::object_properties_t args{{"base",((scenario%2)==1) ? base->m_owner->GetPlayer()->Wrap(GSE_CALL):base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,source)},{"target_design",VALUE(value::Int,,-1)},
                     {"name",VALUE(value::String,,"Unsaved Draft")},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},
                     {"request_id",VALUE(value::Int,,1)},{"confirm",VALUE(value::Int,,-1)},{"strip_offset",VALUE(value::Int,,0)}};
                 game->Event(GSE_CALL,"upgrade_smac_workshop",args);GT_ASSERT(fixture.Snapshot()==before,"Upgrade bypassed queued command");fixture.DrainEvents();
@@ -1498,7 +1498,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     retired=static_cast<value::Bool*>(view->Get("retired"))->value;declined=static_cast<value::Bool*>(view->Get("declined"))->value;
                     count=int(static_cast<value::Int*>(view->Get("count"))->value);return VALUE(value::Undefined);}));
                 um->On(GSE_CALL,"unit_despawn",NATIVE_CALL(&){++hooks;return VALUE(value::Undefined);}));
-                value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,selected)},
+                value::object_properties_t args{{"base",(selected==64) ? base->m_owner->GetPlayer()->Wrap(GSE_CALL):base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,selected)},
                     {"name",VALUE(value::String,,"Unsaved Draft")},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},
                     {"request_id",VALUE(value::Int,,1)},{"confirm",VALUE(value::Int,,-1)},{"strip_offset",VALUE(value::Int,,0)}};
                 game->Event(GSE_CALL,"retire_smac_workshop",args);GT_ASSERT(fixture.Snapshot()==before,"Direct Retire bypassed queue");fixture.DrainEvents();
@@ -1658,8 +1658,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(actual==expected && restored.Game()->GetUM()->GetUnits().size()==2,"Retired world restore differs at normalized byte "+std::to_string(std::distance(actual.begin(),mismatch.first))+" sizes "+std::to_string(actual.size())+"/"+std::to_string(expected.size()));GT_OK();});
     });
     task->AddTest("SMAC live Workshop Rename separates pre-dialog flags from accepted draft text without cache guards",[](GSE*,context::Context*)->std::string {
+        for(const bool owner_target:{false,true}) {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
-        return fixture.Run([&](GSE_CALLABLE)->std::string {
+        const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
             base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
             const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;unit::SmacStartupDesignState original;
@@ -1670,7 +1671,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 answer=static_cast<value::Bool*>(view->Get("answer"))->value;failed=static_cast<value::Bool*>(view->Get("failed"))->value;stale=static_cast<value::Bool*>(view->Get("stale"))->value;
                 expected=static_cast<value::String*>(view->Get("expected_state"))->value;default_name=static_cast<value::String*>(view->Get("default_name"))->value;
                 actor_name=static_cast<value::String*>(view->Get("name"))->value;display_name=static_cast<value::String*>(view->Get("display_name"))->value;return VALUE(value::Undefined);}));
-            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,64)},{"chassis",VALUE(value::Int,,0)},
+            value::object_properties_t args{{"base",owner_target ? base->m_owner->GetPlayer()->Wrap(GSE_CALL):base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,64)},{"chassis",VALUE(value::Int,,0)},
                 {"weapon",VALUE(value::Int,,0)},{"armor",VALUE(value::Int,,2)},{"reactor",VALUE(value::Int,,1)},{"abilities",VALUE(value::Int,,0)},
                 {"name",VALUE(value::String,,"")},{"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"request_id",VALUE(value::Int,,1)}};
             const auto before=fixture.Snapshot();game->Event(GSE_CALL,"open_smac_workshop_rename",args);
@@ -1690,10 +1691,13 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             args.erase("displayed_default");args.erase("submitted");args["selected_design"]=VALUE(value::Int,,128);
             GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"open_smac_workshop_rename",args);}) && fixture.Snapshot()==before,"Rename admitted foreign selection");GT_OK();
         });
+            if(!error.empty()) {return std::string(owner_target ? "Player: ":"Base: ")+error;}
+        }GT_OK();
     });
     task->AddTest("SMAC live Workshop Obsolete toggles through fenced events without retiring units or queues",[](GSE*,context::Context*)->std::string {
+        for(const bool owner_target:{false,true}) {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
-        return fixture.Run([&](GSE_CALLABLE)->std::string {
+        const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
             const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
             base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
@@ -1713,7 +1717,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 chosen=static_cast<value::Int*>(draft->Get("selected_design"))->value;armor=static_cast<value::Int*>(draft->Get("armor"))->value;
                 draft_name=static_cast<value::String*>(draft->Get("name"))->value;return VALUE(value::Undefined);}));
             const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
-            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,64)},
+            value::object_properties_t args{{"base",owner_target ? base->m_owner->GetPlayer()->Wrap(GSE_CALL):base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,64)},
                 {"name",VALUE(value::String,,"Unsaved Guard")},{"old_list",VALUE(value::Array,,ids)},{"strip_offset",VALUE(value::Int,,0)},
                 {"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"request_id",VALUE(value::Int,,1)}};
             game->Event(GSE_CALL,"obsolete_smac_workshop",args);GT_ASSERT(fixture.Snapshot()==before,"Obsolete bypassed queue");fixture.DrainEvents();
@@ -1729,6 +1733,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             fixture.ResourceState([&](auto& state){state.designs=designs;});
             GT_ASSERT(fixture.Snapshot()==before,"Obsolete changed Units, queues, currency or non-design state");GT_OK();
         });
+            if(!error.empty()) {return std::string(owner_target ? "Player: ":"Base: ")+error;}
+        }GT_OK();
     });
     task->AddTest("SMAC live manufactured morale and flags match15 native newborn controls",[](GSE*,context::Context*)->std::string {
         for(const auto& expected:workshop_newborn_fixture::CASES) {
@@ -2318,6 +2324,55 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(Rejects([&]{retained->Run(GSE_CALL,{});}),"Workshop query crossed its retired game session");GT_OK();
         });
     });
+    task->AddTest("SMAC Workshop Player opening and Apply do not require or allocate a Base",[](GSE*,context::Context*)->std::string {
+        const auto source=[](const std::string& filename) {
+            auto text=TanksSource(filename);size_t at=0;
+            while((at=text.find("Tech50",at))!=std::string::npos) {text.replace(at,6,"Neural");at+=6;}
+            return text;
+        };
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* player=game->GetState()->m_slots->GetSlot(0).GetPlayer();
+            fixture.ResourceState([](auto& state) {
+                state.rank_order=faction::SmacRankOrder::Update({1,0,0,0,0,0,0},2);
+                state.economy.at(1).design_counts=faction::SmacDesignCounts{};
+                state.economy.at(1).production_reference_counts=faction::SmacDesignCounts{};
+                state.technology.factions[0].owned[1]=true;
+            });
+            const auto next_base=Base::GetNextId(),next_unit=unit::Unit::GetNextId();const auto random=game->GetRandom()->GetStateString();
+            GT_ASSERT(game->GetBM()->GetBases().empty() && game->GetUM()->GetUnits().empty(),"Owner opening fixture has world actors");
+            bool opened=false,failed=true,stale=false,matched=false;int64_t selected=-1;
+            game->On(GSE_CALL,"smac_workshop_open",NATIVE_CALL(&){N_EXPECT_ARGS(1);N_GET(view,0,Object);
+                opened=true;failed=static_cast<value::Bool*>(view->Get("failed"))->value;stale=static_cast<value::Bool*>(view->Get("stale"))->value;
+                auto* target=static_cast<value::Object*>(view->Get("base"));matched=target->object_class==Player::WRAP_CLASS && Player::Unwrap(target)==player;
+                if(!failed && !stale) {auto* draft=static_cast<value::Object*>(static_cast<value::Object*>(view->Get("selection"))->Get("draft"));
+                    selected=static_cast<value::Int*>(draft->Get("selected_design"))->value;}
+                return VALUE(value::Undefined);}));
+            auto* data=static_cast<value::Object*>(game->CopySmacWorkshop(GSE_CALL,player->GetSlot()));
+            value::object_properties_t opening{{"base",player->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,-1)},
+                {"request_id",VALUE(value::Int,,1)},{"expected_state",data->Get("preset_state")}};
+            const auto before=fixture.Snapshot();game->Event(GSE_CALL,"open_smac_workshop",opening);
+            GT_ASSERT(!opened && fixture.Snapshot()==before,"Owner opening bypassed the queue");fixture.DrainEvents();
+            GT_ASSERT(opened && !failed && !stale && matched && selected>=64 && selected<128,"No-Base owner entry failed or echoed a fabricated Base");
+            const auto after_open=fixture.Snapshot();game->Event(GSE_CALL,"open_smac_workshop",opening);fixture.DrainEvents();
+            GT_ASSERT(stale && fixture.Snapshot()==after_open,"Owner opening replayed its old fence");
+            bool committed=false;int64_t design=-1;
+            game->On(GSE_CALL,"smac_workshop_commit",NATIVE_CALL(&){N_EXPECT_ARGS(1);N_GET(view,0,Object);
+                committed=true;failed=static_cast<value::Bool*>(view->Get("failed"))->value;
+                design=static_cast<value::Int*>(view->Get("design_id"))->value;return VALUE(value::Undefined);}));
+            value::object_properties_t apply{{"base",player->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,game->SmacWorkshopState(player->GetSlot()))},
+                {"armor",VALUE(value::Int,,1)},{"selected_design",VALUE(value::Int,,selected)},{"name",VALUE(value::String,,"Owner Guard")},
+                {"done",VALUE(value::Bool,,false)},{"request_id",VALUE(value::Int,,2)}};
+            game->Event(GSE_CALL,"commit_smac_workshop",apply);fixture.DrainEvents();
+            bool retained=false;fixture.ResourceState([&](auto& state) {const auto* bank=state.designs.Find(1);
+                if(bank) {for(const auto& row:bank->designs) {retained=retained || (row.id==design && row.name==std::optional<std::string>("Owner Guard"));}}});
+            GT_ASSERT(committed && !failed && retained && game->GetBM()->GetBases().empty() && game->GetUM()->GetUnits().empty()
+                && Base::GetNextId()==next_base && unit::Unit::GetNextId()==next_unit && game->GetRandom()->GetStateString()==random,
+                "Owner Apply lost the named design, fabricated an actor or consumed RNG");
+            const auto applied=fixture.Snapshot();game->Event(GSE_CALL,"commit_smac_workshop",apply);fixture.DrainEvents();
+            GT_ASSERT(fixture.Snapshot()==applied,"No-Base Apply replayed the old fence");GT_OK();
+        });
+    });
     task->AddTest("SMAC live Workshop normal opening retains New selection reactor and entry phase effects",[](GSE*,context::Context*)->std::string {
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         const auto source=[&](const std::string& filename) {std::ifstream file(std::string(assets)+"/"+filename,std::ios::binary);
@@ -2406,6 +2461,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
     task->AddTest("SMAC live Workshop presets refresh capabilities retain air history and fence faction inputs",[](GSE*,context::Context*)->std::string {
+        for(const bool owner_target:{false,true}) {
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         const auto source=[&](const std::string& filename) {
             std::ifstream file(std::string(assets)+"/"+filename,std::ios::binary);
@@ -2413,7 +2469,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             return std::string(std::istreambuf_iterator<char>(file),{});
         };
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(source,"GAIANS");
-        return fixture.Run([&](GSE_CALLABLE)->std::string {
+        const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
             const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
             base->SetProductionState(GSE_CALL,ProductionState{scout,0,scout,0,std::vector<ProductionItem>{}});
@@ -2433,7 +2489,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 return VALUE(value::Undefined);}));
             const unit::SmacWorkshopDraft draft{65,4,1,1,32,3,"Inherited"};
             const auto fence=[&]() {return static_cast<value::String*>(static_cast<value::Object*>(base->CopySmacWorkshop(GSE_CALL,&draft))->Get("preset_state"))->value;};
-            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,65)},
+            value::object_properties_t args{{"base",owner_target ? base->m_owner->GetPlayer()->Wrap(GSE_CALL):base->Wrap(GSE_CALL)},{"selected_design",VALUE(value::Int,,65)},
                 {"chassis",VALUE(value::Int,,4)},{"weapon",VALUE(value::Int,,1)},{"armor",VALUE(value::Int,,1)},
                 {"reactor",VALUE(value::Int,,3)},{"abilities",VALUE(value::Int,,32)},{"name",VALUE(value::String,,"Inherited")},
                 {"action",VALUE(value::Int,,16)},{"request_id",VALUE(value::Int,,1)},{"expected_state",VALUE(value::String,,fence())}};
@@ -2485,10 +2541,13 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             try {game->Event(GSE_CALL,"preset_smac_workshop",args);}catch(const std::exception&) {rejected=true;}
             GT_ASSERT(rejected && fixture.Snapshot()==before,"Foreign preset selector entered the queue");GT_OK();
         });
+            if(!error.empty()) {return std::string(owner_target ? "Player: ":"Base: ")+error;}
+        }GT_OK();
     });
     task->AddTest("SMAC live Workshop queued card selection retains saved tuples and fences world state",[](GSE*,context::Context*)->std::string {
+        for(const bool owner_target:{false,true}) {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
-        return fixture.Run([&](GSE_CALLABLE)->std::string {
+        const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
             const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
             base->SetProductionState(GSE_CALL,ProductionState{scout,13,scout,7,std::vector<ProductionItem>{scout}});
@@ -2507,7 +2566,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 auto* draft=static_cast<value::Object*>(static_cast<value::Object*>(view->Get("selection"))->Get("draft"));
                 chassis=int32_t(static_cast<value::Int*>(draft->Get("chassis"))->value);name=static_cast<value::String*>(draft->Get("name"))->value;
                 return VALUE(value::Undefined);}));
-            const auto before=fixture.Snapshot();value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},
+            const auto before=fixture.Snapshot();value::object_properties_t args{{"base",owner_target ? base->m_owner->GetPlayer()->Wrap(GSE_CALL):base->Wrap(GSE_CALL)},
                 {"expected_state",VALUE(value::String,,base->SmacWorkshopState())},{"selected_design",VALUE(value::Int,,64)},
                 {"name",VALUE(value::String,,"Unsaved")},{"request_id",VALUE(value::Int,,1)}};
             game->Event(GSE_CALL,"select_smac_workshop",args);GT_ASSERT(fixture.Snapshot()==before,"Card selection bypassed event queue");fixture.DrainEvents();
@@ -2526,6 +2585,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             bool rejected=false;try {game->Event(GSE_CALL,"select_smac_workshop",args);}catch(const std::exception&) {rejected=true;}
             GT_ASSERT(rejected && fixture.Snapshot()==before,"Foreign card selection entered queue");GT_OK();
         });
+            if(!error.empty()) {return std::string(owner_target ? "Player: ":"Base: ")+error;}
+        }GT_OK();
     });
     task->AddTest("SMAC live Workshop transports complete drafts through quotes Apply and restore",[](GSE*,context::Context*)->std::string {
         const auto source=[](const std::string& filename) {

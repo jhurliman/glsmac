@@ -58,8 +58,9 @@ route. The affected native Workshop and roster-notification groups pass, and
 four production translation units/consumers pass correctness analysis. The same
 affected groups pass focused ASan/UBSan with three production and two test
 translation units instrumented (leak detection disabled). This
-separates the read authority; global U/HQ opening and owner command transport
-remain to be connected.
+separates the read authority. The queued transport now accepts an actual local
+Player as well as the production caller's real Base; global U/HQ UI entry remains
+to be connected.
 
 ## Remaining work
 
@@ -88,3 +89,14 @@ and four native Workshop opening/full-bank/fresh-authority groups. Both an
 explicit facility highlight and current facility production send selection−1;
 read-only entry remains rejected. No C++ changed, so the previous native
 correctness and sanitizer results remain applicable.
+
+Queued Workshop opening, presets, selection, Apply, Rename, Obsolete, Retire and
+Upgrade resolve the actual caller to the shared owner. The historical `base`
+event field echoes that actual Base or Player; it never contains a synthetic
+Base. Real Base callers keep their production/allocation guard. A no-Base/no-Unit
+fixture opens with hint−1 and applies a named design through the queue, preserving
+actor IDs and RNG and rejecting old-fence replay. Existing Rename, Obsolete,
+preset and selection assertions run for both caller types; Upgrade/Retire tables
+include both routes. All68 selected native Workshop/roster groups pass normally
+and under the same focused sanitizer scope. Two affected production translation
+units/consumers pass correctness analysis; unchanged query checks are reused.

@@ -194,6 +194,7 @@ void GlobalSettings::InitializeHostRules( const RulesSource& read_source ) {
 		world_sizes = loader::txt::SmacRulesTXTLoader::ParseWorldSizeRules( source );
 		factions = loader::txt::FactionTXTLoader::ParseStartupRules( source, read_source, *technologies );
 		units = SmacPredefinedUnitRules::Parse( source, *technologies );
+        units->catalog.workshop_name_labels=unit::ReadSmacWorkshopNameLabels(read_source("labels.txt"));
 	}
 	// Stage the complete settings payload, including its existing mutable tail.
 	// The later State admission also accounts for configured faction metadata.

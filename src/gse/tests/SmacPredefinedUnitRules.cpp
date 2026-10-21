@@ -32,11 +32,27 @@ std::vector< size_t > Integers( const std::string& bytes ) {
 }
 
 void AddSmacPredefinedUnitRulesTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC predefined V2 naming text survives transport and retains legacy V1 bytes",GT(){
+        const auto tech=fixture::Technologies();const auto legacy=fixture::LegacyPredefinedUnits();const auto before=legacy.Serialize(tech).ToString();
+        auto named=legacy;named.catalog.workshop_name_labels=game::backend::unit::ReadSmacWorkshopNameLabels(fixture::WorkshopLabelsSource());
+        const auto wire=named.Serialize(tech).ToString();const auto restored=Profile::Deserialize(wire,tech);
+        GT_ASSERT(restored==named && !(restored==legacy),"Naming text lost on transport or omitted from equality");
+        auto clear=restored;clear.catalog.workshop_name_labels.reset();
+        GT_ASSERT(clear.Serialize(tech).ToString()==before,"Optional naming changed legacy V1 encoding");
+        for(size_t i=0;i<7;++i) {auto changed=named;changed.catalog.workshop_name_labels->at(i)+=" translated";
+            GT_ASSERT(!(changed==named) && Profile::Deserialize(changed.Serialize(tech).ToString(),tech)==changed,"Translated naming field lost");}
+        for(size_t size=before.size();size<wire.size();++size) {GT_ASSERT(Rejects([&]{Profile::Deserialize(wire.substr(0,size),tech);}),"Truncated V2 naming fields accepted");}
+        GlobalSettings old_host;old_host.Deserialize(fixture::Payload("smac",true,{17,INT32_MIN,INT32_MAX,-2,300,0,-7,8,9},{},{},{},{},before));
+        const auto old_wire=old_host.Serialize().ToString();GlobalSettings old_copy;old_copy.Deserialize(old_wire);
+        GT_ASSERT(old_copy.Serialize().ToString()==old_wire && !old_copy.GetSmacPredefinedUnitRules()->catalog.workshop_name_labels,"Legacy session acquired fresh naming labels");
+        auto bad=named;bad.catalog.workshop_name_labels->at(6).clear();GT_ASSERT(Rejects([&]{bad.Serialize(tech);}),"Empty name marker accepted");
+        GT_ASSERT(Rejects([&]{game::backend::unit::ReadSmacWorkshopNameLabels("#LABELS\n920\nshort\n");}),"Incomplete label source accepted");GT_OK();
+    });
 	task->AddTest( "SMAC predefined profile owns raw catalogs and verifies every derived field", GT() {
 		const auto t = fixture::Technologies(); Profile saved;
 		{ auto source = fixture::PredefinedSource(); auto parsed = Profile::Parse( source, t ); auto bytes = parsed.Serialize( t ).ToString();
 			saved = Profile::Deserialize( bytes, t ); source.clear(); bytes.clear(); parsed.catalog.source.units.clear(); }
-		const auto expected = fixture::PredefinedUnits(); auto copy = saved; auto moved = std::move( copy );
+		const auto expected = fixture::LegacyPredefinedUnits(); auto copy = saved; auto moved = std::move( copy );
 		GT_ASSERT( saved == expected && moved == expected && saved.catalog.units.size() == 14, "profile borrowed source or lost rows" );
 		GT_ASSERT( saved.catalog.units[ 0 ].cost == 3 && saved.catalog.units[ 1 ].cost == 2 && saved.catalog.units[ 2 ].cost == 1, "host bypassed production cost calculation" );
 		for ( size_t i = 0; i < saved.catalog.units.size(); ++i ) {
@@ -56,7 +72,7 @@ void AddSmacPredefinedUnitRulesTests( task::gsetests::GSETests* task ) {
 		GT_OK();
 	} );
 	task->AddTest( "SMAC predefined profile preserves raw metadata and unknown prerequisite identity", GT() {
-		const auto t = fixture::Technologies(); const auto original = fixture::PredefinedUnits();
+		const auto t = fixture::Technologies(); const auto original = fixture::LegacyPredefinedUnits();
 		std::vector< std::function< void( Profile& ) > > changes = {
 			[]( auto& p ) { p.catalog.chassis.chassis.back().names[ 5 ].name += " suffix"; },
 			[]( auto& p ) { p.catalog.chassis.chassis.back().names[ 5 ].grammar = "F2"; },
@@ -82,7 +98,7 @@ void AddSmacPredefinedUnitRulesTests( task::gsetests::GSETests* task ) {
 		GT_OK();
 	} );
 	task->AddTest( "SMAC predefined profile rejects malformed frames and transport budgets", GT() {
-		const auto t = fixture::Technologies(); const auto p = fixture::PredefinedUnits(); const auto bytes = p.Serialize( t ).ToString();
+		const auto t = fixture::Technologies(); const auto p = fixture::LegacyPredefinedUnits(); const auto bytes = p.Serialize( t ).ToString();
 		for ( size_t length = 0; length < bytes.size(); ++length ) {
 			GT_ASSERT( Rejects( [ & ]() { Profile::Deserialize( bytes.substr( 0, length ), t ); } ), "truncated profile accepted" );
 		}
@@ -105,6 +121,19 @@ void AddSmacPredefinedUnitRulesTests( task::gsetests::GSETests* task ) {
 		GT_ASSERT( Rejects( [ & ]() { invalid.Serialize( t ); } ), "typed producer widened source-ingestion plan policy" );
 		GT_OK();
 	} );
+    task->AddTest("SMAC Workshop host freezes naming text and rejects late replacement atomically",GT(){
+        GlobalSettings host;host.SelectRuleset("smac");host.InitializeHostRules(fixture::Source);
+        GT_ASSERT(host.GetSmacPredefinedUnitRules()->catalog.workshop_name_labels==game::backend::unit::ReadSmacWorkshopNameLabels(fixture::WorkshopLabelsSource()),"Host omitted installed naming fields");
+        const auto before=host.Serialize().ToString();
+        for(size_t i=0;i<7;++i) {auto changed=*host.GetSmacPredefinedUnitRules();changed.catalog.workshop_name_labels->at(i)+=" translated";
+            const auto wire=changed.Serialize(fixture::Technologies()).ToString();
+            GT_ASSERT(Rejects([&]{host.Deserialize(fixture::Payload("smac",true,{17,INT32_MIN,INT32_MAX,-2,300,0,-7,8,9},{},{},{},{},wire));}) && host.Serialize().ToString()==before,"Late naming replacement changed frozen session");
+        }
+        GlobalSettings pending;pending.SelectRuleset("smac");
+        GT_ASSERT(Rejects([&]{pending.InitializeHostRules([](const std::string& name) {return name=="labels.txt" ? std::string("#LABELS\n920\nmissing\n"):fixture::Source(name);});})
+            && !pending.IsRulesetLocked() && !pending.GetSmacPredefinedUnitRules() && !pending.GetSmacResourceRules(),"Missing late naming source published partial settings");
+        pending.InitializeHostRules(fixture::Source);GT_ASSERT(pending.Serialize().ToString()==before,"Naming source retry changed session");GT_OK();
+    });
 	task->AddTest( "SMAC frozen predefined host profile stages failures and rejects late changes", GT() {
 		GlobalSettings host; host.SelectRuleset( "smac" ); host.InitializeHostRules( fixture::Source ); const auto before = host.Serialize().ToString();
 		GlobalSettings joined; joined.Deserialize( before ); GT_ASSERT( joined.Serialize().ToString() == before, "joined profile differs" );

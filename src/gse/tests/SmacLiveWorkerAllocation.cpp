@@ -5766,7 +5766,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 		for ( const bool homed : { false, true } ) {
 			ConventionalUnitFixture fixture; fixture.ConfigureResources( []( const std::string& filename ) {
 				auto source = Source( filename );
-				if ( filename != "alpha.txt" ) {
+				if ( filename == "gaians.txt" || filename == "hive.txt" || filename == "univ.txt" || filename == "morgan.txt"
+					|| filename == "spartans.txt" || filename == "believe.txt" || filename == "peace.txt" ) {
 					const std::string original = "Leader,F,-1,0,0,1,1,";
 					source.replace( source.find( original ), original.size(), "Leader,F,500,0,0,0,0," );
 				}

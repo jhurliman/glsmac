@@ -115,6 +115,66 @@ void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const Sma
     record[44]=0;record[45]=uint8_t(1u<<owner.admission.simulation_id);record[46]=255;record[48]=uint8_t(flags);record[49]=uint8_t(flags>>8);
     pool[index]=record;
 }
+std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
+    const SmacPredefinedUnitCatalog& catalog,int32_t owner) {
+    RequireComponents(draft,catalog);
+    const auto& chassis=catalog.chassis.chassis.at(draft.chassis);const auto& weapon=catalog.weapons.weapons.at(draft.weapon);
+    const auto defense=catalog.defenses.defenses.at(draft.armor).rating;const auto offense=weapon.offense,speed=chassis.speed,mode=int32_t(weapon.mode);
+    if(!catalog.workshop_name_labels || owner<1 || owner>7 || index<64 || index>=512 || int32_t(index/64)!=owner
+        || chassis.triad!=loader::txt::ChassisTriad::Land || chassis.missile || offense<0) {throw std::invalid_argument("Workshop naming requires initialized conventional land text and context");}
+    const auto& current=pool[index];bool same_tuple=(current[48]&1) && current[36]==draft.chassis && current[37]==draft.weapon && current[38]==draft.armor && current[39]==draft.reactor;
+    for(unsigned i=0;i<4;++i) {same_tuple=same_tuple && current[32+i]==uint8_t(draft.abilities>>(8*i));}
+    if(!same_tuple) {throw std::invalid_argument("Workshop naming requires its completed design record");}
+    for(const auto& label:*catalog.workshop_name_labels) {if(label.empty() || label.size()>128 || label.find('\0')!=std::string::npos) {throw std::invalid_argument("Invalid Workshop naming text");}}
+    const auto& labels=*catalog.workshop_name_labels;const auto& names=chassis.names;
+    std::string prefix;for(unsigned bit=0;bit<24;++bit) {
+        const auto& text=catalog.abilities.abilities.at(bit).abbreviation;
+        if(!(draft.abilities&(1u<<bit)) || text.empty() || bit==15) {continue;}
+        if(bit==3 && speed==1 && offense>=defense && !(draft.abilities&0x8000)) {continue;}
+        prefix=text+' ';break;
+    }
+    std::string full=prefix,short_name=prefix;bool compact=false,elite=false;unsigned variant=((draft.reactor-1)^owner)&1;
+    if(mode<3) {const auto threshold=defense<=offense ? 3:6;elite=std::min(defense,offense)>threshold && !names[4].name.empty() && !names[5].name.empty();}
+    if(speed>=std::max(offense,defense) && mode<3) {
+        compact=true;variant=speed>1;
+        if(draft.abilities&0x400000) {
+            if(!full.empty()) {full.pop_back();}short_name.resize(std::min(short_name.size(),full.empty()?size_t(0):full.size()-1));
+        }else {const auto& label=labels[offense>=2?1:0];full+=label;short_name+=label;}
+    }
+    if(defense>offense && mode<3 && !(draft.abilities&0x8000)) {
+        if(!compact) {const auto& text=catalog.defenses.defenses.at(draft.armor).short_name;full+=text;short_name+=text;variant^=unsigned(defense)&1;}
+        full+=' '+names[2].name;
+        short_name+=' '+(compact && (index&1) ? names[elite?5:2].name:names[3].name);
+    } else {
+        if(mode>=3 && draft.chassis!=0) {
+            if(draft.reactor>1) {const auto& text=catalog.reactors.reactors.at(draft.reactor-1).short_name;full+=text+' ';short_name+=text+' ';}
+            full+=names[0].name+' ';short_name+=names[1].name+' ';
+        }
+        if(!compact) {full+=weapon.short_name;short_name+=weapon.short_name;variant^=unsigned(offense)&1;}
+        if(mode<3) {
+            if(draft.abilities&0x8000) {full+=' '+labels[2];short_name+=' '+labels[3];}
+            else if((draft.abilities&8) && speed==1 && offense>defense) {full+=' '+labels[4];short_name+=' '+labels[5];}
+            else {full+=' '+names[elite?4:0].name;short_name+=' '+names[1].name;}
+        }
+    }
+    const bool identical=full==short_name;const auto& marker=labels[6];
+    const auto bump=[&](std::string& text) {
+        const auto at=text.rfind(marker);
+        if(at!=std::string::npos && text.size()-at<=marker.size()+1 && text.back()>='2' && text.back()<='8') {++text.back();}
+        else {text+=' '+marker+'2';}
+    };
+    for(;;) {
+        bool changed=false;
+        for(size_t i=0;i<512;++i) {
+            if(i==index || (i>=64 && (i<size_t(owner)*64 || i>=size_t(owner+1)*64))) {continue;}
+            const auto& row=pool[i];if(std::equal(current.begin()+32,current.begin()+40,row.begin()+32)) {continue;}
+            const std::string name(row.begin(),std::find(row.begin(),row.begin()+32,0));
+            if(name==full) {if(!identical) {variant=1;}bump(full);changed=true;break;}
+            if(!identical && name==short_name) {variant=0;bump(short_name);changed=true;break;}
+        }
+        if(!changed) {return variant ? short_name:full;}
+    }
+}
 SmacPrototypePrice SmacDesignProductionRows(const SmacCustomDesign& design,
     const SmacPredefinedUnitCatalog& catalog,const SmacPrototypePriceContext& context) {
     if(design.id<0 || design.id>=512) {throw std::invalid_argument("Prototype price requires a canonical design identity");}
@@ -233,7 +293,8 @@ SmacWorkshopCommit CommitSmacWorkshopFirstDesign(SmacStartupDesignState& state,c
     if(draft.selected_design!=2 || !bank->designs.empty() || draft.armor!=1) {throw std::runtime_error("Workshop occupied-bank allocation requires its replacement policy");}
     SmacOriginalDesignPool pool{};
     for(const auto& builtin:catalog.units) {
-        auto& row=pool.at(builtin.source_id);row[36]=uint8_t(builtin.chassis_id);row[37]=uint8_t(builtin.weapon_id);row[38]=uint8_t(builtin.defense_id);
+        auto& row=pool.at(builtin.source_id);const auto& name=catalog.source.units.at(builtin.source_id).name;
+        std::copy_n(name.begin(),std::min<size_t>(31,name.size()),row.begin());row[36]=uint8_t(builtin.chassis_id);row[37]=uint8_t(builtin.weapon_id);row[38]=uint8_t(builtin.defense_id);
         row[48]=uint8_t((builtin.active?1:0)|(builtin.prototyped?4:0));const auto prerequisite=uint16_t(Prerequisite(builtin.prerequisite));
         row[50]=uint8_t(prerequisite);row[51]=uint8_t(prerequisite>>8);
     }
@@ -242,7 +303,7 @@ SmacWorkshopCommit CommitSmacWorkshopFirstDesign(SmacStartupDesignState& state,c
     const auto& chassis=catalog.chassis.chassis.at(0);
     const auto& armor=catalog.defenses.defenses.at(1);
     const SmacEarlyDesignNames names{armor.short_name,chassis.names[2].name,chassis.names[3].name,"","",armor.rating};
-    auto automatic=NameSmacOpeningDesign(names,owner.admission.simulation_id,0,1);automatic.resize(std::min<size_t>(automatic.size(),31));
+    auto automatic=catalog.workshop_name_labels ? NameSmacWorkshopDesign(pool,slot,draft,catalog,owner.admission.simulation_id):NameSmacOpeningDesign(names,owner.admission.simulation_id,0,1);automatic.resize(std::min<size_t>(automatic.size(),31));
     SmacCustomDesign design;design.id=owner.admission.simulation_id*64+63;design.defense=1;
     design.cost=pool[slot][41];design.plan=pool[slot][42];design.carry=pool[slot][40];
     design.prototyped=(pool[slot][48]&4)!=0;design.auxiliary_flags=uint16_t((uint16_t(pool[slot][48])|(uint16_t(pool[slot][49])<<8))&~7u);

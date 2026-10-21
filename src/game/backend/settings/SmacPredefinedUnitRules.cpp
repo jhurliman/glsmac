@@ -61,7 +61,7 @@ void Source( const Catalog& c ) {
 }
 
 types::Buffer Encode( const Catalog& c ) {
-	types::Buffer b; b.WriteInt( 1 );
+	types::Buffer b; b.WriteInt( c.workshop_name_labels ? 2:1 );
 	b.WriteString( c.chassis.ruleset_id ); b.WriteInt( c.chassis.chassis.size() );
 	for ( const auto& r : c.chassis.chassis ) {
 		for ( const auto& n : r.names ) { b.WriteString( n.name ); b.WriteString( n.grammar ); }
@@ -97,6 +97,7 @@ types::Buffer Encode( const Catalog& c ) {
 		if ( r.prerequisite.technology_id ) { b.WriteInt( *r.prerequisite.technology_id ); }
 		b.WriteBool( r.active ); b.WriteBool( r.prototyped ); b.WriteInt( r.faction_exclusion );
 	}
+	if(c.workshop_name_labels) {for(const auto& label:*c.workshop_name_labels) {Text(label);b.WriteString(label);}}
 	return b;
 }
 
@@ -113,7 +114,7 @@ void Table( types::Buffer& b, std::string& id, const int32_t count ) {
 }
 
 Catalog Decode( types::Buffer& b ) {
-	Require( Integer( b ) == 1, "Unsupported predefined unit profile version" ); Catalog c;
+	const auto version=Integer(b,1,2);Catalog c;
 	Table( b, c.chassis.ruleset_id, 9 );
 	for ( size_t i = 0; i < 9; ++i ) {
 		ChassisComponent r{}; for ( auto& n : r.names ) { n.name = String( b ); n.grammar = String( b, false, 2 ); }
@@ -158,6 +159,7 @@ Catalog Decode( types::Buffer& b ) {
 		if ( b.ReadBool() ) { r.prerequisite.technology_id = Integer( b, 0, 88 ); }
 		r.active = b.ReadBool(); r.prototyped = b.ReadBool(); r.faction_exclusion = Integer( b, 0, 0 ); c.units.push_back( r );
 	}
+	if(version==2) {unit::SmacWorkshopNameLabels labels;for(auto& label:labels) {label=String(b);}c.workshop_name_labels=std::move(labels);}
 	Require( b.lenr == b.lenw, "Unexpected predefined unit profile fields" ); return c;
 }
 }
@@ -172,7 +174,8 @@ SmacPredefinedUnitRules SmacPredefinedUnitRules::Parse( const std::string& sourc
 void SmacPredefinedUnitRules::Validate( const SmacTechnologyRules& technologies ) const {
 	Source( catalog ); Require( catalog.units.size() == catalog.source.units.size(), "Mismatched predefined record count" );
 	const auto encoded = Encode( catalog ); Require( encoded.lenw <= MAX_WIRE_BYTES, "Predefined unit profile exceeds transport budget" );
-	const auto rebuilt = Catalog::Build( catalog.source, catalog.chassis, catalog.weapons, catalog.defenses, catalog.reactors, catalog.abilities, technologies );
+	auto rebuilt = Catalog::Build( catalog.source, catalog.chassis, catalog.weapons, catalog.defenses, catalog.reactors, catalog.abilities, technologies );
+    rebuilt.workshop_name_labels=catalog.workshop_name_labels;
 	Require( encoded.ToString() == Encode( rebuilt ).ToString(), "Predefined unit derived records differ from the checked source producer" );
 }
 

@@ -48,8 +48,9 @@ public:
 	static CvrGeometry Read( const std::vector< uint8_t >& bytes );
 };
 
-// Owned simple linked detail profile. Original flags, remaining-chain size,
-// local extent and records remain intact. Grouped/terminal chains are excluded.
+// Owned linked detail profile (historical simple-chain API name). Original
+// flags 0..3, remaining-chain size, local extent and grouped records remain
+// intact. Terminal-record chains remain excluded.
 class CvrSimpleDetailChain {
 public:
 	static constexpr size_t MAX_LEVELS = 64; // Port resource policy.

@@ -14,6 +14,8 @@
 #include "fixtures/WorkshopRender.h"
 #include "fixtures/WorkshopComponents.h"
 #include "fixtures/WorkshopGeneralVisual.h"
+#include "fixtures/WorkshopStockVisual.h"
+#include "loader/txt/UnitRulesTXTLoader.h"
 #include <cstdlib>
 #include "game/backend/unit/CvrScoutRender.h"
 #include "game/frontend/sprite/ScoutSpriteCache.h"
@@ -159,6 +161,31 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
         const auto digest=[](const auto& bytes) {uint64_t h=UINT64_C(14695981039346656037);for(const auto byte:bytes) {h=(h^byte)*UINT64_C(1099511628211);}return h;};
         for(const auto& row:workshop_general_visual_fixture::FRAMES) {
             const auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,read("spartans.pcx"),row.chassis,row.weapon,row.armor,row.reactor,row.kind);
+            std::array<uint32_t,3> position{};const auto image=row.kind<0 ? renderer.RenderWorkshop():renderer.RenderWorkshopCard(row.kind,position);
+            std::vector<uint8_t> depth;for(const auto value:image.indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
+            GT_ASSERT(digest(image.indexed.color)==row.color && digest(depth)==row.depth && image.draw_count==row.draws && image.processed_records==row.records,
+                "General frame "+std::string(row.name)+" color="+std::to_string(digest(image.indexed.color))+" depth="+std::to_string(digest(depth))+" draws="+std::to_string(image.draw_count)+" records="+std::to_string(image.processed_records));
+            if(const auto* output=std::getenv("GLSMAC_WORKSHOP_CAPTURE_DIR")) {
+                std::filesystem::create_directories(output);std::ofstream file(std::filesystem::path(output)/(std::string(row.name)+".rgba"),std::ios::binary);
+                file.write(reinterpret_cast<const char*>(image.rgba.data()),image.rgba.size());
+            }
+        }GT_OK();
+    });
+
+    task->AddTest("CVR stock Workshop families match fourteen full native frames",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto read=[&](const std::string& name) {
+            for(const auto& entry:std::filesystem::directory_iterator(directory)) {
+                auto candidate=entry.path().filename().string();std::transform(candidate.begin(),candidate.end(),candidate.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if(candidate==name) {std::ifstream stream(entry.path(),std::ios::binary);return std::string(std::istreambuf_iterator<char>(stream),{});}
+            }throw std::runtime_error("Missing owned Workshop model asset: "+name);
+        };
+        const auto source=read("alpha.txt");
+        const auto weapons=loader::txt::UnitRulesTXTLoader::ParseWeapons(source,"smac");
+        const auto armor=loader::txt::UnitRulesTXTLoader::ParseDefenses(source,"smac");
+        const auto digest=[](const auto& bytes) {uint64_t h=UINT64_C(14695981039346656037);for(const auto byte:bytes) {h=(h^byte)*UINT64_C(1099511628211);}return h;};
+        for(const auto& row:workshop_stock_visual_fixture::FRAMES) {
+            const auto renderer=loader::cvr::CvrScoutRenderer::LoadWorkshopDesign(read,read("spartans.pcx"),row.chassis,row.weapon,row.armor,row.reactor,row.kind,{weapons.weapons.at(row.weapon).offense,int(weapons.weapons.at(row.weapon).mode),armor.defenses.at(row.armor).rating});
             std::array<uint32_t,3> position{};const auto image=row.kind<0 ? renderer.RenderWorkshop():renderer.RenderWorkshopCard(row.kind,position);
             std::vector<uint8_t> depth;for(const auto value:image.indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
             GT_ASSERT(digest(image.indexed.color)==row.color && digest(depth)==row.depth && image.draw_count==row.draws && image.processed_records==row.records,

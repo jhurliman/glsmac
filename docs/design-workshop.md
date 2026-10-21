@@ -410,7 +410,7 @@ human history. General AI prototype allocation remains unfinished.
 Legacy frames with unknown history
 cannot silently treat it as empty. The selective V5 design codec preserves
 all known rows, including nonparticipating owners and untouched slots/cursors;
-absent history keeps the existing V1–V4 encoding. Nonzero faction restart and
+absent history keeps the existing V1â€“V4 encoding. Nonzero faction restart and
 actual Start restore preserve it. The bounded design frame now accommodates
 all seven full custom banks rather than stopping at the old 16 KiB budget.
 
@@ -430,7 +430,7 @@ the complete flags word and per-owner exclusion byte. Frozen source definitions
 remain immutable. Switching to an excluded matched intrinsic sets flag 8 and
 clears only the requesting owner's exclusion bit. An already-selected match
 leaves both unchanged; switching to an already-included match adds no flag.
-The selective V6 design codec preserves every override and leaves V1–V5
+The selective V6 design codec preserves every override and leaves V1â€“V5
 encoding unchanged when no override exists.
 
 Workshop commits publish the shared overrides alongside custom-bank changes.
@@ -454,3 +454,34 @@ now records the separate initialization/reselection paths for the forthcoming
 controller. Remaining work includes retained custom-record fields, occupied-slot
 retirement/queue surgery, browse/rename/confirmation controls and the complete
 component editor. Shared intrinsic overlays are no longer a missing prerequisite.
+
+
+### Stock composition families
+
+The phase-zero composer now covers stock chassis 0..8, combat weapon-power
+selection, Colony/Former/Transport/Supply/Probe/Artifact packages, armor shell
+branches and four reactors. Its broad entry accepts the actual installed weapon
+power/mode and armor strength; it does not infer those fields from component IDs.
+The existing narrow live entry remains compatible. Probe Speeder's temporary
+Infantry remap affects composition only. Mount displacements come from the four
+owned two-frame marker assets, with binary32 stores.
+
+All fourteen new complete native indexed/depth frames match, including draw and
+processed-record counts. The previous fifteen general frames remain exact.
+Weapon cards use .15 for combat modes, .06 for Former and .08 for the remaining
+packages. Only Single kernels use the card clip; ordinary Square2 stays separate.
+Hovertank's grouped detail chain now retains group headers and selects the LOD
+per draw; bounds still use root geometry. Truncation and malformed continuation,
+group and extent tests cover that reader extension.
+
+Validation: 49 relevant native groups pass, including parser/LOD regressions;
+the same groups pass ASan/UBSan with eight production translation units and five
+test files instrumented. Targeted correctness analysis is clean for five
+production files and affected consumers. See the source-backed
+[stock composition contract](behavior/design-workshop-stock-composition-families.md).
+
+This is renderer groundwork for the full editor. The live picker remains the
+Scout/Synthmetal slice; broader selection/commit controls, ability decorations,
+nonzero animation and complete screen matching remain unfinished. Special
+Probability armor card translucency remains with the existing dedicated card
+renderer rather than this phase-zero composition entry.

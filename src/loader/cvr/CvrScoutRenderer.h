@@ -60,6 +60,11 @@ public:
     // 0..3 builds the separate chassis/weapon/shield/reactor scene.
     static CvrScoutRenderer LoadWorkshopDesign(const WorkshopReader& read,std::string_view faction_pcx,
         int chassis,int weapon,int armor,int reactor,int kind=-1);
+    struct WorkshopDefinition {int weapon_power,weapon_mode,armor_strength;};
+    // Phase-zero stock SMAC composer. Definition fields come from the active
+    // installed rules, not an inferred weapon-ID/power mapping. No abilities yet.
+    static CvrScoutRenderer LoadWorkshopDesign(const WorkshopReader& read,std::string_view faction_pcx,
+        int chassis,int weapon,int armor,int reactor,int kind,const WorkshopDefinition& definition);
     CvrScoutImage RenderWorkshopCard(int kind,std::array<uint32_t,3>& position) const;
     static CvrScoutRenderer LoadWorkshopPart(std::string_view part,std::string_view palette,std::string_view system,
         const std::array<uint8_t,24*256>* shades=nullptr,bool direct_locations=false);
@@ -76,7 +81,7 @@ private:
 	enum class Profile { Infantry, SpartanSpeeder, InitializedInfantry, Workshop, WorkshopPart, WorkshopWeapon };
     struct WorkshopAttachment {std::array<float,3> offset;bool direct;std::optional<std::array<uint8_t,24*256>> shades;};
 	static CvrScoutRenderer LoadParts( const std::vector< std::string_view >& parts, Profile profile, const CvrActorMaterial* material,
-        const std::vector<WorkshopAttachment>* attachments=nullptr);
+        const std::vector<WorkshopAttachment>* attachments=nullptr,int workshop_weapon_mode=0);
 	CvrScoutImage RenderView(const scout::View& view,uint8_t clear=9,bool unavailable=false,
         std::optional<std::array<int32_t,4>> clip=std::nullopt) const;
     std::array<uint32_t,3> WorkshopPosition(const std::array<uint32_t,9>& rotation,const std::array<uint32_t,3>& previous={0,0,0}) const;

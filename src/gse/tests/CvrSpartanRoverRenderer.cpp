@@ -45,16 +45,18 @@ using Bytes = std::vector< uint8_t >;
 void PutWord( Bytes& bytes, const size_t offset, const uint32_t value ) {
 	for ( unsigned i = 0; i < 4; ++i ) { bytes.at( offset + i ) = static_cast< uint8_t >( value >> ( 8 * i ) ); }
 }
-Bytes DetailChain( const std::vector< uint32_t >& scalars ) {
+Bytes DetailChain( const std::vector< uint32_t >& scalars, bool grouped=false ) {
 	Bytes bytes;
 	std::vector< size_t > offsets;
 	for ( size_t i = 0; i < scalars.size(); ++i ) {
-		const auto offset = bytes.size(), local = 47 + 3 * ( i + 1 ); offsets.push_back( offset );
+		const auto offset = bytes.size(), local = 47 + (grouped ? 32:0) + 3 * ( i + 1 ); offsets.push_back( offset );
 		bytes.resize( offset + local, 0 );
-		PutWord( bytes, offset, i + 1 < scalars.size() ? 1 : 0 ); PutWord( bytes, offset + 8, scalars[ i ] );
+		PutWord( bytes, offset, (i + 1 < scalars.size() ? 1 : 0) | (grouped ? 2:0) ); PutWord( bytes, offset + 8, scalars[ i ] );
 		PutWord( bytes, offset + 12, static_cast< uint32_t >( local ) ); PutWord( bytes, offset + 16, static_cast< uint32_t >( local - 1 ) );
 		PutWord( bytes, offset + 38, static_cast< uint32_t >( i + 1 ) );
-		for ( size_t j = 0; j <= i; ++j ) { bytes[ offset + 42 + j * 3 ] = 13 << 3; bytes[ offset + 44 + j * 3 ] = static_cast< uint8_t >( i + 20 ); }
+		if(grouped) {PutWord(bytes,offset+42+24,static_cast<uint32_t>(i+1));}
+        const auto records=offset+(grouped ? 74:42);
+        for ( size_t j = 0; j <= i; ++j ) { bytes[ records + j * 3 ] = 13 << 3; bytes[ records + 2 + j * 3 ] = static_cast< uint8_t >( i + 20 ); }
 	}
 	for ( const auto offset : offsets ) { PutWord( bytes, offset + 4, static_cast< uint32_t >( bytes.size() - offset ) ); }
 	return bytes;
@@ -109,6 +111,27 @@ void AddCvrSpartanRoverRendererTests( task::gsetests::GSETests* task ) {
 		for ( const auto bits : { 0x7f800000U, 0xff800000U, 0x7fc00000U } ) { GT_ASSERT( Rejects( [ & ] { chain.Select( bits ); } ), "nonfinite detail scale admitted" ); }
 		GT_OK();
 	} );
+    task->AddTest("CVR Workshop grouped detail chains retain groups and reject malformed continuations",GT(){
+        const auto bytes=DetailChain({0x3f800000,0x40000000},true);
+        const auto chain=CvrSimpleDetailChain::Read(bytes);
+        GT_ASSERT(chain.Levels().size()==2 && chain.Levels()[0].flags==3 && chain.Levels()[1].flags==2,
+            "Grouped continuation or final flags lost");
+        GT_ASSERT(chain.Levels()[0].groups[0].header && chain.Levels()[1].groups[0].records.size()==2
+            && chain.Select(0x3f800000)==0 && chain.Select(0x3dcccccd)==1,"Grouped levels/records or detail selection changed");
+        for(size_t size=0;size<bytes.size();++size) {GT_ASSERT(Rejects([&]{CvrSimpleDetailChain::Read(Bytes(bytes.begin(),bytes.begin()+size));}),"Truncated grouped chain accepted");}
+        for(int scenario=0;scenario<5;++scenario) {
+            auto bad=bytes;const size_t last=82;
+            switch(scenario) {
+            case 0:PutWord(bad,0,2);break;
+            case 1:PutWord(bad,last,3);break;
+            case 2:PutWord(bad,42+24,2);break;
+            case 3:PutWord(bad,last+42+28,1);break;
+            case 4:PutWord(bad,last+12,81);break;
+            }
+            GT_ASSERT(Rejects([&]{CvrSimpleDetailChain::Read(bad);}),"Malformed grouped chain accepted");
+        }GT_OK();
+    });
+
 	task->AddTest( "CVR Rover detail chain rejects late malformed links records and budgets", GT() {
 		const auto good = DetailChain( { 0x3f800000, 0x40000000, 0x40800000 } );
 		for ( size_t size = 0; size < good.size(); ++size ) {

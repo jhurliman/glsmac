@@ -1115,50 +1115,41 @@ the real instrumented dialog. See the
 Upgrade, automatic family controls, persistent preferences, animated preview
 and complete screen parity remain open; this does not complete the Workshop.
 
-### Upgrade implementation in progress
+### Upgrade transaction and pending UI
 
-The Upgrade branch now owns the original action7 candidate scan,504eb0 quote
-and detached design flags of504cc0 in `SmacWorkshopUpgrade.h`. This is not yet
-a live action. The next implementation must stage owned Unit conversion with
-morale clamping and cached-byte deltas, preserve own production queue order,
-minerals/retool state and foreign queues, charge energy and publish the target
-selection atomically. Then connect the measured chooser, affordability,
-confirmation and zero-cache informational dialogs. Keep unsaved draft components
-out of this stored-source action; do not route it through Retire/history.
+`SmacWorkshopUpgrade.h` owns the original action7 candidate scan,504eb0 quote
+and detached design flags of504cc0. The queued `upgrade_smac_workshop`
+transaction connects these rules to the local human Base caller and suspended
+Colony Screen dispatch. It enumerates retained targets, checks affordability,
+supports decline and zero-charge bypass, and stages Unit states, owned queues,
+refreshes, target reselection and treasury before publication. Existing Unit
+transfer publication owns wrapping count deltas; production-reference caches,
+queue order/minerals/retool baselines and retirement history are preserved.
+The ordinary no-project campaign capability explicitly owns Nano Factory
+absence; missing project authority is not treated as false. No new save format
+is introduced.
 
-Twenty-five compact original dispatcher inputs/results verify the candidate
-and per-unit quote rules; four original quote scalars verify prototype and Nano
-rounding. Detached accepted cases verify exact flag-only registry changes,
-unchanged history, cached-zero behavior and save/restore. Additional tests cover
-intrinsic sources/quotes, owner exclusion and retained ability/reactor changes.
-The cached Linux build and affected native groups pass; targeted correctness
-analysis of the changed production translation unit is clean. These checks do
-not establish live conversion, affordability or complete Workshop parity.
+Twenty-five compact original dispatcher inputs/results verify candidates and
+per-unit quotes; four original scalars verify prototype/Nano rounding. Thirteen
+actual-world scenarios cover custom/intrinsic sources, cached-zero and stale
+counts, no own Units, prototype surcharge, High Morale gain/loss, multiple
+targets, insufficient funds, late-animation rollback, duplicate queues, foreign
+records and all four reactor health limits. Each resulting world saves/restores.
 
-The queued `upgrade_smac_workshop` transaction is now connected to the actual
-local human Base caller and suspended Colony Screen dispatch. It quotes from
-saved counts, supports target enumeration/selection, decline, affordability and
-zero-charge bypass, and stages Unit states, owned queues, refreshes, target
-reselection and treasury before publication. Existing Unit transfer publication
-owns the wrapping count deltas; production-reference caches and history are
-preserved. The current ordinary no-project campaign capability explicitly owns
-Nano Factory absence; missing project authority is not treated as false.
-
-Thirteen actual-world scenarios cover custom/intrinsic sources, cached-zero and
-stale-three counts, no own Units, prototype surcharge, High Morale gain/loss,
-multiple targets, insufficient funds, late-animation failure, duplicate queues,
-foreign records and all four reactor health limits. Every scenario saves and
-restores the resulting world. The prior live identity binding was Scout-only;
-it now resolves retained positive Projectile/Energy ground combat weapons,
-positive armor and reactor1..4 plus the passive High Morale bit. A foreign Unit
-can still resolve its globally indexed inactive source after another owner
-upgrades it. This does not remove the separate narrow tactical combat, Speeder
-provenance, native/PSI, other ability or component-rendering restrictions.
+The live identity binding now resolves retained positive Projectile/Energy
+ground combat weapons, positive armor, reactor1..4 and the passive High Morale
+bit. Another owner's physical Unit can resolve its globally indexed inactive
+source after Upgrade. These identities use existing conventional stat rules;
+this does not remove the separate narrow tactical combat, Speeder provenance,
+native/PSI, other ability or component-rendering restrictions.
 
 Validation:46 affected native groups pass, including conventional/factory and
-startup rejection consumers; four focused groups pass ASan/UBSan with19
-production and two test translation units instrumented. Targeted correctness
-analysis is clean for seven production/consumer translation units. No new save
-format is introduced. This branch still needs the original Upgrade dialogs,
-full prompt formatting, native/other component bindings and visual validation
-before claiming the complete user-facing action.
+startup rejection consumers. Four focused groups pass ASan/UBSan with19
+production and two test translation units instrumented; targeted correctness
+analysis is clean for seven production/consumer translation units.
+
+The action still needs the original chooser, affordability, confirmation and
+zero-cache informational dialogs, full prompt formatting, remaining component
+bindings and visual validation. Unsaved draft components must stay out of this
+stored-source action. Do not route it through Retire/history or claim the
+complete Workshop from the transaction tests.

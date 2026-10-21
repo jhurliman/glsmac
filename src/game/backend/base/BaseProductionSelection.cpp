@@ -15,6 +15,7 @@
 #include "game/backend/State.h"
 #include "game/backend/faction/Faction.h"
 #include "gc/Space.h"
+#include "util/SHA256.h"
 #include "gse/value/Array.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Int.h"
@@ -25,6 +26,50 @@
 #include <algorithm>
 
 namespace game::backend {
+
+namespace {
+// Echoed opaque fence: no new opponent capability/strategy data in the UI.
+std::string WorkshopPresetState(const std::string& design_state,const faction::SmacSimulationState& state,const settings::GlobalSettings& settings,int32_t owner) {
+    types::Buffer wire;wire.WriteString(design_state);wire.WriteInt(owner);
+    wire.WriteBool(settings.GetSmacCombatRules().has_value());
+    if(settings.GetSmacCombatRules()) {wire.WriteString(settings.GetSmacCombatRules()->Serialize().ToString());}
+    wire.WriteBool(settings.GetSmacCampaignRules() && (settings.GetSmacCampaignRules()->primary&0x00400000u)!=0);
+    wire.WriteInt(static_cast<int32_t>(state.movement_capability));wire.WriteInt(state.human_membership);
+    wire.WriteBool(state.capabilities.has_value());if(state.capabilities) {for(const auto& row:state.capabilities->factions) {
+        for(const auto& values:{row.available,row.foreign}) {for(const auto value:values) {wire.WriteInt(value);}}
+    }}
+    wire.WriteBool(state.rank_order.has_value());if(state.rank_order) {for(const auto id:state.rank_order->faction_at_rank) {wire.WriteInt(id);}}
+    wire.WriteBool(state.retained_base_totals.has_value());if(state.retained_base_totals) {wire.WriteInt(state.retained_base_totals->at(owner));}
+    wire.WriteBool(state.strategy.has_value());if(state.strategy) {
+        const auto& policy=state.strategy->at(owner);for(const auto value:policy.priorities) {wire.WriteInt(value);}
+        wire.WriteBool(policy.fight.has_value());if(policy.fight) {wire.WriteInt(*policy.fight);}
+    }
+    const auto* social=state.social.Find(owner);wire.WriteBool(social!=nullptr);
+    if(social) {wire.WriteInt(social->current.at(9));wire.WriteInt(static_cast<int32_t>(social->phase));}
+    const auto& air=state.air_summary.at(owner);wire.WriteBool(air.has_value());
+    if(air) {wire.WriteInt(air->foreign_threats);wire.WriteInt(air->own_plan0);wire.WriteInt(air->own_plan4);}
+    for(const auto& direction:state.hostility.owners.at(owner).directions) {wire.WriteInt(direction.primary);}
+    return util::SHA256(wire.ToString());
+}
+unit::SmacWorkshopHumanContext WorkshopHumanContext(const faction::SmacSimulationState& state,int32_t owner) {
+    const auto* social=state.social.Find(owner);
+    if(!state.IsHuman(owner) || !state.capabilities || !state.rank_order || !state.retained_base_totals
+        || !state.strategy || !state.strategy->at(owner).fight || !state.air_summary.at(owner) || !social
+        || social->phase!=faction::SmacFactionSocialState::Phase::Refreshed) {
+        throw std::invalid_argument("Workshop recommendations require current retained faction authority");
+    }
+    int32_t rank=-1;for(size_t i=1;i<8;++i) {if(state.rank_order->faction_at_rank[i]==owner) {rank=static_cast<int32_t>(i);break;}}
+    if(rank<0) {throw std::invalid_argument("Workshop owner has no retained rank position");}
+    const auto& policy=state.strategy->at(owner);const auto& cap=state.capabilities->factions.at(owner-1);const auto& air=*state.air_summary.at(owner);
+    // The admitted faction keyword domain has no direct MORALE scalar writer;
+    // its native definition constructor supplies0. SOCIAL MORALE is separate.
+    return {{{0x95d1ac,rank},{0x95d584,*policy.fight},{0x95d588,policy.priorities[2]},
+        {0x95d58c,policy.priorities[3]},{0x95d590,policy.priorities[0]},{0x95d594,policy.priorities[1]},
+        {0x95e200,state.retained_base_totals->at(owner)},{0x95d9d8,cap.foreign.at(faction::SmacCapabilityState::LandSpeed)},
+        {0x95d9d0,cap.foreign.at(faction::SmacCapabilityState::Weapon)},{0x95d9c8,cap.available.at(faction::SmacCapabilityState::Armor)},
+        {0x95d418,social->current.at(9)},{0x95d9ec,air.foreign_threats},{0x95f22c,air.own_plan0},{0x95f230,air.own_plan4}},0};
+}
+}
 
 bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
     const gse::value::object_properties_t& args, size_t caller, bool apply ) {
@@ -76,6 +121,57 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
         }
         removal.emplace(manager->PrepareWorldUnitRemoval(GSE_CALL,ids));
     };
+    if(name=="preset_smac_workshop") {
+        const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
+            const auto at=args.find(key);if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop preset command");}
+            return at->second->Deref();
+        };
+        if(args.size()!=11) {THROW("Workshop preset requires its complete current draft, action and fence");}
+        const auto integer=[&](const char* key){return static_cast<const gse::value::Int*>(field(key,gse::VT_INT))->value;};
+        const auto text=[&](const char* key)->const std::string& {return static_cast<const gse::value::String*>(field(key,gse::VT_STRING))->value;};
+        const auto* object=static_cast<const gse::value::Object*>(field("base",gse::VT_OBJECT));
+        if(object->object_class!=base::Base::WRAP_CLASS) {THROW("Workshop preset requires an actual Base");}
+        auto* base=base::Base::Unwrap(args.at("base"));
+        const auto selected=integer("selected_design"),chassis=integer("chassis"),weapon=integer("weapon"),armor=integer("armor"),reactor=integer("reactor"),abilities=integer("abilities");
+        const auto action=integer("action"),request=integer("request_id");const auto& expected=text("expected_state");const auto& retained=text("name");
+        if(!base || base->GetGame()!=this || caller!=m_slot_num || action<9 || action>22 || request<1 || selected<0 || selected>511 || selected==63
+            || chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9 || reactor<1 || reactor>4 || abilities<0 || abilities>0xffffff
+            || expected.size()!=64 || retained.size()>31 || retained.find('\0')!=std::string::npos) {THROW("Invalid Workshop preset authority or draft");}
+        for(const unsigned char c:retained) {if(c<32 || c>126) {THROW("Workshop preset name requires printable display bytes");}}
+        base->RequireSmacProductionSelection();const auto owner=base->GetSmacResourceContext().owner_simulation_id;
+        if(selected>=64 && selected/64!=owner) {THROW("Workshop preset selected a foreign bank");}
+        if(apply) {CheckRW(GSE_CALL);if(gc_space!=GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Workshop preset requires its owning accumulation");}}
+        const bool stale=WorkshopPresetState(base->SmacWorkshopState(),m_simulation->value,GetState()->m_settings.global,owner)!=expected;
+        bool failed=false;int32_t mode=1;
+        unit::SmacWorkshopDraft draft{int32_t(selected),uint32_t(chassis),uint32_t(weapon),uint32_t(armor),uint32_t(abilities),uint8_t(reactor),retained};
+        if(!stale) {try {
+            const auto& settings=GetState()->m_settings.global;
+            if(!settings.GetSmacCombatRules() || (!settings.GetSmacCampaignRules() && !settings.IsOrdinarySmacCampaign())) {throw std::invalid_argument("Workshop preset requires retained combat and campaign rules");}
+            auto next=m_simulation->value;
+            // Original597ede runs even if this role has no admitted proposal.
+            next.RefreshCapabilities(owner,*settings.GetSmacTechnologyRules(),*settings.GetSmacPredefinedUnitRules(),*settings.GetSmacCombatRules(),
+                settings.GetSmacCampaignRules() && (settings.GetSmacCampaignRules()->primary&0x00400000u)!=0);
+            const auto context=WorkshopHumanContext(next,owner);const auto& economy=next.economy.at(owner);
+            if(!economy.design_counts || !economy.production_reference_counts) {throw std::invalid_argument("Workshop preset requires retained allocation counts");}
+            constexpr std::array<int32_t,14> filters{{2,3,1,4,10,6,7,8,9,17,13,14,11,12}};
+            auto result=unit::PrepareSmacWorkshopHumanPreview(next.designs,draft,settings.GetSmacPredefinedUnitRules()->catalog,
+                *settings.GetSmacTechnologyRules(),*next.technology.Find(owner),context,*economy.design_counts,*economy.production_reference_counts,filters.at(size_t(action-9)));
+            draft=result.draft;mode=result.mode;
+            if(apply) {
+                static_assert(std::is_nothrow_swappable_v<unit::SmacStartupDesignState> && std::is_nothrow_swappable_v<decltype(next.capabilities)>);
+                std::swap(m_simulation->value.designs,result.state);m_simulation->value.capabilities.swap(next.capabilities);
+            }
+        }catch(const std::invalid_argument&) {failed=true;}catch(const std::runtime_error&) {failed=true;}}
+        if(apply) {GetState()->TriggerObject(this,"smac_workshop_preset",_ARGS_F(this,base,request,stale,failed,mode,draft) {
+            out_args={
+                {"base",base->Wrap(GSE_CALL)},{"request_id",VALUE(gse::value::Int,,request)},
+                {"stale",VALUE(gse::value::Bool,,stale)},{"failed",VALUE(gse::value::Bool,,failed)},
+                {"matched",VALUE(gse::value::Bool,,!stale && !failed && mode>1)},
+                {"feedback",VALUE(gse::value::Int,,!stale && !failed ? (mode>1 ? 43:39):0)},
+                {"selection",!stale && !failed ? base->CopySmacWorkshop(GSE_CALL,&draft):VALUE(gse::value::Undefined)}
+            };
+        });}return true;
+    }
     if(name=="upgrade_smac_workshop") {
         const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
             const auto at=args.find(key);if(at==args.end() || !at->second || at->second->Deref()->type!=type) {THROW("Malformed Workshop Upgrade command");}
@@ -697,7 +793,8 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
         ability_descriptions.push_back(VALUE(gse::value::String,,row.description));
     }
     return VALUE(gse::value::Object,,GSE_CALL_NOGC,{
-        {"expected_state",VALUE(gse::value::String,,expected)}, {"armor",VALUE(gse::value::Array,,armor)},
+        {"expected_state",VALUE(gse::value::String,,expected)},
+        {"preset_state",VALUE(gse::value::String,,WorkshopPresetState(expected,m_game->m_simulation->value,settings,technology.admission.simulation_id))}, {"armor",VALUE(gse::value::Array,,armor)},
         {"mineral_factor",VALUE(gse::value::Int,,mineral_factor)},
         {"movement",VALUE(gse::value::Int,,unit::SmacWorkshopMovement(draft,catalog))},
         {"weapon_cost",VALUE(gse::value::Int,,uint8_t(catalog.weapons.weapons.at(draft.weapon).cost))},

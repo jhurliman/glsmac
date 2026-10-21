@@ -23,6 +23,7 @@ struct SmacCustomDesign {
 	std::optional<std::string> name; // absent until an actual naming producer owns it
 	bool explicitly_named = false; // original custom-name flag, not inferred from localized text
 	std::optional<SmacRiotPrototypeMetadata> riot;
+	uint16_t auxiliary_flags = 0; // native word bits other than active/name/prototype (1/2/4)
 	bool operator==( const SmacCustomDesign& other ) const;
 };
 

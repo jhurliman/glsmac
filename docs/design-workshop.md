@@ -137,7 +137,7 @@ and closes only on success; Escape dismisses the picker or draft.
 
 This remains the bounded Infantry / Hand Weapons / No Armor-or-Synthmetal /
 Fission / no-ability path, with automatic naming in the UI. Native Rename,
-existing-custom editing, browsing/categories and other component controls are
+custom replacement/retirement, browsing/categories and other component controls are
 still required. The main CVR preview is implemented; small component previews
 and animation remain absent. Saved Workshop designs
 are not yet offered by the production chooser; prototype completion and
@@ -196,6 +196,34 @@ under targeted C++ analysis; the same 31 groups with five relevant translation
 units instrumented under ASan/UBSan. Actual hidden Linux normal and focused
 sanitizer runs displayed Scout, opened the armor picker, and closed cleanly.
 This software/no-audio capture does not establish hardware or audio performance.
-The existing first-design commit restrictions still disable some otherwise
-known-technology armor edits in occupied startup banks; full custom editing,
+The first-design commit supports existing-tuple reuse; occupied-bank allocation
+and full custom editing,
 production admission, other models and the original parent console remain.
+
+### Existing design reuse and reactivation
+
+Morgan's startup Synthmetal design is usable in the live Workshop even when
+its legacy saved name is absent. Matching scans the active predefined designs
+and then the owner's custom bank by component tuple. The selected record's
+named flag controls draft-name transfer; target names and prototype state stay
+independent of tuple identity. Switching to an excluded custom match clears the
+owner's exclusion bit and retains original flag 8 along with all other auxiliary
+word bits. Apply acknowledgements retain the selected design ID for the next edit.
+Read-only legacy labels use the existing installed-language naming producer.
+
+The registry emits V4 only when auxiliary flag bits are present. States with
+all auxiliary bits zero retain their exact earlier V1/V2/V3 encoding. The active,
+named and prototyped flags continue to have one authority. Standalone Rename,
+unused-slot selection, intrinsic obsolescence overlays and full allocation /
+retirement remain separate parts of [the complete native contract](behavior/design-workshop-custom-edit.md).
+
+Validation: 19 focused native groups, including six original complete matching /
+name-transfer cases with owned source catalogs and an actual Morgan startup
+producer, reactivation and whole-world restore. All original faction, Base,
+Unit and history buffers remain unchanged in those six reference cases. Six
+GSE scripts pass, including selected-ID acknowledgement and stale/failure cases.
+Targeted C++ analysis of five production consumers is clean; 25 selected native
+groups pass with five relevant translation units instrumented under ASan/UBSan.
+A live hidden Linux Morgan run selected Synthmetal, used Apply then Done, and
+returned to the unchanged Scout Patrol queue. It exited cleanly. The capture
+uses software graphics and no audio.

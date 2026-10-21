@@ -3,6 +3,7 @@
 #include "loader/txt/SmacRulesTXTLoader.h"
 #include "fixtures/SmacStartupSource.h"
 #include "fixtures/SmacPrototypePrice.h"
+#include "fixtures/WorkshopAlias.h"
 #include "task/gsetests/GSETests.h"
 #include <cstdlib>
 #include <fstream>
@@ -60,6 +61,32 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
             GT_ASSERT(Rejects([&]{unit::SmacStartupDesignState::Deserialize(wire+"x",catalog);}),"Trailing named design accepted");
         }GT_OK();
     });
+    task->AddTest("SMAC Workshop reuses unnamed startup tuples and preserves supplied-name alias rules",GT(){
+        const auto catalog=smac_startup_fixture::Units().catalog;const auto tech=smac_rules_fixture::Technologies();const auto owner=Owner();
+        auto state=Empty();unit::SmacCustomDesign existing;existing.id=64;existing.defense=1;existing.cost=2;existing.plan=2;existing.prototyped=true;
+        state.owners[0].designs.push_back(existing);const auto before=state;
+        unit::SmacWorkshopDraft draft;draft.armor=1;draft.name="Different direct draft";
+        GT_ASSERT(unit::CommitSmacWorkshopFirstDesign(state,draft,catalog,tech,owner).design_id==64 && state==before,"Stored-name requirement duplicated a startup tuple or direct draft renamed it");
+        const auto label=unit::SmacWorkshopDesignName(existing,catalog,1);
+        GT_ASSERT(!label.empty() && state==before,"Read-only legacy name query mutated registry");
+        state.owners[0].designs[0].name="Retained Guard";state.owners[0].designs[0].explicitly_named=true;draft.selected_design=64;
+        GT_ASSERT(unit::CommitSmacWorkshopFirstDesign(state,draft,catalog,tech,owner).design_id==64
+            && state.owners[0].designs[0].name==std::optional<std::string>("Different direct draft") && state.owners[0].designs[0].prototyped,"Named same-tuple alias rebuilt prototype metadata");
+        const auto named=state;draft.selected_design=191;
+        GT_ASSERT(Rejects([&]{unit::CommitSmacWorkshopFirstDesign(state,draft,catalog,tech,owner);}) && state==named,"Foreign selected design changed registry");GT_OK();
+    });
+    task->AddTest("SMAC Workshop V4 retains auxiliary prototype flags without changing V1 V2 V3 bytes",GT(){
+        const auto catalog=smac_startup_fixture::Units().catalog;const auto tech=smac_rules_fixture::Technologies();const auto owner=Owner();
+        auto state=Empty();unit::SmacWorkshopDraft draft;draft.armor=1;unit::CommitSmacWorkshopFirstDesign(state,draft,catalog,tech,owner);
+        const auto legacy=state.Serialize(catalog).ToString();state.owners[0].designs[0].auxiliary_flags=0xa508;
+        const auto wire=state.Serialize(catalog).ToString();const auto restored=unit::SmacStartupDesignState::Deserialize(wire,catalog);
+        GT_ASSERT(restored==state && wire!=legacy,"Auxiliary flags were lost or changed known prototype fields");
+        auto clear=restored;clear.owners[0].designs[0].auxiliary_flags=0;
+        GT_ASSERT(clear.Serialize(catalog).ToString()==legacy,"V4-only metadata changed earlier codec bytes");
+        for(size_t n=0;n<wire.size();++n) {GT_ASSERT(Rejects([&]{unit::SmacStartupDesignState::Deserialize(wire.substr(0,n),catalog);}),"Truncated V4 accepted");}
+        state.owners[0].designs[0].auxiliary_flags=1;
+        GT_ASSERT(Rejects([&]{state.Serialize(catalog);}),"Auxiliary flags duplicated active/name/prototype authority");GT_OK();
+    });
     task->AddTest("SMAC Workshop failed edits preserve previously applied design",GT(){
         const auto catalog=smac_startup_fixture::Units().catalog;const auto tech=smac_rules_fixture::Technologies();auto owner=Owner();
         auto state=Empty();unit::SmacWorkshopDraft draft;draft.armor=1;
@@ -69,7 +96,7 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
         for(unsigned change=0;change<7;++change) {
             auto bad=draft;
             switch(change) {case 0:bad.chassis=1;break;case 1:bad.reactor=2;break;case 2:bad.abilities=1;break;
-                case 3:bad.name="Renamed";break;case 4:bad.name=std::string(32,'x');break;case 5:bad.name=std::string("a\0b",3);break;case 6:bad.selected_design=127;break;}
+                case 3:bad.armor=2;break;case 4:bad.name=std::string(32,'x');break;case 5:bad.name=std::string("a\0b",3);break;case 6:bad.selected_design=191;break;}
             GT_ASSERT(Rejects([&]{unit::CommitSmacWorkshopFirstDesign(state,bad,catalog,tech,owner);}) && state==applied,"Unsupported edit changed applied design");
         }
         auto invalid=state;invalid.owners[0].designs[0].explicitly_named=true;invalid.owners[0].designs[0].name.reset();
@@ -115,6 +142,21 @@ void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
             design.defense=row.armor;design.reactor=row.reactor;design.cost=row.cost;design.prototyped=row.prototyped;
             const auto result=unit::SmacDesignProductionRows(design,catalog,{row.difficulty,row.free,row.skunkworks,row.percentages});
             GT_ASSERT(result.rows==row.rows && result.surcharge_present==row.surcharge,"Original prototype price differs at receipt "+std::to_string(ordinal));++ordinal;
+        }GT_OK();
+    });
+    task->AddTest("SMAC Workshop owned original six complete custom alias and name transfers",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);
+        if(!input) {throw std::runtime_error("Missing owned alpha.txt for Workshop alias controls");}
+        const std::string source{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
+        const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;
+        const auto owner=Owner();
+        for(const auto& row:workshop_alias_fixture::Cases()) {
+            auto state=Empty();state.owners[0].designs=row.before;auto expected=state;expected.owners[0].designs=row.after;
+            const auto result=unit::ReuseSmacWorkshopDesign(state,row.draft,catalog,tech,owner);
+            GT_ASSERT(result && result->design_id==row.selected && result->intrinsic_name_warning==row.warning && state==expected,"Complete native alias differs for "+std::string(row.id));
+            GT_ASSERT(unit::SmacStartupDesignState::Deserialize(state.Serialize(catalog).ToString(),catalog)==state,"Native alias metadata lost on save");
         }GT_OK();
     });
     task->AddTest("SMAC Workshop owned original component and commit controls",GT(){

@@ -69,12 +69,70 @@ std::vector<SmacWorkshopChoice> SmacWorkshopChoices(SmacWorkshopComponent kind,c
     }
     return result;
 }
+std::string SmacWorkshopDesignName(const SmacCustomDesign& design,const SmacPredefinedUnitCatalog& catalog,int32_t owner) {
+    if(design.name) {return *design.name;}
+    if(owner<1 || owner>7 || design.chassis || design.weapon || design.defense>1 || design.reactor!=1 || design.abilities) {
+        throw std::invalid_argument("Unnamed Workshop design requires its installed-language naming producer");
+    }
+    if(design.defense==0) {return catalog.source.units.at(2).name;}
+    const auto& armor=catalog.defenses.defenses.at(1);const auto& chassis=catalog.chassis.chassis.at(0);
+    const SmacEarlyDesignNames names{armor.short_name,chassis.names[2].name,chassis.names[3].name,"","",armor.rating};
+    auto result=NameSmacOpeningDesign(names,owner,0,1);result.resize(std::min<size_t>(result.size(),31));return result;
+}
+std::optional<SmacWorkshopCommit> ReuseSmacWorkshopDesign(SmacStartupDesignState& state,
+    const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog,
+    const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner) {
+    RequireOwner(owner);state.Validate(catalog);
+    if(draft.name.size()>31 || draft.name.find('\0')!=std::string::npos || draft.chassis>=catalog.chassis.chassis.size()
+        || draft.weapon>=catalog.weapons.weapons.size() || draft.armor>=catalog.defenses.defenses.size()
+        || draft.reactor<1 || draft.reactor>catalog.reactors.reactors.size() || draft.abilities>0xffffff) {
+        throw std::invalid_argument("Invalid Workshop alias draft");
+    }
+    const auto* bank=state.Find(owner.admission.simulation_id);
+    if(!bank) {throw std::invalid_argument("Workshop alias has no owner bank");}
+    bool selected_named=false;
+    if(draft.selected_design<64) {
+        const auto selected=std::find_if(catalog.units.begin(),catalog.units.end(),[&](const auto& row){return int32_t(row.source_id)==draft.selected_design;});
+        if(selected==catalog.units.end() || !selected->active) {throw std::invalid_argument("Workshop alias has no active selected intrinsic");}
+    } else {
+        const auto selected=std::find_if(bank->designs.begin(),bank->designs.end(),[&](const auto& row){return row.id==draft.selected_design;});
+        if(selected==bank->designs.end() || !selected->active) {throw std::invalid_argument("Workshop alias selected a foreign or inactive design");}
+        selected_named=selected->explicitly_named;
+    }
+    const auto matches=[&](uint32_t ch,uint32_t we,uint32_t ar,uint8_t reactor,uint32_t abilities) {
+        return ch==draft.chassis && we==draft.weapon && ar==draft.armor && reactor==draft.reactor && abilities==draft.abilities;
+    };
+    for(const auto& design:catalog.units) {
+        if(design.source_id<64 && design.active && matches(design.chassis_id,design.weapon_id,design.defense_id,design.reactor,design.abilities)
+            && Available(Prerequisite(design.prerequisite),technologies,owner)) {
+            if(int32_t(design.source_id)!=draft.selected_design && (design.faction_exclusion&(1u<<owner.admission.simulation_id))) {
+                throw std::runtime_error("Workshop intrinsic reactivation requires its retained shared overlay");
+            }
+            return SmacWorkshopCommit{int32_t(design.source_id),!draft.name.empty() && draft.name!=catalog.source.units.at(design.source_id).name};
+        }
+    }
+    const auto match=std::find_if(bank->designs.begin(),bank->designs.end(),[&](const auto& design){
+        return design.active && matches(design.chassis,design.weapon,design.defense,design.reactor,design.abilities);
+    });
+    if(match==bank->designs.end()) {return std::nullopt;}
+    const auto id=match->id;auto next=state;
+    for(auto& target:next.owners) {if(target.simulation_id==owner.admission.simulation_id) {
+        auto& design=*std::find_if(target.designs.begin(),target.designs.end(),[&](const auto& row){return row.id==id;});
+        if(id!=draft.selected_design) {
+            if(design.faction_exclusion&(1u<<owner.admission.simulation_id)) {design.auxiliary_flags|=8;}
+            design.faction_exclusion&=~(1u<<owner.admission.simulation_id);
+        }
+        if(selected_named && !draft.name.empty()) {design.name=draft.name;design.explicitly_named=true;}
+    }}
+    next.Validate(catalog);state.owners.swap(next.owners);return SmacWorkshopCommit{id,false};
+}
+
 SmacWorkshopCommit CommitSmacWorkshopFirstDesign(SmacStartupDesignState& state,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,const settings::SmacTechnologyRules& technologies,
     const faction::SmacFactionTechnologyState& owner) {
     RequireOwner(owner);state.Validate(catalog);
     const auto* bank=state.Find(owner.admission.simulation_id);
-    if(!bank || catalog.source.ruleset_id!="smac" || draft.selected_design!=2 || draft.chassis || draft.weapon || draft.armor>1
+    if(!bank || catalog.source.ruleset_id!="smac" || draft.chassis || draft.weapon || draft.armor>1
         || draft.reactor!=1 || draft.abilities || draft.name.size()>31 || draft.name.find('\0')!=std::string::npos) {
         throw std::invalid_argument("Workshop first path requires an owned Scout/Infantry Fission draft");
     }
@@ -86,26 +144,8 @@ SmacWorkshopCommit CommitSmacWorkshopFirstDesign(SmacStartupDesignState& state,c
     };
     require(SmacWorkshopComponent::Chassis,draft.chassis);require(SmacWorkshopComponent::Weapon,draft.weapon);
     require(SmacWorkshopComponent::Armor,draft.armor);require(SmacWorkshopComponent::Reactor,draft.reactor);
-    const auto matches=[&](uint32_t ch,uint32_t we,uint32_t ar,uint8_t reactor,uint32_t abilities) {
-        return ch==draft.chassis && we==draft.weapon && ar==draft.armor && reactor==draft.reactor && abilities==draft.abilities;
-    };
-    for(const auto& design:catalog.units) {
-        if(design.source_id<64 && design.active && matches(design.chassis_id,design.weapon_id,design.defense_id,design.reactor,design.abilities)
-            && Available(Prerequisite(design.prerequisite),technologies,owner)) {
-            if(design.faction_exclusion&(1u<<owner.admission.simulation_id)) {throw std::runtime_error("Workshop intrinsic reactivation needs obsolescence bookkeeping");}
-            const auto& name=catalog.source.units.at(design.source_id).name;
-            return {int32_t(design.source_id),!draft.name.empty() && draft.name!=name};
-        }
-    }
-    // No custom rename/replacement is inferred from the four native controls.
-    for(const auto& design:bank->designs) {
-        if(design.active && design.name && matches(design.chassis,design.weapon,design.defense,design.reactor,design.abilities)
-            && (!draft.name.empty() ? design.name==draft.name : !design.explicitly_named)) {
-            if(design.faction_exclusion&(1u<<owner.admission.simulation_id)) {throw std::runtime_error("Workshop reactivation needs obsolescence bookkeeping");}
-            return {design.id,false};
-        }
-    }
-    if(!bank->designs.empty() || draft.armor!=1) {throw std::runtime_error("Workshop occupied-bank allocation requires its replacement policy");}
+    if(const auto reused=ReuseSmacWorkshopDesign(state,draft,catalog,technologies,owner)) {return *reused;}
+    if(draft.selected_design!=2 || !bank->designs.empty() || draft.armor!=1) {throw std::runtime_error("Workshop occupied-bank allocation requires its replacement policy");}
     SmacDesignComponents components{};
     const auto& chassis=catalog.chassis.chassis.at(0);const auto& weapon=catalog.weapons.weapons.at(0);
     components.chassis[0]={chassis.speed,int32_t(chassis.triad),chassis.missile,chassis.cargo,chassis.cost};

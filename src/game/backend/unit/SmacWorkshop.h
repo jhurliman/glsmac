@@ -32,10 +32,21 @@ struct SmacWorkshopCommit {
     int32_t design_id;
     bool intrinsic_name_warning;
 };
+// Original 441e20 matching pass. Component picker legality is a separate
+// caller requirement; custom matches ignore stored names and prerequisites.
+// No match => no mutation. Throws before mutation for unsupported intrinsic
+// obsolescence (its shared runtime overlay is not yet retained).
+std::optional<SmacWorkshopCommit> ReuseSmacWorkshopDesign(SmacStartupDesignState& state,
+    const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog,
+    const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner);
+// Read-only installed-language label for admitted unnamed legacy opening rows.
+std::string SmacWorkshopDesignName(const SmacCustomDesign& design,const SmacPredefinedUnitCatalog& catalog,int32_t owner);
+
 // Original 441e20 first path: Scout or its Infantry/Synthmetal edit, no
 // abilities, Fission. Reuses intrinsic tuples before allocating the last slot
-// of an empty owner bank. Occupied-bank replacement and custom rename need
-// their own live-unit/production-count prompt policy and are not admitted here.
+// of an empty owner bank. Existing tuples use the matching pass above.
+// Occupied-bank allocation/retirement and the standalone Rename dialog still
+// require their live-unit/production-count prompt policy.
 // Throws before publication on invalid/unavailable/unsupported drafts.
 SmacWorkshopCommit CommitSmacWorkshopFirstDesign(SmacStartupDesignState& state,
     const SmacWorkshopDraft& draft, const SmacPredefinedUnitCatalog& catalog,

@@ -51,3 +51,10 @@ Four bounded native prefix controls preserve all five fields and peer canaries;
 they are not new full search/upkeep executions. Live port tests additionally
 exercise changed Fight and priority values through the actual restart/elimination,
 second empty-owner initialization, saved Start and continuation paths.
+
+
+The broader CI run exposed a dependent V30 dominance-migration fixture that
+stripped only the pre-V35 tail. Its explicit tail now includes every optional
+Fight value, and the migrated frame is checked for absent Fight rather than
+header replay. Production framing and reader admission are unchanged by that
+fixture repair.

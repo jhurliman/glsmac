@@ -10,6 +10,8 @@
 #include "fixtures/WorkshopPicker.h"
 #include "fixtures/WorkshopStats.h"
 #include "fixtures/WorkshopData.h"
+#include "fixtures/WorkshopEdit.h"
+#include "ui/dom/SmacEditState.h"
 #include "fixtures/WorkshopAbilities.h"
 #include "fixtures/WorkshopSavedCommits.h"
 #include "fixtures/WorkshopAllocation.h"
@@ -29,6 +31,59 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop edit translates printable SDL letters and space before virtual keys",GT(){
+        auto result=::ui::dom::StepSmacInput({"Scout Infantry",0,14},input::K_P,'p',true,input::KM_NONE,31);
+        GT_ASSERT(result.handled && result.state.text=="p" && result.state.anchor==1 && result.state.caret==1,"SDL letter did not replace selection");
+        result=::ui::dom::StepSmacInput(result.state,input::K_SPACE,' ',true,input::KM_NONE,31);
+        GT_ASSERT(result.handled && result.state.text=="p " && result.state.anchor==2 && result.state.caret==2,"SDL space took the virtual-key path");
+        result=::ui::dom::StepSmacInput(result.state,input::K_G,'G',true,input::KM_SHIFT,31);
+        GT_ASSERT(result.handled && result.state.text=="p G","Shift letter lost its printable byte");
+        result=::ui::dom::StepSmacInput(result.state,input::K_LEFT,0,false,input::KM_SHIFT,31);
+        GT_ASSERT(result.handled && result.state.anchor==3 && result.state.caret==2,"Editing key lost its selection modifier");
+        result=::ui::dom::StepSmacInput(result.state,input::K_BACKSPACE,0,false,input::KM_NONE,31);
+        GT_ASSERT(result.handled && result.state.text=="p " && result.state.caret==2,"Selected deletion lost mapped range");GT_OK();
+    });
+    task->AddTest("SMAC Workshop edit matches39 native byte selection navigation and limit controls",GT(){
+        for(const auto& row:workshop_edit_fixture::Cases) {
+            const auto result=::ui::dom::StepSmacEdit({row.text,row.anchor,row.caret},row.key,row.character);
+            GT_ASSERT(result.state.text==row.expected && result.state.anchor==row.end_anchor && result.state.caret==row.end_caret
+                && result.handled==row.handled && result.beep==row.beep,"Native edit differs: "+std::string(row.id));
+        }GT_OK();
+    });
+    task->AddTest("SMAC Workshop Rename matches five native draft and pre-dialog flag controls",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        const auto read=[&](const char* name){std::ifstream file(std::string(assets)+"/"+name,std::ios::binary);if(!file) {throw std::runtime_error("Missing owned Rename source");}return std::string(std::istreambuf_iterator<char>(file),{});};
+        const auto source=read("alpha.txt");const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;catalog.workshop_name_labels=unit::ReadSmacWorkshopNameLabels(read("labels.txt"));
+        for(size_t i=0;i<5;++i) {
+            auto pool=workshop_general_fixture::BasePool();pool[64]=pool[2];pool[64][38]=1;pool[64][48]=i<3 ? 3:1;
+            const int selected=i==4 ? 2:64;if(i==4) {pool[2][48]=1;}
+            auto state=Empty();state.RetainNativeRegistry(pool,catalog);const auto original=state;
+            const unit::SmacWorkshopDraft draft{selected,0,0,2,0,1,""};
+            const auto opened=unit::OpenSmacWorkshopRename(state,draft,catalog,1);
+            GT_ASSERT(opened.default_name=="Plasma Sentinels" && state==original && opened.draft.selected_design==selected
+                && opened.draft.armor==2 && opened.draft.name.empty(),"Rename default ignored unsaved draft or mutated caller");
+            const auto submitted=i==1 ? opened.default_name:i==3 ? "Draft Guard":i==4 ? "Named Scout":"";
+            const auto result=unit::AnswerSmacWorkshopRename(opened.state,opened.draft,opened.default_name,i!=0,submitted,catalog,1);
+            auto expected=pool;expected[selected][48]=i>=3 ? 3:1;
+            GT_ASSERT(*result.state.native_registry==expected && result.draft.name==(i>=3 ? submitted:"")
+                && result.draft.armor==2 && result.draft.selected_design==selected,"Native Rename flags, deferred name or selection differs");
+            GT_ASSERT(unit::SmacStartupDesignState::Deserialize(result.state.Serialize(catalog).ToString(),catalog)==result.state,"Rename flag effect did not survive restore");
+        }
+        // A nonempty actor name is the exact default; cancel/same text do not
+        // clear its saved named flag, and a case-only edit is a new name.
+        auto pool=workshop_general_fixture::BasePool();pool[64]=pool[2];pool[64][48]=3;auto state=Empty();state.RetainNativeRegistry(pool,catalog);
+        const unit::SmacWorkshopDraft named{64,0,0,0,0,1,"Existing Guard"};const auto opened=unit::OpenSmacWorkshopRename(state,named,catalog,1);
+        GT_ASSERT(opened.default_name==named.name && opened.state==state,"Nonempty Rename default cleared named flag");
+        const auto same=unit::AnswerSmacWorkshopRename(opened.state,named,opened.default_name,true,named.name,catalog,1);
+        const auto lower=unit::AnswerSmacWorkshopRename(opened.state,named,opened.default_name,true,"existing guard",catalog,1);
+        GT_ASSERT(same.state==state && same.draft.name==named.name && lower.draft.name=="existing guard","Rename lost bytewise case/default comparison");
+        pool[2][48]|=2;unit::SmacWorkshopDraft intrinsic{2,0,0,0,0,1,"Named Scout"};
+        GT_ASSERT(unit::DisplaySmacWorkshopName(pool,intrinsic,catalog,1)=="Scout Patrol","Unchanged intrinsic title incorrectly used draft name");
+        intrinsic.armor=2;GT_ASSERT(unit::DisplaySmacWorkshopName(pool,intrinsic,catalog,1)=="Named Scout","Changed intrinsic title lost named draft");
+        pool[2][48]&=uint8_t(~2u);GT_ASSERT(unit::DisplaySmacWorkshopName(pool,intrinsic,catalog,1)=="Plasma Sentinels","Unnamed title incorrectly trusted supplied draft string");
+        auto foreign=named;foreign.selected_design=128;GT_ASSERT(Rejects([&]{unit::OpenSmacWorkshopRename(state,foreign,catalog,1);}),"Rename admitted foreign bank");GT_OK();
+    });
     task->AddTest("SMAC Workshop Obsolete matches native toggles navigation and retained draft names",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);if(!file) {throw std::runtime_error("Missing owned Obsolete rules");}

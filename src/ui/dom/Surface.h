@@ -39,6 +39,7 @@ public:
 	// Main-thread RGBA upload; updates both the texture and cached actor revision.
 	void PresentMovieFrame(int width, int height, const std::vector<uint8_t>& rgba);
     void PresentTurnFrame(const std::vector<uint8_t>& rgba);
+    void PresentSolidColor(const types::Color& color);
 
 protected:
 	virtual ~Surface();
@@ -62,9 +63,11 @@ private:
     void EnsureWorkshopComponents();
     gse::Value* WorkshopPickerText(GSE_CALLABLE);
     gse::Value* WorkshopParentText(GSE_CALLABLE);
+    gse::Value* WorkshopRenameText(GSE_CALLABLE);
     gse::Value* WorkshopAbilityText(GSE_CALLABLE,const std::string& technology);
     std::optional<std::array<std::string,8>> m_workshop_picker_text;
-    std::optional<std::array<std::string,25>> m_workshop_parent_text;
+    std::optional<std::array<std::string,26>> m_workshop_parent_text;
+    std::optional<std::array<std::string,4>> m_workshop_rename_text;
     bool m_workshop_console_backing=false;
     std::optional<std::array<std::string,12>> m_workshop_ability_text;
 	std::unique_ptr<task::intro::Movie> m_movie;

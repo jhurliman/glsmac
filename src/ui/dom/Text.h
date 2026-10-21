@@ -19,6 +19,7 @@ public:
 	Text( DOM_ARGS );
 
 	void SetText( const std::string& text );
+    size_t MeasureWidth(const std::string& text) const;
 
 	enum transform_t {
 		T_NONE,

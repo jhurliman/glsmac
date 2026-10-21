@@ -10,9 +10,13 @@
 #include "util/String.h"
 #include "gse/value/Int.h"
 #include "gse/value/Object.h"
+#include "types/Font.h"
 
 namespace ui {
 namespace dom {
+size_t Text::MeasureWidth(const std::string& text) const {
+    const auto* font=m_actor ? m_actor->GetFont():nullptr;return font ? font->GetTextWidth(text.c_str()):0;
+}
 
 Text::Text( DOM_ARGS )
 	: Drawable(

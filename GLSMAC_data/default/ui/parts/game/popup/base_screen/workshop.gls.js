@@ -79,14 +79,15 @@ return {
         this.chassis_stat.text = 'Land ' + #to_string(data.speed); this.weapon_stat.text = 'Weapon ' + #to_string(data.offense); this.reactor_stat.text = 'Power ' + #to_string(data.power);
         this.title.text = #uppercase(data.scout_name); this.draft_name = ''; this.message.text = ''; this.update_armor(); this.window.show();
     },
+    armor_strength: (strength) => { return strength < 0 ? 'Psi' : #to_string(strength); },
     update_armor: () => {
         this.components.smacworkshopcomponents(this.selected_armor);
         for (row of this.selection.armor) { if (row.id == this.selected_armor) {
             this.model.smacworkshopdesign(0, 0, this.selected_armor, 1, (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating);
-            this.armor_name.text = row.id == 0 ? 'NONE' : #uppercase(row.short_name); this.armor_stat.text = 'Level ' + #to_string(row.rating);
+            this.armor_name.text = row.id == 0 ? 'NONE' : #uppercase(row.short_name); this.armor_stat.text = 'Level ' + this.armor_strength(row.rating);
             if (row.design_name != '') { this.title.text = #uppercase(row.design_name); }
             this.cost.text = 'COST:  ' + #to_string(row.cost);
-            this.stats.text = #to_string(this.selection.offense) + '-' + #to_string(row.rating) + '-' + #to_string(this.selection.speed); } }
+            this.stats.text = #to_string(this.selection.offense) + '-' + this.armor_strength(row.rating) + '-' + #to_string(this.selection.speed); } }
     },
     open_picker: () => {
         if (!this.active || this.pending || this.confirming) { return; }
@@ -94,7 +95,7 @@ return {
         this.picker_canvas.smacworkshoparmorpicker(this.selected_armor, this.selection.armor);
         let i = 0;
         for (row of this.selection.armor) {
-            const id = row.id; const available = row.available;
+            const id = row.id; const available = row.available; const strength = this.armor_strength(row.rating);
             const card = this.picker.button({background: 'transparent', overflow: 'hidden', left: 27 + (i % 5) * 108, top: 4 + #floor(#to_float(i) / 5.0) * 94, width: 105, height: 91});
             if (row.technology_available) {
                 const name = card.text({align: 'top center', baseline: 10, font: 'arial.ttf:10:mono', color: 'rgb(176,212,235)', text: ''});
@@ -107,7 +108,7 @@ return {
                 lines :+ line; name.remove(); let baseline = 10;
                 for (text of lines) { card.text({align: 'top center', baseline: baseline, font: 'arial.ttf:10:mono', color: 'rgb(176,212,235)', text: text}); baseline += 13; }
                 card.text({align: 'top left', left: 3, baseline: 85, font: 'arial.ttf:10:mono', color: 'rgb(176,212,235)', text: 'Shielding'});
-                card.text({align: 'top right', right: 3, baseline: 86, font: 'arialbd.ttf:12:mono', color: 'rgb(176,212,235)', text: #to_string(row.rating)});
+                card.text({align: 'top right', right: 3, baseline: 86, font: 'arialbd.ttf:12:mono', color: 'rgb(176,212,235)', text: strength});
             }
             card.on('click', () => { if (available) { this.selected_armor = id; this.update_armor(); this.picker.hide(); } return true; });
             this.cards :+ card; i++;

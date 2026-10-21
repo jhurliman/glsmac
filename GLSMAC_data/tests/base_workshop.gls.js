@@ -89,10 +89,22 @@ test.assert(!dialog.active && windows[2].hidden && #sizeof(commands) == after_cl
 // Researched advanced/PSI shielding keeps source identities through preview and Apply.
 const advanced = selection + {unused: true};
 advanced.armor = [{id: 0, name: 'No Armor', short_name: 'None', rating: 1, design_name: 'Scout', cost: 10, technology_available: true, available: true},
-    {id: 9, name: 'Resonance', short_name: 'PSI', rating: (0 - 1), design_name: 'Psi Infantry', cost: 60, technology_available: true, available: true}];
+    {id: 9, name: 'Psi Defense', short_name: 'PSI', rating: (0 - 1), design_name: 'Psi Infantry', cost: 60, technology_available: true, available: true}];
 dialog.open(base, advanced); dialog.open_picker(); test.assert(#sizeof(dialog.cards) == 2);
 dialog.cards[1].handlers.click({});
 test.assert(dialog.selected_armor == 9 && dialog.model.preview_armor == 9 && dialog.model.preview_strength == (0 - 1)
     && dialog.model.preview_power == 1 && dialog.model.preview_mode == 0 && dialog.components.components_armor == 9);
 dialog.submit(false); test.assert(commands[#sizeof(commands) - 1].data.armor == 9);
+dialog.hide_view();
+
+// Original signed-byte armor labels: all negative strengths are Psi on all three surfaces.
+for (row of [{value: (0 - 128), text: 'Psi'}, {value: (0 - 2), text: 'Psi'}, {value: (0 - 1), text: 'Psi'}, {value: 0, text: '0'}, {value: 12, text: '12'}]) {
+    test.assert(dialog.armor_strength(row.value) == row.text);
+}
+dialog.open(base, advanced); dialog.open_picker();
+let psi_number = false;
+for (child of dialog.cards[1].children) { if (child.text == 'Psi') { psi_number = true; } }
+test.assert(psi_number);
+dialog.cards[1].handlers.click({});
+test.assert(dialog.armor_stat.text == 'Level Psi' && dialog.stats.text == '1-Psi-1');
 dialog.hide_view();

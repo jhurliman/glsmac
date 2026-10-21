@@ -5,6 +5,7 @@
 #include "fixtures/SmacPrototypePrice.h"
 #include "fixtures/WorkshopAlias.h"
 #include "fixtures/WorkshopGeneral.h"
+#include "fixtures/WorkshopHuman.h"
 #include "fixtures/WorkshopSavedCommits.h"
 #include "fixtures/WorkshopAllocation.h"
 #include "fixtures/SmacIntrinsicOverlays.h"
@@ -23,6 +24,32 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop human proposal producer matches414 original submissions and all policy transitions",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);if(!file) {throw std::runtime_error("Missing owned human Workshop rules");}
+        const std::string source{std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>()};const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);
+        const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;
+        for(const auto& test:workshop_human_fixture::Cases()) {
+            auto owner=Owner();owner.owned.fill(false);for(const auto id:test.technologies) {owner.owned.at(id)=true;}
+            auto pool=workshop_general_fixture::BasePool();for(const auto& group:test.records) {for(const auto id:group.first) {pool.at(id)=group.second;}}
+            auto state=Empty();state.RetainNativeRegistry(pool,catalog);const auto before=state;
+            faction::SmacDesignCounts units{},production{};for(const auto& entry:test.units) {units.at(entry.first)=uint8_t(entry.second);}for(const auto& entry:test.production) {production.at(entry.first)=uint8_t(entry.second);}
+            unit::SmacWorkshopDraft provisional{65,1,1,1,0,1,"Retained draft"};
+            const auto result=unit::PrepareSmacWorkshopHumanPreview(state,provisional,catalog,tech,owner,test.context,units,production);
+            GT_ASSERT(state==before && result.steps.size()==test.steps.size(),"Human producer changed caller or proposal count: "+std::string(test.name));
+            const auto fields=[](const auto& draft) {return std::array<int32_t,5>{{int32_t(draft.chassis),int32_t(draft.weapon),int32_t(draft.armor),int32_t(draft.abilities),draft.reactor}};};
+            for(size_t i=0;i<test.steps.size();++i) {const auto& actual=result.steps[i];const auto& expected=test.steps[i];
+                GT_ASSERT(fields(actual.proposal)==expected.proposal && fields(actual.published)==expected.published && actual.category==expected.category
+                    && actual.alias==expected.alias && actual.mode==expected.mode && actual.filter==expected.filter,"Native human proposal/policy differs: "+std::string(test.name)+" step="+std::to_string(i));
+                GT_ASSERT(actual.published.selected_design==65 && actual.published.name=="Retained draft","Proposal changed UI selector/name");
+            }
+            uint64_t digest=UINT64_C(14695981039346656037);for(const auto& row:*result.state.native_registry) {for(const auto byte:row) {digest=(digest^byte)*UINT64_C(1099511628211);}}
+            GT_ASSERT(digest==test.digest,"Human producer complete native pool differs: "+std::string(test.name));
+            GT_ASSERT(result.state.owners.size()==state.owners.size() && result.state.retirement_history==state.retirement_history,"Preview changed owner/history authority");
+            auto missing=test.context;missing.fields.erase(0x95d1ac);
+            GT_ASSERT(Rejects([&]{unit::PrepareSmacWorkshopHumanPreview(state,provisional,catalog,tech,owner,missing,units,production);}) && state==before,"Missing faction authority became zero or mutated caller");
+        }GT_OK();
+    });
     task->AddTest("SMAC Workshop browse keeps native raw IDs and retained-count ordering",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);if(!file) {throw std::runtime_error("Missing owned Workshop browse rules");}

@@ -2,6 +2,8 @@
 #include "SmacStartupDesignState.h"
 #include "SmacOpeningDesigns.h"
 #include "game/backend/faction/SmacDesignCounts.h"
+#include <map>
+#include <utility>
 
 namespace game::backend::unit {
 struct SmacPrototypePriceContext {
@@ -45,6 +47,34 @@ void BuildSmacWorkshopRecord(SmacOriginalDesignPool& pool,size_t index,const Sma
 // Returns the untruncated native buffer; saving owns the31-byte boundary.
 std::string NameSmacWorkshopDesign(const SmacOriginalDesignPool& pool,size_t index,const SmacWorkshopDraft& draft,
     const SmacPredefinedUnitCatalog& catalog,int32_t owner);
+// Explicit post-capability-refresh inputs. Address keys identify original
+// scalar contracts; no executable or captured Faction buffer is a runtime input.
+// Missing authority is an error, never an implicit zero.
+struct SmacWorkshopHumanContext {
+    std::map<uint32_t,int32_t> fields;
+    int32_t innate_morale;
+    uint8_t threat; // Ordinary human entry is0;1..3 are declared stage controls.
+    SmacWorkshopHumanContext(std::map<uint32_t,int32_t> inputs,int32_t morale,uint8_t stage_threat=0)
+        : fields(std::move(inputs)),innate_morale(morale),threat(stage_threat) {}
+};
+struct SmacWorkshopHumanStep {
+    SmacWorkshopDraft proposal,published;
+    int32_t category,source_id,alias,mode,filter;
+};
+struct SmacWorkshopHumanPreview {
+    SmacStartupDesignState state;
+    SmacWorkshopDraft draft;
+    int32_t mode=1,filter=-1;
+    std::vector<SmacWorkshopHumanStep> steps;
+};
+// Original597de0 + preview597390, conventional stock-human domain.
+// Caller owns capability refresh, provisional tuple and selector readback.
+SmacWorkshopHumanPreview PrepareSmacWorkshopHumanPreview(const SmacStartupDesignState& state,
+    const SmacWorkshopDraft& provisional,const SmacPredefinedUnitCatalog& catalog,
+    const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner,
+    const SmacWorkshopHumanContext& context,const faction::SmacDesignCounts& units,
+    const faction::SmacDesignCounts& production);
+
 // Original5bdb60 ordering: active included, every inactive own slot,
 // excluded own with/without cached Units, then excluded intrinsics.
 // A missing count row is acceptable only when no excluded active own row needs it.

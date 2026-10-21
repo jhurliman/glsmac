@@ -422,3 +422,35 @@ groups pass, with targeted correctness analysis of seven production files and
 focused ASan/UBSan. Workshop's live overwrite transaction still needs to invoke
 the history writer alongside Unit retirement and queue surgery; raw retained
 record fields and intrinsic overlays also remain to be connected.
+
+## Shared intrinsic flags and exclusions
+
+The registry now retains sparse shared overrides for intrinsic IDs 0..63:
+the complete flags word and per-owner exclusion byte. Frozen source definitions
+remain immutable. Switching to an excluded matched intrinsic sets flag 8 and
+clears only the requesting owner's exclusion bit. An already-selected match
+leaves both unchanged; switching to an already-included match adds no flag.
+The selective V6 design codec preserves every override and leaves V1–V5
+encoding unchanged when no override exists.
+
+Workshop commits publish the shared overrides alongside custom-bank changes.
+Effective intrinsic state now reaches conventional design resolution, production
+eligibility, ordinary capability refresh and restart selection. Existing Units
+remain usable when their design is obsolete; exclusion belongs to new production
+availability rather than the existing Unit's mechanical component admission.
+
+Validation: four independent native flag/exclusion projections match across all
+64 shared records, with custom banks preserved. The actual queued Workshop
+command reactivates Scout, restores production eligibility, preserves other
+owners' bits and permits existing-Unit updates before and after reactivation.
+Tests also cover full overlay save/restore, legacy framing, field bounds,
+capabilities and restart selection. All 124 selected native groups pass across
+the initial run and focused fixture reruns. Targeted analysis is clean for nine
+production translation units; ten focused groups pass ASan/UBSan with changed
+producers and relevant consumers instrumented.
+
+The [fresh/inactive draft contract](behavior/design-workshop-fresh-draft.md)
+now records the separate initialization/reselection paths for the forthcoming
+controller. Remaining work includes retained custom-record fields, occupied-slot
+retirement/queue surgery, browse/rename/confirmation controls and the complete
+component editor. Shared intrinsic overlays are no longer a missing prerequisite.

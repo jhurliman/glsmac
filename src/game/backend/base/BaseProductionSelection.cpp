@@ -65,6 +65,7 @@ bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
             catch(const std::runtime_error&) {failed=true;}
             if(apply && !failed) {
                 m_simulation->value.designs.owners.swap(next.owners);
+                m_simulation->value.designs.intrinsic_overrides.swap(next.intrinsic_overrides);
             }
         }
         if(apply) {

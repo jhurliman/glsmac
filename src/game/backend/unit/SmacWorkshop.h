@@ -58,8 +58,8 @@ struct SmacWorkshopCommit {
 };
 // Original 441e20 matching pass. Component picker legality is a separate
 // caller requirement; custom matches ignore stored names and prerequisites.
-// No match => no mutation. Throws before mutation for unsupported intrinsic
-// obsolescence (its shared runtime overlay is not yet retained).
+// No match => no mutation. Switching to an excluded intrinsic preserves the
+// shared record's remaining flags and other owners' exclusion bits.
 std::optional<SmacWorkshopCommit> ReuseSmacWorkshopDesign(SmacStartupDesignState& state,
     const SmacWorkshopDraft& draft,const SmacPredefinedUnitCatalog& catalog,
     const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner);

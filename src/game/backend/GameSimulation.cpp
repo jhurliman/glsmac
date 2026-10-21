@@ -322,8 +322,10 @@ unit::SmacCustomDesign Game::ResolveConventionalDesign( const unit::Conventional
 	if ( state.design_id < 64 ) {
 		for ( const auto& row : catalog.units ) {
 			if ( row.source_id == static_cast< uint32_t >( state.design_id ) ) {
-				design = { state.design_id, row.chassis_id, row.weapon_id, row.defense_id, row.reactor, row.cost, row.plan,
-					row.carry, row.abilities, row.faction_exclusion, row.active, row.prototyped };
+				const auto current=simulation.value.designs.EffectiveIntrinsic(row);
+                design = { state.design_id, current.chassis_id, current.weapon_id, current.defense_id, current.reactor, current.cost, current.plan,
+                    current.carry, current.abilities, current.faction_exclusion, current.active, current.prototyped };
+                design.auxiliary_flags=simulation.value.designs.IntrinsicState(row).flags&~7u;
 				return design;
 			}
 		}
@@ -431,7 +433,7 @@ unit::ConventionalUnitContext Game::ResolveConventionalIdentity( const unit::Con
 	simulation.value.designs.Validate( catalog );
 	const auto design = ResolveConventionalDesign( state, simulation );
 	if ( !design.active || design.chassis > 1 || design.defense != 0 || design.reactor != 1
-		|| design.abilities != 0 || design.faction_exclusion != 0
+		|| design.abilities != 0
 		|| catalog.chassis.chassis.size() <= design.chassis || catalog.weapons.weapons.size() <= design.weapon
 		|| catalog.defenses.defenses.empty() || catalog.reactors.reactors.empty() ) {
 		throw std::runtime_error( "Unsupported conventional ground design" );

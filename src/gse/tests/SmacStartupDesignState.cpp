@@ -39,6 +39,22 @@ std::string Wire( const State& value, size_t index = SIZE_MAX, int64_t replaceme
 }
 
 void AddSmacStartupDesignStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC intrinsic overlays preserve V6 words bytes and legacy catalog authority",GT(){
+        const auto catalog=smac_startup_fixture::Units().catalog;auto state=Saved();const auto legacy=state.Serialize(catalog).ToString();
+        GT_ASSERT(State::Deserialize(legacy,catalog)==state && State::Deserialize(legacy,catalog).Serialize(catalog).ToString()==legacy,"legacy design wire changed without overlays");
+        for(size_t i=0;i<64;++i) {state.intrinsic_overrides[i]=unit::SmacIntrinsicDesignState{uint16_t(i*1021),uint8_t(i*37)};}
+        state.intrinsic_overrides[2]=unit::SmacIntrinsicDesignState{0x205,0x86};const auto snapshot=state;
+        const auto current=state.EffectiveIntrinsic(catalog.units.at(2));
+        GT_ASSERT(current.active && current.prototyped && current.faction_exclusion==0x86 && catalog.units.at(2).faction_exclusion==0 && state==snapshot,"effective view changed catalog or overlay");
+        const auto wire=state.Serialize(catalog).ToString();GT_ASSERT(State::Deserialize(wire,catalog)==state && State::Deserialize(wire,catalog).Serialize(catalog).ToString()==wire,"complete intrinsic overlay changed on restore");
+        for(const auto& bad:{wire.substr(0,wire.size()-1),wire+"x"}) {GT_ASSERT(Rejects([&]{State::Deserialize(bad,catalog);}),"malformed V6 frame accepted");}
+        auto v5=State::NewWorld(Technologies({{1,"GAIANS"}}),smac_rules_fixture::Technologies(),smac_startup_fixture::Units(),3).Serialize(catalog).ToString();
+        types::Buffer read(v5);read.ReadInt();GT_ASSERT(read.ReadInt()==5,"V5 boundary fixture changed");types::Buffer header;header.WriteInt(0x534d5344);header.WriteInt(6);
+        const auto candidate=[&](int64_t flags,int64_t exclusion) {types::Buffer tail;
+            for(size_t i=0;i<64;++i) {tail.WriteBool(i==2);if(i==2) {tail.WriteInt(flags);tail.WriteInt(exclusion);}}return header.ToString()+v5.substr(read.lenr)+tail.ToString();};
+        GT_ASSERT(State::Deserialize(candidate(65535,255),catalog).intrinsic_overrides[2]->flags==65535,"valid full-width intrinsic state rejected");
+        for(const auto fields:{std::pair<int64_t,int64_t>{-1,0},{65536,0},{0,-1},{0,256}}) {GT_ASSERT(Rejects([&]{State::Deserialize(candidate(fields.first,fields.second),catalog);}),"overflowed intrinsic fields accepted");}GT_OK();
+    });
     task->AddTest("SMAC retirement history matches eight original complete row and cursor controls",GT(){
         for(const auto& row:retirement_history_fixture::FRAMES) {
             std::array<unit::SmacRetirementHistory,8> histories;std::array<uint8_t,4096> input;

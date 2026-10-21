@@ -6,6 +6,7 @@
 #include "fixtures/WorkshopAlias.h"
 #include "fixtures/WorkshopGeneral.h"
 #include "fixtures/WorkshopAllocation.h"
+#include "fixtures/SmacIntrinsicOverlays.h"
 #include "task/gsetests/GSETests.h"
 #include <cstdlib>
 #include <fstream>
@@ -21,6 +22,21 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop intrinsic reactivation matches four native shared-record controls",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream input(std::string(assets)+"/alpha.txt",std::ios::binary);if(!input) {throw std::runtime_error("Missing owned alpha for intrinsic controls");}
+        const std::string source{std::istreambuf_iterator<char>(input),std::istreambuf_iterator<char>()};
+        const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;
+        for(const auto& test:intrinsic_overlay_fixture::CASES) {
+            auto state=Empty();for(const auto& row:test.custom) {state.owners.at(row.id/64-1).designs.push_back(row);}
+            for(size_t i=0;i<64;++i) {state.intrinsic_overrides[i]=test.before[i];}
+            auto expected=state;for(size_t i=0;i<64;++i) {expected.intrinsic_overrides[i]=test.after[i];}
+            auto owner=Owner();owner.admission.simulation_id=test.owner;unit::SmacWorkshopDraft draft;draft.selected_design=test.selected;
+            const auto result=unit::ReuseSmacWorkshopDesign(state,draft,catalog,tech,owner);
+            GT_ASSERT(result && result->design_id==2 && !result->intrinsic_name_warning && state==expected,"native global intrinsic overlay or unrelated bank changed");
+            GT_ASSERT(unit::SmacStartupDesignState::Deserialize(state.Serialize(catalog).ToString(),catalog)==state,"intrinsic flags/exclusions lost on restore");
+        }GT_OK();
+    });
     task->AddTest("SMAC Workshop picker keeps unknown cards and source identities",GT(){
         auto catalog=smac_startup_fixture::Units().catalog;auto tech=smac_rules_fixture::Technologies();auto owner=Owner();
         for(auto& row:catalog.chassis.chassis) {row.prerequisite="Tech5";}catalog.chassis.chassis[0].prerequisite="None";

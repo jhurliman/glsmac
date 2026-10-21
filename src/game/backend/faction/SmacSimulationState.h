@@ -64,7 +64,8 @@ struct SmacCapabilityState {
 	void Refresh(int32_t owner,const SmacFactionTechnologyState& technology,
 		const settings::SmacTechnologyRules& technologies,const unit::SmacPredefinedUnitCatalog& catalog,
 		const settings::SmacCombatRules& combat,const std::array<uint32_t,8>& relations,
-		int32_t psi_percent,bool dream_twister,bool neural_amplifier,bool no_colony_pods);
+		int32_t psi_percent,bool dream_twister,bool neural_amplifier,bool no_colony_pods,
+        const unit::SmacStartupDesignState* designs=nullptr);
 };
 
 // Authoritative global inputs, distinct from per-base governor options and

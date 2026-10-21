@@ -8,7 +8,7 @@
 namespace game::backend::unit {
 namespace {
 constexpr int64_t MAGIC = 0x534d5344; // SMSD
-constexpr int64_t VERSION = 5;
+constexpr int64_t VERSION = 6;
 
 void RequireDifficulty( int32_t difficulty ) {
 	if ( difficulty < 0 || difficulty > 5 ) { throw std::runtime_error( "SMAC startup requires original difficulty 0..5" ); }
@@ -102,6 +102,16 @@ uint32_t ReadUnsigned( types::Buffer& buffer, uint32_t maximum ) {
 }
 }
 
+SmacIntrinsicDesignState SmacStartupDesignState::IntrinsicState(const SmacPredefinedUnit& definition) const {
+    if(definition.source_id>=64 || definition.faction_exclusion>255) {throw std::invalid_argument("Intrinsic state requires a native predefined identity and exclusion byte");}
+    const auto& retained=intrinsic_overrides.at(definition.source_id);if(retained) {return *retained;}
+    return {uint16_t((definition.active?1:0)|(definition.prototyped?4:0)),uint8_t(definition.faction_exclusion)};
+}
+SmacPredefinedUnit SmacStartupDesignState::EffectiveIntrinsic(const SmacPredefinedUnit& definition) const {
+    auto result=definition;const auto retained=IntrinsicState(definition);
+    result.active=(retained.flags&1)!=0;result.prototyped=(retained.flags&4)!=0;result.faction_exclusion=retained.exclusion;return result;
+}
+
 SmacRetirementTuple SmacDesignRetirementTuple(const SmacCustomDesign& design) {
     if(design.chassis>255 || design.weapon>255 || design.defense>255) {throw std::invalid_argument("Retirement tuple component exceeds native byte");}
     SmacRetirementTuple tuple{};for(unsigned i=0;i<4;++i) {tuple[i]=uint8_t(design.abilities>>(8*i));}
@@ -121,7 +131,7 @@ bool SmacCustomDesign::operator==( const SmacCustomDesign& other ) const {
 		&& active == other.active && prototyped == other.prototyped && name==other.name && explicitly_named==other.explicitly_named && riot==other.riot && auxiliary_flags==other.auxiliary_flags;
 }
 bool SmacDesignOwner::operator==( const SmacDesignOwner& other ) const { return simulation_id == other.simulation_id && designs == other.designs && starting_scout == other.starting_scout; }
-bool SmacStartupDesignState::operator==( const SmacStartupDesignState& other ) const { return global_difficulty == other.global_difficulty && owners == other.owners && retirement_history==other.retirement_history; }
+bool SmacStartupDesignState::operator==( const SmacStartupDesignState& other ) const { return global_difficulty == other.global_difficulty && owners == other.owners && retirement_history==other.retirement_history && intrinsic_overrides==other.intrinsic_overrides; }
 
 int32_t SmacStartupDesignState::OriginalDifficulty( const std::string& canonical_name ) {
 	static const std::array< const char*, 6 > names{ "Citizen", "Specialist", "Talent", "Librarian", "Thinker", "Transcend" };
@@ -254,7 +264,8 @@ types::Buffer SmacStartupDesignState::Serialize( const SmacPredefinedUnitCatalog
     bool named=false;for(const auto& owner:owners) {for(const auto& design:owner.designs) {named=named || design.explicitly_named;}}
     bool auxiliary=false;for(const auto& owner:owners) {for(const auto& design:owner.designs) {auxiliary=auxiliary || design.auxiliary_flags!=0;}}
     const bool history=std::any_of(retirement_history.begin(),retirement_history.end(),[](const auto& row){return row.has_value();});
-    const auto version=history ? VERSION:auxiliary ? 4:named ? 3:metadata ? 2:1;
+    const bool overrides=std::any_of(intrinsic_overrides.begin(),intrinsic_overrides.end(),[](const auto& row){return row.has_value();});
+    const auto version=overrides ? VERSION:history ? 5:auxiliary ? 4:named ? 3:metadata ? 2:1;
 	buffer.WriteInt( MAGIC ); buffer.WriteInt( version ); buffer.WriteInt( global_difficulty ); buffer.WriteInt( owners.size() );
 	for ( const auto& owner : owners ) {
 		buffer.WriteInt( owner.simulation_id ); buffer.WriteInt( owner.starting_scout ); buffer.WriteInt( owner.designs.size() );
@@ -279,6 +290,9 @@ types::Buffer SmacStartupDesignState::Serialize( const SmacPredefinedUnitCatalog
             for(const auto& slot:row->slots) {for(const auto byte:slot) {bytes.push_back(static_cast<char>(byte));}}buffer.WriteString(bytes);
         }
     }}
+    if(version>=6) {for(const auto& row:intrinsic_overrides) {
+        buffer.WriteBool(row.has_value());if(row) {buffer.WriteInt(row->flags);buffer.WriteInt(row->exclusion);}
+    }}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC custom design state exceeds wire budget" ); }
 	return buffer;
 }
@@ -287,7 +301,7 @@ SmacStartupDesignState SmacStartupDesignState::Deserialize( const std::string& w
 	if ( wire.size() > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC custom design state exceeds wire budget" ); }
 	types::Buffer buffer( wire );
     if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC custom design state format");}
-    const auto version=buffer.ReadInt();if(version!=1 && version!=2 && version!=3 && version!=4 && version!=VERSION) {throw std::runtime_error("Unsupported SMAC custom design state format");}
+    const auto version=buffer.ReadInt();if(version!=1 && version!=2 && version!=3 && version!=4 && version!=5 && version!=VERSION) {throw std::runtime_error("Unsupported SMAC custom design state format");}
 	SmacStartupDesignState result;
 	result.global_difficulty = static_cast< int32_t >( ReadUnsigned( buffer, 5 ) );
 	const auto owners = ReadUnsigned( buffer, 7 );
@@ -323,6 +337,10 @@ SmacStartupDesignState SmacStartupDesignState::Deserialize( const std::string& w
         SmacRetirementHistory history;history.cursor=static_cast<int32_t>(ReadUnsigned(buffer,63));
         const auto bytes=buffer.ReadString(512);if(bytes.size()!=512) {throw std::runtime_error("Retirement history requires 512 bytes");}
         for(size_t i=0;i<512;++i) {history.slots[i/8][i%8]=static_cast<uint8_t>(bytes[i]);}row=history;
+    }}}
+    if(version>=6) {for(auto& row:result.intrinsic_overrides) {if(buffer.ReadBool()) {
+        const auto flags=static_cast<uint16_t>(ReadUnsigned(buffer,65535));const auto exclusion=static_cast<uint8_t>(ReadUnsigned(buffer,255));
+        row=SmacIntrinsicDesignState{flags,exclusion};
     }}}
 	if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC custom design trailing fields" ); }
 	result.Validate( catalog ); return result;

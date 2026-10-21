@@ -282,7 +282,8 @@ std::optional<SmacWorkshopCommit> ReuseSmacWorkshopDesign(SmacStartupDesignState
     bool selected_named=false;
     if(draft.selected_design<64) {
         const auto selected=std::find_if(catalog.units.begin(),catalog.units.end(),[&](const auto& row){return int32_t(row.source_id)==draft.selected_design;});
-        if(selected==catalog.units.end() || !selected->active) {throw std::invalid_argument("Workshop alias has no active selected intrinsic");}
+        if(selected==catalog.units.end() || !state.EffectiveIntrinsic(*selected).active) {throw std::invalid_argument("Workshop alias has no active selected intrinsic");}
+        selected_named=(state.IntrinsicState(*selected).flags&2)!=0;
     } else {
         const auto selected=std::find_if(bank->designs.begin(),bank->designs.end(),[&](const auto& row){return row.id==draft.selected_design;});
         if(selected==bank->designs.end() || !selected->active) {throw std::invalid_argument("Workshop alias selected a foreign or inactive design");}
@@ -291,11 +292,13 @@ std::optional<SmacWorkshopCommit> ReuseSmacWorkshopDesign(SmacStartupDesignState
     const auto matches=[&](uint32_t ch,uint32_t we,uint32_t ar,uint8_t reactor,uint32_t abilities) {
         return ch==draft.chassis && we==draft.weapon && ar==draft.armor && reactor==draft.reactor && abilities==draft.abilities;
     };
-    for(const auto& design:catalog.units) {
+    for(const auto& source:catalog.units) {
+        const auto design=state.EffectiveIntrinsic(source);
         if(design.source_id<64 && design.active && matches(design.chassis_id,design.weapon_id,design.defense_id,design.reactor,design.abilities)
             && Available(Prerequisite(design.prerequisite),technologies,owner)) {
             if(int32_t(design.source_id)!=draft.selected_design && (design.faction_exclusion&(1u<<owner.admission.simulation_id))) {
-                throw std::runtime_error("Workshop intrinsic reactivation requires its retained shared overlay");
+                auto next=state;auto overlay=state.IntrinsicState(source);overlay.flags|=8;overlay.exclusion&=uint8_t(~(1u<<owner.admission.simulation_id));
+                next.intrinsic_overrides.at(design.source_id)=overlay;next.Validate(catalog);state.intrinsic_overrides.swap(next.intrinsic_overrides);
             }
             return SmacWorkshopCommit{int32_t(design.source_id),!draft.name.empty() && draft.name!=catalog.source.units.at(design.source_id).name};
         }
@@ -339,7 +342,8 @@ SmacWorkshopCommit CommitSmacWorkshopFirstDesign(SmacStartupDesignState& state,c
     for(const auto& builtin:catalog.units) {
         auto& row=pool.at(builtin.source_id);const auto& name=catalog.source.units.at(builtin.source_id).name;
         std::copy_n(name.begin(),std::min<size_t>(31,name.size()),row.begin());row[36]=uint8_t(builtin.chassis_id);row[37]=uint8_t(builtin.weapon_id);row[38]=uint8_t(builtin.defense_id);
-        row[48]=uint8_t((builtin.active?1:0)|(builtin.prototyped?4:0));const auto prerequisite=uint16_t(Prerequisite(builtin.prerequisite));
+        const auto intrinsic=state.IntrinsicState(builtin);row[39]=builtin.reactor;row[44]=intrinsic.exclusion;row[48]=uint8_t(intrinsic.flags);row[49]=uint8_t(intrinsic.flags>>8);
+        for(unsigned i=0;i<4;++i) {row[32+i]=uint8_t(builtin.abilities>>(8*i));}const auto prerequisite=uint16_t(Prerequisite(builtin.prerequisite));
         row[50]=uint8_t(prerequisite);row[51]=uint8_t(prerequisite>>8);
     }
     const faction::SmacDesignCounts zero{};

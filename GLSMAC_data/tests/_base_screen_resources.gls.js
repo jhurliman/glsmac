@@ -8,7 +8,10 @@ return (game, base, ui) => {
 		const result = properties;
 		result.children = [];
 		result.on = (name, callback) => {};
-		result.listen = (object, name, callback) => { listeners[name] = callback; };
+		result.listen = (object, name, callback) => {
+            if (!#is_defined(listeners[name])) { listeners[name] = []; }
+            listeners[name] :+callback;
+        };
 		result.show = () => {};
 		result.hide = () => {};
 		result.clear = () => { result.children = []; };
@@ -42,14 +45,15 @@ return (game, base, ui) => {
 		create: (title, width, height, initialize) => { initialize(node({}), () => {}); },
 	});
 	const check = (condition, reason) => { if (!condition) { throw TestError(reason); } };
+	const dispatch = (name, event) => { for (callback of listeners[name]) { callback(event); } };
 	const check_retirement = () => {
 		screen.on_show();
 		const before = hidden;
-		listeners.base_despawn({base_id: base.id + 1});
+		dispatch('base_despawn', {base_id: base.id + 1});
 		check(screen.is_open && hidden == before, 'unrelated Base closed this screen');
-		listeners.base_despawn({base_id: base.id});
+		dispatch('base_despawn', {base_id: base.id});
 		check(!screen.is_open && hidden == before + 1 && screen.base == null && screen.base_id == null, 'removed Base screen or retained wrapper survived');
-		listeners.base_despawn({base_id: base.id});
+		dispatch('base_despawn', {base_id: base.id});
 		check(hidden == before + 1, 'duplicate retirement hid another screen');
 	};
 	const check_cells = (cells, prefix, expected) => {
@@ -67,7 +71,7 @@ return (game, base, ui) => {
 		screen.set({ base: base });
 		let section_count = 0;
 		for (section in screen.sections) { section_count++; }
-		check(section_count == 14, 'complete screen sections were not initialized');
+		check(section_count == 15 && #is_defined(screen.sections.workshop), 'complete screen sections were not initialized');
 		if (#is_defined(expected.canonical) && expected.canonical) {
 			check(screen.sections.nutrients.growth_label.text == 'Growth unavailable', 'canonical growth forecast was invented');
 			const stored = screen.sections.nutrients.growth_cells.children;

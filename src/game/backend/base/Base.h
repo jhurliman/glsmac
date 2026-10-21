@@ -89,6 +89,8 @@ public:
 	const std::optional< ProductionState >& GetProductionState() const;
 	// Detached chooser projection; execution rechecks the complete saved state.
 	gse::Value* CopySmacProductionChoices( GSE_CALLABLE ) const;
+	gse::Value* CopySmacWorkshop( GSE_CALLABLE ) const;
+	std::string SmacWorkshopState() const;
 	void SetProductionState( GSE_CALLABLE, const std::optional< ProductionState >& production );
 	bool HasSmacResourceContext() const;
 	SmacBaseResourceContext GetSmacResourceContext() const;

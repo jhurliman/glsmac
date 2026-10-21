@@ -1321,6 +1321,39 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
 
+    task->AddTest("SMAC live Workshop commits through owned Base commands without altering production",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");std::string expected;
+        const auto setup=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);
+            const auto scout=game->MakeSmacProductionItem(base->m_owner,ProductionItemKind::Unit,2);
+            base->SetProductionState(GSE_CALL,ProductionState{scout,2,scout,2,std::vector<ProductionItem>{}});
+            fixture.ResourceState([](auto& state){state.technology.factions[0].owned[1]=true;});
+            const auto before=fixture.Snapshot();base->CopySmacWorkshop(GSE_CALL);expected=base->SmacWorkshopState();
+            GT_ASSERT(fixture.Snapshot()==before,"Workshop query changed the game");GT_OK();
+        });GT_ASSERT(setup.empty(),"Workshop setup: "+setup);
+        const auto run=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=game->GetBM()->GetBase(701);const auto production=*base->GetProductionState();const auto random=fixture.GameplayRandom();
+            const auto before=fixture.Snapshot();
+            value::object_properties_t args{{"base",base->Wrap(GSE_CALL)},{"expected_state",VALUE(value::String,,expected)},
+                {"armor",VALUE(value::Int,,1)},{"name",VALUE(value::String,,"Test Guard")},{"done",VALUE(value::Bool,,false)},
+                {"request_id",VALUE(value::Int,,1)}};
+            game->Event(GSE_CALL,"commit_smac_workshop",args);
+            GT_ASSERT(fixture.Snapshot()==before,"Workshop bypassed the event queue");fixture.DrainEvents();
+            bool retained=false;fixture.ResourceState([&](auto& state){const auto& row=state.designs.Find(1)->designs.at(0);
+                retained=row.id==127 && row.defense==1 && row.cost==2 && row.name==std::optional<std::string>("Test Guard") && row.explicitly_named && !row.prototyped;});
+            GT_ASSERT(retained && *base->GetProductionState()==production && fixture.GameplayRandom()==random,"Workshop lost design identity or changed production/RNG");
+            const auto applied=fixture.Snapshot();game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(fixture.Snapshot()==applied,"Old queued Apply was replayed");
+            args["expected_state"]=VALUE(value::String,,base->SmacWorkshopState());args["name"]=VALUE(value::String,,"Other name");
+            game->Event(GSE_CALL,"commit_smac_workshop",args);fixture.DrainEvents();
+            GT_ASSERT(fixture.Snapshot()==applied,"Unsupported custom rename replaced an applied design");
+            args["armor"]=VALUE(value::Int,,2);
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"commit_smac_workshop",args);}) && fixture.Snapshot()==applied,"Invalid armor reached the registry");
+            args["armor"]=VALUE(value::Int,,1);args["request_id"]=VALUE(value::Int,,0);
+            GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"commit_smac_workshop",args);}) && fixture.Snapshot()==applied,"Invalid UI request changed the registry");
+            GT_OK();
+        });GT_ASSERT(run.empty(),"Live Workshop command: "+run);GT_OK();
+    });
     task->AddTest("SMAC Base Rename accepts empty duplicate spaced and byte bounded names through live requests",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");
         std::array<std::string,8> roles;roles[0]=Roles().worker;for(size_t i=0;i<7;++i) {roles[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(roles);

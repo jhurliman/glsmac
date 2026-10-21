@@ -118,8 +118,40 @@ connected. A separate mutable Workshop design store was not introduced.
 
 The named-design flag survives codec V3; prior V1/V2 bytes remain unchanged for
 states that do not require that flag. Existing simulation serialization embeds
-the same registry. This is an editor backend slice: the Workshop button still
-needs its actual popup, draft session and Apply/Done/Cancel routing. Production
-admission/prototype completion, runtime armored-unit identity and the separate
-CVR preview scene remain required for the first end-to-end playable receipt.
-No visual or complete Workshop functionality claim follows from these tests.
+the same registry.
+
+Base production now opens the first Workshop draft and shielding picker. The
+popup uses owned `deswin.pcx` with indexed transparency, the controlled native
+1024x768 constructor position, component rectangles, clipped captions and the
+observed Arial sizes/colors. Early Fission stats, automatic names and ordinary
+Workshop mineral prices come from the live frozen catalog and shared design /
+mineral-factor producers. Workshop cost excludes the separate Base prototype
+surcharge. English headings currently match the purchased reference.
+
+Apply and Done use the existing game command queue, authenticate the local
+Base/owner, and recheck design state plus owned technologies before publishing.
+UI request IDs correlate acknowledgements; they do not authorize edits. Cancel
+discards the pending draft and retains earlier successful Apply operations.
+An older Done reply cannot close a newer session on the same Base. Enter commits
+and closes only on success; Escape dismisses the picker or draft.
+
+This remains the bounded Infantry / Hand Weapons / No Armor-or-Synthmetal /
+Fission / no-ability path, with automatic naming in the UI. Native Rename,
+existing-custom editing, browsing/categories and other component controls are
+still required. Main and small CVR previews are absent. Saved Workshop designs
+are not yet offered by the production chooser; prototype cost/completion and
+runtime armored-unit identity remain required for the first end-to-end playable
+receipt. The current popup overlays Base management; the original full parent /
+console composition still needs its complete implementation and live reference.
+This is not a pixel-match or complete Workshop claim.
+
+Validation for the first live entry: cached incremental WSL build; eight focused
+live command/production/Rename groups; six affected GSE UI scripts including
+duplicate/stale replies, cancel/reopen, unavailable cards and Enter/Escape;
+targeted correctness analysis on three production translation units; focused
+ASan/UBSan on six translation units with the eight native groups. A real hidden
+Linux 1024x768 run opened the editor and picker, selected No Armor, applied Scout,
+accepted Done with Enter, reopened and cancelled. Original owned assets were
+loaded normally; no backend gameplay commands were injected by the capture
+harness. That visual run used software graphics and no audio, so it makes no
+hardware performance or audio claim.

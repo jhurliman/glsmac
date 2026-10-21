@@ -1,0 +1,1219 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Four native pre-modal-loop layouts; no desktop/input loop or models. Retained original two-target row texts reused. Parent-DIB-only private rasters do not include child compositing.",
+  "validation": {
+    "native_layouts": 4,
+    "retire_counts": [
+      0,
+      1,
+      2
+    ],
+    "upgrade_target_values": [
+      65,
+      66
+    ],
+    "checked_source_literals": 4
+  },
+  "cases": [
+    {
+      "id": "retire_zero",
+      "tag": "RETIRETYPE2",
+      "source_name": "Upgrade Source",
+      "cached_count": 0,
+      "flags": 0,
+      "geometry": {
+        "window": [
+          149,
+          255,
+          906,
+          555
+        ],
+        "client": [
+          0,
+          0,
+          757,
+          300
+        ],
+        "frames": [
+          [
+            23,
+            0,
+            702,
+            305
+          ],
+          [
+            27,
+            4,
+            698,
+            28
+          ],
+          [
+            30,
+            7,
+            695,
+            25
+          ],
+          [
+            30,
+            35,
+            695,
+            58
+          ],
+          [
+            27,
+            32,
+            698,
+            111
+          ]
+        ],
+        "list_rect": [
+          33,
+          64,
+          690,
+          108
+        ],
+        "buttons": [
+          [
+            33,
+            117,
+            690,
+            137
+          ]
+        ],
+        "row_rects": [
+          [
+            0,
+            1,
+            657,
+            21
+          ],
+          [
+            0,
+            23,
+            657,
+            43
+          ]
+        ],
+        "body_baselines": [
+          50
+        ],
+        "row_baselines": [
+          17,
+          39
+        ]
+      },
+      "controls": [
+        {
+          "rect": [
+            149,
+            255,
+            906,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "rect": [
+            33,
+            117,
+            690,
+            137
+          ],
+          "parent": "0x404ef9d0"
+        },
+        {
+          "rect": [
+            33,
+            64,
+            690,
+            108
+          ],
+          "parent": "0x404ef9d0"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            702,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            698,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            695,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            30,
+            35,
+            695,
+            58
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            27,
+            32,
+            698,
+            111
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "rows": [
+        {
+          "value": 0,
+          "state": 2,
+          "rect": [
+            0,
+            1,
+            657,
+            21
+          ]
+        },
+        {
+          "value": 1,
+          "state": 0,
+          "rect": [
+            0,
+            23,
+            657,
+            43
+          ]
+        }
+      ],
+      "buttons": [
+        {
+          "label": "OK",
+          "action": 4294967295
+        }
+      ],
+      "glyphs": [
+        {
+          "text": "CHIEF ENGINEER",
+          "x": 303,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1079174400
+        },
+        {
+          "text": "Do you wish to retire the \"Upgrade Source\" design?",
+          "x": 33,
+          "baseline": 50,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1079174400
+        },
+        {
+          "text": "Never mind.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079211904
+        },
+        {
+          "text": "Retire \"Upgrade Source\" design.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079211904
+        },
+        {
+          "text": "OK",
+          "x": 319,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079232240
+        },
+        {
+          "text": "OK",
+          "x": 318,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079232240
+        },
+        {
+          "text": "Never mind.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079211904
+        },
+        {
+          "text": "Retire \"Upgrade Source\" design.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1079211904
+        }
+      ],
+      "target_rows": []
+    },
+    {
+      "id": "retire_one",
+      "tag": "RETIRETYPE",
+      "source_name": "Upgrade Source",
+      "cached_count": 1,
+      "flags": 0,
+      "geometry": {
+        "window": [
+          149,
+          255,
+          906,
+          555
+        ],
+        "client": [
+          0,
+          0,
+          757,
+          300
+        ],
+        "frames": [
+          [
+            23,
+            0,
+            702,
+            305
+          ],
+          [
+            27,
+            4,
+            698,
+            28
+          ],
+          [
+            30,
+            7,
+            695,
+            25
+          ],
+          [
+            30,
+            35,
+            695,
+            78
+          ],
+          [
+            27,
+            32,
+            698,
+            131
+          ]
+        ],
+        "list_rect": [
+          33,
+          84,
+          690,
+          128
+        ],
+        "buttons": [
+          [
+            33,
+            137,
+            690,
+            157
+          ]
+        ],
+        "row_rects": [
+          [
+            0,
+            1,
+            657,
+            21
+          ],
+          [
+            0,
+            23,
+            657,
+            43
+          ]
+        ],
+        "body_baselines": [
+          50,
+          70
+        ],
+        "row_baselines": [
+          17,
+          39
+        ]
+      },
+      "controls": [
+        {
+          "rect": [
+            149,
+            255,
+            906,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "rect": [
+            33,
+            137,
+            690,
+            157
+          ],
+          "parent": "0x405b4f10"
+        },
+        {
+          "rect": [
+            33,
+            84,
+            690,
+            128
+          ],
+          "parent": "0x405b4f10"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            702,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            698,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            695,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            30,
+            35,
+            695,
+            78
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            27,
+            32,
+            698,
+            131
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "rows": [
+        {
+          "value": 0,
+          "state": 2,
+          "rect": [
+            0,
+            1,
+            657,
+            21
+          ]
+        },
+        {
+          "value": 1,
+          "state": 0,
+          "rect": [
+            0,
+            23,
+            657,
+            43
+          ]
+        }
+      ],
+      "buttons": [
+        {
+          "label": "OK",
+          "action": 4294967295
+        }
+      ],
+      "glyphs": [
+        {
+          "text": "CHIEF ENGINEER",
+          "x": 303,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1079982784
+        },
+        {
+          "text": "Do you wish to retire the \"Upgrade Source\" design? 1 unit of that type still in operation will be ",
+          "x": 33,
+          "baseline": 50,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1079982784
+        },
+        {
+          "text": "disbanded.",
+          "x": 33,
+          "baseline": 70,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1079982784
+        },
+        {
+          "text": "Never mind.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080020288
+        },
+        {
+          "text": "Retire \"Upgrade Source\" design.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080020288
+        },
+        {
+          "text": "OK",
+          "x": 319,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080040624
+        },
+        {
+          "text": "OK",
+          "x": 318,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080040624
+        },
+        {
+          "text": "Never mind.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080020288
+        },
+        {
+          "text": "Retire \"Upgrade Source\" design.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080020288
+        }
+      ],
+      "target_rows": []
+    },
+    {
+      "id": "retire_two",
+      "tag": "RETIRETYPE",
+      "source_name": "Upgrade Source",
+      "cached_count": 2,
+      "flags": 0,
+      "geometry": {
+        "window": [
+          149,
+          255,
+          906,
+          555
+        ],
+        "client": [
+          0,
+          0,
+          757,
+          300
+        ],
+        "frames": [
+          [
+            23,
+            0,
+            702,
+            305
+          ],
+          [
+            27,
+            4,
+            698,
+            28
+          ],
+          [
+            30,
+            7,
+            695,
+            25
+          ],
+          [
+            30,
+            35,
+            695,
+            78
+          ],
+          [
+            27,
+            32,
+            698,
+            131
+          ]
+        ],
+        "list_rect": [
+          33,
+          84,
+          690,
+          128
+        ],
+        "buttons": [
+          [
+            33,
+            137,
+            690,
+            157
+          ]
+        ],
+        "row_rects": [
+          [
+            0,
+            1,
+            657,
+            21
+          ],
+          [
+            0,
+            23,
+            657,
+            43
+          ]
+        ],
+        "body_baselines": [
+          50,
+          70
+        ],
+        "row_baselines": [
+          17,
+          39
+        ]
+      },
+      "controls": [
+        {
+          "rect": [
+            149,
+            255,
+            906,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "rect": [
+            33,
+            137,
+            690,
+            157
+          ],
+          "parent": "0x4067a4d0"
+        },
+        {
+          "rect": [
+            33,
+            84,
+            690,
+            128
+          ],
+          "parent": "0x4067a4d0"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            702,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            698,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            695,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            30,
+            35,
+            695,
+            78
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            27,
+            32,
+            698,
+            131
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "rows": [
+        {
+          "value": 0,
+          "state": 2,
+          "rect": [
+            0,
+            1,
+            657,
+            21
+          ]
+        },
+        {
+          "value": 1,
+          "state": 0,
+          "rect": [
+            0,
+            23,
+            657,
+            43
+          ]
+        }
+      ],
+      "buttons": [
+        {
+          "label": "OK",
+          "action": 4294967295
+        }
+      ],
+      "glyphs": [
+        {
+          "text": "CHIEF ENGINEER",
+          "x": 303,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1080791168
+        },
+        {
+          "text": "Do you wish to retire the \"Upgrade Source\" design? 2 units of that type still in operation will be ",
+          "x": 33,
+          "baseline": 50,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1080791168
+        },
+        {
+          "text": "disbanded.",
+          "x": 33,
+          "baseline": 70,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1080791168
+        },
+        {
+          "text": "Never mind.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080828672
+        },
+        {
+          "text": "Retire \"Upgrade Source\" design.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080828672
+        },
+        {
+          "text": "OK",
+          "x": 319,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080849008
+        },
+        {
+          "text": "OK",
+          "x": 318,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080849008
+        },
+        {
+          "text": "Never mind.",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080828672
+        },
+        {
+          "text": "Retire \"Upgrade Source\" design.",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1080828672
+        }
+      ],
+      "target_rows": []
+    },
+    {
+      "id": "upgrade_two_targets",
+      "tag": "WHICHUPGRADE2",
+      "source_name": "Upgrade Source",
+      "cached_count": 2,
+      "flags": 64,
+      "geometry": {
+        "window": [
+          149,
+          255,
+          906,
+          555
+        ],
+        "client": [
+          0,
+          0,
+          757,
+          300
+        ],
+        "frames": [
+          [
+            23,
+            0,
+            702,
+            305
+          ],
+          [
+            27,
+            4,
+            698,
+            28
+          ],
+          [
+            30,
+            7,
+            695,
+            25
+          ],
+          [
+            30,
+            35,
+            695,
+            58
+          ],
+          [
+            27,
+            32,
+            698,
+            111
+          ]
+        ],
+        "list_rect": [
+          33,
+          64,
+          690,
+          108
+        ],
+        "buttons": [
+          [
+            34,
+            117,
+            359,
+            137
+          ],
+          [
+            365,
+            117,
+            690,
+            137
+          ]
+        ],
+        "row_rects": [
+          [
+            0,
+            1,
+            657,
+            21
+          ],
+          [
+            0,
+            23,
+            657,
+            43
+          ]
+        ],
+        "body_baselines": [
+          50
+        ],
+        "row_baselines": [
+          17,
+          39
+        ]
+      },
+      "controls": [
+        {
+          "rect": [
+            149,
+            255,
+            906,
+            555
+          ],
+          "parent": "0x943294"
+        },
+        {
+          "rect": [
+            34,
+            117,
+            359,
+            137
+          ],
+          "parent": "0x4073fa90"
+        },
+        {
+          "rect": [
+            365,
+            117,
+            690,
+            137
+          ],
+          "parent": "0x4073fa90"
+        },
+        {
+          "rect": [
+            33,
+            64,
+            690,
+            108
+          ],
+          "parent": "0x4073fa90"
+        }
+      ],
+      "frames": [
+        {
+          "rect": [
+            23,
+            0,
+            702,
+            305
+          ],
+          "style": "0x7b01c0"
+        },
+        {
+          "rect": [
+            27,
+            4,
+            698,
+            28
+          ],
+          "style": "0x7b00d0"
+        },
+        {
+          "rect": [
+            30,
+            7,
+            695,
+            25
+          ],
+          "style": "0x7b0148"
+        },
+        {
+          "rect": [
+            30,
+            35,
+            695,
+            58
+          ],
+          "style": "0x7b0058"
+        },
+        {
+          "rect": [
+            27,
+            32,
+            698,
+            111
+          ],
+          "style": "0x7b00d0"
+        }
+      ],
+      "rows": [
+        {
+          "value": 65,
+          "state": 2,
+          "rect": [
+            0,
+            1,
+            657,
+            21
+          ]
+        },
+        {
+          "value": 66,
+          "state": 0,
+          "rect": [
+            0,
+            23,
+            657,
+            43
+          ]
+        }
+      ],
+      "buttons": [
+        {
+          "label": "OK",
+          "action": 4294967295
+        },
+        {
+          "label": "Cancel",
+          "action": 4294967294
+        }
+      ],
+      "glyphs": [
+        {
+          "text": "OPERATIONS DIRECTOR",
+          "x": 279,
+          "baseline": 21,
+          "font": 149,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1081599520
+        },
+        {
+          "text": "Upgrade Upgrade Source to which design:",
+          "x": 33,
+          "baseline": 50,
+          "font": 129,
+          "color": 285147362,
+          "clip": null,
+          "dib": 1081599520
+        },
+        {
+          "text": "Upgrade Target 65",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081637040
+        },
+        {
+          "text": "2-3-1",
+          "x": 623,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081637040
+        },
+        {
+          "text": "Upgrade Target 66",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081637040
+        },
+        {
+          "text": "2-3-1",
+          "x": 623,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081637040
+        },
+        {
+          "text": "OK",
+          "x": 153,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081650736
+        },
+        {
+          "text": "OK",
+          "x": 152,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081650736
+        },
+        {
+          "text": "Cancel",
+          "x": 146,
+          "baseline": 14,
+          "font": 100,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081664016
+        },
+        {
+          "text": "Cancel",
+          "x": 139,
+          "baseline": 16,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081664016
+        },
+        {
+          "text": "Upgrade Target 65",
+          "x": 3,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081637040
+        },
+        {
+          "text": "2-3-1",
+          "x": 623,
+          "baseline": 17,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081637040
+        },
+        {
+          "text": "Upgrade Target 66",
+          "x": 3,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081637040
+        },
+        {
+          "text": "2-3-1",
+          "x": 623,
+          "baseline": 39,
+          "font": 129,
+          "color": 285147136,
+          "clip": null,
+          "dib": 1081637040
+        }
+      ],
+      "target_rows": [
+        {
+          "event": "target_row",
+          "value": 65,
+          "text": "Upgrade Target 65|2-3-1"
+        },
+        {
+          "event": "target_row",
+          "value": 66,
+          "text": "Upgrade Target 66|2-3-1"
+        }
+      ]
+    }
+  ],
+  "fonts": [
+    {
+      "id": 129,
+      "LOGFONT_hex": "f0ffffff000000000000000000000000bc0200000000000007000000417269616c204e6172726f7700ec6a001000000000000000d0ec6a0010000000",
+      "height": -16,
+      "weight": 700,
+      "face": "Arial Narrow",
+      "text_height": 20,
+      "ascent": 16,
+      "descent": 4,
+      "internal_leading": 4,
+      "metrics_hex": "14000000100000000400000004000000000000000700000014000000bc0200000000000060000000600000001eff1f200000002700000000"
+    },
+    {
+      "id": 149,
+      "LOGFONT_hex": "f2ffffff000000000000000000000000bc0200000000000007000000417269616c000000000000000000000039005f0000000000dd38610018000000",
+      "height": -14,
+      "weight": 700,
+      "face": "Arial",
+      "text_height": 16,
+      "ascent": 13,
+      "descent": 3,
+      "internal_leading": 2,
+      "metrics_hex": "100000000d0000000300000002000000000000000700000025000000bc0200000000000060000000600000001eff1f200000002700000000"
+    }
+  ],
+  "prior_upgrade_retire_manifest_sha256": "cbe96dd58685327a2fa5d402fdc5cdcef5505df7a3ae7bf04cf31e2fa1d669dd",
+  "prior_controls_sha256": "7bb190137ea2b97909a26414ce125f68207548eca330ad8a314bed79b9a1864d"
+}

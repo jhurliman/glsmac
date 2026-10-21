@@ -151,6 +151,13 @@ struct SmacWorkshopReselection {
 };
 SmacWorkshopReselection PrepareSmacWorkshopReselection(const SmacStartupDesignState& state,int32_t requested,
     const std::string& retained_name,const SmacPredefinedUnitCatalog& catalog,int32_t owner);
+struct SmacWorkshopObsolete {SmacWorkshopReselection selection;size_t strip_offset;};
+// Action6 toggles stored exclusion/flags before navigating the old browse list.
+// Draft components are not saved; inactive reselection preserves draft name.
+SmacWorkshopObsolete PrepareSmacWorkshopObsolete(const SmacStartupDesignState& state,int32_t selected,
+    const std::string& retained_name,const std::vector<int32_t>& old_list,size_t strip_offset,const SmacPredefinedUnitCatalog& catalog,
+    const settings::SmacTechnologyRules& technologies,const faction::SmacFactionTechnologyState& owner,
+    const std::optional<faction::SmacDesignCounts>& units);
 
 enum class SmacWorkshopSlotKind {Alias,Build,IntrinsicFailure};
 struct SmacWorkshopSlot {int32_t selected;SmacWorkshopSlotKind kind;bool confirmation;};

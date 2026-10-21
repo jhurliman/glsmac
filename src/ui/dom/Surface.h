@@ -64,7 +64,7 @@ private:
     gse::Value* WorkshopParentText(GSE_CALLABLE);
     gse::Value* WorkshopAbilityText(GSE_CALLABLE,const std::string& technology);
     std::optional<std::array<std::string,8>> m_workshop_picker_text;
-    std::optional<std::array<std::string,24>> m_workshop_parent_text;
+    std::optional<std::array<std::string,25>> m_workshop_parent_text;
     bool m_workshop_console_backing=false;
     std::optional<std::array<std::string,12>> m_workshop_ability_text;
 	std::unique_ptr<task::intro::Movie> m_movie;

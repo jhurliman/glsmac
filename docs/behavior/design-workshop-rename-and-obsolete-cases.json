@@ -1,0 +1,532 @@
+{
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "validation": {
+    "actions": 8,
+    "modal_layouts": 1,
+    "prior_custom_edit_cases": 41
+  },
+  "scope": "Eight complete dispatcher action5/6 controls followed by Cancel8, supplied paint/modal boundaries. One separate generic DESIGNNAME layout, native template and geometry, supplied default Scout Patrol, no real modal loop.",
+  "cases": [
+    {
+      "id": "empty_named_cancel",
+      "selected_before": 64,
+      "selected_after": 64,
+      "draft_name_after": "",
+      "saved_changes": {
+        "designs": [
+          {
+            "offset": 3376,
+            "before": 3,
+            "after": 1
+          }
+        ]
+      },
+      "cancel_changes": {},
+      "cached_factor": 8,
+      "events": [
+        {
+          "pc": "0x5d7880",
+          "tag": "DESIGNNAME",
+          "maximum": 31,
+          "default": "Plasma Sentinels",
+          "accepted": false,
+          "submitted": null
+        }
+      ]
+    },
+    {
+      "id": "empty_named_same_default",
+      "selected_before": 64,
+      "selected_after": 64,
+      "draft_name_after": "",
+      "saved_changes": {
+        "designs": [
+          {
+            "offset": 3376,
+            "before": 3,
+            "after": 1
+          }
+        ]
+      },
+      "cancel_changes": {},
+      "cached_factor": 8,
+      "events": [
+        {
+          "pc": "0x5d7880",
+          "tag": "DESIGNNAME",
+          "maximum": 31,
+          "default": "Plasma Sentinels",
+          "accepted": true,
+          "submitted": "Plasma Sentinels"
+        },
+        {
+          "pc": "0x43f8c0",
+          "service": "preview_painter"
+        },
+        {
+          "pc": "0x407cb0",
+          "service": "window_invalidation"
+        }
+      ]
+    },
+    {
+      "id": "empty_named_empty_accept",
+      "selected_before": 64,
+      "selected_after": 64,
+      "draft_name_after": "",
+      "saved_changes": {
+        "designs": [
+          {
+            "offset": 3376,
+            "before": 3,
+            "after": 1
+          }
+        ]
+      },
+      "cancel_changes": {},
+      "cached_factor": 8,
+      "events": [
+        {
+          "pc": "0x5d7880",
+          "tag": "DESIGNNAME",
+          "maximum": 31,
+          "default": "Plasma Sentinels",
+          "accepted": true,
+          "submitted": ""
+        },
+        {
+          "pc": "0x43f8c0",
+          "service": "preview_painter"
+        },
+        {
+          "pc": "0x407cb0",
+          "service": "window_invalidation"
+        }
+      ]
+    },
+    {
+      "id": "edited_draft_name_accept",
+      "selected_before": 64,
+      "selected_after": 64,
+      "draft_name_after": "Draft Guard",
+      "saved_changes": {
+        "designs": [
+          {
+            "offset": 3376,
+            "before": 1,
+            "after": 3
+          }
+        ]
+      },
+      "cancel_changes": {},
+      "cached_factor": 8,
+      "events": [
+        {
+          "pc": "0x5d7880",
+          "tag": "DESIGNNAME",
+          "maximum": 31,
+          "default": "Plasma Sentinels",
+          "accepted": true,
+          "submitted": "Draft Guard"
+        },
+        {
+          "pc": "0x43f8c0",
+          "service": "preview_painter"
+        },
+        {
+          "pc": "0x407cb0",
+          "service": "window_invalidation"
+        }
+      ]
+    },
+    {
+      "id": "intrinsic_name_accept",
+      "selected_before": 2,
+      "selected_after": 2,
+      "draft_name_after": "Named Scout",
+      "saved_changes": {
+        "designs": [
+          {
+            "offset": 152,
+            "before": 1,
+            "after": 3
+          }
+        ]
+      },
+      "cancel_changes": {},
+      "cached_factor": 8,
+      "events": [
+        {
+          "pc": "0x5d7880",
+          "tag": "DESIGNNAME",
+          "maximum": 31,
+          "default": "Plasma Sentinels",
+          "accepted": true,
+          "submitted": "Named Scout"
+        },
+        {
+          "pc": "0x43f8c0",
+          "service": "preview_painter"
+        },
+        {
+          "pc": "0x407cb0",
+          "service": "window_invalidation"
+        }
+      ]
+    },
+    {
+      "id": "obsolete_unsaved_then_cancel",
+      "selected_before": 64,
+      "selected_after": 65,
+      "draft_name_after": "Unsaved Guard",
+      "saved_changes": {
+        "designs": [
+          {
+            "offset": 3372,
+            "before": 0,
+            "after": 2
+          },
+          {
+            "offset": 3376,
+            "before": 11,
+            "after": 3
+          },
+          {
+            "offset": 3377,
+            "before": 2,
+            "after": 0
+          }
+        ]
+      },
+      "cancel_changes": {},
+      "cached_factor": 8,
+      "events": [
+        {
+          "pc": "0x5aaa20",
+          "caller": "0x442b0a",
+          "args": [
+            64,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x447d40",
+          "service": "design_strip_painter"
+        },
+        {
+          "pc": "0x5ee890",
+          "service": "window_repaint"
+        }
+      ]
+    },
+    {
+      "id": "reactivate_unsaved_then_cancel",
+      "selected_before": 64,
+      "selected_after": 65,
+      "draft_name_after": "Unsaved Guard",
+      "saved_changes": {
+        "designs": [
+          {
+            "offset": 3372,
+            "before": 2,
+            "after": 0
+          },
+          {
+            "offset": 3377,
+            "before": 0,
+            "after": 2
+          }
+        ]
+      },
+      "cancel_changes": {},
+      "cached_factor": 8,
+      "events": [
+        {
+          "pc": "0x5aaa20",
+          "caller": "0x442b0a",
+          "args": [
+            64,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x447d40",
+          "service": "design_strip_painter"
+        },
+        {
+          "pc": "0x5ee890",
+          "service": "window_repaint"
+        }
+      ]
+    },
+    {
+      "id": "obsolete_intrinsic",
+      "selected_before": 2,
+      "selected_after": 64,
+      "draft_name_after": "",
+      "saved_changes": {
+        "designs": [
+          {
+            "offset": 148,
+            "before": 0,
+            "after": 2
+          }
+        ]
+      },
+      "cancel_changes": {},
+      "cached_factor": 8,
+      "events": [
+        {
+          "pc": "0x5aaa20",
+          "caller": "0x442b0a",
+          "args": [
+            2,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "pc": "0x447d40",
+          "service": "design_strip_painter"
+        },
+        {
+          "pc": "0x5ee890",
+          "service": "window_repaint"
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "source_sha256": "0d481ae55d5bba5b1d7c4babc396380532fbfb6beb28bd244ad64cda274b6fb9",
+    "rectangles": [
+      {
+        "rect": [
+          148,
+          255,
+          908,
+          555
+        ],
+        "parent": "0x943294"
+      },
+      {
+        "rect": [
+          33,
+          79,
+          360,
+          99
+        ],
+        "parent": "0x404ef9c0"
+      },
+      {
+        "rect": [
+          366,
+          79,
+          693,
+          99
+        ],
+        "parent": "0x404ef9c0"
+      },
+      {
+        "rect": [
+          33,
+          38,
+          693,
+          64
+        ],
+        "parent": "0x404ef9c0"
+      },
+      {
+        "rect": [
+          53,
+          1,
+          663,
+          21
+        ],
+        "parent": "0x404f1d18"
+      }
+    ],
+    "frames": [
+      {
+        "rect": [
+          23,
+          0,
+          705,
+          305
+        ],
+        "style": "0x7b01c0"
+      },
+      {
+        "rect": [
+          27,
+          4,
+          701,
+          28
+        ],
+        "style": "0x7b00d0"
+      },
+      {
+        "rect": [
+          30,
+          7,
+          698,
+          25
+        ],
+        "style": "0x7b0148"
+      },
+      {
+        "rect": [
+          30,
+          35,
+          696,
+          67
+        ],
+        "style": "0x7b00d0"
+      }
+    ],
+    "glyphs": [
+      {
+        "text": "WHAT SHALL WE CALL THIS UNIT TYPE?",
+        "x": 227,
+        "baseline": 21,
+        "font": 149,
+        "color": 285147362,
+        "clip": null,
+        "dib": 1079174272
+      },
+      {
+        "text": "Scout Patrol",
+        "x": 4,
+        "baseline": 16,
+        "font": 129,
+        "color": 285147360,
+        "clip": [
+          4,
+          0,
+          606,
+          20
+        ],
+        "dib": 1079221648
+      },
+      {
+        "text": "Scout Patrol",
+        "x": 0,
+        "baseline": 16,
+        "font": 129,
+        "color": 285147360,
+        "clip": null,
+        "dib": 1079221648
+      },
+      {
+        "text": "Scout Patrol",
+        "x": 0,
+        "baseline": 16,
+        "font": 129,
+        "color": 285147360,
+        "clip": null,
+        "dib": 1079221648
+      },
+      {
+        "text": "Name:",
+        "x": 3,
+        "baseline": 17,
+        "font": 129,
+        "color": 285147360,
+        "clip": null,
+        "dib": 1079199728
+      },
+      {
+        "text": "Scout Patrol",
+        "x": 0,
+        "baseline": 16,
+        "font": 129,
+        "color": 285147360,
+        "clip": null,
+        "dib": 1079221648
+      },
+      {
+        "text": "OK",
+        "x": 154,
+        "baseline": 14,
+        "font": 100,
+        "color": 285147136,
+        "clip": null,
+        "dib": 1079235024
+      },
+      {
+        "text": "OK",
+        "x": 153,
+        "baseline": 16,
+        "font": 129,
+        "color": 285147136,
+        "clip": null,
+        "dib": 1079235024
+      },
+      {
+        "text": "Cancel",
+        "x": 147,
+        "baseline": 14,
+        "font": 100,
+        "color": 285147136,
+        "clip": null,
+        "dib": 1079248304
+      },
+      {
+        "text": "Cancel",
+        "x": 140,
+        "baseline": 16,
+        "font": 129,
+        "color": 285147136,
+        "clip": null,
+        "dib": 1079248304
+      },
+      {
+        "text": "Scout Patrol",
+        "x": 0,
+        "baseline": 16,
+        "font": 129,
+        "color": 285147360,
+        "clip": null,
+        "dib": 1079221648
+      }
+    ],
+    "fonts": [
+      {
+        "id": 129,
+        "LOGFONT_hex": "f0ffffff000000000000000000000000bc0200000000000007000000417269616c204e6172726f7700ec6a001000000000000000d0ec6a0010000000",
+        "height": -16,
+        "weight": 700,
+        "face": "Arial Narrow",
+        "text_height": 20,
+        "ascent": 16,
+        "descent": 4,
+        "internal_leading": 4,
+        "metrics_hex": "14000000100000000400000004000000000000000700000014000000bc0200000000000060000000600000001eff1f200000002700000000"
+      },
+      {
+        "id": 149,
+        "LOGFONT_hex": "f2ffffff000000000000000000000000bc0200000000000007000000417269616c000000000000000000000039005f0000000000dd38610018000000",
+        "height": -14,
+        "weight": 700,
+        "face": "Arial",
+        "text_height": 16,
+        "ascent": 13,
+        "descent": 3,
+        "internal_leading": 2,
+        "metrics_hex": "100000000d0000000300000002000000000000000700000025000000bc0200000000000060000000600000001eff1f200000002700000000"
+      }
+    ],
+    "max_length": 31
+  },
+  "prior_manifest_sha256": "870aa01c5b1cacc8ed8840801ad7125900cd3c60fecd41f0bc97d3996e71da67"
+}

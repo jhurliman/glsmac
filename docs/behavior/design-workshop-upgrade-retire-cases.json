@@ -1,0 +1,390 @@
+{
+  "status": "pass",
+  "cases": [
+    {
+      "id": "upgrade_zero_targets",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": [
+        "NOUPGRADE"
+      ]
+    },
+    {
+      "id": "upgrade_one_accept",
+      "core_conversion": true,
+      "energy_before": 2000,
+      "energy_after": 1900,
+      "selected": 65,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTO"
+      ]
+    },
+    {
+      "id": "upgrade_one_decline",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTO"
+      ]
+    },
+    {
+      "id": "upgrade_insufficient",
+      "core_conversion": false,
+      "energy_before": 0,
+      "energy_after": 0,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTOCOST"
+      ]
+    },
+    {
+      "id": "upgrade_many_cancel",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": []
+    },
+    {
+      "id": "upgrade_many_choose66",
+      "core_conversion": true,
+      "energy_before": 2000,
+      "energy_after": 1900,
+      "selected": 66,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTO"
+      ]
+    },
+    {
+      "id": "upgrade_unprototyped",
+      "core_conversion": true,
+      "energy_before": 2000,
+      "energy_after": 1360,
+      "selected": 65,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTO2"
+      ]
+    },
+    {
+      "id": "upgrade_no_units",
+      "core_conversion": true,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 65,
+      "unit_count": 0,
+      "prompts": [
+        "YESUPGRADE"
+      ]
+    },
+    {
+      "id": "upgrade_stale_cache_zero",
+      "core_conversion": true,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 65,
+      "unit_count": 3,
+      "prompts": [
+        "YESUPGRADE"
+      ]
+    },
+    {
+      "id": "upgrade_stale_cache_three",
+      "core_conversion": true,
+      "energy_before": 2000,
+      "energy_after": 1850,
+      "selected": 65,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTO"
+      ]
+    },
+    {
+      "id": "upgrade_nano_owned",
+      "core_conversion": true,
+      "energy_before": 2000,
+      "energy_after": 1960,
+      "selected": 65,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTO"
+      ]
+    },
+    {
+      "id": "upgrade_nano_foreign",
+      "core_conversion": true,
+      "energy_before": 2000,
+      "energy_after": 1900,
+      "selected": 65,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTO"
+      ]
+    },
+    {
+      "id": "upgrade_add_high_morale",
+      "core_conversion": true,
+      "energy_before": 2000,
+      "energy_after": 1880,
+      "selected": 65,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTO"
+      ]
+    },
+    {
+      "id": "upgrade_remove_high_morale",
+      "core_conversion": true,
+      "energy_before": 2000,
+      "energy_after": 1900,
+      "selected": 65,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTO"
+      ]
+    },
+    {
+      "id": "upgrade_game_flag_reject",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": []
+    },
+    {
+      "id": "upgrade_network_block",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": []
+    },
+    {
+      "id": "upgrade_network_submit",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 65,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTO"
+      ]
+    },
+    {
+      "id": "retire_decline_live",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": [
+        "RETIRETYPE"
+      ]
+    },
+    {
+      "id": "retire_accept_live",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 0,
+      "prompts": [
+        "RETIRETYPE"
+      ]
+    },
+    {
+      "id": "retire_decline_empty",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 0,
+      "prompts": [
+        "RETIRETYPE2"
+      ]
+    },
+    {
+      "id": "retire_accept_empty",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 0,
+      "prompts": [
+        "RETIRETYPE2"
+      ]
+    },
+    {
+      "id": "retire_duplicate_queue",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 0,
+      "prompts": [
+        "RETIRETYPE"
+      ]
+    },
+    {
+      "id": "retire_builtin_shared_units",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 2,
+      "unit_count": 0,
+      "prompts": [
+        "RETIRETYPE"
+      ]
+    },
+    {
+      "id": "retire_network_block",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": [
+        "RETIRETYPE"
+      ]
+    },
+    {
+      "id": "retire_network_submit",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": [
+        "RETIRETYPE"
+      ]
+    },
+    {
+      "id": "upgrade_ignores_unsaved_draft",
+      "core_conversion": true,
+      "energy_before": 2000,
+      "energy_after": 1900,
+      "selected": 65,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTO"
+      ]
+    },
+    {
+      "id": "candidate_chassis_reject",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": [
+        "NOUPGRADE"
+      ]
+    },
+    {
+      "id": "candidate_artillery_reject",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": [
+        "NOUPGRADE"
+      ]
+    },
+    {
+      "id": "candidate_plan_reject",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": [
+        "NOUPGRADE"
+      ]
+    },
+    {
+      "id": "candidate_noncombat_identity_reject",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": [
+        "NOUPGRADE"
+      ]
+    },
+    {
+      "id": "candidate_negative_weapon_reject",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": [
+        "NOUPGRADE"
+      ]
+    },
+    {
+      "id": "candidate_noarmor_reject",
+      "core_conversion": false,
+      "energy_before": 2000,
+      "energy_after": 2000,
+      "selected": 64,
+      "unit_count": 3,
+      "prompts": [
+        "NOUPGRADE"
+      ]
+    },
+    {
+      "id": "candidate_compensating_weapon_accept",
+      "core_conversion": true,
+      "energy_before": 2000,
+      "energy_after": 1920,
+      "selected": 65,
+      "unit_count": 3,
+      "prompts": [
+        "UPGRADEPROTO"
+      ]
+    }
+  ],
+  "receiver_fragments": 2,
+  "quote_scalars": [
+    {
+      "stored_cost": 1,
+      "prototyped": true,
+      "owned_nano": false,
+      "quote_rows": 3
+    },
+    {
+      "stored_cost": 1,
+      "prototyped": true,
+      "owned_nano": true,
+      "quote_rows": 1
+    },
+    {
+      "stored_cost": 1,
+      "prototyped": false,
+      "owned_nano": false,
+      "quote_rows": 8
+    },
+    {
+      "stored_cost": 2,
+      "prototyped": false,
+      "owned_nano": false,
+      "quote_rows": 14
+    }
+  ],
+  "scope": "Independent full Upgrade buffers; Retire caller/removal/queue/history properties reuse existing595ac0 evidence; decoded receiver fragments and supplied sender transport boundaries, no live network round trip."
+}

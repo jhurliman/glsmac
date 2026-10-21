@@ -29,6 +29,33 @@ faction::SmacFactionTechnologyState Owner() {faction::SmacFactionTechnologyState
 unit::SmacStartupDesignState Empty() {unit::SmacStartupDesignState state;state.global_difficulty=3;state.owners={{1,{},2},{2,{},2}};return state;}
 }
 void AddSmacWorkshopTests(task::gsetests::GSETests* task) {
+    task->AddTest("SMAC Workshop Obsolete matches native toggles navigation and retained draft names",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::ifstream file(std::string(assets)+"/alpha.txt",std::ios::binary);if(!file) {throw std::runtime_error("Missing owned Obsolete rules");}
+        const std::string source{std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>()};
+        const auto tech=loader::txt::SmacRulesTXTLoader::ParseTechnologyRules(source);const auto catalog=settings::SmacPredefinedUnitRules::Parse(source,tech).catalog;
+        auto owner=Owner();owner.owned.fill(false);faction::SmacDesignCounts counts{};
+        // Action6 controls in freeze471358e392d3dd4b3238bed3a2186aadd43764f251a54563630ce13e006b7b58.
+        for(size_t i=0;i<3;++i) {
+            auto pool=workshop_general_fixture::BasePool();pool[127]={};pool[128]={};
+            const int selected=i==2 ? 2:64;
+            if(i!=2) {pool[64]=pool[2];pool[64][38]=1;pool[64][48]=0xb;pool[64][49]=i==0 ? 2:0;pool[64][44]=i==1 ? 2:0;}
+            auto state=Empty();state.RetainNativeRegistry(pool,catalog);const auto before=state;
+            const std::string name=i==2 ? "":"Unsaved Guard";
+            auto listed=state;auto listed_pool=pool;if(i==1) {listed_pool[64][44]=0;listed.RetainNativeRegistry(listed_pool,catalog);}
+            const auto old_list=unit::BrowseSmacWorkshopDesigns(listed,catalog,tech,owner,counts);
+            const auto result=unit::PrepareSmacWorkshopObsolete(state,selected,name,old_list,0,catalog,tech,owner,counts);
+            const auto& after=*result.selection.state.native_registry;auto expected=pool[selected];
+            expected[44]^=2;if(i==0) {expected[48]=3;expected[49]=0;}if(i==1) {expected[48]=0xb;expected[49]=2;}
+            GT_ASSERT(after[selected]==expected && state==before,"Obsolete changed saved name/components or mutated its input");
+            GT_ASSERT(result.selection.draft.selected_design==(i==2 ? 64:65) && result.selection.draft.armor==0
+                && result.selection.draft.name==name,"Obsolete saved an unsaved tuple or lost inactive reselection name");
+            const auto list=unit::BrowseSmacWorkshopDesigns(result.selection.state,catalog,tech,owner,counts);
+            GT_ASSERT(list.at((result.strip_offset+5)%list.size())==result.selection.draft.selected_design,"Obsolete did not recenter in rebuilt list");
+            auto rest=after;rest[selected]=pool[selected];GT_ASSERT(rest==pool,"Obsolete touched another saved record");
+            GT_ASSERT(unit::SmacStartupDesignState::Deserialize(result.selection.state.Serialize(catalog).ToString(),catalog)==result.selection.state,"Obsolete did not survive save/restore");
+        }GT_OK();
+    });
     task->AddTest("SMAC Workshop status matches nine native selection transitions without saving",GT(){
         // Native controls.json, frozen92d5a04d299620a805bf710345bc6fdc6e50079dbf8e095c6e3888958dc47d07.
         using K=unit::SmacWorkshopStatusKind;

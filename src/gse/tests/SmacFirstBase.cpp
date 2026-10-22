@@ -8,14 +8,12 @@ void AddSmacFirstBaseTests(task::gsetests::GSETests* task) {
     task->AddTest("SMAC Planet ecology globals pass imported map through actual claimed Start",GT(){
         return CheckSmacFirstBaseFixture(0,false,3,true);
     });
-    task->AddTest("SMAC Planet first Base all seven faction packages and six difficulties through claimed Start",GT(){
-        for(int difficulty=0;difficulty<6;++difficulty) {
-            for(const int scenario:{0,2,4,5,6,7,8}) {
-                const auto result=CheckSmacFirstBaseFixture(scenario,false,difficulty,true);
-                if(!result.empty()) {return "Planet faction scenario "+std::to_string(scenario)+" difficulty "+std::to_string(difficulty)+": "+result;}
-            }
-        } GT_OK();
-    });
+    for(int difficulty=0;difficulty<6;++difficulty) {
+        for(const int scenario:{0,2,4,5,6,7,8}) {
+            task->AddTest("SMAC Planet first Base faction scenario "+std::to_string(scenario)+" difficulty "+std::to_string(difficulty)+" through claimed Start",
+                GT(scenario,difficulty) {return CheckSmacFirstBaseFixture(scenario,false,difficulty,true);});
+        }
+    }
     task->AddTest("SMAC first Base all six difficulties copy governor and stored human target inputs",GT(){
         for (int difficulty=0;difficulty<6;++difficulty) {
             for (int scenario : {0,2}) {

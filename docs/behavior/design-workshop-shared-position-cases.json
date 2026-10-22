@@ -1,0 +1,470 @@
+{
+  "contract": "RE-SMAC-WORKSHOP-SHARED-POSITION-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "status": "complete_position_only_causality_Morgan_target_timer_and_lifetime_controls_passed",
+  "scene": {
+    "relative": "Workshop+0x1279c",
+    "position": "Scene+0x2c..0x37 = Workshop+0x127c8..0x127d3",
+    "initialization": "4469a0@446cea ->630f20@630fea..630ff0 zeroes all3 words",
+    "component_reset": "43df9f resets Scene+13cc object count only; retains Scene.position",
+    "centering": "631370 flags4 ->655210 bounds including current position; midpoint rounded to binary32, subtract midpoint from current position and round to binary32. Flags10 temporarily supply identity rotation for bounds.",
+    "writer_ips": [
+      "0x6315de",
+      "0x6315e8",
+      "0x6315f2"
+    ],
+    "cleanup": "6325b0 clears shared image/depth extents, not Scene.position"
+  },
+  "order": [
+    "43de60 Chassis",
+    "43e2b0 Weapon",
+    "43e850 Shielding",
+    "43ed10 Reactor",
+    "43f120 Ability1",
+    "43f4f0 Ability2",
+    "43f8c0 Main",
+    "43d730 status",
+    "447d40 saved strip",
+    "4487c0 data"
+  ],
+  "native_entries": [
+    {
+      "stage": "ordinary_open",
+      "caller": "0x43e02c",
+      "flags": "0x2",
+      "position_at_entry": {
+        "values": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "words": [
+          "0x0",
+          "0x0",
+          "0x0"
+        ]
+      }
+    },
+    {
+      "stage": "ordinary_open",
+      "caller": "0x43e507",
+      "flags": "0x6",
+      "position_at_entry": {
+        "values": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "words": [
+          "0x0",
+          "0x0",
+          "0x0"
+        ]
+      }
+    },
+    {
+      "stage": "ordinary_open",
+      "caller": "0x43efd3",
+      "flags": "0x6",
+      "position_at_entry": {
+        "values": [
+          147.22743225097656,
+          -252.39456176757812,
+          -217.06167602539062
+        ],
+        "words": [
+          "0x43133a39",
+          "0xc37c6502",
+          "0xc3590fca"
+        ]
+      }
+    },
+    {
+      "stage": "ordinary_open",
+      "caller": "0x43fb3a",
+      "flags": "0x17",
+      "position_at_entry": {
+        "values": [
+          -61.34281921386719,
+          131.29104614257812,
+          -402.5321960449219
+        ],
+        "words": [
+          "0xc2755f0c",
+          "0x43034a82",
+          "0xc3c9441f"
+        ]
+      }
+    },
+    {
+      "stage": "phase0_angle0_repaint",
+      "caller": "0x43e02c",
+      "flags": "0x2",
+      "position_at_entry": {
+        "values": [
+          6.574676513671875,
+          55.81300354003906,
+          -252.00990295410156
+        ],
+        "words": [
+          "0x40d263c0",
+          "0x425f4084",
+          "0xc37c0289"
+        ]
+      }
+    },
+    {
+      "stage": "phase0_angle0_repaint",
+      "caller": "0x43e507",
+      "flags": "0x6",
+      "position_at_entry": {
+        "values": [
+          6.574676513671875,
+          55.81300354003906,
+          -252.00990295410156
+        ],
+        "words": [
+          "0x40d263c0",
+          "0x425f4084",
+          "0xc37c0289"
+        ]
+      }
+    },
+    {
+      "stage": "phase0_angle0_repaint",
+      "caller": "0x43efd3",
+      "flags": "0x6",
+      "position_at_entry": {
+        "values": [
+          147.22743225097656,
+          -252.39454650878906,
+          -217.0616912841797
+        ],
+        "words": [
+          "0x43133a39",
+          "0xc37c6501",
+          "0xc3590fcb"
+        ]
+      }
+    },
+    {
+      "stage": "phase0_angle0_repaint",
+      "caller": "0x43fb3a",
+      "flags": "0x17",
+      "position_at_entry": {
+        "values": [
+          -61.34281921386719,
+          131.2910614013672,
+          -402.53216552734375
+        ],
+        "words": [
+          "0xc2755f0c",
+          "0x43034a83",
+          "0xc3c9441e"
+        ]
+      }
+    }
+  ],
+  "frame_final_positions": [
+    {
+      "id": "ordinary_open",
+      "position": {
+        "values": [
+          6.574676513671875,
+          55.81300354003906,
+          -252.00990295410156
+        ],
+        "words": [
+          "0x40d263c0",
+          "0x425f4084",
+          "0xc37c0289"
+        ]
+      }
+    },
+    {
+      "id": "phase0_angle0_repaint",
+      "position": {
+        "values": [
+          6.574676513671875,
+          55.81300354003906,
+          -252.00990295410156
+        ],
+        "words": [
+          "0x40d263c0",
+          "0x425f4084",
+          "0xc37c0289"
+        ]
+      }
+    }
+  ],
+  "position_only_controls": {
+    "different_pixels": 197,
+    "card_local_rect": [
+      47,
+      18,
+      56,
+      54
+    ],
+    "cases": [
+      {
+        "id": "retained_main",
+        "before": "c063d24084405f4289027cc3",
+        "after": "c063d24084405f4289027cc3",
+        "crop_sha256": "5492869fc55fb123b611f23f9650143d303a1b8495be748f9a77ec96cac6e835",
+        "native_position_writes": 0
+      },
+      {
+        "id": "zero_only",
+        "before": "000000000000000000000000",
+        "after": "000000000000000000000000",
+        "crop_sha256": "64d266fdef36e8c2d67d88dbb5a0de93fb9a2ee62b1fc7cda1ecadfca6685ba8",
+        "native_position_writes": 0
+      },
+      {
+        "id": "retained_restored",
+        "before": "c063d24084405f4289027cc3",
+        "after": "c063d24084405f4289027cc3",
+        "crop_sha256": "5492869fc55fb123b611f23f9650143d303a1b8495be748f9a77ec96cac6e835",
+        "native_position_writes": 0
+      }
+    ],
+    "restoring_position_restores_all8415_crop_pixels": true
+  },
+  "full_repaint_writers": [
+    {
+      "case": "full_repaint",
+      "pc": "0x6315de",
+      "address": "0x750a00",
+      "bytes": 4,
+      "value": "0x43133a39"
+    },
+    {
+      "case": "full_repaint",
+      "pc": "0x6315e8",
+      "address": "0x750a04",
+      "bytes": 4,
+      "value": "0xc37c6501"
+    },
+    {
+      "case": "full_repaint",
+      "pc": "0x6315f2",
+      "address": "0x750a08",
+      "bytes": 4,
+      "value": "0xc3590fcb"
+    },
+    {
+      "case": "full_repaint",
+      "pc": "0x6315de",
+      "address": "0x750a00",
+      "bytes": 4,
+      "value": "0xc2755f0c"
+    },
+    {
+      "case": "full_repaint",
+      "pc": "0x6315e8",
+      "address": "0x750a04",
+      "bytes": 4,
+      "value": "0x43034a83"
+    },
+    {
+      "case": "full_repaint",
+      "pc": "0x6315f2",
+      "address": "0x750a08",
+      "bytes": 4,
+      "value": "0xc3c9441e"
+    },
+    {
+      "case": "full_repaint",
+      "pc": "0x6315de",
+      "address": "0x750a00",
+      "bytes": 4,
+      "value": "0x40d263c0"
+    },
+    {
+      "case": "full_repaint",
+      "pc": "0x6315e8",
+      "address": "0x750a04",
+      "bytes": 4,
+      "value": "0x425f4084"
+    },
+    {
+      "case": "full_repaint",
+      "pc": "0x6315f2",
+      "address": "0x750a08",
+      "bytes": 4,
+      "value": "0xc37c0289"
+    }
+  ],
+  "target_history": {
+    "ordinary_open": "Fresh constructor+first native full paint; chassis position zero.",
+    "morgan_scout": "probe_workshop_parent_visuals_20261021.py calls modal_open(0), then an EXTRA441ba0 before morgan_scout capture. Chassis inherits prior main centered position, despite phase/main angle both reset0."
+  },
+  "lifetime": {
+    "draft_selection": "4490b0 loads draft; no scene constructor reset.",
+    "full_paint": "441ba0 preserves shared scene position across ordered painters and calls.",
+    "timer": "4468a0 ->43f8c0 only; then5ee450 main rect and4d4380 audio resume. No direct full441ba0.",
+    "hide_close": "447910/4495f0/44990d close tail hide/stop timer and set mode0; no position writes.",
+    "next_ordinary_open": "449630 mode!=2 reconstructs4469a0, resetting scene position to0.",
+    "cached_mode2_open": "449630 skips4469a0 and retains scene state.",
+    "bare4468d0_reset": "Resets controls/yaw/timer/fonts/backing; Scene630f20 reset occurs separately in4469a0.",
+    "cached_main": "43fab5->56fd50 uses general/cache unit path, not WorkshopScene631370. Do not copy generalScene8f2790 position into the Workshop scene; keep the prior card position."
+  },
+  "morgan_target_control": {
+    "status": "PASS",
+    "cases": [
+      {
+        "id": "morgan_retained",
+        "sha256": "5492869fc55fb123b611f23f9650143d303a1b8495be748f9a77ec96cac6e835"
+      },
+      {
+        "id": "morgan_zero",
+        "sha256": "64d266fdef36e8c2d67d88dbb5a0de93fb9a2ee62b1fc7cda1ecadfca6685ba8"
+      },
+      {
+        "id": "morgan_restored",
+        "sha256": "5492869fc55fb123b611f23f9650143d303a1b8495be748f9a77ec96cac6e835"
+      }
+    ],
+    "reference_crop_differing_pixels": 0,
+    "zero_position_vs_reference_differing_pixels": 197,
+    "reference": "workshop-morgan-parent-visuals-v3-private-20261021/morgan_scout-indexed.bin",
+    "reference_crop": [
+      246,
+      175,
+      345,
+      260
+    ],
+    "material_tint": 251
+  },
+  "timer_lifetime_controls": {
+    "status": "PASS",
+    "timer": {
+      "admission": "Native4468a0 and43f8c0 execute;5ee450 presentation and4d4380 audio resume supplied boundaries.",
+      "position_before": "c063d24084405f4289027cc3",
+      "position_after": "c063d24084405f4289027cc3",
+      "draws": [
+        {
+          "caller": "0x43fb3a",
+          "this": "0x7509d4",
+          "flags": "0x17",
+          "position_at_draw": [
+            6.574676513671875,
+            55.81300354003906,
+            -252.00990295410156
+          ]
+        }
+      ],
+      "presentation": [
+        {
+          "pc": "0x5ee450",
+          "this": "0x73e238",
+          "rect": [
+            140,
+            9,
+            451,
+            320
+          ],
+          "arg1": 0
+        }
+      ]
+    },
+    "initializer": {
+      "entry": "630f20",
+      "before": [
+        11,
+        22,
+        33
+      ],
+      "position_after": "000000000000000000000000"
+    },
+    "selection": {
+      "entry": "4490b0(2,0)",
+      "before": [
+        11,
+        22,
+        33
+      ],
+      "position_after": "000030410000b04100000442"
+    }
+  },
+  "cached_main_control": {
+    "status": "PASS",
+    "scope": "Complete native43f8c0 with explicit synthetic selected icon0; general56fd50 renderer supplied boundary, no cached sprite visual claim. Installed Scout icon remains255.",
+    "position_before": "000030410000b04100000442",
+    "position_after": "000030410000b04100000442",
+    "angle_after": "0x3f800000",
+    "unit_renderer_calls": [
+      {
+        "pc": "0x56fd50",
+        "caller": "0x43faba",
+        "args": [
+          7595644,
+          2048,
+          202,
+          94,
+          14,
+          68,
+          0
+        ]
+      }
+    ]
+  },
+  "close_controls": {
+    "status": "PASS",
+    "scope": "Complete4495f0 for modes0/1/2; virtual hide447910, message flush615cd0, timer stop630240 and shared cleanup630380 supplied. Tests retained scene position and mode stores; not OS/timer teardown execution.",
+    "cases": [
+      {
+        "mode_before": 0,
+        "helpers": [
+          "0x447910",
+          "0x615cd0",
+          "0x630240",
+          "0x630380"
+        ],
+        "mode_after": 0,
+        "position_after": "000030410000b04100000442",
+        "active_actor": 0
+      },
+      {
+        "mode_before": 1,
+        "helpers": [],
+        "mode_after": 0,
+        "position_after": "000030410000b04100000442",
+        "active_actor": 7594552
+      },
+      {
+        "mode_before": 2,
+        "helpers": [
+          "0x447910",
+          "0x615cd0",
+          "0x630240",
+          "0x630380"
+        ],
+        "mode_after": 0,
+        "position_after": "000030410000b04100000442",
+        "active_actor": 0
+      }
+    ]
+  },
+  "chassis_ink_bounds": {
+    "retained_main": {
+      "model_ink_rect": [
+        47,
+        29,
+        56,
+        54
+      ],
+      "count": 116
+    },
+    "zero_only": {
+      "model_ink_rect": [
+        47,
+        18,
+        56,
+        43
+      ],
+      "count": 121
+    }
+  },
+  "source_packet_sha256": "fbfe44087fc9097ab3123cd581fdfe278e3fd214cf40189208f6b04a42d737a0"
+}

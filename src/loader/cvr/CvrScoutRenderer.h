@@ -70,6 +70,7 @@ public:
     // advances phase only when the Workshop hierarchy is visible. Animated
     // component selection uses the typed LoadWorkshopDesign recipe.
     CvrScoutImage RenderWorkshop(uint32_t yaw_bits=0,WorkshopAnimation* animation=nullptr) const;
+    CvrScoutImage RenderWorkshop(std::array<uint32_t,3>& position,uint32_t yaw_bits=0,WorkshopAnimation* animation=nullptr) const;
     using WorkshopReader=std::function<std::string(const std::string&)>;
     // Asset-derived conventional compositions. kind=-1 is the full model;
     // 0..3 builds the separate chassis/weapon/shield/reactor scene.

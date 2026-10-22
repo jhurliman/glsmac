@@ -1,5 +1,12 @@
 const dialog = #include('../default/ui/parts/game/popup/base_screen/workshop');
 let windows = []; let commands = []; let listeners = {}; let edits = []; let classes = {};
+let scene_paints = [];
+const same_position = (actual, expected) => { return actual[0] == expected[0] && actual[1] == expected[1] && actual[2] == expected[2]; };
+const scene_position = (kind, position) => {
+    test.assert(#sizeof(position) == 3);
+    scene_paints :+ {kind: kind, before: position + []};
+    return kind == 0 ? position : [position[0] + 1, position[1], position[2]];
+};
 const node = (data) => {
     data.preview_paints = 0; data.cached_paints = 0;
     data.smacworkshopclock = (operation) => { data.clock_operation = operation; };
@@ -42,10 +49,10 @@ const node = (data) => {
     data.smacworkshopabilitycardtext = (name, description) => {
         return [{text: name + ':  ', spans: [{text: name + ':  ', color: 224}]}, {text: description, spans: [{text: description, color: 222}]}];
     };
-    data.smacworkshopcomponents = (armor, only_armor) => { test.assert(only_armor); data.components_armor = armor; };
+    data.smacworkshopcomponents = (armor, only_armor, position) => { test.assert(only_armor); data.components_armor = armor; return scene_position(2, position); };
     data.smacworkshopstrip = (rows, faction, selected, hovered) => { data.strip_rows = rows; data.strip_faction = faction; data.strip_selected = selected; data.strip_hovered = hovered;
         return {normal: 'rgb(1,2,3)', unused: 'rgb(4,5,6)', obsolete: 'rgb(7,8,9)', empty_label: 'Empty Slot', obsolete_label: 'Obsolete'}; };
-    data.smacworkshopdesign = (chassis, weapon, armor, reactor, kind, faction, yaw, power, mode, strength, visible, abilities) => { data.preview_abilities = abilities; data.preview_visible = visible; data.preview_paints = data.preview_paints + 1; data.preview_chassis = chassis; data.preview_weapon = weapon; data.preview_reactor = reactor; data.preview_strength = strength; data.preview_power = power; data.preview_mode = mode; data.preview_armor = armor; data.preview_yaw = yaw; data.preview_faction = faction; };
+    data.smacworkshopdesign = (chassis, weapon, armor, reactor, kind, faction, yaw, power, mode, strength, visible, abilities, position) => { data.preview_abilities = abilities; data.preview_visible = visible; data.preview_paints = data.preview_paints + 1; data.preview_chassis = chassis; data.preview_weapon = weapon; data.preview_reactor = reactor; data.preview_strength = strength; data.preview_power = power; data.preview_mode = mode; data.preview_armor = armor; data.preview_yaw = yaw; data.preview_faction = faction; return scene_position(kind, position); };
     data.on = (event, cb) => { data.handlers[event] = cb; };
     data.listen = (target, event, cb) => { listeners[event] = cb; };
     const child = (properties) => { const value = node(properties); data.children :+ value; return value; };
@@ -83,6 +90,8 @@ test.assert(dialog.stats.baseline == 261);
 let stat_geometry = false; for (child of windows[0].children) { if (child.left == 140 && child.top == 9 && child.height == 311) { stat_geometry = true; } }
 test.assert(stat_geometry);
 dialog.open(base, selection); test.assert(dialog.active && !windows[0].hidden && dialog.selected_armor == 0);
+test.assert(scene_paints[0].kind == 0 && same_position(scene_paints[0].before, [0,0,0])
+    && scene_paints[1].kind == 1 && scene_paints[2].kind == 2 && scene_paints[3].kind == 3 && scene_paints[4].kind == (0 - 1));
 test.assert(dialog.chassis_stat.color == dialog.parent_text.colors[224] && dialog.reactor_stat.color == dialog.parent_text.colors[224]);
 test.assert(dialog.ability_labels[0].baseline == 61 && dialog.ability_labels[0].color == dialog.parent_text.colors[224]);
 dialog.ability_slots = [0, (0 - 1)]; dialog.update_labels();
@@ -114,6 +123,11 @@ for (part of dialog.component_models) { if (part.kind == 3) { test.assert(part.m
 
 test.assert(!dialog.model.preview_visible && !dialog.component_models[0].model.preview_visible);
 test.assert(dialog.model.preview_armor == 0 && dialog.model.preview_yaw == 0.0 && dialog.model.preview_faction == 'morgan.pcx');
+const previous_scene_position = dialog.preview_position + []; scene_paints = [];
+dialog.model.handlers.workshopframe({});
+test.assert(#sizeof(scene_paints) == 1 && scene_paints[0].kind == (0 - 1) && same_position(scene_paints[0].before, previous_scene_position));
+const after_timer_position = dialog.preview_position + []; scene_paints = []; dialog.update_armor();
+test.assert(scene_paints[0].kind == 0 && same_position(scene_paints[0].before, after_timer_position));
 dialog.open_picker(); test.assert(!windows[1].hidden && #sizeof(dialog.cards) == 3 && dialog.picker_canvas.picker_selected == 0 && #sizeof(dialog.picker_canvas.picker_rows) == 3 && #sizeof(dialog.cards[2].children) == 0);
 test.assert(release_card(2) == true && dialog.selected_armor == 0 && windows[1].hidden);
 dialog.open_picker();
@@ -605,12 +619,15 @@ dialog.open(base, selection); test.assert(dialog.model.clock_operation == 1);
 const paints = dialog.model.preview_paints; const old_component = dialog.component_models[0].model.preview_paints;
 dialog.model.handlers.workshopframe({}); test.assert(dialog.component_models[0].model.preview_paints == old_component && dialog.model.preview_paints == paints + 1 && dialog.model.preview_visible && dialog.model.preview_abilities == dialog.selected_abilities);
 selection.preview_icon = 3; selection.preview_variant = 2;
-dialog.model.handlers.workshopframe({}); test.assert(dialog.model.cached_icon == 3 && dialog.model.cached_variant == 2 && dialog.model.width == 311);
+const cached_scene_position = dialog.preview_position + [];
+dialog.model.handlers.workshopframe({}); test.assert(dialog.model.cached_icon == 3 && dialog.model.cached_variant == 2 && dialog.model.width == 311 && same_position(dialog.preview_position, cached_scene_position));
 selection.preview_icon = (0 - 1); dialog.model.handlers.workshopframe({}); test.assert(dialog.model.width == 256);
-const closed_paints = dialog.model.preview_paints; dialog.hide_view(); test.assert(dialog.model.clock_operation == 0 && dialog.model.handlers.workshopframe({}) && dialog.model.preview_paints == closed_paints);
+const closed_paints = dialog.model.preview_paints; const closing_scene_position = dialog.preview_position + [];
+dialog.hide_view(); test.assert(dialog.model.clock_operation == 0 && dialog.model.handlers.workshopframe({}) && dialog.model.preview_paints == closed_paints && same_position(dialog.preview_position, closing_scene_position));
 
 // Presets submit the current draft directly, once, and match replies by owner/request.
-selection.preset_state = 'opaque-preset-fence'; dialog.open(base, selection);
+selection.preset_state = 'opaque-preset-fence'; scene_paints = []; dialog.open(base, selection);
+test.assert(scene_paints[0].kind == 0 && same_position(scene_paints[0].before, [0,0,0]));
 test.assert(#sizeof(dialog.preset_buttons) == 14 && dialog.presets_heading.text == 'VEHICLE PRESETS' && dialog.presets_heading.color == 'color240');
 let preset_index = 0;
 for (button of dialog.preset_buttons) {

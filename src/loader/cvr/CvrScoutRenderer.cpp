@@ -379,12 +379,19 @@ CvrFrameAssembly CvrScoutRenderer::WorkshopFrames(WorkshopAnimation& animation) 
 }
 
 CvrScoutImage CvrScoutRenderer::RenderWorkshop(const uint32_t yaw_bits,WorkshopAnimation* animation) const {
+    std::array<uint32_t,3> position{};
+    return RenderWorkshop(position,yaw_bits,animation);
+}
+
+CvrScoutImage CvrScoutRenderer::RenderWorkshop(std::array<uint32_t,3>& position,const uint32_t yaw_bits,WorkshopAnimation* animation) const {
     using namespace scout;
     if(m_assets->profile!=Profile::Workshop) {throw std::invalid_argument("Workshop preview requires its assembled assets");}
     const Matrix identity{0x3f800000,0,0,0,0x3f800000,0,0,0,0x3f800000};
     auto next=animation ? *animation:WorkshopAnimation{};
     const auto frames=animation ? WorkshopFrames(next):CvrFrameAssembler::Assemble(m_assets->frames,m_assets->selections);
-    auto result=RenderView(MakeWorkshopView(WorkshopPosition(identity,{0,0,0},&frames),yaw_bits),9,false,std::nullopt,&frames);
+    const auto centered=WorkshopPosition(identity,position,&frames);
+    auto result=RenderView(MakeWorkshopView(centered,yaw_bits),9,false,std::nullopt,&frames);
+    position=centered;
     if(animation) {*animation=next;}return result;
 }
 

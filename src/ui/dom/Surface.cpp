@@ -44,6 +44,20 @@
 namespace ui {
 namespace dom {
 namespace {
+std::array<uint32_t,3> ReadWorkshopPosition(const gse::Value* value) {
+    if(!value || value->type!=gse::VT_ARRAY) {throw std::invalid_argument("Workshop scene position requires three words");}
+    const auto& fields=static_cast<const gse::value::Array*>(value)->value;
+    if(fields.size()!=3) {throw std::invalid_argument("Workshop scene position requires three words");}
+    std::array<uint32_t,3> position{};
+    for(size_t i=0;i<3;++i) {
+        if(!fields[i] || fields[i]->type!=gse::VT_INT) {throw std::invalid_argument("Workshop scene position requires unsigned words");}
+        const auto word=static_cast<const gse::value::Int*>(fields[i])->value;
+        if(word<0 || uint64_t(word)>UINT32_MAX) {throw std::invalid_argument("Workshop scene position word exceeds32 bits");}
+        position[i]=uint32_t(word);float coordinate;std::memcpy(&coordinate,&position[i],sizeof(coordinate));
+        if(!std::isfinite(coordinate)) {throw std::invalid_argument("Workshop scene position must be finite");}
+    }
+    return position;
+}
 uint64_t WorkshopNow() {
     return uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
 }
@@ -283,14 +297,17 @@ Surface::Surface( DOM_ARGS_T )
     }));
 
     Method(GSE_CALL,"smacworkshopcomponents",NATIVE_CALL(this) {
-        N_EXPECT_ARGS_MIN_MAX(1,2);N_GETVALUE(armor,0,Int);
-        bool armor_only=false;if(arguments.size()==2) {N_GETVALUE(only,1,Bool);armor_only=only;}
+        N_EXPECT_ARGS_MIN_MAX(1,3);N_GETVALUE(armor,0,Int);
+        bool armor_only=false;if(arguments.size()>=2) {N_GETVALUE(only,1,Bool);armor_only=only;}
+        const bool shared_position=arguments.size()==3;
+        auto position=shared_position ? ReadWorkshopPosition(arguments[2]):std::array<uint32_t,3>{};
         if(armor<0 || armor>9) {throw std::invalid_argument("Unsupported Workshop side-card draft");}
         EnsureWorkshopComponents();
         // One original painter pass shares centering state in component order.
-        std::array<uint32_t,3> position{};std::vector<uint8_t> rgba(623*368*4,0);
+        std::vector<uint8_t> rgba(623*368*4,0);
         const std::array<std::array<int,4>,4> clips{{{30,7,129,92},{30,101,129,186},{30,195,129,280},{462,7,561,92}}};
         for(int kind=0;kind<4;++kind) {
+            if(shared_position && armor_only && kind!=2) {continue;}
             const auto image=m_workshop_components->Render(kind,kind==2 ? int(armor):0,false,true,position);
             if(armor_only && kind!=2) {continue;}
             if(!image) {continue;}const auto& clip=clips[kind];
@@ -309,6 +326,7 @@ Surface::Surface( DOM_ARGS_T )
         }
         CreateTexture();m_background.texture->Resize(623,368);std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());
         m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
+        if(shared_position) {gse::value::array_elements_t words;for(const auto word:position) {words.push_back(VALUE(gse::value::Int,,word));}return VALUE(gse::value::Array,,words);}
         return VALUE(gse::value::Bool,,true);
     }));
 
@@ -466,7 +484,7 @@ Surface::Surface( DOM_ARGS_T )
     }));
 
     Method(GSE_CALL,"smacworkshopdesign",NATIVE_CALL(this) {
-        N_EXPECT_ARGS_MIN_MAX(10,12);N_GETVALUE(chassis,0,Int);N_GETVALUE(weapon,1,Int);N_GETVALUE(armor,2,Int);N_GETVALUE(reactor,3,Int);
+        N_EXPECT_ARGS_MIN_MAX(10,13);N_GETVALUE(chassis,0,Int);N_GETVALUE(weapon,1,Int);N_GETVALUE(armor,2,Int);N_GETVALUE(reactor,3,Int);
         N_GETVALUE(kind,4,Int);N_GETVALUE(faction,5,String);N_GETVALUE(yaw,6,Float);
         N_GETVALUE(power,7,Int);N_GETVALUE(mode,8,Int);N_GETVALUE(strength,9,Int);
         if(chassis<0 || chassis>8 || weapon<0 || weapon>20 || armor<0 || armor>9 || reactor<1 || reactor>4 || kind< -1 || kind>3
@@ -475,9 +493,11 @@ Surface::Surface( DOM_ARGS_T )
             || !std::isfinite(yaw) || !std::isfinite(static_cast<float>(yaw))) {throw std::invalid_argument("Unsupported Workshop composition request");}
         bool visible=false;if(arguments.size()>=11) {N_GETVALUE(show,10,Bool);visible=show;}
         const bool animated=arguments.size()>=11;
-        uint32_t abilities=0;if(arguments.size()==12) {N_GETVALUE(mask,11,Int);
+        uint32_t abilities=0;if(arguments.size()>=12) {N_GETVALUE(mask,11,Int);
             if(mask<0 || uint64_t(mask)>UINT32_MAX) {throw std::invalid_argument("Invalid Workshop ability mask");}abilities=uint32_t(mask);
         }
+        const bool shared_position=arguments.size()==13;
+        auto position=shared_position ? ReadWorkshopPosition(arguments[12]):std::array<uint32_t,3>{};
         const std::array<int,8> key{int(chassis),int(weapon),int(armor),int(reactor),int(kind),int(power),int(mode),int(strength)};
         if(!m_workshop_design || key!=m_workshop_design_key || faction!=m_workshop_design_faction || abilities!=m_workshop_design_abilities) {
             const auto read=[](const std::string& name) {std::vector<unsigned char> bytes;
@@ -487,14 +507,15 @@ Surface::Surface( DOM_ARGS_T )
             auto next=std::make_shared<const loader::cvr::CvrScoutRenderer>(std::move(renderer));
             m_workshop_design=std::move(next);m_workshop_design_key=key;m_workshop_design_faction=faction;m_workshop_design_abilities=abilities;
         }
-        const float angle=static_cast<float>(yaw);uint32_t bits;std::memcpy(&bits,&angle,sizeof(bits));std::array<uint32_t,3> position{};
+        const float angle=static_cast<float>(yaw);uint32_t bits;std::memcpy(&bits,&angle,sizeof(bits));
         if(animated && kind<0) {bits=m_workshop_preview.BeginPaint(false);}
         loader::cvr::CvrScoutRenderer::WorkshopAnimation animation{m_ui->ModelAnimationPhase(),visible};
-        const auto image=kind<0 ? m_workshop_design->RenderWorkshop(bits,animated ? &animation:nullptr):m_workshop_design->RenderWorkshopCard(int(kind),position,animated ? &animation:nullptr);
+        const auto image=kind<0 ? m_workshop_design->RenderWorkshop(position,bits,animated ? &animation:nullptr):m_workshop_design->RenderWorkshopCard(int(kind),position,animated ? &animation:nullptr);
         if(animated) {m_ui->ModelAnimationPhase()=animation.phase;}
         m_workshop_cached_key={-1,-1};
         CreateTexture();m_background.texture->Resize(256,256);std::memcpy(m_background.texture->GetBitmap(),image.rgba.data(),image.rgba.size());
         m_background.texture->FullUpdate();m_actor->SetTexture(m_background.texture);m_geometry->AsRectangle()->SetStretched();
+        if(shared_position) {gse::value::array_elements_t words;for(const auto word:position) {words.push_back(VALUE(gse::value::Int,,word));}return VALUE(gse::value::Array,,words);}
         return VALUE(gse::value::Bool,,true);
     }));
 

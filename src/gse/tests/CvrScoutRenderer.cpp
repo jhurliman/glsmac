@@ -563,6 +563,53 @@ void AddCvrScoutRendererTests( task::gsetests::GSETests* task ) {
         std::array<uint32_t,3> position{};GT_ASSERT(probe.RenderWorkshopCard(1,position).draw_count>0,"Independent Probe equipment was hidden by infantry body policy");
         GT_OK();
     });
+    task->AddTest("CVR Workshop shared position follows native first paint and repaint order",GT(){
+        const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
+        const auto read=[&](const std::string& name) {
+            for(const auto& entry:std::filesystem::directory_iterator(directory)) {
+                auto candidate=entry.path().filename().string();std::transform(candidate.begin(),candidate.end(),candidate.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if(candidate==name) {std::ifstream stream(entry.path(),std::ios::binary);return std::string(std::istreambuf_iterator<char>(stream),{});}
+            }throw std::runtime_error("Missing owned shared-scene asset: "+name);
+        };
+        using Renderer=loader::cvr::CvrScoutRenderer;
+        const auto chassis=Renderer::LoadWorkshopDesign(read,read("spartans.pcx"),0,0,0,1,0,{1,0,1});
+        const auto weapon=Renderer::LoadWorkshopDesign(read,read("spartans.pcx"),0,0,0,1,1,{1,0,1});
+        const auto reactor=Renderer::LoadWorkshopDesign(read,read("spartans.pcx"),0,0,0,1,3,{1,0,1});
+        const auto main=Renderer::LoadWorkshopDesign(read,read("spartans.pcx"),0,0,0,1,-1,{1,0,1});
+        std::array<uint32_t,3> position{};
+        const std::array<uint32_t,3> final{0x40d263c0,0x425f4084,0xc37c0289};
+        const std::array<std::array<uint32_t,3>,2> after_weapon{{{0x43133a39,0xc37c6502,0xc3590fca},{0x43133a39,0xc37c6501,0xc3590fcb}}};
+        const std::array<std::array<uint32_t,3>,2> after_reactor{{{0xc2755f0c,0x43034a82,0xc3c9441f},{0xc2755f0c,0x43034a83,0xc3c9441e}}};
+        const std::array<const char*,2> colors{{"25546750d0e1105189e0de82f8cdf2d73ae3291acdb196ae2e4d43d52d2bdffa","4fa3a6e662914027a11cd87c912ccda8bb17382c734fc0d3847a650997f9c7d7"}};
+        const std::array<const char*,2> depths{{"0974b4ddec8cd91866faf5019e4fb6eb84a64d27c624912e11706b75b3230643","1ba6ef5cd0a8a8e24b7c8e402b956316cc469dab3d29b1dd16fedd795207692b"}};
+        for(size_t paint=0;paint<2;++paint) {
+            const auto entry=position;const auto image=chassis.RenderWorkshopCard(0,position);
+            GT_ASSERT(position==entry,"Uncentered chassis discarded retained scene position");
+            std::vector<uint8_t> depth;for(const auto value:image.indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
+            const auto color_hash=util::SHA256(std::string_view(reinterpret_cast<const char*>(image.indexed.color.data()),image.indexed.color.size()));
+            const auto depth_hash=util::SHA256(std::string_view(reinterpret_cast<const char*>(depth.data()),depth.size()));
+            GT_ASSERT(color_hash==colors[paint] && depth_hash==depths[paint],"Complete causal chassis planes differ: "+color_hash+" / "+depth_hash);
+            // Native flags 0x21 skip one terminal per call: 42874 requested - 64 = 42810 processed.
+            GT_ASSERT(image.draw_count==64 && image.processed_records==42810,"Causal chassis group or processed-record count differs: "+std::to_string(image.draw_count)+" / "+std::to_string(image.processed_records));
+            weapon.RenderWorkshopCard(1,position);GT_ASSERT(position==after_weapon[paint],"Weapon did not center from native incoming scene position");
+            reactor.RenderWorkshopCard(3,position);GT_ASSERT(position==after_reactor[paint],"Reactor did not retain native intermediate rounding");
+            main.RenderWorkshop(position);GT_ASSERT(position==final,"Main did not return native bounds-centered position");
+        }
+        // Phase is seeded once, as in the original hidden full-paint control, and retained.
+        position={};Renderer::WorkshopAnimation animation{1,false};
+        for(size_t paint=0;paint<2;++paint) {
+            chassis.RenderWorkshopCard(0,position,&animation);
+            weapon.RenderWorkshopCard(1,position,&animation);
+            reactor.RenderWorkshopCard(3,position,&animation);
+            const auto image=main.RenderWorkshop(position,0,&animation);
+            std::vector<uint8_t> depth;for(const auto value:image.indexed.depth) {depth.push_back(uint8_t(value));depth.push_back(uint8_t(value>>8));}
+            GT_ASSERT(animation.phase==1 && position==(std::array<uint32_t,3>{0x40a4c540,0x42706428,0xc3826823}),"Hidden phase1 full paint changed phase or centered position");
+            GT_ASSERT(util::SHA256(std::string_view(reinterpret_cast<const char*>(image.indexed.color.data()),image.indexed.color.size()))=="ed4e467cae80982699d17acb47ad551b06847722851d7fc9a3a9a77a096d0d0b"
+                && util::SHA256(std::string_view(reinterpret_cast<const char*>(depth.data()),depth.size()))=="5dbabddb82d11dc50222d2b375189663edc3c9bbe2b859f0000476d9cd24bb92",
+                "Complete phase1 native main color/depth planes differ");
+        }
+        GT_OK();
+    });
     task->AddTest("CVR Workshop components match thirty-four complete original frames",GT(){
         const auto* directory=std::getenv("GLSMAC_SCOUT_ASSETS");if(!directory || !*directory) {GT_OK();}
         const auto read=[&](const std::string& name) {

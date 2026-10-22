@@ -21,6 +21,26 @@ template< typename F > bool Rejects( F f ) {
 }
 
 void AddSmacGroundEdgeCostTests( task::gsetests::GSETests* task ) {
+	task->AddTest( "SMAC High Morale ground edge costs match32 complete native queries", GT() {
+        // RE-SMAC-HIGH-MORALE-EDGE-001: only the ability word varies in each pair.
+        struct Terrain {uint32_t source,destination;int rockiness,planet,infantry,speeder;};
+        const Terrain cases[]{
+            {0,0,0,0,3,3},{0,0,2,0,6,6},{0,edge::Forest,0,0,6,6},
+            {edge::Road,edge::Road,0,0,1,1},{edge::River,edge::River,0,0,1,1},
+            {edge::Tube,edge::Tube,0,0,0,0},{0,edge::Fungus,0,0,9,9},{0,edge::Fungus,0,1,3,6}
+        };
+        for(const auto chassis:{edge::Chassis::Infantry,edge::Chassis::Speeder}) {
+            for(const auto abilities:{0u,0x4000u}) {for(const auto& c:cases) {
+                auto q=Ordinary();q.design.chassis=chassis;q.design.abilities=abilities;
+                q.design.basic_allowance=chassis==edge::Chassis::Infantry ? 3:6;
+                q.source.features=c.source;q.destination.features=c.destination;q.destination.rockiness=c.rockiness;q.retained_planet=c.planet;
+                GT_ASSERT(edge::QueryGroundEdgeCost(q)==(chassis==edge::Chassis::Infantry ? c.infantry:c.speeder),"Native High Morale edge cost differs");
+            }}
+        }
+        auto unsupported=Ordinary();unsupported.design.abilities=0x4400u;
+        GT_ASSERT(Rejects([&]{edge::QueryGroundEdgeCost(unsupported);}),"Passive High Morale admitted unsupported Antigrav semantics");
+        GT_OK();
+    });
 	task->AddTest( "SMAC ground edge cost matches admitted original terrain and infrastructure queries", GT() {
 		for ( const auto& c : fixtures::smac_ground_edge::CASES ) {
 			auto q = Ordinary();

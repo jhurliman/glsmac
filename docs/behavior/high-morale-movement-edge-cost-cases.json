@@ -1,0 +1,1027 @@
+{
+  "contract": "RE-SMAC-HIGH-MORALE-EDGE-001",
+  "status": "PASS",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "alpha_sha256": "38399e1d0b967455a9146b1c468b9ec9decda43dd168afd8c3c23e0f46e357d4",
+  "edge_cases": [
+    {
+      "id": "infantry_flat",
+      "inputs": {
+        "profile": "infantry",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": []
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": []
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 3,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 3,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "infantry_rocky",
+      "inputs": {
+        "profile": "infantry",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": []
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 2,
+          "features": []
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 6,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 6,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "infantry_forest",
+      "inputs": {
+        "profile": "infantry",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": []
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "forest"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 6,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 6,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "infantry_road",
+      "inputs": {
+        "profile": "infantry",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "road"
+          ]
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "road"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 1,
+          "ability_predicate_calls": [],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 1,
+          "ability_predicate_calls": [],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "infantry_river",
+      "inputs": {
+        "profile": "infantry",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "river"
+          ]
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "river"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 1,
+          "ability_predicate_calls": [],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 1,
+          "ability_predicate_calls": [],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "infantry_tube",
+      "inputs": {
+        "profile": "infantry",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "tube"
+          ]
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "tube"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 0,
+          "ability_predicate_calls": [],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 0,
+          "ability_predicate_calls": [],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "infantry_fungus",
+      "inputs": {
+        "profile": "infantry",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": []
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "fungus"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 9,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 9,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "infantry_fungus_positive_snapshot",
+      "inputs": {
+        "profile": "infantry",
+        "faction": 1,
+        "scale": 3,
+        "planet": 1,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": []
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "fungus"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 3,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            },
+            {
+              "design": 64,
+              "mask": "0x800000"
+            },
+            {
+              "design": 64,
+              "mask": "0x400"
+            },
+            {
+              "design": 64,
+              "mask": "0x800000"
+            },
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 2
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 3,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            },
+            {
+              "design": 64,
+              "mask": "0x800000"
+            },
+            {
+              "design": 64,
+              "mask": "0x400"
+            },
+            {
+              "design": 64,
+              "mask": "0x800000"
+            },
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 2
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "speeder_flat",
+      "inputs": {
+        "profile": "speeder",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": []
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": []
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 3,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 3,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "speeder_rocky",
+      "inputs": {
+        "profile": "speeder",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": []
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 2,
+          "features": []
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 6,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 6,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "speeder_forest",
+      "inputs": {
+        "profile": "speeder",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": []
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "forest"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 6,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 6,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "speeder_road",
+      "inputs": {
+        "profile": "speeder",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "road"
+          ]
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "road"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 1,
+          "ability_predicate_calls": [],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 1,
+          "ability_predicate_calls": [],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "speeder_river",
+      "inputs": {
+        "profile": "speeder",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "river"
+          ]
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "river"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 1,
+          "ability_predicate_calls": [],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 1,
+          "ability_predicate_calls": [],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "speeder_tube",
+      "inputs": {
+        "profile": "speeder",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "tube"
+          ]
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "tube"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 0,
+          "ability_predicate_calls": [],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 0,
+          "ability_predicate_calls": [],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "speeder_fungus",
+      "inputs": {
+        "profile": "speeder",
+        "faction": 1,
+        "scale": 3,
+        "planet": 0,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": []
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "fungus"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 9,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 9,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 0
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "speeder_fungus_positive_snapshot",
+      "inputs": {
+        "profile": "speeder",
+        "faction": 1,
+        "scale": 3,
+        "planet": 1,
+        "current_planet": 0,
+        "xeno": "none",
+        "wrap": true,
+        "terrain_switch": 0,
+        "source": {
+          "coordinate": [
+            8,
+            8
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": []
+        },
+        "destination": {
+          "coordinate": [
+            9,
+            9
+          ],
+          "band": 3,
+          "rockiness": 0,
+          "features": [
+            "fungus"
+          ]
+        }
+      },
+      "variants": [
+        {
+          "abilities": "0x0",
+          "cost": 6,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            },
+            {
+              "design": 64,
+              "mask": "0x800000"
+            },
+            {
+              "design": 64,
+              "mask": "0x400"
+            },
+            {
+              "design": 64,
+              "mask": "0x800000"
+            },
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 2
+        },
+        {
+          "abilities": "0x4000",
+          "cost": 6,
+          "ability_predicate_calls": [
+            {
+              "design": 64,
+              "mask": "0x400"
+            },
+            {
+              "design": 64,
+              "mask": "0x800000"
+            },
+            {
+              "design": 64,
+              "mask": "0x400"
+            },
+            {
+              "design": 64,
+              "mask": "0x800000"
+            },
+            {
+              "design": 64,
+              "mask": "0x400"
+            }
+          ],
+          "basic_helper_entries": 2
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "stat_cases": [
+    {
+      "chassis": 0,
+      "abilities": "0x0",
+      "stored_morale": 5,
+      "effective_morale": 5,
+      "basic_allowance": 3,
+      "full_allowance": 3,
+      "elite_suppressed_allowance": 3,
+      "passed": true
+    },
+    {
+      "chassis": 0,
+      "abilities": "0x0",
+      "stored_morale": 6,
+      "effective_morale": 6,
+      "basic_allowance": 3,
+      "full_allowance": 6,
+      "elite_suppressed_allowance": 3,
+      "passed": true
+    },
+    {
+      "chassis": 0,
+      "abilities": "0x4000",
+      "stored_morale": 5,
+      "effective_morale": 5,
+      "basic_allowance": 3,
+      "full_allowance": 3,
+      "elite_suppressed_allowance": 3,
+      "passed": true
+    },
+    {
+      "chassis": 0,
+      "abilities": "0x4000",
+      "stored_morale": 6,
+      "effective_morale": 6,
+      "basic_allowance": 3,
+      "full_allowance": 6,
+      "elite_suppressed_allowance": 3,
+      "passed": true
+    },
+    {
+      "chassis": 1,
+      "abilities": "0x0",
+      "stored_morale": 5,
+      "effective_morale": 5,
+      "basic_allowance": 6,
+      "full_allowance": 6,
+      "elite_suppressed_allowance": 6,
+      "passed": true
+    },
+    {
+      "chassis": 1,
+      "abilities": "0x0",
+      "stored_morale": 6,
+      "effective_morale": 6,
+      "basic_allowance": 6,
+      "full_allowance": 9,
+      "elite_suppressed_allowance": 6,
+      "passed": true
+    },
+    {
+      "chassis": 1,
+      "abilities": "0x4000",
+      "stored_morale": 5,
+      "effective_morale": 5,
+      "basic_allowance": 6,
+      "full_allowance": 6,
+      "elite_suppressed_allowance": 6,
+      "passed": true
+    },
+    {
+      "chassis": 1,
+      "abilities": "0x4000",
+      "stored_morale": 6,
+      "effective_morale": 6,
+      "basic_allowance": 6,
+      "full_allowance": 9,
+      "elite_suppressed_allowance": 6,
+      "passed": true
+    }
+  ],
+  "scope": "Complete native5aaad0 edge helper, actual5d6310 ability predicate and5d9400 basic design allowance. Same supplied design64 conventional ground fixture, bit14 toggled only. 16 paired edge cases (32 calls), including positive-snapshot fungus; 8 supplied neutral undamaged unit-state cases execute complete morale/basic/full/suppressed queries. No instruction patches or substituted helper returns. No move admission, production training, promotion, combat, UI or booted campaign claim."
+}

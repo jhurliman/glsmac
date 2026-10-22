@@ -1771,6 +1771,39 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         }GT_OK();
     });
 
+    task->AddTest("SMAC manufactured High Morale moves and replays through saved Start",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        std::string checkpoint,completed;size_t id=0;
+        const auto move=[&](GSE_CALLABLE,ConventionalUnitFixture& active)->std::string {
+            auto* game=active.Game();auto* unit=game->GetUM()->GetUnit(id);auto* destination=game->GetMap()->GetTile(4,2);
+            GT_ASSERT((destination->terraforming&map::tile::TERRAFORMING_FOREST) && destination->rockiness==map::tile::ROCKINESS_FLAT,"High Morale fixture lost its forest destination");
+            const auto random=active.GameplayRandom();active.MoveEvent(GSE_CALL,unit,destination);
+            GT_ASSERT(unit->GetTile()==destination && unit->Conventional().spent==6 && unit->Conventional().stored_morale==2
+                && unit->Conventional().home_base_id==701 && active.GameplayRandom()==random,"High Morale movement: moved="+std::to_string(unit->GetTile()==destination)
+                +" spent="+std::to_string(unit->Conventional().spent)+" morale="+std::to_string(unit->Conventional().stored_morale)
+                +" home="+std::to_string(unit->Conventional().home_base_id.value_or(0))+" RNG="+std::to_string(active.GameplayRandom()==random));
+            completed=ResearchSnapshot(game,active.Snapshot());GT_OK();
+        };
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS",32,16);
+        const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,false);auto* um=game->GetUM();
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(false,true,32,16));fixture.RetainedMorale(0,0);
+            const auto& catalog=game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
+            fixture.ResourceState([&](auto& state){auto pool=*state.designs.native_registry;auto& row=pool[127];row=pool[2];
+                row[38]=1;row[33]=0x40;row[41]=3;row[45]=2;row[48]=7;row[49]=0;state.designs.RetainNativeRegistry(pool,catalog);});
+            auto prepared=um->PrepareManufacturedConventionalUnit(GSE_CALL,*base,127,um->GetUnitDef("live-scout"),SmacMoraleMode::Mode0);
+            auto* unit=prepared.Commit();prepared.Notify(GSE_CALL);id=unit->m_id;
+            GT_ASSERT(unit->Conventional().stored_morale==2 && unit->QueryStats(SmacMoraleMode::Mode1).full_allowance==3,"Factory lost High Morale bonus or ordinary allowance");
+            checkpoint=fixture.Snapshot();return move(GSE_CALL,fixture);
+        });GT_ASSERT(error.empty(),"Manufactured High Morale: "+error);
+        const auto uninterrupted=completed;ConventionalUnitFixture restored;restored.ConfigureProduction(TanksSource,"GAIANS",32,16);
+        return restored.Run([&](GSE_CALLABLE)->std::string {
+            restored.RestoreThroughStart(GSE_CALL,checkpoint,[](GSE_CALLABLE){});
+            const auto error=move(GSE_CALL,restored);GT_ASSERT(error.empty(),"Restored High Morale: "+error);
+            GT_ASSERT(completed==uninterrupted,"Saved Start changed High Morale movement continuation");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC live manufacturing allocation refusal retains debit history queue and all2048 Units",[](GSE*,context::Context*)->std::string {
         std::string full_pool;ConventionalUnitFixture source;source.ConfigureProduction(TanksSource,"GAIANS",32,16);
         const auto setup=source.Run([&](GSE_CALLABLE)->std::string {

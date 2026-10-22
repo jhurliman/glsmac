@@ -1815,8 +1815,8 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });
     });
 
-    task->AddTest("SMAC Colony allocation refusal preserves size two easy Accept and Delay through live callers",[](GSE*,context::Context*)->std::string {
-        for(int profile=0;profile<4;++profile) {
+    for(int profile=0;profile<4;++profile) {
+        task->AddTest("SMAC Colony allocation refusal preserves size two easy Accept and Delay through live callers profile "+std::to_string(profile),[profile](GSE*,context::Context*)->std::string {
             std::string full_pool;ConventionalUnitFixture source;source.ConfigureProduction(ColonyChoiceSource,"GAIANS",32,16);
             const auto setup=source.Run([&](GSE_CALLABLE)->std::string {
                 auto* game=source.Game();auto* base=Populate(GSE_CALL,source,false,false,0,1,profile==0 ? 2:1);
@@ -1859,8 +1859,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 for(const auto& row:units) {GT_ASSERT(game::backend::unit::Unit::Serialize(um->GetUnit(row.first)).ToString()==row.second,"Colony refusal changed an existing Unit");}
                 GT_OK();
             });GT_ASSERT(tail.empty(),"Colony limit tail: "+tail);
-        }GT_OK();
-    });
+            GT_OK();
+        });
+    }
 
     task->AddTest("SMAC retained Unit names publish independently of shared Def and refresh after Workshop Apply",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(TanksSource,"GAIANS");std::string saved;
@@ -3789,12 +3790,14 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             }
         }}GT_OK();
     });
-    task->AddTest("SMAC live undefended Base capture commits ownership loot homes history and actual Start",[](GSE*,context::Context*)->std::string {
-        using namespace game::backend::unit;
-        const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
-        // The final extension distinguishes relocation scoring from nearest
-        // home repair: the larger farther Base receives HQ, not the Former.
-        for(const int mode:{18,19,2,1,0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17}) {
+    // Register complete independent scenarios separately so one hash shard does
+    // not own the entire capture/reload matrix and exhaust its batch deadline.
+    for(const int mode:{18,19,2,1,0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17}) {
+        task->AddTest("SMAC live undefended Base capture commits ownership loot homes history and actual Start scenario "+std::to_string(mode),[mode](GSE*,context::Context*)->std::string {
+            using namespace game::backend::unit;
+            const std::array<std::string,8> names{"live-worker","live-role-0","live-role-1","live-role-2","live-role-3","live-role-4","live-role-5","live-role-6"};
+            // The final extension distinguishes relocation scoring from nearest
+            // home repair: the larger farther Base receives HQ, not the Former.
             const bool computer=mode>=18,retained=mode>=10 && mode<16,liberation=retained && (mode%2==0 || mode>=14),raze=mode==16 || mode==17;
             const bool with_native=mode==8 || mode==9;const int scenario=computer ? (mode==19?5:3):raze ? 3:retained ? (mode==12 || mode==13 || mode==15 ? 4:3):with_native?mode-8:mode;
             const size_t population=computer ? 3:mode>=14 ? 1:scenario>=3 ? 3:2;
@@ -4035,8 +4038,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     }GT_OK();
                 });if(!result.empty()) {return "capture restore: "+result;}
             }
-        }GT_OK();
-    });
+            GT_OK();
+        });
+    }
 
     task->AddTest("SMAC nonzero initialization clears mutual relation mask and retains battle history",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(TanksSource,true);

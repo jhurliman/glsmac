@@ -53,6 +53,9 @@ Config::Config( const std::string& path )
     m_manager->AddRule("automatic-unit-designs", "true|false", "Enable automatic unit design ability suggestions", AH(this) {
         if(value!="true" && value!="false") {throw std::runtime_error("automatic-unit-designs requires true or false");}
     });
+    m_manager->AddRule("smac-preferences","W0,W1,W2","SMAC preference words as unsigned decimals",AH(this) {
+        smac_preferences::Load(value);
+    });
 
 	m_manager->AddRule(
 		"benchmark", "Disable VSync and FPS limit", AH( this ) {
@@ -597,6 +600,14 @@ gse::Value* const Config::Wrap( GSE_CALLABLE ) {
 		m_wrapped_config = new wrapped::Config( m_manager );
 	}
 	return m_wrapped_config->Wrap( GSE_CALL );
+}
+
+bool Config::GetSmacPreference(int control_id) const {
+    const auto words=m_manager->GetSmacPreferences(false,2);
+    for(const auto& binding:smac_preferences::Bindings) {
+        if(binding.id==control_id) {return bool(words[binding.word]&binding.mask)!=binding.inverted;}
+    }
+    throw std::invalid_argument("Unknown SMAC preference control");
 }
 
 }

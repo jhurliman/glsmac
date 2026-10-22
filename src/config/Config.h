@@ -120,6 +120,8 @@ CLASS( Config, common::Module )
 #endif
 
 	gse::Value* const Wrap( GSE_CALLABLE );
+    // Frontend/main-thread reader; preference writes are UI-owned.
+    bool GetSmacPreference(int control_id) const;
 
 private:
 

@@ -18,6 +18,7 @@ for (name of ['first_base', 'research', 'colony']) {
     p.modules[name].pending = {}; test.assert(!controller.open() && #sizeof(calls) == 1); p.modules[name].pending = null;
 }
 popup.popup = {}; test.assert(!controller.open()); popup.popup = null;
+p.modules.preferences = {active: true}; test.assert(!controller.open()); p.modules.preferences.active = false;
 editor.active = true; test.assert(!controller.open()); editor.active = false;
 editor.opening = true; test.assert(!controller.open()); editor.opening = false;
 ruleset = 'smax'; test.assert(!controller.open()); ruleset = 'smac';

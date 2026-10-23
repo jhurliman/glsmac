@@ -70,6 +70,20 @@ Surface::Surface( DOM_ARGS_T )
         }
         return VALUE(gse::value::Array,,pages);
     }));
+    Method(GSE_CALL,"smacpreferencescaptions",NATIVE_CALL(this) {
+        N_EXPECT_ARGS(0);
+        std::vector<unsigned char> bytes;util::FS::ReadFile(bytes,g_engine->GetResourceManager()->GetCustomPath("labels.txt"));
+        const auto labels=loader::txt::TXTLoader::ReadUniqueSection(std::string(bytes.begin(),bytes.end()),"LABELS");
+        // The text reader retains the count at0. These are original native
+        // zero-based token slots, not physical source lines or English keys.
+        const std::array<size_t,20> slots{{750,751,752,753,754,1077,1078,1079,101,102,1088,664,1080,1081,1082,1083,1084,1085,1086,1087}};
+        gse::value::array_elements_t words;
+        for(const auto slot:slots) {
+            if(slot+1>=labels.size() || labels[slot+1].empty() || labels[slot+1].size()>256) {GSE_ERROR(gse::EC.LOADER_ERROR,"Incomplete Preferences caption source");}
+            words.push_back(VALUE(gse::value::String,,labels[slot+1]));
+        }
+        return VALUE(gse::value::Array,,words);
+    }));
 
     Method(GSE_CALL,"smacworkshopparenttext",NATIVE_CALL(this) {
         N_EXPECT_ARGS(0);return WorkshopParentText(GSE_CALL);
@@ -193,7 +207,8 @@ Surface::Surface( DOM_ARGS_T )
         std::vector<uint8_t> indexed(size_t(width)*20,9);const int top=127+21*int(state);
         for(int y=0;y<20;++y) {for(int x=0;x<width;++x) {
             const int sx=x<3 ? 64+x:x>=width-3 ? 136+x-int(width)+3:68+(x-3)%67;
-            indexed[size_t(y)*size_t(width)+size_t(x)]=m_dialog_source->indexed[size_t(top+y)*750+size_t(sx)];
+            const auto index=m_dialog_source->indexed[size_t(top+y)*750+size_t(sx)];
+            indexed[size_t(y)*size_t(width)+size_t(x)]=(index==6 || index==7)?9:index;
         }}
         const auto rgba=loader::texture::smac_dialog_frame::Rgba(indexed,*m_dialog_source);
         CreateTexture();m_background.texture->Resize(width,20);std::memcpy(m_background.texture->GetBitmap(),rgba.data(),rgba.size());

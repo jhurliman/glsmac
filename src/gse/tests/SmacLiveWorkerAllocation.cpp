@@ -430,7 +430,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
                 um->DefineUnit(new StaticDef("MindWorms",um->GetMoraleSet("live-morale"),"Mind Worms",MT_LAND,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
                 fixture.ResourceState([](auto& state){state.native_factory=faction::SmacNativeFactoryState::Initialize(0,state.gameplay_random);state.ecology_history=faction::SmacEcologyHistory{};state.ecology_history->clean_minerals[1]=1;});
-                const auto spawn=PrepareSmacNativeSpawn({{{3,1},128,64,true},1,7,9,1},{{{3,1},1},{{4,2},1},{{2,4},1}},[](int32_t,int32_t){return SmacNativeSpawnTile{3,false,1,1,false,15};});
+                for(const auto point:{std::array<int,2>{3,1},{4,2},{1,1}}) {game->GetMap()->GetTile(point[0],point[1])->features|=FEATURE_XENOFUNGUS;}
+                const auto spawn=PrepareSmacNativeSpawn({{{3,1},128,64,true},1,9,9,1},{{{2,2},1}},[](int32_t x,int32_t y){
+                    const bool fungus=(x==3 && y==1) || (x==4 && y==2) || (x==1 && y==1);return SmacNativeSpawnTile{3,fungus,1,1,false,15};});
                 auto birth=um->PrepareEcologyNativeBirths(GSE_CALL,spawn);GT_ASSERT(birth.Size()==3,"Raid fixture omitted its three native bodies");
                 const auto invading=birth.Candidate(0).m_id,kept=birth.Candidate(1).m_id,removed=birth.Candidate(2).m_id;birth.Commit();birth.Notify(GSE_CALL);
                 auto* actor=um->GetUnit(invading);auto* wrapper=actor->Wrap(GSE_CALL);auto* tile=base->GetTile();

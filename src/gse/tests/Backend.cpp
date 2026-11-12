@@ -923,7 +923,7 @@ public:
         const auto saved=game::backend::campaign::Read(path);
         const auto restored=CheckCampaignRestore(path,saved.world,nullptr,false);
         if(!restored.empty()) {return restored;}
-        return CheckLocalCampaignReplay(1);
+        return CheckLocalCampaignReplay(3);
     }
 
     std::string ConfigureMilestoneFactionPresentations() {
@@ -13215,7 +13215,7 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
         const auto result=fixture.CheckLocalCampaignReplay(1);
         GT_ASSERT(result.empty(),"Short generated replay: "+result);GT_OK();
     });
-    task->AddTest("SMAC milestone saved checkpoint restores and replays one human boundary",GT(){
+    task->AddTest("SMAC milestone saved checkpoint restores and replays three human boundaries",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");const auto* checkpoint=std::getenv("GLSMAC_CAMPAIGN_REPLAY_CHECKPOINT");
         if(!assets || !*assets || !checkpoint || !*checkpoint) {GT_OK();}
         const auto source=[&](const std::string& name)->std::string {

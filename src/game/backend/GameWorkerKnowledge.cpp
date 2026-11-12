@@ -338,7 +338,7 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
 	}
 	// Stored visibility is updated by this event, never rebuilt globally. The
 	// Basic ground detection and owned sensor detection use separate readers;
-    // concealed positive opponents retain their explicit relation/ability gate.
+    // concealed positive opponents retain their separate directed relation gates.
 	auto& moving=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==id;});
 	const auto adjacent=[&](const map::tile::Tile* a,const map::tile::Tile* b) {
         auto dx=std::abs(int64_t(a->coord.x)-int64_t(b->coord.x));
@@ -346,13 +346,24 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
         const auto dy=std::abs(int64_t(a->coord.y)-int64_t(b->coord.y));
         return dx+dy==2;
     };
-    const auto ordinary=[](const map::tile::Tile* tile) {
-        // Basic ground detection has no rockiness, forest, improvement or edge
-        // test. Fungus concealment has its separate relation/ability branch.
-        if(tile->is_water_tile || (tile->features&map::tile::FEATURE_XENOFUNGUS)) {
-            throw std::runtime_error("Foreign sight requires ordinary unconcealed ground detection");
-        }
+    const auto* actor=m_um->GetUnit(id);
+    // Fresh factories initialize flags0 and admit only ordinary ground designs
+    // (currently0/0x4000 abilities). Existing actors retain their actual bits.
+    const auto abilities=[&](const unit::Unit* value) -> uint32_t {
+        return value && value->IsConventional()?ResolveConventionalDesign(value->Conventional(),*m_simulation).abilities:0;
     };
+    const auto concealed=[&](const unit::Unit* value,const map::tile::Tile* tile) {
+        const auto special=abilities(value)&0x44u;
+        const bool flags=value && value->IsConventional() && value->Conventional().native_flags
+            && (*value->Conventional().native_flags&0x400u);
+        return special || flags || bool(tile->features&map::tile::FEATURE_XENOFUNGUS);
+    };
+    const bool mover_concealed=concealed(actor,destination);
+    const auto center_index=size_t(destination->coord.y)*size_t(data.width/2)+destination->coord.x/2;
+    const bool enhanced=(abilities(actor)&2u) || ((destination->terraforming&map::tile::TERRAFORMING_SENSOR)
+        && data.tiles[center_index].claimant==owner);
+    const auto contact_direction=m_simulation->value.hostility.owners.find(owner);
+    if(contact_direction==m_simulation->value.hostility.owners.end()) {throw std::runtime_error("Ordinary sight lacks directed relationship authority");}
 	for ( const auto& entry:m_um->GetUnits() ) {
 		const auto* other=entry.second; const auto faction=other->SimulationOwner();
 		if(entry.first==id || faction==owner) {continue;}
@@ -374,12 +385,19 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
             continue;
         }
 		if(adjacent(destination,tile) || destination==tile) {
-			ordinary(destination); ordinary(tile); if(tile->units.size()!=1 || destination==tile) {throw std::runtime_error("Foreign sight stacks are not admitted");}
-			moving.visible_to |= uint8_t(1u<<faction);
-            prepared.disclosed_to_humans.push_back(id);
-			auto& observation=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==entry.first;});
-			observation.visible_to |= uint8_t(1u<<owner);
-            prepared.disclosed_to_humans.push_back(entry.first);
+            if(tile->is_water_tile || destination==tile || tile->units.size()!=1) {throw std::runtime_error("Foreign sight requires distinct ordinary ground stacks");}
+            //5cebd3..5cec18: concealment gates the mover independently of the
+            // stationary opponent. The raw directed bit8 is not a worker Pact flag.
+            const bool contact=contact_direction->second.directions.at(faction).primary&8u;
+            if(!mover_concealed || (abilities(other)&2u) || !contact) {
+                moving.visible_to|=uint8_t(1u<<faction);prepared.disclosed_to_humans.push_back(id);
+            }
+            //5cee64..5cef16: ordinary singleton Fungus/stealth is concealed
+            // from a contacted opponent without enhanced sight. Old masks stay.
+            if(!concealed(other,tile) || enhanced || !contact) {
+                auto& observation=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==entry.first;});
+                observation.visible_to|=uint8_t(1u<<owner);prepared.disclosed_to_humans.push_back(entry.first);
+            }
 		}
 	}
 	for ( const auto& entry:m_bm->GetBases() ) {
@@ -387,16 +405,15 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
 		if(faction==owner) {continue;}
 		if(base->GetTile()==destination) {throw std::runtime_error("Foreign Base entry is not admitted");}
 		const auto* center=base->GetTile();
-		if(adjacent(destination,center)) {ordinary(destination); ordinary(center); moving.visible_to |= uint8_t(1u<<faction);
+		if(adjacent(destination,center)) {moving.visible_to |= uint8_t(1u<<faction);
             prepared.disclosed_to_humans.push_back(id);}
 	}
     // Original5ce6e2/5cf43e visit inner9 plus outer16 sensor positions.
     // They disclose the moving stack to the sensor's retained raw claimant;
     // ownership alone never grants visibility. Base-marked sensors are skipped.
-    const auto* actor=m_um->GetUnit(id);
-    const bool concealed=actor && actor->IsConventional() && actor->Conventional().native_flags
-        && (*actor->Conventional().native_flags&0x400u);
-    if(!concealed) {
+    const bool sensor_concealed=(abilities(actor)&0x44u) || (actor && actor->IsConventional() && actor->Conventional().native_flags
+        && (*actor->Conventional().native_flags&0x400u));
+    if(!sensor_concealed) {
         for(int dy=-4;dy<=4;++dy) {for(int dx=-4;dx<=4;++dx) {
             if(std::abs(dx)+std::abs(dy)>4 || ((dx^dy)&1)) {continue;}
             auto x=int32_t(destination->coord.x)+dx;const auto y=int32_t(destination->coord.y)+dy;

@@ -596,19 +596,36 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
         }
         GT_OK();
     });
-	task->AddTest( "SMAC live ordinary sight rejects unsupported detection before publication", GT() {
-		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
-		return fixture.Run([&](GSE_CALLABLE)->std::string {
-			auto* game=fixture.Game();Definitions(game);
-			for(size_t y=0;y<64;++y){for(size_t x=y&1;x<128;x+=2){auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners){*corner=100;}tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->Update();}}
-			Spawn(GSE_CALL,game,71,0,1,32,16);
-			Knowledge::Data data{128,64,true,true,0,{},{},{}};data.tiles.resize(4096,{2,std::nullopt});data.observers[1]=Knowledge::Observer{};data.observers[2]=Knowledge::Observer{};data.units={{71,0,false}};
-			game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));const auto bytes=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();const auto next=Unit::GetNextId();const auto queued=fixture.QueuedFrontendRequests().size();
-			auto* tile=game->GetMap()->GetTile(33,15);tile->features=map::tile::FEATURE_XENOFUNGUS;
-			GT_ASSERT(Rejects([&]{Spawn(GSE_CALL,game,72,1,2,33,15);}) && game->GetUM()->GetUnits().size()==1 && tile->units.empty() && Unit::GetNextId()==next && fixture.QueuedFrontendRequests().size()==queued && game->GetMap()->GetSmacWorkerKnowledge()->Serialize()==bytes,
-				"unsupported detection partly published identity, membership, queues or sight");GT_OK();
-		});
-	} );
+    task->AddTest("SMAC ordinary Fungus sight keeps directional concealment and stationary history",GT(){
+        for(int terrain=0;terrain<4;++terrain) {for(const bool contact:{false,true}) {for(const bool sensor:{false,true}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();Definitions(game);
+                for(size_t y=0;y<64;++y) {for(size_t x=y&1;x<128;x+=2) {
+                    auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners) {*corner=100;}
+                    tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->Update();
+                }}
+                Spawn(GSE_CALL,game,71,0,1,32,16);
+                if(terrain&1) {game->GetMap()->GetTile(33,15)->features=map::tile::FEATURE_XENOFUNGUS;}
+                if(terrain&2) {game->GetMap()->GetTile(32,16)->features=map::tile::FEATURE_XENOFUNGUS;}
+                if(sensor) {game->GetMap()->GetTile(33,15)->terraforming=map::tile::TERRAFORMING_SENSOR;}
+                fixture.ResourceState([&](auto& state){state.hostility.owners.at(2).directions[1].primary=contact?8:0;
+                    state.hostility.owners.at(1).directions[2].primary=contact?0:8;});
+                Knowledge::Data data{128,64,true,true,0,{},{},{}};data.tiles.resize(4096,{0,std::nullopt});
+                data.observers[1]=Knowledge::Observer{};data.observers[2]=Knowledge::Observer{};data.units={{71,128,false}};
+                if(sensor) {data.tiles[15*64+33/2].claimant=2;}
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                const auto rng=fixture.GameplayRandom();Spawn(GSE_CALL,game,72,1,2,33,15);
+                const auto actual=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                const uint8_t mover=(contact && (terrain&1))?0:2;
+                const uint8_t stationary=128|((contact && (terrain&2) && !sensor)?0:4);
+                GT_ASSERT(actual.units[0].visible_to==stationary && actual.units[1].visible_to==mover,
+                    "Fungus sight conflated directional mover/target concealment, enhanced sight or stationary history");
+                GT_ASSERT(fixture.GameplayRandom()==rng,"Fungus sight consumed gameplay RNG");GT_OK();
+            });GT_ASSERT(result.empty(),"Fungus sight terrain "+std::to_string(terrain)+": "+result);
+        }}}
+        GT_OK();
+    });
 
 	task->AddTest( "SMAC live worker knowledge joins actual entities and terrain without query effects", []( GSE*, context::Context* ) -> std::string {
 		for ( bool sea : { false, true } ) {

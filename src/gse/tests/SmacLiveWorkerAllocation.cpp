@@ -409,7 +409,7 @@ NativeCoexistenceCanary PublishUnrelatedNative(GSE_CALLABLE,ConventionalUnitFixt
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
     task->AddTest("SMAC native Base raid joins facility population quota and atomic removal",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
-        for(const int scenario:{0,1,2,3,4}) {
+        for(const int scenario:{0,1,2,3,4,5}) {
             ConventionalUnitFixture fixture;fixture.ConfigureProduction(ColonyChoiceSource,"GAIANS");
             const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
                 auto* game=fixture.Game();auto* bm=game->GetBM();auto* um=game->GetUM();
@@ -445,8 +445,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 }
                 fixture.WithNativeController([&]{um->MoveWildNativeUnit(GSE_CALL,actor,tile);});
                 GT_ASSERT(!um->GetUnit(invading) && !um->GetUnit(removed) && um->GetUnit(kept) && wrapper->type==VT_UNDEFINED,"Raid did not consume invader and apply the retained H quota");
-                GT_ASSERT(fixture.GameplayRandom()==expected,"Raid facility search consumed the wrong CRT suffix");
-                if(scenario==3) {GT_ASSERT(!bm->GetBase(701) && !tile->base && bm->GetBase(702)==other,"Native raid captured or retained a destroyed Base");}
+                if(scenario!=5) {GT_ASSERT(fixture.GameplayRandom()==expected,"Raid facility search consumed the wrong CRT suffix");}
+                if(scenario==3 || scenario==5) {
+                    GT_ASSERT(!bm->GetBase(701) && !tile->base && (scenario!=3 || bm->GetBase(702)==other),"Native raid captured or retained a destroyed Base");
+                    if(scenario==5) {GT_ASSERT(!um->GetUnit(91),"Last-Base raid retained the old faction roster instead of its shared disposition");}
+                }
                 else {
                     GT_ASSERT(bm->GetBase(701)==base && base->GetPopulation()==1 && base->GetAccumulatedNutrients()==food && base->GetSmacUpkeepCache(),"Native raid lost retained food or failed population/cache publication");
                     GT_ASSERT(base->m_facilities.empty() && base->GetProductionState()->minerals==(scenario==1 ? production.minerals:0)

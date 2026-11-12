@@ -633,6 +633,7 @@ void BaseManager::RaidSmacBase(GSE_CALLABLE,unit::Unit* actor,map::tile::Tile* d
     if(destroyed) {
         m_bases.swap(bases);m_base_order.swap(order);m_work_assignments.swap(assignments);m_base_updates.swap(updates);m_updated_bases.swap(triggers);destination->base=nullptr;
         m_game->CommitBaseTerritory(knowledge,topology);simulation.economy.at(owner).regional_base_counts=regional;simulation.retained_base_totals=totals;
+        for(size_t faction=1;faction<8;++faction) {auto& target=simulation.battle_plan_target[faction];if(target && *target==static_cast<int64_t>(base->m_id)) {target=-1;}}
         if(disposition) {CommitSmacFactionDisposition(*disposition);}
         retired.reset(base);lock.unlock();
     } else {workers->Commit();base->m_smac_upkeep_cache.swap(cache);workers->Finish();}

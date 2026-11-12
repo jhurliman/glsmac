@@ -52,7 +52,7 @@ int32_t Game::GetCanonicalResearchCost(int32_t owner,const faction::SmacTechnolo
 		inputs.other_scores.at(other.admission.simulation_id-1)=other.score;
 		inputs.other_deferred.at(other.admission.simulation_id-1)=other.deferred;
 	}
-	inputs.human=true;
+	inputs.human=m_simulation->value.IsHuman(owner);
 	inputs.owner_difficulty=unit::SmacStartupDesignState::OriginalDifficulty(slot->GetPlayer()->GetDifficultyLevel());
 	inputs.global_difficulty=m_simulation->value.designs.global_difficulty;
 	inputs.turn=Checked(GetTurnId()); inputs.intrinsic_research=social->intrinsic->at(10);
@@ -188,9 +188,54 @@ void Game::ValidateCanonicalResearchQuestion(const CanonicalResearchRequest& req
     }
 }
 
+void Game::GrantFirstOwnerTechnologies(GSE_CALLABLE,int32_t owner) {
+    auto& simulation=m_simulation->value;
+    if(GetTurnId()!=1 || !simulation.faction_turn || simulation.faction_turn->Current().owner!=owner
+        || simulation.faction_turn->Current().phase!=faction::SmacFactionTurn::Phase::OwnerUpkeep) {
+        throw std::runtime_error("Numeric startup technology requires first owner upkeep");
+    }
+    const auto* profile=m_state->m_settings.global.GetSmacFactionStartupRules()->Find(Owner(simulation.technology,owner).admission.faction_id);
+    for(int32_t i=0;i<profile->ExtraTechnologyCount();++i) {
+        const auto before=Owner(simulation.technology,owner);
+        if(!before.target) {
+            if(simulation.IsHuman(owner)) {ApplyCanonicalBlindResearch(owner,std::nullopt);}
+            else {RequestCanonicalResearch(GSE_CALL,owner,true);}
+        }
+        const auto selected=Owner(simulation.technology,owner).target;
+        if(!selected) {break;}
+        GrantCanonicalResearch(owner,*selected,false,true);
+        auto& after=Owner(simulation.technology,owner);
+        // Native first-upkeep acquisition shortcut grants ownership without
+        // changing research accounting or selecting a follow-up target.
+        after.score=before.score;after.discount=before.discount;after.deferred=before.deferred;
+        after.labs=before.labs;after.cached_threshold=before.cached_threshold;after.pending_secrets=before.pending_secrets;
+        after.target.reset();
+    }
+}
+
 bool Game::RequestCanonicalResearch(GSE_CALLABLE,int32_t owner,bool bonus) {
 	const auto* state=m_simulation->value.technology.Find(owner);
 	if(!state) {throw std::runtime_error("Research choice has no current owner");}
+    if(!m_simulation->value.IsHuman(owner)) {
+        if(!IsSmacControllerOwner(owner)) {throw std::runtime_error("Computer research requires its admitted owner boundary");}
+        const auto& catalog=*m_state->m_settings.global.GetSmacTechnologyRules();
+        const auto choices=faction::SmacManualResearchPool(*state,catalog);
+        if(choices.empty()) {return false;}
+        const auto* profile=m_state->m_settings.global.GetSmacFactionStartupRules()->Find(state->admission.faction_id);
+        const auto former=m_state->m_settings.global.GetSmacPredefinedUnitRules()->catalog.units.at(1).prerequisite;
+        int32_t selected=choices.front();int64_t best=INT64_MIN;
+        // Port AI policy: obtain terrain development first, then follow the
+        // faction's loaded research preferences. No foreign ownership is read.
+        for(const auto id:choices) {
+            int64_t score=0;
+            const auto& ratings=catalog.technologies.at(id).priorities;
+            for(size_t i=0;i<4;++i) {score+=int64_t(ratings[i])*(profile->worker_priorities[i+1]+1);}
+            if(former.technology_id==id) {score+=10000;}
+            if(score>best) {best=score;selected=id;}
+        }
+        Owner(m_simulation->value.technology,owner).target=selected;
+        return false;
+    }
     const bool blind=IsCanonicalBlindResearch();
     std::vector<int32_t> choices;std::array<int32_t,4> priorities{};
     if(blind) {

@@ -447,8 +447,7 @@ public:
 	// Explicit local human-controlled port roster. No AI controller is inferred.
 	void RequireSmacLocalHumanOwner( const slot::Slot* owner ) const;
     bool IsSmacControllerOwner(int32_t owner) const;
-    bool SmacMineralLeaderHuman() const;
-    bool SmacMineralLeadingHumanDominance() const;
+    std::pair<bool,bool> SmacProductionDominance(const slot::Slot* owner) const;
 	// Explicit session presentation roles; saved Unit/Def records remain authority.
 	void ConfigureSmacPresentations( GSE_CALLABLE, const std::array<std::string,4>& roles );
 	void ConfigureSmacBasePresentations( GSE_CALLABLE, const std::array<std::string,8>& roles );
@@ -487,6 +486,7 @@ private:
 	void PrepareLocalComputerRoster();
     void ContinueFactionController(GSE_CALLABLE);
     void RunComputerCommands(GSE_CALLABLE,int32_t owner);
+    void GrantFirstOwnerTechnologies(GSE_CALLABLE,int32_t owner);
     void RunSmacWildlifeTurn(GSE_CALLABLE);
     uint8_t ActiveFactionMask() const;
     void PublishCanonicalCommandTurn(GSE_CALLABLE);

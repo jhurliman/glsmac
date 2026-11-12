@@ -12,6 +12,7 @@
 #include "map/Map.h"
 #include "unit/Unit.h"
 #include "unit/UnitManager.h"
+#include "unit/SmacSelectionDistance.h"
 #include "gc/Space.h"
 #include "gse/value/Int.h"
 #include "gse/value/Array.h"
@@ -114,7 +115,7 @@ void Game::RequireCanonicalTurn(size_t turn_id) const {
 	ValidateCurrentSimulation();
 	RequireSmacGameplayActive();
 	for (const auto& participant:m_simulation->value.roster) {
-		if (participant.active) {RequireSmacLocalHumanOwner(&m_state->m_slots->GetSlot(participant.slot));}
+		if (participant.active) {(void)RequireSmacProductionOwner(&m_state->m_slots->GetSlot(participant.slot));}
 	}
 	const bool startup=m_current_turn.GetId()==0;
 	if (startup) { RequireConventionalStartupClaim(); }
@@ -187,6 +188,20 @@ std::optional<Game::CanonicalRanking> Game::PrepareCanonicalRankOrder() const {
 
 void Game::AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id) {
 	RequireCanonicalTurn(turn_id);
+    if(m_simulation->value.faction_turn) {
+        m_canonical_turn_in_progress=true;
+        util::FinallyGuard finished([&]{m_canonical_turn_in_progress=false;});
+        try {
+            auto& cursor=*m_simulation->value.faction_turn;
+            if(cursor.Current().phase==faction::SmacFactionTurn::Phase::OwnerCommand) {
+                if(cursor.Current().owner!=cursor.Focus()) {throw std::runtime_error("Human end turn has no focused command ticket");}
+                cursor.CompleteOwnerCommand(cursor.Current(),ActiveFactionMask());
+            }
+            ContinueFactionController(GSE_CALL);
+        } catch(const std::exception& error) {FailCanonicalTurn(error.what());throw;}
+        catch(...) {FailCanonicalTurn("Unknown faction controller failure");throw;}
+        return;
+    }
 	// Session bindings choose the worker presentation explicitly: default
 	// WORKER and TALENT both carry the tile-worker flag.
 	(void)GetSmacBasePresentations();
@@ -259,6 +274,9 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 	}
 	using Stage=CanonicalTurnContinuation::Stage;
 	auto& next=*m_canonical_continuation;
+    const auto previous_authority=m_smac_controller_owner;
+    if(m_simulation->value.faction_turn) {m_smac_controller_owner=next.owners.at(next.owner_index).first;}
+    util::FinallyGuard authority([&]{m_smac_controller_owner=previous_authority;});
 	if(next.stage==Stage::Screen) {ValidateCanonicalColonyScreen();return;}
 	while(next.owner_index<next.owners.size()) {
 		const auto& owner=next.owners[next.owner_index];
@@ -272,11 +290,19 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
             continue; // owned entities do not revive an eliminated controller
         }
 		if(next.base_index==owner.second.size()) {
+            if(m_simulation->value.faction_turn && GetTurnId()==1) {GrantFirstOwnerTechnologies(GSE_CALL,owner.first);}
 			RefreshCanonicalPopulationAggregate(owner.first);
 			// Native upkeep retires the shared route only AFTER this summary.
 			m_map->InvalidateRegionalPathWorkspace();
 			ResetCanonicalHurryMarkers(owner.first);
 			SettleCanonicalEconomy(owner.first);
+            if(m_simulation->value.faction_turn) {
+                auto& cursor=*m_simulation->value.faction_turn;
+                cursor.CompleteOwnerUpkeep(cursor.Current(),ActiveFactionMask());
+                m_canonical_continuation.reset();
+                ContinueFactionController(GSE_CALL);
+                return;
+            }
 			++next.owner_index;next.base_index=0;next.stage=Stage::Base;
 			if(m_simulation->value.HasEnding()) {break;} // finish this owner's tail, then the ending controller
             if(next.owner_index<next.owners.size() && IsActiveOwner(m_simulation->value,next.owners[next.owner_index].first)) {BeginOwnerEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,next.owners[next.owner_index].first);}
@@ -324,6 +350,209 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 	}
 	CheckTurnComplete();
 	if(!m_is_turn_complete) {SetTurnStatus(turn::TS_TURN_ACTIVE);}
+}
+
+void Game::RunComputerCommands(GSE_CALLABLE,int32_t owner) {
+    if(!IsSmacControllerOwner(owner) || m_simulation->value.IsHuman(owner)) {throw std::runtime_error("Computer commands require private nonhuman authority");}
+    const auto& simulation=m_simulation->value;
+    auto& slot=m_state->m_slots->GetSlot(std::find_if(simulation.roster.begin(),simulation.roster.end(),[&](const auto& row){return row.simulation_id==owner;})->slot);
+    using Package=unit::ConventionalUnitContext::Package;
+    using Work=unit::ConventionalUnitState::WorkOrder;
+    std::vector<size_t> bases;
+    std::array<size_t,3> counts{};
+    for(const auto id:m_bm->GetBaseRecordOrder()) {if(m_bm->GetBase(id)->m_owner==&slot) {bases.push_back(id);}}
+    for(const auto id:m_um->GetUnitRecordOrder()) {
+        const auto* actor=m_um->GetUnit(id);
+        if(actor->IsConventional() && actor->m_owner==&slot) {++counts.at(static_cast<size_t>(ResolveConventionalUnit(actor->Conventional(),&slot).package));}
+    }
+    // A modest growing empire: garrison, one developer per Base, then one
+    // expansion party at a time. The real selection transaction charges losses
+    // and rejects unavailable technology, population or component packages.
+    for(const auto id:bases) {
+        auto* base=m_bm->GetBase(id);
+        const auto& production=base->GetProductionState();if(!production || !production->queue) {continue;}
+        const bool developer=counts.at(static_cast<size_t>(Package::Former))<bases.size();
+        const bool expand=!developer && bases.size()<5 && !counts.at(static_cast<size_t>(Package::Colony)) && base->GetPopulation()>=2;
+        int32_t desired=developer?1:expand?0:2;
+        auto item=MakeSmacProductionItem(&slot,base::ProductionItemKind::Unit,desired);
+        if(!IsSmacUnitProductionEligible(*base,item)) {desired=2;item=MakeSmacProductionItem(&slot,base::ProductionItemKind::Unit,desired);}
+        if(IsSmacUnitProductionEligible(*base,item) && !(production->current_item==item)) {
+            const auto expected=base::SerializeProductionState(production).ToString();
+            base->SelectSmacProduction(GSE_CALL,desired,expected,true);
+        }
+    }
+    const auto distance=[&](const map::tile::Tile* a,const map::tile::Tile* b) {
+        return unit::selection_distance::Metric({{int32_t(a->coord.x),int32_t(a->coord.y)}},{{int32_t(b->coord.x),int32_t(b->coord.y)}},int32_t(m_map->GetWidth()),true);
+    };
+    // Stable record IDs and owned world/Unit state are the complete persistent
+    // policy state. Saving at command boundaries reproduces every later choice.
+    const auto actors=m_um->GetUnitRecordOrder();
+    for(const auto id:actors) {
+        auto* actor=m_um->GetUnit(id);
+        if(!actor || !actor->IsConventional() || actor->m_owner!=&slot || !actor->HasMovesLeft()) {continue;}
+        const auto package=ResolveConventionalUnit(actor->Conventional(),&slot).package;
+        if(actor->Conventional().IsHeld()) {continue;}
+        for(size_t step=0;step<12 && (actor=m_um->GetUnit(id)) && actor->HasMovesLeft();++step) {
+            auto* source=actor->GetTile();
+            if(package==Package::Colony) {
+                bool legal=true;try {m_bm->ValidateSmacFounding(*actor);} catch(const std::runtime_error&) {legal=false;}
+                if(legal) {m_bm->FoundSmacBase(GSE_CALL,*actor,GetSmacBasePresentations());break;}
+            }
+            if(package==Package::Former) {
+                const auto order=actor->Conventional().work_order;
+                if(order!=Work::None) {
+                    m_um->SetConventionalWork(GSE_CALL,actor,order,slot.GetIndex(),true);break;
+                }
+                bool worked=false;
+                for(const auto job:{Work::Farm,Work::Solar,Work::Forest,Work::Road,Work::Mine}) {
+                    bool legal=true;try {m_um->ValidateConventionalWork(actor,job,slot.GetIndex(),false);} catch(const std::runtime_error&) {legal=false;}
+                    if(legal && !source->base) {m_um->SetConventionalWork(GSE_CALL,actor,job,slot.GetIndex(),false);m_um->SetConventionalWork(GSE_CALL,actor,job,slot.GetIndex(),true);worked=true;break;}
+                }
+                if(worked) {break;}
+            }
+            if(package==Package::Combat && source->base && source->base->m_owner==&slot) {
+                bool first=true;
+                for(const auto& resident:source->units) {
+                    if(resident.first>=id) {break;}
+                    if(resident.second->IsConventional() && resident.second->m_owner==&slot
+                        && ResolveConventionalUnit(resident.second->Conventional(),&slot).package==Package::Combat) {first=false;break;}
+                }
+                if(first) {m_um->ApplyHumanOrder(GSE_CALL,actor,unit::UnitManager::HumanOrderCommand::Skip,slot.GetIndex());break;}
+            }
+            const auto knowledge=m_map->GetSmacWorkerKnowledge()->CopyData();
+            const auto bit=uint8_t(1u<<owner);
+            const auto index=[&](const map::tile::Tile* t){return size_t(t->coord.y)*(knowledge.width/2)+t->coord.x/2;};
+            map::tile::Tile* target=nullptr;int32_t nearest=INT32_MAX;
+            if(package==Package::Combat) {
+                for(const auto& observation:knowledge.bases) {
+                    if(!(observation.known_by&bit)) {continue;}
+                    auto* base=m_bm->GetBase(observation.id);
+                    if(!base || base->m_owner==&slot) {continue;}
+                    const auto d=distance(source,base->GetTile());if(d<nearest) {nearest=d;target=base->GetTile();}
+                }
+            }
+            std::vector<std::pair<int64_t,map::tile::Tile*>> choices;
+            for(auto* tile:source->neighbours) {
+                if(!tile || !(knowledge.tiles.at(index(tile)).explored_by&bit)) {continue;}
+                int64_t score=0;
+                if(target) {score+=1000*(distance(source,target)-distance(tile,target));}
+                for(const auto* adjacent:tile->neighbours) {if(adjacent && !(knowledge.tiles.at(index(adjacent)).explored_by&bit)) {score+=100;}}
+                int32_t own_distance=INT32_MAX;
+                for(const auto base_id:bases) {if(const auto* base=m_bm->GetBase(base_id)) {own_distance=std::min(own_distance,distance(tile,base->GetTile()));}}
+                if(package==Package::Colony && own_distance!=INT32_MAX) {score+=100*std::min(own_distance,5);}
+                if(package==Package::Former && own_distance!=INT32_MAX) {score-=100*std::abs(own_distance-1);}
+                // Break equally useful exploration directions without RNG or
+                // inspecting undisclosed enemy entities/terrain elsewhere.
+                score+=int64_t((id*17+GetTurnId()*7+index(tile)*13)%31);
+                choices.push_back({score,tile});
+            }
+            std::stable_sort(choices.begin(),choices.end(),[](const auto& a,const auto& b){return a.first>b.first;});
+            bool moved=false;
+            for(const auto& choice:choices) {
+                bool legal=true;try {m_um->ValidateConventionalMove(actor,choice.second,slot.GetIndex());} catch(const std::runtime_error&) {legal=false;}
+                if(!legal) {continue;}
+                const auto before=actor->Conventional();
+                m_um->MoveConventionalUnit(GSE_CALL,actor,choice.second,slot.GetIndex());
+                actor=m_um->GetUnit(id);moved=true;
+                if(!actor || (actor->GetTile()==source && actor->Conventional()==before)) {moved=false;}
+                break;
+            }
+            if(!moved) {break;}
+        }
+    }
+}
+
+uint8_t Game::ActiveFactionMask() const {
+    uint8_t mask=0;
+    for(const auto& owner:m_simulation->value.roster) {if(owner.active) {mask|=uint8_t(1u<<owner.simulation_id);}}
+    return mask;
+}
+
+void Game::PublishCanonicalCommandTurn(GSE_CALLABLE) {
+    m_is_turn_complete=false;
+    for(const auto& slot:m_state->m_slots->GetSlots()) {
+        if(slot.GetState()==slot::Slot::SS_PLAYER) {slot.GetPlayer()->UncompleteTurn();}
+    }
+    auto fr=FrontendRequest(FrontendRequest::FR_TURN_ADVANCE);
+    fr.data.turn_advance.turn_id=GetTurnId();AddFrontendRequest(fr);
+    m_state->TriggerObject(this,"turn",ARGS_F(this) {
+        {"year",VALUE(gse::value::Int,,m_current_turn.GetId()+2100)},
+    }; });
+    if(m_simulation->value.HasEnding()) {m_state->TriggerObject(this,"smac_ending",ARGS_F(this) { }; });}
+    else {SetTurnStatus(turn::TS_TURN_ACTIVE);}
+}
+
+void Game::ContinueFactionController(GSE_CALLABLE) {
+    using Phase=faction::SmacFactionTurn::Phase;
+    if(!m_canonical_turn_in_progress || !m_simulation || !m_simulation->value.faction_turn || m_canonical_continuation) {
+        throw std::runtime_error("Faction dispatch requires the owned ready controller");
+    }
+    auto& state=m_simulation->value;
+    auto& cursor=*state.faction_turn;
+    while(true) {
+        if(state.HasEnding()) {PublishCanonicalCommandTurn(GSE_CALL);return;}
+        switch(cursor.Current().phase) {
+        case Phase::Global: {
+            const auto turn=GetTurnId()+1;
+            const auto rank=PrepareCanonicalRankOrder();
+            const auto perihelion=PrepareSmacPerihelionForTurn(turn);
+            RefreshSimulationForTurn(turn);
+            // RefreshSimulationForTurn publishes the next cursor and seals
+            // raw starting Units before the scalar year becomes observable.
+            m_current_turn.AdvanceTurn(turn);state.perihelion=perihelion;
+            if(rank) {state.ranking_scores=rank->scores;state.rank_order=rank->order;}
+            m_is_turn_complete=false;break;
+        }
+        case Phase::WildlifeUpkeep:
+            RunSmacWildlifeTurn(GSE_CALL);
+            cursor.CompleteWildlifeUpkeep(cursor.Current());break;
+        case Phase::WildlifeCommand:
+            cursor.CompleteWildlifeCommand(cursor.Current(),ActiveFactionMask());break;
+        case Phase::OwnerPending: {
+            const auto owner=cursor.Current().owner;
+            if(!(ActiveFactionMask()&(1u<<owner))) {cursor.SkipInactiveOwner(cursor.Current(),ActiveFactionMask());break;}
+            auto social=state.social;auto next_cursor=cursor;
+            social.RefreshOwnerForFirstCommand(owner,*m_state->m_settings.global.GetSmacTechnologyRules(),*m_state->m_settings.global.GetSmacFactionStartupRules());
+            next_cursor.BeginOwnerUpkeep(next_cursor.Current(),ActiveFactionMask());
+            state.social=std::move(social);cursor=std::move(next_cursor);
+            const auto previous=m_smac_controller_owner;m_smac_controller_owner=owner;
+            util::FinallyGuard authority([&]{m_smac_controller_owner=previous;});
+            BeginOwnerEcologyAggregate(state,m_state->m_settings.global,*m_map,owner);
+            for(const auto id:m_um->GetUnitRecordOrder()) {
+                auto* unit=m_um->GetUnit(id);
+                if(unit->IsConventional() && unit->Conventional().owner_simulation_id==owner) {m_um->ResetConventionalSpent(GSE_CALL,unit);}
+            }
+            CanonicalTurnContinuation continuation{GetTurnId()};
+            for(const auto& participant:state.roster) {continuation.owners.push_back({participant.simulation_id,{}});}
+            std::sort(continuation.owners.begin(),continuation.owners.end(),[](const auto& a,const auto& b){return a.first<b.first;});
+            for(size_t i=0;i<continuation.owners.size();++i) {
+                auto& row=continuation.owners[i];if(row.first==owner) {continuation.owner_index=i;}
+                for(const auto id:m_bm->GetBaseRecordOrder()) {
+                    const auto* base=m_bm->GetBase(id);
+                    if(!base || !base->HasSmacResourceContext()) {throw std::runtime_error("Faction upkeep encountered a noncanonical Base");}
+                    if(base->GetSmacResourceContext().owner_simulation_id==row.first) {row.second.push_back(id);}
+                }
+            }
+            m_canonical_continuation=std::move(continuation);
+            ContinueCanonicalTurn(GSE_CALL);return;
+        }
+        case Phase::OwnerCommand: {
+            const auto owner=cursor.Current().owner;
+            if(owner==cursor.Focus()) {PublishCanonicalCommandTurn(GSE_CALL);return;}
+            const auto previous=m_smac_controller_owner;m_smac_controller_owner=owner;
+            util::FinallyGuard authority([&]{m_smac_controller_owner=previous;});
+            RunComputerCommands(GSE_CALL,owner);
+            cursor.CompleteOwnerCommand(cursor.Current(),ActiveFactionMask());break;
+        }
+        case Phase::Tail:
+            if(map::smac_territory::RefreshTerritoryAtGlobalTail(GetTurnId())) {
+                std::optional<map::GlsmacTerritoryTopology> topology;
+                auto knowledge=PrepareBaseTerritory(nullptr,nullptr,false,&topology);CommitBaseTerritory(knowledge,topology);
+            }
+            cursor.CompleteRound(cursor.Current());break;
+        case Phase::OwnerUpkeep:throw std::runtime_error("Faction upkeep lost its saved continuation");
+        }
+    }
 }
 
 void Game::RequireSmacGameplayActive() const {

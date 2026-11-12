@@ -104,6 +104,16 @@ bool Game::IsSmacControllerOwner(int32_t owner) const {
 void Game::PrepareLocalComputerRoster() {
     if(m_state->GetConnection() || !m_player || m_player->GetRole()!=Player::PR_SINGLE
         || !m_state->m_settings.global.IsOrdinarySmacCampaign()) {return;}
+    // Tool/scenario worlds may intentionally load only a faction subset.
+    // A complete ordinary campaign has all seven canonical definitions before
+    // this admission stage; never publish a partially synthesized roster.
+    for(const auto& profile:m_state->m_settings.global.GetSmacFactionStartupRules()->factions) {
+        if(!m_state->GetFM()->Get(profile.port_id)) {return;}
+    }
+    for(const auto& slot:m_state->m_slots->GetSlots()) {
+        if(slot.GetState()==slot::Slot::SS_PLAYER && slot.GetPlayer()!=m_player
+            && slot.GetLinkedGSID().rfind("local-computer:",0)!=0) {return;}
+    }
     std::set<std::string> used;
     for(const auto& slot:m_state->m_slots->GetSlots()) {
         if(slot.GetState()==slot::Slot::SS_PLAYER && slot.GetPlayer()->GetRecord().faction_id) {
@@ -200,7 +210,10 @@ void Game::PrepareNewSimulation() {
 	faction::SmacSimulationState value( SmacGameplayRandomState( shared, crt ), faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain,
 		faction::SmacGlobalResourceModifiers::NewWorld() );
     const bool local_computers=!m_state->GetConnection() && m_player && m_player->GetRole()==Player::PR_SINGLE
-        && settings.IsOrdinarySmacCampaign() && roster.size()==7;
+        && settings.IsOrdinarySmacCampaign() && roster.size()==7
+        && std::all_of(roster.begin(),roster.end(),[&](const auto& row) {
+            return row.slot==static_cast<int32_t>(m_slot_num) || (row.role==roster::Role::Player && row.gsid.rfind("local-computer:",0)==0);
+        });
     uint8_t actors=0;int32_t focus=0;
     for(const auto& participant:roster) {
         actors|=static_cast<uint8_t>(1u<<participant.simulation_id);

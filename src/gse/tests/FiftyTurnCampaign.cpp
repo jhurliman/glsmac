@@ -57,6 +57,7 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
             };
             for(int turn=0;turn<50;++turn) {
                 auto error=settle();GT_ASSERT(error.empty(),"Research: "+error);
+                error=fixture.DriveLocalHumanCampaign(GSE_CALL);GT_ASSERT(error.empty(),"Human commands: "+error);
                 const auto before=game->GetTurnId();
                 game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();
                 error=settle();GT_ASSERT(error.empty(),"Research: "+error);
@@ -68,6 +69,9 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
                 error=fixture.CheckLocalComputerBoundary();GT_ASSERT(error.empty(),"Owner boundary: "+error);
             }
             GT_ASSERT(game->GetBM()->GetBases().size()>=7 && game->GetUM()->GetUnits().size()>=7,"Computer campaign lost its live world");
+            const auto actions=fixture.CampaignActions();
+            GT_ASSERT(actions.production_choices && actions.moves && actions.work_dispatches && actions.terrain_completions && actions.founded_bases,
+                "Human campaign must exercise production, movement, completed development and expansion");
             GT_OK();
         });
     });

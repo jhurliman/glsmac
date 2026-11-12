@@ -250,6 +250,17 @@ void Base::SetPops( const pops_t& pops ) { SetPops(pops,pops.size()); }
 void Base::SetPops( const pops_t& pops, size_t population ) {
 	m_pops = pops; // retained worker/specialist projection may precede population
 	m_population = population;
+    // Console previews consume these meshes even while map disclosure hides
+    // the Base body. Refresh the committed population independently of Show().
+    if(m_render.badge.pops_count!=population) {
+        const bool shown=m_render.is_rendered;HideBody();
+        m_render.badge.pops_count=population;
+        UpdateMeshTex(m_render_data.base,GetSpriteFor(m_faction,false)->instanced_sprite);
+        m_render.badge.def=m_slot_badges->GetBaseBadgeSprite(population,m_is_guarded);
+        m_render.badge.instance_id=0;
+        UpdateMeshTex(m_render_data.badge,m_render.badge.def->instanced_sprite);
+        if(shown) {Show();}
+    }
 }
 
 void Base::SetRenderCoords( const types::Vec3& coords ) {

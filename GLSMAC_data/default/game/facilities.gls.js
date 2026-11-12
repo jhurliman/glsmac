@@ -35,6 +35,10 @@ const result = {
 		);
 
 		if (game.get_ruleset() == 'smac') {
+			def(game, 'CHILDRENS_CRECHE', 'Children\'s Creche', 'Growth/Effic/Morale', 50, 'fac002.pcx', 2);
+			def(game, 'BIOLOGY_LAB', 'Biology Lab', 'Research and PSI', 60, 'fac009.pcx', 9);
+			def(game, 'SKUNKWORKS', 'Skunkworks', 'Prototypes Free', 60, 'fac010.pcx', 10);
+			def(game, 'HOLOGRAM_THEATRE', 'Hologram Theatre', 'Psych and Fewer Drones', 60, 'fac011.pcx', 11);
 			def(game, 'RECREATION_COMMONS', 'Recreation Commons', 'Fewer Drones', 40, 'fac006.pcx', 6);
 			def(game, 'ENERGY_BANK', 'Energy Bank', 'Economy Bonus', 80, 'fac007.pcx', 7);
 			def(game, 'PERIMETER_DEFENSE', 'Perimeter Defense', 'Defense +100%', 50, 'fac004.pcx', 4);

@@ -139,6 +139,10 @@ void AddSmacFacilityIdentityTests( task::gsetests::GSETests* task ) {
 			auto* manager = source.Game()->GetBM();
 			GT_ASSERT( manager->GetFacilityDef( "HEADQUARTERS" )->m_smac_source_id == 1 && manager->GetFacilityDef( "RECYCLING_TANKS" )->m_smac_source_id == 3, "actual default producer omitted source roles" );
 			GT_ASSERT(manager->GetFacilityDef("HAB_COMPLEX")->m_smac_source_id==24 && manager->GetFacilityDef("HABITATION_DOME")->m_smac_source_id==25, "actual default producer omitted habitation roles");
+            for(const auto& entry:std::vector<std::pair<std::string,uint8_t>>{{"CHILDRENS_CRECHE",2},{"RECREATION_COMMONS",6},{"BIOLOGY_LAB",9},{"SKUNKWORKS",10},{"HOLOGRAM_THEATRE",11}}) {
+                const auto* facility=manager->GetFacilityDef(entry.first);
+                GT_ASSERT(facility && facility->m_smac_source_id==entry.second,"Default producer omitted playable early facility role");
+            }
 			auto* owner = &source.Game()->GetState()->m_slots->GetSlot( 0 );
 			auto base = std::make_unique< Base >( source.Game(), 701, owner, owner->GetPlayer()->GetFaction(), source.Game()->GetMap()->GetTile( 2, 2 ), "Facility restore",
 				Base::facilities_t{ { "HEADQUARTERS", manager->GetFacilityDef( "HEADQUARTERS" ) }, { "RECYCLING_TANKS", manager->GetFacilityDef( "RECYCLING_TANKS" ) } }, Base::pops_t{} );

@@ -2553,6 +2553,7 @@ public:
             GT_ASSERT(!unit->IsBadgeVisible(),"hidden selected model regained orphaned overlays");
             frontend.RenderTile(&tile,unit.get());
             GT_ASSERT(unit->IsBadgeVisible(),"re-shown selected model lost retained visible phase");
+            frontend.m_map_data.width=80;frontend.m_map_data.height=80;
             frontend.m_native_object_tiles=std::vector<bool>(3200,false);
             frontend.RenderTile(&tile,unit.get());
             GT_ASSERT(!unit->m_render.is_rendered && !unit->IsBadgeVisible(),"Ordinary native object window left an off-view Unit or overlays visible");
@@ -3213,6 +3214,7 @@ public:
 			util::FinallyGuard close_ui([&]{ui->GetRoot()->Container::Destroy(GSE_CALL);});
 			game::frontend::Game frontend(m_glsmac.get(),m_state,ui,{},{});
 			frontend.m_game=&m_game;
+            frontend.m_map_data.width=80;frontend.m_map_data.height=80;
 			game::frontend::tile::Tile captured_tile({2,2}),first_tile({4,2}),second_tile({6,2});
 			scene::Scene scene("Base ownership",scene::SCENE_TYPE_WORLD);
 			game::frontend::sprite::InstancedSpriteManager sprites(&scene);
@@ -3275,7 +3277,8 @@ public:
                 publish();
                 GT_ASSERT(check(captured,false,true) && check(friendly,false,true) && check(enemy,false,false),
                     "Unknown Base disclosure did not separate actual names from body/population instances");
-                frontend.m_native_object_tiles=std::vector<bool>(3200,false);manager.RefreshVisibility();
+                frontend.m_map_data.width=80;frontend.m_map_data.height=80;
+            frontend.m_native_object_tiles=std::vector<bool>(3200,false);manager.RefreshVisibility();
                 GT_ASSERT(check(captured,false,false) && check(friendly,false,false) && check(enemy,false,false),
                     "Ordinary native object window left off-view Base names or artwork visible");
                 frontend.m_native_object_tiles->at(2*40+2)=true;manager.RefreshVisibility();
@@ -3335,7 +3338,10 @@ public:
                     original_faction->m_colors.text,original_faction->m_colors.text_shadow);
                 game::frontend::base::Base base(&manager,100,"New Austin",&native_slot,&native_tile,false,
                     {0,0,2+height/48.0f},label);
-                base.SetPops({},3);base.Show();
+                base.Hide();base.SetPops({},3);
+                GT_ASSERT(base.m_render.badge.pops_count==3 && !base.m_render.is_rendered,
+                    "Hidden first-turn Base kept population0 console meshes or exposed its body");
+                base.Show();
                 GT_ASSERT(base.GetSprite()->instanced_sprite==native,"Actual Base caller lost the native map projection");
                 const auto matrices=native->actor->GetInstanceMatrices();
                 GT_ASSERT(matrices.size()==1,"Native artwork instance was missing or shared a legacy actor");
@@ -6676,6 +6682,7 @@ public:
             scene::Scene scene("Native single world",scene::SCENE_TYPE_WORLD);frontend.m_world_scene=&scene;
             scene.SetWorldInstancePositions({{-40,0,0},{0,0,0},{40,0,0}});frontend.UpdateMapInstances();
             GT_ASSERT(scene.GetWorldInstancePositions().size()==1,"Native canvas repeated actors around small world");
+            frontend.m_map_data.width=80;frontend.m_map_data.height=80;
             frontend.m_native_object_tiles=std::vector<bool>(3200,false);
             GT_ASSERT(!frontend.IsNativeObjectTile({22,38}),"Unselected native object tile admitted");
             frontend.m_native_object_tiles->at(38*40+11)=true;

@@ -167,7 +167,6 @@ base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::
 			if ( candidate != &evaluating_base ) { continue; }
 			local[ id ] = true;
 			if ( free_facility[ id ] ) { continue; }
-			if ( id == 27 ) { throw std::runtime_error( "Command Center maintenance pricing is not connected" ); }
 			const auto fee = facilities->facilities.at( id - 1 ).maintenance;
 			if ( fee < 0 ) { throw std::runtime_error( "Negative facility maintenance is outside ordinary posting" ); }
 			maintenance = Checked( int64_t( maintenance ) + fee );

@@ -18,7 +18,7 @@ return {
 		return p.create('SAVE GLSMAC CAMPAIGN', 620, 138, (body, close) => {
 			body.text({class: 'game-popup-text', top: 6, left: 10, font: 'arialnb.ttf:16', text: 'Use .glsmac. An existing file at this path will be replaced.'});
 			body.text({class: 'game-popup-text', top: 25, left: 10, text: 'Relative paths use the game working directory.'});
-			input = body.input({class: 'popup-input', top: 48, left: 10, right: 10, value: 'campaign.glsmac'});
+			input = body.input({class: 'popup-input', top: 48, left: 10, right: 10, native_edit: true, selection_color: 'rgb(0, 0, 0)', selection_background: 'rgb(159, 196, 198)', caret_color: 'rgb(159, 196, 198)', value: 'campaign.glsmac'});
 			status = body.text({class: 'game-popup-text', top: 78, left: 10, right: 10, text: ''});
 			body.button({class: 'game-popup-button', top: 108, left: 10, right: 315, text: 'Save', is_ok: true}).on('click', () => {
 				if (pending_request != null) { return true; }

@@ -32,7 +32,7 @@ const menu_entries = menu.init({create: (entries) => {return entries;}, save_cam
 let save_entry = null;
 for (entry of menu_entries) { if (entry.label == 'Save Campaign') { save_entry = entry; } }
 test.assert(save_entry != null); save_entry.open();
-test.assert(opened == 1 && save_input.value == 'campaign.glsmac');
+test.assert(opened == 1 && save_input.value == 'campaign.glsmac' && save_input.native_edit && #is_defined(save_input.selection_background) && #is_defined(save_input.caret_color));
 save_input.value = 'chosen.glsmac';
 save_buttons.Save({});
 test.assert(#sizeof(save_calls) == 1 && save_calls[0] == 'chosen.glsmac' && closed == 0);
@@ -89,7 +89,7 @@ const context = {
 };
 main(context);
 for (entry of main_entries) {if (entry[0] == 'Load Game') {entry[1]();}}
-test.assert(deinitialized == 1 && load_dialog.title == 'Load GLSMAC Campaign' && load_input.value == 'campaign.glsmac');
+test.assert(deinitialized == 1 && load_dialog.title == 'Load GLSMAC Campaign' && load_input.value == 'campaign.glsmac' && load_input.native_edit && #is_defined(load_input.selection_background) && #is_defined(load_input.caret_color));
 load_input.value = 'folder/chosen.glsmac';
 load_dialog.buttons[0].onclick();
 test.assert(#sizeof(load_calls) == 1 && load_calls[0] == 'folder/chosen.glsmac' && dismissed == 0 && deinitialized == 1);

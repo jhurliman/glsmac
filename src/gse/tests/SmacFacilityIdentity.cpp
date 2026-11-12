@@ -139,7 +139,7 @@ void AddSmacFacilityIdentityTests( task::gsetests::GSETests* task ) {
 			auto* manager = source.Game()->GetBM();
 			GT_ASSERT( manager->GetFacilityDef( "HEADQUARTERS" )->m_smac_source_id == 1 && manager->GetFacilityDef( "RECYCLING_TANKS" )->m_smac_source_id == 3, "actual default producer omitted source roles" );
 			GT_ASSERT(manager->GetFacilityDef("HAB_COMPLEX")->m_smac_source_id==24 && manager->GetFacilityDef("HABITATION_DOME")->m_smac_source_id==25, "actual default producer omitted habitation roles");
-            for(const auto& entry:std::vector<std::pair<std::string,uint8_t>>{{"CHILDRENS_CRECHE",2},{"RECREATION_COMMONS",6},{"BIOLOGY_LAB",9},{"SKUNKWORKS",10},{"HOLOGRAM_THEATRE",11}}) {
+            for(const auto& entry:std::vector<std::pair<std::string,uint8_t>>{{"CHILDRENS_CRECHE",2},{"RECREATION_COMMONS",6},{"BIOLOGY_LAB",9},{"SKUNKWORKS",10},{"HOLOGRAM_THEATRE",11},{"COMMAND_CENTER",27}}) {
                 const auto* facility=manager->GetFacilityDef(entry.first);
                 GT_ASSERT(facility && facility->m_smac_source_id==entry.second,"Default producer omitted playable early facility role");
             }

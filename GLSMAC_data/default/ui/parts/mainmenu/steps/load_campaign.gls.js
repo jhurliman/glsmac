@@ -7,7 +7,7 @@ return (i) => {
 			body.text({class: 'popup-text', top: 10, left: 15, text: 'Load a GLSMAC .glsmac campaign file.'});
 			body.text({class: 'popup-text', top: 30, left: 15, text: 'Original .SAV files are not supported.'});
 			body.text({class: 'popup-text', top: 50, left: 15, text: 'Relative paths use the game working directory.'});
-			input = body.input({class: 'popup-input', top: 78, left: 15, right: 15, value: 'campaign.glsmac'});
+			input = body.input({class: 'popup-input', top: 78, left: 15, right: 15, native_edit: true, selection_color: 'rgb(0, 0, 0)', selection_background: 'rgb(159, 196, 198)', caret_color: 'rgb(159, 196, 198)', value: 'campaign.glsmac'});
 			status = body.text({class: 'popup-text', top: 110, left: 15, right: 15, text: ''});
 		},
 		buttons: [

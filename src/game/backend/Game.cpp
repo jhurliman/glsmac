@@ -3203,8 +3203,13 @@ void Game::DeserializeWorldSnapshotBody( GSE_CALLABLE, types::Buffer& body, cons
         const auto& options=m_state->m_settings.global.GetSmacCampaignRules();
         if(!options || !m_state->m_settings.global.IsOrdinarySmacCampaign() || options->AutomaticLandResources()!=map_policy->AutomaticLandResources()
             || m_state->m_settings.global.map.GetSmacOceanCoverage()!=map_policy->OriginalPlanet()->OceanCoverageCategory()) {THROW("Installed Planet resource policy differs from active campaign options");}
-		for(size_t y=0;y<m_map->GetHeight();++y) {for(size_t x=y&1;x<m_map->GetWidth();x+=2) {m_map->GetTile(x,y)->Update();}}
 	}
+    // Raw tile decoding precedes policy attachment and therefore initially
+    // derives water from display corners. Reapply every retained native source,
+    // including generated authority, before authenticating saved regions.
+    if(map_policy && map_policy->NativeTerrainSource()) {
+        for(size_t y=0;y<m_map->GetHeight();++y) {for(size_t x=y&1;x<m_map->GetWidth();x+=2) {m_map->GetTile(x,y)->Update();}}
+    }
 	if (territory) { territory->ValidateTerrain(m_map->TerritorySea()); }
 	m_map->m_territory_topology = std::move(territory);
 	m_map->m_worker_knowledge = std::move( worker_knowledge );

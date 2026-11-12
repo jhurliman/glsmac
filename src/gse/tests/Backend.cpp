@@ -4859,7 +4859,7 @@ public:
             util::FinallyGuard recover([&]{m_map.reset(m_game.m_map);});
             for(int i=0;i<4;++i){m_game.Iterate();}
             GT_ASSERT(m_game.m_active_admission && m_game.m_active_admission->stage==Game::StartupStage::InitializeMap
-                && m_game.m_pending_snapshot_turn && !m_game.m_simulation,"campaign did not use staged saved decode");
+                && m_game.m_pending_snapshot_turn && !m_game.m_simulation,"campaign did not use staged saved decode: "+m_game.m_initialization_error);
             if(decoded_random) {*decoded_random=m_game.GetRandom()->GetStateString();}
             // Asset-free fixture skips only renderer construction. Decode and
             // the actual claimed Start/InitComplete consumer remain production.

@@ -58,6 +58,7 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
             auto initial_error=settle();GT_ASSERT(initial_error.empty(),"Initial research: "+initial_error);
             const auto initial_progress=fixture.CampaignProgress();
             for(int turn=0;turn<50;++turn) {
+                try {
                 auto error=settle();GT_ASSERT(error.empty(),"Research: "+error);
                 error=fixture.DriveLocalHumanCampaign(GSE_CALL);GT_ASSERT(error.empty(),"Human commands: "+error);
                 const auto before=game->GetTurnId();
@@ -69,6 +70,9 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
                     && state.faction_turn->Current().owner==1;});
                 GT_ASSERT(ready,"Campaign lost its human command boundary");
                 error=fixture.CheckLocalComputerBoundary();GT_ASSERT(error.empty(),"Owner boundary: "+error);
+                } catch(const std::exception& error) {
+                    GT_FAIL("Campaign step "+std::to_string(turn)+", current turn "+std::to_string(game->GetTurnId())+": "+error.what());
+                }
             }
             GT_ASSERT(game->GetBM()->GetBases().size()>=7 && game->GetUM()->GetUnits().size()>=7,"Computer campaign lost its live world");
             const auto actions=fixture.CampaignActions();

@@ -137,6 +137,28 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
     const auto participant_d=smac_scout::Participant(defender->m_id,d.reactor,d.health,d.stored,d.morale,d.spent);
     const smac_scout::References references{actor->m_id,defender->m_id};
     const auto noncombat=d.weapon==0 && d.armor==1;
+    map::tile::Tile* escape=nullptr;
+    const auto without_elite=[&](const Unit& u,const BattleUnit& b) {
+        const auto damage=u.IsNative() ? u.Native().damage:u.Conventional().damage;
+        return SmacConventionalAllowance({b.basic,3,SmacMovementDomain::Land,1,damage,b.morale,false,true});
+    };
+    if(!defending_base && defender->IsConventional() && d.weapon!=0 && !defender->Conventional().IsHeld()
+        && without_elite(*defender,d)>without_elite(*actor,a)) {
+        const auto flags=defender->Conventional().native_flags;
+        if(!flags) {throw std::runtime_error("Retreat requires retained original defender flags");}
+        if(!(*flags&0x40u)) {
+            const auto toward=SmacFacingForStep(*destination,*source);int best=2;
+            map::tile::Tile* neighbors[]={destination->NE,destination->E,destination->SE,destination->S,destination->SW,destination->W,destination->NW,destination->N};
+            for(int direction=0;direction<8;++direction) {
+                auto* tile=neighbors[direction];int angle=std::abs(direction-int(toward));angle=std::min(angle,8-angle);
+                if(angle<=best || !ordinary(tile) || (tile->features&map::tile::FEATURE_XENOFUNGUS)) {continue;}
+                if(tile->base && tile->base->m_owner!=defender->m_owner) {continue;}
+                bool friendly=true;for(const auto& row:tile->units) {friendly=friendly && row.second && row.second->m_owner==defender->m_owner;}
+                if(!friendly) {continue;}best=angle;escape=tile;
+            }
+        }
+    }
+
     auto result=[&]() {
         if(psi) {
             if(!combat.psi_ratios || !combat.ordinary_land) {throw std::runtime_error("PSI battle requires frozen ratios and PLANET rules");}
@@ -151,7 +173,7 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
             if(noncombat) {defense=CombatPercent(defense,-combat.ordinary_land->at(settings::SmacCombatRules::NoncombatDefensePenalty));}
             std::array<int32_t,2> widths{attack,defense};
             if(m_game->GetTurnId()<15) {if(!a.owner) {widths[0]/=3;}if(!d.owner) {widths[1]/=2;}}
-            return smac_scout::ResolveStrengthAttack(participant_a,participant_d,{attack,defense},widths,random,references);
+            return smac_scout::ResolveStrengthAttack(participant_a,participant_d,{attack,defense},widths,random,references,escape!=nullptr);
         }
         smac_scout::StrengthBonuses b{combat.fanatic_attack,defending_base && a.basic==3 ? combat.infantry_vs_base:0,
             defending_base ? combat.intrinsic_base_defense:0,a.weapon,d.armor};
@@ -163,7 +185,7 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
             if(mobile) {b.mobile_attack=combat.ordinary_land->at(settings::SmacCombatRules::MobileAttack);}
             if(noncombat) {b.noncombat_defense=-combat.ordinary_land->at(settings::SmacCombatRules::NoncombatDefensePenalty);}
         }
-        return smac_scout::ResolveGroundAttack(participant_a,participant_d,a.full,random,references,fanatic,b);
+        return smac_scout::ResolveGroundAttack(participant_a,participant_d,a.full,random,references,fanatic,b,escape!=nullptr);
     }();
     auto* survivor=result.deleted_identity==actor->m_id ? defender:actor;auto* loser=survivor==actor ? defender:actor;
     ConventionalUnitState candidate;std::optional<SmacNativeUnitRecord> native;
@@ -177,21 +199,25 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
         (void)QueryConventionalUnit(candidate,ResolveConventional(candidate,survivor->m_owner),candidate.render_morale_mode);
     }
     auto history=simulation.hostility;
-    if(a.owner && d.owner) {history.RecordScoutBattle(a.owner,d.owner,survivor->SimulationOwner(),loser->SimulationOwner(),loser->Conventional().design_id);}
+    if(!result.defender_retreated && a.owner && d.owner) {history.RecordScoutBattle(a.owner,d.owner,survivor->SimulationOwner(),loser->SimulationOwner(),loser->Conventional().design_id);}
     std::optional<std::pair<int32_t,int32_t>> reward;
     if(loser->IsNative() && survivor==actor && survivor->SimulationOwner()>0) {
         const auto credits=CombatWord(int64_t(simulation.economy.at(survivor->SimulationOwner()).credits)+10*(QueryNativeUnit(loser->Native(),0).level+1));
         reward={{survivor->SimulationOwner(),credits}};
     }
-    return {survivor,loser,candidate,std::move(history),std::move(result),palette,survivor==actor ? defending_base:nullptr,native,reward};
+    ConventionalUnitState retreat_state;
+    if(result.defender_retreated) {retreat_state=defender->Conventional();retreat_state.damage=static_cast<uint8_t>(10-result.health_after[1]);}
+    return {survivor,loser,candidate,std::move(history),std::move(result),palette,survivor==actor ? defending_base:nullptr,native,reward,
+        result.defender_retreated ? escape:nullptr,retreat_state};
 }
 
 void UnitManager::ApplyConventionalAttack(GSE_CALLABLE,PreparedConventionalAttack prepared) {
 	if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating()) {throw std::runtime_error("Scout attack requires its owning accumulation");}
-	auto removal=PrepareRemovalForQuery({prepared.loser->m_id},nullptr,prepared.survivor,true);
+	auto removal=PrepareRemovalForQuery(prepared.result.defender_retreated ? std::vector<size_t>{}:std::vector<size_t>{prepared.loser->m_id},nullptr,prepared.survivor,true);
+    if(prepared.result.defender_retreated) {removal.PrepareBattleRetreat(prepared.loser,prepared.retreat_destination,prepared.retreat_state);}
     if(prepared.native_survivor) {removal.SetNativeBattleSurvivor(prepared.survivor,*prepared.native_survivor);}
 	if(prepared.defeated_base) {removal.DiscoverDefendedBase(prepared.defeated_base,prepared.survivor_state.owner_simulation_id);}
-	const auto message=prepared.survivor->GetDisplayName()+" defeated "+prepared.loser->GetDisplayName()+".";
+	const auto message=prepared.result.defender_retreated ? prepared.loser->GetDisplayName()+" retreated.":prepared.survivor->GetDisplayName()+" defeated "+prepared.loser->GetDisplayName()+".";
     FrontendRequest playback(FrontendRequest::FR_SCOUT_BATTLE);
     NEW(playback.data.scout_battle.plan,scout_presentation::Plan,scout_presentation::Prepare(prepared.result));
     auto frontend=*m_game->m_pending_frontend_requests;frontend.push_back(playback);

@@ -1,0 +1,6446 @@
+{
+  "research_id": "RE-SMAC-NATIVE-OFFENSE-RETREAT-001",
+  "scope": "Twenty-two continuous actual initialized native birth/offense cases on a supplied128x64 interior land world, neutral native scalar, produced component tables and actual post-variant region rebuild. Controlled turn jumps and terrain/design/damage/spending diagnostics, no elapsed AI turns or general retreat eligibility claim. Normal native reference sentinel retained.",
+  "defaults": {
+    "native_position": [
+      17,
+      17
+    ],
+    "human_position": [
+      16,
+      16
+    ],
+    "human_profile": "Spartans",
+    "native_type": "Mind Worms",
+    "native_life": 1,
+    "reactor": 1,
+    "human_design": "generated Scout Rover except explicit infantry diagnostic",
+    "native_origin_fungus": true,
+    "no_home_base": true,
+    "no_projects": true
+  },
+  "cases": [
+    {
+      "id": "NATIVE-OFFENSE-001",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 15,
+        "variant": "baseline",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 312,
+            "defender_roll": 32,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 364,
+            "defender_roll": 404,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 16,
+            "defender_roll": 302,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 13,
+            "defender_roll": 249,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 464,
+            "defender_roll": 490,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 432,
+            "defender_roll": 79,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 2656031276,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          15,
+          15
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          115,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              15,
+              15
+            ],
+            "damage": 5,
+            "stored_morale": 1,
+            "spent": 0
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 7,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-002",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 15,
+        "variant": "clear_origin_fungus",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 312,
+            "defender_roll": 32,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 364,
+            "defender_roll": 404,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 16,
+            "defender_roll": 302,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 13,
+            "defender_roll": 249,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 464,
+            "defender_roll": 490,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 432,
+            "defender_roll": 79,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 2656031276,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          15,
+          15
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          115,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              15,
+              15
+            ],
+            "damage": 5,
+            "stored_morale": 1,
+            "spent": 0
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 8,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": false,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-003",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 15,
+        "variant": "sea_straight",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 312,
+            "defender_roll": 32,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 364,
+            "defender_roll": 404,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 16,
+            "defender_roll": 302,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 13,
+            "defender_roll": 249,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 464,
+            "defender_roll": 490,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 432,
+            "defender_roll": 79,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 2656031276,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          14,
+          16
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          115,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              14,
+              16
+            ],
+            "damage": 5,
+            "stored_morale": 1,
+            "spent": 0
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 7,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-004",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 15,
+        "variant": "sea_straight_west",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 312,
+            "defender_roll": 32,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 364,
+            "defender_roll": 404,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 16,
+            "defender_roll": 302,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 13,
+            "defender_roll": 249,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 464,
+            "defender_roll": 490,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 432,
+            "defender_roll": 79,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 2656031276,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          16,
+          14
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          115,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              16,
+              14
+            ],
+            "damage": 5,
+            "stored_morale": 1,
+            "spent": 0
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 7,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-005",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 15,
+        "variant": "sea_all_away",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 312,
+            "defender_roll": 32,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 364,
+            "defender_roll": 404,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 16,
+            "defender_roll": 302,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 13,
+            "defender_roll": 249,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 464,
+            "defender_roll": 490,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 432,
+            "defender_roll": 79,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 206,
+            "defender_roll": 423,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 458,
+            "defender_roll": 72,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 9,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 332,
+            "defender_roll": 314,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 9,
+            "defender_damage_before": 6
+          },
+          {
+            "attacker_roll": 178,
+            "defender_roll": 498,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 9,
+            "defender_damage_before": 7
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2656031276,
+            "after": 3482245183,
+            "raw": 20366
+          },
+          {
+            "kind": "defender_round",
+            "before": 3482245183,
+            "after": 195547654,
+            "raw": 2983
+          },
+          {
+            "kind": "attacker_round",
+            "before": 195547654,
+            "after": 3876241585,
+            "raw": 26378
+          },
+          {
+            "kind": "defender_round",
+            "before": 3876241585,
+            "after": 1749573808,
+            "raw": 26696
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1749573808,
+            "after": 588004531,
+            "raw": 8972
+          },
+          {
+            "kind": "defender_round",
+            "before": 588004531,
+            "after": 2369418410,
+            "raw": 3386
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2369418410,
+            "after": 1030908101,
+            "raw": 15730
+          },
+          {
+            "kind": "defender_round",
+            "before": 1030908101,
+            "after": 3857889396,
+            "raw": 26098
+          },
+          {
+            "kind": "human_promotion_admission",
+            "before": 3857889396,
+            "after": 4037625191,
+            "raw": 28841
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 4037625191,
+        "shared_after_battle": 3,
+        "retreat_destination": null,
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          576,
+          153
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              16,
+              16
+            ],
+            "damage": 7,
+            "stored_morale": 2,
+            "spent": 0
+          }
+        ],
+        "native_origin_fungus_repair": false,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-006",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 15,
+        "variant": "fungus_straight",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 312,
+            "defender_roll": 32,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 364,
+            "defender_roll": 404,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 16,
+            "defender_roll": 302,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 13,
+            "defender_roll": 249,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 464,
+            "defender_roll": 490,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 432,
+            "defender_roll": 79,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 2656031276,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          14,
+          16
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          115,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              14,
+              16
+            ],
+            "damage": 5,
+            "stored_morale": 1,
+            "spent": 0
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 7,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-007",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 15,
+        "variant": "infantry_defender",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 312,
+            "defender_roll": 32,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 364,
+            "defender_roll": 404,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 16,
+            "defender_roll": 302,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 13,
+            "defender_roll": 249,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 464,
+            "defender_roll": 490,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 432,
+            "defender_roll": 79,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 206,
+            "defender_roll": 423,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 458,
+            "defender_roll": 72,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 9,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 332,
+            "defender_roll": 314,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 9,
+            "defender_damage_before": 6
+          },
+          {
+            "attacker_roll": 178,
+            "defender_roll": 498,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 9,
+            "defender_damage_before": 7
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2656031276,
+            "after": 3482245183,
+            "raw": 20366
+          },
+          {
+            "kind": "defender_round",
+            "before": 3482245183,
+            "after": 195547654,
+            "raw": 2983
+          },
+          {
+            "kind": "attacker_round",
+            "before": 195547654,
+            "after": 3876241585,
+            "raw": 26378
+          },
+          {
+            "kind": "defender_round",
+            "before": 3876241585,
+            "after": 1749573808,
+            "raw": 26696
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1749573808,
+            "after": 588004531,
+            "raw": 8972
+          },
+          {
+            "kind": "defender_round",
+            "before": 588004531,
+            "after": 2369418410,
+            "raw": 3386
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2369418410,
+            "after": 1030908101,
+            "raw": 15730
+          },
+          {
+            "kind": "defender_round",
+            "before": 1030908101,
+            "after": 3857889396,
+            "raw": 26098
+          },
+          {
+            "kind": "human_promotion_admission",
+            "before": 3857889396,
+            "after": 4037625191,
+            "raw": 28841
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 4037625191,
+        "shared_after_battle": 3,
+        "retreat_destination": null,
+        "retreat_attempts": 0,
+        "promotion_weights": [
+          576,
+          153
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 2,
+            "position": [
+              16,
+              16
+            ],
+            "damage": 7,
+            "stored_morale": 2,
+            "spent": 0
+          }
+        ],
+        "native_origin_fungus_repair": false,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-008",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 15,
+        "variant": "damaged_defender",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          8
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 312,
+            "defender_roll": 32,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 5
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 1767306650,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          15,
+          15
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          345,
+          409
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              15,
+              15
+            ],
+            "damage": 6,
+            "stored_morale": 1,
+            "spent": 0
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 3,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-009",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 15,
+        "variant": "heavily_damaged_defender",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          2
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 8
+          },
+          {
+            "attacker_roll": 312,
+            "defender_roll": 32,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 9
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 2686465646,
+        "shared_after_battle": 3,
+        "retreat_destination": null,
+        "retreat_attempts": 0,
+        "promotion_weights": [
+          576,
+          102
+        ],
+        "units": [
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 0,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": false,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-010",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 15,
+        "variant": "damaged_sea_all",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          8
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 312,
+            "defender_roll": 32,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 364,
+            "defender_roll": 404,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 6
+          },
+          {
+            "attacker_roll": 16,
+            "defender_roll": 302,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 6
+          },
+          {
+            "attacker_roll": 13,
+            "defender_roll": 249,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 6
+          },
+          {
+            "attacker_roll": 464,
+            "defender_roll": 490,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 6
+          },
+          {
+            "attacker_roll": 432,
+            "defender_roll": 79,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 6
+          },
+          {
+            "attacker_roll": 206,
+            "defender_roll": 423,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 7
+          },
+          {
+            "attacker_roll": 458,
+            "defender_roll": 72,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 9,
+            "defender_damage_before": 7
+          },
+          {
+            "attacker_roll": 332,
+            "defender_roll": 314,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 9,
+            "defender_damage_before": 8
+          },
+          {
+            "attacker_roll": 178,
+            "defender_roll": 498,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 9,
+            "defender_damage_before": 9
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2656031276,
+            "after": 3482245183,
+            "raw": 20366
+          },
+          {
+            "kind": "defender_round",
+            "before": 3482245183,
+            "after": 195547654,
+            "raw": 2983
+          },
+          {
+            "kind": "attacker_round",
+            "before": 195547654,
+            "after": 3876241585,
+            "raw": 26378
+          },
+          {
+            "kind": "defender_round",
+            "before": 3876241585,
+            "after": 1749573808,
+            "raw": 26696
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1749573808,
+            "after": 588004531,
+            "raw": 8972
+          },
+          {
+            "kind": "defender_round",
+            "before": 588004531,
+            "after": 2369418410,
+            "raw": 3386
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2369418410,
+            "after": 1030908101,
+            "raw": 15730
+          },
+          {
+            "kind": "defender_round",
+            "before": 1030908101,
+            "after": 3857889396,
+            "raw": 26098
+          },
+          {
+            "kind": "human_promotion_admission",
+            "before": 3857889396,
+            "after": 4037625191,
+            "raw": 28841
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 4037625191,
+        "shared_after_battle": 3,
+        "retreat_destination": null,
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          576,
+          64
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              16,
+              16
+            ],
+            "damage": 9,
+            "stored_morale": 2,
+            "spent": 0
+          }
+        ],
+        "native_origin_fungus_repair": false,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-011",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 14,
+        "variant": "baseline",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 163,
+            "defender_roll": 209,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 120,
+            "defender_roll": 32,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 27,
+            "defender_roll": 74,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 0,
+            "defender_roll": 342,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 172,
+            "defender_roll": 404,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 16,
+            "defender_roll": 302,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 13,
+            "defender_roll": 249,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 9,
+            "defender_damage_before": 1
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "human_promotion_admission",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 3989832715,
+        "shared_after_battle": 3,
+        "retreat_destination": null,
+        "retreat_attempts": 0,
+        "promotion_weights": [
+          192,
+          460
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              16,
+              16
+            ],
+            "damage": 1,
+            "stored_morale": 2,
+            "spent": 0
+          }
+        ],
+        "native_origin_fungus_repair": false,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-012",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 16,
+        "variant": "baseline",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 312,
+            "defender_roll": 32,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 364,
+            "defender_roll": 404,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 16,
+            "defender_roll": 302,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 13,
+            "defender_roll": 249,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 464,
+            "defender_roll": 490,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 432,
+            "defender_roll": 79,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 2656031276,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          15,
+          15
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          115,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              15,
+              15
+            ],
+            "damage": 5,
+            "stored_morale": 1,
+            "spent": 0
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 7,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-013",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 45,
+        "variant": "baseline",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 1,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          672,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 547,
+            "defender_roll": 209,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 216,
+            "defender_roll": 32,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 37,
+            "defender_roll": 430,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 27,
+            "defender_roll": 74,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 41,
+            "defender_roll": 405,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 261,
+            "defender_roll": 332,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 192,
+            "defender_roll": 342,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 460,
+            "defender_roll": 404,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 208,
+            "defender_roll": 302,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 205,
+            "defender_roll": 249,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 560,
+            "defender_roll": 490,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 48,
+            "defender_roll": 79,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 206,
+            "defender_roll": 423,
+            "attacker_width": 672,
+            "defender_width": 512,
+            "attacker_damage_before": 9,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2656031276,
+            "after": 3482245183,
+            "raw": 20366
+          },
+          {
+            "kind": "defender_round",
+            "before": 3482245183,
+            "after": 195547654,
+            "raw": 2983
+          },
+          {
+            "kind": "human_promotion_admission",
+            "before": 195547654,
+            "after": 3876241585,
+            "raw": 26378
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 3876241585,
+        "shared_after_battle": 3,
+        "retreat_destination": null,
+        "retreat_attempts": 0,
+        "promotion_weights": [
+          672,
+          307
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              16,
+              16
+            ],
+            "damage": 4,
+            "stored_morale": 1,
+            "spent": 0
+          }
+        ],
+        "native_origin_fungus_repair": false,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-014",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 90,
+        "variant": "baseline",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 2,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          768,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 739,
+            "defender_roll": 209,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 120,
+            "defender_roll": 32,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 583,
+            "defender_roll": 483,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 521,
+            "defender_roll": 405,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "native_promotion_admission",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 1294307041,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          15,
+          15
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          691,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              15,
+              15
+            ],
+            "damage": 5,
+            "stored_morale": 1,
+            "spent": 0
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 0,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-015",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 170,
+        "variant": "baseline",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 3,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          864,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 643,
+            "defender_roll": 209,
+            "attacker_width": 864,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 24,
+            "defender_roll": 32,
+            "attacker_width": 864,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 864,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 795,
+            "defender_roll": 74,
+            "attacker_width": 864,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 864,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 425,
+            "defender_roll": 405,
+            "attacker_width": 864,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 741,
+            "defender_roll": 332,
+            "attacker_width": 864,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 864,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "native_promotion_admission",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "native_promotion_coin",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 2475999460,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          15,
+          15
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          604,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              15,
+              15
+            ],
+            "damage": 5,
+            "stored_morale": 1,
+            "spent": 0
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 2,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-016",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 250,
+        "variant": "baseline",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 4,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          960,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 931,
+            "defender_roll": 209,
+            "attacker_width": 960,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 888,
+            "defender_roll": 32,
+            "attacker_width": 960,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 709,
+            "defender_roll": 430,
+            "attacker_width": 960,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 795,
+            "defender_roll": 74,
+            "attacker_width": 960,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 583,
+            "defender_roll": 483,
+            "attacker_width": 960,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "native_promotion_admission",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 1896472815,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          15,
+          15
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          960,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              15,
+              15
+            ],
+            "damage": 5,
+            "stored_morale": 1,
+            "spent": 0
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 0,
+            "stored_morale": 1,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": false,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-017",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 330,
+        "variant": "baseline",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 6,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          1152,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 888,
+            "defender_roll": 32,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 583,
+            "defender_roll": 483,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "native_promotion_admission",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 3190597109,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          15,
+          15
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          806,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              15,
+              15
+            ],
+            "damage": 5,
+            "stored_morale": 1,
+            "spent": 0
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 2,
+            "stored_morale": 1,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-018",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 90,
+        "variant": "sea_all_away",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 2,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          768,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 739,
+            "defender_roll": 209,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 120,
+            "defender_roll": 32,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 583,
+            "defender_roll": 483,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 521,
+            "defender_roll": 405,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 549,
+            "defender_roll": 332,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 0,
+            "defender_roll": 342,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 6
+          },
+          {
+            "attacker_roll": 556,
+            "defender_roll": 404,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 6
+          },
+          {
+            "attacker_roll": 592,
+            "defender_roll": 302,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 7
+          },
+          {
+            "attacker_roll": 397,
+            "defender_roll": 249,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 8
+          },
+          {
+            "attacker_roll": 464,
+            "defender_roll": 490,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 9
+          },
+          {
+            "attacker_roll": 240,
+            "defender_roll": 79,
+            "attacker_width": 768,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 9
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          },
+          {
+            "kind": "native_promotion_admission",
+            "before": 2656031276,
+            "after": 3482245183,
+            "raw": 20366
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 3482245183,
+        "shared_after_battle": 3,
+        "retreat_destination": null,
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          537,
+          512
+        ],
+        "units": [
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 2,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-019",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 330,
+        "variant": "sea_all_away",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 6,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          1152,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 888,
+            "defender_roll": 32,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 583,
+            "defender_roll": 483,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 940,
+            "defender_roll": 404,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 5
+          },
+          {
+            "attacker_roll": 592,
+            "defender_roll": 302,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 6
+          },
+          {
+            "attacker_roll": 13,
+            "defender_roll": 249,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 7
+          },
+          {
+            "attacker_roll": 464,
+            "defender_roll": 490,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 7
+          },
+          {
+            "attacker_roll": 1008,
+            "defender_roll": 79,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 7
+          },
+          {
+            "attacker_roll": 782,
+            "defender_roll": 423,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 8
+          },
+          {
+            "attacker_roll": 1034,
+            "defender_roll": 72,
+            "attacker_width": 1152,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 9
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2656031276,
+            "after": 3482245183,
+            "raw": 20366
+          },
+          {
+            "kind": "defender_round",
+            "before": 3482245183,
+            "after": 195547654,
+            "raw": 2983
+          },
+          {
+            "kind": "attacker_round",
+            "before": 195547654,
+            "after": 3876241585,
+            "raw": 26378
+          },
+          {
+            "kind": "defender_round",
+            "before": 3876241585,
+            "after": 1749573808,
+            "raw": 26696
+          },
+          {
+            "kind": "native_promotion_admission",
+            "before": 1749573808,
+            "after": 588004531,
+            "raw": 8972
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 588004531,
+        "shared_after_battle": 3,
+        "retreat_destination": null,
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          576,
+          512
+        ],
+        "units": [
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 4,
+            "stored_morale": 1,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-020",
+      "inputs": {
+        "encounter_seed": 21,
+        "birth_turn": 1,
+        "battle_turn": 14,
+        "variant": "baseline",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 28,
+            "defender_roll": 97,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 118,
+            "defender_roll": 181,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 114,
+            "defender_roll": 511,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 124,
+            "defender_roll": 329,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 127,
+            "defender_roll": 187,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 33,
+            "defender_roll": 139,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 106,
+            "defender_roll": 173,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 181,
+            "defender_roll": 218,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 31,
+            "defender_roll": 482,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 90,
+            "defender_roll": 93,
+            "attacker_width": 192,
+            "defender_width": 512,
+            "attacker_damage_before": 9,
+            "defender_damage_before": 0
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 7025284,
+            "after": 266082103,
+            "raw": 4060
+          },
+          {
+            "kind": "defender_round",
+            "before": 266082103,
+            "after": 2355229982,
+            "raw": 3169
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2355229982,
+            "after": 1064744809,
+            "raw": 16246
+          },
+          {
+            "kind": "defender_round",
+            "before": 1064744809,
+            "after": 4038417544,
+            "raw": 28853
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4038417544,
+            "after": 1882368299,
+            "raw": 28722
+          },
+          {
+            "kind": "defender_round",
+            "before": 1882368299,
+            "after": 536809282,
+            "raw": 8191
+          },
+          {
+            "kind": "attacker_round",
+            "before": 536809282,
+            "after": 2382166269,
+            "raw": 3580
+          },
+          {
+            "kind": "defender_round",
+            "before": 2382166269,
+            "after": 1934223308,
+            "raw": 29513
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1934223308,
+            "after": 4282324831,
+            "raw": 32575
+          },
+          {
+            "kind": "defender_round",
+            "before": 4282324831,
+            "after": 180065446,
+            "raw": 2747
+          },
+          {
+            "kind": "attacker_round",
+            "before": 180065446,
+            "after": 1902246097,
+            "raw": 29025
+          },
+          {
+            "kind": "defender_round",
+            "before": 1902246097,
+            "after": 2626369616,
+            "raw": 7307
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2626369616,
+            "after": 3463067091,
+            "raw": 20074
+          },
+          {
+            "kind": "defender_round",
+            "before": 3463067091,
+            "after": 1823279434,
+            "raw": 27821
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1823279434,
+            "after": 3430230757,
+            "raw": 19573
+          },
+          {
+            "kind": "defender_round",
+            "before": 3430230757,
+            "after": 987427348,
+            "raw": 15066
+          },
+          {
+            "kind": "attacker_round",
+            "before": 987427348,
+            "after": 1310660743,
+            "raw": 19999
+          },
+          {
+            "kind": "defender_round",
+            "before": 1310660743,
+            "after": 2715955502,
+            "raw": 8674
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2715955502,
+            "after": 3273278265,
+            "raw": 17178
+          },
+          {
+            "kind": "defender_round",
+            "before": 3273278265,
+            "after": 2052978968,
+            "raw": 31325
+          },
+          {
+            "kind": "human_promotion_admission",
+            "before": 2052978968,
+            "after": 1920930683,
+            "raw": 29311
+          }
+        ],
+        "crt_after_birth": 7025284,
+        "crt_after_battle": 1920930683,
+        "shared_after_battle": 3,
+        "retreat_destination": null,
+        "retreat_attempts": 0,
+        "promotion_weights": [
+          192,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              16,
+              16
+            ],
+            "damage": 0,
+            "stored_morale": 1,
+            "spent": 0
+          }
+        ],
+        "native_origin_fungus_repair": false,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-021",
+      "inputs": {
+        "encounter_seed": 21,
+        "birth_turn": 1,
+        "battle_turn": 15,
+        "variant": "baseline",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 28,
+            "defender_roll": 97,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 118,
+            "defender_roll": 181,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 498,
+            "defender_roll": 511,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 124,
+            "defender_roll": 329,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 319,
+            "defender_roll": 187,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 225,
+            "defender_roll": 139,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 490,
+            "defender_roll": 173,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 565,
+            "defender_roll": 218,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 415,
+            "defender_roll": 482,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 474,
+            "defender_roll": 93,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 7025284,
+            "after": 266082103,
+            "raw": 4060
+          },
+          {
+            "kind": "defender_round",
+            "before": 266082103,
+            "after": 2355229982,
+            "raw": 3169
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2355229982,
+            "after": 1064744809,
+            "raw": 16246
+          },
+          {
+            "kind": "defender_round",
+            "before": 1064744809,
+            "after": 4038417544,
+            "raw": 28853
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4038417544,
+            "after": 1882368299,
+            "raw": 28722
+          },
+          {
+            "kind": "defender_round",
+            "before": 1882368299,
+            "after": 536809282,
+            "raw": 8191
+          },
+          {
+            "kind": "attacker_round",
+            "before": 536809282,
+            "after": 2382166269,
+            "raw": 3580
+          },
+          {
+            "kind": "defender_round",
+            "before": 2382166269,
+            "after": 1934223308,
+            "raw": 29513
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1934223308,
+            "after": 4282324831,
+            "raw": 32575
+          },
+          {
+            "kind": "defender_round",
+            "before": 4282324831,
+            "after": 180065446,
+            "raw": 2747
+          },
+          {
+            "kind": "attacker_round",
+            "before": 180065446,
+            "after": 1902246097,
+            "raw": 29025
+          },
+          {
+            "kind": "defender_round",
+            "before": 1902246097,
+            "after": 2626369616,
+            "raw": 7307
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2626369616,
+            "after": 3463067091,
+            "raw": 20074
+          },
+          {
+            "kind": "defender_round",
+            "before": 3463067091,
+            "after": 1823279434,
+            "raw": 27821
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1823279434,
+            "after": 3430230757,
+            "raw": 19573
+          },
+          {
+            "kind": "defender_round",
+            "before": 3430230757,
+            "after": 987427348,
+            "raw": 15066
+          },
+          {
+            "kind": "attacker_round",
+            "before": 987427348,
+            "after": 1310660743,
+            "raw": 19999
+          },
+          {
+            "kind": "defender_round",
+            "before": 1310660743,
+            "after": 2715955502,
+            "raw": 8674
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2715955502,
+            "after": 3273278265,
+            "raw": 17178
+          },
+          {
+            "kind": "defender_round",
+            "before": 3273278265,
+            "after": 2052978968,
+            "raw": 31325
+          }
+        ],
+        "crt_after_birth": 7025284,
+        "crt_after_battle": 2052978968,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          15,
+          15
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          288,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              15,
+              15
+            ],
+            "damage": 5,
+            "stored_morale": 1,
+            "spent": 0
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 4,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    },
+    {
+      "id": "NATIVE-OFFENSE-022",
+      "inputs": {
+        "encounter_seed": 19,
+        "birth_turn": 1,
+        "battle_turn": 15,
+        "variant": "exhausted_defender",
+        "shared_seed": 3
+      },
+      "expected": {
+        "native_effective_level": 0,
+        "human_effective_morale": 2,
+        "initial_health": [
+          10,
+          10
+        ],
+        "initial_strength": [
+          576,
+          512
+        ],
+        "rounds": [
+          {
+            "attacker_roll": 355,
+            "defender_roll": 209,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 0
+          },
+          {
+            "attacker_roll": 312,
+            "defender_roll": 32,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 1
+          },
+          {
+            "attacker_roll": 133,
+            "defender_roll": 430,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 0,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 219,
+            "defender_roll": 74,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 2
+          },
+          {
+            "attacker_roll": 7,
+            "defender_roll": 483,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 1,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 137,
+            "defender_roll": 405,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 2,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 165,
+            "defender_roll": 332,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 3,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 384,
+            "defender_roll": 342,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 3
+          },
+          {
+            "attacker_roll": 364,
+            "defender_roll": 404,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 4,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 16,
+            "defender_roll": 302,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 5,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 13,
+            "defender_roll": 249,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 6,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 464,
+            "defender_roll": 490,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 7,
+            "defender_damage_before": 4
+          },
+          {
+            "attacker_roll": 432,
+            "defender_roll": 79,
+            "attacker_width": 576,
+            "defender_width": 512,
+            "attacker_damage_before": 8,
+            "defender_damage_before": 4
+          }
+        ],
+        "crt_draws": [
+          {
+            "kind": "attacker_round",
+            "before": 6597258,
+            "after": 3152234277,
+            "raw": 15331
+          },
+          {
+            "kind": "defender_round",
+            "before": 3152234277,
+            "after": 13737300,
+            "raw": 209
+          },
+          {
+            "kind": "attacker_round",
+            "before": 13737300,
+            "after": 2205685447,
+            "raw": 888
+          },
+          {
+            "kind": "defender_round",
+            "before": 2205685447,
+            "after": 2686465646,
+            "raw": 8224
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2686465646,
+            "after": 1367683961,
+            "raw": 20869
+          },
+          {
+            "kind": "defender_round",
+            "before": 1367683961,
+            "after": 128854104,
+            "raw": 1966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 128854104,
+            "after": 2765850043,
+            "raw": 9435
+          },
+          {
+            "kind": "defender_round",
+            "before": 2765850043,
+            "after": 4064983442,
+            "raw": 29258
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4064983442,
+            "after": 793197069,
+            "raw": 12103
+          },
+          {
+            "kind": "defender_round",
+            "before": 793197069,
+            "after": 199451804,
+            "raw": 3043
+          },
+          {
+            "kind": "attacker_round",
+            "before": 199451804,
+            "after": 1896472815,
+            "raw": 28937
+          },
+          {
+            "kind": "defender_round",
+            "before": 1896472815,
+            "after": 4019550198,
+            "raw": 28565
+          },
+          {
+            "kind": "attacker_round",
+            "before": 4019550198,
+            "after": 1294307041,
+            "raw": 19749
+          },
+          {
+            "kind": "defender_round",
+            "before": 1294307041,
+            "after": 3209475616,
+            "raw": 16204
+          },
+          {
+            "kind": "attacker_round",
+            "before": 3209475616,
+            "after": 1157692515,
+            "raw": 17664
+          },
+          {
+            "kind": "defender_round",
+            "before": 1157692515,
+            "after": 1767306650,
+            "raw": 26966
+          },
+          {
+            "kind": "attacker_round",
+            "before": 1767306650,
+            "after": 3190597109,
+            "raw": 15916
+          },
+          {
+            "kind": "defender_round",
+            "before": 3190597109,
+            "after": 2475999460,
+            "raw": 5012
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2475999460,
+            "after": 189852695,
+            "raw": 2896
+          },
+          {
+            "kind": "defender_round",
+            "before": 189852695,
+            "after": 556725886,
+            "raw": 8494
+          },
+          {
+            "kind": "attacker_round",
+            "before": 556725886,
+            "after": 4186780489,
+            "raw": 31117
+          },
+          {
+            "kind": "defender_round",
+            "before": 4186780489,
+            "after": 788097256,
+            "raw": 12025
+          },
+          {
+            "kind": "attacker_round",
+            "before": 788097256,
+            "after": 3989832715,
+            "raw": 28112
+          },
+          {
+            "kind": "defender_round",
+            "before": 3989832715,
+            "after": 2213183138,
+            "raw": 1002
+          },
+          {
+            "kind": "attacker_round",
+            "before": 2213183138,
+            "after": 972040925,
+            "raw": 14832
+          },
+          {
+            "kind": "defender_round",
+            "before": 972040925,
+            "after": 2656031276,
+            "raw": 7759
+          }
+        ],
+        "crt_after_birth": 6597258,
+        "crt_after_battle": 2656031276,
+        "shared_after_battle": 3,
+        "retreat_destination": [
+          15,
+          15
+        ],
+        "retreat_attempts": 1,
+        "promotion_weights": [
+          115,
+          512
+        ],
+        "units": [
+          {
+            "owner": 1,
+            "design": 64,
+            "position": [
+              15,
+              15
+            ],
+            "damage": 5,
+            "stored_morale": 1,
+            "spent": 6
+          },
+          {
+            "owner": 0,
+            "design": 8,
+            "position": [
+              17,
+              17
+            ],
+            "damage": 7,
+            "stored_morale": 2,
+            "spent": 3
+          }
+        ],
+        "native_origin_fungus_repair": true,
+        "human_treasury_change": 0,
+        "legacy_request_return": 0
+      }
+    }
+  ]
+}

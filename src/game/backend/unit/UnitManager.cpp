@@ -367,6 +367,8 @@ struct UnitManager::PreparedConventionalRemoval::Data {
     std::vector<std::pair<Unit*,SmacNativeUnitRecord>> native_retired_states;
     std::vector<std::pair<Unit*,ConventionalUnitState::Stack>> conventional_stacks;
     std::vector<std::pair<Unit*,ConventionalUnitState>> base_removal_homes;
+    std::vector<std::pair<Unit*,map::tile::Tile*>> battle_positions;
+    std::vector<uint64_t> battle_disclosures;
     std::optional<faction::SmacNativeFactoryState> native_factory;
     bool committed=false;
 };
@@ -663,6 +665,24 @@ UnitManager::PreparedDefectionUnits UnitManager::PrepareDefectionUnitsForQuery(s
         || (removed && (!removal || removal->manager!=this || removal->committed))) {THROW("Defection has a stale future Unit plan");}
     return PrepareDefectionUnitsCore(recipient,changes,removal ? removal->updates:creation ? creation->updates:m_unit_updates);
 }
+void UnitManager::PreparedConventionalRemoval::PrepareBattleRetreat(Unit* unit,map::tile::Tile* destination,const ConventionalUnitState& state) {
+    auto& d=*m_data;
+    if(d.committed || !d.removed.empty() || !unit || !unit->IsConventional() || !d.units.count(unit->m_id)) {THROW("Retreat requires its surviving two-Unit battle plan");}
+    auto* source=unit->GetTile();
+    auto sight=d.manager->m_game->PrepareConventionalSight(unit->m_id,unit->SimulationOwner(),destination,source);
+    auto stacks=d.manager->PrepareConventionalStackMove(unit,destination);
+    d.occupants.try_emplace(source,source->units).first->second.erase(unit->m_id);
+    d.occupants.try_emplace(destination,destination->units).first->second.emplace(unit->m_id,unit);
+    d.base_removal_homes.emplace_back(unit,state);d.battle_positions.emplace_back(unit,destination);
+    d.knowledge=std::move(sight.knowledge);d.battle_disclosures=std::move(sight.disclosed_to_humans);
+    for(const auto& change:stacks) {
+        auto found=std::find_if(d.conventional_stacks.begin(),d.conventional_stacks.end(),[&](const auto& row){return row.first==change.first;});
+        if(found==d.conventional_stacks.end()) {d.conventional_stacks.push_back(change);}else {found->second=change.second;}
+    }
+    auto& update=d.updates.try_emplace(unit->m_id,unit_update_t{UUO_NONE,unit}).first->second;
+    if(update.ops&UUO_DESPAWN) {THROW("Retreating defender has a pending removal");}update.ops=static_cast<unit_update_op_t>(update.ops|UUO_REFRESH);
+}
+
 void UnitManager::PreparedConventionalRemoval::SetNativeBattleSurvivor(Unit* unit,const SmacNativeUnitRecord& state) {
     if(!m_data || m_data->committed || !unit || !unit->IsNative()) {THROW("Native battle result requires an uncommitted casualty plan");}
     state.Validate();
@@ -765,7 +785,9 @@ void UnitManager::PreparedConventionalRemoval::Commit() noexcept {
     for(const auto* removed:d.removed) {d.manager->AdjustDesignCount(*removed,-1);}
     if(d.base_updates) {d.manager->m_game->GetBM()->m_base_updates.swap(*d.base_updates);}
     for(auto& tile:d.occupants) {tile.first->units.swap(tile.second);}
+    for(const auto& row:d.battle_positions) {row.first->m_tile=row.second;}
     d.manager->m_game->CommitConventionalSight(d.knowledge);
+    d.manager->CommitUnitDisclosures(d.battle_disclosures);
     for(size_t i=0;i<d.removed.size();++i) {d.retired[i].reset(d.removed[i]);}
     d.committed=true;
 }

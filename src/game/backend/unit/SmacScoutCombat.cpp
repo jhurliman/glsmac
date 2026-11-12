@@ -63,7 +63,7 @@ AttackResult ResolveFlatScoutAttack( const Participant& attacker, const Particip
 }
 
 AttackResult ResolveGroundAttack(const Participant& attacker,const Participant& defender,int32_t attacker_allowance,
-    const SmacGameplayRandomState& initial_random,const References& references,bool fanatic,const StrengthBonuses& bonuses) {
+    const SmacGameplayRandomState& initial_random,const References& references,bool fanatic,const StrengthBonuses& bonuses,bool retreat_available) {
     Validate(attacker);Validate(defender);
     Require(attacker_allowance>=3 && attacker_allowance<=255 && attacker_allowance%3==0,"Ground battle requires a bounded quantum3 allowance");
     Require(bonuses.weapon_power>0 && bonuses.armor_power>0,"Conventional ground battle requires positive weapon and armor powers");
@@ -83,12 +83,12 @@ AttackResult ResolveGroundAttack(const Participant& attacker,const Participant& 
 	const std::array< int32_t, 2 > strengths{attack,defense};
 	const auto remaining = std::clamp( int64_t( attacker_allowance ) - attacker.spent, INT64_C( 0 ), INT64_C( 999 ) );
 	const std::array< int32_t, 2 > widths{ remaining < Q ? Checked( strengths[ 0 ] * remaining / Q ) : strengths[ 0 ], strengths[ 1 ] };
-    return ResolveStrengthAttack(attacker,defender,strengths,widths,initial_random,references);
+    return ResolveStrengthAttack(attacker,defender,strengths,widths,initial_random,references,retreat_available);
 }
 
 AttackResult ResolveStrengthAttack(const Participant& attacker,const Participant& defender,
     const std::array<int32_t,2>& strengths,const std::array<int32_t,2>& widths,
-    const SmacGameplayRandomState& initial_random,const References& references) {
+    const SmacGameplayRandomState& initial_random,const References& references,bool retreat_available) {
     Validate(attacker);Validate(defender);
     Require(attacker.identity!=defender.identity,"Battle participants require distinct stable identities");
     Require(Names(references.selected,attacker.identity,defender.identity) && Names(references.secondary,attacker.identity,defender.identity),
@@ -99,11 +99,14 @@ AttackResult ResolveStrengthAttack(const Participant& attacker,const Participant
 	auto random = initial_random;
 	std::vector< Round > rounds; rounds.reserve( MAX_ROUNDS );
 	std::vector< Draw > draws; draws.reserve( MAX_DRAWS );
+	int32_t retreat_countdown=retreat_available ? (defender.health+1)/2:0;
+    bool retreated=false;
 	while ( health[ 0 ] > 0 && health[ 1 ] > 0 ) {
 		const auto a = Range( random, draws, DrawPhase::RoundAttacker, widths[ 0 ] );
 		const auto d = Range( random, draws, DrawPhase::RoundDefender, widths[ 1 ] );
 		rounds.push_back( { health, { a, d } } );
 		--health[ a > d ? 1 : 0 ]; // Ties hit the attacker.
+        if(a>d && health[1]>0 && retreat_countdown>0 && --retreat_countdown==0) {retreated=true;break;}
 	}
 	const bool attacker_won = health[ 0 ] > 0;
 	const size_t w = attacker_won ? 0 : 1, l = 1 - w;
@@ -117,8 +120,8 @@ AttackResult ResolveStrengthAttack(const Participant& attacker,const Participant
 		if ( winner.effective_morale <= 2 || ( Raw( random, draws, DrawPhase::PromotionParity ) & 1 ) == 0 ) { ++morale; }
 	}
 	Survivor survivor{ winner.identity, winner.reactor, health[ w ], morale, attacker_won ? Checked( int64_t( attacker.spent ) + Q ) : defender.spent, attacker_won ? Position::Source : Position::Destination, { std::nullopt, std::nullopt } };
-	return { attacker_won ? Victory::Attacker : Victory::Defender, survivor, loser.identity, Retire( references, loser.identity ), winner.identity, random,
-		strengths, widths, health, { attacker_won, !attacker_won }, std::move( rounds ), std::move( draws ), { winner_weight, loser_weight, admitted, winner.stored_morale, morale }, { attacker_won ? 1 : 0, 0 } };
+	return { attacker_won ? Victory::Attacker : Victory::Defender, survivor, loser.identity, retreated ? references:Retire( references, loser.identity ), winner.identity, random,
+		strengths, widths, health, { attacker_won, retreated || !attacker_won }, std::move( rounds ), std::move( draws ), { winner_weight, loser_weight, admitted, winner.stored_morale, morale }, { attacker_won ? 1 : 0, 0 },retreated };
 }
 
 EmptyMoveResult ContinueEmptyFlatWithoutLottery( const Survivor& source, const int32_t current_allowance, const SmacGameplayRandomState& random, const References& references ) {

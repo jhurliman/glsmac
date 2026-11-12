@@ -65,6 +65,7 @@ struct AttackResult {
 	std::vector< Draw > draws;
 	Promotion promotion;
 	OriginalReturns original_returns;
+    bool defender_retreated=false;
 };
 
 // Reactor 1..4; HP 1..10R; neutral stored/effective morale equal in 0..6;
@@ -87,7 +88,7 @@ AttackResult ResolveFlatScoutAttack( const Participant& attacker, const Particip
 // Ordinary positive-component land combat, with the caller resolving each
 // independently truncated bonus from frozen rules and actual terrain/chassis.
 AttackResult ResolveGroundAttack(const Participant& attacker,const Participant& defender,int32_t attacker_allowance,
-    const SmacGameplayRandomState& random,const References& references,bool fanatic,const StrengthBonuses& bonuses);
+    const SmacGameplayRandomState& random,const References& references,bool fanatic,const StrengthBonuses& bonuses,bool retreat_available=false);
 
 // Shared ordinary battle recurrence. The caller produces component/terrain/PSI
 // strengths and any native early-turn width adjustment before entering this
@@ -95,7 +96,7 @@ AttackResult ResolveGroundAttack(const Participant& attacker,const Participant& 
 // state or random stream changes until the complete result is committed.
 AttackResult ResolveStrengthAttack(const Participant& attacker, const Participant& defender,
     const std::array<int32_t,2>& strengths, const std::array<int32_t,2>& round_widths,
-    const SmacGameplayRandomState& random, const References& references);
+    const SmacGameplayRandomState& random, const References& references,bool retreat_available=false);
 
 enum class EmptyMove { Moved, Exhausted };
 struct EmptyMoveResult {

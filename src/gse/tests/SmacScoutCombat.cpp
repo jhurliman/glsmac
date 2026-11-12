@@ -30,6 +30,7 @@
 #include "game/backend/unit/SmacScoutCombat.h"
 #include "fixtures/SmacScoutCombat.h"
 #include "fixtures/SmacNativeCombat.h"
+#include "fixtures/SmacNativeRetreat.h"
 #include "fixtures/SmacEffectEscape.h"
 #include "task/gsetests/GSETests.h"
 
@@ -74,6 +75,18 @@ bool StepMatches( const fixture::Step& e, const model::Survivor& s, const model:
 }
 
 void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC native offense retains22 full retreat and casualty returns",GT(){
+        for(const auto& c:fixtures::smac_native_retreat::CASES) {
+            const auto r=model::ResolveStrengthAttack({1,1,10,1,c.level,0},{2,1,c.human_health,1,2,c.human_spent},
+                {c.attacker_strength,c.defender_strength},{c.attacker_width,c.defender_width},{3,c.crt_before},{1,2},c.retreat);
+            GT_ASSERT(r.survivor.identity==(c.winner==0 ? 1u:2u) && r.survivor.health==10-c.damage
+                && r.survivor.stored_morale==c.morale && r.random.Crt()==c.crt_after
+                && r.rounds.size()==size_t(c.rounds) && r.defender_retreated==c.retreat,
+                "Native offensive battle changed retreat timing, casualty, promotion or CRT continuation");
+            if(c.retreat) {GT_ASSERT(r.unit_present[0] && r.unit_present[1] && r.references.selected==1 && r.references.secondary==2,
+                "Retreat retired a surviving Unit reference");}
+        }GT_OK();
+    });
     task->AddTest("SMAC ground components terrain and mobile stages match original causal controls",GT(){
         struct Case {int32_t weapon,armor,mobile,terrain,noncombat,attack,defense;};
         const Case cases[]={{1,1,0,0,0,224,224},{2,1,0,0,0,448,224},{4,1,0,0,0,896,224},

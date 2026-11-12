@@ -84,7 +84,7 @@ Game::EventBatchHandoff::~EventBatchHandoff() {
 
 void response_map_data_t::SetMapProjectionProvenance(const map::Map& source) {
     const auto& policy=source.GetResourcePolicy();
-    native_projection=policy && policy->OriginalPlanet()!=nullptr;
+    native_projection=policy && policy->NativeTerrainSource()!=nullptr;
 }
 
 response_map_data_t::~response_map_data_t() {
@@ -1411,8 +1411,8 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
                     }
                 }
                 if(snapshot && snapshot->viewer>0) {
-                    for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
-                        auto& tile=snapshot->tiles[static_cast<size_t>(y)*40+x/2];
+                    for(int y=0;y<snapshot->height;++y) {for(int x=y&1;x<snapshot->width;x+=2) {
+                        auto& tile=snapshot->tiles[static_cast<size_t>(y)*size_t(snapshot->width/2)+x/2];
                         if(!tile.developed_ready || tile.band<3 || !(tile.selected_items&0x8000)) {continue;}
                         const auto nutrients=tile.center_known?GetNativeTerrainNutrients(*m_map->GetTile(x,y),snapshot->viewer,tile.base_present,tile.cached_affiliation):std::nullopt;
                         if(nutrients) {tile.nutrients=*nutrients;}else {tile.developed_ready=false;}
@@ -1420,10 +1420,10 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 
                     for(const auto& entry:m_bm->GetBases()) {
                         const auto* base=entry.second;const auto* tile=base->GetTile();
-                        if(!base->HasSmacResourceContext() || !tile || tile->base!=base || tile->coord.x>=80 || tile->coord.y>=80) {continue;}
+                        if(!base->HasSmacResourceContext() || !tile || tile->base!=base || tile->coord.x>=size_t(snapshot->width) || tile->coord.y>=size_t(snapshot->height)) {continue;}
                         const auto owner=base->GetSmacResourceContext().owner_simulation_id;
                         const auto visible=base_visibility.find(base->m_id);
-                        snapshot->tiles[static_cast<size_t>(tile->coord.y)*40+tile->coord.x/2].admitted_base=
+                        snapshot->tiles[static_cast<size_t>(tile->coord.y)*size_t(snapshot->width/2)+tile->coord.x/2].admitted_base=
                             ::game::native_terrain::AdmitsBase(snapshot->viewer,owner,visible==base_visibility.end()?0:visible->second);
                     }
                 }

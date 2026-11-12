@@ -4,7 +4,7 @@
 namespace game::frontend::native_terrain {
 struct Session {
     static bool Admits(const ::game::native_terrain::World& world) {
-        if(!world.ValidDimensions() || world.width!=80 || world.height!=80 || !world.retained_geometry || !world.horizontal_wrap) {return false;}
+        if(!world.ValidDimensions() || !world.retained_geometry) {return false;}
         for(const auto& cell:world.tiles) {
             if(cell.band>7) {return false;}
             if(cell.band<3 || !(cell.landmarks&0xb03u)) {continue;}
@@ -14,13 +14,13 @@ struct Session {
             if(detail<128 || std::find(negative.begin(),negative.end(),int(detail)-256)==negative.end()) {return false;}
         }return true;
     }
-    explicit Session(const ::game::native_terrain::World& world):geometry(world) {
+    explicit Session(const ::game::native_terrain::World& world):geometry(world),cells(world.tiles.size()),world_size{{world.width,world.height}},horizontal_wrap(world.horizontal_wrap) {
         if(!Admits(world)) {throw std::invalid_argument("Unsupported native view session world");}
-        for(size_t i=0;i<3200;++i) {cells[i]={world.tiles[i].band,world.tiles[i].landmarks};}
+        for(size_t i=0;i<world.tiles.size();++i) {cells[i]={world.tiles[i].band,world.tiles[i].landmarks};}
     }
     bool Matches(const ::game::native_terrain::World& world) const {
-        if(!Admits(world)) {return false;}
-        for(size_t i=0;i<3200;++i) {
+        if(!Admits(world) || world_size!=Point{{world.width,world.height}} || horizontal_wrap!=world.horizontal_wrap) {return false;}
+        for(size_t i=0;i<world.tiles.size();++i) {
             if(cells[i].first!=world.tiles[i].band || cells[i].second!=world.tiles[i].landmarks) {return false;}
         }return true;
     }
@@ -64,7 +64,9 @@ struct Session {
     ViewGeometry geometry;
     std::optional<Frame> frame;
     std::optional<ViewLayout> layout;
-    std::array<std::pair<uint8_t,uint32_t>,3200> cells{};
+    std::vector<std::pair<uint8_t,uint32_t>> cells;
+    Point world_size;
+    bool horizontal_wrap;
 private:
     int observer_=0,pending_relief_=25,committed_relief_=25;
     std::optional<int> pending_observer_;

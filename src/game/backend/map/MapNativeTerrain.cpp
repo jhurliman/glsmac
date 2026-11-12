@@ -30,12 +30,12 @@ smac_terrain::LandmarkGeometry* Map::GetNativeGeometry() const {
 }
 std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain(bool include_geometry) const {
     const auto source=m_resource_policy?m_resource_policy->NativeTerrainSource():nullptr;
-    if(!source || GetWidth()!=80 || GetHeight()!=80 || !m_territory_topology) {return {};}
+    if(!source || !m_territory_topology) {return {};}
     const auto& metadata=source->Info();
     if(metadata.width!=GetWidth() || metadata.height!=GetHeight() || m_territory_topology->Width()!=int(metadata.width) || m_territory_topology->Height()!=int(metadata.height)) {
         throw std::runtime_error("Native snapshot authority and live topology disagree");
     }
-    auto result=std::make_unique<::game::native_terrain::World>();
+    auto result=std::make_unique<::game::native_terrain::World>(int(metadata.width),int(metadata.height));
     result->horizontal_wrap=m_territory_topology->Wraps();
     result->retained_geometry=true;
     result->resource_pattern=metadata.pattern;
@@ -44,24 +44,24 @@ std::unique_ptr<::game::native_terrain::World> Map::CopyNativeTerrain(bool inclu
     // must not create, refresh or traverse the shared height/face-light cache.
     auto* geometry=include_geometry?GetNativeGeometry():nullptr;
     const auto band_at=[&](int x,int y)->std::optional<uint8_t> {
-        if(y<0 || y>=80) {return std::nullopt;}
-        if(result->horizontal_wrap) {x=(x%80+80)%80;}
-        if(x<0 || x>=80) {return std::nullopt;}
+        if(y<0 || y>=result->height) {return std::nullopt;}
+        if(result->horizontal_wrap) {x=(x%result->width+result->width)%result->width;}
+        if(x<0 || x>=result->width) {return std::nullopt;}
         return source->At(x,y).Climate()>>5;
     };
     const auto knowledge=m_worker_knowledge && m_worker_knowledge_ready?std::optional<SmacWorkerKnowledge::Data>{m_worker_knowledge->CopyData()}:std::nullopt;
-    if(knowledge && (knowledge->width!=80 || knowledge->height!=80 || knowledge->tiles.size()!=3200 ||
+    if(knowledge && (knowledge->width!=metadata.width || knowledge->height!=metadata.height || knowledge->tiles.size()!=result->tiles.size() ||
         knowledge->horizontal_wrap!=result->horizontal_wrap)) {throw std::runtime_error("Native terrain snapshot has invalid knowledge geometry");}
     if(knowledge) {
         result->exploration_ready=true;result->revealed_by=knowledge->all_map_revealed;
         for(unsigned owner=1;owner<8;++owner) {if(knowledge->observers[owner]) {result->observers_present|=static_cast<uint8_t>(1u<<owner);}}
     }
-    for(int y=0;y<80;++y) {for(int x=y&1;x<80;x+=2) {
+    for(int y=0;y<result->height;++y) {for(int x=y&1;x<result->width;x+=2) {
         const auto& original=source->At(x,y);
         const auto* live=GetTile(x,y);
-        auto& output=result->tiles[static_cast<size_t>(y)*40+x/2];
+        auto& output=result->tiles[static_cast<size_t>(y)*size_t(result->width/2)+x/2];
         output.band=original.Climate()>>5;
-        const auto index=static_cast<size_t>(y)*40+x/2;
+        const auto index=static_cast<size_t>(y)*size_t(result->width/2)+x/2;
         output.region=m_territory_topology->Regions().at(index);
         if(knowledge) {output.owner=static_cast<int8_t>(knowledge->tiles[index].claimant.value_or(-1));output.explored_by=knowledge->tiles[index].explored_by;}
         if(knowledge && knowledge->occupancy) {

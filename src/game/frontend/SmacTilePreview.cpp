@@ -55,7 +55,7 @@ std::optional<native_terrain::Frame> Paint(const ::game::native_terrain::World& 
         // live neighbor climate and Fungus connectivity reads.
         return material::Tile{cell->band,cell->moisture,cell->rockiness,cell->items};
     };
-    const auto passes=material::Select({{x,y}},materials,static_cast<uint16_t>(base+44*(40*y+x/2)),own.selected_items);
+    const auto passes=material::Select({{x,y}},materials,static_cast<uint16_t>(base+44*((world.width/2)*y+x/2)),own.selected_items);
     const std::array<raster::Point,5> points{{{{anchor[0]+40,anchor[1]+20}},
         {{anchor[0],anchor[1]+20}},{{anchor[0]+40,anchor[1]}},
         {{anchor[0]+80,anchor[1]+20}},{{anchor[0]+40,anchor[1]+40}}}};

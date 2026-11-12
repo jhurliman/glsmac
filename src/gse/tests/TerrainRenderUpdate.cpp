@@ -28,6 +28,7 @@
 #include "game/backend/map/Consts.h"
 #include "game/backend/map/SmacTerrainGeometry.h"
 #include "game/backend/map/SmacPlanetMap.h"
+#include "game/backend/map/SmacTerrainAuthority.h"
 #include "game/backend/map/SmacGlobalSpread.h"
 #include "game/backend/map/module/Finalize.h"
 #include "game/backend/map/module/Sprites.h"
@@ -371,6 +372,25 @@ public:
         try {(void)local.CopyGlobalSpreadInput(1,{});}catch(const std::runtime_error&) {refused=true;}
         return refused;
     }
+    bool CheckGeneratedNativeTerrainSnapshot(int width,int height,bool wrap) {
+        map::Map local(nullptr,width,height);
+        map::SmacTerrainAuthority::Metadata metadata;
+        metadata.width=width;metadata.height=height;metadata.horizontal_wrap=wrap;
+        metadata.pattern=17;metadata.generation_primary_rules=0x2000;
+        for(auto& category:metadata.categories) {category=1;}
+        std::string records(size_t(width/2)*size_t(height)*44,'\0');
+        for(size_t i=0;i<records.size();i+=44) {records[i]=char(4<<5);records[i+1]=50;}
+        local.m_resource_policy=map::GlsmacResourceMapPolicy::GeneratedTerrainV3(
+            map::SmacTerrainAuthority::GeneratedRetained(metadata,records));
+        local.m_territory_topology=map::GlsmacTerritoryTopology::Build(width,height,wrap,std::vector<bool>(size_t(width/2)*height,false));
+        auto* last=local.GetTile(width-1,height-1);last->terraforming=tile::TERRAFORMING_ROAD;
+        const auto snapshot=local.CopyNativeTerrain();
+        if(!snapshot || snapshot->width!=width || snapshot->height!=height || snapshot->horizontal_wrap!=wrap
+            || snapshot->tiles.size()!=size_t(width/2)*height || !snapshot->tiles.back().heights
+            || snapshot->tiles.back().items!=4) {return false;}
+        game::backend::response_map_data_t delivery{};delivery.SetMapProjectionProvenance(local);
+        return delivery.native_projection && game::frontend::native_terrain::Session::Admits(*snapshot);
+    }
     bool CheckNativeTerrainSnapshot() {
         std::unique_ptr<::game::native_terrain::World> retained,claims;
         {
@@ -619,7 +639,46 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(native::Session::Admits(world) && !session.Matches(world),"Measured negative profile rejected or reused stale cache");
         world.tiles[0].landmarks=0xc0000001u;GT_ASSERT(!native::Session::Admits(world),"Unmeasured negative profile admitted");
         world.tiles[0].landmarks=0;world.horizontal_wrap=false;
-        GT_ASSERT(!native::Session::Admits(world),"Unmeasured flat view cache admitted");GT_OK();
+        GT_ASSERT(native::Session::Admits(world) && !session.Matches(world),"Flat topology rejected or reused wrapped geometry");GT_OK();
+    });
+    task->AddTest("SMAC generated native terrain delivers every map size and flat topology",GT(){
+        TerrainRenderFixture fixture;
+        for(const auto dimensions:{std::array<int,2>{{16,8}},{{32,24}},{{64,32}},{{128,80}},{{256,128}}}) {
+            for(const bool wrap:{false,true}) {
+                GT_ASSERT(fixture.CheckGeneratedNativeTerrainSnapshot(dimensions[0],dimensions[1],wrap),
+                    "Generated live terrain snapshot lost dimensions, edge improvement, geometry or delivery admission");
+            }
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC generated observer sessions preserve fog and picking across sizes",GT(){
+        namespace native=game::frontend::native_terrain;
+        using World=game::native_terrain::World;
+        for(const auto dimensions:{native::Point{{16,8}},{{32,24}},{{128,80}},{{256,128}}}) {
+            for(const bool wrap:{false,true}) {
+                World world(dimensions[0],dimensions[1]);world.retained_geometry=true;world.horizontal_wrap=wrap;
+                world.viewer=1;world.exploration_ready=true;world.observers_present=2;world.initial_survey=false;
+                for(auto& tile:world.tiles) {tile.band=4;tile.material_admitted=true;}
+                const native::Point center{{dimensions[0]/2,dimensions[1]/2}};
+                world.tiles[size_t(center[1])*size_t(world.width/2)+size_t(center[0])/2].explored_by=2;
+                native::Session session(world);native::ViewContext context;context.camera=center;
+                const auto plan=session.Prepare(world,context);
+                GT_ASSERT(plan && plan->world==dimensions && plan->opaque_background,"Generated observer lost geometry or opaque fog");
+                size_t known=0;for(const auto& cell:plan->terrain) {known+=!cell.unknown;}
+                GT_ASSERT(known==1,"Generated observer disclosed terrain outside saved exploration");
+                native::Source source;source.loaded={1024,768,std::vector<uint8_t>(1024*768,77)};
+                auto frame=native::RenderPrepared(world,source,*plan,0,context.flags);
+                GT_ASSERT(frame.world==dimensions && frame.developed_tiles.size()==world.tiles.size(),"Generated frame retained Planet masks");
+                session.Commit(std::move(frame),context.Layout(world));
+                for(const auto& cell:plan->terrain) {if(!cell.unknown) {
+                    const auto picked=session.Pick({{cell.flat_center[0],cell.flat_center[1]-cell.heights[0]}});
+                    GT_ASSERT(picked && picked->code==0 && picked->written==center,"Generated committed picking differs from rendered tile");
+                }}
+                auto different=world;different.horizontal_wrap=!wrap;
+                GT_ASSERT(!session.Matches(different),"Changed topology reused old geometry");
+            }
+        }
+        GT_OK();
     });
     task->AddTest("SMAC native terrain view preserves1597 original ordered submissions",GT(){
         namespace native=game::frontend::native_terrain;

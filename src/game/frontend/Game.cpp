@@ -1417,7 +1417,7 @@ void Game::Initialize(
     m_native_snapshot_dirty=native_projection;
     if(native_projection) {
         m_native_context=std::make_unique<native_terrain::ViewContext>();
-        m_native_object_tiles=std::vector<bool>(3200,false);
+        m_native_object_tiles=std::vector<bool>((map_size.x/2)*map_size.y,false);
         m_native_context->camera={{int(map_size.x/2),int(map_size.y/2)}};
         m_native_context->camera[0]^=(m_native_context->camera[0]^m_native_context->camera[1])&1;
         if(m_native_inspector) {m_native_context->flags=0x10621;m_native_context->preferences={};}

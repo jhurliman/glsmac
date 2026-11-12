@@ -643,6 +643,60 @@ public:
         util::FinallyGuard clear([&]{m_glsmac->m_state=nullptr;});
         m_glsmac->RestoreSinglePlayerIdentity(id,std::move(identity));
     }
+    std::string StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet) {
+        using namespace game::backend;
+        EnableWorldSnapshot();
+        auto& settings=m_state->m_settings.global;
+        settings.SelectRuleset("smac");settings.InitializeHostRules(source);
+        smac_rules_fixture::AcceptWorldSize(settings);
+        EnableSimulationParticipants({0});
+        for(const auto& profile:settings.GetSmacFactionStartupRules()->factions) {
+            if(!m_state->GetFM()->Get(profile.port_id)) {m_state->GetFM()->Add(new faction::Faction(profile.port_id,profile.port_id));}
+        }
+        settings.difficulty_level=0;settings.SelectInstalledPlanet();settings.SelectSmacCampaignRules(false);
+        m_game.m_slot->GetPlayer()->SetDifficultyLevel("Librarian");
+        const auto setup=WithScriptValues([&](GSE_CALLABLE)->std::string {
+            const auto path=std::filesystem::temp_directory_path()/("glsmac-controller-"+util::UUID::Generate()+".MP");
+            util::FinallyGuard remove([&]{std::filesystem::remove(path);});
+            {std::ofstream file(path,std::ios::binary);file.write(planet.data(),planet.size());}
+            auto* world=m_game.GetMap();DELETE(world->m_tiles);world->m_tiles=nullptr;
+            world->m_resource_policy.reset();world->m_territory_topology.reset();
+            const common::mt_flag_t active=false;
+            GT_ASSERT(world->LoadInstalledPlanet(path.string(),false,active)==map::Map::EC_NONE,"Controller map import failed");
+            m_game.m_tm=new map::tile::TileManager(&m_game);
+            for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {m_game.GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
+            for(const auto* name:{"define_moraleset","define_unit","define_base_pop","define_base_facility","advance_turn"}) {
+                auto* handlers=static_cast<value::Object*>(RunScript(GSE_CALL,std::string("./GLSMAC_data/default/game/event/")+name));
+                RegisterEvent(name,new event::EventHandler(gc_space,name,static_cast<value::Callable*>(handlers->Get("validate")),nullptr,
+                    static_cast<value::Callable*>(handlers->Get("apply")),static_cast<value::Callable*>(handlers->Get("rollback"))));
+            }
+            m_game.On(GSE_CALL,"create_world",NATIVE_CALL(this) {
+                auto* game=m_game.Wrap(GSE_CALL);
+                static_cast<value::Callable*>(RunScript(GSE_CALL,"./GLSMAC_data/default/game/bases"))->Run(GSE_CALL,{game});
+                auto* definitions=static_cast<value::Object*>(RunScript(GSE_CALL,"./GLSMAC_data/default/units/defs"));
+                static_cast<value::Callable*>(definitions->Get("define"))->Run(GSE_CALL,{game});
+                static_cast<value::Callable*>(RunScript(GSE_CALL,"./GLSMAC_data/default/game/world/default"))->Run(GSE_CALL,{game});
+                return VALUE(value::Undefined);
+            }));
+            PushBaseUpdates();FixtureWorldTicket();
+            m_game.m_active_admission->installed_planet=true;
+            m_game.m_active_admission->stage=Game::StartupStage::Start;m_game.m_game_state=Game::GS_STARTING;
+            GT_OK();
+        });
+        if(!setup.empty()) {return setup;}
+        m_map.release();util::FinallyGuard recover([&]{m_map.reset(m_game.m_map);});
+        m_game.Iterate();
+        if(!m_game.IsRunning() || m_game.HasInitializationFailure()) {return "Local controller startup: "+m_game.m_initialization_error;}
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            GT_ASSERT(m_game.m_simulation && m_game.m_simulation->value.roster.size()==7 && m_game.m_simulation->value.human_membership==2,
+                "Local campaign did not admit one human and six actual computers");
+            GT_ASSERT(m_game.m_simulation->value.faction_turn && m_game.m_simulation->value.faction_turn->Current().owner==1
+                && m_game.m_simulation->value.faction_turn->Current().phase==faction::SmacFactionTurn::Phase::OwnerCommand,
+                "Local campaign did not stop at first human command boundary");
+            GT_OK();
+        });
+    }
+
 	BackendFixture()
 		: m_random( new game::backend::Random( &m_game, 12345 ) )
 		, m_gse( CreateRuntime() )
@@ -7868,6 +7922,8 @@ std::string CheckSmacBaseStartupFixture( const bool queued, const int32_t diffic
 
 ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< BackendFixture >() ) {}
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
+std::string ConventionalUnitFixture::StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet) {return fixture->StartLocalComputerCampaign(source,planet);}
+
 void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate, bool single, bool selected_rover ) { fixture->ConfigureConventional( refreshed, rate, single, selected_rover ); }
 void ConventionalUnitFixture::ConfigureMovementCampaign( bool selected_rover ) { fixture->ConfigureConventional( true, 3, false, selected_rover, true ); }
 void ConventionalUnitFixture::ConfigureSpecialists( const game::backend::settings::SmacSpecialistRules& rules ) { fixture->ConfigureConventional( true, 3, false, false, false, &rules ); }

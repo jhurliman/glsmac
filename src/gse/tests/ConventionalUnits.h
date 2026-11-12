@@ -21,6 +21,7 @@ class ConventionalUnitFixture {
 public:
 	ConventionalUnitFixture();
 	~ConventionalUnitFixture();
+    std::string StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet);
 	void Configure( bool refreshed = true, int32_t road_rate = 3, bool single = false, bool selected_rover = false );
 	void ConfigureMovementCampaign( bool selected_rover = true );
 	void ConfigureSpecialists( const game::backend::settings::SmacSpecialistRules& rules );

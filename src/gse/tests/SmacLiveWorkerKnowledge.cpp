@@ -502,6 +502,39 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
             GT_ASSERT(destination.Game()->GetUM()->GetUnit(71)->Conventional().native_flags==0xffff,"Restore replayed disclosure or lost flags");GT_OK();
 		});
 	} );
+    task->AddTest("SMAC distant foreign observers and sensors do not block ordinary terrain movement",GT(){
+        for(int scenario=0;scenario<3;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();Definitions(game);
+                for(size_t y=0;y<64;++y) {for(size_t x=y&1;x<128;x+=2) {
+                    auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners) {*corner=100;}
+                    tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->Update();
+                }}
+                const int x=scenario==2?2:32;
+                auto* local=Spawn(GSE_CALL,game,71,0,1,x,16);
+                Spawn(GSE_CALL,game,72,1,2,0,40);
+                MakeBase(GSE_CALL,game,901,1,2,0,48,1);
+                auto* destination=game->GetMap()->GetTile(x-2,16);
+                if(scenario==0) {destination->rockiness=map::tile::ROCKINESS_ROCKY;}
+                if(scenario==1) {destination->terraforming=map::tile::TERRAFORMING_FOREST;}
+                game->GetMap()->GetTile(96,40)->terraforming=map::tile::TERRAFORMING_SENSOR;
+                Knowledge::Data data{128,64,true,true,0,{},{},{}};data.tiles.resize(4096,{0,std::nullopt});
+                data.observers[1]=Knowledge::Observer{};data.observers[2]=Knowledge::Observer{};
+                data.units={{71,4,false},{72,2,false}};
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                const auto rng=fixture.GameplayRandom();
+                game->GetUM()->MoveConventionalUnit(GSE_CALL,local,destination,0);
+                const auto actual=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                GT_ASSERT(local->GetTile()==destination && actual.units[0].visible_to==0 && actual.units[1].visible_to==2,
+                    "Remote foreign entity vetoed movement or globally rewrote stored disclosure");
+                GT_ASSERT(actual.remembered[1][16*64+(x-2)/2]->unit_present && actual.tiles[40*64].explored_by==0
+                    && fixture.GameplayRandom()==rng,"Distant observer movement revealed remote geography or spent sight RNG");
+                GT_OK();
+            });GT_ASSERT(result.empty(),"distant sight scenario "+std::to_string(scenario)+": "+result);
+        }
+        GT_OK();
+    });
 	task->AddTest( "SMAC live ordinary sight rejects unsupported detection before publication", GT() {
 		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
 		return fixture.Run([&](GSE_CALLABLE)->std::string {

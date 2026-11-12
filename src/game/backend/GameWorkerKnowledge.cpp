@@ -340,46 +340,29 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
 	// receipt admits unobscured flat ordinary land; sensor/edge/concealment
 	// branches remain explicit failures when foreign detection is relevant.
 	auto& moving=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==id;});
-	const auto adjacent=[](const map::tile::Tile* a,const map::tile::Tile* b) {
-		const auto dx=std::abs(int64_t(a->coord.x)-int64_t(b->coord.x));
-		const auto dy=std::abs(int64_t(a->coord.y)-int64_t(b->coord.y));
-		return dx+dy==2;
-	};
+	const auto adjacent=[&](const map::tile::Tile* a,const map::tile::Tile* b) {
+        auto dx=std::abs(int64_t(a->coord.x)-int64_t(b->coord.x));
+        if(data.horizontal_wrap) {dx=std::min(dx,int64_t(data.width)-dx);}
+        const auto dy=std::abs(int64_t(a->coord.y)-int64_t(b->coord.y));
+        return dx+dy==2;
+    };
 	const auto ordinary=[&](const map::tile::Tile* tile) {
 		if ( tile->is_water_tile || tile->rockiness!=map::tile::ROCKINESS_FLAT || tile->features!=map::tile::FEATURE_NONE
 			|| tile->terraforming!=map::tile::TERRAFORMING_NONE || tile->coord.x<2 || tile->coord.x+2>=m_map->GetWidth()
 			|| tile->coord.y<2 || tile->coord.y+2>=m_map->GetHeight() ) { throw std::runtime_error("Foreign sight requires evidenced unobscured interior flat land"); }
 	};
-	bool foreign=false;
-	for ( const auto& entry:m_um->GetUnits() ) {
-        foreign |= entry.second->IsConventional() && entry.second->Conventional().owner_simulation_id!=owner;
-    }
-	for ( const auto& entry:m_bm->GetBases() ) { foreign |= entry.second->GetSmacResourceContext().owner_simulation_id!=owner; }
-	if ( foreign ) {
-		ordinary(destination);
-		for ( int32_t y=0;y<data.height;++y ) { for(int32_t x=y&1;x<data.width;x+=2) {
-			if(m_map->GetTile(x,y)->terraforming & map::tile::TERRAFORMING_SENSOR) { throw std::runtime_error("Foreign sight sensor-range producer is not admitted"); }
-		} }
-	}
 	for ( const auto& entry:m_um->GetUnits() ) {
 		const auto* other=entry.second; const auto faction=other->SimulationOwner();
 		if(entry.first==id || faction==owner) {continue;}
 		const auto* tile=other->GetTile();
 		if(other->IsNative()) {
-            // Native detection is adjacent-eight on all five captured land
-            // terrain families. It does not inherit positive-owner flat-land
-            // restrictions or globally clear stationary masks.
-            const auto interior=[&](const map::tile::Tile* position) {
-                if(position->is_water_tile || position->coord.x<2 || position->coord.x+2>=m_map->GetWidth()
-                    || position->coord.y<2 || position->coord.y+2>=m_map->GetHeight()) {
-                    throw std::runtime_error("Native detection requires interior land geometry");
-                }
-            };
-            if(destination!=tile && !destination->IsAdjactentTo(tile)) {continue;}
-            interior(destination);interior(tile);
+            // Ordinary native detection visits the eight adjacent positions on
+            // every supported land terrain. Use saved topology at wrap/poles;
+            // unrelated sensors and remote foreign entities do not veto sight.
+            if(!adjacent(destination,tile)) {continue;}
             // A departing actor still occupies its authenticated source during
             // preparation. Detect each remaining native there independently.
-            if(destination==tile || (tile->units.size()!=1 && tile!=source)) {throw std::runtime_error("Native detection requires distinct singleton or authenticated departure source");}
+            if(destination==tile) {throw std::runtime_error("Native detection placement requires distinct tiles");}
             if(adjacent(destination,tile)) {
                 moving.visible_to |= 1u; // Faction0 is independent of controller slot0.
                 auto& observation=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==entry.first;});
@@ -388,11 +371,8 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
             }
             continue;
         }
-        // No wrapping foreign detection has been established, even when the
-		// exploration kernel independently supports periodic-X geometry.
-		if(tile->coord.x<2 || tile->coord.x+2>=m_map->GetWidth() || tile->coord.y<2 || tile->coord.y+2>=m_map->GetHeight()) {ordinary(tile);}
 		if(adjacent(destination,tile) || destination==tile) {
-			ordinary(tile); if(tile->units.size()!=1 || destination==tile) {throw std::runtime_error("Foreign sight stacks are not admitted");}
+			ordinary(destination); ordinary(tile); if(tile->units.size()!=1 || destination==tile) {throw std::runtime_error("Foreign sight stacks are not admitted");}
 			moving.visible_to |= uint8_t(1u<<faction);
             prepared.disclosed_to_humans.push_back(id);
 			auto& observation=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==entry.first;});
@@ -405,8 +385,7 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
 		if(faction==owner) {continue;}
 		if(base->GetTile()==destination) {throw std::runtime_error("Foreign Base entry is not admitted");}
 		const auto* center=base->GetTile();
-		if(center->coord.x<2 || center->coord.x+2>=m_map->GetWidth() || center->coord.y<2 || center->coord.y+2>=m_map->GetHeight()) {ordinary(center);}
-		if(adjacent(destination,center)) {ordinary(center); moving.visible_to |= uint8_t(1u<<faction);
+		if(adjacent(destination,center)) {ordinary(destination); ordinary(center); moving.visible_to |= uint8_t(1u<<faction);
             prepared.disclosed_to_humans.push_back(id);}
 	}
     if(data.occupancy) {

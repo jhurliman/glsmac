@@ -388,6 +388,7 @@ private:
     PreparedDefectionUnits PrepareDefectionUnitsForQuery(slot::Slot* recipient,
         const std::vector<std::pair<size_t,ConventionalUnitState>>& changes,
         const PreparedConventionalUnit* created=nullptr,const PreparedConventionalRemoval* removed=nullptr);
+    PreparedConventionalRemoval PrepareBaseCenterRemovalForClass(GSE_CALLABLE,const base::Base& removed,int32_t old_class);
 	PreparedConventionalRemoval PrepareRemovalForQuery(const std::vector<size_t>& ids,PreparedConventionalUnit* created=nullptr,Unit* survivor=nullptr,bool allow_native=false);
 	PreparedFactionUnits PrepareFactionUnitsForQuery(slot::Slot* owner,map::tile::Tile* destination,
 		const std::vector<std::pair<Def*,ConventionalUnitState>>& replacements,const map::SmacWorkerKnowledge& territory,

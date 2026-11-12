@@ -390,13 +390,19 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareWorldUnitRemoval(GS
     return PrepareRemovalForQuery(ids,nullptr,nullptr,true);
 }
 UnitManager::PreparedConventionalRemoval UnitManager::PrepareBaseCenterRemoval(GSE_CALLABLE,const base::Base& removed) {
+    const auto* map=m_game->GetMap();
+    if(!map || !removed.GetTile() || !map->GetResourcePolicy()) {THROW("Base cleanup lacks its old terrain authority");}
+    return PrepareBaseCenterRemovalForClass(GSE_CALL,removed,static_cast<int32_t>(map->GetResourcePolicy()->Altitude(*removed.GetTile())));
+}
+UnitManager::PreparedConventionalRemoval UnitManager::PrepareBaseCenterRemovalForClass(GSE_CALLABLE,const base::Base& removed,int32_t old_class) {
     m_game->CheckRW(GSE_CALL);m_game->RequireSmacGameplayActive();
     const auto* map=m_game->GetMap();const auto* center=removed.GetTile();
     if(!map || !m_game->IsRunning() || gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating()
         || m_game->GetBM()->GetBase(removed.m_id)!=&removed || !center || center->base!=&removed || !map->GetResourcePolicy()) {
         THROW("Base center cleanup requires the registered old surface");
     }
-    const auto altitude=static_cast<int32_t>(map->GetResourcePolicy()->Altitude(*center));
+    if(old_class<0 || old_class>7) {THROW("Base cleanup lacks its retained old surface class");}
+    const auto altitude=old_class;
     const auto& rules=m_game->GetState()->m_settings.global.GetSmacPredefinedUnitRules();
     if(!rules) {THROW("Base center cleanup lacks frozen design/chassis authority");}
     const auto& catalog=rules->catalog;
@@ -497,7 +503,16 @@ void UnitManager::PreparedConventionalRemoval::PrepareBaseRemovalHomes(const bas
         auto* unit=data.manager->GetUnit(id);if(!unit) {THROW("Base home repair Unit order is incomplete");}
         if(unit->IsNative()) {
             (void)data.manager->QueryNativeUnit(unit->Native(),0);
-            if(unit->Native().home_base!=-1) {THROW("Native Base-home repair requires dense Base-reference authority");}
+            auto native=unit->Native();const auto& order=game->GetBM()->GetBaseRecordOrder();
+            const auto lost=std::find(order.begin(),order.end(),removed.m_id),next=std::find(order.begin(),order.end(),replacement.m_id);
+            if(lost==order.end() || next==order.end()) {THROW("Native Base-home repair lacks dense Base order");}
+            const auto index=static_cast<int32_t>(lost-order.begin());
+            if(native.home_base==index) {native.home_base=unit->SimulationOwner()==removed.GetSmacResourceContext().owner_simulation_id ? static_cast<int32_t>(next-order.begin()):-1;}
+            if(native.home_base>index) {--native.home_base;}
+            auto retained=std::find_if(data.native_survivors.begin(),data.native_survivors.end(),[&](const auto& row){return row.first==unit;});
+            if(retained==data.native_survivors.end()) {THROW("Native Base-home repair lacks its retained Unit");}
+            retained->second=native;
+            if(!(native==unit->Native())) {auto& update=data.updates.try_emplace(id,unit_update_t{UUO_NONE,unit}).first->second;update.ops=static_cast<unit_update_op_t>(update.ops|UUO_REFRESH);}
             continue;
         }
         auto state=unit->Conventional();if(state.home_base_id!=removed.m_id) {continue;}
@@ -761,14 +776,20 @@ void UnitManager::PreparedConventionalRemoval::QueryWithNativeRecords(const std:
     if(!m_data || m_data->committed) {THROW("Removal query requires an uncommitted plan");}
     const auto& d=*m_data;
     auto previous=d.native_survivors;auto factory=d.native_factory;
+    auto homes=d.base_removal_homes;for(auto& row:homes) {row.second=row.first->Conventional();}
+    auto updates=d.updates;
     auto previous_stacks=d.conventional_stacks;for(auto& row:previous_stacks) {row.second=*row.first->Conventional().stack;}
     for(auto& row:previous) {row.second=row.first->Native();}
     util::FinallyGuard restore([&] {
+        d.manager->m_unit_updates.swap(updates);
+        for(const auto& row:homes) {std::get<ConventionalUnitState>(row.first->m_state)=row.second;}
         if(d.native_factory) {d.manager->m_game->m_simulation->value.native_factory.swap(factory);}
         for(const auto& row:previous) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
         for(const auto& row:previous_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     });
+    d.manager->m_unit_updates.swap(updates);
     if(d.native_factory) {d.manager->m_game->m_simulation->value.native_factory.swap(factory);}
+    for(const auto& row:d.base_removal_homes) {std::get<ConventionalUnitState>(row.first->m_state)=row.second;}
     for(const auto& row:d.native_survivors) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
     for(const auto& row:d.conventional_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     query();

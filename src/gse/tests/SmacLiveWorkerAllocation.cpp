@@ -734,6 +734,51 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             });if(!error.empty()) {return error;}
         }}GT_OK();
     });
+    task->AddTest("SMAC aggregate climate crossings retain candidate homes counts and rollback before publication",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        for(const bool stale:{false,true}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(FloodSource,"GAIANS");
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* bm=game->GetBM();auto* um=game->GetUM();auto* first=Populate(GSE_CALL,fixture,true,true);
+                game->GetState()->m_settings.global.SelectSmacCampaignRules(false);
+                auto context=first->GetSmacResourceContext();context.retained_status_word=0;first->SetSmacResourceContext(GSE_CALL,context);
+                bm->DefineFacility(new FacilityDef("flood-dome","Pressure Dome","",80,{},26));
+                const auto peer=[&](size_t id,size_t x) {
+                    Base::pops_t pops;pops.emplace(std::piecewise_construct,std::forward_as_tuple(99),std::forward_as_tuple(nullptr,99,bm->GetPopDef(Roles().specialists[1]),1));
+                    SmacBaseAllocationState allocation{1,{{},1}};allocation.specialists.types.fill(1);
+                    auto* base=new Base(game,id,first->m_owner,first->m_faction,game->GetMap()->GetTile(x,2),"Climate peer",{},pops,100,7,Production(),context,allocation);
+                    bm->SpawnBase(GSE_CALL,base);return base;
+                };
+                auto* second=peer(702,6);auto* last=peer(703,10);
+                auto record=um->GetUnit(91)->Conventional();record.native_flags=0;um->UpdateConventionalUnit(GSE_CALL,um->GetUnit(91),record);
+                auto known=KnowledgeValue(true,true,128,64).CopyData();known.occupancy=map::SmacOccupancyCache::Blank(128,64,true);
+                for(const int x:{2,6,10}) {known.occupancy->FoundBase({x,2},1);}known.occupancy->PlaceUnit({6,6},1,true);
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(known));
+                fixture.ResourceState([](auto& state){state.retained_base_totals=faction::SmacBaseTotals{};state.retained_base_totals->at(1)=3;state.faction_status.values[1]=0x1000;
+                    state.economy.at(1).population_aggregate=777;if(state.economy.at(1).regional_base_counts) {state.economy.at(1).regional_base_counts->at(1)=3;}});
+                const auto before=fixture.Snapshot();auto random=fixture.GameplayRandom();map::smac_climate::Streams streams{random};
+                map::smac_climate::World world{128,64,true};world.tiles.resize(4096);for(auto& tile:world.tiles) {tile.elevation=3;}
+                auto plan=bm->PrepareSmacFloods(GSE_CALL);
+                plan.Apply(GSE_CALL,world,2,2,3,2,streams);world.At(2,2)->elevation=2;
+                plan.Query([&]{if(bm->GetBase(701) || um->GetUnit(91)->Conventional().home_base_id!=702) {throw std::runtime_error("First climate candidate did not remove/rehome before the next crossing");}});
+                plan.Apply(GSE_CALL,world,6,2,3,2,streams);world.At(6,2)->elevation=2;
+                plan.Query([&]{if(bm->GetBase(702) || um->GetUnit(91)->Conventional().home_base_id!=703) {throw std::runtime_error("Second climate candidate lost the prior home transition");}});
+                plan.Apply(GSE_CALL,world,10,2,3,2,streams);world.At(10,2)->elevation=2;
+                plan.Apply(GSE_CALL,world,6,6,3,2,streams);world.At(6,6)->elevation=2;
+                GT_ASSERT(Rejects([&]{plan.Query([&]{throw std::runtime_error("query unwind control");});}) && fixture.Snapshot()==before,
+                    "Aggregate crossing preparation or exception unwinding changed the live registry");
+                plan.Seal(GSE_CALL);
+                if(stale) {last->m_name="changed preimage";const auto edited=fixture.Snapshot();GT_ASSERT(Rejects([&]{plan.Validate(GSE_CALL);}) && fixture.Snapshot()==edited,"Stale aggregate validation partially published");GT_OK();}
+                plan.Validate(GSE_CALL);plan.Commit();
+                GT_ASSERT(!bm->GetBase(701) && !bm->GetBase(702) && bm->GetBase(703)==last && last->GetPopulation()==1
+                    && last->m_facilities.count("flood-dome") && !um->GetUnit(91) && streams.crt_draws==3 && streams.shared_draws==0
+                    && world.flood_counts[1]==3,"Aggregate crossings lost last-Base protection or domain cleanup");
+                fixture.ResourceState([](const auto& state){if(state.retained_base_totals->at(1)!=1 || state.economy.at(1).population_aggregate!=777 || state.faction_status.values[1]!=0x81000u) {throw std::runtime_error("Aggregate climate counts status or retained population summary differ");}});
+                plan.Notify(GSE_CALL);GT_OK();
+            });if(!error.empty()) {return error;}
+        }GT_OK();
+    });
+
     task->AddTest("SMAC owning flood preparation preserves allocation and stages Dome damage before publication",[](GSE*,context::Context*)->std::string {
         using Floods=BaseManager::PreparedSmacFloods;
         std::string flooded_save;

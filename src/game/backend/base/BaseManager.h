@@ -28,7 +28,7 @@ class Game;
 class SmacGameplayRandomState;
 
 namespace map {
-namespace smac_climate { struct Streams; }
+namespace smac_climate { struct Streams; struct World; }
 class Map;
 namespace tile {
 class Tile;
@@ -82,7 +82,10 @@ public:
 	void ValidateSmacFounding( const unit::Unit& colony ) const;
     // Native climate-owner preparation. No worker/resource pass occurs here.
     // One plan retains candidate Domes/populations across repeated conversions.
-    // Removal decisions must join ordinary Base removal before publication.
+    // Apply composes ordinary Base removal and domain cleanup in scan order.
+    // Query is restorative, including on exceptions. After Seal, owners validate
+    // every terrain/entity participant before either allocation-free Commit.
+    // The caller owns detached RNG, final terrain/territory and frontend reset.
     class PreparedSmacFloods {
     public:
         ~PreparedSmacFloods();
@@ -90,6 +93,13 @@ public:
         enum class Outcome { Unchanged, Survived, Remove };
         Outcome Flood(GSE_CALLABLE,Base& base,int32_t old_class,int32_t new_class,map::smac_climate::Streams& random);
         void CommitSurvivors(GSE_CALLABLE);
+        void Apply(GSE_CALLABLE,map::smac_climate::World& world,int32_t x,int32_t y,int32_t old_class,int32_t new_class,map::smac_climate::Streams& random);
+        void Query(const std::function<void()>& query) const;
+        void Seal(GSE_CALLABLE);
+        void Validate(GSE_CALLABLE) const;
+        void Commit() noexcept;
+        void Notify(GSE_CALLABLE);
+
     private:
         friend class BaseManager;
         struct Data;

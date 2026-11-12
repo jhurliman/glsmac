@@ -1015,6 +1015,8 @@ public:
             auto* world=m_game.GetMap();auto* changed=world->GetTile(8,6);
             GT_ASSERT(!changed->base && changed->units.empty(),"Climate test square must be unoccupied");
             std::array<uint32_t,8> status{};auto plane=world->CopyClimateTerrain(m_game.GetTurnId(),status);
+            namespace native=game::frontend::native_terrain;
+            const auto original_native=world->CopyNativeTerrain();native::Session old_view(*original_native);
             const auto index=size_t(6)*40+4;auto& cell=plane.tiles.at(index);
             GT_ASSERT(cell.elevation>=3,"Climate test requires ordinary land preimage");
             cell.elevation=2;cell.contour=40;cell.items&=0x7e1377a3u;cell.remembered_items.fill(cell.items);
@@ -1022,6 +1024,11 @@ public:
             const auto exploration=world->GetSmacWorkerKnowledge()->CopyData().tiles;
             auto prepared=world->PrepareClimateTerrain(plane,1,2);
             GT_ASSERT(world->GetClimateTerrainPayload(*prepared).invalidate_native_geometry,"Climate omitted full native-view geometry invalidation");
+            game::FrontendRequest notification(game::FrontendRequest::FR_UPDATE_TERRAIN);
+            NEW(notification.data.update_terrain.update,map::TerrainRenderUpdate,world->GetClimateTerrainPayload(*prepared));
+            game::FrontendRequest copied(notification);
+            GT_ASSERT(copied.data.update_terrain.update!=notification.data.update_terrain.update && copied.data.update_terrain.update->invalidate_native_geometry,
+                "Frontend handoff did not own an independent climate invalidation payload");
             GT_ASSERT(m_game.SerializeWorldSnapshot()==before,"Climate preparation published a partial plane");
             bool saw_candidate=false,rejected=false;
             try {world->QueryClimateTerrain(*prepared,[&]{
@@ -1039,6 +1046,15 @@ public:
             GT_ASSERT(changed->is_water_tile && *changed->elevation.bottom!=old_corner,"Climate commit omitted surface or display geometry");
             GT_ASSERT(world->GetSmacWorkerKnowledge()->CopyData().tiles==exploration,"Climate conversion invented exploration");
             world->GetTerritoryTopology()->ValidateTerrain(world->TerritorySea());
+            const auto native_after=world->CopyNativeTerrain();
+            GT_ASSERT(!old_view.Matches(*native_after),"Committed climate reused the old native geometry identity");
+            native::Session rebuilt(*native_after);native::ViewContext context;context.camera={{8,6}};
+            const auto view=rebuilt.Prepare(*native_after,context,native::Session::Observation::RevealedCanvas);
+            GT_ASSERT(view && view->opaque_background,"Committed climate could not prepare the owned native geometry view");
+            native::Source pixels;pixels.loaded={1024,768,std::vector<uint8_t>(1024*768,77)};
+            auto frame=native::RenderPrepared(*native_after,pixels,*view,0,context.flags);
+            rebuilt.Commit(std::move(frame),context.Layout(*native_after));
+            GT_ASSERT(rebuilt.frame && rebuilt.Matches(*native_after),"Committed climate could not publish a complete native frame");
             const auto raw=world->GetResourcePolicy()->NativeTerrainSource()->ExportClimateTerrain();
             GT_ASSERT(raw.tiles[index].remembered_items==cell.remembered_items,"Climate lost all-positive-faction item masking");
             GT_ASSERT(map::GlsmacResourceMapPolicy::Deserialize(world->GetResourcePolicy()->Serialize().ToString())==*world->GetResourcePolicy(),"Climate source authority did not survive its actual codec");GT_OK();

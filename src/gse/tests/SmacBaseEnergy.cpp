@@ -1,5 +1,6 @@
 #include "SmacBaseEnergy.h"
 #include "fixtures/SmacBaseEnergy.h"
+#include "fixtures/SmacCommerce.h"
 #include "fixtures/SmacEnergyRateButtons.h"
 #include "task/gsetests/GSETests.h"
 #include <stdexcept>
@@ -74,6 +75,19 @@ std::string CheckSmacEnergyBoundaries() {
 }
 
 void AddSmacBaseEnergyTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC commerce preserves23 original ratings pairings and independent quotes",GT(){
+        for(auto row:smac_commerce_fixture::Cases()) {
+            for(size_t owner=1;owner<8;++owner) {
+                const auto rating=CalculateSmacCommerceRating(row.bonus[owner],row.economy[owner],row.known[owner]);
+                GT_ASSERT(rating==row.ratings[owner],"Commerce rating differs: "+std::string(row.id));
+                row.input.factions[owner].rating=rating;
+            }
+            const auto actual=CalculateSmacCommerce(row.input);
+            GT_ASSERT(actual.rank==row.rank && actual.incoming==row.incoming && actual.partner_quotes==row.quotes && actual.total==row.total,
+                "Commerce ordering or rounding differs: "+std::string(row.id));
+            for(size_t owner=1;owner<8;++owner) {GT_ASSERT((actual.partners[owner]?int32_t(*actual.partners[owner]):-1)==row.partners[owner],"Ranked partner differs: "+std::string(row.id));}
+        }GT_OK();
+    });
     task->AddTest("SMAC faction energy buttons match all3168 original coupled lock controls",GT(){
         for(const auto& row:smac_energy_rate_fixture::controls) {
             const auto result=AdjustSmacEnergyRates({row[1],row[2]},row[4],row[3]);

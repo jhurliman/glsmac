@@ -148,6 +148,9 @@ public:
 	void UpdateConventionalUnit( GSE_CALLABLE, Unit* unit, const ConventionalUnitState& state );
 	void ValidateConventionalMove( Unit* unit, map::tile::Tile* destination, size_t caller ) const;
 	void MoveConventionalUnit( GSE_CALLABLE, Unit* unit, map::tile::Tile* destination, size_t caller );
+	void ResetWildNativeSpent(GSE_CALLABLE,Unit* actor);
+    void ValidateWildNativeMove(Unit* actor,map::tile::Tile* destination) const;
+    void MoveWildNativeUnit(GSE_CALLABLE,Unit* actor,map::tile::Tile* destination);
 	void ResetConventionalSpent( GSE_CALLABLE, Unit* unit );
     enum class HumanOrderCommand { Hold, HoldTen, MenuHold, Activate, Skip };
     ConventionalUnitState PrepareHumanOrder(Unit* actor, HumanOrderCommand command, size_t caller) const;

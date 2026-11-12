@@ -4,6 +4,7 @@
 #include "Unit.h"
 #include "SmacGroundEdgeCost.h"
 #include "SmacSelectedMovement.h"
+#include "SmacNativeAI.h"
 #include "game/backend/resource/SmacSiteSignal.h"
 #include "SmacScoutKeyboardAdmission.h"
 #include "game/backend/Game.h"
@@ -437,6 +438,118 @@ void UnitManager::ResetConventionalSpent( GSE_CALLABLE, Unit* unit ) {
     next.AdvanceOrderUpkeep();
 	QueueUnitUpdate( unit, UUO_REFRESH ); // allocation before byte update
 	unit->CommitConventionalMove( next, unit->GetTile() );
+}
+
+namespace {
+int32_t WildEdgeCost(const map::tile::Tile& destination,int32_t quantum) {
+    if(destination.features&map::tile::FEATURE_XENOFUNGUS) {return 1;}
+    return quantum*(1+int(destination.rockiness==map::tile::ROCKINESS_ROCKY)
+        +int(bool(destination.terraforming&map::tile::TERRAFORMING_FOREST)));
+}
+}
+void UnitManager::ResetWildNativeSpent(GSE_CALLABLE,Unit* actor) {
+    m_game->CheckRW(GSE_CALL);m_game->RequireSmacGameplayActive();
+    if(!m_game->IsSmacControllerOwner(0) || !actor || GetUnit(actor->m_id)!=actor || !actor->IsNative()
+        || actor->Native().owner || actor->Native().design!=8) {throw std::runtime_error("Wild upkeep requires the scheduled native Mind Worm");}
+    const auto before=actor->Native();(void)QueryNativeUnit(before,0);
+    const auto* tile=actor->GetTile();
+    const auto upkeep=smac_native_ai::PlanUpkeep(0,tile->is_water_tile,tile->base!=nullptr,before.flags,before.order,before.state,0);
+    if(std::find(upkeep.actions.begin(),upkeep.actions.end(),smac_native_ai::UpkeepAction::Delete)!=upkeep.actions.end()) {
+        auto removal=PrepareWorldUnitRemoval(GSE_CALL,{actor->m_id});removal.Commit();removal.Notify(GSE_CALL);return;
+    }
+    auto next=before;next.movement_spent=0;next.state=upkeep.state;next.order=static_cast<uint8_t>(upkeep.order);
+    QueueUnitUpdate(actor,UUO_REFRESH);std::get<SmacNativeUnitRecord>(actor->m_state)=next;
+}
+void UnitManager::ValidateWildNativeMove(Unit* actor,map::tile::Tile* destination) const {
+    m_game->RequireSmacGameplayActive();m_game->RequireConventionalSightWorld();
+    if(!m_game->IsSmacControllerOwner(0) || !m_game->IsRunning() || !actor || GetUnit(actor->m_id)!=actor || !actor->IsNative()
+        || actor->Native().owner || actor->Native().design!=8 || actor->Native().order==1 || actor->m_animation_id) {
+        throw std::runtime_error("Wild movement requires the scheduled available Mind Worm");
+    }
+    const auto* map=GetMap();const auto* source=actor->GetTile();
+    const auto valid=[&](const map::tile::Tile* tile) {
+        return tile && tile->tiles==map->GetTilesPtr() && tile->coord.x<map->GetWidth() && tile->coord.y<map->GetHeight()
+            && map->GetTile(tile->coord.x,tile->coord.y)==tile && !tile->is_water_tile && !tile->IsLocked();
+    };
+    if(!valid(source) || !valid(destination) || !source->IsAdjactentTo(destination)
+        || !source->units.count(actor->m_id) || source->units.at(actor->m_id)!=actor) {throw std::runtime_error("Wild movement requires canonical adjacent land membership");}
+    const auto stats=QueryNativeUnit(actor->Native(),0);
+    if(stats.remaining_allowance<=0) {throw std::runtime_error("Wild movement requires remaining allowance");}
+    if(HasForeignOccupant(actor,destination)) {(void)PrepareConventionalAttack(actor,destination,0);return;}
+    if(destination->base) {throw std::runtime_error("Native entry into an undefended Base requires its destruction continuation");}
+    for(const auto& row:destination->units) {
+        if(GetUnit(row.first)!=row.second || !row.second->IsNative() || row.second->Native().owner) {throw std::runtime_error("Wild destination stack is not canonical native-owned");}
+    }
+    // The autonomous policy only selects affordable partial steps. It can spend
+    // a full point on more expensive ordinary terrain through normal admission.
+    const auto cost=WildEdgeCost(*destination,stats.quantum);
+    if(cost>stats.remaining_allowance && stats.remaining_allowance<stats.quantum) {throw std::runtime_error("Wild policy waits rather than choosing a partial-point terrain lottery");}
+    if(!map->GetSmacWorkerKnowledge() || !map->GetSmacWorkerKnowledge()->CopyData().occupancy) {throw std::runtime_error("Wild movement requires retained map occupancy");}
+}
+void UnitManager::MoveWildNativeUnit(GSE_CALLABLE,Unit* actor,map::tile::Tile* destination) {
+    m_game->CheckRW(GSE_CALL);ValidateWildNativeMove(actor,destination);
+    if(HasForeignOccupant(actor,destination)) {ApplyConventionalAttack(GSE_CALL,PrepareConventionalAttack(actor,destination,0));return;}
+    auto* source=actor->GetTile();const auto stats=QueryNativeUnit(actor->Native(),0);auto next=actor->Native();
+    const auto cost=WildEdgeCost(*destination,stats.quantum);
+    if(int32_t(next.movement_spent)+cost>255 || destination->coord.x>INT16_MAX || destination->coord.y>INT16_MAX) {throw std::overflow_error("Wild move exceeds native byte/coordinate domain");}
+    next.x=static_cast<int16_t>(destination->coord.x);next.y=static_cast<int16_t>(destination->coord.y);
+    next.facing=SmacFacingForStep(*source,*destination);next.movement_spent=static_cast<uint8_t>(next.movement_spent+cost);
+    auto stacks=PrepareConventionalStackMove(actor,destination);auto knowledge=GetMap()->GetSmacWorkerKnowledge()->CopyData();
+    const auto index=[&](const map::tile::Tile* tile){return size_t(tile->coord.y)*(knowledge.width/2)+tile->coord.x/2;};
+    const auto distance=[&](const map::tile::Tile* a,const map::tile::Tile* b) {
+        auto dx=std::abs(int64_t(a->coord.x)-int64_t(b->coord.x));if(knowledge.horizontal_wrap) {dx=std::min(dx,int64_t(knowledge.width)-dx);}
+        return dx+std::abs(int64_t(a->coord.y)-int64_t(b->coord.y));
+    };
+    const auto observation=[&](size_t id)->map::SmacWorkerKnowledge::UnitObservation& {
+        auto found=std::find_if(knowledge.units.begin(),knowledge.units.end(),[&](const auto& row){return row.id==id;});
+        if(found==knowledge.units.end()) {throw std::runtime_error("Wild sight lost its saved Unit observation");}return *found;
+    };
+    auto& moving=observation(actor->m_id);const auto previous=moving.visible_to;
+    moving.visible_to&=knowledge.tiles.at(index(destination)).explored_by;
+    for(int32_t observer=1;observer<8;++observer) {
+        const auto bit=static_cast<uint8_t>(1u<<observer);if(!(moving.visible_to&bit)) {continue;}
+        std::vector<SmacMovementHistory::BasePosition> positions;
+        for(const auto& row:m_game->GetBM()->GetBases()) {
+            const auto* base=row.second;if(base->GetSmacResourceContext().owner_simulation_id!=observer) {continue;}
+            positions.push_back({row.first,static_cast<int32_t>(base->GetTile()->coord.x),static_cast<int32_t>(base->GetTile()->coord.y)});
+        }
+        const auto nearest=SmacMovementHistory::NearestAnyBase(destination->coord.x,destination->coord.y,knowledge.width,knowledge.horizontal_wrap,positions,{});
+        if((!nearest.distance || *nearest.distance>=8) && knowledge.tiles.at(index(destination)).claimant!=observer) {moving.visible_to&=static_cast<uint8_t>(~bit);}
+    }
+    // Native exploration and stationary stored masks have independent lifetimes.
+    knowledge.tiles.at(index(destination)).explored_by|=1u;
+    for(const auto* tile:destination->neighbours) {if(tile) {knowledge.tiles.at(index(tile)).explored_by|=1u;}}
+    PreparedConventionalSight sight;
+    for(const auto& row:m_units) {
+        auto* other=row.second;if(other==actor || other->IsNative() || distance(destination,other->GetTile())>2) {continue;}
+        observation(other->m_id).visible_to|=1u;moving.visible_to|=static_cast<uint8_t>(1u<<other->SimulationOwner());
+    }
+    for(const auto& row:m_game->GetBM()->GetBases()) {
+        const auto* base=row.second;if(distance(destination,base->GetTile())>2) {continue;}
+        const auto owner=base->GetSmacResourceContext().owner_simulation_id;moving.visible_to|=static_cast<uint8_t>(1u<<owner);
+        auto found=std::find_if(knowledge.bases.begin(),knowledge.bases.end(),[&](const auto& b){return b.id==row.first;});
+        if(found==knowledge.bases.end()) {knowledge.bases.push_back({row.first,0,{}});found=std::prev(knowledge.bases.end());}
+        found->known_by|=1u;found->population[0]=static_cast<uint8_t>(base->GetPopulation());
+    }
+    knowledge.occupancy->RemoveUnit({static_cast<int32_t>(source->coord.x),static_cast<int32_t>(source->coord.y)},source->units.size()==1);
+    knowledge.occupancy->PlaceUnit({next.x,next.y},0,destination->units.empty());
+    for(int32_t observer=1;observer<8;++observer) {
+        const auto bit=static_cast<uint8_t>(1u<<observer);auto& memory=knowledge.remembered[observer];
+        if(previous&bit) {if(!memory.empty() && memory.at(index(source))) {memory.at(index(source))->unit_present=source->units.size()>1;}}
+        if(moving.visible_to&bit) {
+            knowledge.tiles.at(index(destination)).explored_by|=bit;if(memory.empty()) {memory.resize(knowledge.tiles.size());}
+            memory.at(index(destination))=map::SmacWorkerKnowledge::Improvements{destination->features,destination->terraforming,false,true};
+            sight.disclosed_to_humans.push_back(actor->m_id);
+        }
+    }
+    sight.knowledge=map::SmacWorkerKnowledge::Create(knowledge);
+    const auto placement=PreparePlacementHistory(*actor,destination);
+    std::map<size_t,Unit*> staged;staged.emplace(actor->m_id,actor);
+    QueueUnitUpdate(actor,UUO_REFRESH);
+    destination->units.insert(staged.extract(actor->m_id));source->units.erase(actor->m_id);
+    std::get<SmacNativeUnitRecord>(actor->m_state)=next;actor->m_tile=destination;
+    CommitStackChanges(stacks);if(placement.first) {placement.first->MarkPlaced(placement.second);}
+    m_game->CommitConventionalSight(sight);
 }
 
 }

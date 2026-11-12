@@ -170,6 +170,7 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
     if(survivor->IsNative()) {
         native=survivor->Native();native->damage=static_cast<uint8_t>(10-result.survivor.health);
         native->stored_morale=static_cast<uint8_t>(result.survivor.stored_morale);native->movement_spent=static_cast<uint8_t>(result.survivor.spent);
+        if(survivor==actor && (source->features&map::tile::FEATURE_XENOFUNGUS) && native->damage) {--native->damage;}
     } else {
         candidate=survivor->Conventional();if(survivor==actor) {candidate.facing=SmacFacingForStep(*source,*destination);}
         candidate.damage=static_cast<uint8_t>(10-result.survivor.health);candidate.stored_morale=static_cast<uint8_t>(result.survivor.stored_morale);candidate.spent=static_cast<uint8_t>(result.survivor.spent);
@@ -178,7 +179,7 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
     auto history=simulation.hostility;
     if(a.owner && d.owner) {history.RecordScoutBattle(a.owner,d.owner,survivor->SimulationOwner(),loser->SimulationOwner(),loser->Conventional().design_id);}
     std::optional<std::pair<int32_t,int32_t>> reward;
-    if(loser->IsNative() && survivor->SimulationOwner()>0) {
+    if(loser->IsNative() && survivor==actor && survivor->SimulationOwner()>0) {
         const auto credits=CombatWord(int64_t(simulation.economy.at(survivor->SimulationOwner()).credits)+10*(QueryNativeUnit(loser->Native(),0).level+1));
         reward={{survivor->SimulationOwner(),credits}};
     }

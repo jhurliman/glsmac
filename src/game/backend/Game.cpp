@@ -2613,10 +2613,16 @@ void Game::StartInitializedWorld( GSE_CALLABLE ) {
 	}
 	else if ( m_state->IsMaster() ) {
 		try {
+            std::set<size_t> previously_defined;
+            for(const auto& slot:m_state->m_slots->GetSlots()) {if(slot.GetState()==slot::Slot::SS_PLAYER) {previously_defined.insert(slot.GetIndex());}}
 			PrepareNewSimulation();
-            NEWV(slot_defines,FrontendRequest::slot_defines_t,CopyFrontendSlotDefinitions());
-            auto slots_request=FrontendRequest(FrontendRequest::FR_SLOT_DEFINE);
-            slots_request.data.slot_define.slotdefs=slot_defines;AddFrontendRequest(slots_request);
+            auto definitions=CopyFrontendSlotDefinitions();
+            definitions.erase(std::remove_if(definitions.begin(),definitions.end(),[&](const auto& row){return previously_defined.count(row.slot_index);}),definitions.end());
+            if(!definitions.empty()) {
+                NEWV(slot_defines,FrontendRequest::slot_defines_t,std::move(definitions));
+                auto slots_request=FrontendRequest(FrontendRequest::FR_SLOT_DEFINE);
+                slots_request.data.slot_define.slotdefs=slot_defines;AddFrontendRequest(slots_request);
+            }
 			m_state->TriggerObject(
 				this, "create_world", ARGS_F( this ) {
 					{

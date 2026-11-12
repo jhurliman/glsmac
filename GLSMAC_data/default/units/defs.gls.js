@@ -13,7 +13,7 @@ const moralesets = [
 	},
 ];
 
-const native_lifeform = (id, name, movement_type, movement_per_turn, base_y) => {
+const native_lifeform = (id, name, movement_type, movement_per_turn, base_y, base_x, morale_shift) => {
 	return {
 		id: id,
 		data: {
@@ -25,20 +25,24 @@ const native_lifeform = (id, name, movement_type, movement_per_turn, base_y) => 
 			render: {
 				type: 'sprite',
 				file: 'units.pcx',
-				x: 2, y: base_y,
+				x: base_x, y: base_y,
 				w: 100, h: 75,
-				cx: 53, cy: base_y + 51,
-				morale_based_xshift: 102
+				cx: base_x + 51, cy: base_y + 51,
+				morale_based_xshift: morale_shift
 			},
 		},
 	};
 };
 
 const units = [
-	native_lifeform('FungalTower', 'Fungal Tower', 'immovable', 0, 79),
-	native_lifeform('MindWorms', 'Mind Worms', 'land', 1, 233),
-	native_lifeform('SeaLurk', 'Sea Lurk', 'water', 4, 310),
-	native_lifeform('SporeLauncher', 'Spore Launcher', 'land', 1, 387),
+	native_lifeform('FungalTower', 'Fungal Tower', 'immovable', 0, 79, 2, 102),
+	native_lifeform('MindWorms', 'Mind Worms', 'land', 1, 233, 2, 102),
+	// Stock single-cell native artwork in the installed units.pcx atlas.
+	// These bodies do not select the adjacent cells by lifecycle morale.
+	native_lifeform('IsleOfTheDeep', 'Isle of the Deep', 'water', 4, 2, 2, 0),
+	native_lifeform('LocustsOfChiron', 'Locusts of Chiron', 'air', 8, 2, 716, 0),
+	native_lifeform('SeaLurk', 'Sea Lurk', 'water', 4, 310, 2, 102),
+	native_lifeform('SporeLauncher', 'Spore Launcher', 'land', 1, 387, 2, 102),
 ];
 
 // GLSMAC camera policy: preserve the legacy 100x75 sprite's pixel scale

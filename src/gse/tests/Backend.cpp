@@ -686,13 +686,20 @@ public:
         if(!setup.empty()) {return setup;}
         m_map.release();util::FinallyGuard recover([&]{m_map.reset(m_game.m_map);});
         m_game.Iterate();
+        if(m_game.m_first_base_request) {
+            const auto request=*m_game.m_first_base_request;
+            m_game.QueueFirstBaseName(m_state->CaptureGameSession(),request.id,m_game.GetBM()->GetBase(request.base)->m_name);
+            m_game.Iterate();ProcessAccumulations();
+            m_game.Iterate();ProcessAccumulations();
+        }
         if(!m_game.IsRunning() || m_game.HasInitializationFailure()) {return "Local controller startup: "+m_game.m_initialization_error;}
         return WithScriptValues([&](GSE_CALLABLE)->std::string {
             GT_ASSERT(m_game.m_simulation && m_game.m_simulation->value.roster.size()==7 && m_game.m_simulation->value.human_membership==2,
                 "Local campaign did not admit one human and six actual computers");
             GT_ASSERT(m_game.m_simulation->value.faction_turn && m_game.m_simulation->value.faction_turn->Current().owner==1
-                && m_game.m_simulation->value.faction_turn->Current().phase==faction::SmacFactionTurn::Phase::OwnerCommand,
-                "Local campaign did not stop at first human command boundary");
+                && (m_game.m_simulation->value.faction_turn->Current().phase==faction::SmacFactionTurn::Phase::OwnerCommand
+                    || (m_game.m_simulation->value.faction_turn->Current().phase==faction::SmacFactionTurn::Phase::OwnerUpkeep && m_game.m_research_request)),
+                "Local campaign did not stop at its first human command or required research boundary");
             GT_OK();
         });
     }

@@ -465,7 +465,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             auto* game=fixture.Game();Populate(GSE_CALL,fixture,true);auto* um=game->GetUM();
             auto* sea=game->GetMap()->GetTile(20,20);for(auto* elevation:sea->elevation.corners) {*elevation=-1000;}sea->Update();
             GT_ASSERT(sea->is_water_tile,"Carrier fixture lacks its real sea tile");
-            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            auto knowledge=KnowledgeValue(true,true,128,64).CopyData();knowledge.occupancy=map::SmacOccupancyCache::Blank(128,64,true);
+            knowledge.occupancy->FoundBase({2,2},1);knowledge.occupancy->PlaceUnit({6,6},1,true); // explicit initial fixture history, before native factories
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
             for(const auto& row:{std::pair<const char*,movement_type_t>{"MindWorms",MT_LAND},{"IsleOfTheDeep",MT_WATER}}) {
                 um->DefineUnit(new StaticDef(row.first,um->GetMoraleSet("live-morale"),row.first,row.second,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
             }

@@ -646,7 +646,14 @@ void BaseManager::RaidSmacBase(GSE_CALLABLE,unit::Unit* actor,map::tile::Tile* d
         for(size_t faction=1;faction<8;++faction) {auto& target=simulation.battle_plan_target[faction];if(target && *target==static_cast<int64_t>(base->m_id)) {target=-1;}}
         if(disposition) {CommitSmacFactionDisposition(*disposition);}
         retired.reset(base);lock.unlock();
-    } else {workers->Commit();base->m_smac_upkeep_cache.swap(cache);workers->Finish();}
+    } else {
+        workers->Commit();base->m_smac_upkeep_cache.swap(cache);
+        base->m_commerce_ranking_energy=static_cast<int32_t>(base->m_smac_upkeep_cache->calculation.raw_intake[2]);
+        if(base->m_smac_upkeep_cache->calculation.native_target_resources) {
+            base->m_native_target_resources=base->m_smac_upkeep_cache->calculation.native_target_resources;
+        }
+        workers->Finish();
+    }
     if(faction_units) {faction_units->Notify(GSE_CALL);}else {removal.Notify(GSE_CALL);}
     if(destroyed) {m_game->GetState()->TriggerObject(this,"base_despawn",ARGS_F(base) {{"base",base->Wrap(GSE_CALL)},};});}
     if(m_game->RequireSimulationParticipant(m_game->GetPlayer()).simulation_id==owner) {m_game->Message(message);}

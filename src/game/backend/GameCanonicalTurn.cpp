@@ -13,6 +13,7 @@
 #include "unit/Unit.h"
 #include "unit/UnitManager.h"
 #include "unit/SmacSelectionDistance.h"
+#include "unit/SmacNativeAI.h"
 #include "gc/Space.h"
 #include "gse/value/Int.h"
 #include "gse/value/Array.h"
@@ -352,6 +353,56 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 	if(!m_is_turn_complete) {SetTurnStatus(turn::TS_TURN_ACTIVE);}
 }
 
+void Game::RunNativeCommands(GSE_CALLABLE) {
+    if(!IsSmacControllerOwner(0)) {throw std::runtime_error("Wildlife commands require native-controller authority");}
+    // Initial playable wildlife policy connects the measured healthy ground
+    // competition to real Mind Worm movement/PSI callers. Sea and air control
+    // retain their separate movement/transport dependencies.
+    const auto records=m_um->GetUnitRecordOrder();
+    constexpr int32_t deltas[8][2]={{1,-1},{2,0},{1,1},{0,2},{-1,1},{-2,0},{-1,-1},{0,-2}};
+    for(const auto id:records) {
+        auto* actor=m_um->GetUnit(id);
+        if(!actor || !actor->IsNative() || actor->Native().owner!=0 || actor->Native().design!=8) {continue;}
+        m_um->ResetWildNativeSpent(GSE_CALL,actor);
+        for(size_t step=0;step<12;++step) {
+            actor=m_um->GetUnit(id);if(!actor || !actor->IsNative() || m_um->QueryNativeUnit(actor->Native()).remaining_allowance<=0) {break;}
+            const auto before=actor->Native();auto* source=actor->GetTile();
+            const auto knowledge=m_map->GetSmacWorkerKnowledge()->CopyData();
+            std::vector<unit::smac_native_ai::Candidate> candidates;
+            std::array<map::tile::Tile*,8> destinations{};
+            for(int32_t direction=0;direction<8;++direction) {
+                auto x=int32_t(source->coord.x)+deltas[direction][0],y=int32_t(source->coord.y)+deltas[direction][1];
+                x=(x+int32_t(m_map->GetWidth()))%int32_t(m_map->GetWidth());
+                const bool valid=y>=0 && y<int32_t(m_map->GetHeight());
+                unit::smac_native_ai::Candidate candidate{direction,{{x,y}},valid,false,0,0,{}};
+                if(valid) {
+                    auto* tile=m_map->GetTile(x,y);destinations[direction]=tile;
+                    const auto raw=m_map->CopyGlobalWildlifeTile({{x,y}},knowledge);
+                    candidate.sea=tile->is_water_tile;candidate.items=raw.Items();candidate.affiliation=raw.CachedOccupant();
+                    if(!tile->units.empty()) {
+                        const auto* head=tile->units.begin()->second;
+                        if(head->IsConventional()) {
+                            const auto context=ResolveConventionalUnit(head->Conventional(),head->m_owner);
+                            candidate.head=unit::smac_native_ai::Head{head->Conventional().owner_simulation_id,head->Conventional().design_id,*context.offense_rating,0};
+                        } else if(head->IsNative()) {candidate.head=unit::smac_native_ai::Head{head->Native().owner,head->Native().design,-1,0};}
+                    }
+                    // Admission is side-effect free. A forbidden terrain,
+                    // stack or combat context cannot consume random draws.
+                    try {m_um->ValidateWildNativeMove(actor,tile);} catch(const std::runtime_error&) {candidate.in_bounds=false;}
+                }
+                candidates.push_back(candidate);
+            }
+            const auto choice=unit::smac_native_ai::ChooseNeighbors(source->is_water_tile,0,before.facing,int32_t(GetTurnId()),
+                m_simulation->value.designs.global_difficulty,before.state,m_simulation->value.gameplay_random,candidates);
+            m_simulation->value.gameplay_random=choice.random;
+            if(choice.direction<0) {break;}
+            m_um->MoveWildNativeUnit(GSE_CALL,actor,destinations.at(choice.direction));
+            actor=m_um->GetUnit(id);
+            if(!actor || (actor->GetTile()==source && actor->Native()==before)) {break;}
+        }
+    }
+}
+
 void Game::RunComputerCommands(GSE_CALLABLE,int32_t owner) {
     if(!IsSmacControllerOwner(owner) || m_simulation->value.IsHuman(owner)) {throw std::runtime_error("Computer commands require private nonhuman authority");}
     const auto& simulation=m_simulation->value;
@@ -404,7 +455,10 @@ void Game::RunComputerCommands(GSE_CALLABLE,int32_t owner) {
                     m_um->SetConventionalWork(GSE_CALL,actor,order,slot.GetIndex(),true);break;
                 }
                 bool worked=false;
-                for(const auto job:{Work::Farm,Work::Solar,Work::Forest,Work::Road,Work::Mine}) {
+                std::vector<Work> jobs;
+                if(source->moisture==map::tile::MOISTURE_ARID && !(source->terraforming&(map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOLAR|map::tile::TERRAFORMING_MINE))) {jobs={Work::Forest};}
+                else {jobs={Work::Farm,Work::Solar,Work::Road};}
+                for(const auto job:jobs) {
                     bool legal=true;try {m_um->ValidateConventionalWork(actor,job,slot.GetIndex(),false);} catch(const std::runtime_error&) {legal=false;}
                     if(legal && !source->base) {m_um->SetConventionalWork(GSE_CALL,actor,job,slot.GetIndex(),false);m_um->SetConventionalWork(GSE_CALL,actor,job,slot.GetIndex(),true);worked=true;break;}
                 }
@@ -441,6 +495,10 @@ void Game::RunComputerCommands(GSE_CALLABLE,int32_t owner) {
                 for(const auto base_id:bases) {if(const auto* base=m_bm->GetBase(base_id)) {own_distance=std::min(own_distance,distance(tile,base->GetTile()));}}
                 if(package==Package::Colony && own_distance!=INT32_MAX) {score+=100*std::min(own_distance,5);}
                 if(package==Package::Former && own_distance!=INT32_MAX) {score-=100*std::abs(own_distance-1);}
+                if(package==Package::Former && !tile->base && !tile->features && !(tile->terraforming&map::tile::TERRAFORMING_FOREST)) {
+                    const auto complete=map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOLAR|map::tile::TERRAFORMING_ROAD;
+                    if((tile->terraforming&complete)!=complete) {score+=300;}
+                }
                 // Break equally useful exploration directions without RNG or
                 // inspecting undisclosed enemy entities/terrain elsewhere.
                 score+=int64_t((id*17+GetTurnId()*7+index(tile)*13)%31);
@@ -506,8 +564,12 @@ void Game::ContinueFactionController(GSE_CALLABLE) {
         case Phase::WildlifeUpkeep:
             RunSmacWildlifeTurn(GSE_CALL);
             cursor.CompleteWildlifeUpkeep(cursor.Current());break;
-        case Phase::WildlifeCommand:
+        case Phase::WildlifeCommand: {
+            const auto previous=m_smac_controller_owner;m_smac_controller_owner=0;
+            util::FinallyGuard authority([&]{m_smac_controller_owner=previous;});
+            RunNativeCommands(GSE_CALL);
             cursor.CompleteWildlifeCommand(cursor.Current(),ActiveFactionMask());break;
+        }
         case Phase::OwnerPending: {
             const auto owner=cursor.Current().owner;
             if(!(ActiveFactionMask()&(1u<<owner))) {cursor.SkipInactiveOwner(cursor.Current(),ActiveFactionMask());break;}

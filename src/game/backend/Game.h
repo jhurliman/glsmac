@@ -486,6 +486,7 @@ private:
 	void PrepareLocalComputerRoster();
     void ContinueFactionController(GSE_CALLABLE);
     void RunComputerCommands(GSE_CALLABLE,int32_t owner);
+    void RunNativeCommands(GSE_CALLABLE);
     void GrantFirstOwnerTechnologies(GSE_CALLABLE,int32_t owner);
     void RunSmacWildlifeTurn(GSE_CALLABLE);
     uint8_t ActiveFactionMask() const;

@@ -665,7 +665,7 @@ public:
             GT_ASSERT(world->LoadInstalledPlanet(path.string(),false,active)==map::Map::EC_NONE,"Controller map import failed");
             m_game.m_tm=new map::tile::TileManager(&m_game);
             for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {m_game.GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
-            for(const auto* name:{"define_moraleset","define_unit","define_base_pop","define_base_facility","advance_turn"}) {
+            for(const auto* name:{"define_moraleset","define_unit","define_base_pop","define_base_facility","advance_turn","complete_turn","move_unit","attack_unit","unit_skip_turn"}) {
                 auto* handlers=static_cast<value::Object*>(RunScript(GSE_CALL,std::string("./GLSMAC_data/default/game/event/")+name));
                 RegisterEvent(name,new event::EventHandler(gc_space,name,static_cast<value::Callable*>(handlers->Get("validate")),nullptr,
                     static_cast<value::Callable*>(handlers->Get("apply")),static_cast<value::Callable*>(handlers->Get("rollback"))));

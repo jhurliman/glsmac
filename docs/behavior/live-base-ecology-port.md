@@ -15,9 +15,9 @@ native life/sea offset and retained perihelion phase. The admitted no-project
 campaign establishes absence of Singularity Inductor, Pholus Mutagen and Voice
 of Planet; this is not inferred from missing project fields.
 
-No query changes history, posts an aggregate, consumes a CRT/gameplay random
-draw or triggers an ecology event. Those owner-tail/event consumers remain to
-be integrated in their measured sequence. Opening production for ecological
+No resource query changes history, posts an aggregate, consumes a CRT/gameplay
+random draw or triggers an ecology event. The separate owner-tail event consumer
+is described below. Opening production for ecological
 facilities also requires their event-driven clean-mineral history writer;
 this change does not admit those completion targets.
 

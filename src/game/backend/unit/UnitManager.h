@@ -157,6 +157,7 @@ public:
     void DisbandWildNativeUnit(GSE_CALLABLE,Unit* actor);
 
 	void ResetConventionalSpent( GSE_CALLABLE, Unit* unit );
+    void ClearConventionalActivity(GSE_CALLABLE,Unit* unit);
     enum class HumanOrderCommand { Hold, HoldTen, MenuHold, Activate, Skip };
     ConventionalUnitState PrepareHumanOrder(Unit* actor, HumanOrderCommand command, size_t caller) const;
     void ApplyHumanOrder(GSE_CALLABLE,Unit* actor,HumanOrderCommand command,size_t caller);

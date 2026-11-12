@@ -129,7 +129,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
         stats.quantum,new_owner,social->retained->at(7),false,false,static_cast<int32_t>(map->GetWidth()),static_cast<int32_t>(map->GetHeight()),true,edge(source),edge(destination)});
     const auto movement=unit::smac_move::ResolveSelectedGroundStep({actor->m_id,actor->Conventional().spent,actor->Conventional().failed_move},
         stats.quantum,stats.full_allowance,cost,bool(destination->features&map::tile::FEATURE_XENOFUNGUS),simulation.gameplay_random,unit::smac_move::LotteryStream::SharedLow16);
-    auto moved_state=actor->Conventional();moved_state.spent=static_cast<uint8_t>(movement.unit.spent);moved_state.failed_move=movement.unit.prior_failure_marker;
+    auto moved_state=actor->Conventional();if(moved_state.retained_state_word) {*moved_state.retained_state_word|=4u;}moved_state.spent=static_cast<uint8_t>(movement.unit.spent);moved_state.failed_move=movement.unit.prior_failure_marker;
     if(movement.outcome!=unit::smac_move::Outcome::Moved) {
         if(moved_state.retained_state_word && moved_state.failed_move) {*moved_state.retained_state_word|=0x8000u;}
         auto failed=std::make_unique<PreparedSmacCapture::Data>(movement.random,simulation.hostility,simulation.economy.at(new_owner),simulation.economy.at(old_owner));
@@ -537,7 +537,7 @@ void BaseManager::RaidSmacBase(GSE_CALLABLE,unit::Unit* actor,map::tile::Tile* d
         stats.quantum,stats.full_allowance,cost,bool(destination->features&map::tile::FEATURE_XENOFUNGUS),random,unit::smac_move::LotteryStream::SharedLow16);
     random=movement.random;
     if(movement.outcome!=unit::smac_move::Outcome::Moved) {
-        auto state=actor->Native();state.movement_spent=static_cast<uint8_t>(movement.unit.spent);if(movement.unit.prior_failure_marker) {state.state|=0x8000u;}
+        auto state=actor->Native();state.state|=4u;state.movement_spent=static_cast<uint8_t>(movement.unit.spent);if(movement.unit.prior_failure_marker) {state.state|=0x8000u;}
         um->QueueUnitUpdate(actor,unit::UnitManager::UUO_REFRESH);std::get<unit::SmacNativeUnitRecord>(actor->m_state)=state;simulation.gameplay_random=random;return;
     }
     // The admitted stock native definition has no FACILITY bonus records.

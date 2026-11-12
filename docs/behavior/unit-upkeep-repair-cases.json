@@ -1,0 +1,1240 @@
+{
+  "research_id": "RE-SMAC-UNIT-REPAIR-001",
+  "ruleset": "SMAC",
+  "scope": "48 distinct controlled contexts in49 executions and51 full faction returns. Presentation/host services and declared inputs supplied; reached gameplay original.",
+  "units": "Integer damage points; health capacity10 times reactor multiplier. These are not rounded UI percentages.",
+  "cases": [
+    {
+      "id": "field_unclaimed",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 6,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_own",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 5,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_foreign",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "foreign",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 6,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_floor",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 2,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 2,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_below_floor",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 1,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 1,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "healthy",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 0,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 0,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_bunker",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": true,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 5,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "own_bunker",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": true,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 4,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_fungus",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": true,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 6,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 4,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_command",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "facility": "Command Center"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 0,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_wrong_facility",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "facility": "Naval Yard"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 4,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_unrest",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": true,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 5,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_moved",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": true,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 7,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_moved",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": true,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 7,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "spent_without_flag",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 3,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 6,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_nano",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "faction_owned_project": "Nano Factory"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 0,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_xeno_fungus",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": true,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "faction_owned_project": "Xenoempathy Dome"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 5,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_command_nano",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "facility": "Command Center",
+        "faction_owned_project": "Nano Factory"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 0,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_fusion",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 2,
+        "damage": 15,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 13,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "own_fusion",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 2,
+        "damage": 15,
+        "location": "field",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 11,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_fusion",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 2,
+        "damage": 15,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 9,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_fusion_floor",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 2,
+        "damage": 5,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 4,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "real_move_then_two_upkeeps",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 7,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders",
+        "prior_activity": false
+      },
+      "action": "Actual east move from own base before the first upkeep; then a second idle upkeep",
+      "expected_after_move": {
+        "coordinate": [
+          18,
+          16
+        ],
+        "damage": 7,
+        "spent": 3,
+        "prior_activity": true
+      },
+      "expected_after_second_upkeep": {
+        "damage": 5,
+        "spent": 0,
+        "prior_activity": false
+      }
+    },
+    {
+      "id": "native_field",
+      "inputs": {
+        "unit": "predefined Mind Worms",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 6,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "native_fungus",
+      "inputs": {
+        "unit": "predefined Mind Worms",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": true,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 5,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "native_own_fungus",
+      "inputs": {
+        "unit": "predefined Mind Worms",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "own",
+        "fungus": true,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 4,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_native",
+      "inputs": {
+        "unit": "predefined Mind Worms",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 4,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_native_biolab",
+      "inputs": {
+        "unit": "predefined Mind Worms",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "facility": "Biology Lab"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 0,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_native_command",
+      "inputs": {
+        "unit": "predefined Mind Worms",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "facility": "Command Center"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 4,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_native_xeno",
+      "inputs": {
+        "unit": "predefined Mind Worms",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "faction_owned_project": "Xenoempathy Dome"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 0,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "custom_psi_fungus",
+      "inputs": {
+        "unit": "custom Psi Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": true,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 6,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "sea_field",
+      "inputs": {
+        "unit": "conventional Gun Foil",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": true,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 6,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "sea_own",
+      "inputs": {
+        "unit": "conventional Gun Foil",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": true,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 5,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_sea",
+      "inputs": {
+        "unit": "conventional Gun Foil",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 4,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_sea_naval",
+      "inputs": {
+        "unit": "conventional Gun Foil",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "facility": "Naval Yard"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 0,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_sea_wrong_command",
+      "inputs": {
+        "unit": "conventional Gun Foil",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "facility": "Command Center"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 4,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_sea_maritime",
+      "inputs": {
+        "unit": "conventional Gun Foil",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "faction_owned_project": "Maritime Control Center"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 0,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "air_field",
+      "inputs": {
+        "unit": "conventional Gun Gravship",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 6,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "air_airbase",
+      "inputs": {
+        "unit": "conventional Gun Gravship",
+        "reactor": 1,
+        "damage": 7,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": true,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 5,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_air",
+      "inputs": {
+        "unit": "conventional Gun Gravship",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 4,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_air_aerospace",
+      "inputs": {
+        "unit": "conventional Gun Gravship",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "facility": "Aerospace Complex"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 0,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_air_wrong_naval",
+      "inputs": {
+        "unit": "conventional Gun Gravship",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "facility": "Naval Yard"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 4,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_sentry_floor",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 3,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "Sentry/Board Transport"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 2,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "field_sentry_below_floor",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 1,
+        "location": "field",
+        "field_claim": "unclaimed",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "Sentry/Board Transport"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 1,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "Sentry/Board Transport"
+      }
+    },
+    {
+      "id": "base_sentry_full",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 2,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": false,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "Sentry/Board Transport"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 0,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_command_unrest",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": true,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "facility": "Command Center"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 5,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    },
+    {
+      "id": "base_nano_unrest",
+      "inputs": {
+        "unit": "conventional Gun Infantry",
+        "reactor": 1,
+        "damage": 7,
+        "location": "own base",
+        "field_claim": "own",
+        "fungus": false,
+        "bunker": false,
+        "airbase": false,
+        "sea_field": false,
+        "base_unrest": true,
+        "prior_activity_input": false,
+        "initial_spent": 0,
+        "order": "No Orders",
+        "faction_owned_project": "Nano Factory"
+      },
+      "expected_after_first_upkeep": {
+        "damage": 0,
+        "spent": 0,
+        "unit_count": 1,
+        "base_count": 1,
+        "order": "No Orders"
+      }
+    }
+  ]
+}

@@ -407,6 +407,43 @@ NativeCoexistenceCanary PublishUnrelatedNative(GSE_CALLABLE,ConventionalUnitFixt
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC idle Unit recovery uses retained activity territorial rates and Command Center",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        for(int scenario=0;scenario<6;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(ColonyChoiceSource,"GAIANS");
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true);auto* um=game->GetUM();
+                const bool in_base=scenario>=2 && scenario<=4;
+                auto knowledge=KnowledgeValue(true,true,128,64).CopyData();
+                if(scenario==1 || scenario==5) {knowledge.tiles[8*(128/2)+8/2].claimant=1;knowledge.tiles[8*(128/2)+10/2].claimant=1;}
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+                if(scenario==3 || scenario==4) {
+                    const auto& row=game->GetState()->m_settings.global.GetSmacProductionRules()->facilities.at(26);
+                    game->GetBM()->DefineFacility(new FacilityDef("repair-command","Command Center","",row.cost,{},27));base->m_facilities.emplace("repair-command",game->GetBM()->GetFacilityDef("repair-command"));
+                }
+                if(scenario==4) {auto context=base->GetSmacResourceContext();context.drone_riots=true;base->SetSmacResourceContext(GSE_CALL,context);}
+                ConventionalUnitState state{2,1,1,7,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
+                auto* actor=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-scout"),base->m_owner,in_base ? base->GetTile():game->GetMap()->GetTile(8,8),state);
+                const auto random=fixture.GameplayRandom();const auto food=base->GetAccumulatedNutrients();const auto production=base->GetProductionState();
+                if(scenario==5) {
+                    fixture.MoveEvent(GSE_CALL,actor,game->GetMap()->GetTile(10,8));
+                    GT_ASSERT(actor->Conventional().retained_state_word && (*actor->Conventional().retained_state_word&4u),"Actual movement omitted its separate repair activity history");
+                    um->ResetConventionalSpent(GSE_CALL,actor);
+                    GT_ASSERT(actor->Conventional().damage==7 && actor->Conventional().spent==0 && (*actor->Conventional().retained_state_word&4u),"First maintenance healed an active Unit or cleared activity before planning");
+                    um->ClearConventionalActivity(GSE_CALL,actor);
+                }
+                um->ResetConventionalSpent(GSE_CALL,actor);
+                const int expected[]={6,5,4,0,5,5};
+                GT_ASSERT(actor->Conventional().damage==expected[scenario] && actor->Conventional().spent==0 && fixture.GameplayRandom()==random
+                    && base->GetAccumulatedNutrients()==food && base->GetProductionState()==production,"Idle recovery changed the wrong amount RNG or Base stores");
+                if(scenario==0) {
+                    for(int n=0;n<8;++n) {um->ResetConventionalSpent(GSE_CALL,actor);}
+                    GT_ASSERT(actor->Conventional().damage==2,"Ordinary field repair crossed its 80-percent floor");
+                }GT_OK();
+            });if(!result.empty()) {return "repair scenario "+std::to_string(scenario)+": "+result;}
+        }GT_OK();
+    });
+
     task->AddTest("SMAC native carrier activation retains work waypoint observations and lawful beaching",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(ColonyChoiceSource,"GAIANS");

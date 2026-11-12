@@ -1018,7 +1018,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				game->GetUM()->ValidateConventionalMove( unit, destination, 0 );
 				GT_ASSERT( fixture.MovementHistory() == history && fixture.GameplayRandom() == SmacGameplayRandomState( 12345, 0xa1b2c3d4 ), "ordinary validation changed authority" );
 				fixture.MoveEvent( GSE_CALL, unit, destination );
-				auto expected = record; expected.native_flags=0;expected.retained_state_word=0;expected.facing=0; // original fixtures move (+1,-1), north-east
+				auto expected = record; expected.native_flags=0;expected.retained_state_word=4;expected.facing=0; // original fixtures move (+1,-1), north-east
                 expected.spent = static_cast< uint8_t >( c.spent );
 				GT_ASSERT( unit->GetTile() == destination && unit->Conventional() == expected && source->units.empty()
 					&& destination->units.size() == 1 && destination->units.at( unit->m_id ) == unit
@@ -1060,7 +1060,7 @@ void AddConventionalUnitTests( task::gsetests::GSETests* task ) {
 				bool admitted=true;try{manager->ValidateConventionalMove(unit,destination,0);}catch(const std::exception&){admitted=false;}
 				GT_ASSERT(admitted==c.moved && fixture.GameplayRandom()==SmacGameplayRandomState(12345,77),"Base presence overrode current allowance or validation drew RNG");
 				fixture.MoveEvent(GSE_CALL,unit,destination);
-				auto expected=record;expected.native_flags=0;expected.retained_state_word=0;expected.facing=2;expected.spent=static_cast<uint8_t>(c.spent_after);
+				auto expected=record;expected.native_flags=0;expected.retained_state_word=c.moved ? 4:0;expected.facing=2;expected.spent=static_cast<uint8_t>(c.spent_after);
 				GT_ASSERT(unit->Conventional()==expected && unit->GetTile()==(c.moved ? destination : source)
 					&& source->units.count(unit->m_id)==(c.moved ? 0u : 1u) && destination->units.count(unit->m_id)==(c.moved ? 1u : 0u),
 					"damaged/promoted command failed to move once or changed health/morale");

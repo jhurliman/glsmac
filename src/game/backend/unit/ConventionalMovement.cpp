@@ -17,6 +17,7 @@
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/Base.h"
+#include "game/backend/base/FacilityDef.h"
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -360,6 +361,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
     if(result.outcome==smac_move::Outcome::Moved) {changed.facing=SmacFacingForStep(*source,*destination);}
 	changed.spent = static_cast< uint8_t >( result.unit.spent ); changed.failed_move = result.unit.prior_failure_marker;
     if(changed.retained_state_word) {
+        *changed.retained_state_word|=4u; // movement activity is independent of spent points
         if(result.outcome==smac_move::Outcome::Moved) {*changed.retained_state_word&=~0x8040u;}
         else if(result.outcome==smac_move::Outcome::FailedAttempt) {*changed.retained_state_word|=0x8000u;}
     }
@@ -434,11 +436,43 @@ void UnitManager::ResetConventionalSpent( GSE_CALLABLE, Unit* unit ) {
 	m_game->RequireSmacProductionOwner(unit->m_owner);
 	unit->QueryStats( SmacMoraleMode::Mode1 );
 	auto next = unit->Conventional();
+    // Original53a950 resets spent before repair; only retained activity bit4
+    // suppresses recovery. Migrated unknown status words cannot supply this input.
+    if(next.retained_state_word && !(*next.retained_state_word&4u) && next.damage) {
+        const auto context=ResolveConventional(next,unit->m_owner);const auto* tile=unit->GetTile();
+        const auto& knowledge=GetMap()->GetSmacWorkerKnowledge();
+        if(!knowledge) {throw std::runtime_error("Unit repair requires retained territorial recognition");}
+        const auto map_knowledge=knowledge->CopyData();
+        const auto claim=map_knowledge.tiles.at(size_t(tile->coord.y)*(map_knowledge.width/2)+tile->coord.x/2).claimant;
+        int32_t rate=1+int(claim==next.owner_simulation_id);
+        rate+=bool(tile->terraforming&map::tile::TERRAFORMING_BUNKER);
+        bool full=false;
+        if(tile->base) {
+            auto* base=tile->base;
+            if(m_game->GetBM()->GetBase(base->m_id)!=base || base->m_owner!=unit->m_owner) {throw std::runtime_error("Unit repair requires its canonical owned Base");}
+            if(!base->GetSmacResourceContext().drone_riots) {
+                ++rate;
+                for(const auto& row:base->m_facilities) {full|=row.second->m_smac_source_id==27;}
+            }
+        }
+        const int32_t floor=tile->base ? 0:2*context.reactor;
+        next.damage=static_cast<uint8_t>(full ? 0:std::min<int32_t>(next.damage,std::max(floor,int32_t(next.damage)-context.reactor*rate)));
+    }
 	const auto reset = smac_move::ResetSpentForCheckedUnitUpkeep( { unit->m_id, next.spent, next.failed_move } );
 	next.spent = static_cast< uint8_t >( reset.spent );
     next.AdvanceOrderUpkeep();
 	QueueUnitUpdate( unit, UUO_REFRESH ); // allocation before byte update
 	unit->CommitConventionalMove( next, unit->GetTile() );
+}
+
+void UnitManager::ClearConventionalActivity(GSE_CALLABLE,Unit* unit) {
+    m_game->CheckRW(GSE_CALL);
+    if(!unit || GetUnit(unit->m_id)!=unit || !unit->IsConventional()) {throw std::runtime_error("Activity reset requires a registered conventional Unit");}
+    m_game->RequireSmacLocalHumanOwner(unit->m_owner);
+    auto next=unit->Conventional();
+    if(next.retained_state_word && (*next.retained_state_word&4u)) {
+        *next.retained_state_word&=~4u;QueueUnitUpdate(unit,UUO_REFRESH);unit->CommitConventionalMove(next,unit->GetTile());
+    }
 }
 
 namespace {
@@ -561,7 +595,7 @@ void UnitManager::MoveWildNativeUnit(GSE_CALLABLE,Unit* actor,map::tile::Tile* d
     const auto movement=smac_move::ResolveSelectedGroundStep({actor->m_id,next.movement_spent,bool(next.state&0x8000u)},
         stats.quantum,stats.full_allowance,cost,bool(destination->features&map::tile::FEATURE_XENOFUNGUS),
         m_game->m_simulation->value.gameplay_random,smac_move::LotteryStream::SharedLow16);
-    next.movement_spent=static_cast<uint8_t>(movement.unit.spent);
+    next.movement_spent=static_cast<uint8_t>(movement.unit.spent);next.state|=4u;
     if(movement.outcome!=smac_move::Outcome::Moved) {
         if(movement.unit.prior_failure_marker) {next.state|=0x8000u;}
         QueueUnitUpdate(actor,UUO_REFRESH);std::get<SmacNativeUnitRecord>(actor->m_state)=next;

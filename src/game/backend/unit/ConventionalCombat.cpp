@@ -252,11 +252,11 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
     auto* survivor=result.deleted_identity==actor->m_id ? defender:actor;auto* loser=survivor==actor ? defender:actor;
     ConventionalUnitState candidate;std::optional<SmacNativeUnitRecord> native;
     if(survivor->IsNative()) {
-        native=survivor->Native();native->damage=static_cast<uint8_t>(10-result.survivor.health);
+        native=survivor->Native();if(survivor==actor) {native->state|=4u;}native->damage=static_cast<uint8_t>(10-result.survivor.health);
         native->stored_morale=static_cast<uint8_t>(result.survivor.stored_morale);native->movement_spent=static_cast<uint8_t>(result.survivor.spent);
         if(survivor==actor && (source->features&map::tile::FEATURE_XENOFUNGUS) && native->damage) {--native->damage;}
     } else {
-        candidate=survivor->Conventional();if(survivor==actor) {candidate.facing=SmacFacingForStep(*source,*destination);}
+        candidate=survivor->Conventional();if(survivor==actor) {if(candidate.retained_state_word) {*candidate.retained_state_word|=4u;}candidate.facing=SmacFacingForStep(*source,*destination);}
         candidate.damage=static_cast<uint8_t>(10-result.survivor.health);candidate.stored_morale=static_cast<uint8_t>(result.survivor.stored_morale);candidate.spent=static_cast<uint8_t>(result.survivor.spent);
         (void)QueryConventionalUnit(candidate,ResolveConventional(candidate,survivor->m_owner),candidate.render_morale_mode);
     }

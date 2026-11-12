@@ -643,6 +643,51 @@ public:
         util::FinallyGuard clear([&]{m_glsmac->m_state=nullptr;});
         m_glsmac->RestoreSinglePlayerIdentity(id,std::move(identity));
     }
+    std::string CheckLocalComputerBoundary() {
+        using namespace game::backend;
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            const auto& state=m_game.m_simulation->value;
+            GT_ASSERT(state.faction_turn && state.roster.size()==7 && state.human_membership==2,"Local controller membership changed");
+            const auto& cursor=*state.faction_turn;
+            GT_ASSERT(cursor.Current().turn==m_game.GetTurnId() && cursor.Focus()==1 && cursor.Current().owner==1
+                && m_game.GetSlotNum()==0 && m_game.GetPlayer()==m_state->m_slots->GetSlot(0).GetPlayer(),
+                "Scheduled upkeep changed human command focus or global year");
+            GT_ASSERT(!m_game.m_smac_controller_owner && !m_game.m_canonical_turn_in_progress && !m_game.m_canonical_turn_failed,
+                "Private controller authority escaped its synchronous owner operation");
+            GT_ASSERT(cursor.Current().phase==faction::SmacFactionTurn::Phase::OwnerCommand
+                || (cursor.Current().phase==faction::SmacFactionTurn::Phase::OwnerUpkeep && m_game.m_research_request
+                    && m_game.m_research_request->owner==1),"Nonhuman turn leaked a human question or command boundary");
+            for(const auto& participant:state.roster) {
+                const auto* social=state.social.Find(participant.simulation_id);
+                GT_ASSERT(social && social->intrinsic && social->retained && social->third,"Owner social snapshots are unavailable");
+                if(m_game.GetTurnId()==1 && participant.simulation_id!=1) {
+                    GT_ASSERT(social->phase==faction::SmacFactionSocialState::Phase::Early && social->current==faction::SmacSocialRatings{}
+                        && *social->retained==faction::SmacSocialRatings{} && *social->third==faction::SmacSocialRatings{},
+                        "Computer social/upkeep was refreshed before the first human command");
+                    const auto* technology=state.technology.Find(participant.simulation_id);
+                    const auto* profile=m_state->m_settings.global.GetSmacFactionStartupRules()->Find(participant.faction_id);
+                    std::array<bool,89> expected{};for(const auto id:profile->NamedTechnologyReferences()) {if(id>=0) {expected[id]=true;}}
+                    GT_ASSERT(technology->owned==expected && technology->score==0 && technology->labs==0 && !technology->target
+                        && !technology->cached_threshold && !technology->pending_secrets,
+                        "Computer research or University numeric TECH award ran before its own upkeep");
+                } else {GT_ASSERT(social->phase==faction::SmacFactionSocialState::Phase::Refreshed,"An admitted owner missed its upkeep social transition");}
+            }
+            GT_ASSERT(cursor.RefreshedOwners()==(m_game.GetTurnId()==1 ? 2:254),"Faction refresh history does not match per-owner dispatch");
+            if(m_game.GetTurnId()==1) {
+                GT_ASSERT(cursor.UpkeepEntered()==2 && cursor.Passed()==0 && m_game.GetBM()->GetBases().size()==7,
+                    "Startup processed computer Bases before human input");
+                for(const auto id:m_game.GetUM()->GetUnitRecordOrder()) {
+                    const auto* actor=m_game.GetUM()->GetUnit(id);
+                    if(actor->IsConventional() && actor->Conventional().owner_simulation_id!=1) {
+                        GT_ASSERT(actor->Conventional().spent==0 && actor->Conventional().work_order==unit::ConventionalUnitState::WorkOrder::None,
+                            "Computer commands ran before its own first upkeep");
+                    }
+                }
+            }
+            GT_OK();
+        });
+    }
+
     std::string StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet) {
         using namespace game::backend;
         EnableWorldSnapshot();
@@ -693,15 +738,7 @@ public:
             m_game.Iterate();ProcessAccumulations();
         }
         if(!m_game.IsRunning() || m_game.HasInitializationFailure()) {return "Local controller startup: "+m_game.m_initialization_error;}
-        return WithScriptValues([&](GSE_CALLABLE)->std::string {
-            GT_ASSERT(m_game.m_simulation && m_game.m_simulation->value.roster.size()==7 && m_game.m_simulation->value.human_membership==2,
-                "Local campaign did not admit one human and six actual computers");
-            GT_ASSERT(m_game.m_simulation->value.faction_turn && m_game.m_simulation->value.faction_turn->Current().owner==1
-                && (m_game.m_simulation->value.faction_turn->Current().phase==faction::SmacFactionTurn::Phase::OwnerCommand
-                    || (m_game.m_simulation->value.faction_turn->Current().phase==faction::SmacFactionTurn::Phase::OwnerUpkeep && m_game.m_research_request)),
-                "Local campaign did not stop at its first human command or required research boundary");
-            GT_OK();
-        });
+        return CheckLocalComputerBoundary();
     }
 
 	BackendFixture()
@@ -7929,6 +7966,7 @@ std::string CheckSmacBaseStartupFixture( const bool queued, const int32_t diffic
 
 ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< BackendFixture >() ) {}
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
+std::string ConventionalUnitFixture::CheckLocalComputerBoundary() {return fixture->CheckLocalComputerBoundary();}
 std::string ConventionalUnitFixture::StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet) {return fixture->StartLocalComputerCampaign(source,planet);}
 
 void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate, bool single, bool selected_rover ) { fixture->ConfigureConventional( refreshed, rate, single, selected_rover ); }

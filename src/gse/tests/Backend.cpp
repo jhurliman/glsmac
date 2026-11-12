@@ -919,6 +919,13 @@ public:
         });
     }
 
+    std::string CheckSavedLocalCampaignReplay(const std::string& path) {
+        const auto saved=game::backend::campaign::Read(path);
+        const auto restored=CheckCampaignRestore(path,saved.world,nullptr,false);
+        if(!restored.empty()) {return restored;}
+        return CheckLocalCampaignReplay(1);
+    }
+
     std::string ConfigureMilestoneFactionPresentations() {
         using namespace game::backend;
         const auto* root=std::getenv("GLSMAC_STARTUP_ASSETS");
@@ -4861,15 +4868,16 @@ public:
             GT_ASSERT(m_game.m_active_admission && m_game.m_active_admission->stage==Game::StartupStage::InitializeMap
                 && m_game.m_pending_snapshot_turn && !m_game.m_simulation,"campaign did not use staged saved decode: "+m_game.m_initialization_error);
             if(decoded_random) {*decoded_random=m_game.GetRandom()->GetStateString();}
+            // Match new-game headless setup: coordinate TileStates are still
+            // required by later production/spawn updates, even without a renderer.
+            m_game.m_map->m_textures.source.texture_pcx=nullptr;
+            m_game.m_map->m_textures.source.ter1_pcx=nullptr;
+            PushBaseUpdates();
             // Asset-free fixture skips only renderer construction. Decode and
             // the actual claimed Start/InitComplete consumer remain production.
             m_game.m_game_state=Game::GS_STARTING;
             m_game.SetStartupStage(m_game.m_active_admission,Game::StartupStage::Start);m_game.Iterate();
             GT_ASSERT(m_game.IsRunning() && configure_calls==1 && create_calls==0 && start_calls==1,"campaign replayed configure/world creation or skipped restored Start");
-            // This fixture intentionally skips renderer construction. Constructor
-            // inputs are borrowed placeholders and cannot outlive this scope.
-            m_game.m_map->m_textures.source.texture_pcx=nullptr;
-            m_game.m_map->m_textures.source.ter1_pcx=nullptr;
             GT_ASSERT(m_game.GetTurnId()==before_turn && m_game.m_simulation->value.gameplay_random==before_rng
                 && m_state->Serialize().ToString()==before_settings && m_state->ExportRoster()==before_roster,"campaign changed settings, roster, turn or paired RNG");
             const auto normalize_definition_order=[&](const std::string& world) {return NormalizeCampaignSnapshot(world);};
@@ -13206,6 +13214,21 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
         GT_ASSERT(startup.empty(),"Short generated replay startup: "+startup);
         const auto result=fixture.CheckLocalCampaignReplay(1);
         GT_ASSERT(result.empty(),"Short generated replay: "+result);GT_OK();
+    });
+    task->AddTest("SMAC milestone saved checkpoint restores and replays one human boundary",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");const auto* checkpoint=std::getenv("GLSMAC_CAMPAIGN_REPLAY_CHECKPOINT");
+        if(!assets || !*assets || !checkpoint || !*checkpoint) {GT_OK();}
+        const auto source=[&](const std::string& name)->std::string {
+            for(const auto& file:std::filesystem::directory_iterator(assets)) {
+                auto key=file.path().filename().string();std::transform(key.begin(),key.end(),key.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if(key==name) {std::ifstream in(file.path(),std::ios::binary);return std::string(std::istreambuf_iterator<char>(in),{});}
+            }
+            throw std::runtime_error("Missing owned checkpoint source: "+name);
+        };
+        BackendFixture fixture;const auto startup=fixture.StartLocalComputerCampaign(source,"",true);
+        GT_ASSERT(startup.empty(),"Checkpoint test startup: "+startup);
+        const auto replay=fixture.CheckSavedLocalCampaignReplay(checkpoint);
+        GT_ASSERT(replay.empty(),"Saved checkpoint replay: "+replay);GT_OK();
     });
     task->AddTest("SMAC milestone faction presentations import owned atlas definitions",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}

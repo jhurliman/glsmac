@@ -67,6 +67,7 @@ public:
 	static SmacWorkerMapFrame Create( const Data& data );
 	Data CopyData() const;
 	Evaluation Evaluate( size_t base_index ) const;
+    ObservedSquare Observe(Coordinate coordinate) const;
 	std::string Serialize() const;
 	static SmacWorkerMapFrame Deserialize( const std::string& wire );
 	bool operator==( const SmacWorkerMapFrame& other ) const noexcept;

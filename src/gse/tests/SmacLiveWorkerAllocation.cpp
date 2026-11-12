@@ -5319,6 +5319,35 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         });if(!restored_result.empty()) {return restored_result;}
         }GT_OK();
     });
+    task->AddTest("SMAC founding on a retained donor worker defers reallocation to its next intake",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(UpkeepSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            using namespace game::backend::unit;
+            auto* game=fixture.Game();auto* donor=Populate(GSE_CALL,fixture,false);auto* bm=game->GetBM();auto* um=game->GetUM();
+            std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(names);
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            donor->PublishSmacAllocation(GSE_CALL,SmacBaseAllocationState{1u|(1u<<10),{{},0}},Roles());
+            auto* site=game->GetMap()->GetTile(4,4);auto* worker=bm->GetWorkingPop(site->coord);
+            GT_ASSERT(worker && worker->m_base==donor,"Donor setup did not retain its actual worked square");
+            um->DefineUnit(new StaticDef("donor-colony",um->GetMoraleSet("live-morale"),"Colony",MT_LAND,0,new ColonyMarkerRender()));
+            auto* pod=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("donor-colony"),donor->m_owner,site,
+                {0,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+            auto knowledge=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+            if(std::none_of(knowledge.units.begin(),knowledge.units.end(),[](const auto& row){return row.id==92;})) {knowledge.units.push_back({92,0,false});}
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(knowledge));
+            const auto before=Base::Serialize(donor).ToString();const auto minerals=donor->GetProductionState()->minerals;const auto food=donor->GetAccumulatedNutrients();
+            auto* founded=bm->FoundSmacBase(GSE_CALL,*pod,names);
+            GT_ASSERT(founded && founded->GetTile()==site && !um->GetUnit(92) && bm->GetWorkingPop(site->coord)==worker
+                && Base::Serialize(donor).ToString()==before,"Founding eagerly changed donor storage or refused its retained worker");
+            GT_ASSERT(game->GetSmacWorkerAvailability(*donor).unavailable&(1u<<10),"New center was not universally unavailable before donor intake");
+            (void)fixture.Snapshot();(void)donor->PrepareSmacResourceCalculation();
+            GT_ASSERT(donor->GetSmacAllocation()->selected&(1u<<10),"Read-only donor preview published a replacement worker");
+            donor->RecalculateSmacWorkers(GSE_CALL,Roles());
+            GT_ASSERT(!(donor->GetSmacAllocation()->selected&(1u<<10)) && !bm->GetWorkingPop(site->coord)
+                && donor->GetPopulation()==1 && donor->GetProductionState()->minerals==minerals && donor->GetAccumulatedNutrients()==food,
+                "Actual donor intake retained another center or advanced food/mineral stores");GT_OK();
+        });
+    });
     task->AddTest("SMAC running founding rejects terrain claims and late role failures atomically",[](GSE*,context::Context*) -> std::string {
         ConventionalUnitFixture fixture; fixture.ConfigureProduction(UpkeepSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE) -> std::string {

@@ -84,6 +84,16 @@ SmacWorkerMapFrame SmacWorkerMapFrame::Create( const Data& data ) { Validate( da
 SmacWorkerMapFrame::Data SmacWorkerMapFrame::CopyData() const { return m_data; }
 bool SmacWorkerMapFrame::operator==( const SmacWorkerMapFrame& o ) const noexcept { return m_data == o.m_data; }
 
+SmacWorkerMapFrame::ObservedSquare SmacWorkerMapFrame::Observe(Coordinate coordinate) const {
+    Require(coordinate[0]>=0 && coordinate[0]<m_data.width && coordinate[1]>=0 && coordinate[1]<m_data.height && !((coordinate[0]^coordinate[1])&1),
+        "Observed worker square is outside the authenticated map");
+    const auto& tile=m_data.tiles.at(size_t(coordinate[1])*(m_data.width/2)+coordinate[0]/2);
+    std::optional<int32_t> recognized;
+    if(tile.claimant && *tile.claimant>0 && (*tile.claimant==m_data.observer || m_data.foreign_disclosure
+        || m_data.observer_relations[*tile.claimant].territory_recognition)) {recognized=tile.claimant;}
+    return {coordinate,bool(tile.explored_by&(1u<<m_data.observer)),tile.claimant,recognized};
+}
+
 SmacWorkerMapFrame::Evaluation SmacWorkerMapFrame::Evaluate( size_t base_index ) const {
 	Require( base_index < m_data.bases.size(), "Worker frame Base index is unavailable" );
 	const auto& current = m_data.bases[base_index];
@@ -104,10 +114,8 @@ SmacWorkerMapFrame::Evaluation SmacWorkerMapFrame::Evaluate( size_t base_index )
 		const auto coordinate = base::SmacWorkedSquareCollection::Resolve( context.map, i );
 		if ( !coordinate ) { continue; }
 		const auto& tile = m_data.tiles[Index( m_data, *coordinate )];
-		std::optional< int32_t > recognized;
-		if ( tile.claimant && *tile.claimant > 0 && ( *tile.claimant == m_data.observer || m_data.foreign_disclosure
-			|| m_data.observer_relations[*tile.claimant].territory_recognition ) ) { recognized = tile.claimant; }
-		const bool explored = ( tile.explored_by & ( 1u << m_data.observer ) ) != 0;
+        const auto observed=Observe(*coordinate);const auto recognized=observed.recognized_owner;
+        const bool explored=observed.explored;
 		base::SmacWorkerAvailabilitySquare square{explored,false,tile.sea,recognized,{}};
 		for ( const auto& item : m_data.bases ) { square.base_marker |= item.coordinate == *coordinate; }
 		for ( const auto& unit : m_data.units ) {

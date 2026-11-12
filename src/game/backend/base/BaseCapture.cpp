@@ -12,6 +12,9 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/SmacGroundEdgeCost.h"
+#include "game/backend/unit/SmacSelectedMovement.h"
+#include "game/backend/unit/SmacUnitFacing.h"
 #include "game/FrontendRequest.h"
 #include "gc/Space.h"
 #include "util/FinallyGuard.h"
@@ -32,6 +35,7 @@ struct BaseManager::PreparedSmacCapture::Data {
 	int32_t old_owner=0,new_owner=0,loot=0;
 	size_t population=0;
 	bool raze=false;
+    bool movement_failed=false;
 	SmacGameplayRandomState random;
 	faction::SmacHostileState history;
 	faction::SmacEconomyState actor_economy,defender_economy;
@@ -75,8 +79,10 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	const auto ordinary=[&](const map::tile::Tile* tile) {
 		return tile && tile->tiles==map->GetTilesPtr() && tile->coord.x<map->GetWidth() && tile->coord.y<map->GetHeight()
 			&& ((tile->coord.x^tile->coord.y)&1)==0 && map->GetTile(tile->coord.x,tile->coord.y)==tile
-			&& !tile->is_water_tile && !tile->IsLocked() && tile->rockiness==map::tile::ROCKINESS_FLAT
-			&& tile->features==map::tile::FEATURE_NONE && tile->terraforming==map::tile::TERRAFORMING_NONE;
+			&& !tile->is_water_tile && !tile->IsLocked() && tile->rockiness>=map::tile::ROCKINESS_FLAT && tile->rockiness<=map::tile::ROCKINESS_ROCKY
+            && !(tile->features&~(map::tile::FEATURE_RIVER|map::tile::FEATURE_XENOFUNGUS))
+            && !(tile->terraforming&~(map::tile::TERRAFORMING_ROAD|map::tile::TERRAFORMING_MAG_TUBE|map::tile::TERRAFORMING_FOREST
+                |map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_MINE|map::tile::TERRAFORMING_SOLAR|map::tile::TERRAFORMING_SENSOR));
 	};
 	if(!ordinary(source) || !ordinary(destination) || !source->IsAdjactentTo(destination) || source->base || source->units.size()!=1
 		|| source->units.begin()->second!=actor || source->units.begin()->first!=actor->m_id || actor->m_animation_id) {THROW("Capture currently requires adjacent clear flat land");}
@@ -92,18 +98,45 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	const auto design=m_game->ResolveConventionalDesign(actor->Conventional(),*m_game->m_simulation);
 	const auto& catalog=state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
 	const auto stats=actor->QueryStats(unit::SmacMoraleMode::Mode1);
-	if(resolved.package!=unit::ConventionalUnitContext::Package::Combat || resolved.chassis!=settings::SmacMovementRules::GroundChassis::Infantry
-		|| design.abilities || resolved.reactor!=1 || catalog.weapons.weapons.at(design.weapon).offense!=1 || catalog.defenses.defenses.at(design.defense).rating!=1
-		|| stats.full_allowance!=3 || stats.remaining_allowance!=3 || actor->Conventional().work_order!=unit::ConventionalUnitState::WorkOrder::None
+	if(resolved.package!=unit::ConventionalUnitContext::Package::Combat || (design.chassis!=0 && design.chassis!=1)
+        || (design.abilities&~0x4000u) || resolved.reactor!=1 || catalog.weapons.weapons.at(design.weapon).offense<=0 || catalog.defenses.defenses.at(design.defense).rating<=0
+        || stats.remaining_allowance<=0 || actor->Conventional().IsHeld() || actor->Conventional().work_order!=unit::ConventionalUnitState::WorkOrder::None
 		|| simulation.designs.global_difficulty!=3 || unit::SmacStartupDesignState::OriginalDifficulty(actor->m_owner->GetPlayer()->GetDifficultyLevel())!=3
 		|| unit::SmacStartupDesignState::OriginalDifficulty(captured->m_owner->GetPlayer()->GetDifficultyLevel())!=3) {THROW("This capture requires different unit or difficulty rules");}
 	const auto old_owner=before.owner_simulation_id,new_owner=actor->Conventional().owner_simulation_id;
 	const bool liberation=before.FormerOwner()==new_owner,raze=captured->GetPopulation()==1 && !liberation;
-	const auto ordinary_war=[](uint32_t word){return word==16 || word==0x80008118u || word==0x8000a118u;};
+	simulation.hostility.RequireOrdinaryHostility(new_owner,old_owner);
+    const auto ordinary_war=[](uint32_t word){return (word&16u)!=0;};
 	for(const auto& pair:{std::pair<int32_t,int32_t>{old_owner,new_owner},{new_owner,old_owner}}) {
 		const auto& relation=simulation.hostility.owners.at(pair.first).directions.at(pair.second);
 		if(relation.secondary || !ordinary_war(relation.primary)) {THROW("Declare Vendetta before capturing this Base");}
 	}
+    const auto* social=simulation.social.Find(new_owner);
+    if(!social || !social->retained) {THROW("Capture movement requires retained PLANET");}
+    const auto edge=[&](const map::tile::Tile* tile) {
+        uint32_t flags=tile->base ? unit::smac_edge::Base:0;
+        if(tile->features&map::tile::FEATURE_RIVER) {flags|=unit::smac_edge::River;}
+        if(tile->features&map::tile::FEATURE_XENOFUNGUS) {flags|=unit::smac_edge::Fungus;}
+        if(tile->terraforming&map::tile::TERRAFORMING_ROAD) {flags|=unit::smac_edge::Road;}
+        if(tile->terraforming&map::tile::TERRAFORMING_MAG_TUBE) {flags|=unit::smac_edge::Tube;}
+        if(tile->terraforming&map::tile::TERRAFORMING_FOREST) {flags|=unit::smac_edge::Forest;}
+        return unit::smac_edge::Tile{static_cast<int32_t>(tile->coord.x),static_cast<int32_t>(tile->coord.y),3,
+            static_cast<int32_t>(tile->rockiness-map::tile::ROCKINESS_FLAT),flags};
+    };
+    const auto cost=unit::smac_edge::QueryGroundEdgeCost({{design.id,static_cast<unit::smac_edge::Chassis>(design.chassis),0,
+        catalog.weapons.weapons.at(design.weapon).offense,static_cast<int32_t>(catalog.weapons.weapons.at(design.weapon).mode),design.plan,design.abilities,stats.basic_allowance},
+        stats.quantum,new_owner,social->retained->at(7),false,false,static_cast<int32_t>(map->GetWidth()),static_cast<int32_t>(map->GetHeight()),true,edge(source),edge(destination)});
+    const auto movement=unit::smac_move::ResolveSelectedGroundStep({actor->m_id,actor->Conventional().spent,actor->Conventional().failed_move},
+        stats.quantum,stats.full_allowance,cost,bool(destination->features&map::tile::FEATURE_XENOFUNGUS),simulation.gameplay_random,unit::smac_move::LotteryStream::SharedLow16);
+    auto moved_state=actor->Conventional();moved_state.spent=static_cast<uint8_t>(movement.unit.spent);moved_state.failed_move=movement.unit.prior_failure_marker;
+    if(movement.outcome!=unit::smac_move::Outcome::Moved) {
+        if(moved_state.retained_state_word && moved_state.failed_move) {*moved_state.retained_state_word|=0x8000u;}
+        auto failed=std::make_unique<PreparedSmacCapture::Data>(movement.random,simulation.hostility,simulation.economy.at(new_owner),simulation.economy.at(old_owner));
+        failed->movement_failed=true;failed->actor=actor;failed->source=source;failed->base=captured;failed->units.emplace_back(actor,moved_state);
+        return PreparedSmacCapture(std::move(failed));
+    }
+    moved_state.damage=0;moved_state.facing=unit::SmacFacingForStep(*source,*destination);
+    if(moved_state.retained_state_word) {*moved_state.retained_state_word&=~0x8040u;}
 	const auto technology=[&](int32_t owner)->const faction::SmacFactionTechnologyState& {
 		for(const auto& row:simulation.technology.factions) {if(row.admission.simulation_id==owner) {return row;}}
 		THROW("Capture owner has no technology state");
@@ -112,7 +145,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	const auto& defender_economy=simulation.economy.at(old_owner);
 	if(!defender_economy.population_aggregate || *defender_economy.population_aggregate<0 || *defender_economy.population_aggregate==INT32_MAX
 		|| defender_economy.credits<0 || simulation.economy.at(new_owner).credits<0) {THROW("Capture needs the defender's saved population summary and ordinary treasuries");}
-	auto data=std::make_unique<PreparedSmacCapture::Data>(simulation.gameplay_random,simulation.hostility,simulation.economy.at(new_owner),defender_economy);
+	auto data=std::make_unique<PreparedSmacCapture::Data>(movement.random,simulation.hostility,simulation.economy.at(new_owner),defender_economy);
 	data->raze=raze;
 	if(!raze && data->defender_economy.production_reference_counts) {
 		const auto targets=SmacProductionReferenceTargets(captured->GetProductionState());
@@ -225,7 +258,7 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 		std::vector<size_t> ids;for(const auto id:um->GetUnitRecordOrder()) {if(um->GetUnit(id)->m_owner==captured->m_owner) {ids.push_back(id);}}
 		leaving.emplace(um->PrepareRemovalForQuery(ids));
 	}
-	auto actor_state=actor->Conventional();actor_state.spent=3;actor_state.failed_move=false;data->units.emplace_back(actor,actor_state);
+	auto actor_state=moved_state;data->units.emplace_back(actor,actor_state);
 	for(const auto& entry:um->GetUnits()) {
 		auto* unit=entry.second;if(unit->IsNative()) {continue;}auto next=unit->Conventional();
 		if(replacement && unit->m_owner==captured->m_owner && next.home_base_id==captured->m_id) {
@@ -403,6 +436,10 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 	m_game->CheckRW(GSE_CALL);auto& data=*prepared.m_data;
 	if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Capture needs its owning accumulation");}
+    if(data.movement_failed) {
+        auto* um=m_game->GetUM();um->QueueUnitUpdate(data.actor,unit::UnitManager::UUO_REFRESH);
+        data.actor->CommitConventionalMove(data.units.at(0).second,data.source);m_game->m_simulation->value.gameplay_random=data.random;return;
+    }
 	const auto& names=m_game->GetSmacBasePresentations();Base::SmacAllocationRoles roles{names[0],{names[1],names[2],names[3],names[4],names[5],names[6],names[7]}};
 	auto facilities=data.facility_changes;facilities.emplace_back(data.base,data.facilities);
 	std::optional<Base::PreparedSmacWorkerState> workers;

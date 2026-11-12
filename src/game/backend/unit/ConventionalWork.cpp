@@ -64,6 +64,7 @@ UnitManager::ConventionalCommands UnitManager::QueryConventionalCommands(Unit* a
         if(result.package==ConventionalUnitContext::Package::Former) {
             for(const auto order:{Order::Farm,Order::Road,Order::Forest,Order::Solar,Order::Mine,Order::RemoveFungus,Order::Sensor,Order::None}) {
                 if(order==Order::None && actor->Conventional().work_order==Order::None){continue;}
+                if(order==Order::RemoveFungus && !(actor->GetTile()->features&FEATURE_XENOFUNGUS)) {continue;}
                 try {
                     ValidateConventionalWork(actor,order,m_game->GetSlotNum(),false);
                     result.actions.push_back(order==Order::RemoveFungus ? 11:order==Order::Sensor ? 12:static_cast<int32_t>(order));
@@ -123,9 +124,7 @@ UnitManager::PreparedConventionalWork UnitManager::PrepareConventionalWork(Unit*
         || (tile->terraforming&~allowed) || tile->rockiness<ROCKINESS_FLAT || tile->rockiness>ROCKINESS_ROCKY) {
         throw std::runtime_error("Terraforming requires ordinary canonical land without a Base or landmark");
     }
-    if(order==Order::RemoveFungus) {
-        if(!fungus) {throw std::runtime_error("Remove Fungus requires actual land fungus");}
-    } else {
+    if(order!=Order::RemoveFungus) {
         if(fungus || (tile->terraforming&Improvement(order))
             || (order!=Order::Sensor && (tile->terraforming&TERRAFORMING_FOREST))
             || (order!=Order::Sensor && tile->rockiness!=ROCKINESS_FLAT)) {
@@ -183,6 +182,12 @@ void UnitManager::SetConventionalWork(GSE_CALLABLE,Unit* actor,Order order,size_
         if(pending.unit!=entry.first || (pending.ops&UUO_DESPAWN)){throw std::runtime_error("Terraforming has a stale Unit update");}
         pending.ops=static_cast<unit_update_op_t>(pending.ops|UUO_REFRESH);
     }
+    std::optional<map::GlsmacTerritoryTopology> topology;
+    if(prepared.features) {
+        const auto& prior=GetMap()->GetTerritoryTopology();
+        if(!prior || !prior->SiteRatings()) {throw std::runtime_error("Fungus removal requires retained site-rating cache history");}
+        topology=prior->WithSiteRatings(prior->SiteRatings()->InvalidateLocal({static_cast<int32_t>(prepared.tile->coord.x),static_cast<int32_t>(prepared.tile->coord.y)}));
+    }
     // Stage owned atlas/sprite payloads before any Unit, terrain or knowledge write.
     std::unique_ptr<map::Map::PreparedTerrainUpdate> render;
     if(prepared.features || (prepared.terraforming && (*prepared.terraforming&TERRAFORMING_SENSOR))) {
@@ -210,6 +215,7 @@ void UnitManager::SetConventionalWork(GSE_CALLABLE,Unit* actor,Order order,size_
     if(prepared.features){prepared.tile->features=*prepared.features;}
     if(render){GetMap()->CommitOrdinaryTerrainUpdate(*render);}
     m_game->CommitConventionalSight(prepared.knowledge);
+    m_game->CommitBaseTerritoryTopology(topology);
     m_unit_updates.swap(updates);
     if(frontend){m_game->m_pending_frontend_requests->swap(*frontend);}
 }

@@ -58,7 +58,13 @@ SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBa
     // A fresh read-only query must model the same repaired allocation as its
     // owning calculation, rather than mixing old workers with the reduced demand.
     std::optional<SmacBaseAllocationState> repaired;
-    if(!allocation && m_retained_population) {
+    bool blocked_center=false;
+    if(!allocation && m_allocation) {
+        for(const auto& coordinate:AllocationCoordinates(*m_allocation)) {
+            blocked_center|=m_game->GetMap()->GetTile(coordinate.x,coordinate.y)->base!=nullptr;
+        }
+    }
+    if(!allocation && (m_retained_population || blocked_center)) {
         if(!m_allocation) {THROW("Retained population requires saved allocation authority");}
         repaired=CalculateSmacWorkers(*m_allocation,GetSmacResourceContext(),phase,population,prepared_unit,nullptr,candidate_support,granted);
         allocation=&*repaired;

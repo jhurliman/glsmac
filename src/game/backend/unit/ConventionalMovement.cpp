@@ -184,10 +184,6 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	const auto& catalog = state->m_settings.global.GetSmacPredefinedUnitRules()->catalog;
 	const auto& weapon = catalog.weapons.weapons.at( design.weapon );
 	const auto& social = *simulation.social.Find( stored.owner_simulation_id );
-	if ( context.package != ConventionalUnitContext::Package::Combat
-		&& ( ( source->features | destination->features ) & map::tile::FEATURE_XENOFUNGUS ) ) {
-		throw std::runtime_error( "Noncombat runtime fungus encounter admission is not established" );
-	}
 	// Owned Bases impose no extra ordinary nonfungus terrain or population rule.
 	// Fungus still uses the narrower, independently admitted endpoint-HQ path.
 	const base::Base* admitted_hq = nullptr;
@@ -228,7 +224,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 			}
 		} else if ( !source->base && !destination->base ) {
             // Remote ordinary Infantry can reach the separate encounter stage.
-            if(design.chassis!=0 || design.plan!=3 || design.abilities || context.presentation!=ConventionalUnitContext::Presentation::Scout) {
+            if(design.chassis!=0 || (design.plan!=3 && design.plan!=9 && design.plan!=8) || design.abilities) {
                 throw std::runtime_error("Remote fungus requires the admitted conventional Scout profile");
             }
 		} else {
@@ -272,10 +268,11 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
     const bool fungus=(destination->features&map::tile::FEATURE_XENOFUNGUS)!=0;
     if(fungus && !admitted_hq && (source->is_water_tile || destination->is_water_tile
         || (design.chassis!=0 && design.chassis!=1) || static_cast<int32_t>(catalog.chassis.chassis.at(design.chassis).triad)!=0
-        || weapon.offense<=0 || static_cast<int32_t>(weapon.mode)!=0 || design.plan<0 || design.plan>3 || design.abilities)) {
+        || ((weapon.offense<=0 || static_cast<int32_t>(weapon.mode)!=0 || design.plan<0 || design.plan>3)
+            && context.package!=ConventionalUnitContext::Package::Former && context.package!=ConventionalUnitContext::Package::Colony) || design.abilities)) {
         throw std::runtime_error("Fungus encounters require the admitted ordinary land combat profile");
     }
-    if(fungus && (!admitted_hq || simulation.movement_history)) {
+    if(fungus && destination->units.empty() && (!admitted_hq || simulation.movement_history)) {
         if(!simulation.movement_history) {throw std::runtime_error("Fungus nearest-base encounter requires retained placement history");}
         const auto& history=*simulation.movement_history;
         history.ValidateDimensions(map->GetWidth(),map->GetHeight());
@@ -357,11 +354,15 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 		static_cast< int32_t >( map->GetWidth() ), static_cast< int32_t >( map->GetHeight() ), true, edge_source, edge_destination };
 	const auto cost = smac_edge::QueryGroundEdgeCost( query );
 	auto result = smac_move::ResolveSelectedGroundStep( { unit->m_id, stored.spent, stored.failed_move }, stats.quantum, stats.full_allowance,
-		cost, ( edge_destination.features & smac_edge::Fungus ) != 0, random,
+		cost, ( edge_destination.features & smac_edge::Fungus ) != 0 && destination->units.empty() && design.plan!=9, random,
         smac_move::LotteryStream::SharedLow16 );
 	auto changed = stored;
     if(result.outcome==smac_move::Outcome::Moved) {changed.facing=SmacFacingForStep(*source,*destination);}
 	changed.spent = static_cast< uint8_t >( result.unit.spent ); changed.failed_move = result.unit.prior_failure_marker;
+    if(changed.retained_state_word) {
+        if(result.outcome==smac_move::Outcome::Moved) {*changed.retained_state_word&=~0x8040u;}
+        else if(result.outcome==smac_move::Outcome::FailedAttempt) {*changed.retained_state_word|=0x8000u;}
+    }
 	QueryConventionalUnit( changed, context, stored.render_morale_mode );
 	auto sight = result.outcome == smac_move::Outcome::Moved
 		? m_game->PrepareConventionalSight(unit->m_id,stored.owner_simulation_id,destination,source) : PreparedConventionalSight{};
@@ -480,10 +481,6 @@ void UnitManager::ValidateWildNativeMove(Unit* actor,map::tile::Tile* destinatio
     for(const auto& row:destination->units) {
         if(GetUnit(row.first)!=row.second || !row.second->IsNative() || row.second->Native().owner) {throw std::runtime_error("Wild destination stack is not canonical native-owned");}
     }
-    // The autonomous policy only selects affordable partial steps. It can spend
-    // a full point on more expensive ordinary terrain through normal admission.
-    const auto cost=WildEdgeCost(*destination,stats.quantum);
-    if(cost>stats.remaining_allowance && stats.remaining_allowance<stats.quantum) {throw std::runtime_error("Wild policy waits rather than choosing a partial-point terrain lottery");}
     if(!map->GetSmacWorkerKnowledge() || !map->GetSmacWorkerKnowledge()->CopyData().occupancy) {throw std::runtime_error("Wild movement requires retained map occupancy");}
 }
 void UnitManager::MoveWildNativeUnit(GSE_CALLABLE,Unit* actor,map::tile::Tile* destination) {
@@ -492,8 +489,18 @@ void UnitManager::MoveWildNativeUnit(GSE_CALLABLE,Unit* actor,map::tile::Tile* d
     auto* source=actor->GetTile();const auto stats=QueryNativeUnit(actor->Native(),0);auto next=actor->Native();
     const auto cost=WildEdgeCost(*destination,stats.quantum);
     if(int32_t(next.movement_spent)+cost>255 || destination->coord.x>INT16_MAX || destination->coord.y>INT16_MAX) {throw std::overflow_error("Wild move exceeds native byte/coordinate domain");}
+    const auto movement=smac_move::ResolveSelectedGroundStep({actor->m_id,next.movement_spent,bool(next.state&0x8000u)},
+        stats.quantum,stats.full_allowance,cost,bool(destination->features&map::tile::FEATURE_XENOFUNGUS),
+        m_game->m_simulation->value.gameplay_random,smac_move::LotteryStream::SharedLow16);
+    next.movement_spent=static_cast<uint8_t>(movement.unit.spent);
+    if(movement.outcome!=smac_move::Outcome::Moved) {
+        if(movement.unit.prior_failure_marker) {next.state|=0x8000u;}
+        QueueUnitUpdate(actor,UUO_REFRESH);std::get<SmacNativeUnitRecord>(actor->m_state)=next;
+        m_game->m_simulation->value.gameplay_random=movement.random;return;
+    }
+    next.state&=~0x8040u;
     next.x=static_cast<int16_t>(destination->coord.x);next.y=static_cast<int16_t>(destination->coord.y);
-    next.facing=SmacFacingForStep(*source,*destination);next.movement_spent=static_cast<uint8_t>(next.movement_spent+cost);
+    next.facing=SmacFacingForStep(*source,*destination);
     auto stacks=PrepareConventionalStackMove(actor,destination);auto knowledge=GetMap()->GetSmacWorkerKnowledge()->CopyData();
     const auto index=[&](const map::tile::Tile* tile){return size_t(tile->coord.y)*(knowledge.width/2)+tile->coord.x/2;};
     const auto distance=[&](const map::tile::Tile* a,const map::tile::Tile* b) {
@@ -550,6 +557,7 @@ void UnitManager::MoveWildNativeUnit(GSE_CALLABLE,Unit* actor,map::tile::Tile* d
     std::get<SmacNativeUnitRecord>(actor->m_state)=next;actor->m_tile=destination;
     CommitStackChanges(stacks);if(placement.first) {placement.first->MarkPlaced(placement.second);}
     m_game->CommitConventionalSight(sight);
+    m_game->m_simulation->value.gameplay_random=movement.random;
 }
 
 }

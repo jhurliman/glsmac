@@ -19,8 +19,7 @@ void Validate( const Query& q ) {
 	const auto& d = q.design;
 	const bool combat = d.weapon_offense > 0 && d.weapon_mode == 0 && d.plan >= 0 && d.plan <= 3;
 	const bool former = d.chassis == Chassis::Infantry && d.weapon_offense == 0 && d.weapon_mode == 9 && d.plan == 9;
-	const bool colony = d.chassis == Chassis::Infantry && d.weapon_offense == 0 && d.weapon_mode == 8 && d.plan == 8
-		&& !( ( q.source.features | q.destination.features ) & Fungus );
+	const bool colony = d.chassis == Chassis::Infantry && d.weapon_offense == 0 && d.weapon_mode == 8 && d.plan == 8;
 	if ( q.quantum < 1 || q.quantum > 100 || q.faction < 1 || q.faction > 7 ||
 		q.width < 2 || ( q.width & 1 ) != 0 || q.height < 1 ||
 		d.id < 0 || d.id == 8 || d.id == 9 ||

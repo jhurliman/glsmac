@@ -105,10 +105,9 @@ Base::Base(
 	if ( !tile || tile->tiles->GetMap() != game->GetMap() || tile->base || game->GetBM()->GetBase( id ) ) {
 		THROW( "invalid or occupied base location/ID" );
 	}
-	const auto* center_claim = game->GetBM()->GetWorkingPop( tile->coord );
-	if ( center_claim && center_claim->m_base && center_claim->m_base->m_allocation ) {
-		THROW( "Base center conflicts with an existing canonical worker allocation" );
-	}
+    // Native founding retains an older donor selection until its next actual
+    // allocation pass. The new center is unavailable in the worker map frame;
+    // it is not an extra worker reservation or an eager donor resource pass.
 	std::set< std::pair< size_t, size_t > > assigned;
 	for ( const auto& entry : m_pops ) {
 		const auto& pop = entry.second;

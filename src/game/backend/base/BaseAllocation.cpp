@@ -37,9 +37,8 @@ std::vector< map::tile::coords_t > Base::AllocationCoordinates( const SmacBaseAl
 		if ( !resolved || !unique.emplace( ( *resolved )[ 0 ], ( *resolved )[ 1 ] ).second ) {
 			THROW( "Live SMAC allocation requires valid unaliased worker coordinates" );
 		}
-		if ( m_game->GetMap()->GetTile( ( *resolved )[ 0 ], ( *resolved )[ 1 ] )->base ) {
-			THROW( "SMAC allocation worker cannot occupy another Base center" );
-		}
+        // Saved/native retained selection may still name a newly founded
+        // center until this donor's next intake removes unavailable squares.
 		coordinates.emplace_back( ( *resolved )[ 0 ], ( *resolved )[ 1 ] );
 	}
 	// Center and high bits remain exact storage, not additional Pop positions.
@@ -223,6 +222,9 @@ Base::PreparedSmacWorkerState Base::PrepareSmacWorkerState( GSE_CALLABLE, const 
 	}
 	ValidateAllocationProjection( true );
 	const auto coordinates = AllocationCoordinates( allocation, population );
+    for(const auto& coordinate:coordinates) {
+        if(m_game->GetMap()->GetTile(coordinate.x,coordinate.y)->base) {THROW("New SMAC worker selection cannot assign another Base center");}
+    }
 	std::array< const PopDef*, 7 > specialists{};
 	const auto* worker = bm->GetPopDef( roles.worker );
 	if ( !worker || !( worker->m_flags & PopDef::PF_TILE_WORKER ) || worker->m_smac_specialist_id ) { THROW( "SMAC allocation requires an explicit registered worker role" ); }

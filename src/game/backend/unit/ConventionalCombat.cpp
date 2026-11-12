@@ -34,6 +34,9 @@ int32_t CombatWord(int64_t value) {
     if(value<0 || value>INT32_MAX) {throw std::overflow_error("Ground combat exceeds nonnegative signed32 domain");}
     return static_cast<int32_t>(value);
 }
+int32_t CombatNegate(int32_t value) {
+    if(value==INT32_MIN) {throw std::overflow_error("Ground defense penalty exceeds signed32");}return -value;
+}
 int32_t CombatPercent(int32_t value,int32_t percent) {return CombatWord(int64_t(value)*(INT64_C(100)+percent)/100);}
 struct BattleUnit {
     int32_t owner,reactor,health,stored,morale,spent,basic,full,weapon,armor,planet,design;
@@ -60,7 +63,7 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
     const auto ordinary=[&](const map::tile::Tile* tile) {
         using namespace map::tile;
         constexpr auto features=FEATURE_RIVER|FEATURE_XENOFUNGUS;
-        constexpr auto improvements=TERRAFORMING_ROAD|TERRAFORMING_MAG_TUBE|TERRAFORMING_FOREST|TERRAFORMING_FARM|TERRAFORMING_MINE|TERRAFORMING_SOLAR;
+        constexpr auto improvements=TERRAFORMING_ROAD|TERRAFORMING_MAG_TUBE|TERRAFORMING_FOREST|TERRAFORMING_FARM|TERRAFORMING_MINE|TERRAFORMING_SOLAR|TERRAFORMING_SENSOR;
         return tile && tile->tiles==map->GetTilesPtr() && tile->coord.x<map->GetWidth() && tile->coord.y<map->GetHeight()
             && (tile->coord.x&1)==(tile->coord.y&1) && map->GetTile(tile->coord.x,tile->coord.y)==tile && !tile->is_water_tile && !tile->IsLocked()
             && tile->rockiness>=ROCKINESS_FLAT && tile->rockiness<=ROCKINESS_ROCKY && !(tile->features&~features) && !(tile->terraforming&~improvements);
@@ -88,7 +91,7 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
             throw std::runtime_error("Ground Base battle requires a current defender-owned Base");
         }
         for(const auto& row:defending_base->m_facilities) {
-            if(!row.second || !row.second->m_smac_source_id || *row.second->m_smac_source_id==4 || *row.second->m_smac_source_id==5) {
+            if(!row.second || !row.second->m_smac_source_id) {
                 throw std::runtime_error("Ground Base battle requires unfortified defense");
             }
         }
@@ -121,13 +124,40 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
     const bool psi=a.weapon<0 || d.armor<0;
     const auto& combat=*state->m_settings.global.GetSmacCombatRules();
     if(!psi && ((source->features|destination->features)&map::tile::FEATURE_XENOFUNGUS)) {throw std::runtime_error("Conventional fungus defense requires its separate rule");}
-    if(psi && (source->base || defending_base)) {throw std::runtime_error("PSI Base defense requires its separate rule");}
+    if(!psi && defending_base) {
+        for(const auto& row:defending_base->m_facilities) {if(*row.second->m_smac_source_id==4 || *row.second->m_smac_source_id==5) {
+            throw std::runtime_error("Conventional fortified Base defense requires its facility stage");
+        }}
+    }
     if(a.owner && d.owner) {simulation.hostility.RequireOrdinaryHostility(a.owner,d.owner);}
     bool fanatic=false;
     if(a.owner) {
         const auto* profile=state->m_settings.global.GetSmacFactionStartupRules()->Find(actor->m_owner->GetPlayer()->GetFaction()->m_id);
         if(!profile) {throw std::runtime_error("Ground attack has no frozen faction profile");}
         fanatic=std::any_of(profile->bonuses.begin(),profile->bonuses.end(),[](const auto& b){return b.kind==settings::SmacFactionStartupBonus::Kind::FANATIC;});
+    }
+    bool sensor_defense=false;
+    if(d.owner>0) {
+        const auto& knowledge=map->GetSmacWorkerKnowledge();
+        if(!knowledge) {throw std::runtime_error("Sensor defense requires recognized current territory");}
+        const auto frame=m_game->ProjectSmacWorkerKnowledge(*knowledge,d.owner);
+        for(int dy=-4;dy<=4;++dy) {for(int dx=-4;dx<=4;++dx) {
+            if(std::abs(dx)+std::abs(dy)>4 || ((dx^dy)&1)) {continue;}
+            auto x=(int64_t(destination->coord.x)+dx+map->GetWidth())%map->GetWidth();const auto y=int64_t(destination->coord.y)+dy;
+            if(y<0 || y>=int64_t(map->GetHeight())) {continue;}const auto* tile=map->GetTile(x,y);
+            if(!(tile->terraforming&map::tile::TERRAFORMING_SENSOR)) {continue;}
+            if(!tile->is_water_tile) {
+                const auto owner=frame.Observe({static_cast<int32_t>(x),static_cast<int32_t>(y)}).recognized_owner;
+                sensor_defense|=!owner || *owner==d.owner;
+            } else {
+                std::vector<SmacMovementHistory::BasePosition> positions;
+                for(const auto& row:m_game->GetBM()->GetBases()) {positions.push_back({row.first,static_cast<int32_t>(row.second->GetTile()->coord.x),static_cast<int32_t>(row.second->GetTile()->coord.y)});}
+                const auto nearest=SmacMovementHistory::NearestAnyBase(x,y,map->GetWidth(),true,positions,{});
+                if(!nearest.base) {throw std::runtime_error("Sea Sensor defense requires its nearest Base authority");}
+                sensor_defense|=m_game->GetBM()->GetBase(*nearest.base)->GetSmacResourceContext().owner_simulation_id==d.owner;
+            }
+        }}
+        if(sensor_defense && !combat.ordinary_land) {throw std::runtime_error("Sensor defense requires the frozen source percentage");}
     }
     const auto conventional_bonuses=[&](const BattleUnit& candidate) {
         smac_scout::StrengthBonuses b{combat.fanatic_attack,defending_base && a.basic==3 ? combat.infantry_vs_base:0,
@@ -139,22 +169,42 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
         if(mobile || noncombat) {
             if(!combat.ordinary_land) {throw std::runtime_error("Ground battle requires frozen mobile/noncombat rules");}
             if(mobile) {b.mobile_attack=combat.ordinary_land->at(settings::SmacCombatRules::MobileAttack);}
-            if(noncombat) {b.noncombat_defense=-combat.ordinary_land->at(settings::SmacCombatRules::NoncombatDefensePenalty);}
         }
         return b;
     };
+    const auto strengths_for=[&](const BattleUnit& candidate) {
+        if(psi) {
+            if(!combat.psi_ratios || !combat.ordinary_land) {throw std::runtime_error("PSI battle requires frozen ratios and PLANET rules");}
+            const auto ratios=combat.psi_ratios->at(0);
+            auto attack=CombatWord(INT64_C(32)*ratios[0]*(6+a.morale));
+            auto intermediate=CombatWord(INT64_C(8)*ratios[1]*(6+std::max(1,candidate.morale)));
+            if(defending_base) {intermediate=CombatPercent(intermediate,combat.intrinsic_base_defense);}
+            auto defense=CombatWord(int64_t(intermediate)*4);
+            if(sensor_defense) {defense=CombatPercent(defense,combat.ordinary_land->at(settings::SmacCombatRules::SensorDefense));}
+            const auto planet_bonus=int64_t(a.planet)*combat.ordinary_land->at(settings::SmacCombatRules::PlanetAttack);
+            if(planet_bonus<INT32_MIN || planet_bonus>INT32_MAX) {throw std::overflow_error("PSI PLANET percentage exceeds signed32");}
+            attack=CombatPercent(attack,static_cast<int32_t>(planet_bonus));
+            if(candidate.weapon==0 && candidate.armor==1 && !(a.owner==0 && defending_base)) {
+                defense=CombatPercent(defense,CombatNegate(combat.ordinary_land->at(settings::SmacCombatRules::NoncombatDefensePenalty)));
+            }
+            return std::array<int32_t,2>{attack,defense};
+        }
+        auto strength=smac_scout::QueryGroundStrengths({actor->m_id,1,a.health,a.stored,a.morale,a.spent},
+            {defender->m_id,1,candidate.health,candidate.stored,candidate.morale,candidate.spent},fanatic,conventional_bonuses(candidate));
+        if(sensor_defense) {strength[1]=CombatPercent(strength[1],combat.ordinary_land->at(settings::SmacCombatRules::SensorDefense));}
+        if(candidate.weapon==0 && candidate.armor==1) {strength[1]=CombatPercent(strength[1],CombatNegate(combat.ordinary_land->at(settings::SmacCombatRules::NoncombatDefensePenalty)));}
+        return strength;
+    };
     if(destination->units.size()>1) {
-        if(psi) {throw std::runtime_error("Mixed PSI defender stacks require their selector priority rules");}
         int64_t best=INT64_MIN;
-        const auto reference_attack=CombatWord(INT64_C(32)*a.weapon*(6+a.morale));
+        const auto reference_attack=CombatWord(INT64_C(32)*(psi ? combat.psi_ratios->at(0)[0]:a.weapon)*(6+a.morale));
         for(const auto& row:destination->units) {
             auto* candidate=row.second;
             if(!candidate || GetUnit(row.first)!=candidate || !candidate->IsConventional() || candidate->SimulationOwner()!=d.owner || candidate->GetTile()!=destination || candidate->m_animation_id) {
                 throw std::runtime_error("Defender selection requires a current same-owner conventional stack");
             }
             const auto record=read(*candidate,a.owner);
-            const auto strength=smac_scout::QueryGroundStrengths({actor->m_id,1,a.health,a.stored,a.morale,a.spent},
-                {candidate->m_id,1,record.health,record.stored,record.morale,record.spent},fanatic,conventional_bonuses(record));
+            const auto strength=strengths_for(record);
             const auto binding=candidate->SourceStack();
             const auto position=std::find(m_unit_order.begin(),m_unit_order.end(),candidate->m_id);
             if(position==m_unit_order.end()) {throw std::runtime_error("Defender selector lost its dense record identity");}
@@ -164,7 +214,9 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
         }
     }
     auto random=simulation.gameplay_random;std::optional<uint16_t> palette;
-    if(!m_game->m_smac_hit_palette_identifier) {
+    const auto* focused=simulation.FindSlot(m_game->GetSlotNum());
+    const bool presentation=focused && (focused->simulation_id==a.owner || focused->simulation_id==d.owner);
+    if(presentation && !m_game->m_smac_hit_palette_identifier) {
         uint16_t id=0;do {id=static_cast<uint16_t>((uint32_t(random.NextSharedLow16())*65535u)>>16);} while(!id);palette=id;
     }
     const auto participant_a=smac_scout::Participant(actor->m_id,a.reactor,a.health,a.stored,a.morale,a.spent);
@@ -193,24 +245,10 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
         }
     }
 
-    auto result=[&]() {
-        if(psi) {
-            if(!combat.psi_ratios || !combat.ordinary_land) {throw std::runtime_error("PSI battle requires frozen ratios and PLANET rules");}
-            // Supported stock factions have no PSI keyword; the frozen faction
-            // parser rejects unsupported scalar tags rather than defaulting one.
-            const auto ratios=combat.psi_ratios->at(0);
-            auto attack=CombatWord(INT64_C(32)*ratios[0]*(6+a.morale));
-            auto defense=CombatWord(INT64_C(32)*ratios[1]*(6+std::max(1,d.morale)));
-            const auto planet_bonus=int64_t(a.planet)*combat.ordinary_land->at(settings::SmacCombatRules::PlanetAttack);
-            if(planet_bonus<INT32_MIN || planet_bonus>INT32_MAX) {throw std::overflow_error("PSI PLANET percentage exceeds signed32");}
-            attack=CombatPercent(attack,static_cast<int32_t>(planet_bonus));
-            if(noncombat) {defense=CombatPercent(defense,-combat.ordinary_land->at(settings::SmacCombatRules::NoncombatDefensePenalty));}
-            std::array<int32_t,2> widths{attack,defense};
-            if(m_game->GetTurnId()<15) {if(!a.owner) {widths[0]/=3;}if(!d.owner) {widths[1]/=2;}}
-            return smac_scout::ResolveStrengthAttack(participant_a,participant_d,{attack,defense},widths,random,references,escape!=nullptr);
-        }
-        return smac_scout::ResolveGroundAttack(participant_a,participant_d,a.full,random,references,fanatic,conventional_bonuses(d),escape!=nullptr);
-    }();
+    const auto strengths=strengths_for(d);auto widths=strengths;
+    if(m_game->GetTurnId()<15) {if(!a.owner) {widths[0]/=3;}if(!d.owner) {widths[1]/=2;}}
+    auto result=smac_scout::ResolveStrengthAttack(participant_a,participant_d,strengths,widths,random,references,escape!=nullptr);
+
     auto* survivor=result.deleted_identity==actor->m_id ? defender:actor;auto* loser=survivor==actor ? defender:actor;
     ConventionalUnitState candidate;std::optional<SmacNativeUnitRecord> native;
     if(survivor->IsNative()) {
@@ -269,11 +307,15 @@ void UnitManager::ApplyConventionalAttack(GSE_CALLABLE,PreparedConventionalAttac
     removal.PrepareBattleCollateral(prepared.collateral);
     if(prepared.result.defender_retreated) {removal.PrepareBattleRetreat(prepared.loser,prepared.retreat_destination,prepared.retreat_state);}
     if(prepared.native_survivor) {removal.SetNativeBattleSurvivor(prepared.survivor,*prepared.native_survivor);}
-	if(prepared.defeated_base) {removal.DiscoverDefendedBase(prepared.defeated_base,prepared.survivor_state.owner_simulation_id);}
+	if(prepared.defeated_base && !prepared.native_survivor) {removal.DiscoverDefendedBase(prepared.defeated_base,prepared.survivor_state.owner_simulation_id);}
 	const auto message=prepared.result.defender_retreated ? prepared.loser->GetDisplayName()+" retreated.":prepared.survivor->GetDisplayName()+" defeated "+prepared.loser->GetDisplayName()+".";
-    FrontendRequest playback(FrontendRequest::FR_SCOUT_BATTLE);
-    NEW(playback.data.scout_battle.plan,scout_presentation::Plan,scout_presentation::Prepare(prepared.result));
-    auto frontend=*m_game->m_pending_frontend_requests;frontend.push_back(playback);
+    const auto* focused=m_game->m_simulation->value.FindSlot(m_game->GetSlotNum());
+    const bool presentation=focused && (focused->simulation_id==prepared.survivor->SimulationOwner() || focused->simulation_id==prepared.loser->SimulationOwner());
+    auto frontend=*m_game->m_pending_frontend_requests;
+    if(presentation) {
+        FrontendRequest playback(FrontendRequest::FR_SCOUT_BATTLE);
+        NEW(playback.data.scout_battle.plan,scout_presentation::Plan,scout_presentation::Prepare(prepared.result));frontend.push_back(playback);
+    }
 	static_assert(std::is_nothrow_copy_assignable_v<SmacGameplayRandomState>);
 	// All queues, sight, strings, inventory/history and survivor validation are
 	// prepared. No callback or allocation between survivor and casualty authority.
@@ -283,7 +325,7 @@ void UnitManager::ApplyConventionalAttack(GSE_CALLABLE,PreparedConventionalAttac
 	m_game->m_simulation->value.gameplay_random=prepared.result.random;
 	if(prepared.palette_identifier) {m_game->m_smac_hit_palette_identifier=prepared.palette_identifier;}
 	if(prepared.defeated_base) {prepared.defeated_base->m_resource_context->recent_defender_loss=true;prepared.defeated_base->m_resource_context->SyncKnownStatusBits();}
-	removal.Commit();m_game->m_pending_frontend_requests->swap(frontend);removal.Notify(GSE_CALL);m_game->Message(message);
+	removal.Commit();m_game->m_pending_frontend_requests->swap(frontend);removal.Notify(GSE_CALL);if(presentation) {m_game->Message(message);}
 }
 
 }

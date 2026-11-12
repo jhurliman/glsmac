@@ -366,6 +366,8 @@ private:
 	};
 	std::unordered_map< size_t, unit_update_t > m_unit_updates = {};
 	void QueueUnitUpdate( const Unit* unit, const unit_update_op_t op );
+    void CommitDiplomacyStateWords(const std::vector<std::pair<Unit*,uint32_t>>& words,
+        std::unordered_map<size_t,unit_update_t>& updates) noexcept;
 
 	const morale_t GetMorale( GSE_CALLABLE, const int64_t& morale );
 	const health_t GetHealth( GSE_CALLABLE, const float health );

@@ -45,13 +45,13 @@ std::string Source(const std::string& filename) {
 	return result;
 }
 Base* Create(GSE_CALLABLE,Game* game,size_t slot=0) {
-	auto* bm=game->GetBM();auto* owner=&game->GetState()->m_slots->GetSlot(slot);
+	auto* bm=game->GetBM();auto* owner=&game->GetState()->m_slots->GetSlot(slot?6:0);
     if(slot==0) {
 	for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {game->GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
 	bm->DefinePop(new PopDef("energy-role","Not a name identity",{},{},PopDef::PF_NONE,1));
 	for(int role:{1,2,4,8,9,27}) {bm->DefineFacility(new FacilityDef("role"+std::to_string(role),"Name", "",0,{},role));}
     }
-	auto* tile=game->GetMap()->GetTile(slot?12:2,2);
+	auto* tile=game->GetMap()->GetTile(slot?6:2,2);
 	for(auto* corner:tile->elevation.corners){*corner=0;}tile->Update();tile->moisture=map::tile::MOISTURE_ARID;tile->rockiness=map::tile::ROCKINESS_FLAT;
 	tile->features=0;tile->terraforming=0;tile->bonus=map::tile::BONUS_NONE;
 	const auto item=game->MakeSmacProductionItem(owner,ProductionItemKind::Unit,2);

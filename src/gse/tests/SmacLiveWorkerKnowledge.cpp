@@ -24,6 +24,8 @@
 #include "game/UnitVisibility.h"
 #include "fixtures/SmacUnitAdmission.h"
 #include "gse/value/Callable.h"
+#include "gse/value/Array.h"
+#include "gse/value/Object.h"
 #include "gse/value/Int.h"
 #include "gse/value/String.h"
 #include "gse/value/Undefined.h"
@@ -122,6 +124,67 @@ bool Unchanged( ConventionalUnitFixture& fixture, const World& world, const Save
 }
 
 void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC live commlink offers commit source peace aftermath or preserve rejected and stale commands",GT(){
+        for(int scenario=0;scenario<4;++scenario) {
+            ConventionalUnitFixture fixture;fixture.Configure();
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();Definitions(game);
+                for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<8;x+=2) {
+                    auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners) {*corner=100;}
+                    tile->features=0;tile->terraforming=0;tile->Update();
+                }}
+                MakeBase(GSE_CALL,game,901,0,1,2,2,3);MakeBase(GSE_CALL,game,800,6,2,6,4,3);
+                const auto spawn=[&](size_t id,size_t slot,int32_t owner,size_t x,size_t y) {
+                    ConventionalUnitState record{2,owner,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
+                    record.retained_state_word=0x400u;
+                    return game->GetUM()->SpawnConventionalUnit(GSE_CALL,id,game->GetUM()->GetUnitDef("knowledge-scout"),
+                        &game->GetState()->m_slots->GetSlot(slot),game->GetMap()->GetTile(x,y),record);
+                };
+                auto* actor=spawn(91,0,1,5,3);auto* other=spawn(17,6,2,3,3);
+                auto data=Data();data.units={{91,6,false},{17,6,false}};data.tiles[Index(5,3)].claimant=2;
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                fixture.ResourceState([&](auto& state) {
+                    state.human_membership=2;state.diplomacy_metadata.emplace();state.diplomacy_metadata->grievance[2][1]=9;
+                    state.hostility.owners.at(1).directions[2].primary=scenario==2?0xc8000018u:0xc8000008u;
+                    state.hostility.owners.at(2).directions[1].primary=scenario==2?0xc8000018u:0xc8000008u;
+                });
+                auto* wrapper=static_cast<value::Object*>(game->Wrap(GSE_CALL));
+                const auto rows=static_cast<value::Array*>(Call(GSE_CALL,wrapper,"get_smac_diplomacy"))->value;
+                GT_ASSERT(rows.size()==1,"commlink leaked unmet identities or hid the actual contact");
+                auto* row=static_cast<value::Object*>(rows[0]);
+                const auto expected=static_cast<value::String*>(row->Get("expected_state"))->value;
+                if(scenario==3) {fixture.ResourceState([](auto& state){state.hostility.owners.at(2).directions[1].secondary=1;});}
+                const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
+                const auto command=gse::value::object_properties_t{{"target",VALUE(value::Int,,2)},
+                    {"kind",VALUE(value::String,,scenario==1?"truce":"treaty")},{"expected_state",VALUE(value::String,,expected)}};
+                game->Event(GSE_CALL,"offer_smac_peace",command);fixture.DrainEvents();
+                if(scenario>=2) {
+                    GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"refused or stale diplomatic offer changed authority or RNG");
+                } else {
+                    auto advanced=random;if(scenario==0) {(void)advanced.NextSharedLow16();}
+                    GT_ASSERT(fixture.GameplayRandom()==advanced,"accepted Treaty/Truce used the wrong explicit shared variant draw");
+                    bool authority=false;
+                    fixture.ResourceState([&](auto& state) {
+                        const auto& forward=state.hostility.owners.at(1);const auto& reverse=state.hostility.owners.at(2);
+                        authority=(forward.directions[2].primary&(scenario==0?2u:4u)) && (reverse.directions[1].primary&(scenario==0?2u:4u))
+                            && forward.directions[2].transition_turn==1 && reverse.directions[1].transition_turn==-1
+                            && forward.bookkeeping==1 && reverse.bookkeeping==1;
+                        if(scenario==1) {authority=authority && state.diplomacy_metadata->grievance[2][1]==9;}
+                        if(scenario==0) {authority=authority && state.diplomacy_metadata->grievance[2][1]==0 && state.faction_status.values[2] && (*state.faction_status.values[2]&0x10000u);}
+                    });
+                    GT_ASSERT(authority,"accepted peace lost exact directed date bookkeeping or territory status aftermath");
+                    GT_ASSERT((*actor->Conventional().retained_state_word&0x400u)!=0 && ((*other->Conventional().retained_state_word&0x400u)!=0)==(scenario==1),
+                        "Treaty failed to clear the whole roster or mark qualifying actor; Truce incorrectly scanned Units");
+                    const auto after=fixture.Snapshot();game->Event(GSE_CALL,"offer_smac_peace",command);fixture.DrainEvents();
+                    GT_ASSERT(fixture.Snapshot()==after && fixture.GameplayRandom()==advanced,"duplicate retired diplomatic offer replayed effects or RNG");
+                }
+                GT_OK();
+            });
+            GT_ASSERT(error.empty(),"commlink scenario"+std::to_string(scenario)+": "+error);
+        }
+        GT_OK();
+    });
+
     task->AddTest("SMAC ordinary Unit drawing matches60 original admission controls",GT(){
         namespace av=game::actor_visibility;
         for(const auto& c:unit_admission_fixture::Cases) {
@@ -612,7 +675,21 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
             data.observers[1]=Knowledge::Observer{};data.observers[2]=Knowledge::Observer{};
             data.units={{71,0,false},{72,0,false},{73,0,false}};
             game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
-            Spawn(GSE_CALL,game,74,0,1,34,16);
+            ConventionalUnitState record{2,1,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
+            auto birth=game->GetUM()->PrepareConventionalUnit(GSE_CALL,74,game->GetUM()->GetUnitDef("knowledge-scout"),
+                &game->GetState()->m_slots->GetSlot(0),game->GetMap()->GetTile(34,16),record);
+            // Enclosing capture/combat publication may own history before the
+            // prepared newborn sight commits. Contact must compose its OR only.
+            fixture.ResourceState([](auto& state) {
+                auto& a=state.hostility.owners.at(1).directions[2];auto& b=state.hostility.owners.at(2).directions[1];
+                a.primary=b.primary=16;a.paired_b=123;b.paired_a=345;
+            });
+            birth.Commit();birth.Notify(GSE_CALL);
+            bool composed=false;fixture.ResourceState([&](auto& state) {
+                const auto& a=state.hostility.owners.at(1).directions[2];const auto& b=state.hostility.owners.at(2).directions[1];
+                composed=a.primary==0xc8000018u && b.primary==0xc8000018u && a.paired_b==123 && b.paired_a==345;
+            });
+            GT_ASSERT(composed,"Prepared physical contact replaced enclosing battle/capture history");
             const auto actual=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
             GT_ASSERT(actual.units[1].visible_to==2 && actual.units[2].visible_to==2 && actual.units[3].visible_to==4,
                 "Adjacent multi-unit stack retained singleton concealment or vetoed ordinary sight");GT_OK();

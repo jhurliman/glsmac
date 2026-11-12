@@ -632,6 +632,7 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 		|| HandleSmacEnergyRatesEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacGovernorEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleSmacQueueEvent( GSE_CALL, name, args, m_slot_num, false )
+		|| HandleSmacDiplomacyEvent(GSE_CALL,name,args,m_slot_num,false)
 		|| HandleSmacRenameEvent( GSE_CALL, name, args, m_slot_num, false )
 		|| HandleConventionalMoveEvent( GSE_CALL, name, args, m_slot_num, false ) ) {
 		AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
@@ -751,6 +752,14 @@ WRAPIMPL_BEGIN( Game )
 				catch ( const std::runtime_error& error ) { GSE_ERROR( gse::EC.GAME_ERROR, error.what() ); }
 			} )
 		},
+        {
+            "get_smac_diplomacy",
+            NATIVE_CALL(this) {
+                N_EXPECT_ARGS(0);
+                try {return CopySmacDiplomacy(GSE_CALL);}
+                catch(const std::runtime_error& error) {GSE_ERROR(gse::EC.GAME_ERROR,error.what());}
+            })
+        },
 		{
 			"get_technology_state",
 			NATIVE_CALL( this ) {
@@ -1078,6 +1087,7 @@ WRAPIMPL_BEGIN( Game )
 					&& !HandleSmacEnergyRatesEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacGovernorEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleSmacQueueEvent( GSE_CALL, name, args->value, m_slot_num, false )
+					&& !HandleSmacDiplomacyEvent(GSE_CALL,name,args->value,m_slot_num,false)
 					&& !HandleSmacRenameEvent( GSE_CALL, name, args->value, m_slot_num, false )
 					&& !HandleConventionalMoveEvent( GSE_CALL, name, args->value, m_slot_num, false ) ) {
 					RequireWorkerKnowledgeMutation();
@@ -2143,6 +2153,9 @@ void Game::DispatchEventBatch( std::unique_ptr< EventBatchHandoff > handoff ) {
 					WithRW( [ & ] { HandleSmacQueueEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );
 					continue;
 				}
+                if(event->GetSource()==event::Event::ES_LOCAL && HandleSmacDiplomacyEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),false)) {
+                    WithRW([&]{HandleSmacDiplomacyEvent(GSE_CALL,event->GetEventName(),args->value,event->GetCaller(),true);});continue;
+                }
 				if ( event->GetSource() == event::Event::ES_LOCAL
 					&& HandleSmacRenameEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), false ) ) {
 					WithRW( [ & ] { HandleSmacRenameEvent( GSE_CALL, event->GetEventName(), args->value, event->GetCaller(), true ); } );

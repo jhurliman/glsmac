@@ -58,6 +58,7 @@ return {
 			maybe_quit: p.maybe_quit,
             open_workshop: () => { p.modules.workshop.open(); },
             open_research: () => { p.modules.research.overview.open(); },
+            open_diplomacy: () => { p.modules.diplomacy.open(); },
             open_preferences: (page) => { p.modules.preferences.open(page); },
 			save_campaign: () => { p.modules.popup.show('save_campaign'); },
 			create: (entries) => {

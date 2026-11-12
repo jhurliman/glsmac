@@ -490,7 +490,7 @@ void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 		data.base->GetTile()->base=nullptr;
 		for(auto& entry:data.facility_changes) {entry.first->m_facilities.swap(entry.second);}
 		retired.reset(data.base);removal_lock.unlock();
-	} else {workers->Commit();data.base->m_smac_upkeep_cache.swap(data.cache);workers->Finish();}
+	} else {workers->Commit();data.base->m_smac_upkeep_cache.swap(data.cache);data.base->m_commerce_ranking_energy=static_cast<int32_t>(data.base->m_smac_upkeep_cache->calculation.raw_intake[2]);workers->Finish();}
 	if(data.raze) {m_game->GetState()->TriggerObject(this,"base_despawn",ARGS_F(&data) {{"base",data.base->Wrap(GSE_CALL)},};});}
 	if(data.faction_units) {data.faction_units->Notify(GSE_CALL);}
 	if(data.tracked_center) {

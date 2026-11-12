@@ -20,6 +20,9 @@ inline void GrantSmacRelation(SmacHostileState& state,int32_t actor,int32_t targ
     if(mask&0x17u) {forward.primary&=0xff7fffffu;reverse.primary&=0xff7fffffu;}
     forward.primary|=mask;reverse.primary|=mask;
 }
+inline uint32_t SmacPhysicalContactMask(int32_t sunspots,bool valid_coordinates) noexcept {
+    return (sunspots>0?0x80000008u:0x88000008u)|(valid_coordinates?0x40000000u:0u);
+}
 // Ordinary local physical encounter574e80; request dispatch is an independent
 // UI/negotiation stage. Positive sunspots deliberately omit recognition08000000.
 inline void CompleteSmacPhysicalContact(SmacHostileState& state,int32_t actor,int32_t target,int32_t turn,int32_t sunspots,bool valid_coordinates) {

@@ -10,6 +10,7 @@ return (m) => {
 		'outcome',
         'workshop',
         'preferences',
+        'diplomacy',
 	];
 
 	m.ui.class('default-panel').set({

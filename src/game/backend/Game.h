@@ -754,6 +754,7 @@ private:
 	// Only a synchronous prepared riot calculation may inspect an inactive recipient.
 	std::optional<int32_t> m_smac_riot_query_owner;
 	const faction::SmacSimulationParticipant& RequireSmacProductionOwner( const slot::Slot* owner ) const;
+	gse::Value* CopySmacDiplomacy(GSE_CALLABLE) const;
 	gse::Value* CopyTechnologyState( GSE_CALLABLE, const Player* player ) const;
 	gse::Value* CopyLocalFactionSummary( GSE_CALLABLE ) const;
     std::optional<std::array<int32_t,8>> NativeDominanceScores(const std::array<int32_t,8>& scores) const;
@@ -885,6 +886,8 @@ private:
 	bool HandleSmacEnergyRatesEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	bool HandleSmacGovernorEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	bool HandleSmacQueueEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
+	bool HandleSmacDiplomacyEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
+    int32_t ApplySmacAcceptedPeace(GSE_CALLABLE,int32_t actor,int32_t target,bool treaty,bool apply);
 	bool HandleSmacRenameEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	class EventBatchRoots;
 	struct EventBatchHandoff {

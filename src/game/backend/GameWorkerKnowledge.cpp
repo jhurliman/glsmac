@@ -364,10 +364,15 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
         const auto& metadata=m_simulation->value.diplomacy_metadata;
         if(!metadata || !metadata->sunspot_countdown || GetTurnId()>INT32_MAX) {throw std::runtime_error("Physical contact requires saved sunspot and turn authority");}
         const auto& direction=m_simulation->value.hostility.owners.at(owner).directions.at(peer);
-        const auto mask=*metadata->sunspot_countdown>0?0xc0000008u:0xc8000008u;
+        const auto mask=faction::SmacPhysicalContactMask(*metadata->sunspot_countdown,true);
         if((direction.primary&mask)==mask) {return;}
-        if(!prepared.contact_hostility) {prepared.contact_hostility=m_simulation->value.hostility;}
-        faction::CompleteSmacPhysicalContact(*prepared.contact_hostility,owner,peer,static_cast<int32_t>(GetTurnId()),*metadata->sunspot_countdown,true);
+        prepared.physical_contacts.push_back({owner,peer});prepared.physical_contact_mask=mask;
+        for(const auto pair:{std::pair<int32_t,int32_t>{owner,peer},{peer,owner}}) {
+            auto& observer=data.observers.at(pair.first);if(!observer) {continue;}
+            const auto flags=(m_simulation->value.hostility.owners.at(pair.first).directions.at(pair.second).primary|mask);
+            observer->relations.at(pair.second).territory_recognition=(flags&0x08000008u)==0x08000008u;
+        }
+
     };
     const bool mover_concealed=concealed(actor,destination);
     const auto center_index=size_t(destination->coord.y)*size_t(data.width/2)+destination->coord.x/2;
@@ -461,7 +466,12 @@ void Game::CommitConventionalSight( std::optional< map::SmacWorkerKnowledge >& p
 
 void Game::CommitConventionalSight(unit::PreparedConventionalSight& prepared) noexcept {
     if(!prepared.knowledge) {return;}
-    if(prepared.contact_hostility) {m_simulation->value.hostility.owners.swap(prepared.contact_hostility->owners);}
+    // Contact's primitive only ORs its fixed masks. Compose these writes with
+    // enclosing birth/capture/combat history commits; never replace their maps.
+    for(const auto& pair:prepared.physical_contacts) {
+        m_simulation->value.hostility.owners.find(pair[0])->second.directions[pair[1]].primary|=prepared.physical_contact_mask;
+        m_simulation->value.hostility.owners.find(pair[1])->second.directions[pair[0]].primary|=prepared.physical_contact_mask;
+    }
     CommitConventionalSight(prepared.knowledge);
     m_um->CommitUnitDisclosures(prepared.disclosed_to_humans);
 }

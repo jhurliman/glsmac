@@ -16,6 +16,11 @@ std::pair<bool,bool> Game::SmacProductionDominance(const slot::Slot* owner) cons
     const auto& state=m_simulation->value;
     // Neither adaptive input is consumed by the human cost branch.
     if(state.IsHuman(participant.simulation_id)) {return {false,false};}
+    // Fresh seven-faction setup stores Scout half-cost5 at Librarian,
+    // before the first global ranking publication (seven-faction Planet
+    // receipt). A human-leader decrement would incorrectly store4 here.
+    // This claimed initialization branch never invents or publishes ranks.
+    if(GetTurnId()==0) {RequireConventionalStartupClaim();return {false,false};}
     if(!state.rank_order) {throw std::runtime_error("Computer cost requires retained faction ranks");}
     const bool leading_human=state.IsHuman(state.rank_order->Leader());
     return {leading_human,leading_human && PrepareCanonicalLeadingHumanDominance(state)};

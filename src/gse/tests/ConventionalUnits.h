@@ -35,6 +35,7 @@ public:
     std::string CheckLocalCampaignReplay(size_t turns=3);
     std::string DriveLocalHumanCampaign(GSE_CALLABLE);
     std::string CampaignSeedReport() const;
+    std::string CampaignDriverReport() const;
     LocalCampaignActions CampaignActions() const;
     std::vector<LocalFactionProgress> CampaignProgress() const;
     std::string CheckLocalComputerBoundary();

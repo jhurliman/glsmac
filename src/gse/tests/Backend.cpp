@@ -680,6 +680,30 @@ public:
         return result;
     }
 
+    std::string CampaignDriverReport() const {
+        using namespace game::backend;
+        std::array<size_t,3> roles{};std::string detail;
+        for(const auto& row:m_game.GetUM()->GetUnits()) {const auto* actor=row.second;
+            if(!actor->IsConventional() || actor->m_owner!=m_game.m_slot) {continue;}
+            const auto package=m_game.ResolveConventionalUnit(actor->Conventional(),actor->m_owner).package;++roles.at(size_t(package));
+            if(package==unit::ConventionalUnitContext::Package::Former) {
+                const auto* tile=actor->GetTile();detail+=" former#"+std::to_string(actor->m_id)+"@"+std::to_string(tile->coord.x)+","+std::to_string(tile->coord.y)
+                    +" job="+std::to_string(int(actor->Conventional().work_order))+" held="+std::to_string(actor->Conventional().IsHeld())
+                    +" damage="+std::to_string(actor->Conventional().damage)+" features="+std::to_string(tile->features)
+                    +" work="+std::to_string(tile->terraforming)+" rock="+std::to_string(tile->rockiness);
+            }
+        }
+        std::string result="combat="+std::to_string(roles[size_t(unit::ConventionalUnitContext::Package::Combat)])
+            +" formers="+std::to_string(roles[size_t(unit::ConventionalUnitContext::Package::Former)])
+            +" colonies="+std::to_string(roles[size_t(unit::ConventionalUnitContext::Package::Colony)]);
+        for(const auto& row:m_game.GetBM()->GetBases()) {const auto* base=row.second;if(base->m_owner!=m_game.m_slot) {continue;}
+            result+=" base#"+std::to_string(base->m_id)+" pop="+std::to_string(base->GetPopulation());
+            if(const auto& production=base->GetProductionState()) {result+=" target="+std::to_string(production->current_item.smac_source_id.value_or(-999))
+                +" kind="+std::to_string(int(production->current_item.kind))+" minerals="+std::to_string(production->minerals);}
+        }
+        return result+detail;
+    }
+
     std::string DriveLocalHumanCampaign(GSE_CALLABLE) {
         using namespace game::backend;
         using Package=unit::ConventionalUnitContext::Package;
@@ -729,7 +753,12 @@ public:
                     const auto* other=m_game.GetUM()->GetUnit(observation.id);
                     if(other && ((other->IsNative() && other->Native().owner==0) || (other->IsConventional() && other->m_owner!=m_game.m_slot))) {threats.push_back(other->GetTile());}
                 }
-                const bool danger=std::any_of(threats.begin(),threats.end(),[&](const auto* tile){return distance(source,tile)<=4;});
+                const auto protected_tile=[&](const auto* tile) {
+                    return std::any_of(tile->units.begin(),tile->units.end(),[&](const auto& row){const auto* guard=row.second;
+                        return guard->IsConventional() && guard->m_owner==m_game.m_slot && guard->Conventional().damage<=3
+                            && m_game.ResolveConventionalUnit(guard->Conventional(),guard->m_owner).package==Package::Combat;});
+                };
+                const bool danger=!protected_tile(source) && std::any_of(threats.begin(),threats.end(),[&](const auto* tile){return distance(source,tile)<=2;});
                 const auto commands=m_game.GetUM()->QueryConventionalCommands(actor);
                 if(package==Package::Colony && !danger && std::find(commands.actions.begin(),commands.actions.end(),6)!=commands.actions.end()) {
                     m_game.Event(GSE_CALL,"found_base",{{"unit",actor->Wrap(GSE_CALL)}});m_game.ProcessEvents();
@@ -744,15 +773,19 @@ public:
                         if(!legal) {m_game.Event(GSE_CALL,"cancel_unit_work",{{"unit",actor->Wrap(GSE_CALL)}});m_game.ProcessEvents();order=Work::None;}
                     }
                     if(order==Work::None && !danger) {
-                        for(const auto desired:{Work::Farm,Work::Solar,Work::Road}) {
-                            if(std::find(commands.actions.begin(),commands.actions.end(),int32_t(desired))==commands.actions.end()) {continue;}
-                            m_game.Event(GSE_CALL,"work_unit",{{"unit",actor->Wrap(GSE_CALL)},{"action",VALUE(value::Int,,int32_t(desired))}});m_game.ProcessEvents();order=desired;break;
+                        std::vector<std::pair<Work,int32_t>> jobs;
+                        if(source->features&map::tile::FEATURE_XENOFUNGUS) {jobs={{Work::RemoveFungus,11}};}
+                        else if(source->moisture==map::tile::MOISTURE_ARID && !(source->terraforming&(map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOLAR|map::tile::TERRAFORMING_MINE))) {jobs={{Work::Forest,int32_t(Work::Forest)}};}
+                        else {jobs={{Work::Farm,int32_t(Work::Farm)},{Work::Solar,int32_t(Work::Solar)},{Work::Road,int32_t(Work::Road)}};}
+                        for(const auto& desired:jobs) {
+                            if(std::find(commands.actions.begin(),commands.actions.end(),desired.second)==commands.actions.end()) {continue;}
+                            m_game.Event(GSE_CALL,"work_unit",{{"unit",actor->Wrap(GSE_CALL)},{"action",VALUE(value::Int,,desired.second)}});m_game.ProcessEvents();order=desired.first;break;
                         }
                     }
                     if(order!=Work::None) {
-                        const auto terrain=source->terraforming;
+                        const auto terrain=source->terraforming,features=source->features;
                         m_game.Event(GSE_CALL,"continue_unit_work",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,m_game.GetTurnId())}});m_game.ProcessEvents();
-                        ++m_campaign_actions.work_dispatches;if(source->terraforming!=terrain) {++m_campaign_actions.terrain_completions;}break;
+                        ++m_campaign_actions.work_dispatches;if(source->terraforming!=terrain || source->features!=features) {++m_campaign_actions.terrain_completions;}break;
                     }
                 }
                 if(package==Package::Combat && source->base && source->base->m_owner==m_game.m_slot) {
@@ -774,20 +807,39 @@ public:
                 }}
                 if(escort==source) {break;}
                 const auto index=[&](const auto* tile){return size_t(tile->coord.y)*(knowledge.width/2)+tile->coord.x/2;};
+                map::tile::Tile* work_target=nullptr;int64_t work_distance=INT64_MAX;
+                const auto known_work_site=[&](const auto* tile) {
+                    const auto at=index(tile);const auto& memory=knowledge.remembered.at(owner);
+                    if(tile->is_water_tile || !(knowledge.tiles.at(at).explored_by&bit) || memory.empty() || !memory[at] || memory[at]->base_present) {return false;}
+                    const auto& known=*memory[at];
+                    constexpr auto allowed=map::tile::TERRAFORMING_ROAD|map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOLAR|map::tile::TERRAFORMING_MINE|map::tile::TERRAFORMING_FOREST|map::tile::TERRAFORMING_SENSOR;
+                    if((known.features&~(map::tile::FEATURE_RIVER|map::tile::FEATURE_XENOFUNGUS)) || (known.terraforming&~allowed)) {return false;}
+                    if(known.features&map::tile::FEATURE_XENOFUNGUS) {return true;}
+                    const auto complete=map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOLAR|map::tile::TERRAFORMING_ROAD;
+                    return tile->rockiness==map::tile::ROCKINESS_FLAT && !(known.terraforming&map::tile::TERRAFORMING_FOREST) && (known.terraforming&complete)!=complete;
+                };
+                if(package==Package::Former) {
+                    for(int32_t y=0;y<knowledge.height;++y) {for(int32_t x=y&1;x<knowledge.width;x+=2) {
+                        auto* tile=m_game.GetMap()->GetTile(x,y);if(!known_work_site(tile)) {continue;}
+                        const auto metric=distance(source,tile);if(metric<work_distance) {work_target=tile;work_distance=metric;}
+                    }}
+                }
                 std::vector<std::pair<int64_t,map::tile::Tile*>> candidates;
                 for(auto* tile:source->neighbours) {
                     if(!tile || visited.count(tile) || !(knowledge.tiles.at(index(tile)).explored_by&bit)) {continue;}
                     int64_t score=0,nearest=INT64_MAX;
                     if(package!=Package::Combat && !threats.empty()) {
                         int64_t safe=INT64_MAX;for(const auto* threat:threats) {safe=std::min(safe,distance(tile,threat));}
-                        if(safe<=2) {continue;}score+=100000*std::min(safe,int64_t(8));
+                        if(safe<=2 && !protected_tile(tile)) {continue;}
+                        if(danger) {score+=100000*std::min(safe,int64_t(8));}
                     }
                     if(escort) {score-=10000*distance(tile,escort);}
                     for(const auto base_id:bases) {if(const auto* base=m_game.GetBM()->GetBase(base_id)) {nearest=std::min(nearest,distance(tile,base->GetTile()));}}
                     if(package==Package::Colony && nearest!=INT64_MAX) {score+=100*std::min(nearest,int64_t(5));}
-                    if(package==Package::Former && nearest!=INT64_MAX) {score-=100*std::abs(nearest-2);
-                        const auto complete=map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOLAR|map::tile::TERRAFORMING_ROAD;
-                        if(!tile->base && (tile->terraforming&complete)!=complete) {score+=300;}}
+                    if(package==Package::Former) {
+                        if(work_target) {score+=2000*(distance(source,work_target)-distance(tile,work_target));}
+                        if(known_work_site(tile)) {score+=500;}
+                    }
                     for(const auto* neighbor:tile->neighbours) {if(neighbor && !(knowledge.tiles.at(index(neighbor)).explored_by&bit)) {score+=30;}}
                     score+=int64_t((index(tile)*13+id*7+m_game.GetTurnId())%17);candidates.push_back({score,tile});
                 }
@@ -8406,6 +8458,7 @@ void ConventionalUnitFixture::RunNativeControllerCommands(GSE_CALLABLE) {fixture
 std::string ConventionalUnitFixture::CheckLocalCampaignReplay(size_t turns) {return fixture->CheckLocalCampaignReplay(turns);}
 std::string ConventionalUnitFixture::DriveLocalHumanCampaign(GSE_CALLABLE) {return fixture->DriveLocalHumanCampaign(GSE_CALL);}
 std::string ConventionalUnitFixture::CampaignSeedReport() const {return fixture->CampaignSeedReport();}
+std::string ConventionalUnitFixture::CampaignDriverReport() const {return fixture->CampaignDriverReport();}
 LocalCampaignActions ConventionalUnitFixture::CampaignActions() const {return fixture->CampaignActions();}
 std::vector<LocalFactionProgress> ConventionalUnitFixture::CampaignProgress() const {return fixture->CampaignProgress();}
 std::string ConventionalUnitFixture::CheckLocalComputerBoundary() {return fixture->CheckLocalComputerBoundary();}

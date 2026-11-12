@@ -28,6 +28,7 @@
 #include "gse/value/String.h"
 #include <sstream>
 #include <array>
+#include <algorithm>
 
 namespace gse::tests {
 namespace {
@@ -85,7 +86,8 @@ void Event(GSE_CALLABLE,ConventionalUnitFixture& fixture,Unit* actor,Order order
     auto* game=fixture.Game();
     if(dispatch){game->Event(GSE_CALL,"continue_unit_work",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,game->GetTurnId())}});}
     else if(order==Order::None){game->Event(GSE_CALL,"cancel_unit_work",{{"unit",actor->Wrap(GSE_CALL)}});}
-    else{game->Event(GSE_CALL,"work_unit",{{"unit",actor->Wrap(GSE_CALL)},{"action",VALUE(value::Int,,static_cast<int32_t>(order))}});}
+    else{const auto action=order==Order::RemoveFungus?11:order==Order::Sensor?12:static_cast<int32_t>(order);
+        game->Event(GSE_CALL,"work_unit",{{"unit",actor->Wrap(GSE_CALL)},{"action",VALUE(value::Int,,action)}});}
     fixture.DrainEvents();
 }
 }
@@ -434,6 +436,9 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
                 const uint16_t farmroad=map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_ROAD;
                 if(order==Order::RemoveFungus) {tile->features=map::tile::FEATURE_XENOFUNGUS;tile->terraforming=farmroad;}
                 else {tile->terraforming=farmroad|map::tile::TERRAFORMING_MINE;}
+                const auto commands=game->GetUM()->QueryConventionalCommands(actor);
+                const auto action=order==Order::RemoveFungus?11:12;
+                GT_ASSERT(std::find(commands.actions.begin(),commands.actions.end(),action)!=commands.actions.end(),"Actual command query omitted public Former action identity");
                 Event(GSE_CALL,fixture,actor,order);
                 auto stored=actor->Conventional();types::Buffer wire;stored.Serialize(wire,true,true,true,true,true);
                 GT_ASSERT(ConventionalUnitState::Deserialize(wire,true,true,true,true,true)==stored,"New Former order failed exact persistence");

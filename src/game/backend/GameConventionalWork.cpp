@@ -145,10 +145,16 @@ bool Game::HandleConventionalWorkEvent(GSE_CALLABLE,const std::string& name,
             throw std::runtime_error("Former action requires an explicit integer identity");
         }
         const auto value=static_cast<const gse::value::Int*>(action->second)->value;
-        if(value<static_cast<int32_t>(Order::Farm) || value>static_cast<int32_t>(Order::Sensor)) {
-            throw std::runtime_error("Former action is outside the admitted set");
+        // Public command identities11/12 avoid the founding/activation action
+        // aliases. Keep the old work-enum identities for existing queued inputs.
+        if(value==11) {order=Order::RemoveFungus;}
+        else if(value==12) {order=Order::Sensor;}
+        else {
+            if(value<static_cast<int32_t>(Order::Farm) || value>static_cast<int32_t>(Order::Sensor)) {
+                throw std::runtime_error("Former action is outside the admitted set");
+            }
+            order=static_cast<Order>(value);
         }
-        order=static_cast<Order>(value);
     }
     if(apply){m_um->SetConventionalWork(GSE_CALL,actor,order,caller,dispatch);}
     else{m_um->ValidateConventionalWork(actor,order,caller,dispatch);}

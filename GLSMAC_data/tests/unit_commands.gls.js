@@ -103,3 +103,10 @@ map_handlers.unit_preview({unit: former});
 check('check', 'Found Base [B]|Skip [Space]|Hold [H]|Hold 10 [Shift+H]', 'Colony Pod — Found a Base on an available site');
 check('click', 'Skip [Space]', '');
 test.assert(#sizeof(events) == 11 && events[10].name == 'unit_skip_turn' && events[10].data.unit.id == 74);
+
+// A fully enabled Former requires three rows; the last orders must scroll.
+kind = 'former'; offered = [1, 2, 3, 4, 5, 12, 0];
+map_handlers.unit_preview({unit: former});
+check('scrolling', '', '');
+check('click', 'Hold 10 [Shift+H]', '');
+test.assert(#sizeof(events) == 12 && events[11].name == 'unit_hold_ten');

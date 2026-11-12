@@ -19,6 +19,7 @@ return (game) => {
 			return value;
 		};
 		result.panel = child;
+        result.scrollview = child;
 		result.button = child;
 		if (!#is_defined(result.text)) { result.text = child; }
 		return result;
@@ -29,6 +30,12 @@ return (game) => {
 	const check = (condition, reason) => { if (!condition) { throw TestError(reason); } };
 	let remembered = null;
 	return (operation, expected, heading) => {
+        if (operation == 'scrolling') {
+            const area = panel.frame.children[2];
+            check(area.has_vscroll && !area.has_hscroll && area.top == 42 && area.bottom == 3, 'commands lack bounded scrolling');
+            check(area.children[8].top == 48, 'overflow orders did not enter scroll content');
+            return;
+        }
 		if (operation == 'hidden') { check(!panel.frame.is_visible(), 'commands remained visible'); return; }
 		if (operation == 'remembered') { check(remembered != null, 'missing saved callback'); remembered({}); return; }
 		if (operation == 'check') {

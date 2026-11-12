@@ -43,13 +43,15 @@ return {
 		const selected_id = this.unit_id;
         const selected_turn = commands.turn_id;
         const columns = #sizeof(actions) > 6 ? 4 : 3;
+        // More than eight admitted actions need another row in the fixed card.
+        const action_area = this.frame.scrollview({left: 3, right: 3, top: 42, bottom: 3, has_vscroll: true, has_hscroll: false, vscroll_class: 'default-scroll-v'});
 		let index = 0;
 		for (action of actions) {
 			const selected_action = action;
 			const column = index % columns;
 			const row = index / columns;
-			const width = (this.frame.width - 9 - columns * 3) / columns;
-			const button = this.frame.button({class: 'unit-command-button', left: 6 + column * (width + 3), top: 42 + row * 24,
+			const width = (this.frame.width - 32 - columns * 3) / columns;
+			const button = action_area.button({class: 'unit-command-button', left: 3 + column * (width + 3), top: row * 24,
 				width: width, height: 22, text: labels[selected_action]});
 			button.on('click', () => {
 				// Revalidate the current selection and offered action; stale UI never

@@ -4818,6 +4818,7 @@ public:
         const auto before_roster=m_state->ExportRoster();
         const auto presentations=m_game.m_smac_base_presentations;
         const auto unit_presentations=m_game.m_smac_presentations;
+        return WithCampaignMapSources([&]()->std::string {
         return WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
             auto* old_state=m_state;
             auto* candidate=new State(gc_space,ctx,m_glsmac.get());m_gse->AddRootObject(candidate);
@@ -4865,6 +4866,10 @@ public:
             m_game.m_game_state=Game::GS_STARTING;
             m_game.SetStartupStage(m_game.m_active_admission,Game::StartupStage::Start);m_game.Iterate();
             GT_ASSERT(m_game.IsRunning() && configure_calls==1 && create_calls==0 && start_calls==1,"campaign replayed configure/world creation or skipped restored Start");
+            // This fixture intentionally skips renderer construction. Constructor
+            // inputs are borrowed placeholders and cannot outlive this scope.
+            m_game.m_map->m_textures.source.texture_pcx=nullptr;
+            m_game.m_map->m_textures.source.ter1_pcx=nullptr;
             GT_ASSERT(m_game.GetTurnId()==before_turn && m_game.m_simulation->value.gameplay_random==before_rng
                 && m_state->Serialize().ToString()==before_settings && m_state->ExportRoster()==before_roster,"campaign changed settings, roster, turn or paired RNG");
             const auto normalize_definition_order=[&](const std::string& world) {return NormalizeCampaignSnapshot(world);};
@@ -4875,6 +4880,7 @@ public:
                 GT_ASSERT(m_game.GetTurnId()==before_turn+1 && !m_game.m_canonical_turn_failed,"restored campaign did not advance the next actual turn");
             }
             GT_OK();
+        });
         });
     }
 

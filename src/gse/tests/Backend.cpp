@@ -714,6 +714,11 @@ public:
                 }
                 if(package==Package::Former) {
                     auto order=actor->Conventional().work_order;
+                    if(order!=Work::None) {
+                        bool legal=true;
+                        try {m_game.GetUM()->ValidateConventionalWork(actor,order,m_game.GetSlotNum(),true);} catch(const std::runtime_error&) {legal=false;}
+                        if(!legal) {m_game.Event(GSE_CALL,"cancel_unit_work",{{"unit",actor->Wrap(GSE_CALL)}});m_game.ProcessEvents();order=Work::None;}
+                    }
                     if(order==Work::None) {
                         for(const auto desired:{Work::Farm,Work::Solar,Work::Road}) {
                             if(std::find(commands.actions.begin(),commands.actions.end(),int32_t(desired))==commands.actions.end()) {continue;}

@@ -452,7 +452,13 @@ void Game::RunComputerCommands(GSE_CALLABLE,int32_t owner) {
             if(package==Package::Former) {
                 const auto order=actor->Conventional().work_order;
                 if(order!=Work::None) {
-                    m_um->SetConventionalWork(GSE_CALL,actor,order,slot.GetIndex(),true);break;
+                    bool legal=true;
+                    try {m_um->ValidateConventionalWork(actor,order,slot.GetIndex(),true);} catch(const std::runtime_error&) {legal=false;}
+                    if(legal) {m_um->SetConventionalWork(GSE_CALL,actor,order,slot.GetIndex(),true);break;}
+                    // Global flora or a newly founded Base can invalidate a
+                    // persisted job. Use the existing explicit cancel prefix,
+                    // which retains work history, then seek another legal job.
+                    m_um->SetConventionalWork(GSE_CALL,actor,Work::None,slot.GetIndex(),false);
                 }
                 bool worked=false;
                 std::vector<Work> jobs;

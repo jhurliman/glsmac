@@ -357,6 +357,9 @@ const types::Buffer Base::Serialize( const Base* base ) {
     buf.WriteString("SMAC_COMMERCE_INTAKE_V1");
     buf.WriteBool(base->m_commerce_ranking_energy.has_value());
     if(base->m_commerce_ranking_energy) {buf.WriteInt(*base->m_commerce_ranking_energy);}
+    buf.WriteString("SMAC_NATIVE_TARGET_RESOURCES_V1");buf.WriteBool(base->m_native_target_resources.has_value());
+    if(base->m_native_target_resources) {for(const auto value:*base->m_native_target_resources) {buf.WriteInt(value);}}
+
 	return buf;
 }
 
@@ -406,26 +409,36 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game, bool allow_retained_pop
 	if ( buf.ReadBool() ) { allocation = SmacBaseAllocationState::Deserialize( types::Buffer( buf.ReadString( SmacBaseAllocationState::WIRE_BYTES ) ) ); }
 	auto cache = DeserializeSmacBaseUpkeepCache( types::Buffer( buf.ReadString() ) );
 	if ( cache && ( !resource_context || !allocation || !production ) ) { THROW( "Saved upkeep cache requires a canonical Base" ); }
-	std::optional<size_t> retained_population;
+    std::optional<size_t> retained_population;
     std::optional<int32_t> commerce_intake;
-    std::string extension;
-    if(buf.lenr!=buf.lenw) {extension=buf.ReadString(64);}
-	if(extension=="SMAC_RETAINED_POPULATION_V1") {
-		if(!allow_retained_population) { THROW("Unsupported retained Base population"); }
-		const auto population=buf.ReadInt();
-		if(!resource_context || !allocation || !production || population<1 || population>=static_cast<int64_t>(pops.size()) || pops.size()>127) { THROW("Invalid saved retained Base population"); }
-		retained_population=static_cast<size_t>(population);
-        extension=buf.lenr!=buf.lenw?buf.ReadString(64):std::string{};
-	}
-    if(!extension.empty()) {
-        if(extension!="SMAC_COMMERCE_INTAKE_V1") {THROW("Unsupported Base extension");}
-        if(buf.ReadBool()) {const auto raw=buf.ReadInt();if(raw<0 || raw>INT32_MAX) {THROW("Invalid saved commerce intake");}commerce_intake=static_cast<int32_t>(raw);}
+    std::optional<std::array<int32_t,3>> native_target;
+    bool seen_retained=false,seen_commerce=false,seen_native=false;
+    while(buf.lenr!=buf.lenw) {
+        const auto extension=buf.ReadString(64);
+        if(extension=="SMAC_RETAINED_POPULATION_V1") {
+            if(seen_retained || !allow_retained_population) {THROW("Unsupported repeated retained Base population");}seen_retained=true;
+            const auto population=buf.ReadInt();
+            if(!resource_context || !allocation || !production || population<1 || population>=static_cast<int64_t>(pops.size()) || pops.size()>127) {THROW("Invalid saved retained Base population");}
+            retained_population=static_cast<size_t>(population);
+        } else if(extension=="SMAC_COMMERCE_INTAKE_V1") {
+            if(seen_commerce) {THROW("Repeated Base commerce intake");}seen_commerce=true;
+            if(buf.ReadBool()) {const auto raw=buf.ReadInt();if(raw<0 || raw>INT32_MAX) {THROW("Invalid saved commerce intake");}commerce_intake=static_cast<int32_t>(raw);}
+        } else if(extension=="SMAC_NATIVE_TARGET_RESOURCES_V1") {
+            if(seen_native) {THROW("Repeated Base native target resources");}seen_native=true;
+            if(buf.ReadBool()) {
+                native_target.emplace();for(auto& value:*native_target) {const auto raw=buf.ReadInt();
+                    if(raw<INT32_MIN || raw>INT32_MAX) {THROW("Invalid saved native target resource");}value=static_cast<int32_t>(raw);
+                }
+                if(!resource_context || !allocation || !production) {THROW("Native target resources require a canonical Base");}
+            }
+        } else {THROW("Unsupported Base extension");}
     }
 	if ( buf.lenr != buf.lenw ) { THROW( "Trailing Base record" ); }
 	auto* base = new Base( ConstructionKind::Snapshot, game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production, resource_context, allocation );
 	base->m_smac_upkeep_cache = std::move( cache );
 	base->m_retained_population = retained_population;
     base->m_commerce_ranking_energy=commerce_intake;
+    base->m_native_target_resources=native_target;
 	return base;
 }
 

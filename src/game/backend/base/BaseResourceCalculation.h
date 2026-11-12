@@ -9,8 +9,9 @@ namespace game::backend::base {
 
 enum class SmacBaseResourcePhase { Ordinary, Upkeep };
 
-// A fresh owned preparation, not a cache or posting instruction. No fields are
-// written to Base. Upkeep must explicitly consume normalized_stored at its
+// An owned calculation, not a posting instruction. Speculative preparation
+// writes only this record; actual preview/cache publication owns Base snapshots.
+// Upkeep must explicitly consume normalized_stored at its
 // nutrient-processing boundary, separately from later nutrient collection.
 struct SmacBaseResourceCalculation {
     std::array< int64_t, 3 > raw_intake;
@@ -24,6 +25,8 @@ struct SmacBaseResourceCalculation {
     // Missing retained inputs remain unavailable; queries never invent history.
     std::optional<int32_t> eco_damage;
     std::optional<SmacCitizenCalculation> citizens;
+    // Owned calculation side product; Base saves its separately published generation.
+    std::optional<std::array<int32_t,3>> native_target_resources;
 };
 
 // Finish an already calculated raw intake. Founding retains the allocator's

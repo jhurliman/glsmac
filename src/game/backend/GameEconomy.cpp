@@ -42,10 +42,13 @@ faction::SmacEconomyState Game::GetCanonicalEconomy( const slot::Slot* owner ) c
 	throw std::runtime_error( "Canonical economy owner is not admitted" );
 }
 
-int32_t Game::CalculateCanonicalBaseCommerce(const base::Base& evaluating_base,int32_t intake) const {
+int32_t Game::CalculateCanonicalBaseCommerce(const base::Base& evaluating_base,int32_t intake,bool prepared) const {
     using namespace base;
     const auto& simulation=m_simulation->value;
-    const auto owner=evaluating_base.GetSmacResourceContext().owner_simulation_id;
+    const auto owner=prepared && evaluating_base.m_resource_context?evaluating_base.m_resource_context->owner_simulation_id:evaluating_base.GetSmacResourceContext().owner_simulation_id;
+    if(prepared && (evaluating_base.GetGame()!=this || m_bm->GetBase(evaluating_base.m_id) || evaluating_base.GetTile()->base || !evaluating_base.m_allocation)) {
+        throw std::runtime_error("Prepared commerce requires the unregistered new Base");
+    }
     const auto current=simulation.hostility.owners.find(owner);
     if(current==simulation.hostility.owners.end()) {throw std::runtime_error("Commerce lacks relationship authority");}
     bool treaty=false;
@@ -99,13 +102,19 @@ int32_t Game::CalculateCanonicalBaseCommerce(const base::Base& evaluating_base,i
         if(selected) {in.current=in.bases.size();found=true;}
         in.bases.push_back({candidate->GetSmacResourceContext().owner_simulation_id,selected?intake:*candidate->m_commerce_ranking_energy});
     }
+    if(prepared) {
+        in.current=in.bases.size();in.bases.push_back({owner,intake});found=true;
+        in.factions.at(owner).base_count=SmacCommerceChecked(int64_t(in.factions.at(owner).base_count)+1);
+    }
     if(!found) {throw std::runtime_error("Commerce evaluating Base is not registered");}
     return CalculateSmacCommerce(in).total;
 }
 
 base::SmacBaseEnergyCalculation Game::GetCanonicalBaseEnergy( const base::Base& evaluating_base ) const {
     if(evaluating_base.m_retained_population) {return PreviewCanonicalBaseEnergy(evaluating_base,GetCanonicalEconomy(evaluating_base.m_owner).rates);}
-	return CalculateCanonicalBaseEnergy( evaluating_base, evaluating_base.PrepareSmacResourceCalculation() );
+    auto resources=evaluating_base.PrepareSmacResourceCalculation();auto energy=CalculateCanonicalBaseEnergy(evaluating_base,resources);
+    if(resources.eco_damage) {evaluating_base.m_native_target_resources=std::array<int32_t,3>{resources.minerals.intake,Checked(int64_t(energy.raw_intake)+energy.commerce),*resources.eco_damage};}
+    return energy;
 }
 
 base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::Base& evaluating_base,
@@ -213,7 +222,8 @@ base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::
 	inputs.baseline_stockpile = production->baseline_item.kind == ProductionItemKind::Stockpile;
 	inputs.mineral_surplus = resources.minerals.surplus;
 	std::sort( maintenance_fees.begin(), maintenance_fees.end() );
-	return { raw, distance, waste, net, maintenance, categories, FinishSmacEnergy( inputs ), std::move(maintenance_fees), commerce };
+    const auto tail=FinishSmacEnergy(inputs);
+	return { raw, distance, waste, net, maintenance, categories, tail, std::move(maintenance_fees), commerce };
 }
 
 std::vector<std::string> Game::PostCanonicalBaseMaintenance( const base::Base& evaluating_base, const base::SmacBaseEnergyCalculation& energy ) {

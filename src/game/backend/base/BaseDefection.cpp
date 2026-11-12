@@ -185,7 +185,7 @@ Base::SmacProductionResult Base::CompleteSmacRiotDefection(GSE_CALLABLE,SmacProd
     attempt.committed=true;
     if(attempt.publication) {*attempt.publication=true;}
     if(attempt.created) {result.completed_unit=attempt.created->Commit()->m_id;}
-    removal.Commit();transfer->Commit();accounting->Commit();worker.Commit();m_smac_upkeep_cache.swap(cache);m_commerce_ranking_energy=static_cast<int32_t>(m_smac_upkeep_cache->calculation.raw_intake[2]);
+    removal.Commit();transfer->Commit();accounting->Commit();worker.Commit();m_smac_upkeep_cache.swap(cache);m_commerce_ranking_energy=static_cast<int32_t>(m_smac_upkeep_cache->calculation.raw_intake[2]);if(m_smac_upkeep_cache->calculation.native_target_resources) {m_native_target_resources=m_smac_upkeep_cache->calculation.native_target_resources;}
     simulation.economy.at(old_owner).production_reference_counts.swap(references);
     simulation.retained_base_totals.swap(totals);simulation.victory_history.swap(victory);simulation.battle_plan_target.swap(targets);
     std::swap(simulation.designs,designs);

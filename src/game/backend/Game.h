@@ -425,7 +425,7 @@ public:
 	std::array< int32_t, 3 > GetCanonicalOrbitalIntake( const base::Base& base ) const;
 	int32_t GetCanonicalMineralSupport( const base::Base& base ) const;
 	base::SmacPopulationRules GetCanonicalPopulationRules( const base::Base& base ) const;
-	int32_t CalculateCanonicalBaseCommerce(const base::Base&,int32_t intake) const;
+	int32_t CalculateCanonicalBaseCommerce(const base::Base&,int32_t intake,bool prepared=false) const;
 	base::SmacBaseEnergyCalculation GetCanonicalBaseEnergy( const base::Base& base ) const;
 	base::SmacBaseEnergyCalculation PreviewCanonicalBaseEnergy(const base::Base& base,base::SmacEnergyRates rates) const;
 	gse::Value* CopySmacEnergyRatePreview(GSE_CALLABLE,const base::Base& base,std::optional<base::SmacEnergyRates> candidate) const;
@@ -910,7 +910,7 @@ private:
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
 	friend class base::Base;
-	std::optional<base::SmacCitizenCalculation> CalculateCanonicalCitizens(const base::Base&,const base::SmacBaseResourceCalculation&,const base::SmacBaseAllocationState* allocation = nullptr,std::optional<size_t> population = {},const unit::Unit* prepared = nullptr,const std::vector<size_t>& removed = {},const base::FacilityDef* granted = nullptr,std::string* unavailable = nullptr) const;
+	std::optional<base::SmacCitizenCalculation> CalculateCanonicalCitizens(const base::Base&,const base::SmacBaseResourceCalculation&,const base::SmacBaseAllocationState* allocation = nullptr,std::optional<size_t> population = {},const unit::Unit* prepared = nullptr,const std::vector<size_t>& removed = {},const base::FacilityDef* granted = nullptr,std::string* unavailable = nullptr,std::optional<int32_t>* gross_energy = nullptr) const;
 	base::SmacPopulationRules CalculateCanonicalPopulationRules( const base::Base& base, size_t population, const base::FacilityDef* granted = nullptr ) const;
 	int32_t CalculateCanonicalMineralSupport( const base::Base& base, size_t population, const unit::Unit* prepared_unit ) const;
     std::vector<std::pair<size_t,unit::ConventionalUnitState>> CalculateCanonicalUnitAccounting(const base::Base&,const base::SmacUnitSupportResult&) const;

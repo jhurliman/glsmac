@@ -80,6 +80,7 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
                 }
                 result+=line+'\n';
             }
+            result+="\n#WORLDBUILDER\n";for(int i=0;i<31;++i) {result+="5\n";}
             return result;
         };
         ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(source);std::string snapshot;
@@ -89,6 +90,7 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
             GT_ASSERT(enabled==6,"commerce fixture did not freeze six enabled commerce technologies: "+std::to_string(enabled));
 
             fixture.ResourceState([](auto& state) {
+                state.ecology_world=faction::SmacEcologyWorld{1,2,0};state.perihelion=false;state.ecology_history.emplace();
                 state.diplomacy_metadata.emplace();state.retained_base_totals.emplace();state.retained_base_totals->fill(0);
                 state.retained_base_totals->at(1)=1;state.retained_base_totals->at(2)=1;
                 for(auto& faction:state.social.factions) {faction.current[0]=5;faction.current[1]=0;}
@@ -99,6 +101,8 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
             fixture.ResourceState([](auto& state) {state.hostility.owners.at(1).directions.at(2).primary=2;});
             const auto result=game->GetCanonicalBaseEnergy(*own);
             GT_ASSERT(result.raw_intake==16 && result.commerce==1 && result.net==17 && result.waste==0,"real Treaty income did not enter gross before waste/allocation");
+            const auto target=own->GetSmacNativeTargetResources();
+            GT_ASSERT(target && (*target)[1]==17,"Native target energy did not retain gross intake16 plus commerce1 independently of b4");
             GT_ASSERT(game->GetCanonicalEconomy(own->m_owner).treaty_partners==4,"economy Treaty projection did not derive directed relationship bit2");
             const auto peer_before=Base::Serialize(peer).ToString();
             (void)game->GetCanonicalBaseEnergy(*own);
@@ -113,6 +117,7 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
         ConventionalUnitFixture destination;destination.ConfigureTwoResourceParticipants(source);
         return destination.Run([&](GSE_CALLABLE)->std::string {
             destination.Restore(GSE_CALL,snapshot,true);auto* game=destination.Game();auto* own=game->GetBM()->GetBase(701);
+            GT_ASSERT(own->GetSmacNativeTargetResources() && (*own->GetSmacNativeTargetResources())[1]==18,"Restore lost retained gross target energy before any query");
             GT_ASSERT(game->GetCanonicalBaseEnergy(*own).commerce==2,"restore lost intake generations or actual diplomacy/commerce inputs");
             GT_OK();
         });

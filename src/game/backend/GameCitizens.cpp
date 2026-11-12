@@ -17,9 +17,10 @@ namespace game::backend {
 std::optional<base::SmacCitizenCalculation> Game::CalculateCanonicalCitizens(const base::Base& target,
     const base::SmacBaseResourceCalculation& resources,const base::SmacBaseAllocationState* candidate,
     std::optional<size_t> population,const unit::Unit* prepared,const std::vector<size_t>& removed,
-    const base::FacilityDef* granted,std::string* unavailable) const {
+    const base::FacilityDef* granted,std::string* unavailable,std::optional<int32_t>* gross_energy) const {
     const auto missing=[&](const char* reason)->std::optional<base::SmacCitizenCalculation> {if(unavailable) {*unavailable=reason;}return {};};
     if(unavailable) {unavailable->clear();}
+    if(gross_energy) {gross_energy->reset();}
     const auto context=target.GetSmacResourceContext();
     if(target.GetGame()!=this || !m_bm || m_bm->GetBase(target.m_id)!=&target || !m_map) {throw std::runtime_error("Citizens require a registered Base in this world");}
     // Engine upkeep processes every admitted human owner; the copied UI DTO
@@ -60,6 +61,7 @@ std::optional<base::SmacCitizenCalculation> Game::CalculateCanonicalCitizens(con
     // This energy calculation validates every registered local facility and the
     // no-project admission. Candidate slots and a staged local grant are read-only.
     const auto energy=CalculateCanonicalBaseEnergy(target,resources,nullptr,&*allocation,granted);
+    if(gross_energy) {*gross_energy=energy.net+energy.waste;} // checked gross from this actual energy calculation
     result.psych_points=energy.tail.final.psych;
     std::array<bool,34> local{};
     for(const auto& row:target.m_facilities) {local.at(*row.second->m_smac_source_id)=true;}

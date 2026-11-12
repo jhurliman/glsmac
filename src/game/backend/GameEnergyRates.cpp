@@ -38,9 +38,13 @@ base::SmacBaseEnergyCalculation Game::PreviewCanonicalBaseEnergy(const base::Bas
     if(base.m_retained_population) {
         const auto allocation=base.CalculateSmacWorkers(*base.m_allocation,base.GetSmacResourceContext());
         const auto resources=base.CalculateSmacResourceCalculation(base::SmacBaseResourcePhase::Ordinary,&allocation);
-        return CalculateCanonicalBaseEnergy(base,resources,&rates,&allocation);
+        auto energy=CalculateCanonicalBaseEnergy(base,resources,&rates,&allocation);
+        if(resources.eco_damage) {base.m_native_target_resources=std::array<int32_t,3>{resources.minerals.intake,energy.net+energy.waste,*resources.eco_damage};}
+        return energy;
     }
-    return CalculateCanonicalBaseEnergy(base,base.PrepareSmacResourceCalculation(),&rates);
+    auto resources=base.PrepareSmacResourceCalculation();auto energy=CalculateCanonicalBaseEnergy(base,resources,&rates);
+    if(resources.eco_damage) {base.m_native_target_resources=std::array<int32_t,3>{resources.minerals.intake,energy.net+energy.waste,*resources.eco_damage};}
+    return energy;
 }
 
 gse::Value* Game::CopySmacEnergyRatePreview(GSE_CALLABLE,const base::Base& anchor,std::optional<base::SmacEnergyRates> candidate) const {
@@ -110,7 +114,7 @@ void Game::ApplySmacEnergyRates(GSE_CALLABLE,base::Base& anchor,base::SmacEnergy
     static_assert(std::is_nothrow_swappable_v<decltype(candidate)>);
     static_assert(std::is_nothrow_swappable_v<std::optional<base::SmacBaseUpkeepCache>>);
     batch->Commit();std::swap(saved,candidate);
-    for(auto& row:rows) {row.base->m_smac_upkeep_cache.swap(row.cache);row.base->m_commerce_ranking_energy=static_cast<int32_t>(row.base->m_smac_upkeep_cache->calculation.raw_intake[2]);}
+    for(auto& row:rows) {row.base->m_smac_upkeep_cache.swap(row.cache);row.base->m_commerce_ranking_energy=static_cast<int32_t>(row.base->m_smac_upkeep_cache->calculation.raw_intake[2]);if(row.base->m_smac_upkeep_cache->calculation.native_target_resources) {row.base->m_native_target_resources=row.base->m_smac_upkeep_cache->calculation.native_target_resources;}}
     batch->Finish();
 }
 

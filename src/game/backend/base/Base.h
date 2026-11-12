@@ -156,6 +156,7 @@ public:
 	SmacProductionResult BeginSmacUpkeep( GSE_CALLABLE, const SmacAllocationRoles& roles,
 		const std::function< unit::Def*( int32_t ) >& definition, unit::SmacMoraleMode mode );
 	const std::optional<SmacBaseUpkeepCache>& GetSmacUpkeepCache() const;
+    std::optional<std::array<int32_t,3>> GetSmacNativeTargetResources() const {return m_native_target_resources;}
 	std::optional< SmacBaseAllocationState > GetSmacAllocation() const;
 	// Also used by actual Pop, frontend and save reads; absence preserves legacy.
 	void ValidateSmacAllocation() const;
@@ -211,6 +212,8 @@ private:
 	std::optional<SmacBaseUpkeepCache> m_smac_upkeep_cache;
     // Original Base+b4: last actual intake, independent of final energy/upkeep.
     mutable std::optional<int32_t> m_commerce_ranking_energy;
+    // Latest completed native resource pass: c0 gross minerals, c4 gross energy,48 eco-damage.
+    mutable std::optional<std::array<int32_t,3>> m_native_target_resources;
 	// Optional view interaction, not a suspended turn or saved gameplay authority.
 	struct SpecialistSelectionRequest { int64_t id; size_t pop_id; std::string expected; };
 	int64_t m_next_specialist_request = 1;
@@ -257,7 +260,7 @@ private:
 		const SmacBaseAllocationState* allocation, std::optional< size_t > population = {},
 		std::optional< int64_t > stored = {}, const unit::Unit* prepared_unit = nullptr, std::optional<int32_t> mineral_support = {}, const FacilityDef* granted = nullptr, const std::vector<size_t>& removed = {} ) const;
 	std::optional<int32_t> CalculateSmacEcologyDamage( const SmacBaseResourceCalculation& calculation,
-		const SmacBaseAllocationState* allocation, size_t population, const FacilityDef* granted ) const;
+		const SmacBaseAllocationState* allocation, size_t population, const FacilityDef* granted,bool prepared=false,bool startup=false ) const;
 	void ValidatePopulationRole( const PopDef* def, const Pop::worked_tile_t& tile ) const;
 	uint32_t ValidateSmacSpecialistPopulation() const;
 	gse::Value* CopySmacSpecialistMenu( GSE_CALLABLE, std::optional< size_t > pop_id ) const;

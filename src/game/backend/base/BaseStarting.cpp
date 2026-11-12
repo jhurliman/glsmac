@@ -60,8 +60,20 @@ SmacBaseUpkeepCache BaseManager::PrepareNewBaseResourceCache( const Base& candid
     const auto& rules=m_game->GetState()->m_settings.global.GetSmacResourceRules();
     if(!rules) {THROW("Initial resource cache has no frozen nutrient demand");}
     candidate.m_commerce_ranking_energy=intake[2]; // completed new-Base intake precedes its first energy pass
-    return {FinishSmacResourceIntake({intake[0],intake[1],intake[2]},int64_t(rules->nutrients_per_citizen)*population,
-        candidate.m_accumulated_nutrients,support.mineral_support,multiplier_steps),std::move(support)};
+    // Complete the three source target fields with the same mineral/ecology
+    // kernels and incoming-commerce calculation. The citizen/category tail
+    // does not replace c0/c4/final48; no fresh or reused slot zero is assumed.
+    auto calculation=FinishSmacResourceIntake({intake[0],intake[1],intake[2]},int64_t(rules->nutrients_per_citizen)*population,
+        candidate.m_accumulated_nutrients,support.mineral_support,multiplier_steps);
+    calculation.eco_damage=candidate.CalculateSmacEcologyDamage(calculation,&*candidate.m_allocation,population,nullptr,true,startup);
+    const auto commerce=m_game->CalculateCanonicalBaseCommerce(candidate,intake[2],true);
+    const auto gross=int64_t(intake[2])+commerce;
+    if(gross<INT32_MIN || gross>INT32_MAX) {throw std::overflow_error("New Base gross energy exceeds signed32");}
+    if(calculation.eco_damage) {
+        calculation.native_target_resources=std::array<int32_t,3>{calculation.minerals.intake,static_cast<int32_t>(gross),*calculation.eco_damage};
+        candidate.m_native_target_resources=calculation.native_target_resources;
+    }
+    return {std::move(calculation),std::move(support)};
 }
 
 Base* BaseManager::SpawnStartingSmacBase( GSE_CALLABLE, slot::Slot* owner, map::tile::Tile* tile,

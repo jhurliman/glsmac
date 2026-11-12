@@ -5185,7 +5185,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             state.ecology_history=faction::SmacEcologyHistory{};
             for(auto& tech:state.technology.factions) {tech.score=100;tech.future_count=0;}
         });
-        std::string saved;
+        std::string saved;std::optional<std::array<int32_t,3>> saved_native;
         const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* base=Populate(GSE_CALL,fixture,false,false,0,1,1,4,4);auto* game=fixture.Game();
             fixture.RetainedPlanet(0,0);
@@ -5193,16 +5193,20 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             // unowned squares. Center selection is an independent retained bit.
             for(size_t y=0;y<8;++y) {for(size_t x=y&1;x<8;x+=2) {game->GetMap()->GetTile(x,y)->terraforming=TERRAFORMING_BOREHOLE;}}
             auto allocation=*base->GetSmacAllocation();
-            const auto before=fixture.Snapshot();const auto rng=fixture.GameplayRandom();
+            const auto rng=fixture.GameplayRandom();
             const auto first=base->PrepareSmacResourceCalculation();
             // 21*9 + two explicit selected bits =191 -> floor/8=23.
             // Gross minerals=3 (center1 plus capped worker2); clean allowance16 is consumed by terrain,
             // giving residual7 + mineral3 = burden10. PLANET0, L1,
             // technology100 and Citizen factor2 yield damage20.
             GT_ASSERT(first.minerals.intake==3 && first.eco_damage==20,"live ecology did not consume measured full-radius and gross mineral inputs: minerals="+std::to_string(first.minerals.intake)+", damage="+(first.eco_damage ? std::to_string(*first.eco_damage) : "unavailable"));
+            const auto energy=game->GetCanonicalBaseEnergy(*base);const auto targets=base->GetSmacNativeTargetResources();
+            GT_ASSERT(targets && (*targets)==(std::array<int32_t,3>{first.minerals.intake,energy.raw_intake+energy.commerce,*first.eco_damage}),
+                "Completed preview did not publish c0/c4/final eco-damage into native target history");
+            const auto before=fixture.Snapshot();
             const auto wrapped=static_cast<value::Object*>(Call(GSE_CALL,static_cast<value::Object*>(base->Wrap(GSE_CALL)),"get_smac_resource_calculation"));
             GT_ASSERT(static_cast<value::Int*>(wrapped->Get("eco_damage"))->value==20
-                && fixture.Snapshot()==before && fixture.GameplayRandom()==rng,"query mutated saved state/RNG or omitted GSE damage");
+                && fixture.Snapshot()==before && fixture.GameplayRandom()==rng,"repeat query mutated saved state/RNG or omitted GSE damage");
             auto* remote=game->GetMap()->GetTile(1,3);remote->terraforming|=TERRAFORMING_ROAD;
             GT_ASSERT(base->PrepareSmacResourceCalculation().eco_damage==22,"unworked road was omitted from the full radius");
             allocation.selected&=~1u;base->PublishSmacAllocation(GSE_CALL,allocation,Roles());
@@ -5223,6 +5227,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             base->ProcessSmacUpkeep(GSE_CALL,Roles(),{},unit::SmacMoraleMode::Mode0);
             GT_ASSERT(base->GetSmacUpkeepCache() && base->GetSmacUpkeepCache()->calculation.eco_damage==20,"upkeep lost live final resource damage");
             fixture.ResourceState([](auto& state){state.ecology_warming_count=17;state.faction_status.values[1]=0x80004000u;state.faction_status.values[7]=UINT32_MAX;});
+            saved_native=base->GetSmacNativeTargetResources();
             saved=fixture.Snapshot();
             fixture.ResourceState([](auto& state){state.ecology_world.reset();state.ecology_warming_count=777;state.faction_status.values[1]=0;});
             GT_ASSERT(!base->PrepareSmacResourceCalculation().eco_damage
@@ -5234,6 +5239,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
         return restored.Run([&](GSE_CALLABLE)->std::string {
             restored.RestoreThroughStart(GSE_CALL,saved,[](GSE_CALLABLE){});
             const auto* base=restored.Game()->GetBM()->GetBase(701);
+            GT_ASSERT(base && base->GetSmacNativeTargetResources()==saved_native,"Restore rebuilt or lost native target resource generation");
             GT_ASSERT(base && base->GetSmacUpkeepCache() && base->GetSmacUpkeepCache()->calculation.eco_damage==20,
                 "snapshot restore lost historical damage");
             bool retained=false;restored.ResourceState([&](auto& state){retained=state.ecology_warming_count==17 && state.faction_status.values[1]==0x80004000u && state.faction_status.values[7]==UINT32_MAX;});

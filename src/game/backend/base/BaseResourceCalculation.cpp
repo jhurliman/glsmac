@@ -54,6 +54,7 @@ SmacBaseResourceCalculation Base::PrepareSmacResourceCalculation( const SmacBase
     // Actual resource previews run intake too; speculative candidate calculations
     // below must not publish another Base's generation.
     m_commerce_ranking_energy=Checked(result.raw_intake[2]);
+    if(result.native_target_resources) {m_native_target_resources=result.native_target_resources;}
     return result;
 }
 
@@ -119,7 +120,9 @@ SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBa
     result = FinishSmacResourceIntake(result.raw_intake,m_game->CalculateCanonicalNutrientDemand(*this,population),
         stored.value_or(m_accumulated_nutrients),support,multiplier_steps);
     result.eco_damage = CalculateSmacEcologyDamage(result, allocation, population, granted);
-    result.citizens = m_game->CalculateCanonicalCitizens(*this,result,allocation,population,prepared_unit,removed,granted);
+    std::optional<int32_t> gross_energy;
+    result.citizens = m_game->CalculateCanonicalCitizens(*this,result,allocation,population,prepared_unit,removed,granted,nullptr,&gross_energy);
+    if(result.eco_damage && gross_energy) {result.native_target_resources=std::array<int32_t,3>{result.minerals.intake,*gross_energy,*result.eco_damage};}
     return result;
 }
 

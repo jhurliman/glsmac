@@ -13,8 +13,14 @@
 namespace game::backend::base {
 
 std::optional<int32_t> Base::CalculateSmacEcologyDamage(const SmacBaseResourceCalculation& calculation,
-    const SmacBaseAllocationState* allocation, size_t population, const FacilityDef* granted) const {
+    const SmacBaseAllocationState* allocation, size_t population, const FacilityDef* granted,bool prepared,bool startup) const {
     m_game->ValidateCurrentSimulation();
+    if(prepared) {
+        if(!m_resource_context || m_game->GetBM()->GetBase(m_id) || !m_tile || m_tile->base || m_tile->tiles!=m_game->GetMap()->GetTilesPtr()) {throw std::runtime_error("Prepared ecology requires an unregistered new Base");}
+        m_game->GetBM()->ValidateSmacResourceContext(*m_resource_context,m_owner,m_faction);ValidateAllocationProjection(false);
+        if(startup) {m_game->RequireConventionalStartupClaim();}
+    }
+
     const auto& simulation=m_game->m_simulation;
     const auto& rules=m_game->m_state->m_settings.global.GetSmacEcologyRules();
     if(!simulation || !rules || !simulation->value.ecology_world || !simulation->value.ecology_history
@@ -31,10 +37,10 @@ std::optional<int32_t> Base::CalculateSmacEcologyDamage(const SmacBaseResourceCa
     const auto* tiles=m_game->GetMap()->GetTilesPtr();
     if(tiles->GetWidth()<8) {return std::nullopt;} // narrower radius aliasing is not measured
     if(population>127) {throw std::runtime_error("Live ecology population exceeds 127");}
-    const auto owner=GetSmacResourceContext().owner_simulation_id;
+    const auto owner=prepared?m_resource_context->owner_simulation_id:GetSmacResourceContext().owner_simulation_id;
     const auto* technology=state.technology.Find(owner);
     const auto* social=state.social.Find(owner);
-    if(!technology || !social || social->phase!=faction::SmacFactionSocialState::Phase::Refreshed) {
+    if(!technology || !social || social->phase!=(prepared && startup?faction::SmacFactionSocialState::Phase::Early:faction::SmacFactionSocialState::Phase::Refreshed)) {
         throw std::runtime_error("Live ecology requires current owner technology and PLANET");
     }
     bool tree=false,hybrid=false,nano=false,preserve=false,temple=false;

@@ -65,8 +65,7 @@ Base* Create(GSE_CALLABLE,Game* game,size_t slot=0) {
 }
 void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
 	task->AddTest("SMAC live Treaty commerce uses stored intake snapshots and preserved diplomacy authority",[](GSE*,context::Context*)->std::string {
-        ConventionalUnitFixture fixture;
-        fixture.ConfigureTwoResourceParticipants([](const std::string& name) {
+        const auto source=[](const std::string& name) {
             auto source=Source(name);const auto pos=source.find("Center,2,1,2");
             if(pos!=std::string::npos) {source.replace(pos,12,"Center,2,1,10");}
             if(name!="alpha.txt") {return source;}
@@ -82,8 +81,9 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
                 result+=line+'\n';
             }
             return result;
-        });
-        return fixture.Run([&](GSE_CALLABLE)->std::string {
+        };
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(source);std::string snapshot;
+        const auto created=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* own=Create(GSE_CALL,game);auto* peer=Create(GSE_CALL,game,1);
             int32_t enabled=0;for(const auto& technology:game->GetState()->m_settings.global.GetSmacTechnologyRules()->technologies) {if(technology.flags&4u) {++enabled;}}
             GT_ASSERT(enabled==6,"commerce fixture did not freeze six enabled commerce technologies: "+std::to_string(enabled));
@@ -107,8 +107,12 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
             GT_ASSERT(game->GetCanonicalBaseEnergy(*own).commerce==0,"partner sanctions failed to block live commerce");
             fixture.ResourceState([](auto& state) {state.diplomacy_metadata->sanctions[2]=0;state.diplomacy_metadata->trade_doubled=true;});
             GT_ASSERT(game->GetCanonicalBaseEnergy(*own).commerce==2,"global trade doubling failed to precede scaled Treaty quote");
-            const auto snapshot=fixture.Snapshot();fixture.Restore(GSE_CALL,snapshot,true);
-            own=game->GetBM()->GetBase(701);
+            snapshot=fixture.Snapshot();GT_OK();
+        });
+        GT_ASSERT(created.empty(),"commerce source: "+created);
+        ConventionalUnitFixture destination;destination.ConfigureTwoResourceParticipants(source);
+        return destination.Run([&](GSE_CALLABLE)->std::string {
+            destination.Restore(GSE_CALL,snapshot,true);auto* game=destination.Game();auto* own=game->GetBM()->GetBase(701);
             GT_ASSERT(game->GetCanonicalBaseEnergy(*own).commerce==2,"restore lost intake generations or actual diplomacy/commerce inputs");
             GT_OK();
         });

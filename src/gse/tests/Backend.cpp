@@ -13185,6 +13185,22 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC milestone generated campaign restores and replays one human boundary",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        std::map<std::string,std::string> sources;
+        const auto source=[&](const std::string& name)->std::string {
+            if(sources.count(name)) {return sources.at(name);}
+            for(const auto& file:std::filesystem::directory_iterator(assets)) {
+                auto key=file.path().filename().string();std::transform(key.begin(),key.end(),key.begin(),[](unsigned char c){return char(std::tolower(c));});
+                if(key==name) {std::ifstream in(file.path(),std::ios::binary);return sources[name]=std::string(std::istreambuf_iterator<char>(in),{});}
+            }
+            throw std::runtime_error("Missing owned replay source: "+name);
+        };
+        BackendFixture fixture;const auto startup=fixture.StartLocalComputerCampaign(source,"",true);
+        GT_ASSERT(startup.empty(),"Short generated replay startup: "+startup);
+        const auto result=fixture.CheckLocalCampaignReplay(1);
+        GT_ASSERT(result.empty(),"Short generated replay: "+result);GT_OK();
+    });
     task->AddTest("SMAC milestone faction presentations import owned atlas definitions",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         BackendFixture fixture;const auto result=fixture.ConfigureMilestoneFactionPresentations();

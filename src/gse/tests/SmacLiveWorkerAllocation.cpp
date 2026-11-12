@@ -2,6 +2,7 @@
 #include "game/ScoutBattlePresentation.h"
 #include "ConventionalUnits.h"
 #include "game/backend/map/SmacClimate.h"
+#include "game/backend/map/SmacPlanetMap.h"
 #include "fixtures/SmacStartupSource.h"
 #include "fixtures/SmacRestartSearch.h"
 #include "fixtures/SmacCaptureRestart.h"
@@ -495,7 +496,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 
     task->AddTest("SMAC native scheduler readies Isle cargo before the land raid pass",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
-        ConventionalUnitFixture fixture;fixture.ConfigureProduction(NativeCarrierSource,"GAIANS");
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(NativeCarrierSource,"GAIANS",80,80);
         fixture.ResourceState([](auto& state){state.ecology_world=faction::SmacEcologyWorld{1,2,0};state.perihelion=false;state.ecology_history=faction::SmacEcologyHistory{};state.ecology_history->clean_minerals[1]=1;for(auto& knowledge:state.technology.factions) {knowledge.score=100;knowledge.future_count=0;}});
         return fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true);SelectionPresentations(fixture);auto* um=game->GetUM();
@@ -503,15 +504,25 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             game->GetState()->m_settings.global.SelectSmacCampaignRules(false);
             auto context=base->GetSmacResourceContext();context.retained_status_word=0;base->SetSmacResourceContext(GSE_CALL,context);
             auto* sea=game->GetMap()->GetTile(3,1);for(auto* height:sea->elevation.corners) {*height=-1000;}sea->Update();
-            std::vector<bool> water;for(size_t y=0;y<64;++y) {for(size_t x=y&1;x<128;x+=2) {water.push_back(game->GetMap()->GetTile(x,y)->is_water_tile);}}
-            fixture.TerritoryTopology(map::GlsmacTerritoryTopology::Build(128,64,true,water).Serialize());
-            auto known=KnowledgeValue(true,true,128,64).CopyData();known.occupancy=map::SmacOccupancyCache::Blank(128,64,true);
+            std::vector<bool> water;for(size_t y=0;y<80;++y) {for(size_t x=y&1;x<80;x+=2) {water.push_back(game->GetMap()->GetTile(x,y)->is_water_tile);}}
+            const auto topology=map::GlsmacTerritoryTopology::Build(80,80,true,water);
+            using Planet=map::SmacPlanetMap;
+            std::string wire(Planet::FILE_BYTES,'\0');wire.replace(0,11,"TERRANMAP\0\x1a",11);
+            wire[11]=5;wire[15]=80;wire[19]=80;wire[15+0xa30]=4;wire[15+0xa34]=1;
+            for(size_t y=0;y<80;++y) {for(size_t x=y&1;x<80;x+=2) {
+                const auto index=y*40+x/2,at=Planet::PREFIX_BYTES+Planet::HEADER_BYTES+index*44;
+                wire[at]=game->GetMap()->GetTile(x,y)->is_water_tile ? 64:96;
+                wire[at+1]=87;wire[at+2]=15;wire[at+3]=static_cast<char>(topology.Regions()[index]);wire[at+7]=static_cast<char>(255);
+            }}
+            fixture.InstalledResourcePolicy(wire);
+            fixture.TerritoryTopology(topology.Serialize());
+            auto known=KnowledgeValue(true,true,80,80).CopyData();known.occupancy=map::SmacOccupancyCache::Blank(80,80,true);
             known.occupancy->FoundBase({2,2},1);known.occupancy->PlaceUnit({6,6},1,true);
             game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(known));
             RecalculateViaWrapper(GSE_CALL,base);(void)game->GetCanonicalBaseEnergy(*base); // actual completed calculation generation
             for(const auto& row:{std::pair<const char*,movement_type_t>{"MindWorms",MT_LAND},{"IsleOfTheDeep",MT_WATER}}) {um->DefineUnit(new StaticDef(row.first,um->GetMoraleSet("live-morale"),row.first,row.second,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));}
             fixture.ResourceState([](auto& state){state.native_factory=faction::SmacNativeFactoryState::Initialize(0,state.gameplay_random);});
-            auto birth=um->PrepareNativeBirths(GSE_CALL,128,64,true,[&](const UnitManager::NativeBirthFactory& factory){const auto isle=factory.create(9,{3,1},{});const auto worm=factory.create(8,{3,1},{});factory.sentry(worm);factory.promote_stack(isle);});
+            auto birth=um->PrepareNativeBirths(GSE_CALL,80,80,true,[&](const UnitManager::NativeBirthFactory& factory){const auto isle=factory.create(9,{3,1},{});const auto worm=factory.create(8,{3,1},{});factory.sentry(worm);factory.promote_stack(isle);});
             const auto isle_id=birth.Candidate(0).m_id,worm_id=birth.Candidate(1).m_id;birth.Commit();birth.Notify(GSE_CALL);
             fixture.GameplayRandom({11,29});fixture.RunNativeControllerCommands(GSE_CALL);
             auto* isle=um->GetUnit(isle_id);

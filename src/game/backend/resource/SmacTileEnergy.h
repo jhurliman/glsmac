@@ -42,11 +42,12 @@ struct EnergyContext {
 };
 
 struct TileEnergyInputs {
-	TileEnergyInputs( EnergyTerrain terrain, EnergyImprovements improvements, EnergyContext context )
-		: terrain( terrain ), improvements( improvements ), context( context ) {}
+	TileEnergyInputs( EnergyTerrain terrain, EnergyImprovements improvements, EnergyContext context, bool prospective_elevation = false )
+		: terrain( terrain ), improvements( improvements ), context( context ), prospective_elevation( prospective_elevation ) {}
 	EnergyTerrain terrain;
 	EnergyImprovements improvements;
 	EnergyContext context;
+	bool prospective_elevation; // source mode1: prospective altitude, pre-event 0..99 clamp, no technology cap
 };
 
 struct TileEnergyYield {
@@ -60,7 +61,8 @@ struct TileEnergyYield {
 // mirror count outside 0..8 throw std::invalid_argument. Rules/ratings accept int32.
 // Ordered arithmetic uses int64 and rejects evaluated int32 overflow with
 // std::overflow_error, even before a later cap. Original wrap behavior is unverified.
-// No mirror geometry/affiliation resolver, live adapter, preview modes or SMAX claim.
+// Explicit mode1 is the no-Base prospective Solar inquiry; normal mode is default.
+// No mirror geometry/affiliation resolver or SMAX claim.
 TileEnergyYield CalculateTileEnergy( const TileEnergyRules& rules, const TileEnergyInputs& inputs );
 
 }

@@ -428,6 +428,72 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
             });if(!error.empty()){return error;}
         }GT_OK();
     });
+    task->AddTest("Former rough land and forest Roads use admitted actions and actual work costs",GT(){
+        struct Case {Order order;uint8_t rocky;uint16_t before,features,after;int turns;};
+        using namespace map::tile;
+        const Case cases[]{
+            {Order::Farm,ROCKINESS_ROLLING,0,FEATURE_JUNGLE,TERRAFORMING_FARM,4},
+            {Order::Forest,ROCKINESS_ROLLING,0,FEATURE_URANIUM,TERRAFORMING_FOREST,4},
+            {Order::Mine,ROCKINESS_ROCKY,0,FEATURE_GARLAND_CRATER,TERRAFORMING_MINE,8},
+            {Order::Solar,ROCKINESS_ROLLING,0,0,TERRAFORMING_SOLAR,6},
+            {Order::Solar,ROCKINESS_ROCKY,0,0,TERRAFORMING_SOLAR,8},
+            {Order::Road,ROCKINESS_ROCKY,0,0,TERRAFORMING_ROAD,3},
+            {Order::Road,ROCKINESS_ROLLING,TERRAFORMING_FOREST,FEATURE_RIVER,uint16_t(TERRAFORMING_FOREST|TERRAFORMING_ROAD),4},
+            {Order::Road,ROCKINESS_FLAT,0,FEATURE_MONOLITH,TERRAFORMING_ROAD,1}};
+        for(const auto& row:cases) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(smac_startup_fixture::OrdinarySource,"GAIANS");
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* actor=Populate(GSE_CALL,fixture);auto* game=fixture.Game();auto* tile=actor->GetTile();
+                tile->rockiness=row.rocky;tile->terraforming=row.before;tile->features=row.features;
+                const auto random=fixture.GameplayRandom();Event(GSE_CALL,fixture,actor,row.order);
+                for(int turn=1;turn<=row.turns;++turn) {
+                    if(turn>1) {game->GetUM()->ResetConventionalSpent(GSE_CALL,actor);}
+                    Event(GSE_CALL,fixture,actor,Order::None,true);
+                    GT_ASSERT(tile->terraforming==(turn==row.turns?row.after:row.before),"Rough/forest work used the wrong terrain-adjusted completion threshold");
+                }
+                const auto memory=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                const auto& remembered=memory.remembered[1].at(size_t(tile->coord.y)*(memory.width/2)+tile->coord.x/2);
+                GT_ASSERT(actor->Conventional().work_order==Order::None && tile->features==row.features
+                    && remembered && remembered->terraforming==row.after && remembered->features==row.features
+                    && fixture.GameplayRandom()==random,"Rough/forest completion lost features memory or consumed gameplay RNG");
+                if(row.rocky==ROCKINESS_ROCKY) {
+                    GT_ASSERT(Rejects([&]{game->GetUM()->ValidateConventionalWork(actor,Order::Farm,0,false);})
+                        && Rejects([&]{game->GetUM()->ValidateConventionalWork(actor,Order::Forest,0,false);}),"Rocky land admitted Farm or Forest");
+                }GT_OK();
+            });if(!error.empty()) {return error;}
+        }GT_OK();
+    });
+    task->AddTest("Former Solar admission queries prospective energy with current ECONOMY and dust",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* actor=Populate(GSE_CALL,fixture);auto* um=fixture.Game()->GetUM();
+            fixture.ResourceState([](auto& state){state.resource_modifiers.atmospheric_dust_countdown=1;state.social.factions.front().current[0]=0;});
+            const auto before=actor->Conventional();
+            GT_ASSERT(Rejects([&]{um->ValidateConventionalWork(actor,Order::Solar,0,false);}) && actor->Conventional()==before,
+                "Dust-depleted prospective Solar was admitted or query mutated the Former");
+            fixture.ResourceState([](auto& state){state.social.factions.front().current[0]=2;});
+            um->ValidateConventionalWork(actor,Order::Solar,0,false);
+            fixture.ResourceState([](auto& state){state.social.factions.front().current[0]=0;state.resource_modifiers.atmospheric_dust_countdown=0;});
+            um->ValidateConventionalWork(actor,Order::Solar,0,false);GT_OK();
+        });
+    });
+    task->AddTest("Former Solar completion replaces Sensor without losing Farm Road or memory",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* actor=Populate(GSE_CALL,fixture);auto* game=fixture.Game();auto* tile=actor->GetTile();
+            const uint16_t retained=map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_ROAD;
+            tile->terraforming=retained|map::tile::TERRAFORMING_SENSOR;
+            Event(GSE_CALL,fixture,actor,Order::Solar);
+            for(int turn=0;turn<4;++turn) {
+                if(turn) {game->GetUM()->ResetConventionalSpent(GSE_CALL,actor);}
+                Event(GSE_CALL,fixture,actor,Order::None,true);
+            }
+            const auto memory=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+            const auto& remembered=memory.remembered[1].at(size_t(tile->coord.y)*(memory.width/2)+tile->coord.x/2);
+            GT_ASSERT(actor->Conventional().work_order==Order::None && tile->terraforming==(retained|map::tile::TERRAFORMING_SOLAR)
+                && remembered && remembered->terraforming==tile->terraforming,"Solar completion retained replaced Sensor or lost unrelated terrain memory");GT_OK();
+        });
+    });
     task->AddTest("Former early sensor and fungus jobs publish terrain memory and resumable work together",GT(){
         for(const auto order:{Order::RemoveFungus,Order::Sensor}) {
             ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");

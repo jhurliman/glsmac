@@ -5,6 +5,8 @@
 #include "game/backend/slot/Slot.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/SmacTerrainAuthority.h"
+#include "game/backend/resource/SmacTileEnergy.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/FrontendRequest.h"
 #include <limits>
@@ -120,16 +122,38 @@ UnitManager::PreparedConventionalWork UnitManager::PrepareConventionalWork(Unit*
     }
     constexpr auto allowed=TERRAFORMING_ROAD|TERRAFORMING_FARM|TERRAFORMING_SOLAR|TERRAFORMING_MINE|TERRAFORMING_FOREST|TERRAFORMING_SENSOR;
     const bool fungus=(tile->features&FEATURE_XENOFUNGUS)!=0;
-    if(tile->is_water_tile || tile->base || (tile->features&~(FEATURE_RIVER|FEATURE_XENOFUNGUS))
+    constexpr auto features=FEATURE_RIVER|FEATURE_MONOLITH|FEATURE_XENOFUNGUS|FEATURE_JUNGLE|FEATURE_URANIUM
+        |FEATURE_GEOTHERMAL|FEATURE_VOLCANO|FEATURE_SUNNY_MESA|FEATURE_GARLAND_CRATER|FEATURE_FOSSIL_FIELD_RIDGE
+        |FEATURE_UNITY_POD|FEATURE_UNITY_ENERGY|FEATURE_UNITY_CHOPPER|FEATURE_UNITY_RADAR|FEATURE_DUNES;
+    if(tile->is_water_tile || tile->base || (tile->features&~features)
         || (tile->terraforming&~allowed) || tile->rockiness<ROCKINESS_FLAT || tile->rockiness>ROCKINESS_ROCKY) {
-        throw std::runtime_error("Terraforming requires ordinary canonical land without a Base or landmark");
+        throw std::runtime_error("Terraforming requires canonical land without a Base or unknown terrain");
     }
+    const bool farm_or_forest=order==Order::Farm || order==Order::Forest;
+    if(const auto& policy=map->GetResourcePolicy();policy && policy->NativeTerrainSource()) {
+        const auto landmark=policy->NativeTerrainSource()->At(tile->coord.x,tile->coord.y).Landmarks();
+        if((landmark&0x80000002u)==2u && (farm_or_forest || !(landmark&0xff000000u))) {
+            throw std::runtime_error("Terraforming cannot alter the protected Mount Planet square");
+        }
+    } else if(tile->features&FEATURE_VOLCANO) {throw std::runtime_error("Terraforming Mount Planet requires its retained landmark profile");}
     if(order!=Order::RemoveFungus) {
         if(fungus || (tile->terraforming&Improvement(order))
-            || (order!=Order::Sensor && (tile->terraforming&TERRAFORMING_FOREST))
-            || (order!=Order::Sensor && tile->rockiness!=ROCKINESS_FLAT)) {
-            throw std::runtime_error("This work action requires its ordinary terrain and replacement continuation");
+            || ((tile->features&FEATURE_MONOLITH) && order!=Order::Road)
+            || (order!=Order::Sensor && order!=Order::Road && (tile->terraforming&TERRAFORMING_FOREST))
+            || (farm_or_forest && tile->rockiness==ROCKINESS_ROCKY)) {
+            throw std::runtime_error("This work action requires its admitted terrain and replacement continuation");
         }
+    }
+    if(order==Order::Solar) {
+        const auto& resource_rules=global.GetSmacResourceRules();const auto& policy=map->GetResourcePolicy();
+        const auto* social=m_game->m_simulation->value.social.Find(next.owner_simulation_id);
+        if(!resource_rules || !policy || !social) {throw std::runtime_error("Solar command requires actual resource rules map semantics and current ECONOMY");}
+        const auto& modifiers=m_game->m_simulation->value.resource_modifiers;
+        const auto energy=resource::smac::CalculateTileEnergy(resource_rules->TileEnergy(),{
+            {policy->Altitude(*tile),policy->Bonus(*tile),policy->LandmarkBonuses(*tile)[2],bool(tile->terraforming&TERRAFORMING_FOREST),false,false,false,bool(tile->features&FEATURE_RIVER)},
+            {false,false,0},
+            {false,false,0,0,social->current[0],false,false,false,false,modifiers.atmospheric_dust_countdown!=0,modifiers.solar_ordinary},true});
+        if(energy.energy==0) {throw std::runtime_error("Solar command requires nonzero prospective energy before replacement");}
     }
     int64_t cost=action.work_time;
     const auto rocky=static_cast<int32_t>(tile->rockiness-ROCKINESS_FLAT);
@@ -190,11 +214,11 @@ void UnitManager::SetConventionalWork(GSE_CALLABLE,Unit* actor,Order order,size_
     }
     // Stage owned atlas/sprite payloads before any Unit, terrain or knowledge write.
     std::unique_ptr<map::Map::PreparedTerrainUpdate> render;
-    if(prepared.features || (prepared.terraforming && (*prepared.terraforming&TERRAFORMING_SENSOR))) {
+    if(prepared.features || prepared.terraforming) {
         map::Map::TerrainAppearances changes{{prepared.tile,{prepared.features.value_or(prepared.tile->features),
             prepared.terraforming.value_or(prepared.tile->terraforming),prepared.tile->rockiness}}};
         render=GetMap()->PrepareTerrainAppearanceUpdate(changes);
-    } else if(prepared.terraforming) {render=GetMap()->PrepareOrdinaryTerrainUpdate(prepared.tile,*prepared.terraforming);}
+    }
     std::optional<std::vector<FrontendRequest>> frontend;
     if(prepared.terraforming) {
         frontend.emplace(*m_game->m_pending_frontend_requests);

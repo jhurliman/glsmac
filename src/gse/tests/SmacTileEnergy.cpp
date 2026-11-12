@@ -10,6 +10,17 @@ namespace gse::tests {
 
 void AddSmacTileEnergyTests( task::gsetests::GSETests* task ) {
 	using namespace game::backend::resource::smac;
+    task->AddTest("SMAC prospective Solar mode clamps before global events and retains actual mirror presence",GT(){
+        TileEnergyRules rules(0,2,1,3,2,6);
+        TileEnergyInputs input{{AltitudeBand::Land3,ResourceBonus::None,false,false,false,false,false,false},
+            {false,false,8},{false,false,0,0,0,false,false,false,false,true,false},true};
+        GT_ASSERT(CalculateTileEnergy(rules,input).energy==0,"Prospective altitude ignored dust or invented adjacent-mirror energy");
+        input.context.economy=2;
+        GT_ASSERT(CalculateTileEnergy(rules,input).energy==1,"Prospective inquiry omitted current faction ECONOMY");
+        input.terrain.forest=true;rules.forest=150;input.context.solar_multiplier_active=true;
+        const auto result=CalculateTileEnergy(rules,input);
+        GT_ASSERT(result.energy==294 && !result.technology_capped_excess,"Prospective forest yield did not clamp before dust/tripling or retained the normal technology cap");GT_OK();
+    });
 	for ( const auto& test : smac_energy_fixture::cases ) {
 		task->AddTest( std::string( "SMAC " ) + test.id + ": " + test.name, GT( test ) {
 			const auto result = CalculateTileEnergy( test.rules, test.inputs );

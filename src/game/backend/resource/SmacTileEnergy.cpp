@@ -59,7 +59,7 @@ TileEnergyYield CalculateTileEnergy( const TileEnergyRules& rules, const TileEne
 			if ( context.hybrid_forest ) { value = Checked( value + 1 ); }
 		}
 		else {
-			value = improvements.solar_collector || improvements.echelon_mirror ? static_cast< int64_t >( terrain.altitude ) - 2 : 0;
+			value = inputs.prospective_elevation || improvements.solar_collector || improvements.echelon_mirror ? static_cast< int64_t >( terrain.altitude ) - 2 : 0;
 			if ( improvements.solar_collector ) { value = Checked( value + improvements.matching_adjacent_mirrors ); }
 		}
 		if ( land && terrain.river ) { value = Checked( value + 1 ); }
@@ -68,11 +68,12 @@ TileEnergyYield CalculateTileEnergy( const TileEnergyRules& rules, const TileEne
 		if ( context.merchant_exchange_here ) { value = Checked( value + 1 ); }
 		const auto economy = Checked( int64_t( context.economy ) + ( context.golden_age ? 1 : 0 ) );
 		if ( economy >= 2 ) { value = Checked( value + 1 ); }
-		if ( value > 2 && !context.energy_technology && !energy_resource ) {
+		if ( !inputs.prospective_elevation && value > 2 && !context.energy_technology && !energy_resource ) {
 			excess = value - 2;
 			value = 2;
 		}
 	}
+	if ( inputs.prospective_elevation ) { value = std::clamp< int64_t >( value, 0, 99 ); }
 	if ( context.heat_wave ) { value = Checked( value + 1 ); }
 	if ( context.cloud_cover && value != 0 ) { value = Checked( value - 1 ); }
 	if ( context.atmospheric_dust && value != 0 ) { value = Checked( value - 1 ); }

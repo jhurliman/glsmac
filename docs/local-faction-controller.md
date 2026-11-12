@@ -23,7 +23,43 @@ human focus. Upkeep itself changes the Hive Scout order before the AI body.
 The receipt's site-dependent nutrient/mineral/treasury postings are comparisons,
 not hardcoded constants for the port.
 
-## Current integration boundaries
+## First-fifty-turn controller implementation
+
+The milestone batch now connects the saved faction cursor to the native Game
+controller. This describes implemented callers, not a completed M2 acceptance
+or an original AI algorithm reconstruction. Integrated campaign, persistence
+and rendered QA are tracked by the milestone harness.
+
+- Fresh ordinary local setup fills the six unused stock faction participants
+  before world creation. State owns their normal Player identities. The saved
+  human-membership mask identifies the local human independently of transport
+  role; loading retains the saved membership and explicit faction IDs.
+- Global advance runs the existing flora/fauna producer, then wildlife command
+  dispatch. Each positive owner receives its own social transition, movement
+  reset and saved Base upkeep traversal before command entry. Initial human1
+  input precedes computer2..7 upkeep. A normal stamped `complete_turn` command
+  traverses the computers and returns at the next human command boundary.
+- A private scoped owner token authorizes computer startup, upkeep and commands.
+  The human Player/Slot focus stays fixed. Human research/Colony suspension keeps
+  the existing owned continuation and stale-input guards. Computer research is
+  selected from its own prerequisite pool; population-one Colony completion
+  defers through the real resource tail without a human dialog.
+- The deterministic port AI uses real production switching, terrain work,
+  movement, founding and combat admission. It builds developers and expansion
+  parties, retains garrisons, develops nearby terrain and explores toward known
+  foreign Bases. These policies derive their continuation from saved world and
+  stable record state. Legal preflight refusals do not swallow mutation errors.
+- Wild Mind Worm decisions join the existing native neighbor competition and
+  legal movement/PSI transactions. Isle/Locust birth presentations are defined;
+  autonomous sea/air transport decisions remain separate work.
+
+Fresh turn-zero computer costs use the measured pre-ranking setup branch:
+Librarian Scout initial minerals5, rather than a fabricated retained rank table.
+Later costs use the actual global ranking publication. Expansion policies avoid
+already worked Base centers because the current canonical factory rejects them;
+this does not implement the original worker-displacement continuation.
+
+## Baseline before native controller integration
 
 Inspected through the saved-cursor integration in PR385 (live activation is pending):
 

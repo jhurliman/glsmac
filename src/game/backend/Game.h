@@ -865,6 +865,7 @@ private:
 	void ProcessEvents();
 	bool HandleSmacWorkerEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	bool HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
+	bool HandleSmacProductionCommand( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	bool HandleSmacSpecialistEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	bool HandleSmacHurryEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply);
 	void ResetCanonicalHurryMarkers(int32_t owner);

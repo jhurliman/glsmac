@@ -97,6 +97,18 @@ unit::SmacWorkshopHumanContext WorkshopHumanContext(const faction::SmacSimulatio
 
 bool Game::HandleSmacProductionEvent( GSE_CALLABLE, const std::string& name,
     const gse::value::object_properties_t& args, size_t caller, bool apply ) {
+    // Every local event passes this dispatcher. Keep the large detached Workshop
+    // transactions out of unrelated startup, movement and turn call stacks.
+    if ( name != "open_smac_workshop" && name != "preset_smac_workshop"
+        && name != "upgrade_smac_workshop" && name != "retire_smac_workshop"
+        && name != "open_smac_workshop_rename" && name != "answer_smac_workshop_rename"
+        && name != "obsolete_smac_workshop" && name != "commit_smac_workshop"
+        && name != "select_smac_workshop" && name != "select_smac_production" ) { return false; }
+    return HandleSmacProductionCommand( GSE_CALL, name, args, caller, apply );
+}
+
+bool Game::HandleSmacProductionCommand( GSE_CALLABLE, const std::string& name,
+    const gse::value::object_properties_t& args, size_t caller, bool apply ) {
     using WorkshopBaseUpdates=decltype(GetBM()->m_base_updates);
     const auto stage_retirement=[&](int32_t retired,bool custom,
         std::optional<unit::UnitManager::PreparedConventionalRemoval>& removal,

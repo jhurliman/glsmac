@@ -119,13 +119,31 @@ void ConfigManager::ParseFile( const std::string& path ) {
 }
 
 void ConfigManager::UpdateSetting( const std::string& key, const std::string& value ) {
+    UpdateSettings({{key,value}});
+}
+
+void ConfigManager::UpdateSettings(const std::map<std::string,std::string>& values) {
+    if(values.empty()) {return;}
     auto previous=m_settings;
-    m_settings.insert_or_assign(key,std::make_pair(true,value));
-    try {Save();} catch(...) {m_settings.swap(previous);throw;}
+    try {
+        for(const auto& [key,value]:values) {m_settings.insert_or_assign(key,std::make_pair(true,value));}
+        Save();
+    } catch(...) {m_settings.swap(previous);throw;}
 }
 
 const ConfigManager::settings_t& ConfigManager::GetSettings() const {
 	return m_settings;
+}
+
+config::smac_preferences::Words ConfigManager::GetSmacPreferences(bool laptop,int difficulty) const {
+    const auto packed=m_settings.find("smac-preferences");
+    if(packed!=m_settings.end()) {return config::smac_preferences::Load(packed->second.second);}
+    auto words=config::smac_preferences::Defaults(laptop,difficulty);
+    const auto legacy=m_settings.find("automatic-unit-designs");
+    if(legacy!=m_settings.end()) {
+        if(legacy->second.second=="true") {words[0]|=0x4000u;}else {words[0]&=~0x4000u;}
+    }
+    return words;
 }
 
 const std::map< std::string, ConfigManager::arg_rule_t >::iterator ConfigManager::Set( const std::string& k, const std::optional< std::string >& v, const std::string& err_prefix, const bool is_saveable, const bool can_override ) {

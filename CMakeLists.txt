@@ -184,9 +184,9 @@ INCLUDE( CTest )
 IF ( BUILD_TESTING AND ( CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "FastDebug" ) )
     # Preserve every native registration exactly once; scripts get independent
     # deadlines/logs instead of borrowing the tail of one growing suite timeout.
-    FOREACH ( SHARD RANGE 0 7 )
+    FOREACH ( SHARD RANGE 0 15 )
         ADD_TEST( NAME gse_native_${SHARD}
-            COMMAND ${CMAKE_COMMAND} -E env --unset=GLSMAC_GSE_TEST_SOURCE_FILTER "GLSMAC_GSE_TEST_SHARD=${SHARD}/8"
+            COMMAND ${CMAKE_COMMAND} -E env --unset=GLSMAC_GSE_TEST_SOURCE_FILTER "GLSMAC_GSE_TEST_SHARD=${SHARD}/16"
                 $<TARGET_FILE:${PROJECT_NAME}> --gse-tests --gse-tests-native-filter ".*" --quiet
                 --prefix "${CMAKE_CURRENT_BINARY_DIR}/test-data-native-${SHARD}" )
         SET_TESTS_PROPERTIES( gse_native_${SHARD} PROPERTIES

@@ -6,6 +6,7 @@
 #include "fixtures/SmacRegionalBaseFlags.h"
 
 #include "game/backend/faction/SmacSimulationState.h"
+#include "game/backend/faction/SmacDiplomacy.h"
 #include "game/backend/unit/SmacWorkshop.h"
 #include "game/backend/base/SmacBaseResourceContext.h"
 #include "game/backend/faction/SmacRankOrder.h"
@@ -95,7 +96,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=36,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=38,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -200,6 +201,18 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=36,bool
             suffix.WriteInt(summary->foreign_threats);suffix.WriteInt(summary->own_plan0);suffix.WriteInt(summary->own_plan4);
         }
     }}
+    if(version>=37) {
+        suffix.WriteBool(value.diplomacy_metadata.has_value());
+        if(value.diplomacy_metadata) {
+            suffix.WriteBool(value.diplomacy_metadata->trade_doubled);
+            for(const auto counter:value.diplomacy_metadata->sanctions) {suffix.WriteInt(counter);}
+            for(const auto& row:value.diplomacy_metadata->grievance) {for(const auto raw:row) {suffix.WriteInt(raw);}}
+        }
+    }
+    if(version>=38) {
+        suffix.WriteBool(value.diplomacy_metadata && value.diplomacy_metadata->sunspot_countdown.has_value());
+        if(value.diplomacy_metadata && value.diplomacy_metadata->sunspot_countdown) {suffix.WriteInt(*value.diplomacy_metadata->sunspot_countdown);}
+    }
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -217,6 +230,36 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC physical contact preserves raw words and sunspot recognition while retaining saved generations",GT(){
+        using faction::CompleteSmacPhysicalContact;using faction::GrantSmacRelation;
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto value=State();value.diplomacy_metadata.emplace();value.diplomacy_metadata->trade_doubled=true;
+        value.diplomacy_metadata->sanctions[2]=17;value.diplomacy_metadata->grievance[2][7]=255;
+        value.diplomacy_metadata->sunspot_countdown=4;
+        auto& forward=value.hostility.owners.at(7).directions[2];auto& reverse=value.hostility.owners.at(2).directions[7];
+        forward={0x00200000u,37,8,19,23};reverse={0x00002000u,49,9,29,31};
+        const auto cold=value.hostility;
+        CompleteSmacPhysicalContact(value.hostility,7,2,0,0,true);
+        GT_ASSERT(value.hostility==cold,"turn-zero encounter changed relationship history");
+        CompleteSmacPhysicalContact(value.hostility,7,2,6,4,true);
+        GT_ASSERT(forward.primary==0xc0200008u && reverse.primary==0xc0002008u,"sunspots omitted contact high bits or invented full recognition");
+        GT_ASSERT(forward.secondary==37 && reverse.secondary==49 && forward.transition_turn==8 && reverse.paired_b==31,"contact changed dates secondary or counters");
+        CompleteSmacPhysicalContact(value.hostility,7,2,7,0,true);
+        GT_ASSERT(forward.primary==0xc8200008u && reverse.primary==0xc8002008u,"ordinary physical encounter did not add recognition");
+        auto before=value.hostility;GrantSmacRelation(value.hostility,7,2,0x01000202u);
+        GT_ASSERT(forward.primary==((before.owners.at(7).directions[2].primary&0xffee7fafu&0xff7fffffu)|0x01000202u),"Treaty primitive discarded unrelated raw bits");
+        GT_ASSERT(forward.paired_b==23 && reverse.paired_b==31,"peace grant reset Vendetta-only counters");
+        GrantSmacRelation(value.hostility,7,2,16);
+        GT_ASSERT((forward.primary&7u)==0 && (reverse.primary&7u)==0 && forward.paired_b==0 && reverse.paired_b==0 && forward.paired_a==19,"Vendetta primitive reset wrong paired array or retained peace");
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"V38 lost saved diplomacy inputs or histories");
+        auto legacy=value;legacy.diplomacy_metadata->sunspot_countdown.reset();
+        GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(value,37),technologies,profiles,units)==legacy,"V37 silently invented a sunspot generation");
+        legacy.diplomacy_metadata.reset();
+        GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(value,36),technologies,profiles,units)==legacy,"V36 silently initialized diplomacy authority on restore");
+        GT_OK();
+    });
+
     task->AddTest("SMAC capability refresh honors retained intrinsic activity and exclusion",GT(){
         auto catalog=CapabilityCatalog();auto technologies=smac_rules_fixture::Technologies();
         faction::SmacFactionTechnologyState owned{{1,"GAIANS"}};owned.owned.fill(true);

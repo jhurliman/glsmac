@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "faction/SmacDiplomacy.h"
 #include "game/ActorVisibilitySnapshot.h"
 #include "Player.h"
 #include "slot/Slot.h"
@@ -358,6 +359,16 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
             && (*value->Conventional().native_flags&0x400u);
         return special || flags || bool(tile->features&map::tile::FEATURE_XENOFUNGUS);
     };
+    const auto encounter=[&](int32_t peer) {
+        if(!GetTurnId()) {return;}
+        const auto& metadata=m_simulation->value.diplomacy_metadata;
+        if(!metadata || !metadata->sunspot_countdown || GetTurnId()>INT32_MAX) {throw std::runtime_error("Physical contact requires saved sunspot and turn authority");}
+        const auto& direction=m_simulation->value.hostility.owners.at(owner).directions.at(peer);
+        const auto mask=*metadata->sunspot_countdown>0?0xc0000008u:0xc8000008u;
+        if((direction.primary&mask)==mask) {return;}
+        if(!prepared.contact_hostility) {prepared.contact_hostility=m_simulation->value.hostility;}
+        faction::CompleteSmacPhysicalContact(*prepared.contact_hostility,owner,peer,static_cast<int32_t>(GetTurnId()),*metadata->sunspot_countdown,true);
+    };
     const bool mover_concealed=concealed(actor,destination);
     const auto center_index=size_t(destination->coord.y)*size_t(data.width/2)+destination->coord.x/2;
     const bool enhanced=(abilities(actor)&2u) || ((destination->terraforming&map::tile::TERRAFORMING_SENSOR)
@@ -395,6 +406,7 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
             //5cee64..5cef16: ordinary singleton Fungus/stealth is concealed
             // from a contacted opponent without enhanced sight. Old masks stay.
             if(!concealed(other,tile) || enhanced || !contact || tile->units.size()!=1) {
+                encounter(faction);
                 auto& observation=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==entry.first;});
                 observation.visible_to|=uint8_t(1u<<owner);prepared.disclosed_to_humans.push_back(entry.first);
             }
@@ -405,7 +417,7 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
 		if(faction==owner) {continue;}
 		if(base->GetTile()==destination) {throw std::runtime_error("Foreign Base entry is not admitted");}
 		const auto* center=base->GetTile();
-		if(adjacent(destination,center)) {moving.visible_to |= uint8_t(1u<<faction);
+		if(adjacent(destination,center)) {encounter(faction);moving.visible_to |= uint8_t(1u<<faction);
             prepared.disclosed_to_humans.push_back(id);}
 	}
     // Original5ce6e2/5cf43e visit inner9 plus outer16 sensor positions.
@@ -449,6 +461,7 @@ void Game::CommitConventionalSight( std::optional< map::SmacWorkerKnowledge >& p
 
 void Game::CommitConventionalSight(unit::PreparedConventionalSight& prepared) noexcept {
     if(!prepared.knowledge) {return;}
+    if(prepared.contact_hostility) {m_simulation->value.hostility.owners.swap(prepared.contact_hostility->owners);}
     CommitConventionalSight(prepared.knowledge);
     m_um->CommitUnitDisclosures(prepared.disclosed_to_humans);
 }

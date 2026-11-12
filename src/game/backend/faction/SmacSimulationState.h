@@ -77,9 +77,10 @@ struct SmacCapabilityState {
 // derived intake. The two solar flags belong to different calculation phases.
 struct SmacDiplomacyMetadata {
     bool trade_doubled=false;
+    std::optional<int32_t> sunspot_countdown=0;
     std::array<int32_t,8> sanctions{};
     std::array<std::array<uint8_t,8>,8> grievance{};
-    bool operator==(const SmacDiplomacyMetadata& other) const noexcept {return trade_doubled==other.trade_doubled && sanctions==other.sanctions && grievance==other.grievance;}
+    bool operator==(const SmacDiplomacyMetadata& other) const noexcept {return sunspot_countdown==other.sunspot_countdown && trade_doubled==other.trade_doubled && sanctions==other.sanctions && grievance==other.grievance;}
 };
 
 struct SmacGlobalResourceModifiers {

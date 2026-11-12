@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/backend/map/SmacWorkerKnowledge.h"
+#include "game/backend/faction/SmacHostileState.h"
 #include <optional>
 #include <vector>
 #include <utility>
@@ -11,6 +12,7 @@ namespace game::backend::unit {
 struct PreparedConventionalSight {
     std::optional<map::SmacWorkerKnowledge> knowledge;
     std::vector<uint64_t> disclosed_to_humans;
+    std::optional<faction::SmacHostileState> contact_hostility;
     PreparedConventionalSight(std::optional<map::SmacWorkerKnowledge> value = std::nullopt)
         : knowledge(std::move(value)) {}
 };

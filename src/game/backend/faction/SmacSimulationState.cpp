@@ -197,7 +197,7 @@ void SmacHostileState::RequireOrdinaryHostility(int32_t actor,int32_t target) co
 	if(actor<1 || actor>7 || target<1 || target>7 || actor==target || !owners.count(actor) || !owners.count(target)) {throw std::runtime_error("Hostile action requires two admitted factions");}
 	for(const auto& pair:{std::pair<int32_t,int32_t>{actor,target},{target,actor}}) {
 		const auto& direction=owners.at(pair.first).directions[pair.second];
-		if(direction.secondary || (direction.primary!=0 && direction.primary!=16 && direction.primary!=0x80008118u && direction.primary!=0x8000a118u)) {
+		if(direction.secondary || (direction.primary&7u)) {
 			throw std::runtime_error("Hostile movement requires its ordinary no-peace or Vendetta diplomacy context");
 		}
 	}
@@ -212,7 +212,7 @@ void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t wi
 }
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 37;
+constexpr int64_t VERSION = 38;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -619,6 +619,8 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
         for(const auto blocked:diplomacy_metadata->sanctions) {buffer.WriteInt(blocked);}
         for(const auto& row:diplomacy_metadata->grievance) {for(const auto value:row) {buffer.WriteInt(value);}}
     }
+    buffer.WriteBool(diplomacy_metadata && diplomacy_metadata->sunspot_countdown.has_value());
+    if(diplomacy_metadata && diplomacy_metadata->sunspot_countdown) {buffer.WriteInt(*diplomacy_metadata->sunspot_countdown);}
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -630,7 +632,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		types::Buffer buffer( wire );
 		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto version=buffer.ReadInt();
-		if(version!=VERSION && version!=36 && version!=35 && version!=34 && version!=33 && version!=32 && version!=31 && version!=30 && version!=29 && version!=28 && version!=27 && version!=26 && version!=25 && version!=24 && version!=23 && version!=22 && version!=21 && version!=20 && version!=19 && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
+		if(version!=VERSION && version!=37 && version!=36 && version!=35 && version!=34 && version!=33 && version!=32 && version!=31 && version!=30 && version!=29 && version!=28 && version!=27 && version!=26 && version!=25 && version!=24 && version!=23 && version!=22 && version!=21 && version!=20 && version!=19 && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC simulation roster requires 1..7 participants" ); }
 		std::vector< SmacSimulationParticipant > roster;
@@ -772,12 +774,16 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
             summary=SmacAirSummary{ReadInt32(buffer),ReadInt32(buffer),ReadInt32(buffer)};
         }}}
         if(version>=37 && buffer.ReadBool()) {
-            result.diplomacy_metadata.emplace();
+            result.diplomacy_metadata.emplace();result.diplomacy_metadata->sunspot_countdown.reset();
             result.diplomacy_metadata->trade_doubled=buffer.ReadBool();
             for(auto& blocked:result.diplomacy_metadata->sanctions) {blocked=ReadInt32(buffer);if(blocked<0) {throw std::runtime_error("Negative sanctions counter");}}
             for(auto& row:result.diplomacy_metadata->grievance) {for(auto& value:row) {
                 const auto raw=buffer.ReadInt();if(raw<0 || raw>255) {throw std::runtime_error("Diplomatic grievance exceeds byte");}value=static_cast<uint8_t>(raw);
             }}
+        }
+        if(version>=38 && buffer.ReadBool()) {
+            if(!result.diplomacy_metadata) {throw std::runtime_error("Sunspots require saved diplomatic authority");}
+            result.diplomacy_metadata->sunspot_countdown=ReadInt32(buffer);
         }
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );

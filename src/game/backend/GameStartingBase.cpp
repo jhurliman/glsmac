@@ -230,7 +230,7 @@ Game::StartingBaseKnowledge Game::PrepareStartingBaseKnowledge( const base::Base
         data.horizontal_wrap = true; data.ordinary_local_mode = true; data.all_map_revealed = 0;
         data.tiles.resize(sea.size(),{0,std::nullopt});
         auto occupancy=map::SmacOccupancyCache::Blank(data.width,data.height,true);
-        if(const auto* original=m_map->GetResourcePolicy()->OriginalPlanet()) {
+        if(const auto* original=m_map->GetResourcePolicy()->NativeTerrainSource().get()) {
             std::vector<map::SmacOccupancyCache::Cell> cells;cells.reserve(sea.size());
             for(int32_t y=0;y<data.height;++y) {for(int32_t x=y&1;x<data.width;x+=2) {cells.push_back({original->At(x,y).CachedOccupant(),0});}}
             occupancy=map::SmacOccupancyCache::Create(data.width,data.height,true,cells);

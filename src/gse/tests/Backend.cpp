@@ -4838,7 +4838,11 @@ public:
         types::Buffer input(world);
         world_snapshot::ValidateHeader(input,m_state->m_settings.global);
         world_snapshot::ReadRandomState(input);const auto turn=world_snapshot::ReadTurnState(input,m_state->m_slots->GetSlots());
-        m_game.ReadSimulationState(input,turn.id);
+        const auto simulation_offset=input.lenr;
+        const auto simulation=m_game.ReadSimulationState(input,turn.id);const auto simulation_end=input.lenr;
+        types::Buffer current_simulation;current_simulation.WriteBool(simulation.has_value());
+        if(simulation) {const auto& settings=m_state->m_settings.global;
+            current_simulation.WriteString(simulation->value.Serialize(*settings.GetSmacTechnologyRules(),*settings.GetSmacFactionStartupRules(),*settings.GetSmacPredefinedUnitRules()).ToString());}
         map::GlsmacResourceMapPolicy::ReadOptional(input,true);world_snapshot::ReadWorkerKnowledge(input,true);world_snapshot::ReadTerritoryTopology(input,true);
         input.ReadString();input.ReadString(); // map/resources
         const auto units_offset=input.lenr;types::Buffer units(input.ReadString()),unit_prefix;
@@ -4861,20 +4865,26 @@ public:
         if(definitions.size()!=static_cast<size_t>(facility_count)) {throw std::runtime_error("duplicate restored facility definition");}
         for(const auto& row:definitions) {prefix.WriteString(row.second);}
         types::Buffer frame;frame.WriteString(prefix.ToString()+bases.ToString().substr(bases.lenr));
-        return world.substr(0,units_offset)+units_frame.ToString()+frame.ToString()+world.substr(input.lenr);
+        return world.substr(0,simulation_offset)+current_simulation.ToString()+world.substr(simulation_end,units_offset-simulation_end)
+            +units_frame.ToString()+frame.ToString()+world.substr(input.lenr);
     }
 
     std::string CheckCampaignRestore(const std::string& path,const std::string& expected_world,
         std::string* decoded_random=nullptr,bool advance=true) {
         using namespace game::backend;
         const auto saved=campaign::Read(path);
-        types::Buffer saved_prefix(saved.world);world_snapshot::ValidateHeader(saved_prefix,m_state->m_settings.global);
+        types::Buffer saved_settings(saved.settings);settings::GlobalSettings frozen;
+        frozen.Deserialize(types::Buffer(saved_settings.ReadString()));
+        types::Buffer saved_prefix(saved.world);world_snapshot::ValidateHeader(saved_prefix,frozen);
         world_snapshot::ReadRandomState(saved_prefix);const auto saved_turn=world_snapshot::ReadTurnState(saved_prefix,m_state->m_slots->GetSlots());
-        const auto saved_simulation=m_game.ReadSimulationState(saved_prefix,saved_turn.id);
+        GT_ASSERT(saved_prefix.ReadBool() && frozen.GetRulesetId()=="smac","Replay checkpoint lacks its SMAC simulation frame");
+        const auto saved_simulation=faction::SmacSimulationState::Deserialize(saved_prefix.ReadString(faction::SmacSimulationState::MAX_WIRE_BYTES),
+            *frozen.GetSmacTechnologyRules(),*frozen.GetSmacFactionStartupRules(),*frozen.GetSmacPredefinedUnitRules());
+        saved_simulation.ValidateTurn(saved_turn.id);
         const auto before_turn=saved_turn.id;
-        const auto before_rng=saved_simulation->value.gameplay_random;
-        const auto before_settings=m_state->Serialize().ToString();
-        const auto before_roster=m_state->ExportRoster();
+        const auto before_rng=saved_simulation.gameplay_random;
+        const auto before_settings=saved.settings;
+        const auto before_roster=saved.roster;
         const auto presentations=m_game.m_smac_base_presentations;
         const auto unit_presentations=m_game.m_smac_presentations;
         return WithCampaignMapSources([&]()->std::string {

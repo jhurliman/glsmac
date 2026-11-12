@@ -1022,7 +1022,7 @@ public:
             cell.elevation=2;cell.contour=40;cell.items&=0x7e1377a3u;cell.remembered_items.fill(cell.items);
             const auto before=m_game.SerializeWorldSnapshot();const auto old_corner=*changed->elevation.bottom;
             const auto exploration=world->GetSmacWorkerKnowledge()->CopyData().tiles;
-            auto prepared=world->PrepareClimateTerrain(plane,1,2);
+            auto prepared=world->PrepareClimateTerrain(plane,1,2,*world->GetSmacWorkerKnowledge());
             GT_ASSERT(world->GetClimateTerrainPayload(*prepared).invalidate_native_geometry,"Climate omitted full native-view geometry invalidation");
             game::FrontendRequest notification(game::FrontendRequest::FR_UPDATE_TERRAIN);
             NEW(notification.data.update_terrain.update,map::TerrainRenderUpdate,world->GetClimateTerrainPayload(*prepared));
@@ -1040,9 +1040,9 @@ public:
             world->QueryClimateTerrain(*prepared,[&]{knowledge=*world->GetSmacWorkerKnowledge();topology=*world->GetTerritoryTopology();});
             world->CompleteClimateTerritory(*prepared,*knowledge,*topology);
             const auto feature=changed->features;changed->features^=map::tile::FEATURE_XENOFUNGUS;
-            rejected=false;try {world->CommitClimateTerrain(*prepared);}catch(const std::runtime_error&) {rejected=true;}
+            rejected=false;try {world->ValidateClimateTerrain(*prepared);}catch(const std::runtime_error&) {rejected=true;}
             changed->features=feature;GT_ASSERT(rejected && m_game.SerializeWorldSnapshot()==before,"Stale climate preimage partially published");
-            world->CommitClimateTerrain(*prepared);
+            world->ValidateClimateTerrain(*prepared);world->CommitClimateTerrain(*prepared);
             GT_ASSERT(changed->is_water_tile && *changed->elevation.bottom!=old_corner,"Climate commit omitted surface or display geometry");
             GT_ASSERT(world->GetSmacWorkerKnowledge()->CopyData().tiles==exploration,"Climate conversion invented exploration");
             world->GetTerritoryTopology()->ValidateTerrain(world->TerritorySea());

@@ -218,10 +218,13 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
     // entity callback. Preparation stages native regions/coasts, all live fields,
     // remembered improvements and contours; queries restore on every exit.
     smac_climate::World CopyClimateTerrain(int32_t turn,const std::array<uint32_t,8>& status) const;
-    std::unique_ptr<PreparedClimateTerrain> PrepareClimateTerrain(const smac_climate::World& plane,int32_t sea_offset,int32_t climate_extra);
+    std::unique_ptr<PreparedClimateTerrain> PrepareClimateTerrain(const smac_climate::World& plane,int32_t sea_offset,int32_t climate_extra,
+        std::optional<SmacWorkerKnowledge> entities={});
     void QueryClimateTerrain(const PreparedClimateTerrain&,const std::function<void()>& query);
     void CompleteClimateTerritory(PreparedClimateTerrain&,SmacWorkerKnowledge knowledge,GlsmacTerritoryTopology topology);
-    void CommitClimateTerrain(PreparedClimateTerrain&);
+    void ValidateClimateTerrain(PreparedClimateTerrain&);
+    // Caller validates every participant before the first allocation-free commit.
+    void CommitClimateTerrain(PreparedClimateTerrain&) noexcept;
     const TerrainRenderUpdate& GetClimateTerrainPayload(const PreparedClimateTerrain&) const;
 
     smac_terrain::LandmarkGeometry* GetNativeGeometry() const;
@@ -263,6 +266,7 @@ private:
     bool m_native_only_presentation=false;
     void ValidateGlobalSpread(const PreparedGlobalSpread& prepared) const;
     void ValidateEcologyBloom(const PreparedEcologyBloom& prepared) const;
+    void CheckClimateTerrain(const PreparedClimateTerrain&) const;
 	GlsmacTerritoryTopology PrepareSiteRatings(const GlsmacTerritoryTopology& topology,
 		const std::vector<smac_site::Coordinate>& bases,size_t turn,std::optional<smac_site::Coordinate> point) const;
     const error_code_t LoadNativeTerrain(const GlsmacResourceMapPolicy& policy,MT_CANCELABLE);

@@ -115,3 +115,12 @@ heights from that snapshot. No borrowed mesh/texture lifetime changes threads.
 After climate, hidden legacy atlas recipes are retired; later ordinary work still
 publishes tile metadata and native snapshot invalidation, avoiding replay against
 obsolete coastal recipes. Full legacy-mesh renderer support is not implied.
+
+For aggregate entity coupling, Map preparation accepts an explicitly copied
+candidate knowledge frame after the entity query has restored original live
+registries. This preserves survivor observations and acquired exploration while
+applying the evolving climate item-memory and occupancy words. The final Map
+plan exposes separate Validate and noexcept Commit phases: the owner validates
+all participating entity/map/notification plans before the first publication,
+then commits without allocation or a second stale check after another participant
+has already committed. Queries remain detached and can run before sealing.

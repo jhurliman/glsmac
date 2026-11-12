@@ -11,6 +11,7 @@
 #include "tile/Tile.h"
 #include "util/FinallyGuard.h"
 #include <algorithm>
+#include <cassert>
 #include <stdexcept>
 
 namespace game::backend::map {
@@ -49,7 +50,7 @@ struct Map::PreparedClimateTerrain::Data {
     std::vector<std::string> tile_preimages;
     std::vector<Physical> before,after;
     std::map<tile::elevation_t*,tile::elevation_t> old_heights,heights;
-    bool committed=false,territory_complete=false;
+    bool committed=false,territory_complete=false,validated=false;
     TerrainRenderUpdate render;
 };
 Map::PreparedClimateTerrain::PreparedClimateTerrain()=default;
@@ -60,7 +61,7 @@ smac_climate::World Map::CopyClimateTerrain(int32_t turn,const std::array<uint32
     const auto input=CopyGlobalSpreadInput(turn,status);
     return retained_terrain::ExportClimateTerrain(input.tiles,input.geometry);
 }
-std::unique_ptr<Map::PreparedClimateTerrain> Map::PrepareClimateTerrain(const smac_climate::World& world,int32_t offset,int32_t extra) {
+std::unique_ptr<Map::PreparedClimateTerrain> Map::PrepareClimateTerrain(const smac_climate::World& world,int32_t offset,int32_t extra,std::optional<SmacWorkerKnowledge> entities) {
     if(!m_game->GetGCSpace()->IsAccumulating() || m_global_spread_query_active || !m_resource_policy || !m_resource_policy->NativeTerrainSource()
         || !m_worker_knowledge || !m_worker_knowledge_ready || !m_territory_topology || !m_territory_topology->Areas() || !m_territory_topology->SiteRatings()) {
         throw std::runtime_error("Climate terrain requires its owning live native world");
@@ -82,11 +83,14 @@ std::unique_ptr<Map::PreparedClimateTerrain> Map::PrepareClimateTerrain(const sm
     for(const auto& t:regional.records) {details.push_back(t[15]);}
     auto topology=m_territory_topology->Rebuild(sea).WithTerrainPostpass(sea,fertile).WithLandmarkDetails(std::move(details));
     for(size_t i=0;i<regional.records.size();++i) {if(topology.Regions().at(i)!=regional.records[i][3]) {throw std::logic_error("Climate region producers disagree");}}
-    auto knowledge=m_worker_knowledge->CopyData();
+    auto knowledge=entities?entities->CopyData():m_worker_knowledge->CopyData();
+    if(knowledge.width!=width || knowledge.height!=height || knowledge.horizontal_wrap!=world.horizontal_wrap) {
+        throw std::invalid_argument("Climate candidate entity knowledge geometry differs");
+    }
     const auto retained_before=m_resource_policy->NativeTerrainSource()->ExportClimateTerrain();
     auto prepared=std::unique_ptr<PreparedClimateTerrain>(new PreparedClimateTerrain);
     prepared->data=std::make_unique<PreparedClimateTerrain::Data>(PreparedClimateTerrain::Data{
-        this,*m_resource_policy,std::move(policy),*m_worker_knowledge,*m_worker_knowledge,*m_territory_topology,std::move(topology),{},{},{},{},{},false,false});
+        this,*m_resource_policy,std::move(policy),*m_worker_knowledge,*m_worker_knowledge,*m_territory_topology,std::move(topology),{},{},{},{},{},false,false,false});
     auto& d=*prepared->data;d.render.invalidate_native_geometry=true;
     const auto height_at=[&](int x,int y){
         y=std::clamp(y,0,height-1);if(world.horizontal_wrap) {x=(x%width+width)%width;}else {x=std::clamp(x,0,width-1);}
@@ -135,12 +139,21 @@ std::unique_ptr<Map::PreparedClimateTerrain> Map::PrepareClimateTerrain(const sm
     d.knowledge=SmacWorkerKnowledge::Create(knowledge);
     return prepared;
 }
-void Map::QueryClimateTerrain(const PreparedClimateTerrain& prepared,const std::function<void()>& query) {
-    if(!prepared.data || prepared.data->owner!=this || prepared.data->committed || m_global_spread_query_active || !query) {throw std::invalid_argument("Invalid climate terrain query");}
+void Map::CheckClimateTerrain(const PreparedClimateTerrain& prepared) const {
+    if(!prepared.data || prepared.data->owner!=this || prepared.data->committed || m_global_spread_query_active) {throw std::invalid_argument("Invalid climate terrain transaction");}
     const auto& d=*prepared.data;
     if(!m_resource_policy || !(*m_resource_policy==d.original_policy) || !m_worker_knowledge || !(*m_worker_knowledge==d.original_knowledge)
         || !m_territory_topology || !(*m_territory_topology==d.original_topology)) {throw std::runtime_error("Stale climate authority preimage");}
     for(size_t i=0;i<d.before.size();++i) {if(d.before[i].tile->Serialize().ToString()!=d.tile_preimages[i]) {throw std::runtime_error("Stale climate tile preimage");}}
+}
+void Map::ValidateClimateTerrain(PreparedClimateTerrain& prepared) {
+    CheckClimateTerrain(prepared);
+    if(!prepared.data->territory_complete) {throw std::runtime_error("Climate publication requires completed entity and territory consumers");}
+    prepared.data->validated=true;
+}
+void Map::QueryClimateTerrain(const PreparedClimateTerrain& prepared,const std::function<void()>& query) {
+    CheckClimateTerrain(prepared);if(!query) {throw std::invalid_argument("Climate query requires a consumer");}
+    const auto& d=*prepared.data;
     auto policy=std::optional<GlsmacResourceMapPolicy>{d.policy};auto knowledge=std::optional<SmacWorkerKnowledge>{d.knowledge};auto topology=std::optional<GlsmacTerritoryTopology>{d.topology};
     std::unique_ptr<smac_terrain::LandmarkGeometry> geometry;std::shared_ptr<const SmacTerrainAuthority> source;
     const auto wrap=m_native_geometry_wrap;
@@ -157,11 +170,11 @@ void Map::CompleteClimateTerritory(PreparedClimateTerrain& prepared,SmacWorkerKn
     if(!prepared.data || prepared.data->owner!=this || prepared.data->committed || m_global_spread_query_active) {throw std::invalid_argument("Invalid climate territory completion");}
     auto& d=*prepared.data;std::vector<bool> sea;for(const auto& p:d.after) {sea.push_back(p.water);}topology.ValidateTerrain(sea);
     const auto data=knowledge.CopyData();if(data.width!=int32_t(GetWidth()) || data.height!=int32_t(GetHeight()) || data.horizontal_wrap!=topology.Wraps()) {throw std::invalid_argument("Climate territory geometry differs");}
-    d.knowledge=std::move(knowledge);d.topology=std::move(topology);d.territory_complete=true;
+    d.knowledge=std::move(knowledge);d.topology=std::move(topology);d.territory_complete=true;d.validated=false;
 }
-void Map::CommitClimateTerrain(PreparedClimateTerrain& prepared) {
-    if(!prepared.data || !prepared.data->territory_complete) {throw std::runtime_error("Climate publication requires completed entity and territory consumers");}
-    QueryClimateTerrain(prepared,[]{});auto& d=*prepared.data;
+void Map::CommitClimateTerrain(PreparedClimateTerrain& prepared) noexcept {
+    assert(prepared.data && prepared.data->owner==this && prepared.data->territory_complete && prepared.data->validated && !prepared.data->committed);
+    auto& d=*prepared.data;
     static_assert(noexcept(*m_resource_policy=std::move(d.policy)) && noexcept(*m_worker_knowledge=std::move(d.knowledge)) && noexcept(*m_territory_topology=std::move(d.topology)));
     for(const auto& [p,value]:d.heights) {*p=value;}for(const auto& p:d.after) {p.Apply();}
     *m_resource_policy=std::move(d.policy);*m_worker_knowledge=std::move(d.knowledge);*m_territory_topology=std::move(d.topology);

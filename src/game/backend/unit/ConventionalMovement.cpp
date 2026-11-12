@@ -451,15 +451,82 @@ int32_t WildEdgeCost(const map::tile::Tile& destination,int32_t quantum) {
 void UnitManager::ResetWildNativeSpent(GSE_CALLABLE,Unit* actor) {
     m_game->CheckRW(GSE_CALL);m_game->RequireSmacGameplayActive();
     if(!m_game->IsSmacControllerOwner(0) || !actor || GetUnit(actor->m_id)!=actor || !actor->IsNative()
-        || actor->Native().owner || actor->Native().design!=8) {throw std::runtime_error("Wild upkeep requires the scheduled native Mind Worm");}
+        || actor->Native().owner || (actor->Native().design!=8 && actor->Native().design!=9)) {throw std::runtime_error("Wild upkeep requires its scheduled native Worm or Isle");}
     const auto before=actor->Native();(void)QueryNativeUnit(before,0);
     const auto* tile=actor->GetTile();
-    const auto upkeep=smac_native_ai::PlanUpkeep(0,tile->is_water_tile,tile->base!=nullptr,before.flags,before.order,before.state,0);
+    int32_t carriers=0;
+    for(const auto& row:tile->units) {
+        if(row.second->IsNative()) {carriers+=row.second->Native().design==9;}
+        else {carriers+=m_game->ResolveConventionalDesign(row.second->Conventional(),*m_game->m_simulation).plan==7;}
+    }
+    const auto upkeep=smac_native_ai::PlanUpkeep(before.design==9 ? 1:0,tile->is_water_tile,tile->base!=nullptr,before.flags,before.order,before.state,carriers);
     if(std::find(upkeep.actions.begin(),upkeep.actions.end(),smac_native_ai::UpkeepAction::Delete)!=upkeep.actions.end()) {
-        auto removal=PrepareWorldUnitRemoval(GSE_CALL,{actor->m_id});removal.Commit();removal.Notify(GSE_CALL);return;
+        DisbandWildNativeUnit(GSE_CALL,actor);return;
     }
     auto next=before;next.movement_spent=0;next.state=upkeep.state;next.order=static_cast<uint8_t>(upkeep.order);
     QueueUnitUpdate(actor,UUO_REFRESH);std::get<SmacNativeUnitRecord>(actor->m_state)=next;
+}
+uint8_t UnitManager::BeginWildNativeCommand(GSE_CALLABLE,Unit* actor) {
+    m_game->CheckRW(GSE_CALL);m_game->RequireSmacGameplayActive();
+    if(!m_game->IsSmacControllerOwner(0) || !actor || GetUnit(actor->m_id)!=actor || !actor->IsNative()
+        || actor->Native().owner || (actor->Native().design!=8 && actor->Native().design!=9)) {throw std::runtime_error("Native command requires its scheduled Worm or Isle");}
+    auto next=actor->Native();++next.terraforming_progress;
+    QueueUnitUpdate(actor,UUO_REFRESH);std::get<SmacNativeUnitRecord>(actor->m_state)=next;return next.terraforming_progress;
+}
+void UnitManager::SetWildNativeWaypoint(GSE_CALLABLE,Unit* actor,uint8_t order,map::tile::Tile* destination) {
+    m_game->CheckRW(GSE_CALL);m_game->RequireSmacGameplayActive();
+    const auto* map=GetMap();
+    if(!m_game->IsSmacControllerOwner(0) || !actor || GetUnit(actor->m_id)!=actor || !actor->IsNative() || actor->Native().owner
+        || (actor->Native().design!=8 && actor->Native().design!=9) || (order!=24 && order!=0x58) || !destination
+        || destination->coord.x>INT16_MAX || destination->coord.y>INT16_MAX || destination->tiles!=map->GetTilesPtr()
+        || destination->coord.x>=map->GetWidth() || destination->coord.y>=map->GetHeight()
+        || map->GetTile(destination->coord.x,destination->coord.y)!=destination) {throw std::runtime_error("Native directive requires its scheduled Unit and actual waypoint");}
+    auto next=actor->Native();next.order=order;next.waypoint_x[0]=destination->coord.x;next.waypoint_y[0]=destination->coord.y;
+    if(order==24) {next.status_character=99;}
+    QueueUnitUpdate(actor,UUO_REFRESH);std::get<SmacNativeUnitRecord>(actor->m_state)=next;
+}
+void UnitManager::ActivateWildNativeStack(GSE_CALLABLE,Unit* carrier,uint8_t shore_explored) {
+    m_game->CheckRW(GSE_CALL);m_game->RequireSmacGameplayActive();
+    if(!m_game->IsSmacControllerOwner(0) || !carrier || GetUnit(carrier->m_id)!=carrier || !carrier->IsNative()
+        || carrier->Native().owner || carrier->Native().design!=9) {throw std::runtime_error("Shore activation requires its scheduled Isle");}
+    const auto stats=QueryNativeUnit(carrier->Native(),0);if(stats.full_allowance>255) {throw std::overflow_error("Isle exhaustion exceeds its native byte");}
+    auto knowledge=GetMap()->GetSmacWorkerKnowledge();if(!knowledge) {throw std::runtime_error("Shore activation requires saved observations");}
+    auto data=knowledge->CopyData();auto updates=m_unit_updates;
+    std::vector<std::pair<Unit*,SmacNativeUnitRecord>> natives;std::vector<std::pair<Unit*,ConventionalUnitState>> conventional;
+    for(const auto& row:carrier->GetTile()->units) {
+        auto* member=row.second;
+        auto observation=std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==member->m_id;});
+        if(observation==data.units.end()) {throw std::runtime_error("Shore activation lost its stack observation");}
+        observation->visible_to|=shore_explored;
+        if(member->IsNative()) {
+            auto next=member->Native();next.order=0;next.observation_mask=observation->visible_to;
+            if(member==carrier) {next.movement_spent=stats.full_allowance;}natives.emplace_back(member,next);
+        } else {
+            auto next=member->Conventional();next.order=ConventionalUnitState::Order::None;next.work_order=ConventionalUnitState::WorkOrder::None;
+            conventional.emplace_back(member,next);
+        }
+        auto& update=updates.try_emplace(member->m_id,unit_update_t{UUO_NONE,member}).first->second;
+        if(update.unit!=member || (update.ops&UUO_DESPAWN)) {throw std::runtime_error("Shore activation has a stale pending Unit");}
+        update.ops=static_cast<unit_update_op_t>(update.ops|UUO_REFRESH);
+    }
+    PreparedConventionalSight sight;sight.knowledge=map::SmacWorkerKnowledge::Create(data);
+    for(const auto& row:natives) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+    for(const auto& row:conventional) {row.first->CommitConventionalMove(row.second,row.first->GetTile());}
+    m_unit_updates.swap(updates);m_game->CommitConventionalSight(sight);
+}
+void UnitManager::DisbandWildNativeUnit(GSE_CALLABLE,Unit* actor) {
+    m_game->CheckRW(GSE_CALL);m_game->RequireSmacGameplayActive();
+    if(!m_game->IsSmacControllerOwner(0) || !actor || GetUnit(actor->m_id)!=actor || !actor->IsNative()
+        || actor->Native().owner || (actor->Native().design!=8 && actor->Native().design!=9)) {throw std::runtime_error("Native retirement requires its scheduled Worm or Isle");}
+    std::vector<size_t> removed{actor->m_id};
+    if(actor->Native().design==9 && actor->GetTile()->is_water_tile) {
+        std::vector<Unit*> dense;for(const auto id:m_unit_order) {dense.push_back(GetUnit(id));}ValidateNativeIndexBindings(dense);
+        auto* head=actor;while(head->SourceStack()->previous>=0) {head=GetUnit(m_unit_order.at(head->SourceStack()->previous));}
+        for(auto* member=head;member;member=member->SourceStack()->next>=0 ? GetUnit(m_unit_order.at(member->SourceStack()->next)):nullptr) {
+            if(member!=actor && member->IsNative() && member->Native().order==1 && member->Native().waypoint_x[0]==actor->Native().id) {removed.push_back(member->m_id);}
+        }
+    }
+    auto removal=PrepareWorldUnitRemoval(GSE_CALL,removed);removal.Commit();removal.Notify(GSE_CALL);
 }
 void UnitManager::ValidateWildNativeMove(Unit* actor,map::tile::Tile* destination) const {
     m_game->RequireSmacGameplayActive();m_game->RequireConventionalSightWorld();
@@ -470,12 +537,13 @@ void UnitManager::ValidateWildNativeMove(Unit* actor,map::tile::Tile* destinatio
     const auto* map=GetMap();const auto* source=actor->GetTile();
     const auto valid=[&](const map::tile::Tile* tile) {
         return tile && tile->tiles==map->GetTilesPtr() && tile->coord.x<map->GetWidth() && tile->coord.y<map->GetHeight()
-            && map->GetTile(tile->coord.x,tile->coord.y)==tile && !tile->is_water_tile && !tile->IsLocked();
+            && map->GetTile(tile->coord.x,tile->coord.y)==tile && !tile->IsLocked();
     };
-    if(!valid(source) || !valid(destination) || !source->IsAdjactentTo(destination)
+    if(!valid(source) || !valid(destination) || destination->is_water_tile || !source->IsAdjactentTo(destination)
         || !source->units.count(actor->m_id) || source->units.at(actor->m_id)!=actor) {throw std::runtime_error("Wild movement requires canonical adjacent land membership");}
     const auto stats=QueryNativeUnit(actor->Native(),0);
     if(stats.remaining_allowance<=0) {throw std::runtime_error("Wild movement requires remaining allowance");}
+    if(source->is_water_tile && HasForeignOccupant(actor,destination)) {throw std::runtime_error("Native beaching cannot enter positive-owner occupied land");}
     if(HasForeignOccupant(actor,destination)) {(void)PrepareConventionalAttack(actor,destination,0);return;}
     if(destination->base) {m_game->GetBM()->ValidateSmacNativeRaid(actor,destination);return;}
     for(const auto& row:destination->units) {

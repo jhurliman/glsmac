@@ -151,6 +151,11 @@ public:
 	void ResetWildNativeSpent(GSE_CALLABLE,Unit* actor);
     void ValidateWildNativeMove(Unit* actor,map::tile::Tile* destination) const;
     void MoveWildNativeUnit(GSE_CALLABLE,Unit* actor,map::tile::Tile* destination);
+    uint8_t BeginWildNativeCommand(GSE_CALLABLE,Unit* actor);
+    void SetWildNativeWaypoint(GSE_CALLABLE,Unit* actor,uint8_t order,map::tile::Tile* destination);
+    void ActivateWildNativeStack(GSE_CALLABLE,Unit* carrier,uint8_t shore_explored);
+    void DisbandWildNativeUnit(GSE_CALLABLE,Unit* actor);
+
 	void ResetConventionalSpent( GSE_CALLABLE, Unit* unit );
     enum class HumanOrderCommand { Hold, HoldTen, MenuHold, Activate, Skip };
     ConventionalUnitState PrepareHumanOrder(Unit* actor, HumanOrderCommand command, size_t caller) const;

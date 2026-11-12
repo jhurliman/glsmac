@@ -407,6 +407,42 @@ NativeCoexistenceCanary PublishUnrelatedNative(GSE_CALLABLE,ConventionalUnitFixt
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC native carrier activation retains work waypoint observations and lawful beaching",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(ColonyChoiceSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();Populate(GSE_CALL,fixture,true);auto* um=game->GetUM();
+            auto* sea=game->GetMap()->GetTile(20,20);for(auto* elevation:sea->elevation.corners) {*elevation=-1000;}sea->Update();
+            GT_ASSERT(sea->is_water_tile,"Carrier fixture lacks its real sea tile");
+            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            for(const auto& row:{std::pair<const char*,movement_type_t>{"MindWorms",MT_LAND},{"IsleOfTheDeep",MT_WATER}}) {
+                um->DefineUnit(new StaticDef(row.first,um->GetMoraleSet("live-morale"),row.first,row.second,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
+            }
+            fixture.ResourceState([](auto& state){state.native_factory=faction::SmacNativeFactoryState::Initialize(0,state.gameplay_random);});
+            auto birth=um->PrepareNativeBirths(GSE_CALL,128,64,true,[&](const UnitManager::NativeBirthFactory& factory){
+                const auto isle=factory.create(9,{20,20},{});const auto worm=factory.create(8,{20,20},{});factory.sentry(worm);factory.promote_stack(isle);
+            });
+            const auto isle_id=birth.Candidate(0).m_id,worm_id=birth.Candidate(1).m_id;birth.Commit();birth.Notify(GSE_CALL);
+            auto* isle=um->GetUnit(isle_id);auto* worm=um->GetUnit(worm_id);const auto random=fixture.GameplayRandom();
+            fixture.WithNativeController([&]{
+                for(int i=0;i<256;++i) {um->BeginWildNativeCommand(GSE_CALL,isle);}
+                um->SetWildNativeWaypoint(GSE_CALL,isle,24,game->GetMap()->GetTile(2,2));
+                um->ResetWildNativeSpent(GSE_CALL,isle);um->ResetWildNativeSpent(GSE_CALL,worm);
+            });
+            GT_ASSERT(isle->Native().terraforming_progress==0 && isle->Native().order==24 && isle->Native().status_character==99
+                && isle->Native().waypoint_x[0]==2 && isle->Native().waypoint_y[0]==2 && worm->Native().order==1,"Native command work byte wrap directive or carried sentry lifetime differs");
+            const auto worm_mask=worm->Native().observation_mask;
+            fixture.WithNativeController([&]{um->ActivateWildNativeStack(GSE_CALL,isle,2);});
+            GT_ASSERT(isle->GetTile()==sea && worm->GetTile()==sea && isle->Native().order==0 && worm->Native().order==0
+                && isle->Native().movement_spent==um->QueryNativeUnit(isle->Native(),0).full_allowance
+                && worm->Native().observation_mask==(worm_mask|2),"Shore activation moved cargo or omitted readiness observations or actual exhaustion");
+            auto* shore=game->GetMap()->GetTile(21,21);GT_ASSERT(!shore->is_water_tile,"Carrier fixture lacks ordinary shore");
+            fixture.WithNativeController([&]{um->SetWildNativeWaypoint(GSE_CALL,worm,0x58,shore);um->MoveWildNativeUnit(GSE_CALL,worm,shore);um->DisbandWildNativeUnit(GSE_CALL,isle);});
+            GT_ASSERT(!um->GetUnit(isle_id) && um->GetUnit(worm_id)==worm && worm->GetTile()==shore && sea->units.empty()
+                && worm->Native().movement_spent==3 && fixture.GameplayRandom()==random,"Canonical beaching or empty carrier retirement lost cargo positions budget or RNG");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC native Base raid joins facility population quota and atomic removal",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         for(const int scenario:{0,1,2,3,4,5}) {

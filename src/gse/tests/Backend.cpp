@@ -709,8 +709,7 @@ public:
             for(size_t step=0;step<12 && (actor=m_game.GetUM()->GetUnit(id)) && actor->HasMovesLeft();++step) {
                 auto* source=actor->GetTile();visited.insert(source);
                 const auto commands=m_game.GetUM()->QueryConventionalCommands(actor);
-                if(package==Package::Colony && !m_game.GetBM()->GetWorkingPop(source->coord)
-                    && std::find(commands.actions.begin(),commands.actions.end(),6)!=commands.actions.end()) {
+                if(package==Package::Colony && std::find(commands.actions.begin(),commands.actions.end(),6)!=commands.actions.end()) {
                     m_game.Event(GSE_CALL,"found_base",{{"unit",actor->Wrap(GSE_CALL)}});m_game.ProcessEvents();
                     if(!m_game.GetUM()->GetUnit(id)) {++m_campaign_actions.founded_bases;}break;
                 }

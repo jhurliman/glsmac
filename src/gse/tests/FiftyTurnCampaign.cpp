@@ -20,7 +20,9 @@
 
 namespace gse::tests {
 void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
-    task->AddTest("SMAC milestone ordinary seven-faction campaign advances fifty human turns",GT() {
+    for(const bool generated:{false,true}) {
+    task->AddTest(generated ? "SMAC milestone generated seven-faction campaign advances fifty human turns"
+        : "SMAC milestone ordinary seven-faction campaign advances fifty human turns",GT(generated) {
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::map<std::string,std::string> sources;
         const auto read=[&](const std::string& name)->std::string {
@@ -31,12 +33,16 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
             }
             throw std::runtime_error("Missing installed milestone source: "+name);
         };
-        const auto path=std::filesystem::path(assets)/"maps"/"planet.MP";
-        std::ifstream planet(path,std::ios::binary);GT_ASSERT(planet.good(),"Installed Planet map is unavailable");
-        const std::string bytes{std::istreambuf_iterator<char>(planet),{}};
-        ConventionalUnitFixture fixture;const auto startup=fixture.StartLocalComputerCampaign(read,bytes);
+        ConventionalUnitFixture fixture;std::string startup;
+        if(generated) {startup=fixture.StartGeneratedLocalComputerCampaign(read);}
+        else {
+            const auto path=std::filesystem::path(assets)/"maps"/"planet.MP";
+            std::ifstream planet(path,std::ios::binary);GT_ASSERT(planet.good(),"Installed Planet map is unavailable");
+            const std::string bytes{std::istreambuf_iterator<char>(planet),{}};
+            startup=fixture.StartLocalComputerCampaign(read,bytes);
+        }
         GT_ASSERT(startup.empty(),"Ordinary campaign startup: "+startup);
-        return fixture.Run([&](GSE_CALLABLE)->std::string {
+        const auto campaign_result=fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();
             std::cout<<fixture.CampaignSeedReport()<<std::endl;
             const auto settle=[&]()->std::string {
@@ -112,14 +118,19 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
             GT_ASSERT(computer_expanded && computer_researched && computer_developed,
                 "Computer factions must actually expand, acquire knowledge and develop terrain");
             if(const auto* capture=std::getenv("GLSMAC_CAMPAIGN_CAPTURE");capture && *capture) {
-                const auto saved=fixture.SaveCampaign(capture);
+                auto path=std::filesystem::path(capture);
+                if(generated) {path=path.parent_path()/(path.stem().string()+"-generated"+path.extension().string());}
+                const auto saved=fixture.SaveCampaign(path.string());
                 GT_ASSERT(std::filesystem::is_regular_file(saved),"Campaign capture was not written");
                 std::cout<<"Campaign checkpoint: "<<saved<<std::endl;
             }
-            const auto replay=fixture.CheckLocalCampaignReplay(GSE_CALL,3);
-            GT_ASSERT(replay.empty(),"Saved campaign continuation: "+replay);
             GT_OK();
         });
+        GT_ASSERT(campaign_result.empty(),"Campaign: "+campaign_result);
+        const auto replay=fixture.CheckLocalCampaignReplay(3);
+        GT_ASSERT(replay.empty(),"Saved campaign continuation: "+replay);
+        GT_OK();
     });
+    }
 }
 }

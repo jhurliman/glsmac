@@ -297,6 +297,12 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 			m_map->InvalidateRegionalPathWorkspace();
 			ResetCanonicalHurryMarkers(owner.first);
 			SettleCanonicalEconomy(owner.first);
+            for(const auto id:m_um->GetUnitRecordOrder()) {
+                auto* actor=m_um->GetUnit(id);
+                if(actor && actor->IsConventional() && actor->Conventional().owner_simulation_id==owner.first) {
+                    m_um->ClearConventionalActivity(GSE_CALL,actor);
+                }
+            }
             if(m_simulation->value.faction_turn) {
                 auto& cursor=*m_simulation->value.faction_turn;
                 cursor.CompleteOwnerUpkeep(cursor.Current(),ActiveFactionMask());

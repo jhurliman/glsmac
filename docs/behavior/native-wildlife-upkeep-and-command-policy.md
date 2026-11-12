@@ -19,6 +19,12 @@ Use canonical deletion, counter debits, compaction and stack repair. A land Isle
 
 ## Target Base is a weighted competition
 
+The [stored resource producer mapping](native-base-target-resource-inputs-static.md)
+identifies Base+c0 as gross minerals, +c4 as gross energy including commerce,
+and +48 as final eco-damage. Planning reads that retained generation and does
+not refresh candidates or substitute the distinct raw commerce-ranking intake.
+
+
 Native command dispatcher `58f3c0` reaches `57ce60` through the actual Unit planner. It uses **`57cc80`**, not the ordinary nearest-Base helper. The reference `native_base_target` translates it.
 
 Reset global metric `91871c` to9999. For each Base in ascending dense order:
@@ -165,3 +171,15 @@ other linked objects are normal and leak detection is disabled. Targeted
 production analysis reports zero diagnostics. No full platform matrix was rerun.
 The independently verified source bundle contains 32 frozen files, manifest SHA256
 `b0de9b3be666c325c01f16538074135142c19c76c5301db526176bfec7fef313`.
+
+## Live carrier scheduling
+
+The live native command sweep resets all admitted native8/9 planning state
+before command dispatch, then scans carriers before land natives in descending
+retained record order. This permits source shoreline activation to ready Worms
+for their later actual land command, without a second sentry reset. Native9
+uses the weighted Base target, measured CarrierStep/CarrierDirective helpers,
+mode1 group sailing, source command counter and empty-carrier retirement.
+The port controller routes distant sea directives by a deterministic legal BFS;
+this does not claim equivalence to the original pathfinder. Land/sea combat
+continues through the separately admitted battle entry points.

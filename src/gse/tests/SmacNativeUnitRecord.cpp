@@ -418,7 +418,8 @@ void AddSmacNativeUnitRecordTests(task::gsetests::GSETests* task) {
                 else {manager->MoveConventionalUnit(GSE_CALL,scout,destination,0);}
                 auto expected=initial;if(scenario!=4 && scenario!=11) {expected.NextCrtRaw15();}
                 if(scenario==0) {
-                    GT_ASSERT(manager->GetUnits().size()==2 && scout->GetTile()==source && scout->Conventional()==body
+                    auto active=body;if(active.retained_state_word) {*active.retained_state_word|=4u;}
+                    GT_ASSERT(manager->GetUnits().size()==2 && scout->GetTile()==source && scout->Conventional()==active
                         && manager->GetUnit(next)->IsNative() && manager->GetUnit(next)->GetTile()==destination
                         && manager->GetUnit(next)->Native().design==8 && manager->GetUnit(next)->Native().stack_previous==-1,
                         "Successful encounter moved or spent the Scout, or omitted the native birth");

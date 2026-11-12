@@ -31,6 +31,7 @@ public:
 	ConventionalUnitFixture();
 	~ConventionalUnitFixture();
     void WithNativeController(const std::function<void()>& callback);
+    void RunNativeControllerCommands(GSE_CALLABLE);
     std::string CheckLocalCampaignReplay(size_t turns=3);
     std::string DriveLocalHumanCampaign(GSE_CALLABLE);
     std::string CampaignSeedReport() const;

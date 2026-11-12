@@ -337,6 +337,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
                         factory.create(8,{static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y)},{});
                     });
                     if(birth.Size()) {
+                        birth.StageConventionalMovementActivity(unit);
                         return {unit,source,destination,stored,std::nullopt,nearest_distance,update_nearest,{}, {},
                             PreparedConventionalEncounter{std::move(birth),random}};
                     }
@@ -547,6 +548,14 @@ void UnitManager::ActivateWildNativeStack(GSE_CALLABLE,Unit* carrier,uint8_t sho
     for(const auto& row:natives) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
     for(const auto& row:conventional) {row.first->CommitConventionalMove(row.second,row.first->GetTile());}
     m_unit_updates.swap(updates);m_game->CommitConventionalSight(sight);
+}
+void UnitManager::ExhaustWildNativeUnit(GSE_CALLABLE,Unit* actor) {
+    m_game->CheckRW(GSE_CALL);m_game->RequireSmacGameplayActive();
+    if(!m_game->IsSmacControllerOwner(0) || !actor || GetUnit(actor->m_id)!=actor || !actor->IsNative()
+        || actor->Native().owner || (actor->Native().design!=8 && actor->Native().design!=9)) {throw std::runtime_error("Native exhaustion requires its scheduled Worm or Isle");}
+    const auto stats=QueryNativeUnit(actor->Native(),0);if(stats.full_allowance>255) {throw std::overflow_error("Native exhaustion exceeds its stored byte");}
+    auto next=actor->Native();next.movement_spent=static_cast<uint8_t>(stats.full_allowance);
+    QueueUnitUpdate(actor,UUO_REFRESH);std::get<SmacNativeUnitRecord>(actor->m_state)=next;
 }
 void UnitManager::DisbandWildNativeUnit(GSE_CALLABLE,Unit* actor) {
     m_game->CheckRW(GSE_CALL);m_game->RequireSmacGameplayActive();

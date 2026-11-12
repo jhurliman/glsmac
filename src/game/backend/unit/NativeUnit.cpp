@@ -182,6 +182,7 @@ struct UnitManager::PreparedNativeBirths::Data {
     std::map<Unit*,SmacNativeUnitRecord> records;
     std::map<Unit*,ConventionalUnitState::Stack> conventional_stacks;
     std::map<Unit*,std::optional<uint16_t>> conventional_flags;
+    std::map<Unit*,uint32_t> conventional_activity;
     std::optional<map::SmacWorkerKnowledge> knowledge;
     std::optional<faction::SmacNativeFactoryState> factory;
     bool committed=false,notified=false;
@@ -197,9 +198,19 @@ const Unit& UnitManager::PreparedNativeBirths::Candidate(size_t index) const {
     if(!m_data || m_data->committed) {throw std::runtime_error("Native birth candidate is not pending");}
     return *m_data->candidates.at(index);
 }
+void UnitManager::PreparedNativeBirths::StageConventionalMovementActivity(Unit* unit) {
+    if(!m_data || m_data->committed || !unit || m_data->manager->GetUnit(unit->m_id)!=unit || !unit->IsConventional()) {throw std::runtime_error("Encounter activity requires its pending registered actor");}
+    if(const auto word=unit->Conventional().retained_state_word) {
+        m_data->conventional_activity[unit]=*word|4u;
+        auto& update=m_data->updates.try_emplace(unit->m_id,unit_update_t{UUO_NONE,unit}).first->second;
+        if(update.unit!=unit || (update.ops&UUO_DESPAWN)) {throw std::runtime_error("Encounter actor has a stale pending update");}
+        update.ops=static_cast<unit_update_op_t>(update.ops|UUO_REFRESH);
+    }
+}
 void UnitManager::PreparedNativeBirths::Query(const std::function<void()>& query) const {
     if(!m_data || m_data->committed) {throw std::runtime_error("Native birth query is not pending");}
     auto previous=m_data->records;
+    auto previous_activity=m_data->conventional_activity;for(auto& row:previous_activity) {row.second=*row.first->Conventional().retained_state_word;}
     auto previous_flags=m_data->conventional_flags;
     for(auto& row:previous_flags) {row.second=row.first->Conventional().native_flags;}
     std::map<Unit*,std::optional<ConventionalUnitState::Stack>> previous_stacks;
@@ -209,11 +220,13 @@ void UnitManager::PreparedNativeBirths::Query(const std::function<void()>& query
     util::FinallyGuard restore([&]{
         m_data->manager->m_game->m_simulation->value.native_factory.swap(factory);
         for(const auto& row:previous) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+        for(const auto& row:previous_activity) {std::get<ConventionalUnitState>(row.first->m_state).retained_state_word=row.second;}
         for(const auto& row:previous_flags) {std::get<ConventionalUnitState>(row.first->m_state).native_flags=row.second;}
         for(const auto& row:previous_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     });
     m_data->manager->m_game->m_simulation->value.native_factory.swap(factory);
     for(const auto& row:m_data->records) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+    for(const auto& row:m_data->conventional_activity) {std::get<ConventionalUnitState>(row.first->m_state).retained_state_word=row.second;}
     for(const auto& row:m_data->conventional_flags) {std::get<ConventionalUnitState>(row.first->m_state).native_flags=row.second;}
     for(const auto& row:m_data->conventional_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     m_data->manager->QueryPreparedUnits(m_data->units,m_data->order,m_data->occupants,m_data->knowledge,{},query);
@@ -224,6 +237,7 @@ void UnitManager::PreparedNativeBirths::Commit() noexcept {
     static_assert(std::is_nothrow_swappable_v<decltype(d.units)> && std::is_nothrow_swappable_v<decltype(d.order)>
         && std::is_nothrow_swappable_v<decltype(d.updates)> && std::is_nothrow_swappable_v<decltype(d.factory)>);
     for(const auto& row:d.records) {std::get<SmacNativeUnitRecord>(row.first->m_state)=row.second;}
+    for(const auto& row:d.conventional_activity) {std::get<ConventionalUnitState>(row.first->m_state).retained_state_word=row.second;}
     for(const auto& row:d.conventional_flags) {std::get<ConventionalUnitState>(row.first->m_state).native_flags=row.second;}
     for(const auto& row:d.conventional_stacks) {std::get<ConventionalUnitState>(row.first->m_state).stack=row.second;}
     d.manager->m_units.swap(d.units);d.manager->m_unit_order.swap(d.order);d.manager->m_unit_updates.swap(d.updates);

@@ -78,6 +78,7 @@ public:
         friend class base::Base;
         friend class base::BaseManager;
         void Query(const std::function<void()>& query) const;
+        void StageConventionalMovementActivity(Unit* unit);
         struct Data;
         explicit PreparedNativeBirths(std::unique_ptr<Data> data);
         std::unique_ptr<Data> m_data;
@@ -155,6 +156,7 @@ public:
     void SetWildNativeWaypoint(GSE_CALLABLE,Unit* actor,uint8_t order,map::tile::Tile* destination);
     void ActivateWildNativeStack(GSE_CALLABLE,Unit* carrier,uint8_t shore_explored);
     void DisbandWildNativeUnit(GSE_CALLABLE,Unit* actor);
+    void ExhaustWildNativeUnit(GSE_CALLABLE,Unit* actor);
 
 	void ResetConventionalSpent( GSE_CALLABLE, Unit* unit );
     void ClearConventionalActivity(GSE_CALLABLE,Unit* unit);

@@ -25,6 +25,7 @@
 #include <set>
 #include <algorithm>
 #include <thread>
+#include <deque>
 
 namespace game::backend {
 namespace {
@@ -360,57 +361,120 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 }
 
 void Game::RunNativeCommands(GSE_CALLABLE) {
+    namespace ai=unit::smac_native_ai;
     if(!IsSmacControllerOwner(0)) {throw std::runtime_error("Wildlife commands require native-controller authority");}
-    // Initial playable wildlife policy connects the measured healthy ground
-    // competition to real Mind Worm movement/PSI callers. Sea and air control
-    // retain their separate movement/transport dependencies.
     const auto records=m_um->GetUnitRecordOrder();
+    const ai::Geometry geometry{int32_t(m_map->GetWidth()),int32_t(m_map->GetHeight()),true};
     constexpr int32_t deltas[8][2]={{1,-1},{2,0},{1,1},{0,2},{-1,1},{-2,0},{-1,-1},{0,-2}};
+    const auto neighbor=[&](map::tile::Tile* source,int32_t direction)->map::tile::Tile* {
+        const auto x=(int32_t(source->coord.x)+deltas[direction][0]+geometry.width)%geometry.width;
+        const auto y=int32_t(source->coord.y)+deltas[direction][1];return y<0 || y>=geometry.height ? nullptr:m_map->GetTile(x,y);
+    };
+    // Planning sentry resets precede the complete command scan. Resetting a Worm
+    // after an Isle readied it would incorrectly re-board it before beaching.
     for(const auto id:records) {
         auto* actor=m_um->GetUnit(id);
-        if(!actor || !actor->IsNative() || actor->Native().owner!=0 || actor->Native().design!=8) {continue;}
-        m_um->ResetWildNativeSpent(GSE_CALL,actor);
+        if(actor && actor->IsNative() && !actor->Native().owner && (actor->Native().design==8 || actor->Native().design==9)) {m_um->ResetWildNativeSpent(GSE_CALL,actor);}
+    }
+    // The measured carrier pass precedes the land-native pass; both scan current
+    // dense records descending and reacquire stable IDs after every mutation.
+    for(const int32_t design:{9,8}) {for(auto record=records.rbegin();record!=records.rend();++record) {
+        const auto id=*record;
         for(size_t step=0;step<12;++step) {
-            actor=m_um->GetUnit(id);if(!actor || !actor->IsNative() || m_um->QueryNativeUnit(actor->Native()).remaining_allowance<=0) {break;}
-            // Native byte37 counts AI invocations, including repeated actions
-            // in one owner command sweep; it is not elapsed-turn age.
-            (void)m_um->BeginWildNativeCommand(GSE_CALL,actor);
+            auto* actor=m_um->GetUnit(id);
+            if(!actor || !actor->IsNative() || actor->Native().owner || actor->Native().design!=design || actor->Native().order==1
+                || m_um->QueryNativeUnit(actor->Native()).remaining_allowance<=0) {break;}
+            if(actor->Native().flags&0x440u) {m_um->ExhaustWildNativeUnit(GSE_CALL,actor);break;}
             const auto before=actor->Native();auto* source=actor->GetTile();
             const auto knowledge=m_map->GetSmacWorkerKnowledge()->CopyData();
-            std::vector<unit::smac_native_ai::Candidate> candidates;
-            std::array<map::tile::Tile*,8> destinations{};
-            for(int32_t direction=0;direction<8;++direction) {
-                auto x=int32_t(source->coord.x)+deltas[direction][0],y=int32_t(source->coord.y)+deltas[direction][1];
-                x=(x+int32_t(m_map->GetWidth()))%int32_t(m_map->GetWidth());
-                const bool valid=y>=0 && y<int32_t(m_map->GetHeight());
-                unit::smac_native_ai::Candidate candidate{direction,{{x,y}},valid,false,0,0,{}};
-                if(valid) {
-                    auto* tile=m_map->GetTile(x,y);destinations[direction]=tile;
-                    const auto raw=m_map->CopyGlobalWildlifeTile({{x,y}},knowledge);
-                    candidate.sea=tile->is_water_tile;candidate.items=raw.Items();candidate.affiliation=raw.CachedOccupant();
-                    if(!tile->units.empty()) {
-                        const auto* head=tile->units.begin()->second;
-                        if(head->IsConventional()) {
-                            const auto context=ResolveConventionalUnit(head->Conventional(),head->m_owner);
-                            candidate.head=unit::smac_native_ai::Head{head->Conventional().owner_simulation_id,head->Conventional().design_id,*context.offense_rating,0};
-                        } else if(head->IsNative()) {candidate.head=unit::smac_native_ai::Head{head->Native().owner,head->Native().design,-1,0};}
-                    }
-                    // Admission is side-effect free. A forbidden terrain,
-                    // stack or combat context cannot consume random draws.
-                    try {m_um->ValidateWildNativeMove(actor,tile);} catch(const std::runtime_error&) {candidate.in_bounds=false;}
-                }
-                candidates.push_back(candidate);
+            const auto tile_query=[&](ai::Coordinate point) {
+                const auto raw=m_map->CopyGlobalWildlifeTile(point,knowledge);const auto* tile=m_map->GetTile(point[0],point[1]);
+                return ai::Tile{tile->is_water_tile,raw.Region(),raw.CachedOccupant(),knowledge.tiles.at(size_t(point[1])*(geometry.width/2)+point[0]/2).explored_by,raw.Items()};
+            };
+            uint8_t work=0;
+            int32_t land_count=0;
+            for(const auto& row:source->units) {
+                const auto* member=row.second;
+                if(member->IsNative()) {land_count+=member->Native().design==8;}
+                else {const auto value=ResolveConventionalDesign(member->Conventional(),*m_simulation);land_count+=static_cast<int32_t>(m_state->m_settings.global.GetSmacPredefinedUnitRules()->catalog.chassis.chassis.at(value.chassis).triad)==0;}
             }
-            const auto choice=unit::smac_native_ai::ChooseNeighbors(source->is_water_tile,0,before.facing,int32_t(GetTurnId()),
+            if(design==9) {
+                const auto& topology=m_map->GetTerritoryTopology();if(!topology) {throw std::runtime_error("Native carrier target requires retained regions");}
+                std::array<int32_t,8> planet{};std::vector<ai::Base> bases;
+                for(const auto base_id:m_bm->GetBaseRecordOrder()) {
+                    const auto* base=m_bm->GetBase(base_id);const auto owner=base->GetSmacResourceContext().owner_simulation_id;
+                    if(!base->m_native_target_resources) {throw std::runtime_error("Native target requires the Base's retained completed resource generation");}
+                    const auto* social=m_simulation->value.social.Find(owner);
+                    if(!social || !social->retained) {throw std::runtime_error("Native target requires retained owner PLANET");}planet.at(owner)=social->retained->at(7);
+                    int32_t artifacts=0;
+                    for(const auto& row:base->GetTile()->units) {if(row.second->IsConventional()) {artifacts+=ResolveConventionalDesign(row.second->Conventional(),*m_simulation).plan==12;}}
+                    const auto& values=*base->m_native_target_resources;
+                    bases.push_back({int32_t(bases.size()),{{int32_t(base->GetTile()->coord.x),int32_t(base->GetTile()->coord.y)}},GetCanonicalRegion(*base->GetTile(),*topology),uint8_t(owner),values[0],values[1],values[2],artifacts});
+                }
+                const ai::Coordinate point{{int32_t(source->coord.x),int32_t(source->coord.y)}};
+                const auto selected=ai::ChooseBase(geometry,point,GetCanonicalRegion(*source,*topology),before.home_base,before.ecology_owner_tag,planet,bases);
+                if(m_simulation->value.movement_history) {m_simulation->value.movement_history->RetainNearest(selected.metric);}
+                if(selected.base<0) {m_um->ExhaustWildNativeUnit(GSE_CALL,actor);break;}
+                work=m_um->BeginWildNativeCommand(GSE_CALL,actor);
+                const auto& target=bases.at(selected.base);
+                if(land_count) {
+                const auto action=ai::CarrierStep(geometry,point,target,work,land_count,int32_t(before.stored_morale)+1,tile_query);
+                if(action.action==ai::CarrierAction::Disband) {m_um->DisbandWildNativeUnit(GSE_CALL,actor);break;}
+                if(action.action==ai::CarrierAction::ActivateStack) {m_um->ActivateWildNativeStack(GSE_CALL,actor,action.observation);break;}
+                if(action.action==ai::CarrierAction::SeaAttack) {
+                    auto* destination=m_map->GetTile((*action.point)[0],(*action.point)[1]);m_um->ValidateWildNativeMove(actor,destination);
+                    m_um->SetWildNativeWaypoint(GSE_CALL,actor,0x58,destination);m_um->MoveWildNativeUnit(GSE_CALL,actor,destination);continue;
+                }
+                const auto directive=ai::CarrierDirective(geometry,point,target.point,tile_query);
+                if(!directive.waypoint) {m_um->ExhaustWildNativeUnit(GSE_CALL,actor);break;}
+                auto* goal=m_map->GetTile((*directive.waypoint)[0],(*directive.waypoint)[1]);m_um->SetWildNativeWaypoint(GSE_CALL,actor,24,goal);
+                // Routing is the port controller's deterministic legal sea path,
+                // separate from the measured target/directive competition.
+                std::vector<int32_t> distance(size_t(geometry.width/2)*geometry.height,-1);std::deque<map::tile::Tile*> queue;
+                const auto index=[&](const map::tile::Tile* tile){return size_t(tile->coord.y)*(geometry.width/2)+tile->coord.x/2;};
+                if(goal->is_water_tile && !goal->base) {distance[index(goal)]=0;queue.push_back(goal);}
+                while(!queue.empty()) {
+                    auto* tile=queue.front();queue.pop_front();
+                    for(int32_t direction=0;direction<8;++direction) {
+                        auto* next=neighbor(tile,direction);if(!next || !next->is_water_tile || next->base || distance[index(next)]>=0) {continue;}
+                        bool foreign=false;for(const auto& row:next->units) {foreign|=row.second->SimulationOwner()!=0;}if(foreign) {continue;}
+                        distance[index(next)]=distance[index(tile)]+1;queue.push_back(next);
+                    }
+                }
+                map::tile::Tile* destination=nullptr;int32_t best=INT32_MAX;
+                for(int32_t direction=0;direction<8;++direction) {
+                    auto* next=neighbor(source,direction);if(!next || distance[index(next)]<0 || distance[index(next)]>=best) {continue;}
+                    try {m_um->ValidateWildNativeMove(actor,next);} catch(const std::runtime_error&) {continue;}
+                    best=distance[index(next)];destination=next;
+                }
+                if(!destination || distance[index(source)]==0) {m_um->ExhaustWildNativeUnit(GSE_CALL,actor);break;}
+                m_um->MoveWildNativeUnit(GSE_CALL,actor,destination);continue;
+                }
+            } else {(void)m_um->BeginWildNativeCommand(GSE_CALL,actor);}
+            std::vector<ai::Candidate> candidates;std::array<map::tile::Tile*,8> destinations{};
+            for(int32_t direction=0;direction<8;++direction) {
+                auto* tile=neighbor(source,direction);destinations[direction]=tile;
+                ai::Candidate candidate{direction,tile ? ai::Coordinate{{int32_t(tile->coord.x),int32_t(tile->coord.y)}}:ai::Coordinate{{0,0}},tile!=nullptr,false,0,0,{}};
+                if(tile) {
+                    const auto raw=m_map->CopyGlobalWildlifeTile(candidate.point,knowledge);candidate.sea=tile->is_water_tile;candidate.items=raw.Items();candidate.affiliation=raw.CachedOccupant();
+                    for(const auto& row:tile->units) {
+                        const auto* head=row.second;if(head->SourceStack() && head->SourceStack()->previous>=0) {continue;}
+                        if(head->IsConventional()) {const auto context=ResolveConventionalUnit(head->Conventional(),head->m_owner);candidate.head=ai::Head{head->SimulationOwner(),head->Conventional().design_id,*context.offense_rating,0};}
+                        else {candidate.head=ai::Head{head->Native().owner,head->Native().design,-1,head->Native().design==9 ? 1:head->Native().design==10 ? 2:0};}break;
+                    }
+                    try {m_um->ValidateWildNativeMove(actor,tile);} catch(const std::runtime_error&) {candidate.in_bounds=false;}
+                }candidates.push_back(candidate);
+            }
+            const auto choice=ai::ChooseNeighbors(source->is_water_tile,design==9 ? 1:0,before.facing,int32_t(GetTurnId()),
                 m_simulation->value.designs.global_difficulty,before.state,m_simulation->value.gameplay_random,candidates);
             m_simulation->value.gameplay_random=choice.random;
-            if(choice.direction<0) {break;}
-            m_um->SetWildNativeWaypoint(GSE_CALL,actor,0x58,destinations.at(choice.direction));
-            m_um->MoveWildNativeUnit(GSE_CALL,actor,destinations.at(choice.direction));
-            actor=m_um->GetUnit(id);
-            if(!actor || (actor->GetTile()==source && actor->Native()==before)) {break;}
+            if(design==9 && choice.best<99 && !land_count) {m_um->DisbandWildNativeUnit(GSE_CALL,actor);break;}
+            if(choice.direction<0) {m_um->ExhaustWildNativeUnit(GSE_CALL,actor);break;}
+            m_um->SetWildNativeWaypoint(GSE_CALL,actor,0x58,destinations.at(choice.direction));m_um->MoveWildNativeUnit(GSE_CALL,actor,destinations.at(choice.direction));
+            actor=m_um->GetUnit(id);if(!actor || (actor->GetTile()==source && actor->Native().movement_spent==before.movement_spent)) {break;}
         }
-    }
+    }}
+    auto& native_status=m_simulation->value.faction_status.values[0];if(native_status) {*native_status&=~0x10000u;}
 }
 
 void Game::RunComputerCommands(GSE_CALLABLE,int32_t owner) {

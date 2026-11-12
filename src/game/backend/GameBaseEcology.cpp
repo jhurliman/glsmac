@@ -169,10 +169,19 @@ void Game::ProcessCanonicalBaseEcology(GSE_CALLABLE,base::Base& current) {
         payload=std::make_unique<map::TerrainRenderUpdate>(*render);
         FrontendRequest update(FrontendRequest::FR_UPDATE_TERRAIN);update.data.update_terrain.update=payload.get();frontend.push_back(update);
     }
+    std::unique_ptr<FrontendRequest::tile_updates_t> tiles;
+    if(m_map->m_map_state && !plan.Changes().empty()) {
+        tiles=std::make_unique<FrontendRequest::tile_updates_t>();tiles->reserve(plan.Changes().size());
+        for(const auto& change:plan.Changes()) {
+            auto* tile=m_map->GetTile(change.coordinate[0],change.coordinate[1]);
+            tiles->emplace_back(tile,m_map->GetTileState(tile));
+        }
+        FrontendRequest update(FrontendRequest::FR_UPDATE_TILES);update.data.update_tiles.tile_updates=tiles.get();frontend.push_back(update);
+    }
     m_map->CommitEcologyBloom(*terrain);
     if(births) {births->Commit();}
     *state.ecology_history=history;state.faction_status.values.at(owner)=status;state.ecology_warming_count=warming;state.ecology_climate_schedule=schedule;state.gameplay_random=random;
-    m_pending_frontend_requests->swap(frontend);payload.release();
+    m_pending_frontend_requests->swap(frontend);payload.release();tiles.release();
     if(births) {births->Notify(GSE_CALL);}
     if(notice) {Message("Xenofungus has bloomed near "+current.m_name+".");}
     if(warming_notice) {Message("Global warming has scheduled a sea-level change.");}

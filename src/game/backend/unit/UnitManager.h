@@ -326,6 +326,7 @@ private:
 		std::vector<std::pair<Unit*,ConventionalUnitState>> units;
 		std::optional<uint16_t> terraforming;
 		std::optional<map::SmacWorkerKnowledge> knowledge;
+        std::optional<uint16_t> features;
 	};
 	PreparedConventionalWork PrepareConventionalWork( Unit* unit, ConventionalUnitState::WorkOrder order, size_t caller, bool dispatch ) const;
 	void PreflightConventionalStartup( const ConventionalUnitResolver& resolver ) const;

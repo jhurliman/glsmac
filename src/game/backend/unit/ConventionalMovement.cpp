@@ -33,7 +33,7 @@ smac_edge::Tile EdgeTile( const map::tile::Tile& tile, const base::Base* admitte
 	using namespace map::tile;
 	constexpr auto features = FEATURE_RIVER | FEATURE_XENOFUNGUS;
 	constexpr auto terraforming = TERRAFORMING_ROAD | TERRAFORMING_MAG_TUBE | TERRAFORMING_FOREST
-		| TERRAFORMING_FARM | TERRAFORMING_SOLAR | TERRAFORMING_MINE;
+		| TERRAFORMING_FARM | TERRAFORMING_SOLAR | TERRAFORMING_MINE | TERRAFORMING_SENSOR;
 	if ( tile.is_water_tile || ( tile.base && tile.base != admitted_base ) || tile.rockiness < ROCKINESS_FLAT || tile.rockiness > ROCKINESS_ROCKY
 		|| ( tile.features & ~features ) != 0 || ( tile.terraforming & ~terraforming ) != 0
 		|| tile.coord.x > INT32_MAX || tile.coord.y > INT32_MAX ) {

@@ -21,7 +21,7 @@ struct ConventionalUnitState {
 	std::optional< uint64_t > home_base_id; // stable manager ID; never a retained pointer
 	// Port wire identities, mapped explicitly to positional TERRAIN source rows.
 	// Cancellation clears the order but deliberately preserves accumulated work.
-	enum class WorkOrder : uint8_t { None, Farm, Road, Forest, Solar, Mine };
+	enum class WorkOrder : uint8_t { None, Farm, Road, Forest, Solar, Mine, RemoveFungus, Sensor };
 	WorkOrder work_order = WorkOrder::None;
 	uint8_t work_progress = 0;
 	// Native full word remains unknown on migrated Unit4 records. An actual

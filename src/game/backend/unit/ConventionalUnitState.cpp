@@ -61,7 +61,7 @@ void ConventionalUnitState::Validate() const {
 	if(accounting_markers && (*accounting_markers>7 || (retained_state_word && AccountingMarkers(*retained_state_word)!=*accounting_markers))) {
 		throw std::runtime_error("Inconsistent conventional accounting history");
 	}
-	if ( work_order > WorkOrder::Mine || design_id < 0 || design_id >= 512 || owner_simulation_id < 1 || owner_simulation_id > 7
+	if ( work_order > WorkOrder::Sensor || design_id < 0 || design_id >= 512 || owner_simulation_id < 1 || owner_simulation_id > 7
 		|| ( home != Home::None && home != Home::Base )
 		|| ( home == Home::Base ) != home_base_id.has_value()
 		|| ( home_base_id && ( !*home_base_id || *home_base_id >= uint64_t( INT64_MAX ) || *home_base_id >= SIZE_MAX ) ) || ( render_morale_mode != SmacMoraleMode::Mode0 && render_morale_mode != SmacMoraleMode::Mode1 ) ) {
@@ -100,7 +100,7 @@ ConventionalUnitState ConventionalUnitState::Deserialize( types::Buffer& buffer,
 	if ( home ) { const auto id = buffer.ReadInt(); if ( id <= 0 ) { throw std::runtime_error( "Invalid conventional home ID" ); } home_id = static_cast< uint64_t >( id ); }
 	ConventionalUnitState result{ design, owner, static_cast< uint8_t >( morale ), static_cast< uint8_t >( damage ), static_cast< uint8_t >( spent ),
 		failed, static_cast< Home >( home ), static_cast< SmacMoraleMode >( mode ), home_id };
-	result.work_order = static_cast< WorkOrder >( Integer( buffer, 0, static_cast< int32_t >( WorkOrder::Mine ) ) );
+	result.work_order = static_cast< WorkOrder >( Integer( buffer, 0, static_cast< int32_t >( WorkOrder::Sensor ) ) );
 	result.work_progress = static_cast< uint8_t >( Integer( buffer, 0, 255 ) );
 	if(include_state_history) {
 		if(buffer.ReadBool()) {

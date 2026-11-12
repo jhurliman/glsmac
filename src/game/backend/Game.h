@@ -796,7 +796,7 @@ private:
 	bool PrepareCanonicalLeadingHumanDominance(const faction::SmacSimulationState& candidate) const;
 	bool IsSmacUnitProductionEligibleAt( const slot::Slot* owner, const map::tile::Tile* tile, const base::ProductionItem& item ) const;
 	bool HandleConventionalWorkEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
-	std::optional<map::SmacWorkerKnowledge> PrepareConventionalWorkMemory( const unit::Unit& unit, uint16_t terraforming ) const;
+	std::optional<map::SmacWorkerKnowledge> PrepareConventionalWorkMemory( const unit::Unit& unit, uint16_t terraforming, std::optional<uint16_t> features = {} ) const;
 	bool HandleSmacFoundingEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	bool HandleConventionalMoveEvent( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args, size_t caller, bool apply );
 	void ResetGame();

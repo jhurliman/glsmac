@@ -426,6 +426,34 @@ void AddConventionalWorkTests(task::gsetests::GSETests* task) {
             });if(!error.empty()){return error;}
         }GT_OK();
     });
+    task->AddTest("Former early sensor and fungus jobs publish terrain memory and resumable work together",GT(){
+        for(const auto order:{Order::RemoveFungus,Order::Sensor}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(Source,"GAIANS");
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string{
+                auto* actor=Populate(GSE_CALL,fixture);auto* game=fixture.Game();auto* tile=actor->GetTile();
+                const uint16_t farmroad=map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_ROAD;
+                if(order==Order::RemoveFungus) {tile->features=map::tile::FEATURE_XENOFUNGUS;tile->terraforming=farmroad;}
+                else {tile->terraforming=farmroad|map::tile::TERRAFORMING_MINE;}
+                Event(GSE_CALL,fixture,actor,order);
+                auto stored=actor->Conventional();types::Buffer wire;stored.Serialize(wire,true,true,true,true,true);
+                GT_ASSERT(ConventionalUnitState::Deserialize(wire,true,true,true,true,true)==stored,"New Former order failed exact persistence");
+                for(int turn=1;turn<=4;++turn) {
+                    if(turn>1) {game->GetUM()->ResetConventionalSpent(GSE_CALL,actor);}
+                    Event(GSE_CALL,fixture,actor,Order::None,true);
+                    if(turn<4) {GT_ASSERT(actor->Conventional().work_order==order && actor->Conventional().work_progress==2*turn,
+                        "Early job did not retain partial work through the owning upkeep");}
+                }
+                GT_ASSERT(actor->Conventional().work_order==Order::None && actor->Conventional().work_progress==0 && tile->features==0,
+                    "Completion retained fungus or an active order");
+                GT_ASSERT(tile->terraforming==(order==Order::Sensor ? uint16_t(farmroad|map::tile::TERRAFORMING_SENSOR):farmroad),
+                    "Sensor replacement or fungus removal discarded unrelated improvements");
+                const auto memory=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                const auto& remembered=memory.remembered[1].at(size_t(tile->coord.y)*(memory.width/2)+tile->coord.x/2);
+                GT_ASSERT(remembered && remembered->features==tile->features && remembered->terraforming==tile->terraforming,
+                    "Completed work and acting-owner memory diverged");GT_OK();
+            });if(!error.empty()) {return error;}
+        }GT_OK();
+    });
     task->AddTest("Former work cancellation reassignment movement and saved continuation retain bytes",GT(){
         ConventionalUnitFixture source;source.ConfigureProduction(Source,"GAIANS");std::string snapshot;
         const auto first=source.Run([&](GSE_CALLABLE)->std::string{

@@ -19,7 +19,7 @@ int32_t SourceId(Order order) {
     switch(order) {
         case Order::Farm:return 0; case Order::Mine:return 2;
         case Order::Solar:return 3; case Order::Forest:return 4;
-        case Order::Road:return 5;
+        case Order::Road:return 5; case Order::Sensor:return 9; case Order::RemoveFungus:return 10;
         default:throw std::runtime_error("No terraforming source for this work order");
     }
 }
@@ -27,7 +27,8 @@ uint16_t Improvement(Order order) {
     switch(order) {
         case Order::Farm:return TERRAFORMING_FARM; case Order::Mine:return TERRAFORMING_MINE;
         case Order::Solar:return TERRAFORMING_SOLAR; case Order::Forest:return TERRAFORMING_FOREST;
-        case Order::Road:return TERRAFORMING_ROAD;
+        case Order::Road:return TERRAFORMING_ROAD; case Order::Sensor:return TERRAFORMING_SENSOR;
+        case Order::RemoveFungus:return 0;
         default:throw std::runtime_error("No terraforming improvement for this work order");
     }
 }
@@ -61,11 +62,11 @@ UnitManager::ConventionalCommands UnitManager::QueryConventionalCommands(Unit* a
             result.actions.push_back(7);return result;
         }
         if(result.package==ConventionalUnitContext::Package::Former) {
-            for(const auto order:{Order::Farm,Order::Road,Order::Forest,Order::Solar,Order::Mine,Order::None}) {
+            for(const auto order:{Order::Farm,Order::Road,Order::Forest,Order::Solar,Order::Mine,Order::RemoveFungus,Order::Sensor,Order::None}) {
                 if(order==Order::None && actor->Conventional().work_order==Order::None){continue;}
                 try {
                     ValidateConventionalWork(actor,order,m_game->GetSlotNum(),false);
-                    result.actions.push_back(static_cast<int32_t>(order));
+                    result.actions.push_back(order==Order::RemoveFungus ? 11:order==Order::Sensor ? 12:static_cast<int32_t>(order));
                 } catch(const std::runtime_error&) {} catch(const std::invalid_argument&) {}
             }
         } else if(result.package==ConventionalUnitContext::Package::Colony && m_game->GetBM()) {
@@ -116,21 +117,26 @@ UnitManager::PreparedConventionalWork UnitManager::PrepareConventionalWork(Unit*
     if(action.source_id!=id || !Available(technologies->ResolveToken(action.land_prerequisite),*technologies,*owned)) {
         throw std::runtime_error("Terraforming action prerequisite is unavailable");
     }
-    constexpr auto allowed=TERRAFORMING_ROAD|TERRAFORMING_FARM|TERRAFORMING_SOLAR|TERRAFORMING_MINE|TERRAFORMING_FOREST;
-    if(tile->is_water_tile || tile->base || tile->features || (tile->terraforming & ~allowed)
-        || tile->rockiness!=ROCKINESS_FLAT) {
-        throw std::runtime_error("Terraforming requires ordinary flat land without a Base or special features");
+    constexpr auto allowed=TERRAFORMING_ROAD|TERRAFORMING_FARM|TERRAFORMING_SOLAR|TERRAFORMING_MINE|TERRAFORMING_FOREST|TERRAFORMING_SENSOR;
+    const bool fungus=(tile->features&FEATURE_XENOFUNGUS)!=0;
+    if(tile->is_water_tile || tile->base || (tile->features&~(FEATURE_RIVER|FEATURE_XENOFUNGUS))
+        || (tile->terraforming&~allowed) || tile->rockiness<ROCKINESS_FLAT || tile->rockiness>ROCKINESS_ROCKY) {
+        throw std::runtime_error("Terraforming requires ordinary canonical land without a Base or landmark");
     }
-    // Action admission is deliberately narrower than the generic replacement
-    // routine. Forest removal has separate mineral/climate effects; upgrades
-    // from an existing Farm/Road require their own resolved action admission.
-    if((tile->terraforming & Improvement(order)) || (tile->terraforming & TERRAFORMING_FOREST)) {
-        throw std::runtime_error("Terraforming upgrade or forest-removal continuation is not admitted");
+    if(order==Order::RemoveFungus) {
+        if(!fungus) {throw std::runtime_error("Remove Fungus requires actual land fungus");}
+    } else {
+        if(fungus || (tile->terraforming&Improvement(order))
+            || (order!=Order::Sensor && (tile->terraforming&TERRAFORMING_FOREST))
+            || (order!=Order::Sensor && tile->rockiness!=ROCKINESS_FLAT)) {
+            throw std::runtime_error("This work action requires its ordinary terrain and replacement continuation");
+        }
     }
     int64_t cost=action.work_time;
     const auto rocky=static_cast<int32_t>(tile->rockiness-ROCKINESS_FLAT);
     if(order==Order::Solar){cost+=int64_t(rocky)*cost/2;}
     if(order==Order::Road){cost+=(tile->features&FEATURE_RIVER)?1:0;cost+=(tile->terraforming&TERRAFORMING_FOREST)?2:rocky;}
+    if(!m_game->m_simulation->value.IsHuman(next.owner_simulation_id) && m_game->m_simulation->value.designs.global_difficulty>3 && cost>3) {--cost;}
     if(cost<=0 || cost>INT32_MAX/2){throw std::runtime_error("Terraforming time is outside the supported positive signed threshold domain");}
     if(!dispatch){next.work_order=order;result.units.emplace_back(actor,next);return result;}
     // The actor receives all matching progress bytes, then only its own rate.
@@ -154,10 +160,12 @@ UnitManager::PreparedConventionalWork UnitManager::PrepareConventionalWork(Unit*
         auto bits=tile->terraforming;
         if(order==Order::Mine || order==Order::Solar){bits&=~group;}
         if(order==Order::Forest){bits&=~(TERRAFORMING_FARM|TERRAFORMING_SOIL_ENRICHER|TERRAFORMING_MINE|TERRAFORMING_SOLAR|TERRAFORMING_CONDENSER|TERRAFORMING_MIRROR|TERRAFORMING_BOREHOLE);}
+        if(order==Order::Sensor) {bits&=~(TERRAFORMING_BOREHOLE|TERRAFORMING_MIRROR|TERRAFORMING_CONDENSER|TERRAFORMING_MINE|TERRAFORMING_SOLAR);}
+        if(order==Order::RemoveFungus) {result.features=static_cast<uint16_t>(tile->features&~FEATURE_XENOFUNGUS);}
         bits|=Improvement(order);result.terraforming=bits;
         next.work_order=Order::None;next.work_progress=0;
         for(auto& entry:result.units){entry.second.work_order=Order::None;}
-        result.knowledge=m_game->PrepareConventionalWorkMemory(*actor,bits);
+        result.knowledge=m_game->PrepareConventionalWorkMemory(*actor,bits,result.features);
     }
     result.units.emplace_back(actor,next);return result;
 }
@@ -177,7 +185,11 @@ void UnitManager::SetConventionalWork(GSE_CALLABLE,Unit* actor,Order order,size_
     }
     // Stage owned atlas/sprite payloads before any Unit, terrain or knowledge write.
     std::unique_ptr<map::Map::PreparedTerrainUpdate> render;
-    if(prepared.terraforming){render=GetMap()->PrepareOrdinaryTerrainUpdate(prepared.tile,*prepared.terraforming);}
+    if(prepared.features || (prepared.terraforming && (*prepared.terraforming&TERRAFORMING_SENSOR))) {
+        map::Map::TerrainAppearances changes{{prepared.tile,{prepared.features.value_or(prepared.tile->features),
+            prepared.terraforming.value_or(prepared.tile->terraforming),prepared.tile->rockiness}}};
+        render=GetMap()->PrepareTerrainAppearanceUpdate(changes);
+    } else if(prepared.terraforming) {render=GetMap()->PrepareOrdinaryTerrainUpdate(prepared.tile,*prepared.terraforming);}
     std::optional<std::vector<FrontendRequest>> frontend;
     if(prepared.terraforming) {
         frontend.emplace(*m_game->m_pending_frontend_requests);
@@ -195,6 +207,7 @@ void UnitManager::SetConventionalWork(GSE_CALLABLE,Unit* actor,Order order,size_
     static_assert(noexcept(m_unit_updates.swap(updates)));
     for(const auto& entry:prepared.units){entry.first->CommitConventionalMove(entry.second,prepared.tile);}
     if(prepared.terraforming){prepared.tile->terraforming=*prepared.terraforming;}
+    if(prepared.features){prepared.tile->features=*prepared.features;}
     if(render){GetMap()->CommitOrdinaryTerrainUpdate(*render);}
     m_game->CommitConventionalSight(prepared.knowledge);
     m_unit_updates.swap(updates);

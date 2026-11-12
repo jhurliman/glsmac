@@ -12,7 +12,7 @@
 
 namespace game::backend {
 
-std::optional<map::SmacWorkerKnowledge> Game::PrepareConventionalWorkMemory(const unit::Unit& actor,uint16_t terraforming) const {
+std::optional<map::SmacWorkerKnowledge> Game::PrepareConventionalWorkMemory(const unit::Unit& actor,uint16_t terraforming,std::optional<uint16_t> features) const {
     RequireConventionalSightWorld();
     if(!m_map || !m_map->m_worker_knowledge || !m_map->m_worker_knowledge_ready) {
         throw std::runtime_error("Terraforming completion requires owned map memory");
@@ -25,7 +25,7 @@ std::optional<map::SmacWorkerKnowledge> Game::PrepareConventionalWorkMemory(cons
     if(memory.size()!=data.tiles.size() || !(data.tiles.at(index).explored_by & (1u<<owner))) {
         throw std::runtime_error("Terraforming completion requires the acting owner's actual explored/memory inputs");
     }
-    memory.at(index)=map::SmacWorkerKnowledge::Improvements{tile->features,terraforming,tile->base!=nullptr,!tile->units.empty()};
+    memory.at(index)=map::SmacWorkerKnowledge::Improvements{features.value_or(tile->features),terraforming,tile->base!=nullptr,!tile->units.empty()};
     return map::SmacWorkerKnowledge::Create(data);
 }
 
@@ -145,7 +145,7 @@ bool Game::HandleConventionalWorkEvent(GSE_CALLABLE,const std::string& name,
             throw std::runtime_error("Former action requires an explicit integer identity");
         }
         const auto value=static_cast<const gse::value::Int*>(action->second)->value;
-        if(value<static_cast<int32_t>(Order::Farm) || value>static_cast<int32_t>(Order::Mine)) {
+        if(value<static_cast<int32_t>(Order::Farm) || value>static_cast<int32_t>(Order::Sensor)) {
             throw std::runtime_error("Former action is outside the admitted set");
         }
         order=static_cast<Order>(value);

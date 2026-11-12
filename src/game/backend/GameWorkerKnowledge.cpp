@@ -385,7 +385,7 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
             continue;
         }
 		if(adjacent(destination,tile) || destination==tile) {
-            if(tile->is_water_tile || destination==tile || tile->units.size()!=1) {throw std::runtime_error("Foreign sight requires distinct ordinary ground stacks");}
+            if(tile->is_water_tile || destination==tile) {throw std::runtime_error("Foreign sight requires distinct ordinary ground stacks");}
             //5cebd3..5cec18: concealment gates the mover independently of the
             // stationary opponent. The raw directed bit8 is not a worker Pact flag.
             const bool contact=contact_direction->second.directions.at(faction).primary&8u;
@@ -394,7 +394,7 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
             }
             //5cee64..5cef16: ordinary singleton Fungus/stealth is concealed
             // from a contacted opponent without enhanced sight. Old masks stay.
-            if(!concealed(other,tile) || enhanced || !contact) {
+            if(!concealed(other,tile) || enhanced || !contact || tile->units.size()!=1) {
                 auto& observation=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==entry.first;});
                 observation.visible_to|=uint8_t(1u<<owner);prepared.disclosed_to_humans.push_back(entry.first);
             }

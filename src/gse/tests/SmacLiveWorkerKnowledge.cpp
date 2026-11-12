@@ -596,6 +596,28 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
         }
         GT_OK();
     });
+    task->AddTest("SMAC ordinary sight reveals all members of an adjacent concealed ground stack",GT(){
+        ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();Definitions(game);
+            for(size_t y=0;y<64;++y) {for(size_t x=y&1;x<128;x+=2) {
+                auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners) {*corner=100;}
+                tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->Update();
+            }}
+            Spawn(GSE_CALL,game,71,0,1,32,16);
+            Spawn(GSE_CALL,game,72,1,2,33,15);Spawn(GSE_CALL,game,73,1,2,33,15);
+            game->GetMap()->GetTile(33,15)->features=map::tile::FEATURE_XENOFUNGUS;
+            fixture.ResourceState([&](auto& state){state.hostility.owners.at(1).directions[2].primary=8;});
+            Knowledge::Data data{128,64,true,true,0,{},{},{}};data.tiles.resize(4096,{0,std::nullopt});
+            data.observers[1]=Knowledge::Observer{};data.observers[2]=Knowledge::Observer{};
+            data.units={{71,0,false},{72,0,false},{73,0,false}};
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+            Spawn(GSE_CALL,game,74,0,1,34,16);
+            const auto actual=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+            GT_ASSERT(actual.units[1].visible_to==2 && actual.units[2].visible_to==2 && actual.units[3].visible_to==4,
+                "Adjacent multi-unit stack retained singleton concealment or vetoed ordinary sight");GT_OK();
+        });
+    });
     task->AddTest("SMAC ordinary Fungus sight keeps directional concealment and stationary history",GT(){
         for(int terrain=0;terrain<4;++terrain) {for(const bool contact:{false,true}) {for(const bool sensor:{false,true}) {
             ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);

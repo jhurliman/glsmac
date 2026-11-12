@@ -15,7 +15,7 @@ window = {
     hide: () => {visible = false;}, show: () => {visible = true;},
     text: (style) => {return {text: style.text};},
     input: (style) => {
-        test.assert(style.max_bytes == 23);
+        test.assert(style.max_bytes == 23 && style.native_edit == true);
         test.assert(!input_alive); input_alive = true;
         input = {value: style.value, on: (name, callback) => {event = callback;},
             focus: () => {focused = true;}, remove: () => {test.assert(input_alive); input_alive = false; focused = false;}}; return input;

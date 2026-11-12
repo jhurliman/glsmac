@@ -87,3 +87,19 @@ handlers.unit_select({unit: unit});
 check('check', 'Remove Fungus|Sensor Array', 'Former — Order: Remove Fungus  |  Stored work: 3');
 check('click', 'Remove Fungus', '');check('click', 'Sensor Array', '');
 test.assert(#sizeof(events) == 10 && events[8].name == 'work_unit' && events[8].data.action == 6 && events[9].data.action == 7);
+
+// Specialist units retain ordinary orders alongside their package actions.
+orders = [8, 9, 10];
+const former = {id: 74, is_conventional: true, query_conventional_commands: unit.query_conventional_commands,
+    query_conventional_orders: () => { return orders; }};
+handlers.unit_select({unit: former});
+check('check', 'Remove Fungus|Sensor Array|Skip [Space]|Hold [H]|Hold 10 [Shift+H]', 'Former — Order: Remove Fungus  |  Stored work: 3');
+check('remember', 'Hold [H]', '');
+orders = []; check('remembered', '', '');
+test.assert(#sizeof(events) == 10, 'Retired specialist order was sent');
+orders = [8, 9, 10];
+kind = 'colony'; offered = [6];
+map_handlers.unit_preview({unit: former});
+check('check', 'Found Base [B]|Skip [Space]|Hold [H]|Hold 10 [Shift+H]', 'Colony Pod — Found a Base on an available site');
+check('click', 'Skip [Space]', '');
+test.assert(#sizeof(events) == 11 && events[10].name == 'unit_skip_turn' && events[10].data.unit.id == 74);

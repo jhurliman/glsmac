@@ -8,7 +8,7 @@ return {
         if (this.pending != null && this.pending.request_id == pending.request_id) { return; }
         this.pending = pending; this.submitted = false;
         if (this.name == null) {
-            this.name = this.body.input({class: 'smac-original-input', left: 53, top: 1, width: 430, height: 20, max_bytes: 23, value: ''});
+            this.name = this.body.input({class: 'smac-original-input', left: 53, top: 1, width: 430, height: 20, max_bytes: 23, native_edit: true, selection_color: 'rgb(0, 0, 0)', selection_background: 'rgb(159, 196, 198)', caret_color: 'rgb(159, 196, 198)', value: ''});
             this.name.on('input', () => { this.submit(); return true; });
         }
         this.name.value = '' + pending.name;

@@ -15,7 +15,7 @@ return {
 		}
 		const commands = this.unit.query_conventional_commands();
 		let actions = commands.actions;
-        if (commands.kind == 'none' && #is_defined(this.unit.query_conventional_orders)) { actions = this.unit.query_conventional_orders(); }
+        if (#is_defined(this.unit.query_conventional_orders)) { actions = actions + this.unit.query_conventional_orders(); }
         if (commands.kind == 'none' && #sizeof(actions) == 0) { this.frame.hide(); return; }
         if (this.foundation != null && this.foundation.unit.id == this.unit_id) {
             const prompt = this.foundation; const prompt_width = this.frame.width - 12;
@@ -58,7 +58,7 @@ return {
 				const current = this.unit.query_conventional_commands();
                 if (current.turn_id != selected_turn) { return true; }
                 let current_actions = current.actions;
-                if (current.kind == 'none' && #is_defined(this.unit.query_conventional_orders)) { current_actions = this.unit.query_conventional_orders(); }
+                if (#is_defined(this.unit.query_conventional_orders)) { current_actions = current_actions + this.unit.query_conventional_orders(); }
 				let available = false;
 				for (offered of current_actions) { if (offered == selected_action) { available = true; } }
 				if (available) {

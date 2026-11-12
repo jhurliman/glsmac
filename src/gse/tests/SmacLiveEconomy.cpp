@@ -68,7 +68,7 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
         ConventionalUnitFixture fixture;
         fixture.ConfigureTwoResourceParticipants([](const std::string& name) {
             auto source=Source(name);const auto pos=source.find("Center,2,1,2");
-            if(pos!=std::string::npos) {source.replace(pos,12,"Center,2,1,15");}return source;
+            if(pos!=std::string::npos) {source.replace(pos,12,"Center,2,1,11");}return source;
         });
         return fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* own=Create(GSE_CALL,game);auto* peer=Create(GSE_CALL,game,1);
@@ -79,7 +79,7 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
                 for(auto& faction:state.technology.factions) {faction.owned.fill(false);}
             });
             const auto first=game->GetCanonicalBaseEnergy(*peer);const auto own_intake=game->GetCanonicalBaseEnergy(*own);
-            GT_ASSERT(first.raw_intake==16 && own_intake.raw_intake==16,"commerce fixture did not publish actual16-energy intake generations");
+            GT_ASSERT(first.raw_intake==16 && own_intake.raw_intake==16,"commerce fixture actual intake peer="+std::to_string(first.raw_intake)+" own="+std::to_string(own_intake.raw_intake)+"; expected center11+HQ1+ECONOMY4=16");
             fixture.ResourceState([](auto& state) {state.hostility.owners.at(1).directions.at(2).primary=2;});
             const auto result=game->GetCanonicalBaseEnergy(*own);
             GT_ASSERT(result.raw_intake==16 && result.commerce==1 && result.net==17 && result.waste==0,"real Treaty income did not enter gross before waste/allocation");

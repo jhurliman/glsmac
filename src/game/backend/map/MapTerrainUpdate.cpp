@@ -183,7 +183,7 @@ std::unique_ptr<Map::PreparedTerrainUpdate> Map::PrepareTerrainAppearanceUpdate(
             || t->moisture < tile::MOISTURE_ARID || t->moisture > tile::MOISTURE_RAINY
             || ((value.features ^ t->features) & (tile::FEATURE_RIVER | tile::FEATURE_MONOLITH | tile::FEATURE_UNITY_POD
                 | tile::FEATURE_UNITY_ENERGY | tile::FEATURE_UNITY_CHOPPER | tile::FEATURE_UNITY_RADAR | 0x8000u))
-            || ((value.terraforming ^ t->terraforming) & ~(ORDINARY | tile::TERRAFORMING_MAG_TUBE | tile::TERRAFORMING_SOIL_ENRICHER)))
+            || ((value.terraforming ^ t->terraforming) & ~(ORDINARY | tile::TERRAFORMING_MAG_TUBE | tile::TERRAFORMING_SOIL_ENRICHER | tile::TERRAFORMING_SENSOR)))
             throw std::runtime_error("invalid terrain appearance candidate");
         affected.emplace(std::make_pair(t->coord.y,t->coord.x),t);
         if (value.features != t->features || ((value.terraforming ^ t->terraforming) &
@@ -225,7 +225,7 @@ std::unique_ptr<Map::PreparedTerrainUpdate> Map::PrepareTerrainAppearanceUpdate(
     // only its five improvements; landmark invalidation can remove two markers.
     const auto managed=[](const std::string& name) {
         return name=="FarmLand" || name=="FarmSea" || name=="SolarLand" || name=="SolarSea"
-            || name=="MineLand" || name=="MineSea" || name=="SoilEnricher" || name=="Uranium" || name=="Geothermal";
+            || name=="MineLand" || name=="MineSea" || name=="SoilEnricher" || name=="Sensor" || name=="Uranium" || name=="Geothermal";
     };
     for (const auto& [coordinate,t] : affected) {
         const auto changed=changes.find(t);
@@ -247,6 +247,7 @@ std::unique_ptr<Map::PreparedTerrainUpdate> Map::PrepareTerrainAppearanceUpdate(
             if (value.terraforming & tile::TERRAFORMING_MINE) add("MineLand",s_consts.tc.ter1_pcx.mine_land[0],13);
             if (value.terraforming & tile::TERRAFORMING_SOIL_ENRICHER) add("SoilEnricher",s_consts.tc.ter1_pcx.soil_enricher[t->moisture],16);
         }
+        if(value.terraforming&tile::TERRAFORMING_SENSOR) add("Sensor",s_consts.tc.ter1_pcx.sensor[0],20);
         tile::TileState::sprites_t sprites;
         for (const auto& sprite : ts->sprites) {
             if (!managed(sprite.name)) {sprites.push_back(sprite);continue;}

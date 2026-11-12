@@ -73,7 +73,8 @@ return {
         }
         this.submitted = true;
         this.selection.text = 'Waiting for research selection…';
-        this.p.game.event('set_research_priorities', {request_id: request_id, mask: mask});
+        try { this.p.game.event('set_research_priorities', {request_id: request_id, mask: mask}); }
+        catch { : (error) => { this.submitted = false; this.selection.text = error.reason; } }
     },
 
 	submit: () => {
@@ -84,7 +85,8 @@ return {
 		const technology_id = this.choice;
 		this.submitted = true;
 		this.selection.text = 'Waiting for research selection…';
-		this.p.game.event('choose_research', {request_id: request_id, technology_id: technology_id});
+		try { this.p.game.event('choose_research', {request_id: request_id, technology_id: technology_id}); }
+        catch { : (error) => { this.submitted = false; this.selection.text = error.reason; } }
 		// Only an authoritative research_choice notification clears/replaces it.
 	},
 
@@ -99,6 +101,7 @@ return {
 
 	init: (p) => {
 		this.p = p;
+        this.overview = #include('overview');this.overview.init(p);
         this.is_blind = false;
         this.priority_values = [];
 		this.pending = null;

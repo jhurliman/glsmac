@@ -1614,6 +1614,23 @@ void AddTerrainRenderUpdateTests( task::gsetests::GSETests* task ) {
         GT_OK();
     });
 
+    task->AddTest("Sensor appearance staging preserves unrelated sprites and supports removal",GT(){
+        TerrainRenderFixture f;auto* t=f.world.GetTile(2,2);auto* ts=f.world.GetTileState(t);
+        ts->sprites.push_back({"bonus",77,"NutrientBonusLand",{}});
+        auto addition=f.world.PrepareTerrainAppearanceUpdate({{t,{tile::FEATURE_NONE,tile::TERRAFORMING_SENSOR,tile::ROCKINESS_FLAT}}});
+        const auto& payload=f.world.GetTerrainUpdatePayload(*addition);
+        GT_ASSERT(payload.added.size()==1 && payload.actors.size()==1 && payload.removed.empty()
+            && payload.actors.begin()->second.name=="Sensor" && ts->sprites.size()==1 && t->terraforming==0,
+            "Sensor preparation was missing, mutated live terrain or removed unrelated artwork");
+        f.Commit(t,tile::TERRAFORMING_SENSOR,*addition);
+        GT_ASSERT(ts->sprites.size()==2 && ts->sprites.front().instance==77 && ts->sprites.back().name=="Sensor",
+            "Completed Sensor did not reach current terrain artwork");
+        auto removal=f.world.PrepareTerrainAppearanceUpdate({{t,{tile::FEATURE_NONE,0,tile::ROCKINESS_FLAT}}});
+        const auto& removed=f.world.GetTerrainUpdatePayload(*removal);
+        GT_ASSERT(removed.removed.size()==1 && removed.added.empty(),"Sensor replacement duplicated or leaked its sprite");
+        f.Commit(t,0,*removal);GT_ASSERT(ts->sprites.size()==1 && ts->sprites.front().instance==77,"Removing Sensor changed another sprite");
+        GT_OK();
+    });
     task->AddTest("Bloom terrain appearance stages land fungus rockiness sprites and neighbors atomically", GT() {
         TerrainRenderFixture f; auto* t=f.world.GetTile(2,2); auto* peer=f.world.GetTile(4,4);
         auto farm=f.world.PrepareOrdinaryTerrainUpdate(t,tile::TERRAFORMING_FARM);

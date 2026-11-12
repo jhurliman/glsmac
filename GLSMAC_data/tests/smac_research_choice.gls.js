@@ -2,11 +2,12 @@ const initialize = #include('./_smac_research_choice');
 let pending = null;
 const handlers = {};
 let events = [];
+let reject = false;
 let resets = 0;
 const game = {
 	get_pending_smac_research: () => { return pending; },
 	on: (name, callback) => { handlers[name] = callback; },
-	event: (name, args) => { events :+{name: name, args: args}; },
+	event: (name, args) => { if (reject) { throw TestError('queue denied'); } events :+{name: name, args: args}; },
 };
 const request = {request_id: 41, owner_slot: 3, owner_name: 'University', bonus: false,
 	choices: [{id: 8, name: 'Centauri Ecology', category: 0}, {id: 3, name: 'Information Networks', category: 1}]};
@@ -70,3 +71,8 @@ handlers.research_choice({});retired_priority({});
 ui.key('ESCAPE', {});
 test.assert(events[3] == {name: 'set_research_priorities', args: {request_id: 61, mask: null}});
 test.assert(resets == 2);
+
+// Failed enqueue keeps the required question actionable instead of waiting forever.
+pending = request;handlers.research_choice({});ui.choose(0);reject = true;ui.confirm();
+test.assert(!ui.state().submitted && #sizeof(events) == 4);
+reject = false;ui.confirm();test.assert(ui.state().submitted && #sizeof(events) == 5);

@@ -581,11 +581,23 @@ gse::Value* Game::CopyTechnologyState( GSE_CALLABLE, const Player* player ) cons
 		if ( value ) { return VALUE( gse::value::Int,, *value ); }
 		return VALUE( gse::value::Undefined );
 	};
+    const auto& catalog=*m_state->m_settings.global.GetSmacTechnologyRules();
+    gse::value::array_elements_t known,priorities;
+    for(size_t id=0;id<state.owned.size();++id) {if(state.owned[id]) {
+        known.push_back(VALUE(gse::value::String,,catalog.technologies[id].name));
+    }}
+    if(m_simulation->value.strategy) {for(const auto value:m_simulation->value.strategy->at(participant.simulation_id).priorities) {
+        priorities.push_back(VALUE(gse::value::Int,,value));
+    }}
 	// Every field is a fresh scalar/array value. No Ptr/native mutator escapes.
 	return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
 		{ "simulation_id", VALUE( gse::value::Int,, participant.simulation_id ) },
 		{ "faction_id", VALUE( gse::value::String,, participant.faction_id ) },
 		{ "owned_technologies", VALUE( gse::value::Array,, owned ) },
+        { "known_names", VALUE(gse::value::Array,,known) },
+        { "priorities", VALUE(gse::value::Array,,priorities) },
+        { "blind", VALUE(gse::value::Bool,,IsCanonicalBlindResearch()) },
+        { "target_name", state.target?static_cast<gse::Value*>(VALUE(gse::value::String,,catalog.technologies.at(*state.target).name)):VALUE(gse::value::Undefined) },
 		{ "score", VALUE( gse::value::Int,, state.score ) },
 		{ "future_count", VALUE( gse::value::Int,, state.future_count ) },
 		{ "labs", VALUE( gse::value::Int,, state.labs ) },

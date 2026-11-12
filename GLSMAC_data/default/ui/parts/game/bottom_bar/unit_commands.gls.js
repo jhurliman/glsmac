@@ -32,22 +32,23 @@ return {
             cancel.on('click', () => { if (this.foundation == prompt) { this.foundation = null; this.refresh(); } return true; });
             this.buttons :+ accept; this.buttons :+ cancel; this.frame.show(); return;
         }
-		const orders = ['None', 'Farm', 'Road', 'Forest', 'Solar', 'Mine'];
+		const orders = ['None', 'Farm', 'Road', 'Forest', 'Solar', 'Mine', 'Remove Fungus', 'Sensor'];
 		const heading = commands.held ? 'Holding position — stored work: ' + #to_string(commands.work_progress) : (commands.kind == 'former'
 			? 'Former — Order: ' + orders[commands.work_order] + '  |  Stored work: ' + #to_string(commands.work_progress)
 			: (commands.kind == 'colony' ? 'Colony Pod — Found a Base on an available site' : 'Unit orders'));
 		this.frame.text({left: 6, top: 4, font: 'arialnb.ttf:14', color: 'rgb(232,212,140)', text: heading});
 		this.frame.text({left: 6, top: 22, font: 'arialnb.ttf:12', color: 'rgb(184,192,96)',
 			text: #sizeof(actions) == 0 ? 'No available commands here.' : 'Click a command or press its key.'});
-		const labels = ['Cancel [C]', 'Farm [F]', 'Road [R]', 'Forest [O]', 'Solar [S]', 'Mine [M]', 'Found Base [B]', 'Activate unit', 'Skip [Space]', 'Hold [H]', 'Hold 10 [Shift+H]'];
+		const labels = ['Cancel [C]', 'Farm [F]', 'Road [R]', 'Forest [O]', 'Solar [S]', 'Mine [M]', 'Found Base [B]', 'Activate unit', 'Skip [Space]', 'Hold [H]', 'Hold 10 [Shift+H]', 'Remove Fungus', 'Sensor Array'];
 		const selected_id = this.unit_id;
         const selected_turn = commands.turn_id;
+        const columns = #sizeof(actions) > 6 ? 4 : 3;
 		let index = 0;
 		for (action of actions) {
 			const selected_action = action;
-			const column = index % 3;
-			const row = index / 3;
-			const width = (this.frame.width - 18) / 3;
+			const column = index % columns;
+			const row = index / columns;
+			const width = (this.frame.width - 9 - columns * 3) / columns;
 			const button = this.frame.button({class: 'unit-command-button', left: 6 + column * (width + 3), top: 42 + row * 24,
 				width: width, height: 22, text: labels[selected_action]});
 			button.on('click', () => {
@@ -62,14 +63,14 @@ return {
 				for (offered of current_actions) { if (offered == selected_action) { available = true; } }
 				if (available) {
 					const unit = this.unit;
-                    if (selected_action >= 8) {
+                    if (selected_action >= 8 && selected_action <= 10) {
                         const names = ['unit_skip_turn', 'unit_hold', 'unit_hold_ten'];
                         this.p.game.event(names[selected_action - 8], {unit: unit, turn_id: selected_turn});
                     }
 					else if (selected_action == 7) { this.p.game.event('unit_activate', {unit: unit, turn_id: selected_turn}); }
 					else if (selected_action == 6) { this.p.game.event('found_base', {unit: unit}); }
 					else if (selected_action == 0) { this.p.game.event('cancel_unit_work', {unit: unit}); }
-					else { this.p.game.event('work_unit', {unit: unit, action: selected_action}); }
+					else { this.p.game.event('work_unit', {unit: unit, action: selected_action >= 11 ? selected_action - 5 : selected_action}); }
 				}
 				// The native event is queued. Refresh when its committed Unit update arrives.
 				return true;

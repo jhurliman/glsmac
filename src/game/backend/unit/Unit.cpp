@@ -148,6 +148,8 @@ char Unit::VisibleOrderGlyph(size_t viewer_slot) const {
     switch(state.work_order) {
         case Work::None:return '-';case Work::Farm:return 'f';case Work::Road:return 'R';
         case Work::Forest:return 'F';case Work::Solar:return 'S';case Work::Mine:return 'M';
+        case static_cast<Work>(6):return 'F'; // RemoveFungus retained work-order wire
+        case static_cast<Work>(7):return 'O'; // Sensor retained work-order wire
     }
     throw std::runtime_error("Invalid conventional work glyph");
 }

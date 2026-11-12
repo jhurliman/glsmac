@@ -514,7 +514,7 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
                 const int x=scenario==2?2:32;
                 auto* local=Spawn(GSE_CALL,game,71,0,1,x,16);
                 Spawn(GSE_CALL,game,72,1,2,0,40);
-                MakeBase(GSE_CALL,game,901,1,2,0,48,1);
+                MakeBase(GSE_CALL,game,901,1,2,0,48,3);
                 auto* destination=game->GetMap()->GetTile(x-2,16);
                 if(scenario==0) {destination->rockiness=map::tile::ROCKINESS_ROCKY;}
                 if(scenario==1) {destination->terraforming=map::tile::TERRAFORMING_FOREST;}

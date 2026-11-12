@@ -81,3 +81,9 @@ test.assert(#sizeof(events) == 7 && events[6].name == 'unit_hold_ten');
 orders = [8];map_handlers.unit_preview({unit: scout});check('click', 'Skip [Space]', '');
 test.assert(#sizeof(events) == 8 && events[7].name == 'unit_skip_turn');
 orders = [];map_handlers.unit_preview({unit: scout});check('hidden', '', '');
+
+kind = 'former';offered = [11, 12];order = 6;progress = 3;
+handlers.unit_select({unit: unit});
+check('check', 'Remove Fungus|Sensor Array', 'Former — Order: Remove Fungus  |  Stored work: 3');
+check('click', 'Remove Fungus', '');check('click', 'Sensor Array', '');
+test.assert(#sizeof(events) == 10 && events[8].name == 'work_unit' && events[8].data.action == 6 && events[9].data.action == 7);

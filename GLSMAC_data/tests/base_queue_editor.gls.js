@@ -42,3 +42,9 @@ screen.base = base; screen.is_open = true; screen.production_selection = null;
 screen.sections = {hurry: {hide_view: () => {}}, specialist_selection: {hide_view: () => {}}, rename: {hide_view: () => {}}, queue_editor: {
     open: (target, selection) => { test.assert(target == base && selection == data); opened = true; }}};
 screen.open_queue_editor(); test.assert(opened);
+
+// Retired choice callbacks cannot append to another Base or stale queue context.
+dialog.open(base, data); const old_add = dialog.choices.children[0].click;
+const other_base = {id: 702, get_smac_specialist_selection_state: base.get_smac_specialist_selection_state};
+dialog.open(other_base, data);old_add();test.assert(#sizeof(dialog.entries) == 2);
+dialog.hide_view();old_add();test.assert(!dialog.active);

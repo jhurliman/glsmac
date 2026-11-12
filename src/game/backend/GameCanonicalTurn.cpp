@@ -366,6 +366,9 @@ void Game::RunNativeCommands(GSE_CALLABLE) {
         m_um->ResetWildNativeSpent(GSE_CALL,actor);
         for(size_t step=0;step<12;++step) {
             actor=m_um->GetUnit(id);if(!actor || !actor->IsNative() || m_um->QueryNativeUnit(actor->Native()).remaining_allowance<=0) {break;}
+            // Native byte37 counts AI invocations, including repeated actions
+            // in one owner command sweep; it is not elapsed-turn age.
+            (void)m_um->BeginWildNativeCommand(GSE_CALL,actor);
             const auto before=actor->Native();auto* source=actor->GetTile();
             const auto knowledge=m_map->GetSmacWorkerKnowledge()->CopyData();
             std::vector<unit::smac_native_ai::Candidate> candidates;
@@ -396,6 +399,7 @@ void Game::RunNativeCommands(GSE_CALLABLE) {
                 m_simulation->value.designs.global_difficulty,before.state,m_simulation->value.gameplay_random,candidates);
             m_simulation->value.gameplay_random=choice.random;
             if(choice.direction<0) {break;}
+            m_um->SetWildNativeWaypoint(GSE_CALL,actor,0x58,destinations.at(choice.direction));
             m_um->MoveWildNativeUnit(GSE_CALL,actor,destinations.at(choice.direction));
             actor=m_um->GetUnit(id);
             if(!actor || (actor->GetTile()==source && actor->Native()==before)) {break;}

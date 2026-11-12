@@ -55,6 +55,8 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
                 }
                 GT_FAIL("Human research continuation did not settle");
             };
+            auto initial_error=settle();GT_ASSERT(initial_error.empty(),"Initial research: "+initial_error);
+            const auto initial_progress=fixture.CampaignProgress();
             for(int turn=0;turn<50;++turn) {
                 auto error=settle();GT_ASSERT(error.empty(),"Research: "+error);
                 error=fixture.DriveLocalHumanCampaign(GSE_CALL);GT_ASSERT(error.empty(),"Human commands: "+error);
@@ -72,6 +74,17 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
             const auto actions=fixture.CampaignActions();
             GT_ASSERT(actions.production_choices && actions.moves && actions.work_dispatches && actions.terrain_completions && actions.founded_bases,
                 "Human campaign must exercise production, movement, completed development and expansion");
+            bool computer_expanded=false,computer_researched=false,computer_developed=false;
+            for(const auto& after:fixture.CampaignProgress()) {
+                if(after.human) {continue;}
+                const auto before=std::find_if(initial_progress.begin(),initial_progress.end(),[&](const auto& row){return row.owner==after.owner;});
+                GT_ASSERT(before!=initial_progress.end(),"Computer owner disappeared from progression inventory");
+                computer_expanded|=after.bases>before->bases;
+                computer_researched|=after.technologies>before->technologies;
+                computer_developed|=after.improved_tiles>before->improved_tiles;
+            }
+            GT_ASSERT(computer_expanded && computer_researched && computer_developed,
+                "Computer factions must actually expand, acquire knowledge and develop terrain");
             GT_OK();
         });
     });

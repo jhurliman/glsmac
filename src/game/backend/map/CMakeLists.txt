@@ -30,6 +30,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacPlanetMap.cpp
 	${PWD}/MapPlanet.cpp
     ${PWD}/MapNativeTerrain.cpp
+    ${PWD}/MapEcology.cpp
 	${PWD}/MapTerrainUpdate.cpp
 	${PWD}/TerrainRenderUpdate.cpp
 	${PWD}/GlsmacResourceMapPolicy.cpp

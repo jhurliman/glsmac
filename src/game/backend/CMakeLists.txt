@@ -47,6 +47,7 @@ SET( SRC ${SRC}
 	${PWD}/GameFounding.cpp
 	${PWD}/GameConventionalWork.cpp
 	${PWD}/GameCanonicalTurn.cpp
+	${PWD}/GameBaseEcology.cpp
 	${PWD}/GameCanonicalSnapshot.cpp
 	${PWD}/GamePresentations.cpp
 	${PWD}/Account.cpp

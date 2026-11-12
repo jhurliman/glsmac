@@ -138,6 +138,7 @@
 #include "SmacProductionTargets.h"
 #include "SmacConventionalStats.h"
 #include "ConventionalUnits.h"
+#include "FiftyTurnCampaign.h"
 #include "ManufacturedConventionalUnits.h"
 #include "ConventionalWork.h"
 #include "CampaignPersistence.h"
@@ -248,6 +249,7 @@ void AddTests( task::gsetests::GSETests* task ) {
 		tests::AddCvrTransformCalculatorTests( task );
 		tests::AddSmacConventionalStatsTests( task );
 		tests::AddConventionalUnitTests( task );
+        tests::AddFiftyTurnCampaignTests(task);
 		tests::AddManufacturedConventionalUnitTests( task );
 		tests::AddConventionalWorkTests( task );
 		tests::AddCampaignPersistenceTests( task );

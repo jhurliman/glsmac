@@ -1021,6 +1021,7 @@ public:
             const auto before=m_game.SerializeWorldSnapshot();const auto old_corner=*changed->elevation.bottom;
             const auto exploration=world->GetSmacWorkerKnowledge()->CopyData().tiles;
             auto prepared=world->PrepareClimateTerrain(plane,1,2);
+            GT_ASSERT(world->GetClimateTerrainPayload(*prepared).invalidate_native_geometry,"Climate omitted full native-view geometry invalidation");
             GT_ASSERT(m_game.SerializeWorldSnapshot()==before,"Climate preparation published a partial plane");
             bool saw_candidate=false,rejected=false;
             try {world->QueryClimateTerrain(*prepared,[&]{

@@ -1025,6 +1025,12 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		}
 		case FrontendRequest::FR_UPDATE_TERRAIN: {
             m_native_snapshot_dirty=true;
+            const auto& native_update=*request->data.update_terrain.update;
+            if(native_update.invalidate_native_geometry) {
+                ASSERT(m_map_data.native_projection,"Native climate update requires native projection provenance");
+                RestoreNativeTerrainProjection();m_native_world.reset();m_native_frame_dirty=true;
+                m_native_preview_tile.reset();m_native_preview_texture.reset();
+            }
 			// All atlas/actor access stays on the frontend thread. A reset can retire
 			// the renderer before a previously queued presentation payload is drained.
 			if ( !m_textures.terrain ) break;

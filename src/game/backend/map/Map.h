@@ -222,6 +222,7 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
     void QueryClimateTerrain(const PreparedClimateTerrain&,const std::function<void()>& query);
     void CompleteClimateTerritory(PreparedClimateTerrain&,SmacWorkerKnowledge knowledge,GlsmacTerritoryTopology topology);
     void CommitClimateTerrain(PreparedClimateTerrain&);
+    const TerrainRenderUpdate& GetClimateTerrainPayload(const PreparedClimateTerrain&) const;
 
     smac_terrain::LandmarkGeometry* GetNativeGeometry() const;
 	const size_t GetHeight() const;
@@ -257,6 +258,9 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 private:
+    // Native retained climate retires hidden legacy atlas replay recipes.
+    // Later work still publishes ordinary tile notifications to the native view.
+    bool m_native_only_presentation=false;
     void ValidateGlobalSpread(const PreparedGlobalSpread& prepared) const;
     void ValidateEcologyBloom(const PreparedEcologyBloom& prepared) const;
 	GlsmacTerritoryTopology PrepareSiteRatings(const GlsmacTerritoryTopology& topology,

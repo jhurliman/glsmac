@@ -50,6 +50,7 @@ struct Map::PreparedClimateTerrain::Data {
     std::vector<Physical> before,after;
     std::map<tile::elevation_t*,tile::elevation_t> old_heights,heights;
     bool committed=false,territory_complete=false;
+    TerrainRenderUpdate render;
 };
 Map::PreparedClimateTerrain::PreparedClimateTerrain()=default;
 Map::PreparedClimateTerrain::~PreparedClimateTerrain()=default;
@@ -86,7 +87,7 @@ std::unique_ptr<Map::PreparedClimateTerrain> Map::PrepareClimateTerrain(const sm
     auto prepared=std::unique_ptr<PreparedClimateTerrain>(new PreparedClimateTerrain);
     prepared->data=std::make_unique<PreparedClimateTerrain::Data>(PreparedClimateTerrain::Data{
         this,*m_resource_policy,std::move(policy),*m_worker_knowledge,*m_worker_knowledge,*m_territory_topology,std::move(topology),{},{},{},{},{},false,false});
-    auto& d=*prepared->data;
+    auto& d=*prepared->data;d.render.invalidate_native_geometry=true;
     const auto height_at=[&](int x,int y){
         y=std::clamp(y,0,height-1);if(world.horizontal_wrap) {x=(x%width+width)%width;}else {x=std::clamp(x,0,width-1);}
         if((x&1)!=(y&1)) {x=x+1<width?x+1:x-1;}
@@ -161,12 +162,13 @@ void Map::CompleteClimateTerritory(PreparedClimateTerrain& prepared,SmacWorkerKn
 void Map::CommitClimateTerrain(PreparedClimateTerrain& prepared) {
     if(!prepared.data || !prepared.data->territory_complete) {throw std::runtime_error("Climate publication requires completed entity and territory consumers");}
     QueryClimateTerrain(prepared,[]{});auto& d=*prepared.data;
-    // Replacing renderer-owned geometry must join the frontend lifetime protocol.
-    // A class-only atlas payload cannot stand in for this cross-category update.
-    if(m_map_state && m_textures.source.texture_pcx) {throw std::runtime_error("Climate geometry requires an owned full frontend replacement");}
     static_assert(noexcept(*m_resource_policy=std::move(d.policy)) && noexcept(*m_worker_knowledge=std::move(d.knowledge)) && noexcept(*m_territory_topology=std::move(d.topology)));
     for(const auto& [p,value]:d.heights) {*p=value;}for(const auto& p:d.after) {p.Apply();}
     *m_resource_policy=std::move(d.policy);*m_worker_knowledge=std::move(d.knowledge);*m_territory_topology=std::move(d.topology);
-    m_native_geometry.reset();m_native_geometry_source.reset();InvalidateRegionalPathWorkspace();d.committed=true;
+    m_native_geometry.reset();m_native_geometry_source.reset();InvalidateRegionalPathWorkspace();m_native_only_presentation=true;d.committed=true;
+}
+const TerrainRenderUpdate& Map::GetClimateTerrainPayload(const PreparedClimateTerrain& prepared) const {
+    if(!prepared.data || prepared.data->owner!=this) {throw std::invalid_argument("Foreign climate terrain payload");}
+    return prepared.data->render;
 }
 }

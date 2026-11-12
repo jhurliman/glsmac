@@ -838,6 +838,7 @@ const Map::error_code_t Map::Initialize( MT_CANCELABLE ) {
 	m_current_tile = nullptr;
 	m_current_ts = nullptr;
 	m_terrain_updates_ready = true;
+    m_native_only_presentation=false;
 
 	return EC_NONE;
 }

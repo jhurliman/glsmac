@@ -17,6 +17,10 @@ namespace game::backend::map {
 
 // Owned CPU data only. Applied to the frontend-owned atlas/actors on its thread.
 struct TerrainRenderUpdate {
+    // Full native retained geometry changed. The frontend drops its owned
+    // view/session and requests a fresh complete snapshot; no borrowed mesh is
+    // replaced or freed by this payload.
+    bool invalidate_native_geometry=false;
 	struct Patch { size_t x, y; std::shared_ptr< const types::texture::Texture > pixels; };
 	struct Instance { size_t id; std::string actor; types::Vec3 coords; };
 	std::vector< Patch > patches;

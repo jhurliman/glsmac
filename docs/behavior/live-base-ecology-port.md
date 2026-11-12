@@ -101,10 +101,17 @@ authorities on normal/exceptional exit; publication checks complete tile and
 policy/knowledge/topology preimages.
 
 The final territory consumer must complete the prepared transaction explicitly.
-This adapter alone does not supply Base/Unit destruction or replace frontend-owned
-meshes: a rendered cross-category commit still rejects until the full ownership
-protocol joins it. The existing live climate/volcano guards remain in force;
-this preparation is not permission to publish only terrain or a class-only atlas
-patch. The focused live Map test uses claimed startup and the actual owned save
+This adapter alone does not supply Base/Unit destruction. The existing live
+climate/volcano caller guards remain until the owning entity transaction joins it;
+this preparation is not permission to publish only terrain. The focused live Map test uses claimed startup and the actual owned save
 codec to check detached preparation, injected-consumer rollback, stale-preimage
 rejection, surface/contour/region publication and all-seven-memory preservation.
+
+The admitted native-source campaign renders through an owned terrain snapshot,
+not its hidden legacy mesh. A climate payload explicitly invalidates the complete
+native Session/geometry/projector view and requests a fresh snapshot, preserving
+viewer knowledge. The native renderer rebuilds the landscape and actor projector
+heights from that snapshot. No borrowed mesh/texture lifetime changes threads.
+After climate, hidden legacy atlas recipes are retired; later ordinary work still
+publishes tile metadata and native snapshot invalidation, avoiding replay against
+obsolete coastal recipes. Full legacy-mesh renderer support is not implied.

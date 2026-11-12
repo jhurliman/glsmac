@@ -63,7 +63,7 @@ void Map::RecordWaterPaint( const Texture* source, size_t x, size_t y, size_t dx
 std::unique_ptr< Map::PreparedTerrainUpdate > Map::PrepareOrdinaryTerrainUpdate( const tile::Tile* changed, uint16_t terraforming ) {
 	// The native headless fixture has no renderer. A loaded render dump is distinct:
 	// it has source/state but no replay recipe and must not silently corrupt coasts.
-	if ( !m_map_state || !m_textures.source.texture_pcx ) return {};
+	if ( m_native_only_presentation || !m_map_state || !m_textures.source.texture_pcx ) return {};
 	if ( !m_terrain_updates_ready || m_land_canvas || m_current_ts )
 		throw std::runtime_error( "terrain update requires initialized idle presentation" );
 	if ( !changed || GetTile( changed->coord.x, changed->coord.y ) != changed || !Ordinary( *changed, changed->terraforming ) || !Ordinary( *changed, terraforming ) )
@@ -171,7 +171,7 @@ void Map::AddWaterFungus(const pcx_texture_coordinates_t& tc, types::texture::ad
 }
 
 std::unique_ptr<Map::PreparedTerrainUpdate> Map::PrepareTerrainAppearanceUpdate(const TerrainAppearances& changes) {
-    if (!m_map_state || !m_textures.source.texture_pcx) return {};
+    if (m_native_only_presentation || !m_map_state || !m_textures.source.texture_pcx) return {};
     if (!m_terrain_updates_ready || m_land_canvas || m_current_ts || m_terrain_candidates)
         throw std::runtime_error("terrain appearance update requires initialized idle presentation");
     auto prepared = std::unique_ptr<PreparedTerrainUpdate>(new PreparedTerrainUpdate);

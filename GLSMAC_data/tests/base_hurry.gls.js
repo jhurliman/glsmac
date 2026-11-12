@@ -4,7 +4,7 @@ let focused = true;
 const field = {value: '', hide: () => { test.assert(focused); focused = false; }, show: () => { test.assert(!focused); focused = true; }, on: (event, cb) => { handlers[event] = cb; }};
 const child = (data) => { data.hide = () => {}; data.show = () => {}; return data; };
 const window = {hidden: false, hide: () => { this.hidden = true; }, show: () => { this.hidden = false; },
-    text: child, input: (data) => { return field; },
+    text: child, input: (data) => { test.assert(data.native_edit == true); return field; },
     button: (data) => { data = child(data); data.on = (event, cb) => { actions :+ cb; }; return data; },
     on: (event, cb) => { keys = cb; }, listen: (target, event, cb) => { listeners[event] = cb; }};
 dialog.init({ui: {root: {window: (data) => { test.assert(data.zindex == 0.9); return window; }}}, game: {event: (name, data) => { commands :+ {name: name, data: data}; }}});

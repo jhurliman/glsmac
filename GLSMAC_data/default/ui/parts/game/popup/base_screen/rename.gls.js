@@ -5,7 +5,7 @@ return {
         this.window.hide();
         this.window.text({class: 'game-popup-text', top: 12, left: 12, text: 'Rename Base'});
         this.window.text({class: 'game-popup-text', top: 38, left: 12, right: 12, text: '24 bytes; printable ASCII display only.'});
-        this.input = this.window.input({class: 'popup-input', top: 68, left: 12, right: 12, value: ''});
+        this.input = this.window.input({class: 'popup-input', top: 68, left: 12, right: 12, native_edit: true, selection_color: 'rgb(0, 0, 0)', selection_background: 'rgb(159, 196, 198)', caret_color: 'rgb(159, 196, 198)', value: ''});
         this.input.on('change', (e) => { this.input.value = (e.value + '')[0::24]; return true; });
         this.input.on('input', (e) => { this.submit(); return true; });
         this.window.button({class: 'game-popup-button', align: 'bottom left', left: 12, right: 266, bottom: 12, height: 28, text: 'Accept'}).on('click', () => { this.submit(); return true; });

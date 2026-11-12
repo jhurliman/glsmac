@@ -4,7 +4,7 @@ let commands = []; let actions = []; let listeners = {}; let keys = undefined;
 let input_handlers = {};
 const field = {value: '', on: (event, cb) => { input_handlers[event] = cb; }};
 const window = {hidden: false, hide: () => { this.hidden = true; }, show: () => { this.hidden = false; },
-    text: (data) => { return data; }, input: (data) => { return field; },
+    text: (data) => { return data; }, input: (data) => { test.assert(data.native_edit == true); return field; },
     button: (data) => { return {on: (event, cb) => { actions :+ cb; }}; },
     on: (event, cb) => { keys = cb; }, listen: (target, event, cb) => { listeners[event] = cb; }};
 dialog.init({ui: {root: {window: (data) => { test.assert(data.zindex == 0.9); return window; }}}, game: {event: (name, data) => { commands :+ {name: name, data: data}; }}});

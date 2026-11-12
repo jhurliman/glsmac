@@ -7,7 +7,7 @@ return {
         this.info = this.window.text({class: 'game-popup-text', top: 40, left: 12, right: 12});
         this.budget = this.window.text({class: 'game-popup-text', top: 65, left: 12, right: 12});
         this.input_label = this.window.text({class: 'game-popup-text', top: 100, left: 12, text: 'Partial credits:'});
-        this.input = this.window.input({class: 'popup-input', top: 94, left: 150, width: 180, value: '0'});
+        this.input = this.window.input({class: 'popup-input', top: 94, left: 150, width: 180, native_edit: true, selection_color: 'rgb(0, 0, 0)', selection_background: 'rgb(159, 196, 198)', caret_color: 'rgb(159, 196, 198)', value: '0'});
         this.input_visible = true;
         this.input.on('change', (e) => { this.change_amount(e.value); return true; });
         this.input.on('input', (e) => { this.submit(false); return true; });

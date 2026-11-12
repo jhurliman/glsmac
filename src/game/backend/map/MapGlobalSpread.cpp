@@ -1,5 +1,6 @@
 #include "Map.h"
 #include "SmacGlobalSpread.h"
+#include "SmacTerrainAuthority.h"
 #include "SmacLandmarkGeometry.h"
 #include "util/FinallyGuard.h"
 #include "SmacNativeTerrainItems.h"

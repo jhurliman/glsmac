@@ -4,6 +4,7 @@
 #include "map/Map.h"
 #include "map/SmacGlobalWildlife.h"
 #include "map/SmacTerritoryRules.h"
+#include "map/tile/Tile.h"
 #include "unit/UnitManager.h"
 #include <stdexcept>
 

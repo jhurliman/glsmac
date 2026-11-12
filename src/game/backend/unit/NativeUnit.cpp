@@ -9,6 +9,7 @@
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/SmacTerrainAuthority.h"
 #include <algorithm>
 #include <limits>
 #include <type_traits>

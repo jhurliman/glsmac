@@ -14,6 +14,8 @@
 #include "game/backend/map/SmacLandmarkGeometry.h"
 #include "util/String.h"
 #include "loader/txt/FactionTXTLoader.h"
+#include "loader/txt/TXTLoaders.h"
+#include "loader/texture/SDL2.h"
 #include "loader/texture/SmacUnitBadge.h"
 #include "loader/texture/SmacGraphPalette.h"
 #include "SmacFirstBase.h"
@@ -932,9 +934,15 @@ public:
             auto key=path;std::transform(key.begin(),key.end(),key.begin(),[](unsigned char c){return char(std::tolower(c));});
             resources.m_custom_resource_paths.emplace(key,path);
         }
-        auto* previous=g_engine->m_resource_manager;
-        {std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;}
-        util::FinallyGuard restore([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=previous;});
+        // GSE-only Engine deliberately has no TXT loaders and a Null texture
+        // loader. The owned-asset smoke needs the ordinary real import services.
+        loader::txt::TXTLoaders text_loaders;loader::texture::SDL2 textures;
+        auto* previous=g_engine->m_resource_manager;auto* previous_text=g_engine->m_txt_loaders;
+        auto* previous_textures=g_engine->m_texture_loader;
+        {std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;
+            g_engine->m_txt_loaders=&text_loaders;g_engine->m_texture_loader=&textures;}
+        util::FinallyGuard restore([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=previous;
+            g_engine->m_txt_loaders=previous_text;g_engine->m_texture_loader=previous_textures;});
         return WithScriptValues([&](GSE_CALLABLE)->std::string {
             std::vector<std::pair<Player*,std::string>> selected;
             for(auto* player:m_state->m_players) {if(const auto* faction=player->GetFaction()) {selected.emplace_back(player,faction->m_id);}}

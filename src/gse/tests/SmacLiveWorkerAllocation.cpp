@@ -4252,7 +4252,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 
     task->AddTest("SMAC live hostile Scout movement joins battle history casualties palette and actual Start",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
-        for(int scenario=0;scenario<7;++scenario) {
+        for(int scenario=0;scenario<8;++scenario) {
             const auto provider=scenario==5 ? FanaticBattleSource : BattleSource;
             ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(provider,true);
             std::string saved;uint32_t saved_crt=0;size_t survivor_id=0;int32_t winner=0,loser=0;
@@ -4272,6 +4272,11 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                     um->SpawnConventionalUnit(GSE_CALL,94,um->GetUnitDef("live-scout"),foreign,game->GetMap()->GetTile(11,11),enemy);
                 }
                 fixture.ResourceState([&](auto& state){
+                    if(scenario==7) {
+                        // Same stored/effective morale as the neutral control; bit14 has no direct battle bonus.
+                        auto pool=*state.designs.native_registry;pool[2][33]|=0x40;
+                        state.designs.RetainNativeRegistry(pool,game->GetState()->m_settings.global.GetSmacPredefinedUnitRules()->catalog);
+                    }
                     auto& a=state.hostility.owners.at(1);auto& d=state.hostility.owners.at(2);
                     a.directions[2].primary=d.directions[1].primary=scenario==6 ? 0x8000a118u : scenario==1 ? 16 : 0;
                     a.directions[2].transition_turn=2;d.directions[1].transition_turn=3;

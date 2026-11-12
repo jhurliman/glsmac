@@ -78,7 +78,7 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
 		const auto& weapon=rules.catalog.weapons.weapons.at(design.weapon);
 		const auto& armor=rules.catalog.defenses.defenses.at(design.defense);
 		if(context.package!=ConventionalUnitContext::Package::Combat || context.chassis!=settings::SmacMovementRules::GroundChassis::Infantry
-			|| design.abilities || context.reactor!=1 || weapon.offense!=1 || armor.rating!=1 || context.quantum!=3
+			|| (design.abilities&~0x4000u) || context.reactor!=1 || weapon.offense!=1 || armor.rating!=1 || context.quantum!=3
 			|| record.work_order!=ConventionalUnitState::WorkOrder::None || record.stored_morale>6
 			|| simulation.designs.global_difficulty!=3 || SmacStartupDesignState::OriginalDifficulty(unit.m_owner->GetPlayer()->GetDifficultyLevel())!=3) {
 			throw std::runtime_error("Flat Scout battle requires ordinary Gun/Scout Infantry/Fission components at Librarian");

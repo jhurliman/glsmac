@@ -51,16 +51,24 @@ verified seven-faction Planet startup and per-owner upkeep boundaries to the
 current engine. Computer admission, owner scheduling and actual decisions are
 required before the local conquest milestone can be claimed.
 
-## Current acceptance dashboard — 2026-10-21
+## Current acceptance dashboard — 2026-11-11
 
-Accepted integration: **`59e123d11e0b6665d7a06ebf10ea1b0320591690`**, through
-[#551](https://github.com/jhurliman/glsmac/pull/551), on `codex/faithful-1.0`.
-Its selected Linux regression/lifecycle checks passed at head
-`a85bcfc1ba624bce2cb7b8702c9b0f7ab0cc7707`; the preceding owner-command
-correctness-analysis gate also passed. This is an integration checkpoint, not
-a release candidate or a statement that all platforms were rerun. The ordinary
-global U/HQ caller and failed/stale opening feedback are now part of this accepted
-checkpoint. Documentation-only#552 records its remaining limits.
+Accepted integration: **`b719f052d7ea2e8fdbde5943dd39146c6b8b3b49`**, through
+[#560](https://github.com/jhurliman/glsmac/pull/560), on `codex/faithful-1.0`.
+Preferences storage/UI, production Unit Help, retained Workshop preview position
+and ordinary High Morale movement are merged. The storage and renderer heads
+passed Linux/macOS/Windows regression and lifecycle gates; the other focused
+changes passed their selected Linux gates and correctness analysis where selected.
+All merges used the tested full head SHA. This is an integration checkpoint,
+not a release candidate or packaged native-platform acceptance.
+
+The [shared-position receipt](workshop-shared-position.md) records exact native
+color/depth expectations and three matching live chassis-card captures. The
+[High Morale movement receipt](high-morale-live-movement.md) connects a manufactured
+unit's actual command and saved-Start replay. The 67-checkbox Preferences window
+and packed store are connected, but most preference effects, sliders and SMAX
+presentation remain open. [Unit Help](production-unit-help.md) opens the exact
+highlighted design; facility Datalinks remains separate work.
 
 Through#551 retained component bodies and current-owner materials reach the map
 and both console cards; bounded original idle-body controls match. Native
@@ -109,7 +117,7 @@ filtered preset and PSI-custom recommendation boundaries with521 original
 submission expectations; the later live preset, console-button and normal-entry
 receipts connect those consumers. The shared owner backend and production Workshop/Redesign entry are connected;
 the global U/HQ UI route has an accepted caller receipt above. The original normal picker has no established separate visible
-New/Redesign controls; Help/Datalinks and preference persistence remain open.
+New/Redesign controls; facility Datalinks and remaining preference effects remain open.
 These receipts do not establish whole-screen parity or general advanced/remote
 manufacture acceptance. The bounded early-Fission human-played path and its
 remaining limits are recorded in the journal. First custom prototype completion

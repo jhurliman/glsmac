@@ -5,7 +5,7 @@ return (game) => {
 		const result = properties;
 		result.children = [];
 		result.handlers = {};
-		result.width = 600;
+		if (!#is_defined(result.width)) { result.width = 0; } // Hidden card width is not laid out yet.
 		result.on = (name, callback) => { result.handlers[name] = callback; };
 		result.listen = (object, name, callback) => { object.on(name, callback); };
 		let visible = true;
@@ -26,7 +26,7 @@ return (game) => {
 	};
 	const style = {set: (properties) => {}};
 	style.extend = (name) => { return style; };
-	panel.init({game: game, map: game.get_map(), el: node({}), ui: {class: (name) => {return style;}}});
+	panel.init({game: game, map: game.get_map(), el: node({}), ui: {get_width: () => {return 1024;}, class: (name) => {return style;}}});
 	const check = (condition, reason) => { if (!condition) { throw TestError(reason); } };
 	let remembered = null;
 	return (operation, expected, heading) => {
@@ -41,6 +41,7 @@ return (game) => {
 		if (operation == 'check') {
 			check(panel.frame.is_visible(), 'commands are hidden');
 			let labels = '';
+            for (button of panel.buttons) { check(button.width == 141, 'commands used stale DOM width'); }
 			for (button of panel.buttons) { if (labels != '') { labels += '|'; } labels += button.text; }
 			check(labels == expected, 'wrong commands: ' + labels);
 			check(panel.frame.children[0].text == heading, 'wrong saved order: ' + panel.frame.children[0].text);

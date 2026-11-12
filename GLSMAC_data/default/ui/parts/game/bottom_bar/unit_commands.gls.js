@@ -17,8 +17,11 @@ return {
 		let actions = commands.actions;
         if (#is_defined(this.unit.query_conventional_orders)) { actions = actions + this.unit.query_conventional_orders(); }
         if (commands.kind == 'none' && #sizeof(actions) == 0) { this.frame.hide(); return; }
+        // DOM width can still describe hidden/previous content during refresh.
+        // This card is anchored to the full viewport by the fixed console insets.
+        const frame_width = this.p.ui.get_width() - 266 - 293;
         if (this.foundation != null && this.foundation.unit.id == this.unit_id) {
-            const prompt = this.foundation; const prompt_width = this.frame.width - 12;
+            const prompt = this.foundation; const prompt_width = frame_width - 12;
             this.frame.text({left: 6, top: 4, font: 'arialnb.ttf:14', color: 'rgb(232,212,140)', text: 'Choose Governor settings before founding.'});
             this.frame.text({left: 6, top: 22, font: 'arialnb.ttf:12', color: 'rgb(184,192,96)', text: 'Use the default settings for newly founded Bases?'});
             const accept = this.frame.button({class: 'unit-command-button', left: 6, top: 42, width: prompt_width, height: 22, text: 'Use default Governor settings'});
@@ -42,7 +45,7 @@ return {
 		const labels = ['Cancel [C]', 'Farm [F]', 'Road [R]', 'Forest [O]', 'Solar [S]', 'Mine [M]', 'Found Base [B]', 'Activate unit', 'Skip [Space]', 'Hold [H]', 'Hold 10 [Shift+H]', 'Remove Fungus', 'Sensor Array'];
 		const selected_id = this.unit_id;
         const selected_turn = commands.turn_id;
-        const columns = #sizeof(actions) > 6 ? 4 : 3;
+        const columns = 3;
         // More than eight admitted actions need another row in the fixed card.
         const action_area = this.frame.scrollview({left: 3, right: 3, top: 42, bottom: 3, has_vscroll: true, has_hscroll: false, vscroll_class: 'default-scroll-v'});
 		let index = 0;
@@ -50,7 +53,7 @@ return {
 			const selected_action = action;
 			const column = index % columns;
 			const row = index / columns;
-			const width = (this.frame.width - 32 - columns * 3) / columns;
+			const width = (frame_width - 32 - columns * 3) / columns;
 			const button = action_area.button({class: 'unit-command-button', left: 3 + column * (width + 3), top: row * 24,
 				width: width, height: 22, text: labels[selected_action]});
 			button.on('click', () => {

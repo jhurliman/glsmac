@@ -699,9 +699,17 @@ bool Game::BeginCanonicalBaseUpkeep(GSE_CALLABLE) {
 	const auto& configured=GetSmacBasePresentations();roles.worker=configured[0];
 	for(size_t i=0;i<7;++i) {roles.specialists[i]=configured[i+1];}
     PrepareCanonicalOwnershipContinuation();
-	const auto result=base->BeginSmacUpkeep(GSE_CALL,roles,[&](int32_t design){
+	auto result=base->BeginSmacUpkeep(GSE_CALL,roles,[&](int32_t design){
 		return ResolveSmacProductionPresentation(base->m_owner,design);
 	},unit::SmacMoraleMode::Mode0);
+    if(result.colony_pause && !m_simulation->value.IsHuman(owner.first)) {
+        // A population-one computer Base retains its city rather than opening
+        // a human abandonment dialog. The existing deferred-production tail
+        // commits its resource accounting; command planning changes the item.
+        result=base->ResumeSmacColonyUpkeep(GSE_CALL,*result.colony_pause,base::SmacColonyChoice::Delay,roles,[&](int32_t design){
+            return ResolveSmacProductionPresentation(base->m_owner,design);
+        });
+    }
     if(result.ownership_changed) {CompleteCanonicalOwnershipChange(GSE_CALL,base->m_id);return m_canonical_continuation->stage!=CanonicalTurnContinuation::Stage::Screen;}
 	if(result.needs_former_owner) {next.stage=CanonicalTurnContinuation::Stage::FormerOwner;RequestCanonicalFormerOwner(GSE_CALL);return false;}
 	if(result.colony_pause) {

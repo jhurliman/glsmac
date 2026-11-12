@@ -45,6 +45,8 @@
 #include "ui/dom/Root.h"
 #include "ui/dom/Widget.h"
 #include "ui/dom/Surface.h"
+#include "ui/dom/Input.h"
+#include "gse/value/Bool.h"
 #include "ui/geometry/Geometry.h"
 #include "util/FinallyGuard.h"
 #include "util/UUID.h"
@@ -527,6 +529,38 @@ static std::string CheckMinimapCaptureOwnership() {
 	}
 	catch ( const std::exception& error ) { GT_FAIL( std::string( "minimap ownership check failed: " ) + error.what() ); }
 	return result;
+}
+
+static std::string CheckFocusedInputRemoval() {
+    WidgetGraphicsFixture graphics;
+    GSE runtime;
+    auto* gc_space=runtime.GetGCSpace();
+    gc_space->Accumulate(&runtime,[&] {
+        auto* ctx=runtime.CreateGlobalContext();const si_t si;ExecutionPointer ep;
+        auto* ui=new ::ui::UI(GSE_CALL);
+        util::FinallyGuard cleanup([&] {ui->GetRoot()->Container::Destroy(GSE_CALL);});
+        auto* root=static_cast<value::Object*>(ui->GetRoot()->Wrap(GSE_CALL));
+        for(bool native:{false,true}) {
+            auto* props=new value::Object(GSE_CALL,{
+                {"native_edit",new value::Bool(gc_space,native)},
+                {"value",new value::String(gc_space,"campaign.glsmac")},
+                {"width",new value::Int(gc_space,48)},
+                {"height",new value::Int(gc_space,20)}});
+            auto* input=static_cast<::ui::dom::Input*>(::ui::dom::Object::Unwrap(
+                static_cast<value::Callable*>(root->Get("input"))->Run(GSE_CALL,{props})));
+            // Real factory registration focuses before initial properties are
+            // applied, leaving selected native text and a live blink cursor.
+            auto* wrapped=static_cast<value::Object*>(input->Wrap(GSE_CALL));
+            static_cast<value::Callable*>(wrapped->Get("remove"))->Run(GSE_CALL,{});
+        }
+        // Whole-window/root clear is the campaign load teardown boundary.
+        auto* props=new value::Object(GSE_CALL,{
+            {"native_edit",new value::Bool(gc_space,true)},
+            {"value",new value::String(gc_space,"selected path")}});
+        static_cast<value::Callable*>(root->Get("input"))->Run(GSE_CALL,{props});
+        ui->GetRoot()->Clear(GSE_CALL);
+    });
+    GT_OK();
 }
 
 static std::string CheckMovieStageLayout() {
@@ -1020,6 +1054,7 @@ void AddMeshTests( task::gsetests::GSETests* task ) {
 		GT_OK();
 	});
 
+    task->AddTest("UI focused native and legacy input removal preserves child lifetimes",GT(){return CheckFocusedInputRemoval();});
 	task->AddTest( "UI viewport cache includes the bottom-right pixel", GT() { return CheckViewportEdges(); } );
 	task->AddTest( "movie native aspect stays inside the 4:3 presentation stage", GT() { return CheckMovieStageLayout(); } );
 	task->AddTest( "texture copy uploads the last row and column including one-pixel extents", GT() { return CheckTextureCopyUpdates(); } );

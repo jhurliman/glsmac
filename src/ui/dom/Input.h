@@ -21,6 +21,7 @@ public:
 
 	void Show() override;
 	void Hide() override;
+    void Destroy( GSE_CALLABLE ) override;
 
 protected:
 	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) override;

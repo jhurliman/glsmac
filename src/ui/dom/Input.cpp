@@ -141,6 +141,14 @@ void Input::OnDefocus() {
 	}
 }
 
+void Input::Destroy( GSE_CALLABLE ) {
+    // Defocus redraws selection/caret children. Container teardown destroys
+    // those children before Object::Destroy calls our Hide/RemoveFocusable.
+    // Finish that redraw while they are alive; the later defocus is a no-op.
+    OnDefocus();
+    Panel::Destroy( GSE_CALL );
+}
+
 void Input::Show() {
 	Panel::Show();
 	if ( m_ui ) {

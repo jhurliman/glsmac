@@ -72,7 +72,8 @@ base::SmacPopulationRules Game::CalculateCanonicalPopulationRules( const base::B
 			throw std::runtime_error("Population staged grant is not a supported registered facility");
 		}
 		m_bm->ValidateSmacFacilityDef(granted);
-		hab_complex = hab_complex || granted->m_smac_source_id==24;
+		creche = creche || granted->m_smac_source_id==2;
+        hab_complex = hab_complex || granted->m_smac_source_id==24;
 		hab_dome = hab_dome || granted->m_smac_source_id==25;
 	}
 	const int64_t growth = int64_t( social->current[ 6 ] ) + ( creche ? 2 : 0 ) + ( context.golden_age ? 2 : 0 );
@@ -80,10 +81,12 @@ base::SmacPopulationRules Game::CalculateCanonicalPopulationRules( const base::B
 		throw std::overflow_error( "Population growth or population exceeds admitted signed32/byte domain" );
 	}
 	const auto effective_growth = static_cast< int32_t >( growth );
-	// Human cost does not read AI leader/dominance inputs. Cloning/Ascetic are
+	const auto dominance=m_simulation->value.IsHuman(context.owner_simulation_id)
+        ? std::pair<bool,bool>{false,false}:SmacProductionDominance(evaluating_base.m_owner);
+    // Cloning/Ascetic are
 	// absent by saved campaign authority, checked against all installed facilities.
 	return {
-		base::CalculateSmacNutrientCostFactor( { true, m_simulation->value.designs.global_difficulty, false, false, false,
+		base::CalculateSmacNutrientCostFactor( { m_simulation->value.IsHuman(context.owner_simulation_id), m_simulation->value.designs.global_difficulty, dominance.first, m_state->GetConnection()!=nullptr, dominance.second,
 			selection->category, rules->nutrient_multiplier, effective_growth } ),
 		effective_growth, rules->nutrients_per_citizen,
 		base::SmacHousingAllowsGrowth( static_cast< int32_t >( population ), population_penalty,

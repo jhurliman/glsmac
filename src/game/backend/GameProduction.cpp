@@ -113,7 +113,10 @@ bool Game::IsSmacUnitProductionEligible( const base::Base& base, const base::Pro
 }
 
 bool Game::SupportsSmacFacilityProduction(int32_t source_id) noexcept {
-	return source_id==1 || source_id==3 || source_id==7 || source_id==8 || source_id==24 || source_id==25;
+	switch(source_id) {
+        case 1: case 2: case 3: case 6: case 7: case 8: case 9: case 10: case 11: case 24: case 25: return true;
+        default: return false;
+    }
 }
 
 bool Game::IsSmacFacilityProductionEligible(const base::Base& base,const base::ProductionItem& item,const base::FacilityDef* granted) const {
@@ -195,7 +198,8 @@ int32_t Game::GetSmacProductionMineralFactor(const slot::Slot* owner) const {
 	selection->Validate();
 	using namespace resource::smac;
 	const auto size = selection->category == 0 ? MineralCostWorldSize::Tiny : selection->category == 1 ? MineralCostWorldSize::Small : MineralCostWorldSize::StandardOrLarger;
-	const auto dominance=SmacProductionDominance(owner);
+	const auto dominance=m_simulation->value.IsHuman(participant.simulation_id)
+        ? std::pair<bool,bool>{false,false}:SmacProductionDominance(owner);
     return CalculateMineralCostFactor( { m_simulation->value.IsHuman(participant.simulation_id), m_simulation->value.designs.global_difficulty,
         dominance.first, m_state->GetConnection()!=nullptr, dominance.second, size, global.GetSmacProductionRules()->mineral_multiplier, social->current[ 9 ] } );
 }

@@ -201,7 +201,9 @@ std::string NativeCarrierSource(const std::string& filename) {
                 line.clear();for(const auto& value:fields) {if(!line.empty()) {line+=',';}line+=value;}
             }++index;
         }result+=line+'\n';
-    }return result;
+    }
+    result+="\n#WORLDBUILDER\n";for(int i=0;i<31;++i) {result+="5\n";}
+    return result;
 }
 std::string RestartSource(const std::string& filename) {
     auto source=ColonyChoiceSource(filename);
@@ -480,7 +482,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             const auto expected=smac_scout::ResolveStrengthAttack({92,1,10,6,6,0},{second,1,10,1,0,0},{1152,448},{1152,224},{3,3},{92,second});
             GT_ASSERT(expected.survivor.identity==92,"Native stack fixture's pinned command is not an attacker victory");
             fixture.Updates();um->MoveConventionalUnit(GSE_CALL,actor,tile,0);
-            const auto updates=fixture.Updates();const auto playback=std::find_if(updates.begin(),updates.end(),[](const auto& row){return row.type==game::FrontendRequest::FR_SCOUT_BATTLE;});
+            const auto& updates=fixture.QueuedFrontendRequests();const auto playback=std::find_if(updates.begin(),updates.end(),[](const auto& row){return row.type==game::FrontendRequest::FR_SCOUT_BATTLE;});
             GT_ASSERT(playback!=updates.end() && playback->data.scout_battle.plan->units[1]==second && fixture.GameplayRandom()==expected.random,"Native stack selection or combat draw transcript lost the higher source-ID tie");
             GT_ASSERT(!um->GetUnit(first) && !um->GetUnit(second) && tile->units.empty() && um->GetUnitRecordOrder()==std::vector<size_t>({91,92})
                 && one->type==VT_UNDEFINED && two->type==VT_UNDEFINED && actor->GetTile()==game->GetMap()->GetTile(4,4)

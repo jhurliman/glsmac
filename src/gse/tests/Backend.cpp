@@ -755,6 +755,67 @@ public:
         GT_OK();
     }
 
+    std::string SettleLocalHumanChoices(GSE_CALLABLE) {
+        for(size_t decision=0;decision<128;++decision) {
+            if(m_game.m_research_request) {
+                auto* request=static_cast<value::Object*>(m_game.GetPendingSmacResearch(GSE_CALL));
+                auto* id=request->Get("request_id");
+                if(static_cast<value::Bool*>(request->Get("blind"))->value) {
+                    m_game.Event(GSE_CALL,"set_research_priorities",{{"request_id",id},{"mask",VALUE(value::Int,,15)}});
+                } else {
+                    const auto& choices=static_cast<value::Array*>(request->Get("choices"))->value;
+                    GT_ASSERT(!choices.empty(),"Replay human research has no offered choice");
+                    m_game.Event(GSE_CALL,"choose_research",{{"request_id",id},{"technology_id",static_cast<value::Object*>(choices.front())->Get("id")}});
+                }
+                m_game.ProcessEvents();continue;
+            }
+            if(m_game.m_colony_request) {
+                GT_ASSERT(m_game.m_colony_request->owner==1 && m_game.m_canonical_continuation->stage==game::backend::Game::CanonicalTurnContinuation::Stage::Colony,
+                    "Replay reached an unimplemented human history question");
+                m_game.Event(GSE_CALL,"choose_colony",{{"request_id",VALUE(value::Int,,m_game.m_colony_request->id)},{"choice",VALUE(value::String,,"delay")}});
+                m_game.ProcessEvents();continue;
+            }
+            GT_OK();
+        }
+        GT_FAIL("Replay did not settle its ordinary human decisions");
+    }
+
+    std::string CheckLocalCampaignReplay(GSE_CALLABLE,size_t turns) {
+        GT_ASSERT(turns>0 && turns<=10,"Replay helper requires a bounded future continuation");
+        auto error=SettleLocalHumanChoices(GSE_CALL);GT_ASSERT(error.empty(),"Replay setup: "+error);
+        error=CheckLocalComputerBoundary();GT_ASSERT(error.empty(),"Replay setup: "+error);
+        const auto checkpoint=m_game.SerializeWorldSnapshot();
+        const auto checkpoint_turn=m_game.GetTurnId();
+        const auto path=std::filesystem::temp_directory_path()/("glsmac-fifty-replay-"+util::UUID::Generate());
+        const auto saved_path=SaveCampaign(path.string());
+        util::FinallyGuard remove([&]{std::filesystem::remove(saved_path);});
+        const auto saved_actions=m_campaign_actions;
+        std::vector<std::string> expected;
+        const auto advance=[&]()->std::string {
+            auto next=DriveLocalHumanCampaign(GSE_CALL);GT_ASSERT(next.empty(),"Replay step: "+next);
+            m_game.Event(GSE_CALL,"complete_turn",{});m_game.ProcessEvents();
+            next=SettleLocalHumanChoices(GSE_CALL);GT_ASSERT(next.empty(),"Replay step: "+next);
+            next=CheckLocalComputerBoundary();GT_ASSERT(next.empty(),"Replay step: "+next);
+            GT_OK();
+        };
+        for(size_t i=0;i<turns;++i) {
+            error=advance();GT_ASSERT(error.empty(),"Uninterrupted replay continuation: "+error);
+            expected.push_back(NormalizeCampaignSnapshot(m_game.SerializeWorldSnapshot()));
+        }
+        // Reuse the existing actual disk read -> fresh State/roster -> claimed
+        // saved Start path. Loading must not perform any owner upkeep.
+        error=CheckCampaignRestore(saved_path,checkpoint,nullptr,false);
+        GT_ASSERT(error.empty(),"Replay campaign restore: "+error);
+        GT_ASSERT(m_game.GetTurnId()==checkpoint_turn,"Saved Start replayed an upkeep or global year advance");
+        m_campaign_actions=saved_actions;
+        for(size_t i=0;i<turns;++i) {
+            error=advance();GT_ASSERT(error.empty(),"Restored replay continuation: "+error);
+            const auto actual=NormalizeCampaignSnapshot(m_game.SerializeWorldSnapshot());
+            GT_ASSERT(actual==expected[i],"Saved campaign diverged in year, resources, research, Units, terrain, cursor or RNG at future step "+std::to_string(i));
+        }
+        GT_OK();
+    }
+
     std::string CheckLocalComputerBoundary() {
         using namespace game::backend;
         return WithScriptValues([&](GSE_CALLABLE)->std::string {
@@ -4545,15 +4606,53 @@ public:
         GT_OK();
     }
 
+    std::string NormalizeCampaignSnapshot(const std::string& world) {
+        using namespace game::backend;
+        // Definition registry iteration is not saved gameplay order.
+        // Compare each owned definition by ID; retain exact bytes for
+        // all other fields, including Base and Unit record order.
+        types::Buffer input(world);
+        world_snapshot::ValidateHeader(input,m_state->m_settings.global);
+        world_snapshot::ReadRandomState(input);const auto turn=world_snapshot::ReadTurnState(input,m_state->m_slots->GetSlots());
+        m_game.ReadSimulationState(input,turn.id);
+        map::GlsmacResourceMapPolicy::ReadOptional(input,true);world_snapshot::ReadWorkerKnowledge(input,true);world_snapshot::ReadTerritoryTopology(input,true);
+        input.ReadString();input.ReadString(); // map/resources
+        const auto units_offset=input.lenr;types::Buffer units(input.ReadString()),unit_prefix;
+        unit_prefix.WriteString(units.ReadString());
+        for(int registry=0;registry<2;++registry) {
+            const auto count=units.ReadInt();unit_prefix.WriteInt(count);std::map<std::string,std::string> definitions;
+            for(int64_t i=0;i<count;++i) {const auto id=units.ReadString();const auto value=units.ReadString();definitions.emplace(id,value);}
+            if(definitions.size()!=static_cast<size_t>(count)) {throw std::runtime_error("duplicate restored Unit definition");}
+            for(const auto& row:definitions) {unit_prefix.WriteString(row.first);unit_prefix.WriteString(row.second);}
+        }
+        types::Buffer units_frame;units_frame.WriteString(unit_prefix.ToString()+units.ToString().substr(units.lenr));
+        types::Buffer bases(input.ReadString()),prefix;
+        prefix.WriteString(bases.ReadString());const auto count=bases.ReadInt();prefix.WriteInt(count);
+        std::map<std::string,std::string> definitions;
+        for(int64_t i=0;i<count;++i){const auto id=bases.ReadString();const auto value=bases.ReadString();definitions.emplace(id,value);}
+        if(definitions.size()!=static_cast<size_t>(count)){throw std::runtime_error("duplicate restored population definition");}
+        for(const auto& row:definitions){prefix.WriteString(row.first);prefix.WriteString(row.second);}
+        const auto facility_count=bases.ReadInt();prefix.WriteInt(facility_count);definitions.clear();
+        for(int64_t i=0;i<facility_count;++i) {const auto value=bases.ReadString();types::Buffer definition(value);definitions.emplace(definition.ReadString(),value);}
+        if(definitions.size()!=static_cast<size_t>(facility_count)) {throw std::runtime_error("duplicate restored facility definition");}
+        for(const auto& row:definitions) {prefix.WriteString(row.second);}
+        types::Buffer frame;frame.WriteString(prefix.ToString()+bases.ToString().substr(bases.lenr));
+        return world.substr(0,units_offset)+units_frame.ToString()+frame.ToString()+world.substr(input.lenr);
+    }
+
     std::string CheckCampaignRestore(const std::string& path,const std::string& expected_world,
         std::string* decoded_random=nullptr,bool advance=true) {
         using namespace game::backend;
         const auto saved=campaign::Read(path);
-        const auto before_turn=m_game.GetTurnId();
-        const auto before_rng=m_game.m_simulation->value.gameplay_random;
+        types::Buffer saved_prefix(saved.world);world_snapshot::ValidateHeader(saved_prefix,m_state->m_settings.global);
+        world_snapshot::ReadRandomState(saved_prefix);const auto saved_turn=world_snapshot::ReadTurnState(saved_prefix,m_state->m_slots->GetSlots());
+        const auto saved_simulation=m_game.ReadSimulationState(saved_prefix,saved_turn.id);
+        const auto before_turn=saved_turn.id;
+        const auto before_rng=saved_simulation->value.gameplay_random;
         const auto before_settings=m_state->Serialize().ToString();
         const auto before_roster=m_state->ExportRoster();
         const auto presentations=m_game.m_smac_base_presentations;
+        const auto unit_presentations=m_game.m_smac_presentations;
         return WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
             auto* old_state=m_state;
             auto* candidate=new State(gc_space,ctx,m_glsmac.get());m_gse->AddRootObject(candidate);
@@ -4567,7 +4666,16 @@ public:
             m_game.BindLocalCampaignState(candidate);m_state=candidate;
             m_gse->RemoveRootObject(old_state);
             size_t configure_calls=0,create_calls=0,start_calls=0;
-            m_game.On(GSE_CALL,"configure",NATIVE_CALL(this,&configure_calls,&presentations){++configure_calls;if(presentations){m_game.ConfigureSmacBasePresentations(GSE_CALL,*presentations);}return VALUE(value::Undefined); }));
+            m_game.On(GSE_CALL,"configure",NATIVE_CALL(this,&configure_calls,&presentations,&unit_presentations){
+                ++configure_calls;if(presentations) {m_game.ConfigureSmacBasePresentations(GSE_CALL,*presentations);}
+                if(unit_presentations) {m_game.ConfigureSmacPresentations(GSE_CALL,*unit_presentations);}
+                for(const auto* name:{"advance_turn","complete_turn","move_unit","attack_unit","unit_skip_turn"}) {
+                    auto* handlers=static_cast<value::Object*>(RunScript(GSE_CALL,std::string("./GLSMAC_data/default/game/event/")+name));
+                    RegisterEvent(name,new event::EventHandler(gc_space,name,static_cast<value::Callable*>(handlers->Get("validate")),nullptr,
+                        static_cast<value::Callable*>(handlers->Get("apply")),static_cast<value::Callable*>(handlers->Get("rollback"))));
+                }
+                return VALUE(value::Undefined);
+            }));
             m_game.On(GSE_CALL,"create_world",NATIVE_CALL(&create_calls){++create_calls;return VALUE(value::Undefined); }));
             m_game.On(GSE_CALL,"start",NATIVE_CALL(&start_calls){++start_calls;return VALUE(value::Undefined); }));
             util::FinallyGuard callbacks([&]{m_game.ClearHandlers();});
@@ -4594,33 +4702,7 @@ public:
             GT_ASSERT(m_game.IsRunning() && configure_calls==1 && create_calls==0 && start_calls==1,"campaign replayed configure/world creation or skipped restored Start");
             GT_ASSERT(m_game.GetTurnId()==before_turn && m_game.m_simulation->value.gameplay_random==before_rng
                 && m_state->Serialize().ToString()==before_settings && m_state->ExportRoster()==before_roster,"campaign changed settings, roster, turn or paired RNG");
-            const auto normalize_definition_order=[&](const std::string& world) {
-                // Definition registry iteration is not saved gameplay order.
-                // Compare each owned definition by ID; retain exact bytes for
-                // all other fields, including Base and Unit record order.
-                types::Buffer input(world);
-                world_snapshot::ValidateHeader(input,m_state->m_settings.global);
-                world_snapshot::ReadRandomState(input);world_snapshot::ReadTurnState(input,m_state->m_slots->GetSlots());
-                ReadSimulationPrefix(input);
-                input.ReadString();input.ReadString(); // map/resources
-                const auto units_offset=input.lenr;types::Buffer units(input.ReadString()),unit_prefix;
-                unit_prefix.WriteString(units.ReadString());
-                for(int registry=0;registry<2;++registry) {
-                    const auto count=units.ReadInt();unit_prefix.WriteInt(count);std::map<std::string,std::string> definitions;
-                    for(int64_t i=0;i<count;++i) {const auto id=units.ReadString();const auto value=units.ReadString();definitions.emplace(id,value);}
-                    if(definitions.size()!=static_cast<size_t>(count)) {throw std::runtime_error("duplicate restored Unit definition");}
-                    for(const auto& row:definitions) {unit_prefix.WriteString(row.first);unit_prefix.WriteString(row.second);}
-                }
-                types::Buffer units_frame;units_frame.WriteString(unit_prefix.ToString()+units.ToString().substr(units.lenr));
-                types::Buffer bases(input.ReadString()),prefix;
-                prefix.WriteString(bases.ReadString());const auto count=bases.ReadInt();prefix.WriteInt(count);
-                std::map<std::string,std::string> definitions;
-                for(int64_t i=0;i<count;++i){const auto id=bases.ReadString();const auto value=bases.ReadString();definitions.emplace(id,value);}
-                if(definitions.size()!=static_cast<size_t>(count)){throw std::runtime_error("duplicate restored population definition");}
-                for(const auto& row:definitions){prefix.WriteString(row.first);prefix.WriteString(row.second);}
-                types::Buffer frame;frame.WriteString(prefix.ToString()+bases.ToString().substr(bases.lenr));
-                return world.substr(0,units_offset)+units_frame.ToString()+frame.ToString()+world.substr(input.lenr);
-            };
+            const auto normalize_definition_order=[&](const std::string& world) {return NormalizeCampaignSnapshot(world);};
             GT_ASSERT(normalize_definition_order(m_game.SerializeWorldSnapshot())==normalize_definition_order(expected_world),
                 "campaign restore changed world bytes or population definition values");
             if(advance) {
@@ -8078,6 +8160,7 @@ std::string CheckSmacBaseStartupFixture( const bool queued, const int32_t diffic
 
 ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< BackendFixture >() ) {}
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
+std::string ConventionalUnitFixture::CheckLocalCampaignReplay(GSE_CALLABLE,size_t turns) {return fixture->CheckLocalCampaignReplay(GSE_CALL,turns);}
 std::string ConventionalUnitFixture::DriveLocalHumanCampaign(GSE_CALLABLE) {return fixture->DriveLocalHumanCampaign(GSE_CALL);}
 LocalCampaignActions ConventionalUnitFixture::CampaignActions() const {return fixture->CampaignActions();}
 std::vector<LocalFactionProgress> ConventionalUnitFixture::CampaignProgress() const {return fixture->CampaignProgress();}

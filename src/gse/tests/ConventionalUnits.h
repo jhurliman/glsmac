@@ -30,6 +30,7 @@ class ConventionalUnitFixture {
 public:
 	ConventionalUnitFixture();
 	~ConventionalUnitFixture();
+    std::string CheckLocalCampaignReplay(GSE_CALLABLE,size_t turns=3);
     std::string DriveLocalHumanCampaign(GSE_CALLABLE);
     LocalCampaignActions CampaignActions() const;
     std::vector<LocalFactionProgress> CampaignProgress() const;

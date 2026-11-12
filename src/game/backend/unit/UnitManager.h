@@ -181,6 +181,7 @@ public:
         void PrepareBaseRemovalHomes(const base::Base& removed,const base::Base& replacement);
         void QueryWithNativeRecords(const std::function<void()>& query) const;
 		void DiscoverDefendedBase(base::Base* target, int32_t observer);
+        void SetNativeBattleSurvivor(Unit* unit,const SmacNativeUnitRecord& state);
 		struct Data;
 		explicit PreparedConventionalRemoval( std::unique_ptr<Data> data );
 		std::unique_ptr<Data> m_data;

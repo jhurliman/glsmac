@@ -514,7 +514,7 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
     m_game->RequireSmacGameplayActive();
     if(!m_game->GetGCSpace()->IsAccumulating() || !m_game->IsRunning()) {THROW("Removal requires the owning running accumulation");}
     m_game->RequireConventionalSightWorld();
-    if(allow_native && (created || battle_survivor)) {THROW("World removal cannot use conventional battle or factory projections");}
+    if(allow_native && created) {THROW("Native removal cannot use conventional factory projections");}
     const auto* creation=created ? created->m_data.get() : nullptr;
     if(created && (!creation || creation->manager!=this || !creation->candidate || creation->published)) {THROW("Removal requires an uncommitted same-manager creation");}
     auto data=std::make_unique<PreparedConventionalRemoval::Data>(); data->manager=this;
@@ -595,7 +595,8 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
             const auto row=std::find_if(knowledge->units.begin(),knowledge->units.end(),[&](const auto& item){return item.id==id;});
             if(row==knowledge->units.end()) {THROW("Removal Unit observation is absent");}
             if(battle_survivor) {
-                const auto visible=static_cast<uint8_t>(row->visible_to | (1u<<unit->Conventional().owner_simulation_id));
+                const auto visible=static_cast<uint8_t>(row->visible_to | (1u<<unit->SimulationOwner())
+                    | (1u<<battle_survivor->SimulationOwner()));
                 const auto index=static_cast<size_t>(tile->coord.y)*(knowledge->width/2)+tile->coord.x/2;
                 for(size_t observer=1;observer<8;++observer) {
                     auto& memory=knowledge->remembered[observer];
@@ -614,13 +615,13 @@ UnitManager::PreparedConventionalRemoval UnitManager::PrepareRemovalForQuery(con
         update.ops=static_cast<unit_update_op_t>(update.ops|UUO_REFRESH);
         data->base_updates=m_game->GetBM()->m_base_updates;
         for(const auto* unit:data->removed) {
-            if(unit->Conventional().home_base_id) {
+            if(unit->IsConventional() && unit->Conventional().home_base_id) {
                 auto* home=m_game->GetBM()->GetBase(*unit->Conventional().home_base_id);
                 if(!home) {THROW("Battle victim has no current home Base");}
                 base::BaseManager::QueueBaseUpdateInto(*data->base_updates,home,base::BaseManager::BUO_REFRESH);
             }
         }
-        if(battle_survivor->Conventional().home_base_id) {
+        if(battle_survivor->IsConventional() && battle_survivor->Conventional().home_base_id) {
             auto* home=m_game->GetBM()->GetBase(*battle_survivor->Conventional().home_base_id);
             if(!home) {THROW("Battle survivor has no current home Base");}
             base::BaseManager::QueueBaseUpdateInto(*data->base_updates,home,base::BaseManager::BUO_REFRESH);
@@ -662,6 +663,18 @@ UnitManager::PreparedDefectionUnits UnitManager::PrepareDefectionUnitsForQuery(s
         || (removed && (!removal || removal->manager!=this || removal->committed))) {THROW("Defection has a stale future Unit plan");}
     return PrepareDefectionUnitsCore(recipient,changes,removal ? removal->updates:creation ? creation->updates:m_unit_updates);
 }
+void UnitManager::PreparedConventionalRemoval::SetNativeBattleSurvivor(Unit* unit,const SmacNativeUnitRecord& state) {
+    if(!m_data || m_data->committed || !unit || !unit->IsNative()) {THROW("Native battle result requires an uncommitted casualty plan");}
+    state.Validate();
+    auto found=std::find_if(m_data->native_survivors.begin(),m_data->native_survivors.end(),[&](const auto& row){return row.first==unit;});
+    if(found==m_data->native_survivors.end()) {THROW("Native battle survivor is absent from the prepared roster");}
+    // Casualty compaction already repaired source identity and stack links.
+    // Only the battle-owned payload changes here, before authority publication.
+    found->second.damage=state.damage;
+    found->second.stored_morale=state.stored_morale;
+    found->second.movement_spent=state.movement_spent;
+}
+
 void UnitManager::PreparedConventionalRemoval::DiscoverDefendedBase(base::Base* target,int32_t observer) {
     auto& d=*m_data;
     if(d.committed || !target || !d.knowledge || !d.base_updates || observer<1 || observer>7) {THROW("Battle discovery requires a prepared casualty and Base");}

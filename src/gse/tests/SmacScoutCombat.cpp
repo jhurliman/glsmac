@@ -73,6 +73,23 @@ bool StepMatches( const fixture::Step& e, const model::Survivor& s, const model:
 }
 
 void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC resolved-strength battle kernel retains187 original round and promotion histories",GT(){
+        for(const auto& c:fixture::CASES) {
+            const auto actual=model::ResolveStrengthAttack(Participant(c.input,0,ATTACKER),Participant(c.input,1,DEFENDER),
+                c.strengths,c.widths,{c.input.shared,c.input.crt},{ATTACKER,DEFENDER});
+            GT_ASSERT(actual.rounds.size()==c.round_count && actual.draws.size()==c.draw_count
+                && actual.random.Shared()==c.shared_after && actual.random.Crt()==c.crt_after
+                && actual.health_after==c.health_after && actual.survivor.stored_morale==c.stored_after
+                && actual.promotion.winner_weight==c.weights[0] && actual.promotion.loser_weight==c.weights[1],
+                "Resolved-strength battle changed original RNG, health or promotion");
+            for(size_t i=0;i<actual.rounds.size();++i) {
+                const auto& expected=fixture::ROUNDS.at(c.first_round+i);
+                GT_ASSERT(actual.rounds[i].health_before==expected.health_before && actual.rounds[i].draws==expected.draws,
+                    "Resolved-strength battle changed a retained original round");
+            }
+        }GT_OK();
+    });
+
     task->AddTest("SMAC native font identity gates measured layout without filename fallback",GT(){
         GT_ASSERT(util::SHA256("")=="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" &&
             util::SHA256("abc")=="ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" &&

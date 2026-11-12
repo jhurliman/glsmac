@@ -65,6 +65,7 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
                     && state.faction_turn->Current().phase==game::backend::faction::SmacFactionTurn::Phase::OwnerCommand
                     && state.faction_turn->Current().owner==1;});
                 GT_ASSERT(ready,"Campaign lost its human command boundary");
+                error=fixture.CheckLocalComputerBoundary();GT_ASSERT(error.empty(),error);
             }
             GT_ASSERT(game->GetBM()->GetBases().size()>=7 && game->GetUM()->GetUnits().size()>=7,"Computer campaign lost its live world");
             GT_OK();

@@ -3,6 +3,7 @@
 #include "task/gsetests/GSETests.h"
 #include "game/backend/Game.h"
 #include "game/backend/base/BaseManager.h"
+#include "game/backend/base/Base.h"
 #include "game/backend/unit/UnitManager.h"
 #include "gse/value/Array.h"
 #include "gse/value/Bool.h"
@@ -14,6 +15,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <iostream>
 #include <map>
 
 namespace gse::tests {
@@ -57,6 +59,24 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
             };
             auto initial_error=settle();GT_ASSERT(initial_error.empty(),"Initial research: "+initial_error);
             const auto initial_progress=fixture.CampaignProgress();
+            const auto report=[&]() {
+                const auto actions=fixture.CampaignActions();
+                std::cout<<"Campaign turn "<<game->GetTurnId()<<": production="<<actions.production_choices
+                    <<" moves="<<actions.moves<<" work="<<actions.work_dispatches<<" completed="<<actions.terrain_completions
+                    <<" founded="<<actions.founded_bases<<std::endl;
+                for(const auto& row:fixture.CampaignProgress()) {
+                    if(!row.human && game->GetTurnId()<51) {continue;}
+                    std::cout<<"  owner="<<row.owner<<" bases="<<row.bases<<" units="<<row.units
+                        <<" technologies="<<row.technologies<<" labs="<<row.labs<<" improved="<<row.improved_tiles<<std::endl;
+                }
+                for(const auto& entry:game->GetBM()->GetBases()) {
+                    const auto* base=entry.second;if(base->GetSmacResourceContext().owner_simulation_id!=1) {continue;}
+                    std::cout<<"  human Base "<<entry.first<<" population="<<base->GetPopulation()
+                        <<" target="<<base->GetProductionState()->current_item.smac_source_id.value_or(-999)
+                        <<" minerals="<<base->GetProductionState()->minerals<<std::endl;
+                }
+            };
+            report();
             for(int turn=0;turn<50;++turn) {
                 try {
                 auto error=settle();GT_ASSERT(error.empty(),"Research: "+error);
@@ -70,6 +90,7 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
                     && state.faction_turn->Current().owner==1;});
                 GT_ASSERT(ready,"Campaign lost its human command boundary");
                 error=fixture.CheckLocalComputerBoundary();GT_ASSERT(error.empty(),"Owner boundary: "+error);
+                if((turn+1)%10==0) {report();}
                 } catch(const std::exception& error) {
                     GT_FAIL("Campaign step "+std::to_string(turn)+", current turn "+std::to_string(game->GetTurnId())+": "+error.what());
                 }

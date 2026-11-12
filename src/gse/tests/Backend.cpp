@@ -650,7 +650,8 @@ public:
 
     LocalCampaignActions m_campaign_actions;
     size_t m_campaign_entropy_calls=0;
-    std::string CampaignSeedReport() const {return "mapJSF=12345 shared=11 crt=29 entropy_samples="+std::to_string(m_campaign_entropy_calls);}
+    bool m_campaign_generated=false;
+    std::string CampaignSeedReport() const {return (m_campaign_generated ? "mapJSF=12345 native_seed_words=4 startup_entropy_samples=" : "mapJSF=12345 shared=11 crt=29 entropy_samples=")+std::to_string(m_campaign_entropy_calls);}
     LocalCampaignActions CampaignActions() const {return m_campaign_actions;}
     std::vector<LocalFactionProgress> CampaignProgress() const {
         using namespace game::backend;
@@ -909,8 +910,9 @@ public:
         });
     }
 
-    std::string StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet) {
+    std::string StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet,bool generated=false) {
         using namespace game::backend;
+        m_campaign_generated=generated;
         EnableWorldSnapshot();
         auto& settings=m_state->m_settings.global;
         settings.SelectRuleset("smac");settings.InitializeHostRules(source);
@@ -919,9 +921,28 @@ public:
         for(const auto& profile:settings.GetSmacFactionStartupRules()->factions) {
             if(!m_state->GetFM()->Get(profile.port_id)) {m_state->GetFM()->Add(new faction::Faction(profile.port_id,profile.port_id));}
         }
-        settings.difficulty_level=0;settings.SelectInstalledPlanet();settings.SelectSmacCampaignRules(false);
+        settings.difficulty_level=0;
+        if(generated) {
+            settings.SelectSmacWorldSize(2);settings.map.type=settings::MapSettings::MT_RANDOM;
+            settings.map.ocean_coverage=0.6f;settings.map.erosive_forces=0.75f;
+            settings.map.cloud_cover=0.5f;settings.map.native_lifeforms=0.5f;
+        } else {settings.SelectInstalledPlanet();}
+        settings.SelectSmacCampaignRules(false);
         m_game.m_slot->GetPlayer()->SetDifficultyLevel("Librarian");
+        if(generated) {
+            FixtureWorldTicket();
+            auto* const previous_game=g_engine->m_game;
+            {std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_game=&m_game;}
+            util::FinallyGuard restore([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_game=previous_game;});
+            m_map.release();util::FinallyGuard recover([&]{m_game.RetireOldMap();m_map.reset(m_game.m_map);});
+            std::exception_ptr error;
+            std::thread native([&]{try {m_game.AcquireInitializationMap();} catch(...) {error=std::current_exception();}});
+            native.join();if(error) {std::rethrow_exception(error);}
+            ProcessAccumulations();
+            GT_ASSERT(m_game.m_active_admission->generated_map && m_game.GetMap()->GetResourcePolicy()->NativeTerrainSource(),"Generated campaign omitted native terrain authority");
+        }
         const auto setup=WithScriptValues([&](GSE_CALLABLE)->std::string {
+            if(!generated) {
             const auto path=std::filesystem::temp_directory_path()/("glsmac-controller-"+util::UUID::Generate()+".MP");
             util::FinallyGuard remove([&]{std::filesystem::remove(path);});
             {std::ofstream file(path,std::ios::binary);file.write(planet.data(),planet.size());}
@@ -929,6 +950,7 @@ public:
             world->m_resource_policy.reset();world->m_territory_topology.reset();
             const common::mt_flag_t active=false;
             GT_ASSERT(world->LoadInstalledPlanet(path.string(),false,active)==map::Map::EC_NONE,"Controller map import failed");
+            }
             m_game.m_tm=new map::tile::TileManager(&m_game);
             for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {m_game.GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
             for(const auto* name:{"define_moraleset","define_unit","define_base_pop","define_base_facility","advance_turn","complete_turn","move_unit","attack_unit","unit_skip_turn"}) {
@@ -945,7 +967,7 @@ public:
                 return VALUE(value::Undefined);
             }));
             PushBaseUpdates();FixtureWorldTicket();
-            m_game.m_active_admission->installed_planet=true;
+            m_game.m_active_admission->installed_planet=!generated;
             m_game.m_active_admission->stage=Game::StartupStage::Start;m_game.m_game_state=Game::GS_STARTING;
             GT_OK();
         });
@@ -969,7 +991,7 @@ public:
             m_game.Iterate();ProcessAccumulations();
         }
         if(!m_game.IsRunning() || m_game.HasInitializationFailure()) {return "Local controller startup: "+m_game.m_initialization_error;}
-        GT_ASSERT(m_campaign_entropy_calls==2,"Milestone startup did not own exactly two seed words");
+        GT_ASSERT(m_campaign_entropy_calls==(generated?0u:2u),"Milestone startup entropy ownership differs from its map source");
         return CheckLocalComputerBoundary();
     }
 
@@ -8227,6 +8249,7 @@ LocalCampaignActions ConventionalUnitFixture::CampaignActions() const {return fi
 std::vector<LocalFactionProgress> ConventionalUnitFixture::CampaignProgress() const {return fixture->CampaignProgress();}
 std::string ConventionalUnitFixture::CheckLocalComputerBoundary() {return fixture->CheckLocalComputerBoundary();}
 std::string ConventionalUnitFixture::StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet) {return fixture->StartLocalComputerCampaign(source,planet);}
+std::string ConventionalUnitFixture::StartGeneratedLocalComputerCampaign(const std::function<std::string(const std::string&)>& source) {return BackendFixture::WithCampaignMapSources([&]{return fixture->StartLocalComputerCampaign(source,"",true);});}
 
 void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate, bool single, bool selected_rover ) { fixture->ConfigureConventional( refreshed, rate, single, selected_rover ); }
 void ConventionalUnitFixture::ConfigureMovementCampaign( bool selected_rover ) { fixture->ConfigureConventional( true, 3, false, selected_rover, true ); }

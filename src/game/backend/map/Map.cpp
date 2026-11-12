@@ -676,6 +676,11 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 	m_resource_policy.reset();
 	m_territory_topology.reset();
 	m_regional_path_workspace.reset();
+    m_generated_random.reset();
+    const auto& global=m_game->GetState()->m_settings.global;
+    if(global.GetRulesetId()=="smac" && global.GetSmacCampaignRules()) {
+        return GenerateSmacTerrain(map_settings,MT_C);
+    }
 	auto* random = m_game->GetRandom();
 	const auto policy = m_game->GetState()->m_settings.global.GetRulesetId() == "smac"
 		? std::optional< GlsmacResourceMapPolicy >( GlsmacResourceMapPolicy::DisplayedTerrainV1() ) : std::nullopt;
@@ -734,6 +739,7 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 const Map::error_code_t Map::LoadFromBuffer( types::Buffer& buffer ) {
 	m_game->RequireWorkerKnowledgeMutation();
 	m_worker_knowledge_ready = false;
+    m_generated_random.reset();
 	m_resource_policy.reset(); // raw/imported tile payloads never infer a policy
 	m_territory_topology.reset();
 	m_regional_path_workspace.reset();

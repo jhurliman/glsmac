@@ -661,7 +661,7 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 		}
 		GT_OK();
 	});
-	task->AddTest("SMAC territory topology rejects capacity malformed frames and stale terrain",GT(){
+	task->AddTest("SMAC territory topology merges native capacity and rejects malformed frames and stale terrain",GT(){
 		std::vector<bool> sea(32,false);const auto value=Topology::Build(8,8,true,sea);const auto wire=value.Serialize();
 		sea[10]=true;GT_ASSERT(Rejects([&]{value.ValidateTerrain(sea);}),"changed terrain retained region authority");
 		for(int i=0;i<7;++i) {
@@ -671,7 +671,9 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 		}
 		std::vector<bool> islands(128*64/2,false);
 		for(int y=4;y<60;y+=4){for(int x=4;x<124;x+=4){islands[Index(128,x,y)]=true;}}
-		GT_ASSERT(Rejects([&]{Topology::Build(128,64,true,islands);}),"unmeasured region-capacity merging silently admitted");
+		const auto merged=Topology::Build(128,64,true,islands);
+		GT_ASSERT(Topology::Deserialize(merged.Serialize())==merged,"Native capacity merge did not retain stable save topology");
+		merged.ValidateTerrain(islands);
 		types::Buffer framed;world_snapshot::WriteTerritoryTopology(framed,value,true);framed.WriteInt(17);
 		GT_ASSERT(world_snapshot::ReadTerritoryTopology(framed,true)==value && framed.ReadInt()==17,"topology prefix consumed map bytes");
 		types::Buffer oversized;oversized.WriteBool(true);const auto cursor=oversized.lenw;oversized.WriteString(std::string(Topology::MAX_WIRE_BYTES+1,'x'));

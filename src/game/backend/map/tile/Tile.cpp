@@ -83,7 +83,7 @@ void Tile::Update() {
 	// contour. Retain its land/sea identity after every renderer/restore update.
 	if (tiles && tiles->GetMap()) {
 		const auto& policy=tiles->GetMap()->GetResourcePolicy();
-		if(policy && policy->OriginalPlanet()) {is_water_tile=policy->Altitude(*this)<resource::smac::AltitudeBand::Land3;}
+		if(policy && policy->NativeTerrainSource()) {is_water_tile=policy->Altitude(*this)<resource::smac::AltitudeBand::Land3;}
 	}
 }
 

@@ -196,7 +196,11 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::Deserialize( const std::string&
         meta.width=uint32_t(integer(16,512));meta.height=uint32_t(integer(8,256));meta.horizontal_wrap=input.ReadBool();
         if((meta.width&1) || (meta.height&1)) {throw std::runtime_error("Generated terrain requires even parity-grid dimensions");}
         meta.pattern=int32_t(integer(1,32767));meta.sea_offset=int32_t(integer(INT32_MIN,INT32_MAX));meta.climate_extra=int32_t(integer(INT32_MIN,INT32_MAX));
-        for(size_t i=0;i<7;++i) {meta.categories[i]=int32_t(integer(0,i==0?4:2));}
+        for(size_t i=0;i<7;++i) {
+            const auto category=int32_t(integer(0,i==0?99:2));
+            if(i==0 && category>4 && category!=99) {throw std::runtime_error("Generated world-size category is not a preset or explicit custom tag");}
+            meta.categories[i]=category;
+        }
         meta.generation_primary_rules=uint32_t(integer(0,UINT32_MAX));
         if(automatic!=bool(*meta.generation_primary_rules&0x2000)) {throw std::runtime_error("Generated terrain automatic-resource option differs from source rules");}
         const auto records=input.ReadString(meta.width/2*meta.height*44);

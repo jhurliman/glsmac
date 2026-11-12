@@ -37,6 +37,7 @@ public:
     LocalCampaignActions CampaignActions() const;
     std::vector<LocalFactionProgress> CampaignProgress() const;
     std::string CheckLocalComputerBoundary();
+    std::string StartGeneratedLocalComputerCampaign(const std::function<std::string(const std::string&)>& source);
     std::string StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet);
 	void Configure( bool refreshed = true, int32_t road_rate = 3, bool single = false, bool selected_rover = false );
 	void ConfigureMovementCampaign( bool selected_rover = true );

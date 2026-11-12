@@ -38,7 +38,8 @@ SmacTerrainAuthority SmacTerrainAuthority::GeneratedRetained(Metadata meta,const
     if(meta.width<16 || meta.width>512 || (meta.width&1) || meta.height<8 || meta.height>256 || (meta.height&1)
         || uint64_t(meta.width/2)*meta.height*44!=records.size() || !meta.generation_primary_rules
         || meta.pattern<1 || meta.pattern>32767) {throw std::invalid_argument("Invalid retained generated terrain metadata or record length");}
-    for(size_t i=0;i<7;++i) {if(!meta.categories[i] || *meta.categories[i]<0 || *meta.categories[i]>(i==0?4:2)) {
+    for(size_t i=0;i<7;++i) {if(!meta.categories[i] || *meta.categories[i]<0
+        || (*meta.categories[i]>(i==0?4:2) && !(i==0 && *meta.categories[i]==99))) {
         throw std::invalid_argument("Retained generated terrain requires resolved source categories");}}
     SmacTerrainAuthority result;result.m_origin=Origin::Generated;result.m_metadata=std::move(meta);
     result.m_generated.resize(records.size()/44);

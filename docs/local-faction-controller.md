@@ -137,3 +137,15 @@ Use cached affected tests and targeted correctness analysis during development.
 Scheduler persistence, shared lifetime and command authority warrant focused
 sanitizers and a broader integration gate, not a full three-platform matrix for
 each arithmetic change. A playable match is a meaningful platform smoke gate.
+
+
+Generated ordinary campaigns use the verified complete native terrain pipeline
+through `AcquireInitializationMap`, with all31 `WORLDBUILDER` values frozen from
+the selected source. The live tile projection retains `GeneratedTerrainV3`
+authority, source categories and raw records, rather than constructing an
+installed Planet header. The explicit port entropy policy consumes four words
+from the saved map JSF stream before generation (shared, CRT, borehole clock,
+final-climate clock); initialization continues the resulting native streams.
+Landform and temperature currently select Average because the setup surface
+exposes ocean, erosion, cloud and life presets. This entropy/setup policy is
+not a claim about the original program's clock sampling.

@@ -5,6 +5,7 @@
 #include "base/SmacWorkedSquareCollection.h"
 #include "map/Map.h"
 #include "map/SmacPlanetMap.h"
+#include "map/SmacTerrainAuthority.h"
 #include "map/SmacTerritoryRules.h"
 #include "map/SmacStartingSite.h"
 #include "map/SmacStartingBalance.h"
@@ -127,7 +128,7 @@ bool Game::HandleCanonicalStartupEvent(GSE_CALLABLE,const std::string& name,
             m_simulation->value.social.BuildStartupIntrinsic(participant->simulation_id,*global.GetSmacTechnologyRules(),*global.GetSmacFactionStartupRules());
         }
         const auto& geography=*m_map->GetTerritoryTopology();
-        const auto& policy=*m_map->GetResourcePolicy();const auto* source=policy.OriginalPlanet();
+        const auto& policy=*m_map->GetResourcePolicy();const auto* source=policy.NativeTerrainSource().get();
         map::smac_balance::Input balance{};balance.geometry={geography.Width(),geography.Height(),geography.Wraps()};
         balance.difficulty=m_simulation->value.designs.global_difficulty;balance.human_mask=m_simulation->value.human_membership;
         balance.areas=*geography.Areas();
@@ -149,7 +150,7 @@ bool Game::HandleCanonicalStartupEvent(GSE_CALLABLE,const std::string& name,
         },[&](auto p,uint32_t items) {
             if(!source) {return int32_t(policy.SiteSignal(*m_map->GetTile(p[0],p[1])));}
             return int32_t(resource::smac::ResolveSiteSignal({p[0],p[1],static_cast<resource::smac::AltitudeBand>(source->At(p[0],p[1]).Climate()>>5),
-                items,policy.AutomaticLandResources(),source->ResourcePattern(),11,61}));
+                items,policy.AutomaticLandResources(),source->Info().pattern,11,61}));
         });
         auto compensated_policy=compensation.writes.empty() ? m_map->m_resource_policy
             :std::optional<map::GlsmacResourceMapPolicy>(policy.WithStartingBalance(compensation));

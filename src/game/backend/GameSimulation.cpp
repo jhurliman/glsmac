@@ -20,6 +20,7 @@
 #include "base/FacilityDef.h"
 #include "map/Map.h"
 #include "map/SmacPlanetMap.h"
+#include "map/SmacTerrainAuthority.h"
 #include "gse/value/Array.h"
 #include "gse/value/Bool.h"
 
@@ -190,8 +191,10 @@ void Game::PrepareNewSimulation() {
 	// A second-sample failure publishes neither word nor the staged simulation.
 	std::optional<faction::SmacEcologyWorld> ecology_world;
 	if(m_map && m_map->GetResourcePolicy()) {
-		if(const auto* planet=m_map->GetResourcePolicy()->OriginalPlanet()) {
-			ecology_world=faction::SmacEcologyWorld{planet->NativeLifeCategory(),planet->CloudCoverCategory(),planet->CumulativeSeaLevelOffset()};
+		if(const auto& planet=m_map->GetResourcePolicy()->NativeTerrainSource()) {
+            const auto& info=planet->Info();
+            if(!info.categories[6] || !info.categories[5]) {throw std::runtime_error("Native ecology source lacks selected life/cloud categories");}
+			ecology_world=faction::SmacEcologyWorld{*info.categories[6],*info.categories[5],info.sea_offset};
 			ecology_world->Validate();
 		}
         else if(settings.map.type==settings::MapSettings::MT_RANDOM || settings.map.type==settings::MapSettings::MT_CUSTOM) {
@@ -204,8 +207,11 @@ void Game::PrepareNewSimulation() {
             }
         }
 	}
-	const auto shared = m_gameplay_entropy_word_source();
-	const auto crt = m_gameplay_entropy_word_source();
+    // Native generation retains its real two-stream continuation on the
+    // unpublished candidate Map. Installed worlds retain the existing separate
+    // startup entropy policy; restores never enter this producer.
+    const auto shared=m_map && m_map->m_generated_random ? m_map->m_generated_random->Shared():m_gameplay_entropy_word_source();
+    const auto crt=m_map && m_map->m_generated_random ? m_map->m_generated_random->Crt():m_gameplay_entropy_word_source();
 	// Explicit GLSMAC supported campaign: project effects are not activated.
 	// This is not a claim about original setup or a missing-project fallback.
 	faction::SmacSimulationState value( SmacGameplayRandomState( shared, crt ), faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain,
@@ -287,6 +293,7 @@ void Game::PrepareNewSimulation() {
 		value.movement_history = SmacMovementHistory::NewGeneratedWorld( selected->width, selected->height );
 	}
 	m_simulation = BindSimulation( std::move( value ) );
+    if(m_map) {m_map->m_generated_random.reset();}
 }
 
 void Game::PublishPendingSimulation() {

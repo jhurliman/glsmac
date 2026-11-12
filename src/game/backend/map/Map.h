@@ -14,6 +14,7 @@ namespace game::native_terrain {struct World;}
 
 #include "Types.h"
 #include "GlsmacResourceMapPolicy.h"
+#include "game/backend/SmacGameplayRandomState.h"
 #include "SmacPlanetMap.h"
 #include "SmacWorkerKnowledge.h"
 #include "GlsmacTerritoryTopology.h"
@@ -223,6 +224,9 @@ private:
     void ValidateGlobalSpread(const PreparedGlobalSpread& prepared) const;
 	GlsmacTerritoryTopology PrepareSiteRatings(const GlsmacTerritoryTopology& topology,
 		const std::vector<smac_site::Coordinate>& bases,size_t turn,std::optional<smac_site::Coordinate> point) const;
+    const error_code_t LoadNativeTerrain(const GlsmacResourceMapPolicy& policy,MT_CANCELABLE);
+    const error_code_t GenerateSmacTerrain(settings::MapSettings* settings,MT_CANCELABLE);
+    std::optional<SmacGameplayRandomState> m_generated_random;
 	friend class gse::tests::BackendFixture;
 	friend class gse::tests::TerrainRenderFixture;
 	// Backend snapshot fixtures need only the tile grid. This constructor does

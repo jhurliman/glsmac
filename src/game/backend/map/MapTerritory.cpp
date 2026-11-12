@@ -1,6 +1,7 @@
 #include "Map.h"
 #include "tile/Tiles.h"
 #include "SmacPlanetMap.h"
+#include "SmacTerrainAuthority.h"
 
 namespace game::backend::map {
 std::vector< bool > Map::TerritorySea() const {
@@ -30,7 +31,7 @@ GlsmacTerritoryTopology Map::PrepareFreshTerritoryTopology() const {
 			&& !(tile->features&tile::FEATURE_XENOFUNGUS));
 	}}
 	std::vector<uint8_t> details(sea.size(),0);
-	if(const auto* planet=m_resource_policy->OriginalPlanet()) {
+	if(const auto& planet=m_resource_policy->NativeTerrainSource()) {
 		for(size_t y=0;y<GetHeight();++y) {for(size_t x=y&1;x<GetWidth();x+=2) {
 			details[y*(GetWidth()/2)+x/2]=static_cast<uint8_t>(planet->At(x,y).Landmarks()>>24);
 		}}

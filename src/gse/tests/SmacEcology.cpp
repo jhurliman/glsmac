@@ -387,6 +387,18 @@ void AddSmacEcologyTests(task::gsetests::GSETests* task) {
         }
         GT_OK();
     });
+    task->AddTest("SMAC generation freezes all31 WORLDBUILDER values and transfers exact native inputs", GT() {
+        std::string text="#WORLDBUILDER\n";std::array<int32_t,31> expected{};
+        for(size_t i=0;i<expected.size();++i) {expected[i]=int32_t(i*3);text+=std::to_string(expected[i])+(i>=25 && i<29 ? "," : i==29 ? " ; configured ratios\n" : ", ; configured row\n");}
+        text+="#END\n";const auto rules=SmacEcologyRules::Read(text);
+        GT_ASSERT(rules && rules->world_builder && *rules->world_builder==expected,"Generation substituted or omitted configured world-builder rows");
+        const auto wire=rules->Serialize().ToString();
+        GT_ASSERT(SmacEcologyRules::Deserialize(types::Buffer(wire))==*rules,"Full generation input changed across host/save transfer");
+        auto inconsistent=*rules;inconsistent.world_builder->at(14)=1;
+        GT_ASSERT(Rejects([&]{inconsistent.Serialize();}),"Generation and ecology accepted different sea-level authority");
+        auto short_rules=SmacEcologyRules::Read(EcologySource("5,"));
+        GT_ASSERT(short_rules && !short_rules->world_builder,"Legacy short ecology fixture invented generation defaults");GT_OK();
+    });
     task->AddTest("SMAC ecology host settings freeze source preserve old absence and reject partial replacement", GT() {
         using game::backend::settings::GlobalSettings;
         const auto source = [](const std::string& filename) {

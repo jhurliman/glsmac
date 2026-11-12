@@ -11,8 +11,8 @@
 namespace game::backend::map {
 
 // Saved GLSMAC topology over actual displayed land/sea classification. The
-// region traversal follows REGION-FRESH-001 below its unimplemented merging
-// paths. Stored area and postpass data retain their own producer lifetimes;
+// ordinary campaign traversal uses the complete native region producer,
+// including capacity merging. Stored area and postpass data retain their own producer lifetimes;
 // this does not own Freshwater markers or an original world generator.
 class GlsmacTerritoryTopology {
 public:

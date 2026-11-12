@@ -1,4 +1,5 @@
 #include "GlsmacTerritoryTopology.h"
+#include "SmacGenerationRegions.h"
 
 #include <array>
 #include <stdexcept>
@@ -64,6 +65,21 @@ GlsmacTerritoryTopology GlsmacTerritoryTopology::BuildWithAreas(int32_t width,in
 	const auto count = Count(width,height);
 	Require( sea.size() == count, "Territory topology sea extent differs from geometry" );
 	for(const auto area:areas) {Require(area>=0,"Negative initial region area history");}
+    if(width>=8 && height>=8) {
+        // The verified native region producer owns capacity merging as well as
+        // the ordinary flood. Its unused/polar area history is retained; raw
+        // Freshwater/adjacency outputs remain owned by the terrain producer.
+        smac_generation::State plane{std::vector<smac_generation::Record>(count),{},SmacGameplayRandomState(0,0)};
+        plane.topology=wrap?0:1;
+        for(size_t i=0;i<count;++i) {plane.records[i][0]=sea[i]?uint8_t(2u<<5):uint8_t(3u<<5);}
+        smac_generation::Regions native;native.summary_initial=0;
+        for(size_t region=0;region<128;++region) {for(size_t k=0;k<4;++k) {native.records[region*28+k]=uint8_t(uint32_t(areas[region])>>(8*k));}}
+        smac_generation::RebuildRegions(plane,{width,height},native);
+        std::vector<uint8_t> labels;labels.reserve(count);
+        for(const auto& record:plane.records) {labels.push_back(record[3]);}
+        for(size_t region=0;region<128;++region) {areas[region]=native.Area(region);}
+        auto result=GlsmacTerritoryTopology(width,height,wrap,std::move(labels));result.m_areas=areas;return result;
+    }
 	std::vector<uint8_t> regions(count,0);
 	std::vector<size_t> queue; queue.reserve(count);
 	uint8_t last_land = 0, last_sea = 64;

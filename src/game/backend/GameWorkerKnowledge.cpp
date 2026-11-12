@@ -337,8 +337,8 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
 		data.units.push_back({id,0,false});
 	}
 	// Stored visibility is updated by this event, never rebuilt globally. The
-	// receipt admits unobscured flat ordinary land; sensor/edge/concealment
-	// branches remain explicit failures when foreign detection is relevant.
+	// Basic ground detection and owned sensor detection use separate readers;
+    // concealed positive opponents retain their explicit relation/ability gate.
 	auto& moving=*std::find_if(data.units.begin(),data.units.end(),[&](const auto& value){return value.id==id;});
 	const auto adjacent=[&](const map::tile::Tile* a,const map::tile::Tile* b) {
         auto dx=std::abs(int64_t(a->coord.x)-int64_t(b->coord.x));
@@ -346,11 +346,13 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
         const auto dy=std::abs(int64_t(a->coord.y)-int64_t(b->coord.y));
         return dx+dy==2;
     };
-	const auto ordinary=[&](const map::tile::Tile* tile) {
-		if ( tile->is_water_tile || tile->rockiness!=map::tile::ROCKINESS_FLAT || tile->features!=map::tile::FEATURE_NONE
-			|| tile->terraforming!=map::tile::TERRAFORMING_NONE || tile->coord.x<2 || tile->coord.x+2>=m_map->GetWidth()
-			|| tile->coord.y<2 || tile->coord.y+2>=m_map->GetHeight() ) { throw std::runtime_error("Foreign sight requires evidenced unobscured interior flat land"); }
-	};
+    const auto ordinary=[](const map::tile::Tile* tile) {
+        // Basic ground detection has no rockiness, forest, improvement or edge
+        // test. Fungus concealment has its separate relation/ability branch.
+        if(tile->is_water_tile || (tile->features&map::tile::FEATURE_XENOFUNGUS)) {
+            throw std::runtime_error("Foreign sight requires ordinary unconcealed ground detection");
+        }
+    };
 	for ( const auto& entry:m_um->GetUnits() ) {
 		const auto* other=entry.second; const auto faction=other->SimulationOwner();
 		if(entry.first==id || faction==owner) {continue;}
@@ -388,6 +390,30 @@ unit::PreparedConventionalSight Game::PrepareConventionalSight( uint64_t id, int
 		if(adjacent(destination,center)) {ordinary(destination); ordinary(center); moving.visible_to |= uint8_t(1u<<faction);
             prepared.disclosed_to_humans.push_back(id);}
 	}
+    // Original5ce6e2/5cf43e visit inner9 plus outer16 sensor positions.
+    // They disclose the moving stack to the sensor's retained raw claimant;
+    // ownership alone never grants visibility. Base-marked sensors are skipped.
+    const auto* actor=m_um->GetUnit(id);
+    const bool concealed=actor && actor->IsConventional() && actor->Conventional().native_flags
+        && (*actor->Conventional().native_flags&0x400u);
+    if(!concealed) {
+        for(int dy=-4;dy<=4;++dy) {for(int dx=-4;dx<=4;++dx) {
+            if(std::abs(dx)+std::abs(dy)>4 || ((dx^dy)&1)) {continue;}
+            auto x=int32_t(destination->coord.x)+dx;const auto y=int32_t(destination->coord.y)+dy;
+            if(data.horizontal_wrap) {x=(x%data.width+data.width)%data.width;}
+            if(x<0 || x>=data.width || y<0 || y>=data.height) {continue;}
+            const auto* sensor=m_map->GetTile(x,y);
+            if(!(sensor->terraforming&map::tile::TERRAFORMING_SENSOR) || sensor->base) {continue;}
+            const auto claim=data.tiles[size_t(y)*size_t(data.width/2)+size_t(x)/2].claimant;
+            if(!claim || *claim<1 || *claim>7 || *claim==owner || !data.observers[*claim]) {continue;}
+            const auto bit=uint8_t(1u<<*claim);
+            moving.visible_to|=bit;prepared.disclosed_to_humans.push_back(id);
+            const auto index=size_t(destination->coord.y)*size_t(data.width/2)+destination->coord.x/2;
+            data.tiles[index].explored_by|=bit;
+            auto& memory=data.remembered[*claim];if(memory.empty()) {memory.resize(data.tiles.size());}
+            memory[index]=map::SmacWorkerKnowledge::Improvements{destination->features,destination->terraforming,destination->base!=nullptr,true};
+        }}
+    }
     if(data.occupancy) {
         if(source) {data.occupancy->RemoveUnit({static_cast<int32_t>(source->coord.x),static_cast<int32_t>(source->coord.y)},source->units.size()==1 && source->units.count(id));}
         data.occupancy->PlaceUnit({static_cast<int32_t>(destination->coord.x),static_cast<int32_t>(destination->coord.y)},owner,destination->units.empty());

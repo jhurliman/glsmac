@@ -535,6 +535,67 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
         }
         GT_OK();
     });
+    task->AddTest("SMAC ordinary foreign detection admits rocky forest road and wrapped edges",GT(){
+        for(int scenario=0;scenario<4;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();Definitions(game);
+                for(size_t y=0;y<64;++y) {for(size_t x=y&1;x<128;x+=2) {
+                    auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners) {*corner=100;}
+                    tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->Update();
+                }}
+                const int x=scenario==3?0:32,foreign_x=scenario==3?127:33;
+                Spawn(GSE_CALL,game,71,0,1,x,16);
+                for(auto* tile:{game->GetMap()->GetTile(x,16),game->GetMap()->GetTile(foreign_x,15)}) {
+                    if(scenario==0) {tile->rockiness=map::tile::ROCKINESS_ROCKY;}
+                    if(scenario==1) {tile->terraforming=map::tile::TERRAFORMING_FOREST;}
+                    if(scenario==2) {tile->terraforming=map::tile::TERRAFORMING_ROAD;}
+                }
+                Knowledge::Data data{128,64,true,true,0,{},{},{}};data.tiles.resize(4096,{0,std::nullopt});
+                data.observers[1]=Knowledge::Observer{};data.observers[2]=Knowledge::Observer{};data.units={{71,0,false}};
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                Spawn(GSE_CALL,game,72,1,2,foreign_x,15);
+                const auto actual=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();
+                GT_ASSERT(actual.units[0].visible_to==4 && actual.units[1].visible_to==2,
+                    "Basic foreign detection inherited unrelated terrain or interior-only gates");GT_OK();
+            });GT_ASSERT(result.empty(),"ordinary detection scenario "+std::to_string(scenario)+": "+result);
+        }
+        GT_OK();
+    });
+    task->AddTest("SMAC conventional sensors disclose only their owned bounded footprint",GT(){
+        for(int distance=0;distance<=6;distance+=2) {
+            ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();Definitions(game);
+                for(size_t y=0;y<64;++y) {for(size_t x=y&1;x<128;x+=2) {
+                    auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners) {*corner=100;}
+                    tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->Update();
+                }}
+                auto* local=Spawn(GSE_CALL,game,71,0,1,32,16);
+                Spawn(GSE_CALL,game,72,1,2,64,40);
+                auto* destination=game->GetMap()->GetTile(30,16);
+                game->GetMap()->GetTile(30+distance,16)->terraforming=map::tile::TERRAFORMING_SENSOR;
+                Knowledge::Data data{128,64,true,true,0,{},{},{}};data.tiles.resize(4096,{0,std::nullopt});
+                data.observers[1]=Knowledge::Observer{};data.observers[2]=Knowledge::Observer{};
+                data.tiles[16*64+(30+distance)/2].claimant=2;
+                data.units={{71,0,false},{72,2,false}};
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                const auto before=game->GetMap()->GetSmacWorkerKnowledge()->Serialize();
+                game->GetUM()->ValidateConventionalMove(local,destination,0);
+                GT_ASSERT(game->GetMap()->GetSmacWorkerKnowledge()->Serialize()==before,"Sensor preparation mutated live knowledge");
+                game->GetUM()->MoveConventionalUnit(GSE_CALL,local,destination,0);
+                const auto actual=game->GetMap()->GetSmacWorkerKnowledge()->CopyData();const bool seen=distance<=4;
+                GT_ASSERT(actual.units[0].visible_to==(seen?4:0) && actual.units[1].visible_to==2,
+                    "Sensor radius or stationary visibility changed");
+                const auto center=size_t(16*64+15);
+                GT_ASSERT(bool(actual.tiles[center].explored_by&4)==seen &&
+                    (seen ? actual.remembered[2][center]->unit_present:actual.remembered[2].empty()),
+                    "Sensor omitted bounded destination memory or revealed an out-of-range tile");
+                GT_OK();
+            });GT_ASSERT(result.empty(),"sensor distance "+std::to_string(distance)+": "+result);
+        }
+        GT_OK();
+    });
 	task->AddTest( "SMAC live ordinary sight rejects unsupported detection before publication", GT() {
 		ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
 		return fixture.Run([&](GSE_CALLABLE)->std::string {

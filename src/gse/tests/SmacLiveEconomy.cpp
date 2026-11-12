@@ -68,10 +68,26 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
         ConventionalUnitFixture fixture;
         fixture.ConfigureTwoResourceParticipants([](const std::string& name) {
             auto source=Source(name);const auto pos=source.find("Center,2,1,2");
-            if(pos!=std::string::npos) {source.replace(pos,12,"Center,2,1,10");}return source;
+            if(pos!=std::string::npos) {source.replace(pos,12,"Center,2,1,10");}
+            if(name!="alpha.txt") {return source;}
+            // The generic parser fixture has flags=i*5 (44 commerce records),
+            // unlike installed SMAC's six. This arithmetic fixture explicitly
+            // supplies six enabled commerce records with None prerequisites.
+            std::istringstream input(source);std::string line,section,result;size_t row=0;
+            while(std::getline(input,line)) {
+                if(!line.empty() && line[0]=='#') {section=line;row=0;}
+                else if(section=="#TECHNOLOGY" && !line.empty()) {
+                    line.replace(line.rfind(',')+1,std::string::npos,row++<6?"000000100":"000000000");
+                }
+                result+=line+'\n';
+            }
+            return result;
         });
         return fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();auto* own=Create(GSE_CALL,game);auto* peer=Create(GSE_CALL,game,1);
+            int32_t enabled=0;for(const auto& technology:game->GetState()->m_settings.global.GetSmacTechnologyRules()->technologies) {if(technology.flags&4u) {++enabled;}}
+            GT_ASSERT(enabled==6,"commerce fixture did not freeze six enabled commerce technologies: "+std::to_string(enabled));
+
             fixture.ResourceState([](auto& state) {
                 state.diplomacy_metadata.emplace();state.retained_base_totals.emplace();state.retained_base_totals->fill(0);
                 state.retained_base_totals->at(1)=1;state.retained_base_totals->at(2)=1;

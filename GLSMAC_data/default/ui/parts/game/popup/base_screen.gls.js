@@ -230,7 +230,7 @@ return {
 			});
 		} else {
 			this.sections.economy.set_commerce({
-				// TODO
+                income: #is_defined(energy) && #is_defined(energy.commerce) ? energy.commerce : undefined,
 			});
 		}
 
@@ -252,7 +252,7 @@ return {
 				loss: consumption.MINERALS,
 			},
 			energy: {
-				profit: intake.ENERGY,
+				profit: intake.ENERGY + (#is_defined(energy) && #is_defined(energy.commerce) ? energy.commerce : 0),
 				loss: consumption.ENERGY,
 			},
 		};

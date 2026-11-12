@@ -5,6 +5,7 @@
 #include "base/BaseManager.h"
 #include "base/FacilityDef.h"
 #include "base/SmacBaseEnergy.h"
+#include "base/SmacCommerce.h"
 #include "faction/Faction.h"
 #include "map/Map.h"
 #include "map/SmacTerritoryRules.h"
@@ -29,11 +30,77 @@ faction::SmacEconomyState Game::GetCanonicalEconomy( const slot::Slot* owner ) c
 	RequireSmacLocalHumanOwner( owner );
 	for ( const auto& participant : m_simulation->value.roster ) {
 		if ( participant.slot == owner->GetIndex() ) {
-			const auto& result = m_simulation->value.economy.at( participant.simulation_id );
+			auto result = m_simulation->value.economy.at( participant.simulation_id );
+            result.treaty_partners=0;
+            const auto relation=m_simulation->value.hostility.owners.find(participant.simulation_id);
+            if(relation!=m_simulation->value.hostility.owners.end()) {for(int32_t peer=1;peer<8;++peer) {
+                if(relation->second.directions.at(peer).primary&2u) {result.treaty_partners|=static_cast<uint8_t>(1u<<peer);}
+            }}
 			result.Validate(); return result;
 		}
 	}
 	throw std::runtime_error( "Canonical economy owner is not admitted" );
+}
+
+int32_t Game::CalculateCanonicalBaseCommerce(const base::Base& evaluating_base,int32_t intake) const {
+    using namespace base;
+    const auto& simulation=m_simulation->value;
+    const auto owner=evaluating_base.GetSmacResourceContext().owner_simulation_id;
+    const auto current=simulation.hostility.owners.find(owner);
+    if(current==simulation.hostility.owners.end()) {throw std::runtime_error("Commerce lacks relationship authority");}
+    bool treaty=false;
+    for(const auto& peer:simulation.hostility.owners) {
+        if(peer.first!=owner && ((current->second.directions.at(peer.first).primary&2u) || (peer.second.directions.at(owner).primary&2u))) {treaty=true;}
+    }
+    if(!treaty) {return 0;}
+    if(!simulation.diplomacy_metadata || !simulation.retained_base_totals) {throw std::runtime_error("Commerce requires saved diplomacy and Base-count authority");}
+    const auto& global=m_state->m_settings.global;
+    const auto& technologies=global.GetSmacTechnologyRules();const auto& profiles=global.GetSmacFactionStartupRules();
+    if(!technologies || !profiles) {throw std::runtime_error("Commerce requires frozen profiles and technology rules");}
+    SmacCommerceInputs in;
+    in.trade_doubled=simulation.diplomacy_metadata->trade_doubled;
+    in.governor=simulation.resource_modifiers.planetary_governor.value_or(0);
+    std::array<bool,89> enabled{};
+    for(const auto& technology:technologies->technologies) {
+        if(!(technology.flags&4u)) {continue;}
+        bool admitted=true;
+        for(const auto& token:technology.prerequisites) {
+            const auto ref=technologies->ResolveToken(token);
+            if(ref.kind==settings::SmacTechnologyReference::Kind::UNKNOWN) {throw std::runtime_error("Commerce technology prerequisite is unavailable");}
+            if(ref.kind==settings::SmacTechnologyReference::Kind::DISABLED) {admitted=false;}
+        }
+        if(admitted) {enabled.at(technology.source_id)=true;++in.enabled_technologies;}
+    }
+    for(const auto& participant:simulation.roster) {
+        const auto id=participant.simulation_id;
+        const auto* profile=profiles->Find(participant.faction_id);
+        const auto* knowledge=simulation.technology.Find(id);const auto* social=simulation.social.Find(id);
+        const auto relations=simulation.hostility.owners.find(id);
+        if(!profile || !knowledge || !social || relations==simulation.hostility.owners.end()) {throw std::runtime_error("Commerce owner authority is incomplete");}
+        int32_t bonus=0,owned=0;
+        for(const auto& record:profile->Records()) {if(record.kind==settings::SmacFactionStartupBonus::Kind::COMMERCE) {bonus=record.parameter;}}
+        for(size_t key=0;key<88;++key) {if(enabled[key] && knowledge->owned[key]) {++owned;}}
+        auto& row=in.factions.at(id);
+        row.rating=CalculateSmacCommerceRating(bonus,social->current.at(0),owned);
+        row.base_count=simulation.retained_base_totals->at(id);
+        row.blocked=simulation.diplomacy_metadata->sanctions.at(id)!=0;
+        for(int32_t other=1;other<8;++other) {
+            const auto flags=relations->second.directions.at(other).primary;
+            if(flags&2u) {row.treaty_partners|=static_cast<uint8_t>(1u<<other);}
+            if(flags&1u) {row.pact_partners|=static_cast<uint8_t>(1u<<other);}
+        }
+    }
+    bool found=false;
+    for(const auto id:m_bm->GetBaseRecordOrder()) {
+        const auto* candidate=m_bm->GetBase(id);
+        if(!candidate || candidate->m_id!=id) {throw std::runtime_error("Commerce Base order is invalid");}
+        const bool selected=candidate==&evaluating_base;
+        if(!selected && !candidate->m_commerce_ranking_energy) {throw std::runtime_error("Commerce partner intake generation is unavailable");}
+        if(selected) {in.current=in.bases.size();found=true;}
+        in.bases.push_back({candidate->GetSmacResourceContext().owner_simulation_id,selected?intake:*candidate->m_commerce_ranking_energy});
+    }
+    if(!found) {throw std::runtime_error("Commerce evaluating Base is not registered");}
+    return CalculateSmacCommerce(in).total;
 }
 
 base::SmacBaseEnergyCalculation Game::GetCanonicalBaseEnergy( const base::Base& evaluating_base ) const {
@@ -52,13 +119,6 @@ base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::
 	const auto context = evaluating_base.GetSmacResourceContext();
 	if ( m_simulation->value.movement_capability != faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain ) {
 		throw std::runtime_error( "Energy calculation requires the explicit no-project campaign" );
-	}
-	for ( const auto& owner : m_simulation->value.economy ) {
-		owner.second.Validate();
-		if ( ( owner.first == context.owner_simulation_id && owner.second.treaty_partners )
-			|| ( owner.second.treaty_partners & ( 1u << context.owner_simulation_id ) ) ) {
-			throw std::runtime_error( "Treaty commerce pairing is not connected" );
-		}
 	}
 	const auto* social = m_simulation->value.social.Find( context.owner_simulation_id );
 	if ( !social || social->phase != faction::SmacFactionSocialState::Phase::Refreshed ) {
@@ -140,8 +200,10 @@ base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::
 	const auto raw = Checked( resources.raw_intake[ 2 ] );
 	const auto distance = SmacHeadquartersDistance( Checked( m_map->GetWidth() ), true /* actual GLSMAC tile grid wraps X */,
 		{ Checked( tile->coord.x ), Checked( tile->coord.y ) }, headquarters );
-	const auto waste = CalculateSmacEnergyWaste( raw, distance, social->current[ 1 ], local[ 2 ] );
-	const auto net = Checked( int64_t( raw ) - waste );
+	const auto commerce=CalculateCanonicalBaseCommerce(evaluating_base,raw);
+    const auto gross=Checked(int64_t(raw)+commerce);
+	const auto waste = CalculateSmacEnergyWaste( gross, distance, social->current[ 1 ], local[ 2 ] );
+	const auto net = Checked( int64_t( gross ) - waste );
 	const auto categories = AllocateSmacEnergy( net, rates, outputs );
 	// The definition constructor clears flat labs. The fully validated admitted
 	// keyword set has no direct RESEARCH writer; current social RESEARCH is a
@@ -152,7 +214,7 @@ base::SmacBaseEnergyCalculation Game::CalculateCanonicalBaseEnergy( const base::
 	inputs.baseline_stockpile = production->baseline_item.kind == ProductionItemKind::Stockpile;
 	inputs.mineral_surplus = resources.minerals.surplus;
 	std::sort( maintenance_fees.begin(), maintenance_fees.end() );
-	return { raw, distance, waste, net, maintenance, categories, FinishSmacEnergy( inputs ), std::move(maintenance_fees) };
+	return { raw, distance, waste, net, maintenance, categories, FinishSmacEnergy( inputs ), std::move(maintenance_fees), commerce };
 }
 
 std::vector<std::string> Game::PostCanonicalBaseMaintenance( const base::Base& evaluating_base, const base::SmacBaseEnergyCalculation& energy ) {

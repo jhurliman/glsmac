@@ -21,7 +21,7 @@ return {
 			class: 'base-screen-body',
 		});
 
-		body.text({
+		this.income = body.text({
 			class: 'base-screen-frame-title',
 			text: 'NONE',
 		});
@@ -31,6 +31,7 @@ return {
 
 	set_commerce: (data) => {
 		this.header.text = 'COMMERCE';
+        this.income.text = #is_defined(data.income) ? ('Income: ' + #to_string(data.income)) : 'N/A';
 	},
 
 	set_energy_grid: (data) => {

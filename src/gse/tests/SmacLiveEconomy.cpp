@@ -44,24 +44,59 @@ std::string Source(const std::string& filename) {
 	}
 	return result;
 }
-Base* Create(GSE_CALLABLE,Game* game) {
-	auto* bm=game->GetBM();auto* owner=&game->GetState()->m_slots->GetSlot(0);
+Base* Create(GSE_CALLABLE,Game* game,size_t slot=0) {
+	auto* bm=game->GetBM();auto* owner=&game->GetState()->m_slots->GetSlot(slot);
+    if(slot==0) {
 	for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {game->GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
 	bm->DefinePop(new PopDef("energy-role","Not a name identity",{},{},PopDef::PF_NONE,1));
 	for(int role:{1,2,4,8,9,27}) {bm->DefineFacility(new FacilityDef("role"+std::to_string(role),"Name", "",0,{},role));}
-	auto* tile=game->GetMap()->GetTile(2,2);
+    }
+	auto* tile=game->GetMap()->GetTile(slot?12:2,2);
 	for(auto* corner:tile->elevation.corners){*corner=0;}tile->Update();tile->moisture=map::tile::MOISTURE_ARID;tile->rockiness=map::tile::ROCKINESS_FLAT;
 	tile->features=0;tile->terraforming=0;tile->bonus=map::tile::BONUS_NONE;
 	const auto item=game->MakeSmacProductionItem(owner,ProductionItemKind::Unit,2);
 	const ProductionState production{item,0,item,0,std::vector<ProductionItem>{}};
 	const SmacBaseAllocationState allocation{1,{{1},1}};
-	auto* base=new Base(game,701,owner,owner->GetPlayer()->GetFaction(),tile,"Energy",{{"role1",bm->GetFacilityDef("role1")}},
+	auto* base=new Base(game,701+slot,owner,owner->GetPlayer()->GetFaction(),tile,"Energy",{{"role1",bm->GetFacilityDef("role1")}},
 		{{1,Pop(nullptr,1,bm->GetPopDef("energy-role"),0)}},2,0,production,
-		SmacBaseResourceContext{1,false,0,0,0x00dfbe41u,false},allocation);
+		SmacBaseResourceContext{static_cast<int32_t>(slot+1),false,0,0,0x00dfbe41u,false},allocation);
 	bm->SpawnBase(GSE_CALL,base);return base;
 }
 }
 void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
+	task->AddTest("SMAC live Treaty commerce uses stored intake snapshots and preserved diplomacy authority",[](GSE*,context::Context*)->std::string {
+        ConventionalUnitFixture fixture;
+        fixture.ConfigureTwoResourceParticipants([](const std::string& name) {
+            auto source=Source(name);const auto pos=source.find("Center,2,1,2");
+            if(pos!=std::string::npos) {source.replace(pos,12,"Center,2,1,15");}return source;
+        });
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* own=Create(GSE_CALL,game);auto* peer=Create(GSE_CALL,game,1);
+            fixture.ResourceState([](auto& state) {
+                state.diplomacy_metadata.emplace();state.retained_base_totals.emplace();state.retained_base_totals->fill(0);
+                state.retained_base_totals->at(1)=1;state.retained_base_totals->at(2)=1;
+                for(auto& faction:state.social.factions) {faction.current[0]=5;faction.current[1]=0;}
+                for(auto& faction:state.technology.factions) {faction.owned.fill(false);}
+            });
+            const auto first=game->GetCanonicalBaseEnergy(*peer);const auto own_intake=game->GetCanonicalBaseEnergy(*own);
+            GT_ASSERT(first.raw_intake==16 && own_intake.raw_intake==16,"commerce fixture did not publish actual16-energy intake generations");
+            fixture.ResourceState([](auto& state) {state.hostility.owners.at(1).directions.at(2).primary=2;});
+            const auto result=game->GetCanonicalBaseEnergy(*own);
+            GT_ASSERT(result.raw_intake==16 && result.commerce==1 && result.net==17 && result.waste==0,"real Treaty income did not enter gross before waste/allocation");
+            GT_ASSERT(game->GetCanonicalEconomy(own->m_owner).treaty_partners==4,"economy Treaty projection did not derive directed relationship bit2");
+            const auto peer_before=Base::Serialize(peer).ToString();
+            (void)game->GetCanonicalBaseEnergy(*own);
+            GT_ASSERT(Base::Serialize(peer).ToString()==peer_before,"commerce recursively refreshed partner intake");
+            fixture.ResourceState([](auto& state) {state.diplomacy_metadata->sanctions[2]=1;});
+            GT_ASSERT(game->GetCanonicalBaseEnergy(*own).commerce==0,"partner sanctions failed to block live commerce");
+            fixture.ResourceState([](auto& state) {state.diplomacy_metadata->sanctions[2]=0;state.diplomacy_metadata->trade_doubled=true;});
+            GT_ASSERT(game->GetCanonicalBaseEnergy(*own).commerce==2,"global trade doubling failed to precede scaled Treaty quote");
+            const auto snapshot=fixture.Snapshot();fixture.Restore(GSE_CALL,snapshot,true);
+            own=game->GetBM()->GetBase(701);
+            GT_ASSERT(game->GetCanonicalBaseEnergy(*own).commerce==2,"restore lost intake generations or actual diplomacy/commerce inputs");
+            GT_OK();
+        });
+    });
 	task->AddTest("SMAC minimap treasury observes in-turn Base publication without posting on read",[](GSE*,context::Context*)->std::string {
 		ConventionalUnitFixture fixture;fixture.ConfigureResources(Source,"UNIVERSITY");
 		return fixture.Run([&](GSE_CALLABLE)->std::string {
@@ -149,7 +184,7 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
 			GT_ASSERT(number(display(),"credits")==137&&fixture.Snapshot()==before_display&&fixture.GameplayRandom()==rng,
 				"Base UI read posted economy or returned mutable authority");
 			const auto stable=fixture.Snapshot();fixture.ResourceState([](auto& state){state.economy.at(1).treaty_partners=4;});
-			GT_ASSERT(Rejects([&]{game->GetCanonicalBaseEnergy(*base);}),"missing commerce producer became zero for a real treaty");
+			GT_ASSERT(game->GetCanonicalBaseEnergy(*base).commerce==0 && game->GetCanonicalEconomy(base->m_owner).treaty_partners==0,"retired economy mask overrode actual relationship authority");
 			fixture.ResourceState([](auto& state){state.economy.at(1).treaty_partners=0;});
 			GT_ASSERT(fixture.Snapshot()==stable&&fixture.GameplayRandom()==rng,"queries/rejection changed saved state or RNG");
 			expected=result;snapshot=fixture.Snapshot();GT_OK();

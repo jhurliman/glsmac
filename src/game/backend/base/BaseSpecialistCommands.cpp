@@ -86,7 +86,7 @@ void Base::PublishSmacSpecialistState(GSE_CALLABLE,const SmacBaseAllocationState
         m_game->CalculateCanonicalUnitSupport(*this,GetPopulation(),nullptr)}};
     auto prepared=PrepareSmacWorkerState(GSE_CALL,allocation,SpecialistSelectionRoles(),context,m_production,cache->calculation.nutrients.normalized_stored);
     static_assert(std::is_nothrow_swappable_v<decltype(cache)>);
-    prepared.Commit();m_smac_upkeep_cache.swap(cache);prepared.Finish();
+    prepared.Commit();m_smac_upkeep_cache.swap(cache);m_commerce_ranking_energy=static_cast<int32_t>(m_smac_upkeep_cache->calculation.raw_intake[2]);prepared.Finish();
 }
 void Base::OpenSmacSpecialistSelection(GSE_CALLABLE,size_t pop_id,bool apply) {
     RequireSmacSpecialistSelection();

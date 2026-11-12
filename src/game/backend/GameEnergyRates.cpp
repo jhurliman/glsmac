@@ -110,7 +110,7 @@ void Game::ApplySmacEnergyRates(GSE_CALLABLE,base::Base& anchor,base::SmacEnergy
     static_assert(std::is_nothrow_swappable_v<decltype(candidate)>);
     static_assert(std::is_nothrow_swappable_v<std::optional<base::SmacBaseUpkeepCache>>);
     batch->Commit();std::swap(saved,candidate);
-    for(auto& row:rows) {row.base->m_smac_upkeep_cache.swap(row.cache);}
+    for(auto& row:rows) {row.base->m_smac_upkeep_cache.swap(row.cache);row.base->m_commerce_ranking_energy=static_cast<int32_t>(row.base->m_smac_upkeep_cache->calculation.raw_intake[2]);}
     batch->Finish();
 }
 

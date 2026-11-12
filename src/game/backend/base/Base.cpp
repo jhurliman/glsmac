@@ -354,6 +354,9 @@ const types::Buffer Base::Serialize( const Base* base ) {
 			|| *base->m_retained_population>=base->m_pops.size() || base->m_pops.size()>127) { THROW("Invalid retained Base population"); }
 		buf.WriteString("SMAC_RETAINED_POPULATION_V1");buf.WriteInt(*base->m_retained_population);
 	}
+    buf.WriteString("SMAC_COMMERCE_INTAKE_V1");
+    buf.WriteBool(base->m_commerce_ranking_energy.has_value());
+    if(base->m_commerce_ranking_energy) {buf.WriteInt(*base->m_commerce_ranking_energy);}
 	return buf;
 }
 
@@ -404,16 +407,25 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game, bool allow_retained_pop
 	auto cache = DeserializeSmacBaseUpkeepCache( types::Buffer( buf.ReadString() ) );
 	if ( cache && ( !resource_context || !allocation || !production ) ) { THROW( "Saved upkeep cache requires a canonical Base" ); }
 	std::optional<size_t> retained_population;
-	if(buf.lenr!=buf.lenw) {
-		if(!allow_retained_population || buf.ReadString(64)!="SMAC_RETAINED_POPULATION_V1") { THROW("Unsupported retained Base population"); }
+    std::optional<int32_t> commerce_intake;
+    std::string extension;
+    if(buf.lenr!=buf.lenw) {extension=buf.ReadString(64);}
+	if(extension=="SMAC_RETAINED_POPULATION_V1") {
+		if(!allow_retained_population) { THROW("Unsupported retained Base population"); }
 		const auto population=buf.ReadInt();
 		if(!resource_context || !allocation || !production || population<1 || population>=static_cast<int64_t>(pops.size()) || pops.size()>127) { THROW("Invalid saved retained Base population"); }
 		retained_population=static_cast<size_t>(population);
+        extension=buf.lenr!=buf.lenw?buf.ReadString(64):std::string{};
 	}
+    if(!extension.empty()) {
+        if(extension!="SMAC_COMMERCE_INTAKE_V1") {THROW("Unsupported Base extension");}
+        if(buf.ReadBool()) {const auto raw=buf.ReadInt();if(raw<0 || raw>INT32_MAX) {THROW("Invalid saved commerce intake");}commerce_intake=static_cast<int32_t>(raw);}
+    }
 	if ( buf.lenr != buf.lenw ) { THROW( "Trailing Base record" ); }
 	auto* base = new Base( ConstructionKind::Snapshot, game, id, slot, faction, tile, name, facilities, pops, next_pop_id, accumulated_nutrients, production, resource_context, allocation );
 	base->m_smac_upkeep_cache = std::move( cache );
 	base->m_retained_population = retained_population;
+    base->m_commerce_ranking_energy=commerce_intake;
 	return base;
 }
 
@@ -1071,6 +1083,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			return VALUEEXT( gse::value::Object, GSE_CALL, ( gse::value::object_properties_t{
 				{ "credits", VALUE( gse::value::Int,, economy.credits ) },
 				{ "raw_intake", VALUE( gse::value::Int,, energy.raw_intake ) },
+                { "commerce", VALUE(gse::value::Int,,energy.commerce) },
 				{ "waste", VALUE( gse::value::Int,, energy.waste ) },
 				{ "net", VALUE( gse::value::Int,, energy.net ) },
 				{ "maintenance", VALUE( gse::value::Int,, energy.maintenance ) },

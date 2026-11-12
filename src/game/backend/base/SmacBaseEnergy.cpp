@@ -10,7 +10,7 @@ namespace game::backend::base {
 namespace {
 void ValidateSavedEnergy(const SmacBaseEnergyCalculation& value) {
     if(value.raw_intake<0 || value.headquarters_distance<0 || value.waste<0 || value.net<0 ||
-        int64_t(value.raw_intake)-value.waste!=value.net || value.maintenance<0 || value.maintenance_fees.size()>33) {
+        value.commerce<0 || int64_t(value.raw_intake)+value.commerce-value.waste!=value.net || value.maintenance<0 || value.maintenance_fees.size()>33) {
         throw std::runtime_error("Invalid saved Base energy calculation");
     }
     int32_t previous=0;int64_t total=0;
@@ -34,6 +34,7 @@ int32_t Checked( int64_t value ) {
 
 void WriteSmacBaseEnergy(types::Buffer& buffer,const SmacBaseEnergyCalculation& value) {
     ValidateSavedEnergy(value);
+    buffer.WriteInt(-592037);buffer.WriteInt(value.commerce); // self-framed V2, old nonnegative first raw stays readable
     for(const auto field:{value.raw_intake,value.headquarters_distance,value.waste,value.net,value.maintenance}) {buffer.WriteInt(field);}
     for(const auto categories:{value.allocation.allocation,value.allocation.after_specialists,value.tail.multiplier_quarters,
         value.tail.before_penalty,value.tail.after_penalty,value.tail.final}) {
@@ -50,7 +51,10 @@ SmacBaseEnergyCalculation ReadSmacBaseEnergy(types::Buffer& buffer) {
         return static_cast<int32_t>(value);
     };
     SmacBaseEnergyCalculation value{};
-    value.raw_intake=integer();value.headquarters_distance=integer();value.waste=integer();value.net=integer();value.maintenance=integer();
+    const auto first=integer();
+    if(first==-592037) {value.commerce=integer();value.raw_intake=integer();}
+    else {value.raw_intake=first;}
+    value.headquarters_distance=integer();value.waste=integer();value.net=integer();value.maintenance=integer();
     for(auto* categories:{&value.allocation.allocation,&value.allocation.after_specialists,&value.tail.multiplier_quarters,
         &value.tail.before_penalty,&value.tail.after_penalty,&value.tail.final}) {
         categories->economy=integer();categories->psych=integer();categories->labs=integer();

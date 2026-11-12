@@ -425,6 +425,7 @@ public:
 	std::array< int32_t, 3 > GetCanonicalOrbitalIntake( const base::Base& base ) const;
 	int32_t GetCanonicalMineralSupport( const base::Base& base ) const;
 	base::SmacPopulationRules GetCanonicalPopulationRules( const base::Base& base ) const;
+	int32_t CalculateCanonicalBaseCommerce(const base::Base&,int32_t intake) const;
 	base::SmacBaseEnergyCalculation GetCanonicalBaseEnergy( const base::Base& base ) const;
 	base::SmacBaseEnergyCalculation PreviewCanonicalBaseEnergy(const base::Base& base,base::SmacEnergyRates rates) const;
 	gse::Value* CopySmacEnergyRatePreview(GSE_CALLABLE,const base::Base& base,std::optional<base::SmacEnergyRates> candidate) const;

@@ -226,6 +226,9 @@ void Game::PrepareNewSimulation() {
 
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
 	value.capabilities=capabilities;value.hostility=std::move(hostility);
+    // Explicit GLSMAC cold campaign: no council trade resolution or sanctions.
+    // Restore retains the saved authorities and never replays this reset.
+    value.diplomacy_metadata.emplace();
 	// Stock native definition morale0 is a fresh-image input; ordinary faction
 	// parsing starts at positive slot1. Restore retains its independent value.
 	value.native_factory=faction::SmacNativeFactoryState::Initialize(0,value.gameplay_random);

@@ -59,6 +59,7 @@ SmacBaseUpkeepCache BaseManager::PrepareNewBaseResourceCache( const Base& candid
     }
     const auto& rules=m_game->GetState()->m_settings.global.GetSmacResourceRules();
     if(!rules) {THROW("Initial resource cache has no frozen nutrient demand");}
+    candidate.m_commerce_ranking_energy=intake[2]; // completed new-Base intake precedes its first energy pass
     return {FinishSmacResourceIntake({intake[0],intake[1],intake[2]},int64_t(rules->nutrients_per_citizen)*population,
         candidate.m_accumulated_nutrients,support.mineral_support,multiplier_steps),std::move(support)};
 }

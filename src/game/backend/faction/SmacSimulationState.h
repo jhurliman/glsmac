@@ -75,6 +75,13 @@ struct SmacCapabilityState {
 
 // Authoritative global inputs, distinct from per-base governor options and
 // derived intake. The two solar flags belong to different calculation phases.
+struct SmacDiplomacyMetadata {
+    bool trade_doubled=false;
+    std::array<int32_t,8> sanctions{};
+    std::array<std::array<uint8_t,8>,8> grievance{};
+    bool operator==(const SmacDiplomacyMetadata& other) const noexcept {return trade_doubled==other.trade_doubled && sanctions==other.sanctions && grievance==other.grievance;}
+};
+
 struct SmacGlobalResourceModifiers {
 	int32_t atmospheric_dust_countdown;
 	bool solar_ordinary, solar_upkeep;
@@ -152,6 +159,7 @@ struct SmacSimulationState {
 	SmacGameplayRandomState gameplay_random;
 	MovementCapability movement_capability;
 	SmacGlobalResourceModifiers resource_modifiers;
+    std::optional<SmacDiplomacyMetadata> diplomacy_metadata;
 	std::optional< SmacMovementHistory > movement_history;
 	// Exactly one record for each roster simulation ID; absence is not zero.
 	std::map< int32_t, SmacSatelliteCounts > satellites;

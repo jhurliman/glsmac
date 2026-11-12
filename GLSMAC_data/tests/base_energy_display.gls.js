@@ -11,11 +11,12 @@ account.info_year = {};
 account.info_energy = {};
 account.info_ecodamage = {};
 let balance = null;
+let commerce = undefined;
 let reads = 0;
 let eco_damage = 137;
 let nutrient_view = {stored: 13, threshold: 20};
 let displayed_nutrients = undefined;
-let response = {credits: 137, raw_intake: 15, waste: 3, net: 12, maintenance: 2,
+let response = {credits: 137, raw_intake: 15, commerce: 5, waste: 3, net: 12, maintenance: 2,
 	rates: {economy: 5, labs: 5, psych: 0}, allocated: {economy: 7, labs: 8, psych: 2},
 	final: {economy: 7, labs: 12, psych: 2}};
 const base = {
@@ -29,7 +30,7 @@ const base = {
 	get_smac_nutrient_presentation: () => { return nutrient_view; },
 	get_facilities: () => { return {}; },
 };
-const sink = {set: (data) => {}, set_stored: (value) => {}, set_commerce: (value) => {}};
+const sink = {set: (data) => {}, set_stored: (value) => {}, set_commerce: (value) => { commerce = value; }};
 screen.sections = {top_buttons: {set_base: (base) => {}, set_read_only: (value) => {}, hide_view: () => {}}, hurry: {on_base_update: (base) => {}}, queue_editor: {on_base_update: (base) => {}}, buttons: {show_default: () => {}}, rename: {on_base_update: (base) => {}}, specialist_selection: {on_base_update: (base) => {}}, nutrients: {set_stored: (data) => { displayed_nutrients = data; }}, economy: sink, game_state: account, facilities: sink,
 	resources: {set: (data) => {balance = data;}}, energy: allocation, middle_area: sink, bottom_bar: sink};
 screen.p = {game: {get_year: () => {return 2101;}}};
@@ -38,7 +39,8 @@ screen.set({base: base});
 test.assert(reads == 1 && account.info_year.text == '2101' && account.info_energy.text == '137');
 test.assert(displayed_nutrients == nutrient_view);
 test.assert(account.info_ecodamage.text == 'Eco-Damage: 137');
-test.assert(balance.energy == {profit: 15, loss: 3});
+test.assert(balance.energy == {profit: 20, loss: 3});
+test.assert(commerce == {income: 5});
 test.assert(balance.minerals == {profit: 18, loss: 2});
 test.assert(allocation.labels.labs.percentage.text == ' 50%' && allocation.labels.psych.percentage.text == '  0%');
 test.assert(allocation.labels.labs.value.text == '  8' && allocation.labels.labs.bonus.text == '  4' && allocation.labels.labs.total.text == ' 12');
@@ -67,3 +69,10 @@ for (type of ['economy', 'labs', 'psych']) {
 }
 
 test.assert(displayed_nutrients == {stored: 13});
+
+const commerce_panel = #include('../default/ui/parts/game/popup/base_screen/economy');
+commerce_panel.header = {}; commerce_panel.income = {};
+commerce_panel.set_commerce({income: 5});
+test.assert(commerce_panel.header.text == 'COMMERCE' && commerce_panel.income.text == 'Income: 5');
+commerce_panel.set_commerce({});
+test.assert(commerce_panel.income.text == 'N/A');

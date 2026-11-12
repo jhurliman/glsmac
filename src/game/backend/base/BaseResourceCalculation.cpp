@@ -50,7 +50,11 @@ SmacBaseResourceCalculation FinishSmacResourceIntake( const std::array<int64_t,3
 }
 
 SmacBaseResourceCalculation Base::PrepareSmacResourceCalculation( const SmacBaseResourcePhase phase ) const {
-    return CalculateSmacResourceCalculation( phase, nullptr );
+    auto result=CalculateSmacResourceCalculation(phase,nullptr);
+    // Actual resource previews run intake too; speculative candidate calculations
+    // below must not publish another Base's generation.
+    m_commerce_ranking_energy=Checked(result.raw_intake[2]);
+    return result;
 }
 
 SmacBaseResourceCalculation Base::CalculateSmacResourceCalculation( const SmacBaseResourcePhase phase, const SmacBaseAllocationState* allocation, std::optional< size_t > candidate_population, std::optional< int64_t > stored, const unit::Unit* prepared_unit, std::optional<int32_t> candidate_support, const FacilityDef* granted, const std::vector<size_t>& removed ) const {

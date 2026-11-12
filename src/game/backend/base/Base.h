@@ -209,6 +209,8 @@ private:
 	std::optional< SmacBaseAllocationState > m_allocation;
 	std::optional<size_t> m_retained_population;
 	std::optional<SmacBaseUpkeepCache> m_smac_upkeep_cache;
+    // Original Base+b4: last actual intake, independent of final energy/upkeep.
+    mutable std::optional<int32_t> m_commerce_ranking_energy;
 	// Optional view interaction, not a suspended turn or saved gameplay authority.
 	struct SpecialistSelectionRequest { int64_t id; size_t pop_id; std::string expected; };
 	int64_t m_next_specialist_request = 1;

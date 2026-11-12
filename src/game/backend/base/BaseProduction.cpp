@@ -171,7 +171,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 						auto prepared = PrepareSmacWorkerState( GSE_CALL, allocation, roles, context, production, m_accumulated_nutrients );
 						std::optional<SmacBaseUpkeepCache> cache{SmacBaseUpkeepCache{resources,support}};
 						static_assert(std::is_nothrow_swappable_v<decltype(cache)>);
-						publishing();prepared.Commit(); m_smac_upkeep_cache.swap(cache); prepared.Finish();
+						publishing();prepared.Commit(); m_smac_upkeep_cache.swap(cache);m_commerce_ranking_energy=static_cast<int32_t>(m_smac_upkeep_cache->calculation.raw_intake[2]); prepared.Finish();
 						return result;
 					}
 					else { THROW( "Size-one Colony completion requires an explicit player choice" ); }
@@ -415,7 +415,7 @@ Base::SmacProductionResult Base::ProcessSmacProductionAndPopulation( GSE_CALLABL
 	if ( unit ) { result.completed_unit = unit->Commit()->m_id; }
 	if ( removal ) { removal->Commit(); }
 	accounting->Commit();
-	prepared.Commit();m_smac_upkeep_cache.swap(cache);m_game->m_simulation->value.gameplay_random=random;prepared.Finish();
+	prepared.Commit();m_smac_upkeep_cache.swap(cache);m_commerce_ranking_energy=static_cast<int32_t>(m_smac_upkeep_cache->calculation.raw_intake[2]);m_game->m_simulation->value.gameplay_random=random;prepared.Finish();
     for(const auto& message:status_messages) {m_game->Message(message);}
 	if ( unit && ( !removal || !removal->Removes( *result.completed_unit ) ) ) { unit->Notify( GSE_CALL ); }
 	if ( removal ) { removal->Notify( GSE_CALL ); }

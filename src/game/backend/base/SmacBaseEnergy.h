@@ -64,6 +64,7 @@ struct SmacBaseEnergyCalculation {
 	// Frozen at the final resource pass, before research can change authority.
 	// Source ID order is the original individual maintenance charge order.
 	std::vector< std::pair< int32_t, int32_t > > maintenance_fees;
+    int32_t commerce=0; // added to raw intake before final waste/allocation
 };
 
 // Saved final-pass result, retained before research changes technology or

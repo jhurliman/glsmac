@@ -643,6 +643,11 @@ public:
         util::FinallyGuard clear([&]{m_glsmac->m_state=nullptr;});
         m_glsmac->RestoreSinglePlayerIdentity(id,std::move(identity));
     }
+    void WithNativeController(const std::function<void()>& callback) {
+        const auto previous=m_game.m_smac_controller_owner;m_game.m_smac_controller_owner=0;
+        util::FinallyGuard restore([&]{m_game.m_smac_controller_owner=previous;});callback();
+    }
+
     LocalCampaignActions m_campaign_actions;
     size_t m_campaign_entropy_calls=0;
     std::string CampaignSeedReport() const {return "mapJSF=12345 shared=11 crt=29 entropy_samples="+std::to_string(m_campaign_entropy_calls);}
@@ -8180,6 +8185,7 @@ std::string CheckSmacBaseStartupFixture( const bool queued, const int32_t diffic
 
 ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< BackendFixture >() ) {}
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
+void ConventionalUnitFixture::WithNativeController(const std::function<void()>& callback) {fixture->WithNativeController(callback);}
 std::string ConventionalUnitFixture::CheckLocalCampaignReplay(GSE_CALLABLE,size_t turns) {return fixture->CheckLocalCampaignReplay(GSE_CALL,turns);}
 std::string ConventionalUnitFixture::DriveLocalHumanCampaign(GSE_CALLABLE) {return fixture->DriveLocalHumanCampaign(GSE_CALL);}
 std::string ConventionalUnitFixture::CampaignSeedReport() const {return fixture->CampaignSeedReport();}

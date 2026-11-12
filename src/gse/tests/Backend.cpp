@@ -690,7 +690,11 @@ public:
             auto* base=m_game.GetBM()->GetBase(id);
             const bool former=counts.at(size_t(Package::Former))<bases.size();
             const bool colony=!former && bases.size()<3 && !counts.at(size_t(Package::Colony)) && base->GetPopulation()>=2;
-            const int32_t desired=former?1:colony?0:counts.at(size_t(Package::Combat))<bases.size()+1?2:-4;
+            const bool garrison=std::any_of(base->GetTile()->units.begin(),base->GetTile()->units.end(),[&](const auto& row){
+                return row.second->IsConventional() && row.second->m_owner==m_game.m_slot
+                    && m_game.ResolveConventionalUnit(row.second->Conventional(),row.second->m_owner).package==Package::Combat;
+            });
+            const int32_t desired=!garrison?2:former?1:colony?0:counts.at(size_t(Package::Combat))<bases.size()+1?2:-4;
             auto* picker=static_cast<value::Object*>(base->CopySmacProductionChoices(GSE_CALL));
             for(auto* entry:static_cast<value::Array*>(picker->Get("choices"))->value) {
                 auto* choice=static_cast<value::Object*>(entry);
@@ -713,19 +717,28 @@ public:
             std::set<map::tile::Tile*> visited;
             for(size_t step=0;step<12 && (actor=m_game.GetUM()->GetUnit(id)) && actor->HasMovesLeft();++step) {
                 auto* source=actor->GetTile();visited.insert(source);
+                const auto knowledge=m_game.GetMap()->GetSmacWorkerKnowledge()->CopyData();const auto bit=uint8_t(1u<<owner);
+                std::vector<map::tile::Tile*> threats;
+                for(const auto& observation:knowledge.units) {
+                    if(!(observation.visible_to&bit)) {continue;}
+                    const auto* other=m_game.GetUM()->GetUnit(observation.id);
+                    if(other && ((other->IsNative() && other->Native().owner==0) || (other->IsConventional() && other->m_owner!=m_game.m_slot))) {threats.push_back(other->GetTile());}
+                }
+                const bool danger=std::any_of(threats.begin(),threats.end(),[&](const auto* tile){return distance(source,tile)<=4;});
                 const auto commands=m_game.GetUM()->QueryConventionalCommands(actor);
-                if(package==Package::Colony && std::find(commands.actions.begin(),commands.actions.end(),6)!=commands.actions.end()) {
+                if(package==Package::Colony && !danger && std::find(commands.actions.begin(),commands.actions.end(),6)!=commands.actions.end()) {
                     m_game.Event(GSE_CALL,"found_base",{{"unit",actor->Wrap(GSE_CALL)}});m_game.ProcessEvents();
                     if(!m_game.GetUM()->GetUnit(id)) {++m_campaign_actions.founded_bases;}break;
                 }
                 if(package==Package::Former) {
                     auto order=actor->Conventional().work_order;
+                    if(danger && order!=Work::None) {m_game.Event(GSE_CALL,"cancel_unit_work",{{"unit",actor->Wrap(GSE_CALL)}});m_game.ProcessEvents();order=Work::None;}
                     if(order!=Work::None) {
                         bool legal=true;
                         try {m_game.GetUM()->ValidateConventionalWork(actor,order,m_game.GetSlotNum(),true);} catch(const std::runtime_error&) {legal=false;}
                         if(!legal) {m_game.Event(GSE_CALL,"cancel_unit_work",{{"unit",actor->Wrap(GSE_CALL)}});m_game.ProcessEvents();order=Work::None;}
                     }
-                    if(order==Work::None) {
+                    if(order==Work::None && !danger) {
                         for(const auto desired:{Work::Farm,Work::Solar,Work::Road}) {
                             if(std::find(commands.actions.begin(),commands.actions.end(),int32_t(desired))==commands.actions.end()) {continue;}
                             m_game.Event(GSE_CALL,"work_unit",{{"unit",actor->Wrap(GSE_CALL)},{"action",VALUE(value::Int,,int32_t(desired))}});m_game.ProcessEvents();order=desired;break;
@@ -737,13 +750,34 @@ public:
                         ++m_campaign_actions.work_dispatches;if(source->terraforming!=terrain) {++m_campaign_actions.terrain_completions;}break;
                     }
                 }
-                if(package==Package::Combat && source->base && source->base->m_owner==m_game.m_slot && source->units.begin()->first==id) {break;}
-                const auto knowledge=m_game.GetMap()->GetSmacWorkerKnowledge()->CopyData();const auto bit=uint8_t(1u<<owner);
+                if(package==Package::Combat && source->base && source->base->m_owner==m_game.m_slot) {
+                    bool first=true;
+                    for(const auto& row:source->units) {
+                        if(row.first>=id) {break;}
+                        if(row.second->IsConventional() && row.second->m_owner==m_game.m_slot
+                            && m_game.ResolveConventionalUnit(row.second->Conventional(),row.second->m_owner).package==Package::Combat) {first=false;break;}
+                    }
+                    if(first) {break;}
+                }
+                if(package!=Package::Combat && danger && source->base && source->base->m_owner==m_game.m_slot) {break;}
+                map::tile::Tile* escort=nullptr;int64_t escort_distance=INT64_MAX;
+                if(package==Package::Combat) {for(const auto& row:m_game.GetUM()->GetUnits()) {
+                    const auto* other=row.second;
+                    if(!other->IsConventional() || other->m_owner!=m_game.m_slot
+                        || m_game.ResolveConventionalUnit(other->Conventional(),other->m_owner).package!=Package::Former) {continue;}
+                    const auto metric=distance(source,other->GetTile());if(metric<escort_distance) {escort=other->GetTile();escort_distance=metric;}
+                }}
+                if(escort==source) {break;}
                 const auto index=[&](const auto* tile){return size_t(tile->coord.y)*(knowledge.width/2)+tile->coord.x/2;};
                 std::vector<std::pair<int64_t,map::tile::Tile*>> candidates;
                 for(auto* tile:source->neighbours) {
                     if(!tile || visited.count(tile) || !(knowledge.tiles.at(index(tile)).explored_by&bit)) {continue;}
                     int64_t score=0,nearest=INT64_MAX;
+                    if(package!=Package::Combat && !threats.empty()) {
+                        int64_t safe=INT64_MAX;for(const auto* threat:threats) {safe=std::min(safe,distance(tile,threat));}
+                        if(safe<=2) {continue;}score+=100000*std::min(safe,int64_t(8));
+                    }
+                    if(escort) {score-=10000*distance(tile,escort);}
                     for(const auto base_id:bases) {if(const auto* base=m_game.GetBM()->GetBase(base_id)) {nearest=std::min(nearest,distance(tile,base->GetTile()));}}
                     if(package==Package::Colony && nearest!=INT64_MAX) {score+=100*std::min(nearest,int64_t(5));}
                     if(package==Package::Former && nearest!=INT64_MAX) {score-=100*std::abs(nearest-2);

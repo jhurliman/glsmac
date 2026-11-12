@@ -424,7 +424,11 @@ void Game::RunComputerCommands(GSE_CALLABLE,int32_t owner) {
         const auto& production=base->GetProductionState();if(!production || !production->queue) {continue;}
         const bool developer=counts.at(static_cast<size_t>(Package::Former))<bases.size();
         const bool expand=!developer && bases.size()<5 && !counts.at(static_cast<size_t>(Package::Colony)) && base->GetPopulation()>=2;
-        int32_t desired=developer?1:expand?0:2;
+        const bool garrison=std::any_of(base->GetTile()->units.begin(),base->GetTile()->units.end(),[&](const auto& row){
+            return row.second->IsConventional() && row.second->m_owner==&slot
+                && ResolveConventionalUnit(row.second->Conventional(),&slot).package==Package::Combat;
+        });
+        int32_t desired=!garrison?2:developer?1:expand?0:2;
         auto item=MakeSmacProductionItem(&slot,base::ProductionItemKind::Unit,desired);
         if(!IsSmacUnitProductionEligible(*base,item)) {desired=2;item=MakeSmacProductionItem(&slot,base::ProductionItemKind::Unit,desired);}
         if(IsSmacUnitProductionEligible(*base,item) && !(production->current_item==item)) {

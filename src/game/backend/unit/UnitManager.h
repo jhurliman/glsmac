@@ -283,6 +283,8 @@ private:
 		smac_scout::AttackResult result;
 		std::optional<uint16_t> palette_identifier;
 		base::Base* defeated_base;
+        std::optional<SmacNativeUnitRecord> native_survivor;
+        std::optional<std::pair<int32_t,int32_t>> reward; // owner, final credits
 	};
 	bool HasForeignOccupant(const Unit* actor,const map::tile::Tile* destination) const;
 	PreparedConventionalAttack PrepareConventionalAttack(Unit* actor,map::tile::Tile* destination,size_t caller) const;

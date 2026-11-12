@@ -1,0 +1,465 @@
+{
+  "contract": "RE-SMAC-EARLY-GROUND-COMBAT-001",
+  "status": "PASS",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "scope": "Complete native516390 strength queries and complete5187e0 same-owner ordinary military stack selection, supplied resolved states and previously captured complete numeric component/RULES producer output. Only modifier label text is supplied empty. No strength, morale, speed, terrain or selection helper is replaced; no battle round rerun or giant matrix. Ordinary ground, reactor1, abilities0, homeless morale1/retained0, no Base/sensor/project. PSI component sign controls use conventional owners1/2, not native-faction birth behavior.",
+  "checks": {
+    "strength_queries": 26,
+    "defender_queries": 6,
+    "component_fields_from_complete_native_producer": true,
+    "rng_unchanged_during_strength_queries": true,
+    "independent_selection_score_matches": true
+  },
+  "strength_cases": [
+    {
+      "id": "flat",
+      "inputs": {},
+      "expected_strength": [
+        224,
+        224
+      ]
+    },
+    {
+      "id": "laser",
+      "inputs": {
+        "awe": 1
+      },
+      "expected_strength": [
+        448,
+        224
+      ]
+    },
+    {
+      "id": "impact",
+      "inputs": {
+        "awe": 2
+      },
+      "expected_strength": [
+        896,
+        224
+      ]
+    },
+    {
+      "id": "synthmetal",
+      "inputs": {
+        "dar": 1
+      },
+      "expected_strength": [
+        224,
+        448
+      ]
+    },
+    {
+      "id": "laser_synthmetal",
+      "inputs": {
+        "awe": 1,
+        "dar": 1
+      },
+      "expected_strength": [
+        448,
+        448
+      ]
+    },
+    {
+      "id": "rolling",
+      "inputs": {
+        "rock": 1
+      },
+      "expected_strength": [
+        224,
+        224
+      ]
+    },
+    {
+      "id": "rocky",
+      "inputs": {
+        "rock": 2
+      },
+      "expected_strength": [
+        224,
+        336
+      ]
+    },
+    {
+      "id": "forest",
+      "inputs": {
+        "forest": true
+      },
+      "expected_strength": [
+        224,
+        336
+      ]
+    },
+    {
+      "id": "rocky_forest_control",
+      "inputs": {
+        "rock": 2,
+        "forest": true
+      },
+      "expected_strength": [
+        224,
+        336
+      ]
+    },
+    {
+      "id": "rover_flat",
+      "inputs": {
+        "ach": 1
+      },
+      "expected_strength": [
+        280,
+        224
+      ]
+    },
+    {
+      "id": "rover_rolling",
+      "inputs": {
+        "ach": 1,
+        "rock": 1
+      },
+      "expected_strength": [
+        280,
+        224
+      ]
+    },
+    {
+      "id": "rover_rocky",
+      "inputs": {
+        "ach": 1,
+        "rock": 2
+      },
+      "expected_strength": [
+        224,
+        336
+      ]
+    },
+    {
+      "id": "rover_forest",
+      "inputs": {
+        "ach": 1,
+        "forest": true
+      },
+      "expected_strength": [
+        224,
+        336
+      ]
+    },
+    {
+      "id": "infantry_vs_rover",
+      "inputs": {
+        "dch": 1
+      },
+      "expected_strength": [
+        224,
+        224
+      ]
+    },
+    {
+      "id": "rover_vs_rover",
+      "inputs": {
+        "ach": 1,
+        "dch": 1
+      },
+      "expected_strength": [
+        280,
+        224
+      ]
+    },
+    {
+      "id": "psi_weapon",
+      "inputs": {
+        "awe": 12
+      },
+      "expected_strength": [
+        672,
+        448
+      ]
+    },
+    {
+      "id": "psi_armor",
+      "inputs": {
+        "dar": 9
+      },
+      "expected_strength": [
+        672,
+        448
+      ]
+    },
+    {
+      "id": "gun_vs_worm_components",
+      "inputs": {
+        "dwe": 12,
+        "dar": 9
+      },
+      "expected_strength": [
+        672,
+        448
+      ]
+    },
+    {
+      "id": "worm_components_attack",
+      "inputs": {
+        "awe": 12,
+        "aar": 9
+      },
+      "expected_strength": [
+        672,
+        448
+      ]
+    },
+    {
+      "id": "rover_flat_no_speed_rule",
+      "inputs": {
+        "ach": 1,
+        "rules": {
+          "0x9ba4e4": 0
+        }
+      },
+      "expected_strength": [
+        224,
+        224
+      ]
+    },
+    {
+      "id": "rover_flat_speed_rule50",
+      "inputs": {
+        "ach": 1,
+        "rules": {
+          "0x9ba4e4": 50
+        }
+      },
+      "expected_strength": [
+        336,
+        224
+      ]
+    },
+    {
+      "id": "rover_vs_faster_hover",
+      "inputs": {
+        "ach": 1,
+        "dch": 2
+      },
+      "expected_strength": [
+        224,
+        224
+      ]
+    },
+    {
+      "id": "psi_percent_then_planet",
+      "inputs": {
+        "awe": 12,
+        "psi_a": 17,
+        "psi_d": 17,
+        "planet_a": 1,
+        "current_planet_a": -3
+      },
+      "expected_strength": [
+        862,
+        504
+      ]
+    },
+    {
+      "id": "psi_current_planet_only",
+      "inputs": {
+        "awe": 12,
+        "current_planet_a": 3
+      },
+      "expected_strength": [
+        672,
+        448
+      ]
+    },
+    {
+      "id": "defending_former",
+      "inputs": {
+        "dwe": 15,
+        "dplan": 9
+      },
+      "expected_strength": [
+        224,
+        112
+      ]
+    },
+    {
+      "id": "defending_colony",
+      "inputs": {
+        "dwe": 14,
+        "dplan": 8
+      },
+      "expected_strength": [
+        224,
+        112
+      ]
+    }
+  ],
+  "selection_cases": [
+    {
+      "id": "better_armor",
+      "inputs": {
+        "candidate1_armor": 0,
+        "candidate2_armor": 1,
+        "candidate2_damage": 0,
+        "candidate2_weapon": 0,
+        "chain": [
+          1,
+          2
+        ]
+      },
+      "expected_defender": 2,
+      "candidate_scores": [
+        {
+          "unit": 1,
+          "score": 884737,
+          "previous_best": 4294966297
+        },
+        {
+          "unit": 2,
+          "score": 1802242,
+          "previous_best": 884737
+        }
+      ]
+    },
+    {
+      "id": "better_armor_reverse_chain",
+      "inputs": {
+        "candidate1_armor": 0,
+        "candidate2_armor": 1,
+        "candidate2_damage": 0,
+        "candidate2_weapon": 0,
+        "chain": [
+          2,
+          1
+        ]
+      },
+      "expected_defender": 2,
+      "candidate_scores": [
+        {
+          "unit": 2,
+          "score": 1802242,
+          "previous_best": 4294966297
+        },
+        {
+          "unit": 1,
+          "score": 884737,
+          "previous_best": 1802242
+        }
+      ]
+    },
+    {
+      "id": "equal_tie",
+      "inputs": {
+        "candidate1_armor": 0,
+        "candidate2_armor": 0,
+        "candidate2_damage": 0,
+        "candidate2_weapon": 0,
+        "chain": [
+          1,
+          2
+        ]
+      },
+      "expected_defender": 2,
+      "candidate_scores": [
+        {
+          "unit": 1,
+          "score": 884737,
+          "previous_best": 4294966297
+        },
+        {
+          "unit": 2,
+          "score": 884738,
+          "previous_best": 884737
+        }
+      ]
+    },
+    {
+      "id": "equal_tie_reverse",
+      "inputs": {
+        "candidate1_armor": 0,
+        "candidate2_armor": 0,
+        "candidate2_damage": 0,
+        "candidate2_weapon": 0,
+        "chain": [
+          2,
+          1
+        ]
+      },
+      "expected_defender": 2,
+      "candidate_scores": [
+        {
+          "unit": 2,
+          "score": 884738,
+          "previous_best": 4294966297
+        },
+        {
+          "unit": 1,
+          "score": 884737,
+          "previous_best": 884738
+        }
+      ]
+    },
+    {
+      "id": "damaged_synth_vs_scout",
+      "inputs": {
+        "candidate1_armor": 0,
+        "candidate2_armor": 1,
+        "candidate2_damage": 7,
+        "candidate2_weapon": 0,
+        "chain": [
+          1,
+          2
+        ]
+      },
+      "expected_defender": 1,
+      "candidate_scores": [
+        {
+          "unit": 1,
+          "score": 884737,
+          "previous_best": 4294966297
+        },
+        {
+          "unit": 2,
+          "score": 491522,
+          "previous_best": 884737
+        }
+      ]
+    },
+    {
+      "id": "same_armor_laser_candidate",
+      "inputs": {
+        "candidate1_armor": 0,
+        "candidate2_armor": 0,
+        "candidate2_damage": 0,
+        "candidate2_weapon": 1,
+        "chain": [
+          1,
+          2
+        ]
+      },
+      "expected_defender": 1,
+      "candidate_scores": [
+        {
+          "unit": 1,
+          "score": 884737,
+          "previous_best": 4294966297
+        },
+        {
+          "unit": 2,
+          "score": 851970,
+          "previous_best": 884737
+        }
+      ]
+    }
+  ],
+  "entry_points": {
+    "components_attack": "0x5d91c0",
+    "components_defense": "0x5d92f0",
+    "attack_factor": "0x515ec0",
+    "defense_factor": "0x5160d0",
+    "composed_strength": "0x516390",
+    "terrain_factor": "0x515ab0",
+    "best_defender": "0x5187e0",
+    "native_level": "0x515d50",
+    "casualty_reward": "0x519db0",
+    "round_compare": "0x51d3be"
+  }
+}

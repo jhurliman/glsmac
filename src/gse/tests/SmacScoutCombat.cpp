@@ -29,6 +29,7 @@
 
 #include "game/backend/unit/SmacScoutCombat.h"
 #include "fixtures/SmacScoutCombat.h"
+#include "fixtures/SmacNativeCombat.h"
 #include "fixtures/SmacEffectEscape.h"
 #include "task/gsetests/GSETests.h"
 
@@ -73,6 +74,28 @@ bool StepMatches( const fixture::Step& e, const model::Survivor& s, const model:
 }
 
 void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC ground components terrain and mobile stages match original causal controls",GT(){
+        struct Case {int32_t weapon,armor,mobile,terrain,noncombat,attack,defense;};
+        const Case cases[]={{1,1,0,0,0,224,224},{2,1,0,0,0,448,224},{4,1,0,0,0,896,224},
+            {2,2,0,0,0,448,448},{1,1,25,0,0,280,224},{1,1,0,50,0,224,336},
+            {1,1,50,0,0,336,224},{1,1,0,0,-50,224,112}};
+        for(const auto& c:cases) {
+            model::StrengthBonuses b;b.weapon_power=c.weapon;b.armor_power=c.armor;b.mobile_attack=c.mobile;
+            b.terrain_defense=c.terrain;b.noncombat_defense=c.noncombat;
+            const auto r=model::ResolveGroundAttack({1,1,10,1,1,0},{2,1,10,1,1,0},6,{3,1},{1,2},false,b);
+            GT_ASSERT(r.strengths==(std::array<int32_t,2>{c.attack,c.defense}),"Component or independent terrain/mobile percentage stage changed");
+        }GT_OK();
+    });
+    task->AddTest("SMAC native PSI recurrence preserves43 original casualty promotion and random returns",GT(){
+        for(const auto& c:fixtures::smac_native_combat::CASES) {
+            const std::array<int32_t,2> strengths{768,448},widths{768,c.turn<15 ? 224:448};
+            const auto r=model::ResolveStrengthAttack({1,1,10,1,2,0},{2,1,10,1,0,0},strengths,widths,{3,c.crt_before},{1,2});
+            GT_ASSERT(r.survivor.identity==(c.winner ? 1u:2u) && r.survivor.health==10-c.damage
+                && r.survivor.stored_morale==c.morale && r.survivor.spent==c.spent
+                && r.random.Crt()==c.crt_after && r.rounds.size()==size_t(c.rounds),
+                "Native full-return recurrence changed casualty, promotion, health or CRT continuation");
+        }GT_OK();
+    });
     task->AddTest("SMAC resolved-strength battle kernel retains187 original round and promotion histories",GT(){
         for(const auto& c:fixture::CASES) {
             const auto actual=model::ResolveStrengthAttack(Participant(c.input,0,ATTACKER),Participant(c.input,1,DEFENDER),

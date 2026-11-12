@@ -58,17 +58,28 @@ AttackResult ResolveNeutralFlatAttack( const Participant& attacker, const Partic
 
 AttackResult ResolveFlatScoutAttack( const Participant& attacker, const Participant& defender, const int32_t attacker_allowance,
 	const SmacGameplayRandomState& initial_random, const References& references, bool fanatic, const StrengthBonuses& bonuses ) {
-	Validate( attacker ); Validate( defender ); ValidateAllowance( attacker_allowance );
+	ValidateAllowance(attacker_allowance);
+    return ResolveGroundAttack(attacker,defender,attacker_allowance,initial_random,references,fanatic,bonuses);
+}
+
+AttackResult ResolveGroundAttack(const Participant& attacker,const Participant& defender,int32_t attacker_allowance,
+    const SmacGameplayRandomState& initial_random,const References& references,bool fanatic,const StrengthBonuses& bonuses) {
+    Validate(attacker);Validate(defender);
+    Require(attacker_allowance>=3 && attacker_allowance<=255 && attacker_allowance%3==0,"Ground battle requires a bounded quantum3 allowance");
+    Require(bonuses.weapon_power>0 && bonuses.armor_power>0,"Conventional ground battle requires positive weapon and armor powers");
 	Require( attacker.identity != defender.identity, "SMAC Scout participants require distinct stable identities" );
 	Require( Names( references.selected, attacker.identity, defender.identity ) && Names( references.secondary, attacker.identity, defender.identity ), "SMAC Scout references must name a participant or be absent" );
 	Require( attacker.spent <= 255 - Q, "SMAC Scout attack spending would exceed the verified nonwrapping byte domain" );
 	const auto percent=[](int32_t strength,int32_t bonus) {return Checked(int64_t(strength)*(INT64_C(100)+bonus)/100);};
-	auto attack=Checked(INT64_C(32)*(6+attacker.effective_morale));
+	auto attack=Checked(INT64_C(32)*(6+attacker.effective_morale)*bonuses.weapon_power);
 	if(fanatic) {attack=percent(attack,bonuses.fanatic_attack);}
 	// Independent native stages: truncation after FANATIC precedes the
 	// Infantry-versus-Base stage, rather than adding their percentages.
 	attack=percent(attack,bonuses.infantry_vs_base);
-	const auto defense=percent(Checked(INT64_C(32)*(6+std::max(1,defender.effective_morale))),bonuses.intrinsic_base_defense);
+    attack=percent(attack,bonuses.mobile_attack);
+    auto defense=percent(Checked(INT64_C(32)*(6+std::max(1,defender.effective_morale))*bonuses.armor_power),bonuses.intrinsic_base_defense);
+    defense=percent(defense,bonuses.terrain_defense);
+    defense=percent(defense,bonuses.noncombat_defense);
 	const std::array< int32_t, 2 > strengths{attack,defense};
 	const auto remaining = std::clamp( int64_t( attacker_allowance ) - attacker.spent, INT64_C( 0 ), INT64_C( 999 ) );
 	const std::array< int32_t, 2 > widths{ remaining < Q ? Checked( strengths[ 0 ] * remaining / Q ) : strengths[ 0 ], strengths[ 1 ] };

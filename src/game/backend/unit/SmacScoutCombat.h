@@ -79,9 +79,15 @@ AttackResult ResolveNeutralFlatAttack( const Participant& attacker, const Partic
 // attack strength. The live caller owns complete component/terrain admission.
 struct StrengthBonuses {
 	int32_t fanatic_attack=25, infantry_vs_base=0, intrinsic_base_defense=0;
+    int32_t weapon_power=1, armor_power=1, mobile_attack=0, terrain_defense=0, noncombat_defense=0;
 };
 AttackResult ResolveFlatScoutAttack( const Participant& attacker, const Participant& defender, int32_t attacker_allowance,
 	const SmacGameplayRandomState& random, const References& references, bool fanatic, const StrengthBonuses& bonuses = {} );
+
+// Ordinary positive-component land combat, with the caller resolving each
+// independently truncated bonus from frozen rules and actual terrain/chassis.
+AttackResult ResolveGroundAttack(const Participant& attacker,const Participant& defender,int32_t attacker_allowance,
+    const SmacGameplayRandomState& random,const References& references,bool fanatic,const StrengthBonuses& bonuses);
 
 // Shared ordinary battle recurrence. The caller produces component/terrain/PSI
 // strengths and any native early-turn width adjustment before entering this

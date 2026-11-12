@@ -295,7 +295,8 @@ game::backend::settings::SmacCombatRules SmacRulesTXTLoader::ParseCombatRules( c
 		return ParseField(field,"row "+std::to_string(row),1,"RULES");
 	};
 	game::backend::settings::SmacCombatRules result{percentage(22),percentage(28),percentage(30)};
-	result.psi_ratios.emplace();
+	result.ordinary_land={{percentage(26),percentage(27),percentage(37),percentage(41),percentage(42),percentage(33),percentage(34)}};
+    result.psi_ratios.emplace();
 	for(size_t i=0;i<result.psi_ratios->size();++i) {
 		const auto row=18+i;
 		auto line=util::String::TrimCopy(rules[row-1].substr(0,rules[row-1].find(';')));

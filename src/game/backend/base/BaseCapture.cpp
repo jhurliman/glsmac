@@ -2,6 +2,7 @@
 #include "Base.h"
 #include "FacilityDef.h"
 #include "SmacFactionDisposition.h"
+#include "SmacWorkedSquareCollection.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/Player.h"
@@ -497,6 +498,147 @@ void BaseManager::ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared) {
 		m_game->AddFrontendRequest(request);m_game->Message("The restarted faction has been tracked.");
 	}
 	m_game->Message(message);
+    if(simulation.HasEnding()) {m_game->GetState()->TriggerObject(m_game,"smac_ending",ARGS_F(this) { }; });}
+}
+
+void BaseManager::ValidateSmacNativeRaid(unit::Unit* actor,map::tile::Tile* destination) const {
+    m_game->RequireSmacGameplayActive();
+    const auto* map=m_game->GetMap();
+    if(!m_game->IsRunning() || !m_game->IsSmacControllerOwner(0) || !actor || m_game->GetUM()->GetUnit(actor->m_id)!=actor
+        || !actor->IsNative() || actor->Native().owner || actor->Native().design!=8 || actor->m_animation_id || !destination
+        || destination->tiles!=map->GetTilesPtr() || destination->coord.x>=map->GetWidth() || destination->coord.y>=map->GetHeight()
+        || map->GetTile(destination->coord.x,destination->coord.y)!=destination || destination->is_water_tile || destination->IsLocked()
+        || !actor->GetTile()->IsAdjactentTo(destination) || !destination->base || !destination->units.empty() || m_dispatching_updates) {
+        THROW("Native raid requires its scheduled adjacent wild Worm and undefended land Base");
+    }
+    auto* base=destination->base;
+    if(GetBase(base->m_id)!=base || base->GetTile()!=destination || base->GetPopulation()<1 || !base->GetSmacAllocation() || !base->GetProductionState()) {
+        THROW("Native raid requires a current canonical Base and retained population/production");
+    }
+    const auto& simulation=m_game->m_simulation->value;
+    const auto context=base->GetSmacResourceContext();
+    if(!context.retained_status_word || !simulation.ecology_history || simulation.ecology_history->clean_minerals.at(context.owner_simulation_id)<0
+        || !m_game->GetState()->m_settings.global.GetSmacCampaignRules() || m_game->GetUM()->QueryNativeUnit(actor->Native(),0).remaining_allowance<=0) {
+        THROW("Native raid requires retained protection, clean-mineral history and remaining movement");
+    }
+}
+
+void BaseManager::RaidSmacBase(GSE_CALLABLE,unit::Unit* actor,map::tile::Tile* destination) {
+    m_game->CheckRW(GSE_CALL);ValidateSmacNativeRaid(actor,destination);
+    if(gc_space!=m_game->GetGCSpace() || !gc_space->IsAccumulating()) {THROW("Native raid requires its owning accumulation");}
+    auto* base=destination->base;auto* um=m_game->GetUM();auto* source=actor->GetTile();auto* map=m_game->GetMap();
+    auto& simulation=m_game->m_simulation->value;const auto context=base->GetSmacResourceContext();const auto owner=context.owner_simulation_id;
+    auto* victim_owner=base->m_owner;const auto& rules=*m_game->GetState()->m_settings.global.GetSmacCampaignRules();
+    const auto stats=um->QueryNativeUnit(actor->Native(),0);
+    const auto cost=(destination->features&map::tile::FEATURE_XENOFUNGUS) ? 1:stats.quantum*(1+int(destination->rockiness==map::tile::ROCKINESS_ROCKY)
+        +int(bool(destination->terraforming&map::tile::TERRAFORMING_FOREST)));
+    auto random=simulation.gameplay_random;
+    const auto movement=unit::smac_move::ResolveSelectedGroundStep({actor->m_id,actor->Native().movement_spent,bool(actor->Native().state&0x8000u)},
+        stats.quantum,stats.full_allowance,cost,bool(destination->features&map::tile::FEATURE_XENOFUNGUS),random,unit::smac_move::LotteryStream::SharedLow16);
+    random=movement.random;
+    if(movement.outcome!=unit::smac_move::Outcome::Moved) {
+        auto state=actor->Native();state.movement_spent=static_cast<uint8_t>(movement.unit.spent);if(movement.unit.prior_failure_marker) {state.state|=0x8000u;}
+        um->QueueUnitUpdate(actor,unit::UnitManager::UUO_REFRESH);std::get<unit::SmacNativeUnitRecord>(actor->m_state)=state;simulation.gameplay_random=random;return;
+    }
+    // The admitted stock native definition has no FACILITY bonus records.
+    // This exclusion belongs to faction0, never the attacked owner's grants.
+    auto facilities=base->m_facilities;bool damaged_facility=false;
+    for(int attempt=0;attempt<=100;++attempt) {
+        const int32_t id=random.NextCrtRaw15()%39;if(id<=1 || id>=34 || (id==26 && destination->is_water_tile)) {continue;}
+        const auto found=std::find_if(facilities.begin(),facilities.end(),[&](const auto& row){return row.second && row.second->m_smac_source_id==id;});
+        if(found==facilities.end()) {continue;}
+        ValidateSmacFacilityDef(found->second);facilities.erase(found);damaged_facility=true;break;
+    }
+    auto production=*base->GetProductionState();if(!damaged_facility) {production.minerals=0;}
+    const auto quota=simulation.ecology_history->clean_minerals.at(owner);
+    std::vector<size_t> casualties{actor->m_id};int32_t retained=0;
+    static constexpr int offsets[25][2]={{0,0},{1,-1},{2,0},{1,1},{0,2},{-1,1},{-2,0},{-1,-1},{0,-2},
+        {2,-2},{2,2},{-2,2},{-2,-2},{1,-3},{3,-1},{3,1},{1,3},{-1,3},{-3,1},{-3,-1},{-1,-3},{4,0},{-4,0},{0,4},{0,-4}};
+    for(const auto& offset:offsets) {
+        const auto y=int64_t(destination->coord.y)+offset[1];if(y<0 || y>=int64_t(map->GetHeight())) {continue;}
+        const auto x=(int64_t(destination->coord.x)+offset[0]+map->GetWidth())%map->GetWidth();auto* tile=map->GetTile(x,y);
+        unit::Unit* head=nullptr;
+        for(const auto& row:tile->units) {if(row.second->SourceStack() && row.second->SourceStack()->previous<0) {head=row.second;break;}}
+        size_t visited=0;
+        while(head) {
+            if(++visited>um->GetUnits().size()) {THROW("Native raid sweep encountered a cyclic source stack");}
+            const auto binding=head->SourceStack();if(!binding) {THROW("Native raid sweep requires retained source stack links");}
+            if(head!=actor && head->SimulationOwner()==0) {if(retained<quota) {++retained;}else {casualties.push_back(head->m_id);}}
+            head=binding->next>=0 ? um->GetUnit(um->GetUnitRecordOrder().at(binding->next)):nullptr;
+        }
+    }
+    bool objective=(rules.primary&0x20000000u) || (*context.retained_status_word&0x8000u);
+    if(rules.primary&0x40000000u) {THROW("Native raid objective-Base list requires its retained authority");}
+    if(rules.secondary&0x04000000u) {
+        for(const auto& row:facilities) {objective|=row.second->m_smac_source_id==rules.objective_facility && rules.objective_facility<34;}
+    }
+    auto population=base->GetPopulation();if(m_game->GetTurnId()>=10) {population=population ? population-1:0;if(objective) {population=std::max<size_t>(1,population);}}
+    const bool destroyed=population==0;
+    Base* replacement=nullptr;int64_t nearest=INT64_MAX;
+    if(destroyed) {
+        for(const auto id:m_base_order) {
+            auto* candidate=GetBase(id);if(candidate==base || candidate->m_owner!=victim_owner) {continue;}
+            auto dx=std::abs(int64_t(candidate->GetTile()->coord.x)-int64_t(destination->coord.x));dx=std::min(dx,int64_t(map->GetWidth())-dx);
+            const auto dy=std::abs(int64_t(candidate->GetTile()->coord.y)-int64_t(destination->coord.y));const auto distance=std::max(dx,dy)-(std::abs(dx-dy)+2)/4;
+            if(distance<=nearest) {nearest=distance;replacement=candidate;}
+        }
+        if(!replacement) {for(auto it=um->GetUnitRecordOrder().rbegin();it!=um->GetUnitRecordOrder().rend();++it) {
+            if(um->GetUnit(*it)->m_owner==victim_owner) {casualties.push_back(*it);}
+        }}
+    }
+    auto removal=um->PrepareWorldUnitRemoval(GSE_CALL,casualties);
+    if(destroyed && replacement) {removal.PrepareBaseRemovalHomes(*base,*replacement);}
+    const auto previous_query=m_game->m_smac_riot_query_owner;m_game->m_smac_riot_query_owner=owner;
+    util::FinallyGuard restore_query([&]{m_game->m_smac_riot_query_owner=previous_query;});
+    std::optional<Base::PreparedSmacWorkerState> workers;std::optional<SmacBaseUpkeepCache> cache;
+    std::optional<SmacDispositionPlan> disposition;std::optional<unit::UnitManager::PreparedFactionUnits> faction_units;
+    std::optional<map::SmacWorkerKnowledge> knowledge;std::optional<map::GlsmacTerritoryTopology> topology;
+    const auto& names=m_game->GetSmacBasePresentations();Base::SmacAllocationRoles roles{names[0],{names[1],names[2],names[3],names[4],names[5],names[6],names[7]}};
+    if(!destroyed) {
+        auto future_facilities=facilities;SmacBaseAllocationState allocation;
+        base->m_facilities.swap(future_facilities);util::FinallyGuard restore_facilities([&]{base->m_facilities.swap(future_facilities);});
+        um->QueryDefectionUnits(nullptr,removal,[&]{
+            allocation=base->CalculateSmacWorkers(*base->m_allocation,context,SmacBaseResourcePhase::Ordinary,population,nullptr,&production);
+            cache=SmacBaseUpkeepCache{base->CalculateSmacResourceCalculation(SmacBaseResourcePhase::Ordinary,&allocation,population),m_game->CalculateCanonicalUnitSupport(*base,population,nullptr)};
+        });
+        restore_facilities.f_after();
+        workers.emplace(base->PrepareSmacWorkerState(GSE_CALL,allocation,roles,context,production,base->m_accumulated_nutrients,population,{{base,facilities}}));
+    } else {
+        um->QueryDefectionUnits(nullptr,removal,[&]{
+            knowledge=m_game->PrepareBaseTerritory(nullptr,base,false,&topology);
+            if(!replacement) {
+                disposition.emplace(PrepareSmacFactionDisposition(victim_owner,base,0,random));
+                auto& plan=*disposition;
+                faction_units.emplace(um->PrepareFactionUnitsForQuery(victim_owner,plan.site,plan.units,*plan.territory,nullptr,&removal));
+                knowledge=plan.territory;topology=plan.topology;random=plan.random;
+            }
+        });
+    }
+    auto bases=destroyed ? m_bases:decltype(m_bases){};auto order=destroyed ? m_base_order:decltype(m_base_order){};
+    auto assignments=destroyed ? m_work_assignments:decltype(m_work_assignments){};auto updates=destroyed ? m_base_updates:decltype(m_base_updates){};
+    std::unique_lock<std::mutex> lock;std::unordered_set<Base*> triggers;
+    std::optional<faction::SmacBaseTotals> totals;std::optional<faction::SmacEconomyState::RegionalBaseCounts> regional;
+    if(destroyed) {
+        totals=faction::AdjustSmacBaseTotal(simulation.retained_base_totals,owner,-1);
+        regional=m_game->PrepareCanonicalRegionalBaseDelta(*base,-1,map->GetTerritoryTopology());
+        bases.erase(base->m_id);order.erase(std::remove(order.begin(),order.end(),base->m_id),order.end());
+        for(auto it=assignments.begin();it!=assignments.end();) {if(it->second.first==base->m_id) {it=assignments.erase(it);}else {++it;}}
+        QueueBaseUpdateInto(updates,base,BUO_DESPAWN);lock=std::unique_lock(m_updated_bases_mutex);triggers=m_updated_bases;triggers.erase(base);
+    }
+    const auto message=base->m_name+(destroyed ? " was destroyed by native life.":" was raided by native life.");
+    restore_query.f_after();
+    if(faction_units) {faction_units->Commit();}else {removal.Commit();}
+    simulation.gameplay_random=random;
+    std::unique_ptr<Base> retired;
+    if(destroyed) {
+        m_bases.swap(bases);m_base_order.swap(order);m_work_assignments.swap(assignments);m_base_updates.swap(updates);m_updated_bases.swap(triggers);destination->base=nullptr;
+        m_game->CommitBaseTerritory(knowledge,topology);simulation.economy.at(owner).regional_base_counts=regional;simulation.retained_base_totals=totals;
+        if(disposition) {CommitSmacFactionDisposition(*disposition);}
+        retired.reset(base);lock.unlock();
+    } else {workers->Commit();base->m_smac_upkeep_cache.swap(cache);workers->Finish();}
+    if(faction_units) {faction_units->Notify(GSE_CALL);}else {removal.Notify(GSE_CALL);}
+    if(destroyed) {m_game->GetState()->TriggerObject(this,"base_despawn",ARGS_F(base) {{"base",base->Wrap(GSE_CALL)},};});}
+    if(m_game->RequireSimulationParticipant(m_game->GetPlayer()).simulation_id==owner) {m_game->Message(message);}
     if(simulation.HasEnding()) {m_game->GetState()->TriggerObject(m_game,"smac_ending",ARGS_F(this) { }; });}
 }
 

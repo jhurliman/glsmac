@@ -477,7 +477,7 @@ void UnitManager::ValidateWildNativeMove(Unit* actor,map::tile::Tile* destinatio
     const auto stats=QueryNativeUnit(actor->Native(),0);
     if(stats.remaining_allowance<=0) {throw std::runtime_error("Wild movement requires remaining allowance");}
     if(HasForeignOccupant(actor,destination)) {(void)PrepareConventionalAttack(actor,destination,0);return;}
-    if(destination->base) {throw std::runtime_error("Native entry into an undefended Base requires its destruction continuation");}
+    if(destination->base) {m_game->GetBM()->ValidateSmacNativeRaid(actor,destination);return;}
     for(const auto& row:destination->units) {
         if(GetUnit(row.first)!=row.second || !row.second->IsNative() || row.second->Native().owner) {throw std::runtime_error("Wild destination stack is not canonical native-owned");}
     }
@@ -486,6 +486,7 @@ void UnitManager::ValidateWildNativeMove(Unit* actor,map::tile::Tile* destinatio
 void UnitManager::MoveWildNativeUnit(GSE_CALLABLE,Unit* actor,map::tile::Tile* destination) {
     m_game->CheckRW(GSE_CALL);ValidateWildNativeMove(actor,destination);
     if(HasForeignOccupant(actor,destination)) {ApplyConventionalAttack(GSE_CALL,PrepareConventionalAttack(actor,destination,0));return;}
+    if(destination->base) {m_game->GetBM()->RaidSmacBase(GSE_CALL,actor,destination);return;}
     auto* source=actor->GetTile();const auto stats=QueryNativeUnit(actor->Native(),0);auto next=actor->Native();
     const auto cost=WildEdgeCost(*destination,stats.quantum);
     if(int32_t(next.movement_spent)+cost>255 || destination->coord.x>INT16_MAX || destination->coord.y>INT16_MAX) {throw std::overflow_error("Wild move exceeds native byte/coordinate domain");}

@@ -361,3 +361,72 @@ Base percentages into an additive50% or apply a second Sensor for overlap.
 
 Private source and numeric offsets are frozen separately in
 `tmp/reference/independent-sensor-defense-static-evidence-20261111/`.
+
+## Native raid razing and last-Base faction disposition
+
+Static continuation, 2026-11-11. **Base deletion `4faad0` does not itself call
+faction disposition/restart.** Its full body handles Base loss history/counts,
+homed-unit rehome/removal, Base-record compaction/reference repair, map marker
+and radius/territory rebuild, then returns at `4fb2b2`. There is no call to
+`5ca7f0` or faction initializer `5c8650` in that body. Reuse the existing
+[Base removal contract](starvation-base-removal.md), retaining its unit and
+compaction effects; deletion alone is not the completed faction-loss transaction.
+
+The **native raid movement caller explicitly follows deletion with disposition**:
+
+```
+5afe88..5afe89: 4faad0(attackedBaseID)
+5afe8e..5afe90: 4779e0(1)                 // display refresh
+5afe95..5afe9c: 5ca7f0(attackedBaseOwner, 0)
+5afea4..5afea6: 4779e0(1)                 // display refresh
+5afeae:        jump common movement exit 5b1203
+```
+
+The owner argument is the saved pre-deletion destination owner, not a Base
+record read after compaction. At `5afe95`, two still-pushed arguments shift
+the local frame: `[esp+40]` refers to original local+38, that saved owner.
+The second disposition argument is literal0 (native/no positive instigator).
+Do not pass the deleted Worm Unit ID or treat faction0 as capturing this Base.
+The invader was already consumed at `5afd1b` before the population test.
+
+Disposition `5ca7f0(owner,0)` immediately returns for owner0 or if any Base
+record still belongs to owner (`5ca803`..`5ca836`). Otherwise it removes all
+remaining own Units in descending live-index order, clears the faction Base
+count, and calls actual nonzero-turn faction initialization/restart
+`5c8650(owner,0)` at `5ca893`. Thus reuse the existing
+[last-Base restart/disposition authority](last-base-restart.md), including its
+turn/Do-or-Die/site-search gates, treasury handling, replacement units and
+elimination outcomes. The second-argument-positive defeat-credit/relationship
+branches do not apply to this literal0 raid caller. Do not hardcode immediate
+elimination or skip restart merely because the loss was caused by natives.
+
+For the port transaction: delete/compact the Base through normal removal, then
+prepare faction disposition from the resulting world and saved victim owner,
+with instigator0, before finishing the raid command. Restart can change the
+Unit roster again; no continuation should dereference the consumed native or
+stale pre-compaction Base/Unit indices. Surviving-Base and before-turn10 raid
+paths do not call this destruction/disposition tail.
+
+These are source-backed caller links to retained executed deletion/restart
+contracts, not a new full native-raid/restart replay. Evidence is frozen in
+`tmp/reference/independent-native-raid-disposition-static-evidence-20261111/`.
+
+### Raid facility exclusion reads faction0's definition
+
+At `5afb5e` the raid loads count **`95a9d4` with no faction stride**, then
+scans kind DWORDs at `95a9d8 + 4*i` and value DWORDs at `95a9f8 + 4*i`
+(`5afb68`..`5afb81`). These are faction-definition slot0's bonus list, not
+the attacked owner's list. Eligibility is suppressed exactly when a record
+has **stored kind==2 AND stored value==candidateFacilityID**. Kind2 is the
+stored `FACILITY` grant representation also consumed by ordinary founding;
+it is not the positional index of the FACILITY token in BONUSNAMES. No generic
+FREEFAC/tech-grant/project-equivalence or victim-intrinsic-facility predicate
+is consulted by this loop. There is no parameter clamping in this comparison.
+
+Consequently a victim Hive Perimeter or University Node is not protected by
+this test merely because the victim received it as a faction grant. If the
+native slot0 list is empty, no candidate is excluded by this bonus-list gate.
+Use the retained native definition as input rather than assuming the victim's
+grant list or inventing a separate protected-facilities set. Candidate26 is
+separately ineligible on a sea Base; on land it can pass the normal installed-
+facility test. HQ<=1 and IDs>=34 are excluded by their separate numeric gates.

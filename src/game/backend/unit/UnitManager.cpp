@@ -846,7 +846,8 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnitsForQuery(slot:
     m_game->RequireSmacGameplayActive();
     const auto& admitted=m_game->RequireSmacProductionOwner(owner);
     if(m_game->m_simulation->value.IsHuman(admitted.simulation_id)) {m_game->RequireSmacLocalHumanOwner(owner);}
-    else if(!supplied || destination || !replacements.empty()) {THROW("Computer faction cleanup requires the private failed-capture removal plan");}
+    else if((!supplied || destination || !replacements.empty())
+        && !(m_game->IsSmacControllerOwner(0) && m_game->m_smac_riot_query_owner==admitted.simulation_id)) {THROW("Computer faction cleanup requires its private capture or native-raid plan");}
     RequireConventionalUnitsReady();
     if(!m_game->GetGCSpace()->IsAccumulating() || !m_game->IsRunning()) {THROW("Faction preparation requires its owning accumulation");}
     if(replacements.size()>8 || (replacements.empty() ? destination!=nullptr : destination==nullptr)) {
@@ -873,7 +874,8 @@ UnitManager::PreparedFactionUnits UnitManager::PrepareFactionUnitsForQuery(slot:
         // supplied plan may be installed as a read-only nested query view.
         const auto& old=*supplied->m_data;auto copy=std::make_unique<PreparedConventionalRemoval::Data>();
         copy->manager=this;copy->removed=old.removed;copy->removed_ids=old.removed_ids;copy->units=old.units;copy->order=old.order;
-        copy->native_survivors=old.native_survivors;copy->conventional_stacks=old.conventional_stacks;copy->updates=old.updates;copy->occupants=old.occupants;copy->knowledge=old.knowledge;copy->base_updates=old.base_updates;copy->retired.resize(old.removed.size());
+        copy->native_survivors=old.native_survivors;copy->native_retired_states=old.native_retired_states;copy->native_factory=old.native_factory;
+        copy->base_removal_homes=old.base_removal_homes;copy->battle_positions=old.battle_positions;copy->battle_disclosures=old.battle_disclosures;copy->conventional_stacks=old.conventional_stacks;copy->updates=old.updates;copy->occupants=old.occupants;copy->knowledge=old.knowledge;copy->base_updates=old.base_updates;copy->retired.resize(old.removed.size());
         data->removal.emplace(PreparedConventionalRemoval(std::move(copy)));
     } else {data->removal.emplace(PrepareRemovalForQuery(removed,transient));}
     const auto& removal=*data->removal->m_data;

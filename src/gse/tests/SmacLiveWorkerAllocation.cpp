@@ -407,6 +407,57 @@ NativeCoexistenceCanary PublishUnrelatedNative(GSE_CALLABLE,ConventionalUnitFixt
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC native Base raid joins facility population quota and atomic removal",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        for(const int scenario:{0,1,2,3,4}) {
+            ConventionalUnitFixture fixture;fixture.ConfigureProduction(ColonyChoiceSource,"GAIANS");
+            const auto result=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();auto* bm=game->GetBM();auto* um=game->GetUM();
+                auto* base=Populate(GSE_CALL,fixture,true,false,0,1,scenario==2 ? 2:1);SelectionPresentations(fixture);
+                std::array<std::string,8> names;names[0]=Roles().worker;for(size_t i=0;i<7;++i) {names[i+1]=Roles().specialists[i];}fixture.BasePresentationRoles(names);
+                game->GetState()->m_settings.global.SelectSmacCampaignRules(false);
+                auto context=base->GetSmacResourceContext();context.retained_status_word=scenario==4 ? 0x8000u:0;base->SetSmacResourceContext(GSE_CALL,context);
+                const auto production=*base->GetProductionState();const auto food=base->GetAccumulatedNutrients();
+                if(scenario==1) {bm->DefineFacility(new FacilityDef("raid-tanks","Tanks","",40,{},3));base->m_facilities.emplace("raid-tanks",bm->GetFacilityDef("raid-tanks"));}
+                if(scenario>=2) {game->AdvanceTurn(10);}
+                // Retain another Base so destruction exercises home reassignment without a separate restart fixture.
+                Base* other=nullptr;
+                if(scenario==3) {
+                    Base::pops_t pops;pops.emplace(99,Pop(nullptr,99,bm->GetPopDef(Roles().specialists[1]),0));
+                    SmacBaseAllocationState allocation{1,{{},1}};allocation.specialists.types[0]=1;
+                    other=new Base(game,702,base->m_owner,base->m_faction,game->GetMap()->GetTile(40,40),"Raid survivor",{},pops,2,13,production,context,allocation);bm->SpawnBase(GSE_CALL,other);
+                }
+                game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+                um->DefineUnit(new StaticDef("MindWorms",um->GetMoraleSet("live-morale"),"Mind Worms",MT_LAND,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
+                fixture.ResourceState([](auto& state){state.native_factory=faction::SmacNativeFactoryState::Initialize(0,state.gameplay_random);state.ecology_history=faction::SmacEcologyHistory{};state.ecology_history->clean_minerals[1]=1;});
+                const auto spawn=PrepareSmacNativeSpawn({{{3,1},128,64,true},1,7,9,1},{{{3,1},1},{{4,2},1},{{2,4},1}},[](int32_t,int32_t){return SmacNativeSpawnTile{3,false,1,1,false,15};});
+                auto birth=um->PrepareEcologyNativeBirths(GSE_CALL,spawn);GT_ASSERT(birth.Size()==3,"Raid fixture omitted its three native bodies");
+                const auto invading=birth.Candidate(0).m_id,kept=birth.Candidate(1).m_id,removed=birth.Candidate(2).m_id;birth.Commit();birth.Notify(GSE_CALL);
+                auto* actor=um->GetUnit(invading);auto* wrapper=actor->Wrap(GSE_CALL);auto* tile=base->GetTile();
+                fixture.GameplayRandom({11,29});auto expected=fixture.GameplayRandom();size_t draws=0;
+                do {const auto candidate=expected.NextCrtRaw15()%39;++draws;if(scenario==1 && candidate==3) {break;}} while(draws<101);
+                const auto before=fixture.Snapshot();
+                fixture.WithNativeController([&]{bm->ValidateSmacNativeRaid(actor,tile);});GT_ASSERT(fixture.Snapshot()==before,"Raid validation changed retained authority");
+                // Force a late resource-presentation refusal after random planning and verify full rollback.
+                if(scenario==0) {
+                    auto missing=names;missing[7]="missing-raid-role";fixture.BasePresentationRoles(missing);
+                    GT_ASSERT(Rejects([&]{fixture.WithNativeController([&]{um->MoveWildNativeUnit(GSE_CALL,actor,tile);});}) && fixture.Snapshot()==before && Unit::Unwrap(wrapper)==actor,"Failed raid leaked RNG population or native retirement");fixture.BasePresentationRoles(names);
+                }
+                fixture.WithNativeController([&]{um->MoveWildNativeUnit(GSE_CALL,actor,tile);});
+                GT_ASSERT(!um->GetUnit(invading) && !um->GetUnit(removed) && um->GetUnit(kept) && wrapper->type==VT_UNDEFINED,"Raid did not consume invader and apply the retained H quota");
+                GT_ASSERT(fixture.GameplayRandom()==expected,"Raid facility search consumed the wrong CRT suffix");
+                if(scenario==3) {GT_ASSERT(!bm->GetBase(701) && !tile->base && bm->GetBase(702)==other,"Native raid captured or retained a destroyed Base");}
+                else {
+                    GT_ASSERT(bm->GetBase(701)==base && base->GetPopulation()==1 && base->GetAccumulatedNutrients()==food && base->GetSmacUpkeepCache(),"Native raid lost retained food or failed population/cache publication");
+                    GT_ASSERT(base->m_facilities.empty() && base->GetProductionState()->minerals==(scenario==1 ? production.minerals:0)
+                        && base->GetProductionState()->baseline_minerals==production.baseline_minerals,"Raid did not distinguish facility damage from exhausted-search mineral reset");
+                }
+                bool exact=false;fixture.ResourceState([&](const auto& state){exact=state.ecology_history->clean_minerals[1]==1 && state.native_factory->active_designs.at(8)==1;});
+                GT_ASSERT(exact,"Raid changed H or lost native casualty accounting");GT_OK();
+            });if(!result.empty()) {return "raid scenario "+std::to_string(scenario)+": "+result;}
+        }GT_OK();
+    });
+
     task->AddTest("SMAC inspector opening queues fresh resources before selection and keeps the final requested Base",[](GSE*,context::Context*)->std::string {
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(UpkeepSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {

@@ -109,6 +109,8 @@ public:
 	};
 	PreparedSmacCapture PrepareSmacCapture(unit::Unit* actor,map::tile::Tile* destination,size_t caller) const;
 	void ApplySmacCapture(GSE_CALLABLE,PreparedSmacCapture prepared);
+    void ValidateSmacNativeRaid(unit::Unit* actor,map::tile::Tile* destination) const;
+    void RaidSmacBase(GSE_CALLABLE,unit::Unit* actor,map::tile::Tile* destination);
 	struct SmacAbandonmentResult {
 		size_t newborn_id;
 		std::optional<size_t> successor_id;

@@ -62,3 +62,22 @@ handlers.unit_select({unit: unit});
 check('check', 'Activate unit', 'Holding position — stored work: 2');
 check('click', 'Activate unit', '');
 test.assert(#sizeof(events) == 5 && events[4].name == 'unit_activate' && events[4].data.unit.id == 71);
+
+// Produced combat units use the existing authenticated human-order producers.
+held = false; kind = 'none'; offered = [];
+let orders = [8, 9, 10];
+const scout = {id: 73, is_conventional: true, query_conventional_commands: unit.query_conventional_commands,
+    query_conventional_orders: () => { return orders; }};
+handlers.unit_select({unit: scout});
+check('check', 'Skip [Space]|Hold [H]|Hold 10 [Shift+H]', 'Unit orders');
+check('remember', 'Skip [Space]', '');
+orders = [9, 10];check('remembered', '', '');
+test.assert(#sizeof(events) == 5);
+map_handlers.unit_preview({unit: scout});
+check('click', 'Hold [H]', '');
+test.assert(#sizeof(events) == 6 && events[5].name == 'unit_hold' && events[5].data.unit.id == 73 && events[5].data.turn_id == 1);
+check('click', 'Hold 10 [Shift+H]', '');
+test.assert(#sizeof(events) == 7 && events[6].name == 'unit_hold_ten');
+orders = [8];map_handlers.unit_preview({unit: scout});check('click', 'Skip [Space]', '');
+test.assert(#sizeof(events) == 8 && events[7].name == 'unit_skip_turn');
+orders = [];map_handlers.unit_preview({unit: scout});check('hidden', '', '');

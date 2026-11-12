@@ -356,6 +356,18 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
             { "order_countdown", VALUE(gse::value::Int,,Conventional().order_countdown) }
 		} ) );
 	} ) },
+    { "query_conventional_orders", NATIVE_CALL(this) {
+        N_EXPECT_ARGS(0);
+        gse::value::array_elements_t orders;
+        using Command=UnitManager::HumanOrderCommand;
+        for(const auto& offered:std::array<std::pair<int32_t,Command>,3>{{{8,Command::Skip},{9,Command::Hold},{10,Command::HoldTen}}}) {
+            try {
+                (void)m_um->PrepareHumanOrder(this,offered.second,m_um->m_game->GetSlotNum());
+                orders.push_back(VALUE(gse::value::Int,,offered.first));
+            } catch(const std::runtime_error&) {} catch(const std::invalid_argument&) {}
+        }
+        return VALUE(gse::value::Array,,orders);
+    }) },
 	{ "query_conventional_commands", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 0 );
 		const auto commands = m_um->QueryConventionalCommands( this );

@@ -14,7 +14,9 @@ return {
 			return;
 		}
 		const commands = this.unit.query_conventional_commands();
-		if (commands.kind == 'none') { this.frame.hide(); return; }
+		let actions = commands.actions;
+        if (commands.kind == 'none' && #is_defined(this.unit.query_conventional_orders)) { actions = this.unit.query_conventional_orders(); }
+        if (commands.kind == 'none' && #sizeof(actions) == 0) { this.frame.hide(); return; }
         if (this.foundation != null && this.foundation.unit.id == this.unit_id) {
             const prompt = this.foundation; const prompt_width = this.frame.width - 12;
             this.frame.text({left: 6, top: 4, font: 'arialnb.ttf:14', color: 'rgb(232,212,140)', text: 'Choose Governor settings before founding.'});
@@ -33,15 +35,15 @@ return {
 		const orders = ['None', 'Farm', 'Road', 'Forest', 'Solar', 'Mine'];
 		const heading = commands.held ? 'Holding position — stored work: ' + #to_string(commands.work_progress) : (commands.kind == 'former'
 			? 'Former — Order: ' + orders[commands.work_order] + '  |  Stored work: ' + #to_string(commands.work_progress)
-			: 'Colony Pod — Found a Base on an available site');
+			: (commands.kind == 'colony' ? 'Colony Pod — Found a Base on an available site' : 'Unit orders'));
 		this.frame.text({left: 6, top: 4, font: 'arialnb.ttf:14', color: 'rgb(232,212,140)', text: heading});
 		this.frame.text({left: 6, top: 22, font: 'arialnb.ttf:12', color: 'rgb(184,192,96)',
-			text: #sizeof(commands.actions) == 0 ? 'No available commands here.' : 'Click a command or press its key.'});
-		const labels = ['Cancel [C]', 'Farm [F]', 'Road [R]', 'Forest [O]', 'Solar [S]', 'Mine [M]', 'Found Base [B]', 'Activate unit'];
+			text: #sizeof(actions) == 0 ? 'No available commands here.' : 'Click a command or press its key.'});
+		const labels = ['Cancel [C]', 'Farm [F]', 'Road [R]', 'Forest [O]', 'Solar [S]', 'Mine [M]', 'Found Base [B]', 'Activate unit', 'Skip [Space]', 'Hold [H]', 'Hold 10 [Shift+H]'];
 		const selected_id = this.unit_id;
         const selected_turn = commands.turn_id;
 		let index = 0;
-		for (action of commands.actions) {
+		for (action of actions) {
 			const selected_action = action;
 			const column = index % 3;
 			const row = index / 3;
@@ -54,11 +56,17 @@ return {
 				if (!#is_defined(this.unit) || this.unit == null || this.unit_id != selected_id) { return true; }
 				const current = this.unit.query_conventional_commands();
                 if (current.turn_id != selected_turn) { return true; }
+                let current_actions = current.actions;
+                if (current.kind == 'none' && #is_defined(this.unit.query_conventional_orders)) { current_actions = this.unit.query_conventional_orders(); }
 				let available = false;
-				for (offered of current.actions) { if (offered == selected_action) { available = true; } }
+				for (offered of current_actions) { if (offered == selected_action) { available = true; } }
 				if (available) {
 					const unit = this.unit;
-					if (selected_action == 7) { this.p.game.event('unit_activate', {unit: unit, turn_id: selected_turn}); }
+                    if (selected_action >= 8) {
+                        const names = ['unit_skip_turn', 'unit_hold', 'unit_hold_ten'];
+                        this.p.game.event(names[selected_action - 8], {unit: unit, turn_id: selected_turn});
+                    }
+					else if (selected_action == 7) { this.p.game.event('unit_activate', {unit: unit, turn_id: selected_turn}); }
 					else if (selected_action == 6) { this.p.game.event('found_base', {unit: unit}); }
 					else if (selected_action == 0) { this.p.game.event('cancel_unit_work', {unit: unit}); }
 					else { this.p.game.event('work_unit', {unit: unit, action: selected_action}); }

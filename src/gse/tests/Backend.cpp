@@ -643,6 +643,117 @@ public:
         util::FinallyGuard clear([&]{m_glsmac->m_state=nullptr;});
         m_glsmac->RestoreSinglePlayerIdentity(id,std::move(identity));
     }
+    LocalCampaignActions m_campaign_actions;
+    LocalCampaignActions CampaignActions() const {return m_campaign_actions;}
+    std::vector<LocalFactionProgress> CampaignProgress() const {
+        using namespace game::backend;
+        const auto& state=m_game.m_simulation->value;
+        const auto knowledge=m_game.GetMap()->GetSmacWorkerKnowledge()->CopyData();
+        std::vector<LocalFactionProgress> result;
+        for(const auto& participant:state.roster) {
+            LocalFactionProgress row;row.owner=participant.simulation_id;row.human=state.IsHuman(row.owner);row.active=participant.active;
+            const auto* technology=state.technology.Find(row.owner);row.labs=technology->labs;
+            row.technologies=std::count(technology->owned.begin(),technology->owned.end(),true);
+            for(const auto& item:m_game.GetBM()->GetBases()) {const auto* base=item.second;
+                if(base->GetSmacResourceContext().owner_simulation_id==row.owner) {++row.bases;if(base->GetProductionState()) {row.stored_minerals+=base->GetProductionState()->minerals;}}
+            }
+            for(const auto& item:m_game.GetUM()->GetUnits()) {const auto* actor=item.second;
+                if(actor->IsConventional() && actor->Conventional().owner_simulation_id==row.owner) {++row.units;
+                    if(actor->Conventional().work_order!=unit::ConventionalUnitState::WorkOrder::None) {++row.working_formers;}}
+            }
+            const auto& memory=knowledge.remembered.at(row.owner);
+            for(size_t i=0;i<memory.size();++i) {if(memory[i] && memory[i]->terraforming && knowledge.tiles[i].claimant==row.owner) {++row.improved_tiles;}}
+            result.push_back(row);
+        }
+        return result;
+    }
+
+    std::string DriveLocalHumanCampaign(GSE_CALLABLE) {
+        using namespace game::backend;
+        using Package=unit::ConventionalUnitContext::Package;
+        using Work=unit::ConventionalUnitState::WorkOrder;
+        GT_ASSERT(!m_game.m_smac_controller_owner,"Human driver inherited computer authority");
+        const auto owner=m_game.RequireSimulationParticipant(m_game.GetPlayer()).simulation_id;
+        if(m_game.m_canonical_continuation || m_game.m_research_request || m_game.m_colony_request) {GT_OK();}
+        std::vector<size_t> bases;std::array<size_t,3> counts{};
+        for(const auto id:m_game.GetBM()->GetBaseRecordOrder()) {if(m_game.GetBM()->GetBase(id)->m_owner==m_game.m_slot) {bases.push_back(id);}}
+        for(const auto id:m_game.GetUM()->GetUnitRecordOrder()) {const auto* actor=m_game.GetUM()->GetUnit(id);
+            if(actor->IsConventional() && actor->m_owner==m_game.m_slot) {++counts.at(size_t(m_game.ResolveConventionalUnit(actor->Conventional(),actor->m_owner).package));}}
+        for(const auto id:bases) {
+            auto* base=m_game.GetBM()->GetBase(id);
+            const bool former=counts.at(size_t(Package::Former))<bases.size();
+            const bool colony=!former && bases.size()<3 && !counts.at(size_t(Package::Colony)) && base->GetPopulation()>=2;
+            const int32_t desired=former?1:colony?0:counts.at(size_t(Package::Combat))<bases.size()+1?2:-4;
+            auto* picker=static_cast<value::Object*>(base->CopySmacProductionChoices(GSE_CALL));
+            for(auto* entry:static_cast<value::Array*>(picker->Get("choices"))->value) {
+                auto* choice=static_cast<value::Object*>(entry);
+                if(static_cast<value::Int*>(choice->Get("source_id"))->value!=desired) {continue;}
+                const auto& production=base->GetProductionState();
+                if(production && production->current_item.smac_source_id==std::abs(desired)
+                    && production->current_item.kind==(desired<0?base::ProductionItemKind::Facility:base::ProductionItemKind::Unit)) {break;}
+                m_game.Event(GSE_CALL,"select_smac_production",{{"base",base->Wrap(GSE_CALL)},{"source_id",choice->Get("source_id")},
+                    {"expected_state",picker->Get("expected_state")},{"expected_minerals",choice->Get("minerals")},{"confirm",VALUE(value::Bool,,true)}});
+                m_game.ProcessEvents();++m_campaign_actions.production_choices;break;
+            }
+        }
+        const auto distance=[&](const map::tile::Tile* a,const map::tile::Tile* b) {
+            const auto dx=std::abs(int64_t(a->coord.x)-int64_t(b->coord.x));return std::max(std::min(dx,int64_t(m_game.GetMap()->GetWidth())-dx),std::abs(int64_t(a->coord.y)-int64_t(b->coord.y)));};
+        const auto records=m_game.GetUM()->GetUnitRecordOrder();
+        for(const auto id:records) {
+            auto* actor=m_game.GetUM()->GetUnit(id);
+            if(!actor || !actor->IsConventional() || actor->m_owner!=m_game.m_slot || !actor->HasMovesLeft() || actor->Conventional().IsHeld()) {continue;}
+            const auto package=m_game.ResolveConventionalUnit(actor->Conventional(),actor->m_owner).package;
+            std::set<map::tile::Tile*> visited;
+            for(size_t step=0;step<12 && (actor=m_game.GetUM()->GetUnit(id)) && actor->HasMovesLeft();++step) {
+                auto* source=actor->GetTile();visited.insert(source);
+                const auto commands=m_game.GetUM()->QueryConventionalCommands(actor);
+                if(package==Package::Colony && std::find(commands.actions.begin(),commands.actions.end(),6)!=commands.actions.end()) {
+                    m_game.Event(GSE_CALL,"found_base",{{"unit",actor->Wrap(GSE_CALL)}});m_game.ProcessEvents();
+                    if(!m_game.GetUM()->GetUnit(id)) {++m_campaign_actions.founded_bases;}break;
+                }
+                if(package==Package::Former) {
+                    auto order=actor->Conventional().work_order;
+                    if(order==Work::None) {
+                        for(const auto desired:{Work::Farm,Work::Solar,Work::Road}) {
+                            if(std::find(commands.actions.begin(),commands.actions.end(),int32_t(desired))==commands.actions.end()) {continue;}
+                            m_game.Event(GSE_CALL,"work_unit",{{"unit",actor->Wrap(GSE_CALL)},{"action",VALUE(value::Int,,int32_t(desired))}});m_game.ProcessEvents();order=desired;break;
+                        }
+                    }
+                    if(order!=Work::None) {
+                        const auto terrain=source->terraforming;
+                        m_game.Event(GSE_CALL,"continue_unit_work",{{"unit",actor->Wrap(GSE_CALL)},{"turn_id",VALUE(value::Int,,m_game.GetTurnId())}});m_game.ProcessEvents();
+                        ++m_campaign_actions.work_dispatches;if(source->terraforming!=terrain) {++m_campaign_actions.terrain_completions;}break;
+                    }
+                }
+                if(package==Package::Combat && source->base && source->base->m_owner==m_game.m_slot && source->units.begin()->first==id) {break;}
+                const auto knowledge=m_game.GetMap()->GetSmacWorkerKnowledge()->CopyData();const auto bit=uint8_t(1u<<owner);
+                const auto index=[&](const auto* tile){return size_t(tile->coord.y)*(knowledge.width/2)+tile->coord.x/2;};
+                std::vector<std::pair<int64_t,map::tile::Tile*>> candidates;
+                for(auto* tile:source->neighbours) {
+                    if(!tile || visited.count(tile) || !(knowledge.tiles.at(index(tile)).explored_by&bit)) {continue;}
+                    int64_t score=0,nearest=INT64_MAX;
+                    for(const auto base_id:bases) {if(const auto* base=m_game.GetBM()->GetBase(base_id)) {nearest=std::min(nearest,distance(tile,base->GetTile()));}}
+                    if(package==Package::Colony && nearest!=INT64_MAX) {score+=100*std::min(nearest,int64_t(5));}
+                    if(package==Package::Former && nearest!=INT64_MAX) {score-=100*std::abs(nearest-2);
+                        const auto complete=map::tile::TERRAFORMING_FARM|map::tile::TERRAFORMING_SOLAR|map::tile::TERRAFORMING_ROAD;
+                        if(!tile->base && (tile->terraforming&complete)!=complete) {score+=300;}}
+                    for(const auto* neighbor:tile->neighbours) {if(neighbor && !(knowledge.tiles.at(index(neighbor)).explored_by&bit)) {score+=30;}}
+                    score+=int64_t((index(tile)*13+id*7+m_game.GetTurnId())%17);candidates.push_back({score,tile});
+                }
+                std::stable_sort(candidates.begin(),candidates.end(),[](const auto& a,const auto& b){return a.first>b.first;});
+                bool moved=false;
+                for(const auto& candidate:candidates) {
+                    try {m_game.GetUM()->ValidateConventionalMove(actor,candidate.second,m_game.GetSlotNum());}
+                    catch(const std::runtime_error&) {++m_campaign_actions.refused_moves;continue;}
+                    m_game.Event(GSE_CALL,"move_unit",{{"unit",actor->Wrap(GSE_CALL)},{"tile",candidate.second->Wrap(GSE_CALL)}});m_game.ProcessEvents();
+                    actor=m_game.GetUM()->GetUnit(id);moved=actor && actor->GetTile()!=source;if(moved) {++m_campaign_actions.moves;}break;
+                }
+                if(!moved) {break;}
+            }
+        }
+        GT_OK();
+    }
+
     std::string CheckLocalComputerBoundary() {
         using namespace game::backend;
         return WithScriptValues([&](GSE_CALLABLE)->std::string {
@@ -7966,6 +8077,9 @@ std::string CheckSmacBaseStartupFixture( const bool queued, const int32_t diffic
 
 ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< BackendFixture >() ) {}
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
+std::string ConventionalUnitFixture::DriveLocalHumanCampaign(GSE_CALLABLE) {return fixture->DriveLocalHumanCampaign(GSE_CALL);}
+LocalCampaignActions ConventionalUnitFixture::CampaignActions() const {return fixture->CampaignActions();}
+std::vector<LocalFactionProgress> ConventionalUnitFixture::CampaignProgress() const {return fixture->CampaignProgress();}
 std::string ConventionalUnitFixture::CheckLocalComputerBoundary() {return fixture->CheckLocalComputerBoundary();}
 std::string ConventionalUnitFixture::StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet) {return fixture->StartLocalComputerCampaign(source,planet);}
 

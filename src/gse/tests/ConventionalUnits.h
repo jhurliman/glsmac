@@ -17,10 +17,22 @@ namespace gse::tests {
 class BackendFixture;
 // Small adapter to the existing asset-free backend/runtime fixture. Assertions
 // live in the dedicated test TU; no alternative gameplay implementation.
+struct LocalCampaignActions {
+    size_t production_choices=0,moves=0,work_dispatches=0,terrain_completions=0,founded_bases=0,refused_moves=0;
+};
+struct LocalFactionProgress {
+    int32_t owner=0;bool human=false,active=false;
+    size_t bases=0,units=0,technologies=0,improved_tiles=0,working_formers=0;
+    int64_t labs=0,stored_minerals=0;
+};
+
 class ConventionalUnitFixture {
 public:
 	ConventionalUnitFixture();
 	~ConventionalUnitFixture();
+    std::string DriveLocalHumanCampaign(GSE_CALLABLE);
+    LocalCampaignActions CampaignActions() const;
+    std::vector<LocalFactionProgress> CampaignProgress() const;
     std::string CheckLocalComputerBoundary();
     std::string StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet);
 	void Configure( bool refreshed = true, int32_t road_rate = 3, bool single = false, bool selected_rover = false );

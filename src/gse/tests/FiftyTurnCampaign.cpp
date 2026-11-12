@@ -56,16 +56,16 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
                 GT_FAIL("Human research continuation did not settle");
             };
             for(int turn=0;turn<50;++turn) {
-                auto error=settle();GT_ASSERT(error.empty(),error);
+                auto error=settle();GT_ASSERT(error.empty(),"Research: "+error);
                 const auto before=game->GetTurnId();
                 game->Event(GSE_CALL,"complete_turn",{});fixture.DrainEvents();
-                error=settle();GT_ASSERT(error.empty(),error);
+                error=settle();GT_ASSERT(error.empty(),"Research: "+error);
                 GT_ASSERT(game->GetTurnId()==before+1,"Human completion did not return through all computer turns at step "+std::to_string(turn));
                 bool ready=false;fixture.ResourceState([&](const auto& state){ready=state.faction_turn
                     && state.faction_turn->Current().phase==game::backend::faction::SmacFactionTurn::Phase::OwnerCommand
                     && state.faction_turn->Current().owner==1;});
                 GT_ASSERT(ready,"Campaign lost its human command boundary");
-                error=fixture.CheckLocalComputerBoundary();GT_ASSERT(error.empty(),error);
+                error=fixture.CheckLocalComputerBoundary();GT_ASSERT(error.empty(),"Owner boundary: "+error);
             }
             GT_ASSERT(game->GetBM()->GetBases().size()>=7 && game->GetUM()->GetUnits().size()>=7,"Computer campaign lost its live world");
             GT_OK();

@@ -11,6 +11,16 @@
 
 namespace game::backend {
 
+std::pair<bool,bool> Game::SmacProductionDominance(const slot::Slot* owner) const {
+    const auto& participant=RequireSmacProductionOwner(owner);
+    const auto& state=m_simulation->value;
+    // Neither adaptive input is consumed by the human cost branch.
+    if(state.IsHuman(participant.simulation_id)) {return {false,false};}
+    if(!state.rank_order) {throw std::runtime_error("Computer cost requires retained faction ranks");}
+    const bool leading_human=state.IsHuman(state.rank_order->Leader());
+    return {leading_human,leading_human && PrepareCanonicalLeadingHumanDominance(state)};
+}
+
 bool Game::PrepareCanonicalLeadingHumanDominance(const faction::SmacSimulationState& state) const {
     if(GetTurnId()>INT32_MAX) {throw std::runtime_error("Dominance turn exceeds signed32");}
     // Every mode0 difficulty/rivalry branch rejects through turn100. Do not

@@ -510,12 +510,12 @@ UnitManager::PreparedGlobalEcology UnitManager::PrepareGlobalEcology(GSE_CALLABL
             map::smac_wildlife::Hooks hooks;
             hooks.tile=[&](auto point) {return world->CopyGlobalWildlifeTile(point,factory.knowledge());};
             hooks.site=[&](auto point) {
-                const auto& policy=*world->GetResourcePolicy();const auto* original=policy.OriginalPlanet();
+                const auto& policy=*world->GetResourcePolicy();const auto* original=policy.NativeTerrainSource().get();
                 const auto* tile=world->GetTile(point[0],point[1]);auto flags=original->At(point[0],point[1]).Items()&~0x00102000u;
                 if(simulation.movement_history->WasPlaced(point[0],point[1])) {flags|=0x100000u;}
                 if(tile->features&map::tile::FEATURE_MONOLITH) {flags|=0x2000u;}
                 return resource::smac::ResolveSiteSignal({point[0],point[1],policy.Altitude(*tile),flags,
-                    rules->AutomaticLandResources(),original->ResourcePattern(),11,61});
+                    rules->AutomaticLandResources(),original->Info().pattern,11,61});
             };
             hooks.create=[&](int32_t design,auto point,SmacGameplayRandomState&) {return factory.create(design,point,{});};
             hooks.capacity=factory.capacity;

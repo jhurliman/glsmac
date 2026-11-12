@@ -44,7 +44,15 @@ and measurable acceptance gates in [the playthrough audit](smac-playthrough-ui-a
 The original interactive guided tour is explicitly excluded from the 1.0 release
 requirement at the user's request (2026-10-19). Help and Datalinks remain required.
 
-## Next gameplay integration
+## Active execution strategy — 2026-11-11
+
+Build the [integrated first-50-turn milestone](first-50-turns.md) in parallel,
+then perform consolidated cleanup, simplification and repeated QA. Construction
+uses substantial lane commits on one integration branch, not a PR and exhaustive
+validation cycle for every small feature. Presentation pixel polishing is deferred
+while the playable loop is assembled. The M0–M7 release contract remains intact.
+
+## Gameplay integration
 
 The [local faction controller plan](local-faction-controller.md) connects the
 verified seven-faction Planet startup and per-owner upkeep boundaries to the

@@ -32,6 +32,7 @@ public:
 	~ConventionalUnitFixture();
     std::string CheckLocalCampaignReplay(GSE_CALLABLE,size_t turns=3);
     std::string DriveLocalHumanCampaign(GSE_CALLABLE);
+    std::string CampaignSeedReport() const;
     LocalCampaignActions CampaignActions() const;
     std::vector<LocalFactionProgress> CampaignProgress() const;
     std::string CheckLocalComputerBoundary();

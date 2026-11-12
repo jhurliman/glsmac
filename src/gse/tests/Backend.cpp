@@ -644,6 +644,8 @@ public:
         m_glsmac->RestoreSinglePlayerIdentity(id,std::move(identity));
     }
     LocalCampaignActions m_campaign_actions;
+    size_t m_campaign_entropy_calls=0;
+    std::string CampaignSeedReport() const {return "mapJSF=12345 shared=11 crt=29 entropy_samples="+std::to_string(m_campaign_entropy_calls);}
     LocalCampaignActions CampaignActions() const {return m_campaign_actions;}
     std::vector<LocalFactionProgress> CampaignProgress() const {
         using namespace game::backend;
@@ -795,6 +797,9 @@ public:
         const auto saved_path=SaveCampaign(path.string());
         util::FinallyGuard remove([&]{std::filesystem::remove(saved_path);});
         const auto saved_actions=m_campaign_actions;
+        auto entropy_source=m_game.m_gameplay_entropy_word_source;
+        util::FinallyGuard restore_entropy([&]{m_game.m_gameplay_entropy_word_source=std::move(entropy_source);});
+        m_game.m_gameplay_entropy_word_source=[]()->uint32_t {throw std::runtime_error("Saved/future campaign resampled startup entropy");};
         std::vector<std::string> expected;
         const auto advance=[&]()->std::string {
             auto next=DriveLocalHumanCampaign(GSE_CALL);GT_ASSERT(next.empty(),"Replay step: "+next);
@@ -908,6 +913,16 @@ public:
         });
         if(!setup.empty()) {return setup;}
         m_map.release();util::FinallyGuard recover([&]{m_map.reset(m_game.m_map);});
+        // Pin the existing11/29 startup control before observing outcomes.
+        // The ordinary controller owns both words once; saved Start never
+        // creates or reseeds this stream again.
+        auto entropy_source=m_game.m_gameplay_entropy_word_source;
+        util::FinallyGuard restore_entropy([&]{m_game.m_gameplay_entropy_word_source=std::move(entropy_source);});
+        m_campaign_entropy_calls=0;
+        m_game.m_gameplay_entropy_word_source=[&]()->uint32_t {
+            if(++m_campaign_entropy_calls>2) {throw std::runtime_error("Milestone startup sampled more than two seed words");}
+            return m_campaign_entropy_calls==1 ? 11u:29u;
+        };
         m_game.Iterate();
         if(m_game.m_first_base_request) {
             const auto request=*m_game.m_first_base_request;
@@ -916,6 +931,7 @@ public:
             m_game.Iterate();ProcessAccumulations();
         }
         if(!m_game.IsRunning() || m_game.HasInitializationFailure()) {return "Local controller startup: "+m_game.m_initialization_error;}
+        GT_ASSERT(m_campaign_entropy_calls==2,"Milestone startup did not own exactly two seed words");
         return CheckLocalComputerBoundary();
     }
 
@@ -8167,6 +8183,7 @@ ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< 
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
 std::string ConventionalUnitFixture::CheckLocalCampaignReplay(GSE_CALLABLE,size_t turns) {return fixture->CheckLocalCampaignReplay(GSE_CALL,turns);}
 std::string ConventionalUnitFixture::DriveLocalHumanCampaign(GSE_CALLABLE) {return fixture->DriveLocalHumanCampaign(GSE_CALL);}
+std::string ConventionalUnitFixture::CampaignSeedReport() const {return fixture->CampaignSeedReport();}
 LocalCampaignActions ConventionalUnitFixture::CampaignActions() const {return fixture->CampaignActions();}
 std::vector<LocalFactionProgress> ConventionalUnitFixture::CampaignProgress() const {return fixture->CampaignProgress();}
 std::string ConventionalUnitFixture::CheckLocalComputerBoundary() {return fixture->CheckLocalComputerBoundary();}

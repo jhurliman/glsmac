@@ -67,6 +67,11 @@ SmacPlanetMap SmacPlanetMap::WithClimateTerrain(const smac_climate::World& world
     put(0x0c,uint32_t(sea_level_offset));put(0x10,uint32_t(climate_extra));return result;
 }
 
+SmacPlanetMap SmacPlanetMap::WithClimatePostpass(const smac_generation::State& plane) const {
+    SmacPlanetMap result;result.m_header=m_header;result.m_trailer=m_trailer;
+    const bool wrap=!(m_header[0x1c] || m_header[0x1d] || m_header[0x1e] || m_header[0x1f]);
+    result.m_tiles=retained_terrain::WithClimatePostpass(m_tiles,{int32_t(WIDTH),int32_t(HEIGHT),wrap},plane);return result;
+}
 SmacPlanetMap SmacPlanetMap::Decode(const std::string& bytes) {
     // Check the exact bounded layout before reading any scalar or allocating
     // records. Other versions/maps are not silently accepted as standard Planet.

@@ -77,6 +77,11 @@ SmacTerrainAuthority SmacTerrainAuthority::WithClimateTerrain(const smac_climate
     SmacTerrainAuthority result;result.m_origin=m_origin;result.m_metadata=m_metadata;result.m_generated=retained_terrain::WithClimateTerrain(m_generated,{int32_t(m_metadata.width),int32_t(m_metadata.height),m_metadata.horizontal_wrap},world);
     result.m_metadata.sea_offset=sea_offset;result.m_metadata.climate_extra=climate_extra;return result;
 }
+SmacTerrainAuthority SmacTerrainAuthority::WithClimatePostpass(const smac_generation::State& plane) const {
+    if(m_installed) {return Installed(m_installed->WithClimatePostpass(plane));}
+    auto result=*this;result.m_generated=retained_terrain::WithClimatePostpass(m_generated,
+        {int32_t(m_metadata.width),int32_t(m_metadata.height),m_metadata.horizontal_wrap},plane);return result;
+}
 bool SmacTerrainAuthority::operator==(const SmacTerrainAuthority& other) const {
     const auto& a=m_metadata;const auto& b=other.m_metadata;
     if(m_origin!=other.m_origin || a.width!=b.width || a.height!=b.height || a.horizontal_wrap!=b.horizontal_wrap || a.pattern!=b.pattern

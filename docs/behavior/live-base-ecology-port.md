@@ -86,3 +86,25 @@ assignment tail retain their existing explicit rejection. These limits are
 material beyond the early campaign slice; this is not complete climate parity.
 Legacy diagnostic worlds lacking frozen event rules retain aggregate-only
 capability without invented rule words or frequency defaults.
+
+
+## Full-plane climate preparation
+
+The owning Map adapter now projects the actual live material, occupancy and
+remembered improvements into the existing climate plane. Its prepared climate
+transaction invokes the original-checked region rebuild and coastal postpass,
+retaining area history, Freshwater and raw coastal words. It stages the complete
+resource policy, topology/site invalidation, shared display corners, physical
+terrain and positive-faction remembered item changes. Cross-category remembered
+writes do not add exploration. Queries restore all terrain, geometry caches and
+authorities on normal/exceptional exit; publication checks complete tile and
+policy/knowledge/topology preimages.
+
+The final territory consumer must complete the prepared transaction explicitly.
+This adapter alone does not supply Base/Unit destruction or replace frontend-owned
+meshes: a rendered cross-category commit still rejects until the full ownership
+protocol joins it. The existing live climate/volcano guards remain in force;
+this preparation is not permission to publish only terrain or a class-only atlas
+patch. The focused live Map test uses claimed startup and the actual owned save
+codec to check detached preparation, injected-consumer rollback, stale-preimage
+rejection, surface/contour/region publication and all-seven-memory preservation.

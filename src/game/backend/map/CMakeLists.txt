@@ -21,6 +21,7 @@ SET( SRC ${SRC}
 	${PWD}/SmacTerrainAuthority.cpp
 	${PWD}/SmacGlobalSpread.cpp
 	${PWD}/MapGlobalSpread.cpp
+	${PWD}/MapClimate.cpp
 	${PWD}/SmacGlobalWildlife.cpp
 	${PWD}/SmacTerrainLighting.cpp
 	${PWD}/SmacOrdinaryLandExploration.cpp

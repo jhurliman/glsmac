@@ -11,6 +11,7 @@ namespace game::backend::base { class SmacBloomTerrainPlan; }
 
 namespace game::backend::map {
 namespace smac_climate { struct World; }
+namespace smac_generation {struct State;}
 namespace smac_balance {struct Result;}
 namespace smac_spread {struct Input;struct Result;}
 
@@ -44,6 +45,7 @@ public:
     // regions, territory, sites or entities; their owning transaction does so.
     smac_climate::World ExportClimateTerrain(bool horizontal_wrap) const;
     SmacPlanetMap WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const;
+    SmacPlanetMap WithClimatePostpass(const smac_generation::State& plane) const;
     SmacPlanetMap WithStartingBalance(const smac_balance::Result& plan) const;
     SmacPlanetMap WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const;
     // Caller authenticates current live fields. Preserve every unowned retained

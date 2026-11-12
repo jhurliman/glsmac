@@ -66,6 +66,11 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithGlobalSpread(const smac_spr
     auto result=*this;result.SetOriginalSource(m_planet->WithGlobalSpread(before,plan));return result;
 }
 
+GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithClimatePostpass(const smac_generation::State& plane) const {
+    if(m_native && !m_planet) {return GeneratedTerrainV3(m_native->WithClimatePostpass(plane));}
+    if(!m_planet) {throw std::runtime_error("Climate postpass requires native terrain authority");}
+    return RetainedClimatePlanetV2(m_planet->WithClimatePostpass(plane),m_automatic_land_resources);
+}
 GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithLiveGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const {
     if(m_native && !m_planet) {return GeneratedTerrainV3(m_native->WithGlobalSpread(before,plan,true));}
     if(!m_planet || !before.geometry.wrap) {throw std::runtime_error("Live flora publication requires installed wrapped Planet authority");}

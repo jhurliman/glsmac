@@ -31,6 +31,7 @@ public:
     SmacTerrainAuthority WithBloomTerrain(const base::SmacBloomTerrainPlan&,std::optional<uint8_t> viewer={}) const;
     smac_climate::World ExportClimateTerrain() const;
     SmacTerrainAuthority WithClimateTerrain(const smac_climate::World&,int32_t sea_offset,int32_t climate_extra) const;
+    SmacTerrainAuthority WithClimatePostpass(const smac_generation::State& plane) const;
     Origin SourceOrigin() const {return m_origin;}
     const Metadata& Info() const {return m_metadata;}
     const Cell& At(uint32_t x,uint32_t y) const;

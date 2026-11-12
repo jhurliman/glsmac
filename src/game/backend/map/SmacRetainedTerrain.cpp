@@ -1,4 +1,5 @@
 #include "SmacRetainedTerrain.h"
+#include "SmacContinentGeneration.h"
 #include "SmacClimate.h"
 #include "SmacGlobalSpread.h"
 #include "SmacStartingBalance.h"
@@ -169,4 +170,23 @@ Cells WithClimateTerrain(const Cells& cells,smac_site::Geometry g,const smac_cli
 }
 
 
+Cells WithClimatePostpass(const Cells& cells,smac_site::Geometry g,const smac_generation::State& plane) {
+    Validate(cells,g);
+    if(plane.records.size()!=cells.size() || plane.topology!=(g.wrap?0:1)) {
+        throw std::invalid_argument("Climate postpass geometry differs from retained authority");
+    }
+    auto result=cells;
+    const auto put=[](uint8_t* p,uint32_t value){for(unsigned k=0;k<4;++k) {p[k]=uint8_t(value>>(8*k));}};
+    for(size_t i=0;i<cells.size();++i) {
+        const auto& next=plane.records[i];auto& raw=result[i].bytes;
+        // Native region/coastal publication owns only these fields. Climate,
+        // entity cache, exploration, remembered items and opaque bytes survive.
+        if(next[3]>=128) {throw std::invalid_argument("Climate postpass region exceeds native seven-bit range");}
+        raw[3]=next[3];raw[2]&=15u;
+        const auto word=[&](size_t off){return uint32_t(next[off])|(uint32_t(next[off+1])<<8)|(uint32_t(next[off+2])<<16)|(uint32_t(next[off+3])<<24);};
+        put(raw.data()+8,(cells[i].Items()&~0x40004000u)|(word(8)&0x40004000u));
+        put(raw.data()+12,(cells[i].Landmarks()&~0x80u)|(word(12)&0x80u));
+    }
+    return result;
+}
 }

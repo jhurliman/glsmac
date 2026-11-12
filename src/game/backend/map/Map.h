@@ -205,6 +205,24 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
     void CommitEcologyBloom(PreparedEcologyBloom& prepared);
     void QueryEcologyBloom(const PreparedEcologyBloom& prepared,const std::function<void()>& query);
 
+    class PreparedClimateTerrain {
+    public:
+        ~PreparedClimateTerrain();
+    private:
+        friend class Map;
+        struct Data;
+        PreparedClimateTerrain();
+        std::unique_ptr<Data> data;
+    };
+    // The running climate owner supplies the complete evolved plane after its
+    // entity callback. Preparation stages native regions/coasts, all live fields,
+    // remembered improvements and contours; queries restore on every exit.
+    smac_climate::World CopyClimateTerrain(int32_t turn,const std::array<uint32_t,8>& status) const;
+    std::unique_ptr<PreparedClimateTerrain> PrepareClimateTerrain(const smac_climate::World& plane,int32_t sea_offset,int32_t climate_extra);
+    void QueryClimateTerrain(const PreparedClimateTerrain&,const std::function<void()>& query);
+    void CompleteClimateTerritory(PreparedClimateTerrain&,SmacWorkerKnowledge knowledge,GlsmacTerritoryTopology topology);
+    void CommitClimateTerrain(PreparedClimateTerrain&);
+
     smac_terrain::LandmarkGeometry* GetNativeGeometry() const;
 	const size_t GetHeight() const;
 

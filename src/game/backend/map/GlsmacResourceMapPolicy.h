@@ -14,6 +14,7 @@ namespace game::backend::base { class SmacBloomTerrainPlan; }
 namespace game::backend::map {
 namespace tile { class Tile; }
 namespace smac_climate { struct World; }
+namespace smac_generation {struct State;}
 namespace smac_balance {struct Result;}
 namespace smac_spread {struct Input;struct Result;}
 class SmacPlanetMap;
@@ -38,6 +39,7 @@ public:
     GlsmacResourceMapPolicy WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const;
     GlsmacResourceMapPolicy WithLiveGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const;
     GlsmacResourceMapPolicy WithClimateTerrain(const smac_climate::World& world,int32_t sea_level_offset,int32_t climate_extra) const;
+    GlsmacResourceMapPolicy WithClimatePostpass(const smac_generation::State& plane) const;
 	resource::smac::AltitudeBand Altitude( const tile::Tile& tile ) const;
 	std::array<bool,3> LandmarkBonuses( const tile::Tile& tile ) const;
 

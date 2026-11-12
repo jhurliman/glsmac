@@ -2,6 +2,7 @@
 #include "SmacPlanetMap.h"
 #include "SmacSiteGeometry.h"
 
+namespace game::backend::map::smac_generation {struct State;}
 namespace game::backend::map::retained_terrain {
 using Cell=SmacPlanetMap::Tile;
 using Cells=std::vector<Cell>;
@@ -14,4 +15,5 @@ Cells WithStartingBalance(const Cells&,smac_site::Geometry,const smac_balance::R
 Cells WithBloomTerrain(const Cells&,smac_site::Geometry,const base::SmacBloomTerrainPlan&,std::optional<uint8_t> viewer={});
 smac_climate::World ExportClimateTerrain(const Cells&,smac_site::Geometry);
 Cells WithClimateTerrain(const Cells&,smac_site::Geometry,const smac_climate::World&);
+Cells WithClimatePostpass(const Cells&,smac_site::Geometry,const smac_generation::State&);
 }

@@ -126,6 +126,8 @@
 #include "game/backend/faction/FactionManager.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
+#include "game/backend/map/SmacClimate.h"
+#include "game/backend/map/SmacTerrainAuthority.h"
 #include "game/backend/map/MapState.h"
 #include "game/backend/map/module/Module.h"
 #include "game/backend/map/tile/Tiles.h"
@@ -1003,6 +1005,42 @@ public:
             const std::array<map::tile::elevation_t,5> final{{*tile->elevation.center,*tile->elevation.left,*tile->elevation.top,*tile->elevation.right,*tile->elevation.bottom}};
             GT_ASSERT(final==heights,"Class-only bloom changed contours/shared display corners");
             GT_ASSERT(map::GlsmacResourceMapPolicy::Deserialize(world->GetResourcePolicy()->Serialize().ToString())==*world->GetResourcePolicy(),"Bloom terrain lost saved native authority");GT_OK();
+        });
+    }
+
+    std::string CheckLiveClimateTerrainTransaction() {
+        using namespace game::backend;
+        const auto startup=CheckCanonicalFirstBase(5,true,3,true);if(!startup.empty()) {return startup;}
+        return WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* world=m_game.GetMap();auto* changed=world->GetTile(8,6);
+            GT_ASSERT(!changed->base && changed->units.empty(),"Climate test square must be unoccupied");
+            std::array<uint32_t,8> status{};auto plane=world->CopyClimateTerrain(m_game.GetTurnId(),status);
+            const auto index=size_t(6)*40+4;auto& cell=plane.tiles.at(index);
+            GT_ASSERT(cell.elevation>=3,"Climate test requires ordinary land preimage");
+            cell.elevation=2;cell.contour=40;cell.items&=0x7e1377a3u;cell.remembered_items.fill(cell.items);
+            const auto before=m_game.SerializeWorldSnapshot();const auto old_corner=*changed->elevation.bottom;
+            const auto exploration=world->GetSmacWorkerKnowledge()->CopyData().tiles;
+            auto prepared=world->PrepareClimateTerrain(plane,1,2);
+            GT_ASSERT(m_game.SerializeWorldSnapshot()==before,"Climate preparation published a partial plane");
+            bool saw_candidate=false,rejected=false;
+            try {world->QueryClimateTerrain(*prepared,[&]{
+                saw_candidate=changed->is_water_tile && world->GetResourcePolicy()->NativeTerrainSource()->Info().sea_offset==1;
+                throw std::runtime_error("Injected climate consumer failure");
+            });}catch(const std::runtime_error&) {rejected=true;}
+            GT_ASSERT(saw_candidate && rejected && m_game.SerializeWorldSnapshot()==before,"Climate query failure leaked geometry or authority");
+            std::optional<map::SmacWorkerKnowledge> knowledge;std::optional<map::GlsmacTerritoryTopology> topology;
+            world->QueryClimateTerrain(*prepared,[&]{knowledge=*world->GetSmacWorkerKnowledge();topology=*world->GetTerritoryTopology();});
+            world->CompleteClimateTerritory(*prepared,*knowledge,*topology);
+            const auto feature=changed->features;changed->features^=map::tile::FEATURE_XENOFUNGUS;
+            rejected=false;try {world->CommitClimateTerrain(*prepared);}catch(const std::runtime_error&) {rejected=true;}
+            changed->features=feature;GT_ASSERT(rejected && m_game.SerializeWorldSnapshot()==before,"Stale climate preimage partially published");
+            world->CommitClimateTerrain(*prepared);
+            GT_ASSERT(changed->is_water_tile && *changed->elevation.bottom!=old_corner,"Climate commit omitted surface or display geometry");
+            GT_ASSERT(world->GetSmacWorkerKnowledge()->CopyData().tiles==exploration,"Climate conversion invented exploration");
+            world->GetTerritoryTopology()->ValidateTerrain(world->TerritorySea());
+            const auto raw=world->GetResourcePolicy()->NativeTerrainSource()->ExportClimateTerrain();
+            GT_ASSERT(raw.tiles[index].remembered_items==cell.remembered_items,"Climate lost all-positive-faction item masking");
+            GT_ASSERT(map::GlsmacResourceMapPolicy::Deserialize(world->GetResourcePolicy()->Serialize().ToString())==*world->GetResourcePolicy(),"Climate source authority did not survive its actual codec");GT_OK();
         });
     }
 
@@ -13314,6 +13352,9 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC live climate terrain transaction stages geometry regions and remembered items",GT(){
+        BackendFixture fixture;const auto result=fixture.CheckLiveClimateTerrainTransaction();GT_ASSERT(result.empty(),"Live climate transaction: "+result);GT_OK();
+    });
     task->AddTest("SMAC live ecology terrain transaction preserves owning rollback and viewer memory",GT(){
         BackendFixture fixture;const auto result=fixture.CheckLiveEcologyTerrainTransaction();
         GT_ASSERT(result.empty(),"Live ecology terrain: "+result);GT_OK();

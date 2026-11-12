@@ -89,6 +89,8 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
             }
             GT_ASSERT(computer_expanded && computer_researched && computer_developed,
                 "Computer factions must actually expand, acquire knowledge and develop terrain");
+            const auto replay=fixture.CheckLocalCampaignReplay(GSE_CALL,3);
+            GT_ASSERT(replay.empty(),"Saved campaign continuation: "+replay);
             GT_OK();
         });
     });

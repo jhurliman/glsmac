@@ -4,6 +4,7 @@ return {
         this.picker_active = false; this.picker_input = #include('./workshop_picker_input');
         this.data_formatter = #include('./workshop_data');
         this.automatic_suggestions = true; // Original fresh preference-store default.
+        this.preview_position = [0,0,0];
         this.ability_slots = [(0 - 1), (0 - 1)];
         this.ability_dialog = #include('./workshop_abilities'); this.ability_dialog.init(p);
         this.rename_dialog = #include('./workshop_rename'); this.rename_dialog.init(p);
@@ -235,7 +236,7 @@ return {
         this.p.game.event('open_smac_workshop', {base: base, selected_design: selected, request_id: request, expected_state: expected});
     },
     open: (base, data) => {
-        if (!this.active) { this.model.smacworkshopclock(2); }
+        if (!this.active) { this.model.smacworkshopclock(2); this.preview_position = [0,0,0]; }
         if (!#is_defined(this.parent_text)) { this.parent_text = this.components.smacworkshopparenttext(); }
         for (entry of this.centered_captions) { entry.label.color = this.parent_text.colors[entry.color]; }
         this.presets_heading.text = #uppercase(this.parent_text.presets_title); this.presets_heading.color = this.parent_text.colors[240];
@@ -479,16 +480,16 @@ return {
             this.model.smacworkshopcachedpreview(this.selection.preview_icon, this.selection.preview_variant);
         } else {
             this.model.left = 167; this.model.top = 36; this.model.width = 256; this.model.height = 256;
-            this.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor,
-                (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, this.preview_strength, this.window.is_visible(), this.selected_abilities);
+            this.preview_position = this.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor,
+                (0 - 1), this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, this.preview_strength, this.window.is_visible(), this.selected_abilities, this.preview_position);
         }
     },
     armor_strength: (strength) => { return strength < 0 ? this.parent_text.psi : #to_string(strength); },
     update_armor: () => {
-        this.components.smacworkshopcomponents(this.selected_armor, true);
         for (row of this.selection.armor) { if (row.id == this.selected_armor) {
             for (component of this.component_models) {
-                component.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor, component.kind, this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating, this.window.is_visible(), this.selected_abilities);
+                if (component.kind == 3) { this.preview_position = this.components.smacworkshopcomponents(this.selected_armor, true, this.preview_position); }
+                this.preview_position = component.model.smacworkshopdesign(this.selected_chassis, this.selected_weapon, this.selected_armor, this.selected_reactor, component.kind, this.selection.faction_art, 0.0, this.selection.offense, this.selection.weapon_mode, row.rating, this.window.is_visible(), this.selected_abilities, this.preview_position);
             }
             this.preview_strength = row.rating; this.paint_main_preview();
             this.armor_name.text = row.id == 0 ? #uppercase(this.parent_text.none) : #uppercase(row.short_name); this.armor_stat.text = row.armor_class >= 3 ? '' : this.parent_text.level + ' ' + this.armor_strength(row.rating);

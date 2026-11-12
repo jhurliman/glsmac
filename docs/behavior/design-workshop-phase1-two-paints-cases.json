@@ -1,0 +1,693 @@
+{
+  "contract": "RE-SMAC-WORKSHOP-PHASE1-TWO-PAINTS-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "status": "PASS",
+  "scope": "Two complete441ba0 calls on constructor-initialized hidden Workshop, same declared owner1 Spartan material/Scout inputs. Native visibility610d10=0. Main yaw is explicitly supplied0 before each call to match fixed-pose frontend comparison; native43f8c0 still increments stored next yaw0.05. Phase1 is set once and then observed, not reset between calls. Shared position and renderer state carry through both calls.",
+  "fixture": {
+    "same_as": "RE-SMAC-WORKSHOP-SHARED-POSITION-001",
+    "owner": 1,
+    "design": 2,
+    "chassis": 0,
+    "weapon": 0,
+    "armor": 0,
+    "reactor": 1,
+    "abilities": 0,
+    "material": "same declared owner1 Spartan tint row/Gamma100 palette",
+    "technology_owner_bytes": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "screen_dimensions": [
+      1024,
+      768
+    ],
+    "native_visibility_610d10": 0,
+    "phase_seed_once": 1,
+    "main_yaw_input_each_paint": "0x00000000",
+    "x87_control_word": "0x037f",
+    "timers": "inert; no delivered asynchronous callbacks",
+    "main_surface_capture": "631613 after654770 returns; before keyed copy and cleanup",
+    "shared_state_between_paints": "Position and natural renderer state retained; phase not reset or advanced by harness between paints."
+  },
+  "cases": [
+    {
+      "id": "first_full_paint",
+      "phase_before": 1,
+      "phase_after": 1,
+      "position_before": {
+        "values": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "words": [
+          "0x0",
+          "0x0",
+          "0x0"
+        ]
+      },
+      "position_after": {
+        "values": [
+          5.149078369140625,
+          60.097808837890625,
+          -260.8135681152344
+        ],
+        "words": [
+          "0x40a4c540",
+          "0x42706428",
+          "0xc3826823"
+        ]
+      },
+      "yaw_input": "0x00000000",
+      "yaw_after": "0x3d4ccccd",
+      "painters": [
+        {
+          "role": "chassis",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "words": [
+              "0x0",
+              "0x0",
+              "0x0"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "words": [
+              "0x0",
+              "0x0",
+              "0x0"
+            ]
+          },
+          "yaw_after": "0x0"
+        },
+        {
+          "role": "weapon",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "words": [
+              "0x0",
+              "0x0",
+              "0x0"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              147.22743225097656,
+              -252.39456176757812,
+              -217.06167602539062
+            ],
+            "words": [
+              "0x43133a39",
+              "0xc37c6502",
+              "0xc3590fca"
+            ]
+          },
+          "yaw_after": "0x0"
+        },
+        {
+          "role": "shielding",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              147.22743225097656,
+              -252.39456176757812,
+              -217.06167602539062
+            ],
+            "words": [
+              "0x43133a39",
+              "0xc37c6502",
+              "0xc3590fca"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              147.22743225097656,
+              -252.39456176757812,
+              -217.06167602539062
+            ],
+            "words": [
+              "0x43133a39",
+              "0xc37c6502",
+              "0xc3590fca"
+            ]
+          },
+          "yaw_after": "0x0"
+        },
+        {
+          "role": "reactor",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              147.22743225097656,
+              -252.39456176757812,
+              -217.06167602539062
+            ],
+            "words": [
+              "0x43133a39",
+              "0xc37c6502",
+              "0xc3590fca"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              -61.34281921386719,
+              131.29104614257812,
+              -402.5321960449219
+            ],
+            "words": [
+              "0xc2755f0c",
+              "0x43034a82",
+              "0xc3c9441f"
+            ]
+          },
+          "yaw_after": "0x0"
+        },
+        {
+          "role": "ability1",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              -61.34281921386719,
+              131.29104614257812,
+              -402.5321960449219
+            ],
+            "words": [
+              "0xc2755f0c",
+              "0x43034a82",
+              "0xc3c9441f"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              -61.34281921386719,
+              131.29104614257812,
+              -402.5321960449219
+            ],
+            "words": [
+              "0xc2755f0c",
+              "0x43034a82",
+              "0xc3c9441f"
+            ]
+          },
+          "yaw_after": "0x0"
+        },
+        {
+          "role": "ability2",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              -61.34281921386719,
+              131.29104614257812,
+              -402.5321960449219
+            ],
+            "words": [
+              "0xc2755f0c",
+              "0x43034a82",
+              "0xc3c9441f"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              -61.34281921386719,
+              131.29104614257812,
+              -402.5321960449219
+            ],
+            "words": [
+              "0xc2755f0c",
+              "0x43034a82",
+              "0xc3c9441f"
+            ]
+          },
+          "yaw_after": "0x0"
+        },
+        {
+          "role": "main",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              -61.34281921386719,
+              131.29104614257812,
+              -402.5321960449219
+            ],
+            "words": [
+              "0xc2755f0c",
+              "0x43034a82",
+              "0xc3c9441f"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              5.149078369140625,
+              60.097808837890625,
+              -260.8135681152344
+            ],
+            "words": [
+              "0x40a4c540",
+              "0x42706428",
+              "0xc3826823"
+            ]
+          },
+          "yaw_after": "0x3d4ccccd"
+        }
+      ],
+      "main_planes": {
+        "dimensions": [
+          256,
+          256
+        ],
+        "color_sha256": "ed4e467cae80982699d17acb47ad551b06847722851d7fc9a3a9a77a096d0d0b",
+        "depth_le_u16_sha256": "5dbabddb82d11dc50222d2b375189663edc3c9bbe2b859f0000476d9cd24bb92",
+        "draw_count": 65,
+        "geometry_draws": 59,
+        "kernel_count_operand_sum": 47548
+      },
+      "chassis_crop": {
+        "dimensions": [
+          99,
+          85
+        ],
+        "rect": [
+          30,
+          7,
+          129,
+          92
+        ],
+        "sha256": "995994109caecde8d02dd3f40088e06368b5ed18d77b13f7593ff7174fd00654"
+      }
+    },
+    {
+      "id": "second_full_paint",
+      "phase_before": 1,
+      "phase_after": 1,
+      "position_before": {
+        "values": [
+          5.149078369140625,
+          60.097808837890625,
+          -260.8135681152344
+        ],
+        "words": [
+          "0x40a4c540",
+          "0x42706428",
+          "0xc3826823"
+        ]
+      },
+      "position_after": {
+        "values": [
+          5.149078369140625,
+          60.097808837890625,
+          -260.8135681152344
+        ],
+        "words": [
+          "0x40a4c540",
+          "0x42706428",
+          "0xc3826823"
+        ]
+      },
+      "yaw_input": "0x00000000",
+      "yaw_after": "0x3d4ccccd",
+      "painters": [
+        {
+          "role": "chassis",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              5.149078369140625,
+              60.097808837890625,
+              -260.8135681152344
+            ],
+            "words": [
+              "0x40a4c540",
+              "0x42706428",
+              "0xc3826823"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              5.149078369140625,
+              60.097808837890625,
+              -260.8135681152344
+            ],
+            "words": [
+              "0x40a4c540",
+              "0x42706428",
+              "0xc3826823"
+            ]
+          },
+          "yaw_after": "0x0"
+        },
+        {
+          "role": "weapon",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              5.149078369140625,
+              60.097808837890625,
+              -260.8135681152344
+            ],
+            "words": [
+              "0x40a4c540",
+              "0x42706428",
+              "0xc3826823"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              147.22743225097656,
+              -252.39453125,
+              -217.0616912841797
+            ],
+            "words": [
+              "0x43133a39",
+              "0xc37c6500",
+              "0xc3590fcb"
+            ]
+          },
+          "yaw_after": "0x0"
+        },
+        {
+          "role": "shielding",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              147.22743225097656,
+              -252.39453125,
+              -217.0616912841797
+            ],
+            "words": [
+              "0x43133a39",
+              "0xc37c6500",
+              "0xc3590fcb"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              147.22743225097656,
+              -252.39453125,
+              -217.0616912841797
+            ],
+            "words": [
+              "0x43133a39",
+              "0xc37c6500",
+              "0xc3590fcb"
+            ]
+          },
+          "yaw_after": "0x0"
+        },
+        {
+          "role": "reactor",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              147.22743225097656,
+              -252.39453125,
+              -217.0616912841797
+            ],
+            "words": [
+              "0x43133a39",
+              "0xc37c6500",
+              "0xc3590fcb"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              -61.34281921386719,
+              131.29107666015625,
+              -402.53216552734375
+            ],
+            "words": [
+              "0xc2755f0c",
+              "0x43034a84",
+              "0xc3c9441e"
+            ]
+          },
+          "yaw_after": "0x0"
+        },
+        {
+          "role": "ability1",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              -61.34281921386719,
+              131.29107666015625,
+              -402.53216552734375
+            ],
+            "words": [
+              "0xc2755f0c",
+              "0x43034a84",
+              "0xc3c9441e"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              -61.34281921386719,
+              131.29107666015625,
+              -402.53216552734375
+            ],
+            "words": [
+              "0xc2755f0c",
+              "0x43034a84",
+              "0xc3c9441e"
+            ]
+          },
+          "yaw_after": "0x0"
+        },
+        {
+          "role": "ability2",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              -61.34281921386719,
+              131.29107666015625,
+              -402.53216552734375
+            ],
+            "words": [
+              "0xc2755f0c",
+              "0x43034a84",
+              "0xc3c9441e"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              -61.34281921386719,
+              131.29107666015625,
+              -402.53216552734375
+            ],
+            "words": [
+              "0xc2755f0c",
+              "0x43034a84",
+              "0xc3c9441e"
+            ]
+          },
+          "yaw_after": "0x0"
+        },
+        {
+          "role": "main",
+          "phase_before": 1,
+          "position_before": {
+            "values": [
+              -61.34281921386719,
+              131.29107666015625,
+              -402.53216552734375
+            ],
+            "words": [
+              "0xc2755f0c",
+              "0x43034a84",
+              "0xc3c9441e"
+            ]
+          },
+          "yaw_before": "0x0",
+          "phase_after": 1,
+          "position_after": {
+            "values": [
+              5.149078369140625,
+              60.097808837890625,
+              -260.8135681152344
+            ],
+            "words": [
+              "0x40a4c540",
+              "0x42706428",
+              "0xc3826823"
+            ]
+          },
+          "yaw_after": "0x3d4ccccd"
+        }
+      ],
+      "main_planes": {
+        "dimensions": [
+          256,
+          256
+        ],
+        "color_sha256": "ed4e467cae80982699d17acb47ad551b06847722851d7fc9a3a9a77a096d0d0b",
+        "depth_le_u16_sha256": "5dbabddb82d11dc50222d2b375189663edc3c9bbe2b859f0000476d9cd24bb92",
+        "draw_count": 65,
+        "geometry_draws": 59,
+        "kernel_count_operand_sum": 47548
+      },
+      "chassis_crop": {
+        "dimensions": [
+          99,
+          85
+        ],
+        "rect": [
+          30,
+          7,
+          129,
+          92
+        ],
+        "sha256": "be27d0ef064d09c00ece9b83ee594a2f526f622535f8985b3dd07f98581751cc"
+      }
+    }
+  ],
+  "comparison": {
+    "both_main_centered_words_match_reported_live_run": true,
+    "reported_live_words": [
+      "0x40a4c540",
+      "0x42706428",
+      "0xc3826823"
+    ],
+    "main_color_planes_identical": true,
+    "main_depth_planes_identical": true,
+    "chassis_differing_pixels": 194,
+    "chassis_diff_rect": [
+      47,
+      18,
+      56,
+      53
+    ]
+  },
+  "encoding": {
+    "chassis": "99x85 unsigned8 original palette indices,8415bytes,row-major pitch99",
+    "main_color": "256x256 unsigned8 original palette indices,65536bytes,pitch256",
+    "main_depth": "256x256 unsigned16 little-endian,131072bytes,pitch256samples",
+    "main_kernel_count_operand_sum": "47548 raw requested record operands over65kernel/group draws; not a claimed effective processed count in this packet. See separate terminal count audit."
+  },
+  "evidence_directory": "tmp/reference/independent-workshop-phase1-two-paints-evidence-20261021"
+}

@@ -186,6 +186,7 @@ public:
 		void DiscoverDefendedBase(base::Base* target, int32_t observer);
         void SetNativeBattleSurvivor(Unit* unit,const SmacNativeUnitRecord& state);
         void PrepareBattleRetreat(Unit* unit,map::tile::Tile* destination,const ConventionalUnitState& state);
+        void PrepareBattleCollateral(const std::vector<std::pair<Unit*,ConventionalUnitState>>& states);
 		struct Data;
 		explicit PreparedConventionalRemoval( std::unique_ptr<Data> data );
 		std::unique_ptr<Data> m_data;
@@ -291,6 +292,8 @@ private:
         std::optional<std::pair<int32_t,int32_t>> reward; // owner, final credits
         map::tile::Tile* retreat_destination=nullptr;
         ConventionalUnitState retreat_state;
+        std::vector<size_t> casualties;
+        std::vector<std::pair<Unit*,ConventionalUnitState>> collateral;
 	};
 	bool HasForeignOccupant(const Unit* actor,const map::tile::Tile* destination) const;
 	PreparedConventionalAttack PrepareConventionalAttack(Unit* actor,map::tile::Tile* destination,size_t caller) const;

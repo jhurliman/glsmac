@@ -87,6 +87,14 @@ void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
                 "Retreat retired a surviving Unit reference");}
         }GT_OK();
     });
+    task->AddTest("SMAC military defender score preserves source health weapon and identity tie stages",GT(){
+        GT_ASSERT(model::QueryGroundDefenderScore(224,224,10,10,224,1,1)==884737
+            && model::QueryGroundDefenderScore(224,448,10,10,224,1,2)==1802242
+            && model::QueryGroundDefenderScore(224,224,10,10,224,1,2)==884738
+            && model::QueryGroundDefenderScore(224,448,3,10,224,1,2)==491522
+            && model::QueryGroundDefenderScore(224,224,10,10,224,2,2)==851970,
+            "Original defender score lost a staged truncation or higher-ID tie preference");GT_OK();
+    });
     task->AddTest("SMAC ground components terrain and mobile stages match original causal controls",GT(){
         struct Case {int32_t weapon,armor,mobile,terrain,noncombat,attack,defense;};
         const Case cases[]={{1,1,0,0,0,224,224},{2,1,0,0,0,448,224},{4,1,0,0,0,896,224},

@@ -87,6 +87,9 @@ AttackResult ResolveFlatScoutAttack( const Participant& attacker, const Particip
 
 // Ordinary positive-component land combat, with the caller resolving each
 // independently truncated bonus from frozen rules and actual terrain/chassis.
+int64_t QueryGroundDefenderScore(int32_t final_attack,int32_t final_defense,int32_t health,int32_t maximum_health,
+    int32_t reference_attack,int32_t weapon_power,int32_t source_id);
+std::array<int32_t,2> QueryGroundStrengths(const Participant& attacker,const Participant& defender,bool fanatic,const StrengthBonuses& bonuses);
 AttackResult ResolveGroundAttack(const Participant& attacker,const Participant& defender,int32_t attacker_allowance,
     const SmacGameplayRandomState& random,const References& references,bool fanatic,const StrengthBonuses& bonuses,bool retreat_available=false);
 

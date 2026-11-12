@@ -665,6 +665,16 @@ UnitManager::PreparedDefectionUnits UnitManager::PrepareDefectionUnitsForQuery(s
         || (removed && (!removal || removal->manager!=this || removal->committed))) {THROW("Defection has a stale future Unit plan");}
     return PrepareDefectionUnitsCore(recipient,changes,removal ? removal->updates:creation ? creation->updates:m_unit_updates);
 }
+void UnitManager::PreparedConventionalRemoval::PrepareBattleCollateral(const std::vector<std::pair<Unit*,ConventionalUnitState>>& states) {
+    auto& d=*m_data;if(d.committed) {THROW("Collateral requires its uncommitted battle casualty plan");}
+    for(const auto& row:states) {
+        if(!row.first || !d.units.count(row.first->m_id) || !row.first->IsConventional()) {THROW("Collateral survivor is absent from its battle roster");}
+        row.second.Validate();d.base_removal_homes.push_back(row);
+        auto& update=d.updates.try_emplace(row.first->m_id,unit_update_t{UUO_NONE,row.first}).first->second;
+        if(update.ops&UUO_DESPAWN) {THROW("Collateral survivor has a pending removal");}update.ops=static_cast<unit_update_op_t>(update.ops|UUO_REFRESH);
+    }
+}
+
 void UnitManager::PreparedConventionalRemoval::PrepareBattleRetreat(Unit* unit,map::tile::Tile* destination,const ConventionalUnitState& state) {
     auto& d=*m_data;
     if(d.committed || !d.removed.empty() || !unit || !unit->IsConventional() || !d.units.count(unit->m_id)) {THROW("Retreat requires its surviving two-Unit battle plan");}

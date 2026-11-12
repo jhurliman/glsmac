@@ -70,6 +70,23 @@ AttackResult ResolveGroundAttack(const Participant& attacker,const Participant& 
 	Require( attacker.identity != defender.identity, "SMAC Scout participants require distinct stable identities" );
 	Require( Names( references.selected, attacker.identity, defender.identity ) && Names( references.secondary, attacker.identity, defender.identity ), "SMAC Scout references must name a participant or be absent" );
 	Require( attacker.spent <= 255 - Q, "SMAC Scout attack spending would exceed the verified nonwrapping byte domain" );
+    const auto strengths=QueryGroundStrengths(attacker,defender,fanatic,bonuses);
+	const auto remaining = std::clamp( int64_t( attacker_allowance ) - attacker.spent, INT64_C( 0 ), INT64_C( 999 ) );
+	const std::array< int32_t, 2 > widths{ remaining < Q ? Checked( strengths[ 0 ] * remaining / Q ) : strengths[ 0 ], strengths[ 1 ] };
+    return ResolveStrengthAttack(attacker,defender,strengths,widths,initial_random,references,retreat_available);
+}
+
+int64_t QueryGroundDefenderScore(int32_t attack,int32_t defense,int32_t health,int32_t maximum,int32_t reference,int32_t weapon,int32_t id) {
+    Require(attack>0 && defense>0 && maximum>0 && health>0 && health<=maximum && reference>0
+        && weapon>=0 && id>=0 && id<2048,"Defender score requires ordinary military strength health and source identity");
+    const auto health_scaled=int64_t(defense)*health/maximum;
+    const auto ratio=health_scaled*reference/attack;
+    return (ratio/8-weapon)*32768+id;
+}
+
+std::array<int32_t,2> QueryGroundStrengths(const Participant& attacker,const Participant& defender,bool fanatic,const StrengthBonuses& bonuses) {
+    Validate(attacker);Validate(defender);
+    Require(bonuses.weapon_power>0 && bonuses.armor_power>0,"Conventional strengths require positive component powers");
 	const auto percent=[](int32_t strength,int32_t bonus) {return Checked(int64_t(strength)*(INT64_C(100)+bonus)/100);};
 	auto attack=Checked(INT64_C(32)*(6+attacker.effective_morale)*bonuses.weapon_power);
 	if(fanatic) {attack=percent(attack,bonuses.fanatic_attack);}
@@ -80,10 +97,7 @@ AttackResult ResolveGroundAttack(const Participant& attacker,const Participant& 
     auto defense=percent(Checked(INT64_C(32)*(6+std::max(1,defender.effective_morale))*bonuses.armor_power),bonuses.intrinsic_base_defense);
     defense=percent(defense,bonuses.terrain_defense);
     defense=percent(defense,bonuses.noncombat_defense);
-	const std::array< int32_t, 2 > strengths{attack,defense};
-	const auto remaining = std::clamp( int64_t( attacker_allowance ) - attacker.spent, INT64_C( 0 ), INT64_C( 999 ) );
-	const std::array< int32_t, 2 > widths{ remaining < Q ? Checked( strengths[ 0 ] * remaining / Q ) : strengths[ 0 ], strengths[ 1 ] };
-    return ResolveStrengthAttack(attacker,defender,strengths,widths,initial_random,references,retreat_available);
+    return {attack,defense};
 }
 
 AttackResult ResolveStrengthAttack(const Participant& attacker,const Participant& defender,

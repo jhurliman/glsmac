@@ -134,5 +134,22 @@ remain authoritative. A retreating defender must bypass lethal casualty
 processing. Changes to stack composition require resolving the selected
 defender and current tile links again after every native-style compaction.
 
+### Ordinary Former/Colony handler outcome
+
+Additional complete-handler source audit on 2026-11-11: for the admitted
+positive-owner ordinary Former plan9 or Colony plan8, with no special flags,
+`519db0` **deletes**, both after direct defeat and when reached by residual
+exempt-only cleanup. Zero weapon power and Scout armor do not enable capture.
+The ownership-changing early-return branch requires the **victim design plan
+to equal12**, checked at `519e64`..`519e6c`; plans8 and9 jump past it to
+`519f99`. The ordinary path reaches deletion `5d89f0` at `51a147`..`51a150`
+and returns1. The plan12 capture path instead returns0 at `519f8d`..`519f94`.
+Thus the earlier warning about special capture handling is not an unresolved
+capture exception for this ordinary Former/Colony package. Preserve the
+separate Artifact branch if expanding scope; do not convert defeated ordinary
+civilians to the winner's faction. This is static source evidence, not a new
+runtime battle matrix. Complete private handler source:
+`tmp/reference/ordinary-civilian-casualty-handler-source-20261111.asm.txt`.
+
 Private source slices and references are retained in
 `tmp/reference/independent-early-ground-lifecycle-evidence-20261111/`.

@@ -38,6 +38,7 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
         GT_ASSERT(startup.empty(),"Ordinary campaign startup: "+startup);
         return fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();
+            std::cout<<fixture.CampaignSeedReport()<<std::endl;
             const auto settle=[&]()->std::string {
                 for(size_t decision=0;decision<128;++decision) {
                     auto* wrapped=static_cast<value::Object*>(game->Wrap(GSE_CALL));
@@ -110,6 +111,11 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
             }
             GT_ASSERT(computer_expanded && computer_researched && computer_developed,
                 "Computer factions must actually expand, acquire knowledge and develop terrain");
+            if(const auto* capture=std::getenv("GLSMAC_CAMPAIGN_CAPTURE");capture && *capture) {
+                const auto saved=fixture.SaveCampaign(capture);
+                GT_ASSERT(std::filesystem::is_regular_file(saved),"Campaign capture was not written");
+                std::cout<<"Campaign checkpoint: "<<saved<<std::endl;
+            }
             const auto replay=fixture.CheckLocalCampaignReplay(GSE_CALL,3);
             GT_ASSERT(replay.empty(),"Saved campaign continuation: "+replay);
             GT_OK();

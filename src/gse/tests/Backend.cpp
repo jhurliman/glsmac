@@ -792,7 +792,7 @@ public:
         error=CheckLocalComputerBoundary();GT_ASSERT(error.empty(),"Replay setup: "+error);
         const auto checkpoint=m_game.SerializeWorldSnapshot();
         const auto checkpoint_turn=m_game.GetTurnId();
-        const auto path=std::filesystem::temp_directory_path()/("glsmac-fifty-replay-"+util::UUID::Generate());
+        const auto path=std::filesystem::temp_directory_path()/("glsmac-fifty-replay-"+util::UUID::Generate()+".glsmac");
         const auto saved_path=SaveCampaign(path.string());
         util::FinallyGuard remove([&]{std::filesystem::remove(saved_path);});
         const auto saved_actions=m_campaign_actions;

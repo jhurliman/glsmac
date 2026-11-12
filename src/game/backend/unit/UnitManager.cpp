@@ -703,6 +703,14 @@ void UnitManager::PreparedConventionalRemoval::SetNativeBattleSurvivor(Unit* uni
     found->second.damage=state.damage;
     found->second.stored_morale=state.stored_morale;
     found->second.movement_spent=state.movement_spent;
+    found->second.state=(found->second.state&~4u)|(state.state&4u);
+}
+
+void UnitManager::PreparedConventionalRemoval::SetNativeBattleCasualty(Unit* unit,const SmacNativeUnitRecord& state) {
+    if(!m_data || m_data->committed || !unit || !unit->IsNative()) {THROW("Native casualty payload requires an uncommitted removal plan");}
+    const auto found=std::find_if(m_data->native_retired_states.begin(),m_data->native_retired_states.end(),[&](const auto& row){return row.first==unit;});
+    if(found==m_data->native_retired_states.end()) {THROW("Native casualty is absent from its prepared retirement");}
+    found->second.damage=state.damage;found->second.state=(found->second.state&~4u)|(state.state&4u);
 }
 
 void UnitManager::PreparedConventionalRemoval::DiscoverDefendedBase(base::Base* target,int32_t observer) {

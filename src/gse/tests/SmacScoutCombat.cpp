@@ -75,6 +75,22 @@ bool StepMatches( const fixture::Step& e, const model::Survivor& s, const model:
 }
 
 void AddSmacScoutCombatTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Perimeter replaces intrinsic defense and native selector subtracts signed power",GT(){
+        const model::Participant a{1,1,10,1,1,0},d{2,1,10,1,1,0};
+        model::StrengthBonuses bonuses{25,25,25};bonuses.base_fortification_factor=2;
+        GT_ASSERT((model::QueryGroundStrengths(a,d,false,bonuses)==std::array<int32_t,2>{280,280}),"Ordinary Base stages differ");
+        bonuses.base_fortification_factor=4;
+        GT_ASSERT((model::QueryGroundStrengths(a,d,false,bonuses)==std::array<int32_t,2>{280,448}),"Perimeter stacked with intrinsic instead of replacing it");
+        bonuses.base_fortification_factor=6;
+        GT_ASSERT(model::QueryGroundStrengths(a,d,false,bonuses)[1]==672,"Tachyon did not add2 to the selected fortification factor");
+        bonuses.base_fortification_factor=2;bonuses.intrinsic_base_defense=5;
+        GT_ASSERT(model::QueryGroundStrengths(a,d,false,bonuses)[1]==234,"Unfortified intrinsic rounding moved after the final factor");
+        bonuses.base_fortification_factor=4;
+        GT_ASSERT(model::QueryGroundStrengths(a,d,false,bonuses)[1]==448,"Fortified defense consumed an edited intrinsic percentage");
+        GT_ASSERT(model::QueryGroundDefenderScore(672,448,10,10,672,-1,2)==1867778
+            && model::QueryGroundDefenderScore(672,448,10,10,672,-1,2)>model::QueryGroundDefenderScore(672,448,10,10,672,-1,1),"Native selector treated signed -1 as255 or lost the higher dense-ID tie");GT_OK();
+    });
+
     task->AddTest("SMAC native offense retains22 full retreat and casualty returns",GT(){
         for(const auto& c:fixtures::smac_native_retreat::CASES) {
             const auto r=model::ResolveStrengthAttack({1,1,10,1,c.level,0},{2,1,c.human_health,1,2,c.human_spent},

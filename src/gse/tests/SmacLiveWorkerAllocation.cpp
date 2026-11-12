@@ -279,6 +279,17 @@ std::string BattleSource(const std::string& filename) {
     if(filename=="gaians.txt") {const std::string bonus=",SOCIAL,-MORALE";const auto at=source.find(bonus);source.erase(at,bonus.size());}
     return source;
 }
+std::string FortifiedBattleSource(const std::string& filename) {
+    const auto source=BattleSource(filename);if(filename!="alpha.txt") {return source;}
+    std::istringstream input(source);std::string line,section,result;size_t row=0;
+    while(std::getline(input,line)) {
+        if(!line.empty() && line.front()=='#') {section=line;row=0;}
+        else {++row;if(section=="#RULES") {
+            if(row==18) {line="3,2,";}
+            if(row==41) {line="25,";}
+        }}result+=line+'\n';
+    }return result;
+}
 std::string FanaticBattleSource(const std::string& filename) {
     auto source=BattleSource(filename);
     if(filename=="gaians.txt") {const auto at=source.find("\n#END");source.insert(at,std::string(source.at(at-1)==',' ? "" : ",")+"FANATIC,1");}
@@ -421,6 +432,64 @@ NativeCoexistenceCanary PublishUnrelatedNative(GSE_CALLABLE,ConventionalUnitFixt
 }
 
 void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC live Perimeter and Tachyon Base defense retain late Sensor composition",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(FortifiedBattleSource,true);
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* own=Populate(GSE_CALL,fixture,true);auto* bm=game->GetBM();auto* um=game->GetUM();
+            auto* actor=um->GetUnit(91);auto* foreign=&game->GetState()->m_slots->GetSlot(6);fixture.RetainedMorale(0,0);
+            own->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");foreign->GetPlayer()->SetDifficultyLevel("Librarian");
+            const auto item=game->MakeSmacProductionItem(foreign,ProductionItemKind::Unit,2);
+            Base::pops_t pops;pops.emplace(19,Pop(nullptr,19,bm->GetPopDef(Roles().specialists[1]),0));
+            SmacBaseAllocationState allocation{1,{{},1}};allocation.specialists.types[0]=1;
+            auto* target=new Base(game,702,foreign,foreign->GetPlayer()->GetFaction(),game->GetMap()->GetTile(20,16),"Fortified target",{},pops,20,0,
+                ProductionState{item,0,item,0,std::vector<ProductionItem>{}},SmacBaseResourceContext{2,false,0,0,0,false},allocation);bm->SpawnBase(GSE_CALL,target);
+            actor->SetTile(GSE_CALL,game->GetMap()->GetTile(19,15));
+            um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-scout"),foreign,target->GetTile(),{2,2,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+            auto known=KnowledgeValue(true,true,128,64).CopyData();known.observers[2]=Knowledge::Observer{false,{},uint8_t(0)};known.units={{91,0,false},{92,0,false}};
+            known.tiles[16*64+10].claimant=2;game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(known));
+            fixture.ResourceState([](auto& state){state.hostility.owners.at(1).directions[2].primary=16;state.hostility.owners.at(2).directions[1].primary=16;});
+            for(const auto id:{4,5}) {const auto& row=game->GetState()->m_settings.global.GetSmacProductionRules()->facilities.at(id-1);bm->DefineFacility(new FacilityDef("fortification-"+std::to_string(id),row.name,"",row.cost,{},id));}
+            target->m_facilities.emplace("fortification-4",bm->GetFacilityDef("fortification-4"));target->m_facilities.emplace("fortification-5",bm->GetFacilityDef("fortification-5"));target->GetTile()->terraforming|=TERRAFORMING_SENSOR;
+            fixture.BattlePalette(7);fixture.GameplayRandom({3,3});const auto before=fixture.Snapshot();
+            um->ValidateConventionalMove(actor,target->GetTile(),0);GT_ASSERT(fixture.Snapshot()==before,"Fortified battle preflight changed authority");
+            const auto expected=smac_scout::ResolveStrengthAttack({91,1,10,1,1,0},{92,1,10,1,1,0},{280,840},{280,840},{3,3},{91,92});
+            um->MoveConventionalUnit(GSE_CALL,actor,target->GetTile(),0);
+            const auto* winner=um->GetUnit(expected.survivor.identity);
+            GT_ASSERT(winner && !um->GetUnit(expected.deleted_identity) && winner->Conventional().damage==10-expected.survivor.health
+                && winner->Conventional().stored_morale==expected.survivor.stored_morale && fixture.GameplayRandom()==expected.random,"Actual Perimeter/Tachyon/Sensor battle diverged from the source-composed strengths");GT_OK();
+        });
+    });
+    task->AddTest("SMAC live native Worm stack selector joins all casualties rewards and dense repair",[](GSE*,context::Context*)->std::string {
+        using namespace game::backend::unit;
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(FortifiedBattleSource,"GAIANS");
+        return fixture.Run([&](GSE_CALLABLE)->std::string {
+            auto* game=fixture.Game();auto* base=Populate(GSE_CALL,fixture,true);auto* um=game->GetUM();fixture.RetainedMorale(0,0);
+            base->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");
+            auto* actor=um->SpawnConventionalUnit(GSE_CALL,92,um->GetUnitDef("live-scout"),base->m_owner,game->GetMap()->GetTile(4,4),
+                {2,1,6,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0});
+            auto known=KnowledgeValue(true,true,128,64).CopyData();known.units={{91,0,false},{92,0,false}};known.occupancy=map::SmacOccupancyCache::Blank(128,64,true);
+            known.occupancy->FoundBase({2,2},1);known.occupancy->PlaceUnit({6,6},1,true);known.occupancy->PlaceUnit({4,4},1,true);game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(known));
+            um->DefineUnit(new StaticDef("MindWorms",um->GetMoraleSet("live-morale"),"Mind Worms",MT_LAND,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));
+            fixture.ResourceState([](auto& state){state.native_factory=faction::SmacNativeFactoryState::Initialize(0,state.gameplay_random);state.ecology_history=faction::SmacEcologyHistory{};});
+            auto birth=um->PrepareNativeBirths(GSE_CALL,128,64,true,[&](const UnitManager::NativeBirthFactory& factory){factory.create(8,{5,5},{});factory.create(8,{5,5},{});});
+            const auto first=birth.Candidate(0).m_id,second=birth.Candidate(1).m_id;birth.Commit();birth.Notify(GSE_CALL);
+            auto* one=um->GetUnit(first)->Wrap(GSE_CALL);auto* two=um->GetUnit(second)->Wrap(GSE_CALL);auto* tile=game->GetMap()->GetTile(5,5);
+            fixture.BattlePalette(7);fixture.GameplayRandom({3,3});const auto before=fixture.Snapshot();const auto credits=game->GetCanonicalEconomy(base->m_owner).credits;
+            um->ValidateConventionalMove(actor,tile,0);GT_ASSERT(fixture.Snapshot()==before,"Native stack query changed authority");
+            const auto expected=smac_scout::ResolveStrengthAttack({92,1,10,6,6,0},{second,1,10,1,0,0},{1152,448},{1152,224},{3,3},{92,second});
+            GT_ASSERT(expected.survivor.identity==92,"Native stack fixture's pinned command is not an attacker victory");
+            fixture.Updates();um->MoveConventionalUnit(GSE_CALL,actor,tile,0);
+            const auto updates=fixture.Updates();const auto playback=std::find_if(updates.begin(),updates.end(),[](const auto& row){return row.type==game::FrontendRequest::FR_SCOUT_BATTLE;});
+            GT_ASSERT(playback!=updates.end() && playback->data.scout_battle.plan->units[1]==second && fixture.GameplayRandom()==expected.random,"Native stack selection or combat draw transcript lost the higher source-ID tie");
+            GT_ASSERT(!um->GetUnit(first) && !um->GetUnit(second) && tile->units.empty() && um->GetUnitRecordOrder()==std::vector<size_t>({91,92})
+                && one->type==VT_UNDEFINED && two->type==VT_UNDEFINED && actor->GetTile()==game->GetMap()->GetTile(4,4)
+                && (*actor->Conventional().retained_state_word&4u) && game->GetCanonicalEconomy(base->m_owner).credits==credits+20,"Open native stack kept positive-health Worms or lost per-casualty bounty/retirement");
+            bool empty=false;fixture.ResourceState([&](const auto& state){empty=state.native_factory->active_designs.at(8)==0 && state.native_factory->active_plan_tally==0;});
+            GT_ASSERT(empty,"Multiple native casualties did not debit their actual factory rows");GT_OK();
+        });
+    });
+
     task->AddTest("SMAC native scheduler readies Isle cargo before the land raid pass",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
         ConventionalUnitFixture fixture;fixture.ConfigureProduction(NativeCarrierSource,"GAIANS");
@@ -433,7 +502,9 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             auto* sea=game->GetMap()->GetTile(3,1);for(auto* height:sea->elevation.corners) {*height=-1000;}sea->Update();
             std::vector<bool> water;for(size_t y=0;y<64;++y) {for(size_t x=y&1;x<128;x+=2) {water.push_back(game->GetMap()->GetTile(x,y)->is_water_tile);}}
             fixture.TerritoryTopology(map::GlsmacTerritoryTopology::Build(128,64,true,water).Serialize());
-            game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
+            auto known=KnowledgeValue(true,true,128,64).CopyData();known.occupancy=map::SmacOccupancyCache::Blank(128,64,true);
+            known.occupancy->FoundBase({2,2},1);known.occupancy->PlaceUnit({6,6},1,true);
+            game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(known));
             RecalculateViaWrapper(GSE_CALL,base);(void)game->GetCanonicalBaseEnergy(*base); // actual completed calculation generation
             for(const auto& row:{std::pair<const char*,movement_type_t>{"MindWorms",MT_LAND},{"IsleOfTheDeep",MT_WATER}}) {um->DefineUnit(new StaticDef(row.first,um->GetMoraleSet("live-morale"),row.first,row.second,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));}
             fixture.ResourceState([](auto& state){state.native_factory=faction::SmacNativeFactoryState::Initialize(0,state.gameplay_random);});

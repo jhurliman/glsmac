@@ -193,6 +193,7 @@ public:
         void QueryWithNativeRecords(const std::function<void()>& query) const;
 		void DiscoverDefendedBase(base::Base* target, int32_t observer);
         void SetNativeBattleSurvivor(Unit* unit,const SmacNativeUnitRecord& state);
+        void SetNativeBattleCasualty(Unit* unit,const SmacNativeUnitRecord& state);
         void PrepareBattleRetreat(Unit* unit,map::tile::Tile* destination,const ConventionalUnitState& state);
         void PrepareBattleCollateral(const std::vector<std::pair<Unit*,ConventionalUnitState>>& states);
 		struct Data;
@@ -302,6 +303,7 @@ private:
         ConventionalUnitState retreat_state;
         std::vector<size_t> casualties;
         std::vector<std::pair<Unit*,ConventionalUnitState>> collateral;
+        std::vector<std::pair<Unit*,SmacNativeUnitRecord>> native_casualties;
 	};
 	bool HasForeignOccupant(const Unit* actor,const map::tile::Tile* destination) const;
 	PreparedConventionalAttack PrepareConventionalAttack(Unit* actor,map::tile::Tile* destination,size_t caller) const;

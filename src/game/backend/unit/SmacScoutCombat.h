@@ -81,6 +81,7 @@ AttackResult ResolveNeutralFlatAttack( const Participant& attacker, const Partic
 struct StrengthBonuses {
 	int32_t fanatic_attack=25, infantry_vs_base=0, intrinsic_base_defense=0;
     int32_t weapon_power=1, armor_power=1, mobile_attack=0, terrain_defense=0, noncombat_defense=0;
+    int32_t base_fortification_factor=0; // 0 outside Base; literal ordinary/Perimeter/Tachyon factors2/4/6
 };
 AttackResult ResolveFlatScoutAttack( const Participant& attacker, const Participant& defender, int32_t attacker_allowance,
 	const SmacGameplayRandomState& random, const References& references, bool fanatic, const StrengthBonuses& bonuses = {} );

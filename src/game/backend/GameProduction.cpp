@@ -114,7 +114,7 @@ bool Game::IsSmacUnitProductionEligible( const base::Base& base, const base::Pro
 
 bool Game::SupportsSmacFacilityProduction(int32_t source_id) noexcept {
 	switch(source_id) {
-        case 1: case 2: case 3: case 6: case 7: case 8: case 9: case 10: case 11: case 24: case 25: case 27: return true;
+        case 1: case 2: case 3: case 4: case 6: case 7: case 8: case 9: case 10: case 11: case 24: case 25: case 27: return true;
         default: return false;
     }
 }

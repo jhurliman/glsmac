@@ -78,7 +78,7 @@ AttackResult ResolveGroundAttack(const Participant& attacker,const Participant& 
 
 int64_t QueryGroundDefenderScore(int32_t attack,int32_t defense,int32_t health,int32_t maximum,int32_t reference,int32_t weapon,int32_t id) {
     Require(attack>0 && defense>0 && maximum>0 && health>0 && health<=maximum && reference>0
-        && weapon>=0 && id>=0 && id<2048,"Defender score requires ordinary military strength health and source identity");
+        && weapon>=-128 && id>=0 && id<2048,"Defender score requires ordinary military strength health and source identity");
     const auto health_scaled=int64_t(defense)*health/maximum;
     const auto ratio=health_scaled*reference/attack;
     return (ratio/8-weapon)*32768+id;
@@ -94,7 +94,14 @@ std::array<int32_t,2> QueryGroundStrengths(const Participant& attacker,const Par
 	// Infantry-versus-Base stage, rather than adding their percentages.
 	attack=percent(attack,bonuses.infantry_vs_base);
     attack=percent(attack,bonuses.mobile_attack);
-    auto defense=percent(Checked(INT64_C(32)*(6+std::max(1,defender.effective_morale))*bonuses.armor_power),bonuses.intrinsic_base_defense);
+    const auto morale=6+std::max(1,defender.effective_morale);
+    auto defense=Checked(INT64_C(32)*morale*bonuses.armor_power);
+    if(bonuses.base_fortification_factor) {
+        Require(bonuses.base_fortification_factor==2 || bonuses.base_fortification_factor==4 || bonuses.base_fortification_factor==6,"Unsupported Base fortification factor");
+        defense=Checked(INT64_C(16)*morale*bonuses.armor_power); // intermediate8 then Base terrain2
+        if(bonuses.base_fortification_factor==2) {defense=percent(defense,bonuses.intrinsic_base_defense);}
+        defense=Checked(int64_t(defense)*bonuses.base_fortification_factor);
+    } else {defense=percent(defense,bonuses.intrinsic_base_defense);}
     defense=percent(defense,bonuses.terrain_defense);
     defense=percent(defense,bonuses.noncombat_defense);
     return {attack,defense};

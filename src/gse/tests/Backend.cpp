@@ -1052,6 +1052,8 @@ public:
             const auto view=rebuilt.Prepare(*native_after,context,native::Session::Observation::RevealedCanvas);
             GT_ASSERT(view && view->opaque_background,"Committed climate could not prepare the owned native geometry view");
             native::Source pixels;pixels.loaded={1024,768,std::vector<uint8_t>(1024*768,77)};
+            pixels.coast_mask={56,56,std::vector<uint8_t>(56*56,0)};
+            pixels.boundary_mask={60,60,std::vector<uint8_t>(60*60,1)};
             auto frame=native::RenderPrepared(*native_after,pixels,*view,0,context.flags);
             rebuilt.Commit(std::move(frame),context.Layout(*native_after));
             GT_ASSERT(rebuilt.frame && rebuilt.Matches(*native_after),"Committed climate could not publish a complete native frame");

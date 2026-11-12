@@ -207,8 +207,11 @@ GlsmacTerritoryTopology GlsmacTerritoryTopology::Deserialize( const std::string&
 	// Validate every byte before allocating the owned result.
 	for (size_t i = 0; i < count; ++i) {
 		const auto region = static_cast<uint8_t>(wire[16+i]); const auto y = i/(width/2);
-		Require( y == 0 || y == height-1 ? region == 63 || region == 127 : (region >= 1 && region <= 61) || (region >= 65 && region <= 125),
-			"Invalid territory topology region" );
+        // Native capacity merging can reuse the lowest slot0/64 and merge
+        // overflow into63/127 away from the poles. The original region producer
+        // owns all seven-bit labels; polar rows still have their exact IDs.
+        Require(y==0 || y==height-1 ? region==63 || region==127 : region<128,
+            "Invalid territory topology region");
 		if(areas) {Require(Read32(wire,16+count+4*size_t(region))>0,"Referenced region has no positive retained area");}
 	}
 	// A and F are retained producer counts, never signed adjustments. Preserve

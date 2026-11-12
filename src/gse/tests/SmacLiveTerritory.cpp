@@ -666,7 +666,7 @@ void AddSmacLiveTerritoryTests(task::gsetests::GSETests* task) {
 		sea[10]=true;GT_ASSERT(Rejects([&]{value.ValidateTerrain(sea);}),"changed terrain retained region authority");
 		for(int i=0;i<7;++i) {
 			auto bad=wire;if(i==0){bad.pop_back();}if(i==1){bad+='x';}if(i==2){bad[12]=2;}if(i==3){bad[13]=2;}
-			if(i==4){bad[16]=1;}if(i==5){bad[20]=64;}if(i==6){bad[8]=3;}
+			if(i==4){bad[16]=1;}if(i==5){bad[20]=char(128);}if(i==6){bad[8]=3;}
 			GT_ASSERT(Rejects([&]{Topology::Deserialize(bad);}),"invalid topology frame admitted");
 		}
 		std::vector<bool> islands(128*64/2,false);

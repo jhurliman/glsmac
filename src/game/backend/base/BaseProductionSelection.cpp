@@ -1046,8 +1046,9 @@ gse::Value* Base::CopySmacWorkshop(GSE_CALLABLE,const unit::SmacWorkshopDraft* s
 void Base::RequireSmacProductionSelection() const {
     GetSmacResourceContext();
     m_game->RequireSmacLocalHumanOwner( m_owner );
-    if ( !m_game->IsRunning() || m_game->m_canonical_turn_failed || m_game->m_canonical_turn_in_progress
-        || m_game->GetBM()->GetBase( m_id ) != this || m_owner->GetPlayer() != m_game->GetPlayer()
+    const bool controller=m_game->IsSmacControllerOwner(GetSmacResourceContext().owner_simulation_id);
+    if ( !m_game->IsRunning() || m_game->m_canonical_turn_failed || (m_game->m_canonical_turn_in_progress && !controller)
+        || m_game->GetBM()->GetBase( m_id ) != this || (m_owner->GetPlayer() != m_game->GetPlayer() && !controller)
         || !m_production || !m_production->queue || !m_allocation ) {
         THROW( "Production selection requires the ready local canonical Base" );
     }

@@ -66,7 +66,9 @@ BaseManager::PreparedSmacCapture BaseManager::PrepareSmacCapture(unit::Unit* act
 	const auto* participant=simulation.FindSlot(caller);
 	if(state->GetConnection() || state->m_settings.local.game_mode!=settings::LocalSettings::GM_SINGLEPLAYER
 		|| state->m_settings.local.network_type!=settings::LocalSettings::NT_NONE || state->m_settings.local.network_role!=settings::LocalSettings::NR_NONE
-		|| !participant || !participant->active || participant->role!=roster::Role::Single || caller!=m_game->GetSlotNum()
+		|| !participant || !participant->active
+        || (!m_game->IsSmacControllerOwner(actor->Conventional().owner_simulation_id)
+            && (participant->role!=roster::Role::Single || caller!=m_game->GetSlotNum()))
 		|| actor->m_owner!=&state->m_slots->GetSlot(caller)
 		|| simulation.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {THROW("Capture currently requires the local human controller");}
 	const auto* map=m_game->GetMap();auto* source=actor->GetTile();

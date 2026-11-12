@@ -72,6 +72,18 @@ AttackResult ResolveFlatScoutAttack( const Participant& attacker, const Particip
 	const std::array< int32_t, 2 > strengths{attack,defense};
 	const auto remaining = std::clamp( int64_t( attacker_allowance ) - attacker.spent, INT64_C( 0 ), INT64_C( 999 ) );
 	const std::array< int32_t, 2 > widths{ remaining < Q ? Checked( strengths[ 0 ] * remaining / Q ) : strengths[ 0 ], strengths[ 1 ] };
+    return ResolveStrengthAttack(attacker,defender,strengths,widths,initial_random,references);
+}
+
+AttackResult ResolveStrengthAttack(const Participant& attacker,const Participant& defender,
+    const std::array<int32_t,2>& strengths,const std::array<int32_t,2>& widths,
+    const SmacGameplayRandomState& initial_random,const References& references) {
+    Validate(attacker);Validate(defender);
+    Require(attacker.identity!=defender.identity,"Battle participants require distinct stable identities");
+    Require(Names(references.selected,attacker.identity,defender.identity) && Names(references.secondary,attacker.identity,defender.identity),
+        "Battle references must name a participant or be absent");
+    Require(attacker.spent<=255-Q,"Battle spending exceeds nonwrapping byte domain");
+    for(size_t i=0;i<2;++i) {Require(strengths[i]>0 && widths[i]>=0,"Battle requires positive strengths and nonnegative round widths");}
 	std::array< int32_t, 2 > health{ attacker.health, defender.health };
 	auto random = initial_random;
 	std::vector< Round > rounds; rounds.reserve( MAX_ROUNDS );

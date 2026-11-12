@@ -37,7 +37,9 @@ UnitManager::PreparedConventionalAttack UnitManager::PrepareConventionalAttack(U
 	const auto* participant=simulation.FindSlot(caller);
 	if(!m_game->IsRunning() || state->GetConnection() || state->m_settings.local.game_mode!=settings::LocalSettings::GM_SINGLEPLAYER
 		|| state->m_settings.local.network_type!=settings::LocalSettings::NT_NONE || state->m_settings.local.network_role!=settings::LocalSettings::NR_NONE
-		|| !participant || !participant->active || participant->role!=roster::Role::Single || caller!=m_game->GetSlotNum()
+		|| !participant || !participant->active
+        || (!m_game->IsSmacControllerOwner(actor->Conventional().owner_simulation_id)
+            && (participant->role!=roster::Role::Single || caller!=m_game->GetSlotNum()))
 		|| actor->m_owner!=&state->m_slots->GetSlot(caller) || simulation.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {
 		throw std::runtime_error("Scout attack requires the admitted local human controller and ordinary no-project campaign");
 	}

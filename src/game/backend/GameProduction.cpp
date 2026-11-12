@@ -20,7 +20,7 @@ namespace game::backend {
 
 void Game::RequireSmacLocalHumanOwner( const slot::Slot* owner ) const {
 	const auto& participant = RequireSmacProductionOwner( owner );
-	if ( (m_smac_riot_query_owner!=participant.simulation_id && !m_simulation->value.IsHuman(participant.simulation_id)) || !m_player || m_state->GetConnection() || m_player->GetRole() != Player::PR_SINGLE
+	if ( (m_smac_riot_query_owner!=participant.simulation_id && !m_simulation->value.IsHuman(participant.simulation_id) && !IsSmacControllerOwner(participant.simulation_id)) || !m_player || m_state->GetConnection() || m_player->GetRole() != Player::PR_SINGLE
 		|| ( participant.role != roster::Role::Single && participant.role != roster::Role::Player ) ) {
 		throw std::runtime_error( "Canonical calculation requires the explicit local human-controlled roster" );
 	}
@@ -195,9 +195,9 @@ int32_t Game::GetSmacProductionMineralFactor(const slot::Slot* owner) const {
 	selection->Validate();
 	using namespace resource::smac;
 	const auto size = selection->category == 0 ? MineralCostWorldSize::Tiny : selection->category == 1 ? MineralCostWorldSize::Small : MineralCostWorldSize::StandardOrLarger;
-	// The checked human branch does not consume leader/dominance/network values.
-	return CalculateMineralCostFactor( { true, m_simulation->value.designs.global_difficulty,
-		false, false, false, size, global.GetSmacProductionRules()->mineral_multiplier, social->current[ 9 ] } );
+	const auto dominance=SmacProductionDominance(owner);
+    return CalculateMineralCostFactor( { m_simulation->value.IsHuman(participant.simulation_id), m_simulation->value.designs.global_difficulty,
+        dominance.first, m_state->GetConnection()!=nullptr, dominance.second, size, global.GetSmacProductionRules()->mineral_multiplier, social->current[ 9 ] } );
 }
 
 int32_t Game::GetSmacProductionCost( const slot::Slot* owner, const base::ProductionItem& item, const base::Base* queried_base ) const {

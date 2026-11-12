@@ -52,7 +52,8 @@ bool Game::HandleSmacFoundingEvent(GSE_CALLABLE,const std::string& name,
     if(id<0 || uint64_t(id)>SIZE_MAX) {THROW("Invalid Colony Pod identity");}
     auto* colony=m_um ? m_um->GetUnit(static_cast<size_t>(id)) : nullptr;
     if(!colony || object->wrapobj!=colony) {return true;}
-    if(caller!=m_slot_num || colony->m_owner->GetIndex()!=caller || colony->m_owner->GetPlayer()!=m_player) {
+    if(colony->m_owner->GetIndex()!=caller || (!IsSmacControllerOwner(colony->Conventional().owner_simulation_id)
+        && (caller!=m_slot_num || colony->m_owner->GetPlayer()!=m_player))) {
         THROW("Founding requires the actual local owner and registered Colony Pod");
     }
     m_bm->ValidateSmacFounding(*colony);

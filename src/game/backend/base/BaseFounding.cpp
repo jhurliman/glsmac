@@ -23,7 +23,7 @@ void BaseManager::ValidateSmacFounding(const unit::Unit& colony) const {
     using namespace map::tile;
     if (!m_game->IsRunning() || m_game->GetTurnId()==0 || m_game->GetTurnId()>INT32_MAX
         || m_dispatching_updates || m_game->GetUM()->GetUnit(colony.m_id)!=&colony || !colony.IsConventional()
-        || colony.m_owner->GetPlayer()!=m_game->GetPlayer()) {THROW("Founding requires the current local running Colony Pod");}
+        || (colony.m_owner->GetPlayer()!=m_game->GetPlayer() && (!colony.IsConventional() || !m_game->IsSmacControllerOwner(colony.Conventional().owner_simulation_id)))) {THROW("Founding requires the current local running Colony Pod");}
     m_game->RequireSmacLocalHumanOwner(colony.m_owner);
     colony.RequireConventionalReady();
     const auto resolved=m_game->ResolveConventionalUnit(colony.Conventional(),colony.m_owner);

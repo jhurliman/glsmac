@@ -115,8 +115,9 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	// Active participants and the local controller are distinct. This port
 	// route uses the accepted local participant, never an inferred faction slot.
 	const auto* participant = simulation.FindSlot( caller );
-	if ( !participant || !participant->active || participant->role != roster::Role::Single
-		|| caller != m_game->GetSlotNum() || unit->m_owner != &state->m_slots->GetSlot( caller ) ) {
+	if ( !participant || !participant->active || unit->m_owner != &state->m_slots->GetSlot( caller )
+        || (!m_game->IsSmacControllerOwner(stored.owner_simulation_id)
+            && (participant->role != roster::Role::Single || caller != m_game->GetSlotNum())) ) {
 		throw std::runtime_error( "Conventional movement requires the accepted local single-player controller" );
 	}
 	if ( simulation.movement_capability != faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain ) {
@@ -194,14 +195,13 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 	const auto& bases = m_game->GetBM()->GetBases();
 	if ( !bases.empty() ) {
 		const bool infantry = design.chassis == 0 && stats.basic_allowance == 3;
-		// This context is produced only after resolving the canonical Spartan
-		// participant and its actual selected owned design, never slot arithmetic.
-		const bool selected_rover = context.presentation == ConventionalUnitContext::Presentation::SelectedSpartanRover
-			&& design.chassis == 1 && stats.basic_allowance == 6;
+		// Every produced Rover uses the same resolved allowance and edge-cost
+        // producer as the starting Rover; presentation identity is not a rule.
+		const bool rover = design.chassis == 1 && stats.basic_allowance == 6;
 		// Damage and effective morale have already produced full_allowance.
 		// Base proximity adds no second health or stored-morale admission gate.
-		if ( stats.quantum != 3 || ( !infantry && !selected_rover ) ) {
-			throw std::runtime_error( "Movement with Bases requires admitted Infantry or selected Spartan Rover with quantum3" );
+		if ( stats.quantum != 3 || ( !infantry && !rover ) ) {
+			throw std::runtime_error( "Movement with Bases requires ordinary Infantry or Rover with quantum3" );
 		}
 		// Source fungus does not enter the encounter or movement lottery.
         // A clear destination uses ordinary Base admission at any distance.
@@ -217,7 +217,7 @@ UnitManager::PreparedConventionalMove UnitManager::PrepareConventionalMove( Unit
 				if ( !base || base->m_id != entry.first || base->GetGame() != m_game || !canonical( center ) || center->base != base ) {
 					throw std::runtime_error( "Ordinary movement requires canonical registered Base centers" );
 				}
-				if ( center == source || center == destination || source->IsAdjactentTo( center ) || destination->IsAdjactentTo( center ) ) {
+				if ( center == source || center == destination ) {
 					if ( base->m_owner != unit->m_owner || base->m_faction != unit->m_owner->GetPlayer()->GetFaction() ) {
 						throw std::runtime_error( "Ordinary movement does not admit foreign Base interactions" );
 					}

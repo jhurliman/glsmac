@@ -83,6 +83,14 @@ struct StrengthBonuses {
 AttackResult ResolveFlatScoutAttack( const Participant& attacker, const Participant& defender, int32_t attacker_allowance,
 	const SmacGameplayRandomState& random, const References& references, bool fanatic, const StrengthBonuses& bonuses = {} );
 
+// Shared ordinary battle recurrence. The caller produces component/terrain/PSI
+// strengths and any native early-turn width adjustment before entering this
+// kernel; partial movement is already represented in round_widths. No live
+// state or random stream changes until the complete result is committed.
+AttackResult ResolveStrengthAttack(const Participant& attacker, const Participant& defender,
+    const std::array<int32_t,2>& strengths, const std::array<int32_t,2>& round_widths,
+    const SmacGameplayRandomState& random, const References& references);
+
 enum class EmptyMove { Moved, Exhausted };
 struct EmptyMoveResult {
 	EmptyMove outcome;

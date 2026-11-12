@@ -445,7 +445,7 @@ void Game::RunComputerCommands(GSE_CALLABLE,int32_t owner) {
         if(actor->Conventional().IsHeld()) {continue;}
         for(size_t step=0;step<12 && (actor=m_um->GetUnit(id)) && actor->HasMovesLeft();++step) {
             auto* source=actor->GetTile();
-            if(package==Package::Colony) {
+            if(package==Package::Colony && !m_bm->GetWorkingPop(source->coord)) {
                 bool legal=true;try {m_bm->ValidateSmacFounding(*actor);} catch(const std::runtime_error&) {legal=false;}
                 if(legal) {m_bm->FoundSmacBase(GSE_CALL,*actor,GetSmacBasePresentations());break;}
             }

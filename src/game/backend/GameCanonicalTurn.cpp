@@ -381,6 +381,9 @@ void Game::RunNativeCommands(GSE_CALLABLE) {
     for(const int32_t design:{9,8}) {for(auto record=records.rbegin();record!=records.rend();++record) {
         const auto id=*record;
         for(size_t step=0;step<12;++step) {
+            if(m_simulation->value.HasEnding()) {
+                auto& status=m_simulation->value.faction_status.values[0];if(status) {*status&=~0x10000u;}return;
+            }
             auto* actor=m_um->GetUnit(id);
             if(!actor || !actor->IsNative() || actor->Native().owner || actor->Native().design!=design || actor->Native().order==1
                 || m_um->QueryNativeUnit(actor->Native()).remaining_allowance<=0) {break;}

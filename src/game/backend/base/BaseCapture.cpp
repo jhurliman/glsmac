@@ -657,7 +657,8 @@ void BaseManager::RaidSmacBase(GSE_CALLABLE,unit::Unit* actor,map::tile::Tile* d
     if(faction_units) {faction_units->Notify(GSE_CALL);}else {removal.Notify(GSE_CALL);}
     if(destroyed) {m_game->GetState()->TriggerObject(this,"base_despawn",ARGS_F(base) {{"base",base->Wrap(GSE_CALL)},};});}
     if(m_game->RequireSimulationParticipant(m_game->GetPlayer()).simulation_id==owner) {m_game->Message(message);}
-    if(simulation.HasEnding()) {m_game->GetState()->TriggerObject(m_game,"smac_ending",ARGS_F(this) { }; });}
+    const bool scheduled=simulation.faction_turn && simulation.faction_turn->Current().phase==faction::SmacFactionTurn::Phase::WildlifeCommand;
+    if(simulation.HasEnding() && !scheduled) {m_game->GetState()->TriggerObject(m_game,"smac_ending",ARGS_F(this) { }; });}
 }
 
 }

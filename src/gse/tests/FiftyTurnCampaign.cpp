@@ -71,6 +71,7 @@ void AddFiftyTurnCampaignTests(task::gsetests::GSETests* task) {
                 std::cout<<"Campaign turn "<<game->GetTurnId()<<": production="<<actions.production_choices
                     <<" moves="<<actions.moves<<" work="<<actions.work_dispatches<<" completed="<<actions.terrain_completions
                     <<" founded="<<actions.founded_bases<<std::endl;
+                std::cout<<fixture.CampaignDriverReport()<<std::endl;
                 for(const auto& row:fixture.CampaignProgress()) {
                     if(!row.human && game->GetTurnId()<51) {continue;}
                     std::cout<<"  owner="<<row.owner<<" bases="<<row.bases<<" units="<<row.units

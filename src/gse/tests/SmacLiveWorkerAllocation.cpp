@@ -189,6 +189,20 @@ Base::SmacAllocationRoles Roles() {
 	Base::SmacAllocationRoles result{ "live-worker", {} };
 	for ( size_t i = 0; i < 7; ++i ) { result.specialists[ i ] = "live-role-" + std::to_string( i ); } return result;
 }
+std::string NativeCarrierSource(const std::string& filename) {
+    const auto source=ColonyChoiceSource(filename);if(filename!="alpha.txt") {return source;}
+    std::istringstream input(source);std::string line,section,result;int index=-1;
+    while(std::getline(input,line)) {
+        if(!line.empty() && line[0]=='#') {section=line;index=-1;}
+        else if(section=="#UNITS") {
+            if(index==9) {
+                std::istringstream row(line);std::vector<std::string> fields;std::string field;while(std::getline(row,field,',')) {fields.push_back(field);}
+                fields.at(5)="8";fields.at(6)="4"; // stock Isle receipt needs actual cost/carry fields
+                line.clear();for(const auto& value:fields) {if(!line.empty()) {line+=',';}line+=value;}
+            }++index;
+        }result+=line+'\n';
+    }return result;
+}
 std::string RestartSource(const std::string& filename) {
     auto source=ColonyChoiceSource(filename);
     if(filename=="alpha.txt") {
@@ -446,7 +460,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
 
     task->AddTest("SMAC native carrier activation retains work waypoint observations and lawful beaching",[](GSE*,context::Context*)->std::string {
         using namespace game::backend::unit;
-        ConventionalUnitFixture fixture;fixture.ConfigureProduction(ColonyChoiceSource,"GAIANS");
+        ConventionalUnitFixture fixture;fixture.ConfigureProduction(NativeCarrierSource,"GAIANS");
         return fixture.Run([&](GSE_CALLABLE)->std::string {
             auto* game=fixture.Game();Populate(GSE_CALL,fixture,true);auto* um=game->GetUM();
             auto* sea=game->GetMap()->GetTile(20,20);for(auto* elevation:sea->elevation.corners) {*elevation=-1000;}sea->Update();
@@ -508,7 +522,7 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
                 if(scenario==3) {
                     Base::pops_t pops;pops.emplace(99,Pop(nullptr,99,bm->GetPopDef(Roles().specialists[1]),0));
                     SmacBaseAllocationState allocation{1,{{},1}};allocation.specialists.types[0]=1;
-                    other=new Base(game,702,base->m_owner,base->m_faction,game->GetMap()->GetTile(40,40),"Raid survivor",{},pops,2,13,production,context,allocation);bm->SpawnBase(GSE_CALL,other);
+                    other=new Base(game,702,base->m_owner,base->m_faction,game->GetMap()->GetTile(40,40),"Raid survivor",{},pops,100,13,production,context,allocation);bm->SpawnBase(GSE_CALL,other);
                 }
                 game->PublishSmacWorkerKnowledge(GSE_CALL,KnowledgeValue(true,true,128,64));
                 um->DefineUnit(new StaticDef("MindWorms",um->GetMoraleSet("live-morale"),"Mind Worms",MT_LAND,999,new SpriteRender("fixture",0,0,1,1,0,0,1)));

@@ -85,8 +85,9 @@ UnitManager::PreparedConventionalWork UnitManager::PrepareConventionalWork(Unit*
     m_game->RequireConventionalSightWorld();
     m_game->RequireSmacLocalHumanOwner(actor->m_owner);
     const auto context=ResolveConventional(actor->Conventional(),actor->m_owner);
-    if(!m_game->IsRunning() || caller!=m_game->GetSlotNum() || actor->m_owner->GetIndex()!=caller
-        || actor->m_owner->GetPlayer()!=m_game->GetPlayer() || context.package!=ConventionalUnitContext::Package::Former
+    if(!m_game->IsRunning() || actor->m_owner->GetIndex()!=caller
+        || ((!m_game->IsSmacControllerOwner(actor->Conventional().owner_simulation_id))
+            && (caller!=m_game->GetSlotNum() || actor->m_owner->GetPlayer()!=m_game->GetPlayer())) || context.package!=ConventionalUnitContext::Package::Former
         || m_game->m_simulation->value.movement_capability!=faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain) {
         throw std::runtime_error("Terraforming requires the actual local Former in the supported no-project campaign");
     }

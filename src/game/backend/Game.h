@@ -446,6 +446,9 @@ public:
 	static bool SupportsSmacFacilityProduction( int32_t source_id ) noexcept;
 	// Explicit local human-controlled port roster. No AI controller is inferred.
 	void RequireSmacLocalHumanOwner( const slot::Slot* owner ) const;
+    bool IsSmacControllerOwner(int32_t owner) const;
+    bool SmacMineralLeaderHuman() const;
+    bool SmacMineralLeadingHumanDominance() const;
 	// Explicit session presentation roles; saved Unit/Def records remain authority.
 	void ConfigureSmacPresentations( GSE_CALLABLE, const std::array<std::string,4>& roles );
 	void ConfigureSmacBasePresentations( GSE_CALLABLE, const std::array<std::string,8>& roles );
@@ -481,7 +484,14 @@ private:
 	bool QueueCanonicalCompleteTurn(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args);
 	void AdvanceCanonicalTurn(GSE_CALLABLE,size_t turn_id);
 	void FailCanonicalTurn(const std::string& error);
-	bool m_canonical_turn_in_progress=false;
+	void PrepareLocalComputerRoster();
+    void ContinueFactionController(GSE_CALLABLE);
+    void RunComputerCommands(GSE_CALLABLE,int32_t owner);
+    void RunSmacWildlifeTurn(GSE_CALLABLE);
+    uint8_t ActiveFactionMask() const;
+    void PublishCanonicalCommandTurn(GSE_CALLABLE);
+    std::optional<int32_t> m_smac_controller_owner;
+    bool m_canonical_turn_in_progress=false;
 	bool m_canonical_turn_failed=false;
 	bool m_canonical_screen_edit_in_progress=false;
 	struct CanonicalResearchRequest {

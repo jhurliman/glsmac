@@ -20,6 +20,7 @@
 #include <set>
 #include <thread>
 #include <type_traits>
+#include "util/FinallyGuard.h"
 
 namespace game::backend {
 
@@ -57,7 +58,7 @@ bool Game::HandleCanonicalStartupEvent(GSE_CALLABLE,const std::string& name,
         std::vector<const faction::SmacSimulationParticipant*> participants;
         for(const auto& p:m_simulation->value.roster) {
             if(!p.active) {continue;}
-            RequireSmacLocalHumanOwner(&m_state->m_slots->GetSlot(p.slot));participants.push_back(&p);
+            (void)RequireSmacProductionOwner(&m_state->m_slots->GetSlot(p.slot));participants.push_back(&p);
         }
         std::sort(participants.begin(),participants.end(),[](const auto* a,const auto* b){return a->simulation_id<b->simulation_id;});
         if(!apply) {return true;}
@@ -73,7 +74,10 @@ bool Game::HandleCanonicalStartupEvent(GSE_CALLABLE,const std::string& name,
         topology=m_map->PrepareSiteRatingRefill(topology.WithSiteRatings(topology.SiteRatings()->ClearRatings()),{},0);
         m_map->m_territory_topology=std::move(topology);
         for(const auto* participant:participants) {
-            auto* owner=&m_state->m_slots->GetSlot(participant->slot);RequireSmacLocalHumanOwner(owner);
+            auto* owner=&m_state->m_slots->GetSlot(participant->slot);
+            const auto previous=m_smac_controller_owner;m_smac_controller_owner=participant->simulation_id;
+            util::FinallyGuard authority([&]{m_smac_controller_owner=previous;});
+            RequireSmacLocalHumanOwner(owner);
             auto prepared=*m_map->GetTerritoryTopology();
             map::smac_start::Input input{};
             input.geometry={prepared.Width(),prepared.Height(),prepared.Wraps()};
@@ -153,6 +157,8 @@ bool Game::HandleCanonicalStartupEvent(GSE_CALLABLE,const std::string& name,
             auto participant=std::find_if(participants.begin(),participants.end(),[&](const auto* p){return p->simulation_id==pod.owner;});
             if(participant==participants.end()) {throw std::runtime_error("Compensation Pod has no admitted owner");}
             auto* owner=&m_state->m_slots->GetSlot((*participant)->slot);
+            const auto previous=m_smac_controller_owner;m_smac_controller_owner=pod.owner;
+            util::FinallyGuard authority([&]{m_smac_controller_owner=previous;});
             m_um->SpawnStartingConventionalUnit(GSE_CALL,ResolveSmacProductionPresentation(owner,0),owner,
                 m_map->GetTile(pod.point[0],pod.point[1]),unit::SmacMoraleMode::Mode0,true);
         }

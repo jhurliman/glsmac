@@ -2614,6 +2614,9 @@ void Game::StartInitializedWorld( GSE_CALLABLE ) {
 	else if ( m_state->IsMaster() ) {
 		try {
 			PrepareNewSimulation();
+            NEWV(slot_defines,FrontendRequest::slot_defines_t,CopyFrontendSlotDefinitions());
+            auto slots_request=FrontendRequest(FrontendRequest::FR_SLOT_DEFINE);
+            slots_request.data.slot_define.slotdefs=slot_defines;AddFrontendRequest(slots_request);
 			m_state->TriggerObject(
 				this, "create_world", ARGS_F( this ) {
 					{

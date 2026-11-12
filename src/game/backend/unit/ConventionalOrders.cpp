@@ -13,8 +13,10 @@ ConventionalUnitState UnitManager::PrepareHumanOrder(Unit* actor,HumanOrderComma
     if(!actor || GetUnit(actor->m_id)!=actor || !actor->IsConventional()) {throw std::runtime_error("Human order requires a registered conventional unit");}
     actor->RequireConventionalReady();
     m_game->RequireConventionalSightWorld();m_game->RequireSmacLocalHumanOwner(actor->m_owner);
-    if(!m_game->IsRunning() || m_game->m_canonical_turn_failed || m_game->m_canonical_turn_in_progress || m_game->m_canonical_continuation
-        || caller!=m_game->GetSlotNum() || actor->m_owner->GetIndex()!=caller || actor->m_owner->GetPlayer()!=m_game->GetPlayer()) {
+    if(!m_game->IsRunning() || m_game->m_canonical_turn_failed || actor->m_owner->GetIndex()!=caller
+        || (!m_game->IsSmacControllerOwner(actor->Conventional().owner_simulation_id)
+            && (m_game->m_canonical_turn_in_progress || m_game->m_canonical_continuation
+                || caller!=m_game->GetSlotNum() || actor->m_owner->GetPlayer()!=m_game->GetPlayer()))) {
         throw std::runtime_error("Human order requires actual local owner and stable turn");
     }
     auto* tile=actor->GetTile();auto* map=GetMap();

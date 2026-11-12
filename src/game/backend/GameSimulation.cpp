@@ -5,6 +5,10 @@
 #include <utility>
 
 #include "Player.h"
+#include "faction/FactionManager.h"
+#include "faction/Faction.h"
+#include <set>
+#include "gc/Space.h"
 #include "slot/Slot.h"
 #include "slot/Slots.h"
 #include "unit/UnitManager.h"
@@ -92,6 +96,35 @@ void Game::ValidateSimulation( const BoundSimulation& simulation ) const {
 	}
 }
 
+bool Game::IsSmacControllerOwner(int32_t owner) const {
+    return m_smac_controller_owner==owner && m_simulation && m_state && !m_state->GetConnection()
+        && GetGCSpace()->IsAccumulating() && !m_canonical_turn_failed;
+}
+
+void Game::PrepareLocalComputerRoster() {
+    if(m_state->GetConnection() || !m_player || m_player->GetRole()!=Player::PR_SINGLE
+        || !m_state->m_settings.global.IsOrdinarySmacCampaign()) {return;}
+    std::set<std::string> used;
+    for(const auto& slot:m_state->m_slots->GetSlots()) {
+        if(slot.GetState()==slot::Slot::SS_PLAYER && slot.GetPlayer()->GetRecord().faction_id) {
+            used.insert(*slot.GetPlayer()->GetRecord().faction_id);
+        }
+    }
+    for(const auto& profile:m_state->m_settings.global.GetSmacFactionStartupRules()->factions) {
+        if(used.count(profile.port_id)) {continue;}
+        auto& slots=m_state->m_slots->GetSlots();
+        const auto available=std::find_if(slots.begin(),slots.end(),[](const auto& slot){return slot.GetState()==slot::Slot::SS_OPEN;});
+        if(available==slots.end()) {break;}
+        auto* faction=m_state->GetFM()->Get(profile.port_id);
+        if(!faction) {throw std::runtime_error("Computer faction has no canonical presentation");}
+        auto* computer=new Player(faction->m_name,Player::PR_PLAYER,faction,m_player->GetDifficultyLevel());
+        m_state->AddPlayer(computer);
+        available->SetPlayer(computer,0,"");
+        available->SetLinkedGSID("local-computer:"+profile.port_id);
+        used.insert(profile.port_id);
+    }
+}
+
 void Game::PrepareNewSimulation() {
 	if ( m_state->m_settings.global.GetRulesetId() != "smac" ) {
 		if ( m_simulation || m_pending_simulation ) { throw std::runtime_error( "Unexpected simulation state for non-SMAC world" ); }
@@ -100,6 +133,7 @@ void Game::PrepareNewSimulation() {
 	if ( m_simulation || m_pending_simulation ) { throw std::runtime_error( "New-world simulation was already admitted" ); }
 	const auto& settings = m_state->m_settings.global;
 	if ( !settings.GetSmacTechnologyRules() || !settings.GetSmacFactionStartupRules() || !settings.GetSmacPredefinedUnitRules() ) { throw std::runtime_error( "Missing SMAC simulation profiles" ); }
+	PrepareLocalComputerRoster();
 	std::vector< faction::SmacSimulationParticipant > roster;
 	faction::SmacTechnologyState technology;
 	faction::SmacSocialState social;
@@ -165,10 +199,17 @@ void Game::PrepareNewSimulation() {
 	// This is not a claim about original setup or a missing-project fallback.
 	faction::SmacSimulationState value( SmacGameplayRandomState( shared, crt ), faction::SmacSimulationState::MovementCapability::NoProjectsOrdinaryTerrain,
 		faction::SmacGlobalResourceModifiers::NewWorld() );
-    // Every occupied controller admitted by the current startup path is an
-    // explicitly selected human Player. AI admission must supply its own
-    // control authority; it must not inherit a transport-role heuristic.
-    for(const auto& participant:roster) {value.human_membership|=static_cast<uint8_t>(1u<<participant.simulation_id);}
+    const bool local_computers=!m_state->GetConnection() && m_player && m_player->GetRole()==Player::PR_SINGLE
+        && settings.IsOrdinarySmacCampaign() && roster.size()==7;
+    uint8_t actors=0;int32_t focus=0;
+    for(const auto& participant:roster) {
+        actors|=static_cast<uint8_t>(1u<<participant.simulation_id);
+        if(!local_computers || participant.slot==static_cast<int32_t>(m_slot_num)) {
+            value.human_membership|=static_cast<uint8_t>(1u<<participant.simulation_id);focus=participant.simulation_id;
+        }
+    }
+    if(local_computers) {value.faction_turn=faction::SmacFactionTurn::NewWorld(actors,focus);}
+
 	value.roster = std::move( roster ); value.technology = std::move( technology ); value.social = std::move( social ); value.designs = std::move( designs );
 	value.capabilities=capabilities;value.hostility=std::move(hostility);
 	// Stock native definition morale0 is a fresh-image input; ordinary faction
@@ -294,7 +335,10 @@ void Game::RefreshSimulationForTurn( const size_t turn ) {
 	try {
 		m_simulation->value.Validate( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules(), *settings.GetSmacPredefinedUnitRules() );
 		auto staged = *m_simulation;
-		if ( m_current_turn.GetId() == 0 ) {
+		if(staged.value.faction_turn) {
+            auto& cursor=*staged.value.faction_turn;cursor.BeginRound(cursor.Current());
+        }
+        else if ( m_current_turn.GetId() == 0 ) {
 			if ( turn != 1 ) { throw std::runtime_error( "SMAC early social state requires the first turn transition" ); }
 			staged.value.social.RefreshForFirstCommand( *settings.GetSmacTechnologyRules(), *settings.GetSmacFactionStartupRules() );
 		}
@@ -308,6 +352,7 @@ void Game::RefreshSimulationForTurn( const size_t turn ) {
 		// All validation/allocation is complete. These transfers have no callbacks;
 		// AdvanceTurn publishes the scalar turn immediately afterward, before hooks.
 		m_simulation->value.social = std::move( staged.value.social );
+        m_simulation->value.faction_turn=std::move(staged.value.faction_turn);
 		m_um->SealConventionalStartup();
 	}
 	catch ( const std::invalid_argument& error ) { throw std::runtime_error( error.what() ); }

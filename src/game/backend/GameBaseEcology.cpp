@@ -182,6 +182,7 @@ void Game::ProcessCanonicalBaseEcology(GSE_CALLABLE,base::Base& current) {
     if(births) {births->Commit();}
     *state.ecology_history=history;state.faction_status.values.at(owner)=status;state.ecology_warming_count=warming;state.ecology_climate_schedule=schedule;state.gameplay_random=random;
     m_pending_frontend_requests->swap(frontend);payload.release();tiles.release();
+    if(remembered) {m_map_knowledge_dirty=true;} // publish the admitted viewer-memory change through the ordinary observer channel
     if(births) {births->Notify(GSE_CALL);}
     if(notice) {Message("Xenofungus has bloomed near "+current.m_name+".");}
     if(warming_notice) {Message("Global warming has scheduled a sea-level change.");}

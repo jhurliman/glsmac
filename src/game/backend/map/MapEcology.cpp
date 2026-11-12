@@ -1,5 +1,6 @@
 #include "Map.h"
 #include "game/backend/Game.h"
+#include "gc/Space.h"
 #include "SmacTerrainAuthority.h"
 #include "SmacClimate.h"
 #include "SmacNativeTerrainItems.h"
@@ -35,7 +36,12 @@ struct Map::PreparedEcologyBloom::Data {
 Map::PreparedEcologyBloom::PreparedEcologyBloom()=default;
 Map::PreparedEcologyBloom::~PreparedEcologyBloom()=default;
 std::unique_ptr<Map::PreparedEcologyBloom> Map::PrepareEcologyBloom(const base::SmacBloomTerrainPlan& plan,std::optional<uint8_t> viewer,std::optional<int32_t> climate_extra) {
-    m_game->RequireWorkerKnowledgeMutation();
+    // This is the integrated sight/terrain producer itself. The raw mutation
+    // guard deliberately rejects worlds that have worker knowledge; it must
+    // not be applied to this detached preparation of replacement knowledge.
+    if(!m_game->GetGCSpace()->IsAccumulating()) {
+        throw std::runtime_error("Ecology terrain preparation requires its owning accumulation");
+    }
     if(m_global_spread_query_active || !m_resource_policy || !m_resource_policy->NativeTerrainSource()
         || !m_worker_knowledge || !m_worker_knowledge_ready || !m_territory_topology || !m_territory_topology->SiteRatings()) {
         throw std::runtime_error("Ecology terrain requires current native authority, knowledge and site history");

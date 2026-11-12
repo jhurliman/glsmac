@@ -671,6 +671,41 @@ entry_screen.open_workshop(); test.assert(dialog.opening && commands[#sizeof(com
 entry_screen.read_only = true; const read_only_commands = #sizeof(commands);
 entry_screen.open_workshop(); test.assert(!dialog.opening && #sizeof(commands) == read_only_commands); entry_screen.read_only = false;
 
+// Production Help is picker action1. It requires an explicit highlighted Unit;
+// a facility must not take Workshop's -1 owner-bank/New path.
+entry_screen.production_selection = {};
+entry_screen.production_choice = #undefined;
+const before_help = #sizeof(commands);
+entry_screen.open_production_help(); test.assert(#sizeof(commands) == before_help && !dialog.opening);
+entry_screen.production_choice = {source_id: (0 - 3)};
+entry_screen.open_production_help(); test.assert(#sizeof(commands) == before_help && !dialog.opening);
+entry_screen.production_choice = {source_id: 9999};
+entry_screen.open_production_help(); test.assert(#sizeof(commands) == before_help && !dialog.opening);
+for (id of [2,65]) {
+    entry_screen.production_choice = {source_id: id}; entry_screen.open_production_help();
+    test.assert(dialog.opening && commands[#sizeof(commands) - 1].name == 'open_smac_workshop'
+        && commands[#sizeof(commands) - 1].data.selected_design == id);
+    dialog.hide_view();
+}
+entry_screen.read_only = true; const before_foreign_help = #sizeof(commands);
+entry_screen.open_production_help(); test.assert(#sizeof(commands) == before_foreign_help && !dialog.opening);
+entry_screen.read_only = false;
+
+const production_buttons = #include('../default/ui/parts/game/popup/base_screen/buttons');
+const production_style = {set: (properties) => {}};
+production_style.extend = (name) => { return production_style; };
+production_buttons.init({body: node({}), ui: {class: (name) => { return production_style; }},
+    utils: {can_rename: () => { return false; }, open_production_help: entry_screen.open_production_help}});
+production_buttons.show_production_selection();
+test.assert(production_buttons.buttons[0].text == 'HELP');
+test.assert(production_buttons.buttons[0].handlers.click({button: 'left'}) && dialog.opening
+    && commands[#sizeof(commands) - 1].data.selected_design == 65);
+dialog.hide_view(); entry_screen.is_open = false;
+const closed_help_commands = #sizeof(commands); entry_screen.open_production_help();
+test.assert(#sizeof(commands) == closed_help_commands && !dialog.opening); entry_screen.is_open = true;
+entry_screen.production_selection = null;
+entry_screen.open_production_help(); test.assert(#sizeof(commands) == closed_help_commands && !dialog.opening);
+
 // Refresh the actual saved preference at every opening, not only UI init.
 let automatic_preference = false; dialog.p.config = {get_automatic_unit_designs: () => { return automatic_preference; }};
 dialog.begin(base, selection, (0 - 1)); test.assert(!dialog.automatic_suggestions); dialog.hide_view();

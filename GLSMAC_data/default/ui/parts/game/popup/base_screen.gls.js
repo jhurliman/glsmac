@@ -135,6 +135,7 @@ return {
 					open_specialist_selection: parent.parent.open_specialist_selection,
 					open_rename: parent.parent.open_rename,
                     open_workshop: parent.parent.open_workshop,
+                    open_production_help: parent.parent.open_production_help,
                     workshop_open_result: parent.parent.workshop_open_result,
                     workshop_closed: parent.parent.workshop_closed,
 					open_queue_editor: parent.parent.open_queue_editor,
@@ -338,6 +339,15 @@ return {
         // The visible Workshop button's raw callback1 becomes picker action2.
         // Its negative facility selection enters the owner's normal -1 scan.
         this.sections.workshop.begin(this.base, data, selected);
+    },
+
+    open_production_help: () => {
+        if (!this.is_open || this.read_only || this.production_selection == null || !#is_defined(this.production_choice)) { return; }
+        // Picker raw callback0 becomes action1: Units open their actual design
+        // in Workshop; negative facility targets belong to separate Datalinks.
+        const selected = this.production_choice.source_id;
+        if (selected < 0 || selected > 511) { return; }
+        this.open_workshop();
     },
 
     workshop_closed: () => { if (this.is_open && !this.read_only) { this.show_production_selection(); } },

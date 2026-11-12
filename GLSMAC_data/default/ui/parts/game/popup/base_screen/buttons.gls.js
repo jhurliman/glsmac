@@ -55,18 +55,19 @@ return {
 		});
 
 		this.buttons = [
-			this.frame.text({
-				class: 'base-screen-frame-text', font: 'arialnb.ttf:11',
-				top: 7,
+			this.frame.button({
+				class: 'base-screen-popup-bottom-button',
 				align: 'left',
 				left: 3,
-				text: 'Help unavailable',
+				width: 104,
+				text: 'HELP',
 			}),
 			this.frame.button({class: 'base-screen-popup-bottom-button', align: 'left', left: 109, width: 104, text: 'WORKSHOP'}),
 			btn_ok,
 			btn_cancel,
 		];
 
+        this.buttons[0].on('click', () => { this.p.utils.open_production_help(); return true; });
         this.buttons[1].on('click', () => { this.p.utils.open_workshop(); return true; });
 
 		btn_cancel.on('click', (e) => {

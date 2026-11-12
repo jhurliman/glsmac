@@ -127,9 +127,10 @@ void Game::PrepareLocalComputerRoster() {
         if(available==slots.end()) {break;}
         auto* faction=m_state->GetFM()->Get(profile.port_id);
         if(!faction) {throw std::runtime_error("Computer faction has no canonical presentation");}
-        auto* computer=new Player(faction->m_name,Player::PR_PLAYER,faction,m_player->GetDifficultyLevel());
-        m_state->AddPlayer(computer);
-        available->SetPlayer(computer,0,"");
+        auto computer=std::make_unique<Player>(faction->m_name,Player::PR_PLAYER,faction,m_player->GetDifficultyLevel());
+        m_state->AddPlayer(computer.get());
+        auto* admitted=computer.release(); // State owns the successfully inserted identity.
+        available->SetPlayer(admitted,0,"");
         available->SetLinkedGSID("local-computer:"+profile.port_id);
         used.insert(profile.port_id);
     }

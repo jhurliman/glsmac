@@ -1,0 +1,379 @@
+{
+  "contract": "RE-SMAC-PREFERENCES-INITIALIZED-THEME-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "status": "native_offscreen_shared_theme_initialized_and_independent_recipe_passed",
+  "supersedes": [
+    "RE-SMAC-PREFERENCES-PIXELS-001 normal-game appearance",
+    "RE-SMAC-PREFERENCES-BUTTONS-001 normal-game procedural claim"
+  ],
+  "source_packet_sha256": "852f5ecaa1801e275e13549197ae45e7eb8766d6facc6746bd8ab8bcf50b1b5e",
+  "scope": "Complete460720 shared theme; original font defaults, Preferences constructor, Window-tree paint and software composite; memory Win32 services and blank map. Not an OS screenshot or full game startup execution.",
+  "seeds": {
+    "unchecked": {
+      "live_words": [
+        0,
+        0,
+        0
+      ]
+    },
+    "checked": {
+      "live_words": [
+        16384,
+        0,
+        0
+      ]
+    },
+    "fresh_profile_defaults": false,
+    "full_profile_loader_and_copy_executed": false,
+    "assignment_timing": "Immediately before each native49ef50(0); normal open initializes draft controls from these explicit live words."
+  },
+  "startup": {
+    "source_order": [
+      "46c339..46c34d bootstrap Arial12/plain",
+      "5a59c0 ->460f70 ->460720(0)",
+      "5a59c0 ->59f880 ->59f240",
+      "53f6e0 ->5a57e0 ->49bde0",
+      "528d50 ->49ef50(0)"
+    ],
+    "creation_refresh": "621620@621628 virtual+168 resolves6221f0, refreshing shared defaults",
+    "executed_for_capture": [
+      "native owned palette load and palette binding",
+      "source-equivalent final bootstrap font630450 after private font registration",
+      "4d01f0 frame definitions",
+      "COMPLETE460720 including iface role samples, skin globals, all interface slices and45eea0",
+      "59f880 font bank and59f240 defaults",
+      "auxiliary/primary map and complete console initialization",
+      "49bde0 constructor",
+      "49ef50(0) stopped at60708b before OS input pump",
+      "6101a0 software Window-tree composition"
+    ],
+    "omitted": "No full460f70 execution: unrelated tech/model resource stages and full application/OS startup are outside this capture. The consumed button-theme stage460720 executes completely."
+  },
+  "asset": {
+    "file": "interface.pcx",
+    "sha256": "a787846aaf62a199a9f40a5b36d53c121cfdfae2c4baa7bab4dd525d9f374618",
+    "indexed_load": "(sourceIndex+10)&255; loaded6/7 replaced with key9",
+    "states": [
+      {
+        "state": 0,
+        "y": 127,
+        "left": {
+          "rect": [
+            64,
+            127,
+            3,
+            20
+          ],
+          "pointer": "0x777a18"
+        },
+        "middle": {
+          "rect": [
+            68,
+            127,
+            67,
+            20
+          ],
+          "pointer": "0x777a44"
+        },
+        "right": {
+          "rect": [
+            136,
+            127,
+            3,
+            20
+          ],
+          "pointer": "0x777a70"
+        }
+      },
+      {
+        "state": 1,
+        "y": 148,
+        "left": {
+          "rect": [
+            64,
+            148,
+            3,
+            20
+          ],
+          "pointer": "0x777a9c"
+        },
+        "middle": {
+          "rect": [
+            68,
+            148,
+            67,
+            20
+          ],
+          "pointer": "0x777ac8"
+        },
+        "right": {
+          "rect": [
+            136,
+            148,
+            3,
+            20
+          ],
+          "pointer": "0x777af4"
+        }
+      },
+      {
+        "state": 2,
+        "y": 169,
+        "left": {
+          "rect": [
+            64,
+            169,
+            3,
+            20
+          ],
+          "pointer": "0x777b20"
+        },
+        "middle": {
+          "rect": [
+            68,
+            169,
+            67,
+            20
+          ],
+          "pointer": "0x777b4c"
+        },
+        "right": {
+          "rect": [
+            136,
+            169,
+            3,
+            20
+          ],
+          "pointer": "0x777b78"
+        }
+      }
+    ]
+  },
+  "render": {
+    "height": 20,
+    "caps": 3,
+    "middle_tile_width": 67,
+    "recipe": "clear key9; draw left at0,0 and right atW-3,0; repeat middle starting3,0 clipped to[3,0,W-3,20). No scaling.",
+    "width214_middle_draw_x": [
+      3,
+      70,
+      137,
+      204
+    ],
+    "state_rule": "valid override0..2; else pressed or selected=>2; else hover=>1; else0",
+    "caption": "Arial height-12/plain; foreground0, shadow-1. Same caption placement for every initialized skin state; OK x98 baseline14.",
+    "procedural_pressed_caption_shift": false,
+    "procedural_focus_outline": false,
+    "whole_sprites_and_frame_bank_pointers": "null; slice TL/middle/TR nonnull; others null",
+    "scope": "20px-high stock Preferences controls with nonoverlapping3px caps; no claim for disabled/custom skin or smaller-than-caps control"
+  },
+  "palette_roles": {
+    "0x6ab498": 204,
+    "0x6ab49c": 206,
+    "0x6ab4a0": 207,
+    "0x6ab4a4": 208,
+    "0x6ab4a8": 212,
+    "0x6ab4ac": 188,
+    "0x6ab4b0": 19,
+    "0x6ab4b4": 73,
+    "0x6ab4b8": 147,
+    "0x6ab4bc": 209
+  },
+  "native_properties": {
+    "0xa84": 19,
+    "0xa88": 73,
+    "0xa8c": 147,
+    "0xa90": 2,
+    "0xa94": 0,
+    "0xa98": 207,
+    "0xa9c": 0,
+    "0xaa0": 125,
+    "0xaa4": 0,
+    "0xaa8": 0,
+    "0xaac": 0,
+    "0xab0": 0,
+    "0xab4": 0,
+    "0xab8": 4294967295,
+    "0xabc": 4294967295,
+    "0xac0": 4294967295,
+    "0xac4": 4294967295,
+    "0xac8": 0,
+    "0xacc": 0,
+    "0xad0": 0,
+    "0xad4": 0,
+    "0xad8": 0,
+    "0xadc": 0,
+    "0xae0": 0,
+    "0xae4": 0,
+    "0xae8": 0,
+    "0xaec": 0,
+    "0xaf0": 0,
+    "0xaf4": 0,
+    "0xaf8": 7830084,
+    "0xafc": 7830216,
+    "0xb00": 7830348,
+    "0xb04": 0,
+    "0xb08": 0,
+    "0xb0c": 0,
+    "0xb10": 7830040,
+    "0xb14": 7830172,
+    "0xb18": 7830304,
+    "0xb1c": 7830128,
+    "0xb20": 7830260,
+    "0xb24": 7830392,
+    "0xb28": 0,
+    "0xb2c": 0,
+    "0xb30": 0,
+    "0xb34": 0,
+    "0xb38": 0,
+    "0xb3c": 0,
+    "0xb40": 0,
+    "0xb44": 0,
+    "0xb48": 0
+  },
+  "cases": [
+    {
+      "id": "normal",
+      "indexed_sha256": "c3ac2a005ba8aa05f220d5707d298a93581d8de3f4be2c2f8baa2dc2e40724aa",
+      "caption_requests": [
+        {
+          "x": 98,
+          "baseline": 14,
+          "gdi_color": "0x10ff0000"
+        }
+      ]
+    },
+    {
+      "id": "hover",
+      "indexed_sha256": "8106e2a105a83a4049598b262ccb6fc018c7a7cbf6de31d0cc373b438b232881",
+      "caption_requests": [
+        {
+          "x": 98,
+          "baseline": 14,
+          "gdi_color": "0x10ff0000"
+        }
+      ]
+    },
+    {
+      "id": "pressed",
+      "indexed_sha256": "4ebdb0e283408135aaec373111ff24bca28f92d0e5443bce8e76053d0ae69500",
+      "caption_requests": [
+        {
+          "x": 98,
+          "baseline": 14,
+          "gdi_color": "0x10ff0000"
+        }
+      ]
+    },
+    {
+      "id": "selected_page",
+      "indexed_sha256": "4ebdb0e283408135aaec373111ff24bca28f92d0e5443bce8e76053d0ae69500",
+      "caption_requests": [
+        {
+          "x": 98,
+          "baseline": 14,
+          "gdi_color": "0x10ff0000"
+        }
+      ]
+    },
+    {
+      "id": "explicit_state0",
+      "indexed_sha256": "c3ac2a005ba8aa05f220d5707d298a93581d8de3f4be2c2f8baa2dc2e40724aa",
+      "caption_requests": [
+        {
+          "x": 98,
+          "baseline": 14,
+          "gdi_color": "0x10ff0000"
+        }
+      ]
+    },
+    {
+      "id": "explicit_state1",
+      "indexed_sha256": "8106e2a105a83a4049598b262ccb6fc018c7a7cbf6de31d0cc373b438b232881",
+      "caption_requests": [
+        {
+          "x": 98,
+          "baseline": 14,
+          "gdi_color": "0x10ff0000"
+        }
+      ]
+    },
+    {
+      "id": "explicit_state2",
+      "indexed_sha256": "4ebdb0e283408135aaec373111ff24bca28f92d0e5443bce8e76053d0ae69500",
+      "caption_requests": [
+        {
+          "x": 98,
+          "baseline": 14,
+          "gdi_color": "0x10ff0000"
+        }
+      ]
+    },
+    {
+      "id": "focused",
+      "indexed_sha256": "c3ac2a005ba8aa05f220d5707d298a93581d8de3f4be2c2f8baa2dc2e40724aa",
+      "caption_requests": [
+        {
+          "x": 98,
+          "baseline": 14,
+          "gdi_color": "0x10ff0000"
+        }
+      ]
+    }
+  ],
+  "independent_recipe": {
+    "status": "PASS",
+    "cases": [
+      {
+        "state": 0,
+        "differences": 0,
+        "pixels": 4280,
+        "sha256": "633f15adebf4596065386fdda14c362dc977c3999a2a074ff67d1bede4150cea"
+      },
+      {
+        "state": 1,
+        "differences": 0,
+        "pixels": 4280,
+        "sha256": "24c08efe1301bf5451ad60ae391ba084f857938aa96af9f0928d84ee1ec9e146"
+      },
+      {
+        "state": 2,
+        "differences": 0,
+        "pixels": 4280,
+        "sha256": "a885153c873f5c429e8b39f3abf3587b9035afc72bad083e962dacd1017e1a18"
+      }
+    ],
+    "full_frame_crop_differences": 0,
+    "asset_sha256": "a787846aaf62a199a9f40a5b36d53c121cfdfae2c4baa7bab4dd525d9f374618"
+  },
+  "frames": [
+    {
+      "id": "unchecked",
+      "indexed_sha256": "ec849310d57532bb6e4610356bfec8ec6e625fbbed89bb6a437ccaa2f2cd3642",
+      "dimensions": [
+        1024,
+        768
+      ]
+    },
+    {
+      "id": "checked",
+      "indexed_sha256": "67f75b7871842620b9fbe32753a80e854808129b806b08cbce0461f7c5e0e04a",
+      "dimensions": [
+        1024,
+        768
+      ]
+    }
+  ],
+  "comparisons": {
+    "old_to_initialized_differing_pixels": 40637,
+    "all_differences_within_ten_visible_buttons": true,
+    "id8_toggle_pixels": 324,
+    "id8_toggle_rect": [
+      418,
+      187,
+      436,
+      205
+    ],
+    "checkbox_label_frame_rails_pixels_unchanged": true
+  }
+}

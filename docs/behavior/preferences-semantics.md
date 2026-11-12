@@ -203,8 +203,10 @@ fails. This is **not** a crash-atomic filesystem replacement guarantee.
 The actual Workshop suggestion gate and frontend edge-scrolling admission
 read these shared values. Disabling edge scrolling also stops an existing
 scroll timer on the next frontend iteration. The other preference consumers,
-normal Preferences window route, audio playback/levels and Gamma remain
+audio playback/levels and Gamma remain
 open. Storing their source-backed bits alone does not establish their effects.
+The [live Preferences window](preferences-window.md) now exposes detached
+editing and acceptance of the stored controls.
 
 Focused native checks cover original inversion/default/reconstruction
 controls, strict local word parsing, legacy migration, detached edits,

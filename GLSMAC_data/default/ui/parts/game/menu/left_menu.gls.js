@@ -8,7 +8,8 @@ return {
 					p.menu.open('left_menu_game', {
 						align: 'bottom',
 						left: p.menu.menu_width,
-						bottom: 256 + 166 - p.menu.item_height * 3,
+                        width: 260,
+						bottom: 256 + 166 - p.menu.item_height * 9,
 					});
 				},
 				close: () => {

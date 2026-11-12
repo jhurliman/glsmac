@@ -57,6 +57,7 @@ return {
 			menu: parent,
 			maybe_quit: p.maybe_quit,
             open_workshop: () => { p.modules.workshop.open(); },
+            open_preferences: (page) => { p.modules.preferences.open(page); },
 			save_campaign: () => { p.modules.popup.show('save_campaign'); },
 			create: (entries) => {
 

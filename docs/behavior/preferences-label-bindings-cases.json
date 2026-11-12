@@ -1,0 +1,205 @@
+{
+  "contract": "RE-SMAC-PREFERENCES-LABELS-001",
+  "executable_sha256": "0a61eb3642df750c0d5e516c3e3efeb4ad5ae7e1ce3163617759449327952a01",
+  "source_file": "labels.txt",
+  "section": "LABELS",
+  "labels_index_base": 0,
+  "table_pointer_address": "0x9c15b8",
+  "string_table_object": "0x9c1598",
+  "resolve_token_function": "0x62e860",
+  "installed_labels_sha256": "b6b7057a9f96a29a77e89da143d38e34bec5d93d651ac798b3c27d4efdab2009",
+  "installed_count": 1131,
+  "bindings": [
+    {
+      "role": "preferences",
+      "control_id": 0,
+      "labels_index": 750,
+      "table_byte_offset": "0xbb8",
+      "table_load_instruction": "0x49bf51",
+      "installed_english": "Preferences",
+      "installed_file_line": 761
+    },
+    {
+      "role": "advanced_preferences",
+      "control_id": 1,
+      "labels_index": 751,
+      "table_byte_offset": "0xbbc",
+      "table_load_instruction": "0x49bfe7",
+      "installed_english": "Adv. Preferences",
+      "installed_file_line": 762
+    },
+    {
+      "role": "warning_preferences",
+      "control_id": 2,
+      "labels_index": 752,
+      "table_byte_offset": "0xbc0",
+      "table_load_instruction": "0x49c07c",
+      "installed_english": "Warning Preferences",
+      "installed_file_line": 763
+    },
+    {
+      "role": "automation_preferences",
+      "control_id": 3,
+      "labels_index": 753,
+      "table_byte_offset": "0xbc4",
+      "table_load_instruction": "0x49c11b",
+      "installed_english": "Automation Preferences",
+      "installed_file_line": 764
+    },
+    {
+      "role": "audio_visual_preferences",
+      "control_id": 4,
+      "labels_index": 754,
+      "table_byte_offset": "0xbc8",
+      "table_load_instruction": "0x49c1b5",
+      "installed_english": "Audio/Visual Preferences",
+      "installed_file_line": 765
+    },
+    {
+      "role": "map_preferences",
+      "control_id": 5,
+      "labels_index": 1077,
+      "table_byte_offset": "0x10d4",
+      "table_load_instruction": "0x49c24f",
+      "installed_english": "Map Preferences",
+      "installed_file_line": 1088
+    },
+    {
+      "role": "gamma_correction",
+      "control_id": 6,
+      "labels_index": 1078,
+      "table_byte_offset": "0x10d8",
+      "table_load_instruction": "0x49c2e9",
+      "installed_english": "Gamma Correction",
+      "installed_file_line": 1089
+    },
+    {
+      "role": "restore_defaults",
+      "control_id": 90,
+      "labels_index": 1079,
+      "table_byte_offset": "0x10dc",
+      "table_load_instruction": "0x49ed13",
+      "installed_english": "Restore Defaults",
+      "installed_file_line": 1090
+    },
+    {
+      "role": "ok",
+      "control_id": 92,
+      "labels_index": 101,
+      "table_byte_offset": "0x194",
+      "table_load_instruction": "0x49ed3f",
+      "installed_english": "OK",
+      "installed_file_line": 112
+    },
+    {
+      "role": "cancel",
+      "control_id": 91,
+      "labels_index": 102,
+      "table_byte_offset": "0x198",
+      "table_load_instruction": "0x49edc9",
+      "installed_english": "Cancel",
+      "installed_file_line": 113
+    },
+    {
+      "role": "warnings_more",
+      "control_id": 94,
+      "labels_index": 1088,
+      "table_byte_offset": "0x1100",
+      "table_load_instruction": "0x49f6fc",
+      "installed_english": "More",
+      "installed_file_line": 1099
+    },
+    {
+      "role": "warnings_back",
+      "control_id": 94,
+      "labels_index": 664,
+      "table_byte_offset": "0xa60",
+      "table_load_instruction": "0x49f74f",
+      "installed_english": "Back",
+      "installed_file_line": 675
+    },
+    {
+      "role": "main_off",
+      "control_id": 85,
+      "labels_index": 1080,
+      "table_byte_offset": "0x10e0",
+      "table_load_instruction": "0x4a0ee8",
+      "installed_english": "Main Off",
+      "installed_file_line": 1091
+    },
+    {
+      "role": "main_on",
+      "control_id": 85,
+      "labels_index": 1081,
+      "table_byte_offset": "0x10e4",
+      "table_load_instruction": "0x4a0ef6",
+      "installed_english": "Main On",
+      "installed_file_line": 1092
+    },
+    {
+      "role": "voice_off",
+      "control_id": 87,
+      "labels_index": 1082,
+      "table_byte_offset": "0x10e8",
+      "table_load_instruction": "0x4a0e2a",
+      "installed_english": "Voice Off",
+      "installed_file_line": 1093
+    },
+    {
+      "role": "voice_on",
+      "control_id": 87,
+      "labels_index": 1083,
+      "table_byte_offset": "0x10ec",
+      "table_load_instruction": "0x4a0e38",
+      "installed_english": "Voice On",
+      "installed_file_line": 1094
+    },
+    {
+      "role": "sfx_off",
+      "control_id": 86,
+      "labels_index": 1084,
+      "table_byte_offset": "0x10f0",
+      "table_load_instruction": "0x4a0e69",
+      "installed_english": "SFX Off",
+      "installed_file_line": 1095
+    },
+    {
+      "role": "sfx_on",
+      "control_id": 86,
+      "labels_index": 1085,
+      "table_byte_offset": "0x10f4",
+      "table_load_instruction": "0x4a0e78",
+      "installed_english": "SFX On",
+      "installed_file_line": 1096
+    },
+    {
+      "role": "music_off",
+      "control_id": 88,
+      "labels_index": 1086,
+      "table_byte_offset": "0x10f8",
+      "table_load_instruction": "0x4a0ea8",
+      "installed_english": "Music Off",
+      "installed_file_line": 1097
+    },
+    {
+      "role": "music_on",
+      "control_id": 88,
+      "labels_index": 1087,
+      "table_byte_offset": "0x10fc",
+      "table_load_instruction": "0x4a0eb7",
+      "installed_english": "Music On",
+      "installed_file_line": 1098
+    }
+  ],
+  "more_constructor_load": {
+    "instruction": "0x49ef0d",
+    "offset": "0x1100",
+    "labels_index": 1088
+  },
+  "audio_state_fields": {
+    "85": "0x15820",
+    "87": "0x16eb8",
+    "86": "0x1636c",
+    "88": "0x17a04"
+  }
+}

@@ -29,8 +29,10 @@ save.init({
 });
 let opened = 0;
 const menu_entries = menu.init({create: (entries) => {return entries;}, save_campaign: () => {opened++;save.on_show();}});
-menu_entries[0].open();
-test.assert(menu_entries[0].label == 'Save Campaign' && opened == 1 && save_input.value == 'campaign.glsmac');
+let save_entry = null;
+for (entry of menu_entries) { if (entry.label == 'Save Campaign') { save_entry = entry; } }
+test.assert(save_entry != null); save_entry.open();
+test.assert(opened == 1 && save_input.value == 'campaign.glsmac');
 save_input.value = 'chosen.glsmac';
 save_buttons.Save({});
 test.assert(#sizeof(save_calls) == 1 && save_calls[0] == 'chosen.glsmac' && closed == 0);

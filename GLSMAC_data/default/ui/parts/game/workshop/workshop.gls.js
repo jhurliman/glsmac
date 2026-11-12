@@ -9,6 +9,7 @@ return {
     },
     open: () => {
         const p = this.p;
+        if (#is_defined(p.modules.preferences) && p.modules.preferences.active) { return false; }
         if (p.game.get_ruleset() != 'smac' || p.modules.popup.popup != null) { return false; }
         for (name of ['first_base', 'research', 'colony']) {
             const module = p.modules[name];

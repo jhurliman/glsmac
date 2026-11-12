@@ -197,7 +197,7 @@ void SmacHostileState::RequireOrdinaryHostility(int32_t actor,int32_t target) co
 	if(actor<1 || actor>7 || target<1 || target>7 || actor==target || !owners.count(actor) || !owners.count(target)) {throw std::runtime_error("Hostile action requires two admitted factions");}
 	for(const auto& pair:{std::pair<int32_t,int32_t>{actor,target},{target,actor}}) {
 		const auto& direction=owners.at(pair.first).directions[pair.second];
-		if(direction.secondary || (direction.primary&7u)) {
+		if((direction.secondary&~0xc20u) || (direction.primary&7u)) {
 			throw std::runtime_error("Hostile movement requires its ordinary no-peace or Vendetta diplomacy context");
 		}
 	}
@@ -212,7 +212,7 @@ void SmacHostileState::RecordScoutBattle(int32_t actor,int32_t target,int32_t wi
 }
 namespace {
 constexpr int64_t MAGIC = 0x534d5353; // SMSS, mutable world state, not settings
-constexpr int64_t VERSION = 38;
+constexpr int64_t VERSION = 39;
 
 int32_t ReadInt32( types::Buffer& buffer ) {
 	const auto value = buffer.ReadInt();
@@ -463,7 +463,7 @@ void SmacSimulationState::ValidateTurn(size_t turn) const {
     }
 }
 
-bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && faction_turn==other.faction_turn && conquest_winner==other.conquest_winner && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order && human_membership==other.human_membership && strategy==other.strategy && air_summary==other.air_summary && capabilities==other.capabilities && regional_military==other.regional_military && victory_history==other.victory_history && retained_land_region_concentration==other.retained_land_region_concentration && retained_base_totals==other.retained_base_totals && regional_strategy==other.regional_strategy && ranking_scores==other.ranking_scores && dominance_history==other.dominance_history && dominance_native_keys==other.dominance_native_keys && ecology_history==other.ecology_history && ecology_world==other.ecology_world && perihelion==other.perihelion && remembered_governor==other.remembered_governor && faction_status==other.faction_status && ecology_warming_count==other.ecology_warming_count && native_factory==other.native_factory && battle_plan_target==other.battle_plan_target && diplomacy_metadata==other.diplomacy_metadata; }
+bool SmacSimulationState::operator==( const SmacSimulationState& other ) const { return roster == other.roster && technology == other.technology && designs == other.designs && social == other.social && gameplay_random == other.gameplay_random && movement_capability == other.movement_capability && resource_modifiers == other.resource_modifiers && movement_history == other.movement_history && satellites == other.satellites && economy == other.economy && do_or_die == other.do_or_die && hostility==other.hostility && faction_turn==other.faction_turn && conquest_winner==other.conquest_winner && human_defeat_request==other.human_defeat_request && rank_order==other.rank_order && human_membership==other.human_membership && strategy==other.strategy && air_summary==other.air_summary && capabilities==other.capabilities && regional_military==other.regional_military && victory_history==other.victory_history && retained_land_region_concentration==other.retained_land_region_concentration && retained_base_totals==other.retained_base_totals && regional_strategy==other.regional_strategy && ranking_scores==other.ranking_scores && dominance_history==other.dominance_history && dominance_native_keys==other.dominance_native_keys && ecology_history==other.ecology_history && ecology_world==other.ecology_world && perihelion==other.perihelion && remembered_governor==other.remembered_governor && faction_status==other.faction_status && ecology_warming_count==other.ecology_warming_count && native_factory==other.native_factory && battle_plan_target==other.battle_plan_target && diplomacy_metadata==other.diplomacy_metadata && war_history==other.war_history; }
 
 std::optional<SmacBaseTotals> AdjustSmacBaseTotal(std::optional<SmacBaseTotals> saved,int32_t owner,int32_t delta) {
 	if(owner<1 || owner>7 || (delta!=1 && delta!=-1)) {throw std::invalid_argument("Base total delta requires positive owner and unit delta");}
@@ -621,6 +621,12 @@ types::Buffer SmacSimulationState::Serialize( const settings::SmacTechnologyRule
     }
     buffer.WriteBool(diplomacy_metadata && diplomacy_metadata->sunspot_countdown.has_value());
     if(diplomacy_metadata && diplomacy_metadata->sunspot_countdown) {buffer.WriteInt(*diplomacy_metadata->sunspot_countdown);}
+    buffer.WriteBool(war_history.has_value());
+    if(war_history) {const auto& history=*war_history;
+        for(const auto* rows:{&history.field240,&history.field26c,&history.field2f4,&history.field314}) {
+            for(const auto& row:*rows) {for(const auto word:row) {buffer.WriteBool(word.has_value());if(word) {buffer.WriteInt(*word);}}}
+        }
+    }
 	if ( buffer.lenw > MAX_WIRE_BYTES ) { throw std::runtime_error( "SMAC simulation state exceeds wire budget" ); }
 	return buffer;
 }
@@ -632,7 +638,7 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
 		types::Buffer buffer( wire );
 		if(buffer.ReadInt()!=MAGIC) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto version=buffer.ReadInt();
-		if(version!=VERSION && version!=37 && version!=36 && version!=35 && version!=34 && version!=33 && version!=32 && version!=31 && version!=30 && version!=29 && version!=28 && version!=27 && version!=26 && version!=25 && version!=24 && version!=23 && version!=22 && version!=21 && version!=20 && version!=19 && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
+		if(version!=VERSION && version!=38 && version!=37 && version!=36 && version!=35 && version!=34 && version!=33 && version!=32 && version!=31 && version!=30 && version!=29 && version!=28 && version!=27 && version!=26 && version!=25 && version!=24 && version!=23 && version!=22 && version!=21 && version!=20 && version!=19 && version!=18 && version!=17 && version!=16 && version!=15 && version!=14 && version!=13 && version!=12 && version!=11) {throw std::runtime_error("Unsupported SMAC simulation state format");}
 		const auto count = buffer.ReadInt();
 		if ( count < 1 || count > 7 ) { throw std::runtime_error( "SMAC simulation roster requires 1..7 participants" ); }
 		std::vector< SmacSimulationParticipant > roster;
@@ -784,6 +790,12 @@ SmacSimulationState SmacSimulationState::Deserialize( const std::string& wire, c
         if(version>=38 && buffer.ReadBool()) {
             if(!result.diplomacy_metadata) {throw std::runtime_error("Sunspots require saved diplomatic authority");}
             result.diplomacy_metadata->sunspot_countdown=ReadInt32(buffer);
+        }
+        if(version>=39 && buffer.ReadBool()) {
+            auto& history=result.war_history.emplace();
+            for(auto* rows:{&history.field240,&history.field26c,&history.field2f4,&history.field314}) {
+                for(auto& row:*rows) {for(auto& word:row) {if(buffer.ReadBool()) {word=ReadUInt32(buffer);}}}
+            }
         }
 		if ( buffer.lenr != buffer.lenw ) { throw std::runtime_error( "Unexpected SMAC simulation trailing fields" ); }
 		result.roster = std::move( roster ); result.technology = std::move( technology ); result.designs = std::move( designs ); result.social = std::move( social );

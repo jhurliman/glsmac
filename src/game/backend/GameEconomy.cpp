@@ -461,6 +461,7 @@ void Game::SettleCanonicalEconomy( int32_t owner ) {
 	const bool has_base=std::any_of(m_bm->GetBases().begin(),m_bm->GetBases().end(),[&](const auto& row){return row.second->GetSmacResourceContext().owner_simulation_id==owner;});
 	const bool has_unit=std::any_of(m_um->GetUnits().begin(),m_um->GetUnits().end(),[&](const auto& row){return row.second->SimulationOwner()==owner;});
 	if (!has_base && !has_unit) {
+        if(GetTurnId()>INT32_MAX) {throw std::runtime_error("Faction initialization turn exceeds signed32");}
 		const auto initialized=PrepareSmacNonzeroInitialization(owner);
 		auto hostility=m_simulation->value.hostility;hostility.Reinitialize(owner);
 		auto victory=m_simulation->value.victory_history;
@@ -474,6 +475,8 @@ void Game::SettleCanonicalEconomy( int32_t owner ) {
 		if(m_simulation->value.retained_base_totals) {m_simulation->value.retained_base_totals->at(owner)=0;}
 		if(m_simulation->value.capabilities) {m_simulation->value.capabilities->factions.at(owner-1)={};}
 		m_simulation->value.hostility.owners.swap(hostility.owners);
+        if(!m_simulation->value.war_history) {m_simulation->value.war_history.emplace();}
+        m_simulation->value.war_history->Initialize(owner,static_cast<int32_t>(GetTurnId()));
 		m_simulation->value.victory_history=std::move(victory);
 	}
 	const auto next = saved.SettleDebit(); saved = next;

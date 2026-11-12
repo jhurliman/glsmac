@@ -1,4 +1,5 @@
 #include "fixtures/SmacProductionCandidates.h"
+#include "fixtures/SmacDiplomaticWarning.h"
 #include "game/backend/unit/SmacProductionDesigns.h"
 #include "SmacSimulationState.h"
 #include "fixtures/SmacRegionalMilitary.h"
@@ -96,7 +97,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=38,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=39,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -213,6 +214,14 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=38,bool
         suffix.WriteBool(value.diplomacy_metadata && value.diplomacy_metadata->sunspot_countdown.has_value());
         if(value.diplomacy_metadata && value.diplomacy_metadata->sunspot_countdown) {suffix.WriteInt(*value.diplomacy_metadata->sunspot_countdown);}
     }
+    if(version>=39) {
+        suffix.WriteBool(value.war_history.has_value());
+        if(value.war_history) {const auto& history=*value.war_history;
+            for(const auto* rows:{&history.field240,&history.field26c,&history.field2f4,&history.field314}) {
+                for(const auto& row:*rows) {for(const auto word:row) {suffix.WriteBool(word.has_value());if(word) {suffix.WriteInt(*word);}}}
+            }
+        }
+    }
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -230,6 +239,50 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC Vendetta raw history preserves source write order fresh reuse and unavailable increments",GT(){
+        for(int scenario=0;scenario<7;++scenario) {
+            faction::SmacHostileState state;state.owners.emplace(1,faction::SmacHostileOwner{});state.owners.emplace(2,faction::SmacHostileOwner{});
+            faction::SmacWarHistory history;history.Initialize(1,0);history.Initialize(2,0);
+            auto& own=state.owners.at(1);auto& peer=state.owners.at(2);own.integrity=3;own.bookkeeping=4;peer.bookkeeping=7;
+            auto& a=own.directions[2];auto& r=peer.directions[1];a={2,0,2,17,23};r={0x22u,0x400u,3,29,31};
+            history.field240[1][2]=4;history.field240[2][1]=5;history.field26c[2][1]=12;history.field2f4[1][2]=7;history.field314[2][1]=9;
+            if(scenario==1) {a.primary=0x10004u;}
+            if(scenario==2) {a.primary|=0x40000u;}
+            if(scenario==3) {a.secondary=0x20u;}
+            if(scenario==4) {a.primary=8;r.primary=2;}
+            if(scenario==5) {a.primary=r.primary=16;}
+            const auto before_a=a.primary,before_r=r.primary;
+            faction::ApplySmacOrdinaryVendetta(state,history,{1,2,100,scenario==6?5:7,scenario==6?5:3,scenario==6?0:3,0,scenario==6});
+            const auto blemishes=scenario==0?2:scenario==1?1:scenario==6?1:0;
+            GT_ASSERT(own.integrity==uint32_t(3+blemishes) && history.field314[2][1]==uint32_t(9+blemishes),"Vendetta integrity/reverse grievance increments differ");
+            GT_ASSERT(own.bookkeeping==uint32_t((scenario==0 || scenario==2 || scenario==6)?3:4) && peer.bookkeeping==7,"Vendetta changed wrong bookkeeping or missed floor");
+            GT_ASSERT(history.field26c[2][1]==0 && history.field240[2][1]==5,"Unconditional reverse clear or untouched reverse timer differs");
+            GT_ASSERT(history.field2f4[1][2]==uint32_t(scenario<=2 || scenario==6?8:7),"Peace-break history increment used wrong branch");
+            GT_ASSERT(a.primary==((before_a&0xfa6ef378u)|0x80000118u|(scenario==3?0u:0x40u)),"Forward full raw primary transition differs");
+            const auto reverse_stage=before_r|((scenario<=2 || scenario==6)?0x20u:0u);
+            GT_ASSERT(r.primary==((reverse_stage&0xfa6ef378u)|0x80000118u),"Reverse primary warning metadata not ordered before grant");
+            GT_ASSERT(a.transition_turn==(scenario==3?2:100) && r.transition_turn==3 && history.field240[1][2]==uint32_t(scenario==3?4:50),"Skip or repeat declaration date/timer mismatch");
+            GT_ASSERT(a.paired_a==17 && r.paired_a==29 && a.paired_b==uint32_t(scenario==4 || scenario==5?23:0) && r.paired_b==uint32_t(scenario==4 || scenario==5?31:0),"Vendetta reset wrong historical pair counters");
+        }
+        faction::SmacWarHistory history;history.Initialize(1,0);history.Initialize(2,0);
+        history.field240[1][2]=41;history.field26c[1][2]=42;history.field2f4[1][2]=43;history.field314[1][2]=44;history.field26c[2][1]=45;
+        history.Initialize(1,101);
+        GT_ASSERT(history.field240[1][2]==41 && history.field2f4[1][2]==43 && history.field314[1][2]==44 && history.field26c[1][2]==0 && history.field26c[2][1]==45,
+            "Nonzero initialization cleared incoming or retained source fields");
+        auto value=State();value.war_history=history;const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        const auto wire=value.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(value) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==value,"V39 lost directed history or independent absence");
+        value.war_history.reset();GT_ASSERT(SmacSimulationState::Deserialize(CurrentWire(value,38),technologies,profiles,units)==value,"V38 inferred war history from current world");
+        GT_OK();
+    });
+    task->AddTest("SMAC diplomatic warning matches19 original forward-mask and player-response controls",GT(){
+        for(const auto& c:smac_diplomatic_warning_fixture::Cases) {
+            const auto warning=faction::SelectSmacDiplomaticWarning(c.relation,c.guards);
+            GT_ASSERT(static_cast<int>(warning)==c.warning && faction::PassSmacDiplomaticWarning(warning,c.proceed)==c.pass,
+                "Original diplomatic permission differs: "+std::string(c.id));
+        }GT_OK();
+    });
+
     task->AddTest("SMAC physical contact preserves raw words and sunspot recognition while retaining saved generations",GT(){
         using faction::CompleteSmacPhysicalContact;using faction::GrantSmacRelation;
         const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();

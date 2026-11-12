@@ -7,7 +7,7 @@
 #include "SmacEconomyState.h"
 #include "SmacRankOrder.h"
 #include "SmacDominanceHistory.h"
-#include "SmacHostileState.h"
+#include "SmacDiplomacy.h"
 #include "SmacRegionalMilitaryState.h"
 #include "SmacRegionalStrategy.h"
 #include "SmacEcologyWorld.h"
@@ -161,6 +161,7 @@ struct SmacSimulationState {
 	MovementCapability movement_capability;
 	SmacGlobalResourceModifiers resource_modifiers;
     std::optional<SmacDiplomacyMetadata> diplomacy_metadata;
+    std::optional<SmacWarHistory> war_history;
 	std::optional< SmacMovementHistory > movement_history;
 	// Exactly one record for each roster simulation ID; absence is not zero.
 	std::map< int32_t, SmacSatelliteCounts > satellites;

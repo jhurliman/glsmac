@@ -7,7 +7,7 @@ const node = (data) => {
     data.show = () => { data.hidden = false; }; data.hide = () => { data.hidden = true; };
     data.clear = () => { data.children = []; };
     const child = (props) => { const value = node(props); data.children :+value; return value; };
-    data.window = child; data.scrollview = child; data.button = child;
+    data.panel = child; data.window = child; data.scrollview = child; data.button = child;
     if (!#is_defined(data.text)) { data.text = child; }
     return data;
 };
@@ -36,3 +36,17 @@ handlers.turn({}); test.assert(!view.active);
 const menu = #include('../default/ui/parts/game/menu/right_menu'); let opened = 0;
 const entries = menu.init({create: (entries) => { return entries; }, open_diplomacy: () => { opened++; }});
 test.assert(#sizeof(entries) == 1 && entries[0].label == 'Commlink'); entries[0].open(); test.assert(opened == 1);
+
+// War confirmation remains available independently of negotiation cooldown.
+contacts = [{target: 2, name: 'Gaia', relation: 'Treaty', unavailable: 'Negotiations resume in 16 turns', expected_state: 'war-state',
+    war_unavailable: '', war_warning: 'Breaking this Treaty can damage your integrity. Declare Vendetta?'}];
+view.open(); test.assert(#sizeof(view.rows.children) == 3);
+view.rows.children[2].click({}); test.assert(view.confirming != null && !view.confirmation.hidden);
+const previous_count = #sizeof(submitted); view.cancel_war();
+test.assert(view.confirming == null && #sizeof(submitted) == previous_count);
+view.rows.children[2].click({}); view.submit_war();
+test.assert(view.waiting && submitted[previous_count] == {name: 'declare_smac_vendetta', args: {target: 2, expected_state: 'war-state', proceed: true}});
+handlers.smac_diplomacy_response({target: 2, accepted: true, text: 'Vendetta declared'});
+test.assert(!view.waiting && view.confirming == null && view.status.text == 'Vendetta declared');
+view.rows.children[2].click({}); handlers.turn({}); view.submit_war();
+test.assert(#sizeof(submitted) == previous_count + 1 && !view.active);

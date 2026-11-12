@@ -235,6 +235,8 @@ void Game::PrepareNewSimulation() {
     // Explicit GLSMAC cold campaign: no council trade resolution or sanctions.
     // Restore retains the saved authorities and never replays this reset.
     value.diplomacy_metadata.emplace();
+    value.war_history.emplace();for(const auto& participant:value.roster) {value.war_history->Initialize(participant.simulation_id,0);}
+
 	// Stock native definition morale0 is a fresh-image input; ordinary faction
 	// parsing starts at positive slot1. Restore retains its independent value.
 	value.native_factory=faction::SmacNativeFactoryState::Initialize(0,value.gameplay_random);

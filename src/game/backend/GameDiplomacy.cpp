@@ -34,6 +34,24 @@ std::string ContactUnavailable(const faction::SmacSimulationState& state,int32_t
     }
     return {};
 }
+std::string WarUnavailable(const faction::SmacSimulationState& state,int32_t actor,int32_t target) {
+    if(!state.IsHuman(actor) || state.IsHuman(target)) {return "This declaration requires a human and a computer faction";}
+    const auto& direction=state.hostility.owners.at(actor).directions.at(target);
+    if(direction.primary&1u) {return "Pact breakup and withdrawal are not available";}
+    const bool skip=(direction.secondary&0x20u)!=0;
+    if(!skip && (direction.primary&6u) && (!state.war_history || !state.war_history->field2f4[actor][target])) {return "Saved declaration grievance history is unavailable";}
+    if(!skip && (direction.primary&6u) && (!state.rank_order || !state.ecology_history)) {return "Saved reputation and rank history is unavailable";}
+    if(!skip) {
+        for(const auto& peer:state.roster) {
+            const auto id=peer.simulation_id;if(id==actor || id==target || !peer.active) {continue;}
+            const auto& row=state.hostility.owners.at(id);
+            if((row.directions[target].primary&1u) && !(row.directions[actor].primary&0x11u)) {
+                return "A third-party Pact would require alliance war propagation";
+            }
+        }
+    }
+    return {};
+}
 std::string DiplomacyToken(const faction::SmacSimulationState& state,int32_t actor,int32_t target,size_t turn) {
     types::Buffer token;token.WriteInt(actor);token.WriteInt(target);token.WriteInt(turn);
     for(const auto pair:{std::pair<int32_t,int32_t>{actor,target},{target,actor}}) {
@@ -48,6 +66,20 @@ std::string DiplomacyToken(const faction::SmacSimulationState& state,int32_t act
         if(data.sunspot_countdown) {token.WriteInt(*data.sunspot_countdown);}
         token.WriteInt(data.sanctions[actor]);token.WriteInt(data.sanctions[target]);
         token.WriteInt(data.grievance[actor][target]);token.WriteInt(data.grievance[target][actor]);
+    }
+    token.WriteBool(state.rank_order.has_value());if(state.rank_order) {for(const auto id:state.rank_order->faction_at_rank) {token.WriteInt(id);}}
+    token.WriteBool(state.ecology_history.has_value());if(state.ecology_history) {token.WriteInt(state.ecology_history->major_atrocities[target]);}
+    for(const auto& peer:state.roster) {
+        token.WriteInt(peer.simulation_id);token.WriteBool(peer.active);
+        const auto& row=state.hostility.owners.at(peer.simulation_id);
+        token.WriteInt(row.directions[actor].primary);token.WriteInt(row.directions[target].primary);
+    }
+    token.WriteBool(state.war_history.has_value());
+    if(state.war_history) {
+        const auto& history=*state.war_history;
+        for(const auto* rows:{&history.field240,&history.field26c,&history.field2f4,&history.field314}) {
+            for(const auto word:{(*rows)[actor][target],(*rows)[target][actor]}) {token.WriteBool(word.has_value());if(word) {token.WriteInt(*word);}}
+        }
     }
     return token.ToString();
 }
@@ -84,9 +116,14 @@ gse::Value* Game::CopySmacDiplomacy(GSE_CALLABLE) const {
         const auto* definition=GetFaction(participant.faction_id);
         if(!definition) {throw std::runtime_error("Commlink faction definition is unavailable");}
         const auto unavailable=participant.active?ContactUnavailable(state,owner,target,GetTurnId()):"Faction eliminated";
+        const auto war_unavailable=!participant.active?"Faction eliminated":(relation.primary&16u)?"Vendetta already declared":WarUnavailable(state,owner,target);
+        const auto warning=faction::SelectSmacDiplomaticWarning(relation.primary,7u);
+        const auto warning_text=warning==faction::SmacDiplomaticWarning::Treaty?"Breaking this Treaty can damage your integrity. Declare Vendetta?"
+            :warning==faction::SmacDiplomaticWarning::Truce?"Breaking this Truce can damage your integrity. Declare Vendetta?":"Declare Vendetta against this faction?";
         rows.push_back(VALUEEXT(gse::value::Object,GSE_CALL,(gse::value::object_properties_t{
             {"target",VALUE(gse::value::Int,,target)}, {"name",VALUE(gse::value::String,,definition->m_name)},
             {"relation",VALUE(gse::value::String,,RelationText(relation.primary))}, {"unavailable",VALUE(gse::value::String,,unavailable)},
+            {"war_unavailable",VALUE(gse::value::String,,war_unavailable)},{"war_warning",VALUE(gse::value::String,,warning_text)},
             {"expected_state",VALUE(gse::value::String,,DiplomacyToken(state,owner,target,GetTurnId()))}
         })));
     }
@@ -94,7 +131,8 @@ gse::Value* Game::CopySmacDiplomacy(GSE_CALLABLE) const {
 }
 
 bool Game::HandleSmacDiplomacyEvent(GSE_CALLABLE,const std::string& name,const gse::value::object_properties_t& args,size_t caller,bool apply) {
-    if(name!="offer_smac_peace") {return false;}
+    const bool declare=name=="declare_smac_vendetta";
+    if(!declare && name!="offer_smac_peace") {return false;}
     const auto field=[&](const char* key,gse::value_type_t type)->const gse::Value* {
         const auto found=args.find(key);
         if(found==args.end() || !found->second || found->second->Deref()->type!=type) {throw std::runtime_error("Malformed diplomatic offer");}
@@ -104,13 +142,55 @@ bool Game::HandleSmacDiplomacyEvent(GSE_CALLABLE,const std::string& name,const g
     ValidateCurrentSimulation();RequireSmacLocalHumanOwner(m_slot);RequireSmacGameplayActive();
     if(m_canonical_continuation || m_canonical_turn_in_progress || m_canonical_turn_failed) {throw std::runtime_error("Finish the current turn choice before negotiations");}
     const auto target=static_cast<const gse::value::Int*>(field("target",gse::VT_INT))->value;
-    const auto& kind=static_cast<const gse::value::String*>(field("kind",gse::VT_STRING))->value;
+    const auto kind=declare?std::string{}:static_cast<const gse::value::String*>(field("kind",gse::VT_STRING))->value;
+    const auto proceed=declare?static_cast<const gse::value::Bool*>(field("proceed",gse::VT_BOOL))->value:true;
+
     const auto& expected=static_cast<const gse::value::String*>(field("expected_state",gse::VT_STRING))->value;
     const auto owner=RequireSimulationParticipant(m_player).simulation_id;auto& state=m_simulation->value;
-    if(target<1 || target>7 || target==owner || (kind!="truce" && kind!="treaty") || expected.size()>4096) {throw std::runtime_error("Diplomatic offer has invalid target or terms");}
+    if(target<1 || target>7 || target==owner || (!declare && kind!="truce" && kind!="treaty") || expected.size()>4096) {throw std::runtime_error("Diplomatic offer has invalid target or terms");}
     const auto participant=std::find_if(state.roster.begin(),state.roster.end(),[&](const auto& row){return row.simulation_id==target;});
     if(participant==state.roster.end() || !participant->active) {throw std::runtime_error("Diplomatic target is not an active participant");}
     if(expected!=DiplomacyToken(state,owner,static_cast<int32_t>(target),GetTurnId())) {return true;}
+    if(declare) {
+        if(!proceed) {return true;} // cancel owns no source transaction or RNG
+        const auto unavailable=WarUnavailable(state,owner,static_cast<int32_t>(target));if(!unavailable.empty()) {throw std::runtime_error(unavailable);}
+        if(!(state.hostility.owners.at(owner).directions[target].primary&8u)) {throw std::runtime_error("Vendetta requires a discovered commlink faction");}
+        const auto warning=faction::SelectSmacDiplomaticWarning(state.hostility.owners.at(owner).directions[target].primary,7u);
+        if(!faction::PassSmacDiplomaticWarning(warning,proceed)) {return true;}
+        faction::SmacWarBreakInputs inputs{owner,static_cast<int32_t>(target),static_cast<int32_t>(GetTurnId()),0,0,0,0,false};
+        if(GetTurnId()>INT32_MAX) {throw std::runtime_error("Vendetta turn exceeds signed32");}
+        const auto& forward=state.hostility.owners.at(owner).directions[target];
+        if(!(forward.secondary&0x20u) && (forward.primary&6u)) {
+            for(int32_t rank=1;rank<8;++rank) {
+                if(state.rank_order->faction_at_rank[rank]==owner) {inputs.actor_rank=rank;}
+                if(state.rank_order->faction_at_rank[rank]==target) {inputs.target_rank=rank;}
+            }
+            if(!inputs.actor_rank || !inputs.target_rank) {throw std::runtime_error("Vendetta participants lack retained ranks");}
+            inputs.actor_difficulty=unit::SmacStartupDesignState::OriginalDifficulty(m_player->GetDifficultyLevel());
+            inputs.target_major_atrocities=state.ecology_history->major_atrocities[target];
+            inputs.dominance=state.rank_order->Leader()==owner && PrepareCanonicalLeadingHumanDominance(state);
+        }
+        auto history=state.war_history.value_or(faction::SmacWarHistory{});auto hostility=state.hostility;
+        faction::ApplySmacOrdinaryVendetta(hostility,history,inputs);
+        if(!m_map || !m_map->m_worker_knowledge) {throw std::runtime_error("Vendetta requires current worker/territory knowledge");}
+        auto knowledge=m_map->m_worker_knowledge->CopyData();
+        for(const auto pair:{std::pair<int32_t,int32_t>{owner,static_cast<int32_t>(target)},{static_cast<int32_t>(target),owner}}) {
+            auto& observer=knowledge.observers[pair.first];if(!observer) {throw std::runtime_error("Vendetta lacks an admitted worker observer");}
+            const auto flags=hostility.owners.at(pair.first).directions[pair.second].primary;
+            observer->relations[pair.second].foreign_unit_exemption=(flags&3u)!=0;
+            observer->relations[pair.second].territory_recognition=(flags&0x08000008u)==0x08000008u;
+            if(observer->pact_with) {*observer->pact_with=static_cast<uint8_t>((*observer->pact_with&~(1u<<pair.second))|((flags&1u)?1u<<pair.second:0u));}
+        }
+        auto prepared=std::optional<map::SmacWorkerKnowledge>{map::SmacWorkerKnowledge::Create(knowledge)};
+        if(!apply) {return true;}
+        CheckRW(GSE_CALL);if(!GetGCSpace()->IsAccumulating()) {throw std::runtime_error("Vendetta requires its owning accumulation");}
+        state.hostility.owners.swap(hostility.owners);state.war_history=history;CommitConventionalSight(prepared);
+        const std::string text="Vendetta declared";
+        m_state->TriggerObject(this,"smac_diplomacy_response",ARGS_F(target,text) {
+            {"target",VALUE(gse::value::Int,,target)},{"accepted",VALUE(gse::value::Bool,,true)},{"text",VALUE(gse::value::String,,text)}
+        };});
+        return true;
+    }
     const auto unavailable=ContactUnavailable(state,owner,static_cast<int32_t>(target),GetTurnId());
     if(!unavailable.empty()) {throw std::runtime_error(unavailable);}
     const auto refusal=PeaceRefusal(state,owner,static_cast<int32_t>(target),kind=="treaty");

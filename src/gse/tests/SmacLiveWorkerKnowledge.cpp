@@ -25,6 +25,7 @@
 #include "fixtures/SmacUnitAdmission.h"
 #include "gse/value/Callable.h"
 #include "gse/value/Array.h"
+#include "gse/value/Bool.h"
 #include "gse/value/Object.h"
 #include "gse/value/Int.h"
 #include "gse/value/String.h"
@@ -124,6 +125,61 @@ bool Unchanged( ConventionalUnitFixture& fixture, const World& world, const Save
 }
 
 void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC live Commlink Vendetta confirms peace breaks and preserves cancellation and alliance guards",GT(){
+        for(int scenario=0;scenario<5;++scenario) {
+            ConventionalUnitFixture fixture;fixture.ConfigureMovementCampaign(false);
+            const auto error=fixture.Run([&](GSE_CALLABLE)->std::string {
+                auto* game=fixture.Game();Definitions(game);
+                const auto width=game->GetMap()->GetWidth(),height=game->GetMap()->GetHeight();
+                for(size_t y=0;y<height;++y) {for(size_t x=y&1;x<width;x+=2) {
+                    auto* tile=game->GetMap()->GetTile(x,y);for(auto* corner:tile->elevation.corners) {*corner=100;}
+                    tile->features=0;tile->terraforming=0;tile->rockiness=map::tile::ROCKINESS_FLAT;tile->moisture=map::tile::MOISTURE_ARID;tile->Update();
+                }}
+                auto* own=MakeBase(GSE_CALL,game,901,0,1,2,2,3);auto* peer=MakeBase(GSE_CALL,game,800,1,2,6,4,3);
+                own->m_owner->GetPlayer()->SetDifficultyLevel("Librarian");
+                Knowledge::Data data{static_cast<int32_t>(width),static_cast<int32_t>(height),true,true,0,{},{},{}};
+                data.tiles.resize(width*height/2,{255,std::nullopt});
+                for(size_t owner=1;owner<8;++owner) {data.observers[owner]=Knowledge::Observer{};data.observers[owner]->pact_with=0;}
+                data.observers[1]->relations[2]={true,true};data.observers[2]->relations[1]={true,true};
+                game->PublishSmacWorkerKnowledge(GSE_CALL,Knowledge::Create(data));
+                fixture.ResourceState([&](auto& state) {
+                    state.human_membership=2;state.rank_order=faction::SmacRankOrder{{0,7,6,2,5,4,3,1}};state.ecology_history.emplace();
+                    state.war_history.emplace();for(int owner=1;owner<8;++owner) {state.war_history->Initialize(owner,0);}
+                    auto& a=state.hostility.owners.at(1);auto& r=state.hostility.owners.at(2);
+                    a.bookkeeping=4;a.integrity=0;a.directions[2].primary=0xc8000008u|(scenario==1?4u:scenario==2?3u:2u);
+                    r.directions[1].primary=0xc800000au;a.directions[2].transition_turn=2;r.directions[1].transition_turn=3;
+                    state.war_history->field26c[2][1]=9;state.war_history->field2f4[1][2]=11;state.war_history->field314[2][1]=7;
+                    if(scenario>=3) {state.hostility.owners.at(3).directions[2].primary=1;}
+                    if(scenario==4) {a.directions[2].secondary=0x20u;}
+                });
+                auto* wrapper=static_cast<value::Object*>(game->Wrap(GSE_CALL));
+                const auto rows=static_cast<value::Array*>(Call(GSE_CALL,wrapper,"get_smac_diplomacy"))->value;
+                GT_ASSERT(rows.size()==1,"war commlink exposed unmet faction identities");
+                auto* row=static_cast<value::Object*>(rows[0]);const auto token=static_cast<value::String*>(row->Get("expected_state"))->value;
+                const auto before=fixture.Snapshot(),own_before=Base::Serialize(own).ToString(),peer_before=Base::Serialize(peer).ToString();const auto random=fixture.GameplayRandom();
+                const auto command=gse::value::object_properties_t{{"target",VALUE(value::Int,,2)},{"expected_state",VALUE(value::String,,token)},{"proceed",VALUE(value::Bool,,scenario!=1)}};
+                if(scenario==2 || scenario==3) {GT_ASSERT(Rejects([&]{game->Event(GSE_CALL,"declare_smac_vendetta",command);}),"Pact/third-party unsupported transaction was queued");}
+                else {game->Event(GSE_CALL,"declare_smac_vendetta",command);fixture.DrainEvents();}
+                if(scenario>=1 && scenario<=3) {GT_ASSERT(fixture.Snapshot()==before && fixture.GameplayRandom()==random,"cancelled/guarded declaration changed persisted authority");}
+                else {
+                    bool correct=false;fixture.ResourceState([&](auto& state) {
+                        const auto& a=state.hostility.owners.at(1);const auto& r=state.hostility.owners.at(2);const bool skip=scenario==4;
+                        correct=(a.directions[2].primary&16u) && (r.directions[1].primary&16u) && !(a.directions[2].primary&7u) && !(r.directions[1].primary&7u)
+                            && a.integrity==uint32_t(skip?0:2) && a.bookkeeping==uint32_t(skip?4:3) && a.directions[2].transition_turn==(skip?2:1)
+                            && r.directions[1].transition_turn==3 && state.war_history->field26c[2][1]==0
+                            && state.war_history->field2f4[1][2]==uint32_t(skip?11:12) && state.war_history->field314[2][1]==uint32_t(skip?7:9)
+                            && state.war_history->field240[1][2]==uint32_t(skip?0:50);
+                    });
+                    GT_ASSERT(correct,"live human/computer declaration lost raw metadata, penalties, skip or directed timestamp semantics");
+                    GT_ASSERT(game->GetCanonicalEconomy(own->m_owner).treaty_partners==0 && fixture.GameplayRandom()==random
+                        && Base::Serialize(own).ToString()==own_before && Base::Serialize(peer).ToString()==peer_before,"war posted resources, changed Bases or advanced RNG");
+                    const auto after=fixture.Snapshot();game->Event(GSE_CALL,"declare_smac_vendetta",command);fixture.DrainEvents();
+                    GT_ASSERT(fixture.Snapshot()==after,"retired declaration token repeated metadata effects");
+                }
+                GT_OK();
+            });GT_ASSERT(error.empty(),"Vendetta scenario"+std::to_string(scenario)+": "+error);
+        }GT_OK();
+    });
     task->AddTest("SMAC live commlink offers commit source peace aftermath or preserve rejected and stale commands",GT(){
         for(int scenario=0;scenario<4;++scenario) {
             ConventionalUnitFixture fixture;fixture.Configure();

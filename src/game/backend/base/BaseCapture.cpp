@@ -586,6 +586,16 @@ void BaseManager::RaidSmacBase(GSE_CALLABLE,unit::Unit* actor,map::tile::Tile* d
             if(um->GetUnit(*it)->m_owner==victim_owner) {casualties.push_back(*it);}
         }}
     }
+    // The source sweep invokes the carrier-loss wrapper. Assigned sea cargo
+    // cannot survive merely because it was an earlier H-quota survivor.
+    for(size_t i=0;i<casualties.size();++i) {
+        auto* lost=um->GetUnit(casualties[i]);if(!lost->IsNative() || lost->Native().design!=9 || !lost->GetTile()->is_water_tile) {continue;}
+        for(const auto& row:lost->GetTile()->units) {
+            auto* cargo=row.second;
+            if(cargo->IsNative() && cargo->Native().order==1 && cargo->Native().waypoint_x[0]==lost->Native().id
+                && std::find(casualties.begin(),casualties.end(),cargo->m_id)==casualties.end()) {casualties.push_back(cargo->m_id);}
+        }
+    }
     auto removal=um->PrepareWorldUnitRemoval(GSE_CALL,casualties);
     if(destroyed && replacement) {removal.PrepareBaseRemovalHomes(*base,*replacement);}
     const auto previous_query=m_game->m_smac_riot_query_owner;m_game->m_smac_riot_query_owner=owner;

@@ -468,12 +468,22 @@ void AddSmacLiveWorkerAllocationTests( task::gsetests::GSETests* task ) {
             });
             GT_ASSERT(isle->Native().terraforming_progress==0 && isle->Native().order==24 && isle->Native().status_character==99
                 && isle->Native().waypoint_x[0]==2 && isle->Native().waypoint_y[0]==2 && worm->Native().order==1,"Native command work byte wrap directive or carried sentry lifetime differs");
+            auto* sailed=game->GetMap()->GetTile(22,20);for(auto* elevation:sailed->elevation.corners) {*elevation=-1000;}sailed->Update();
+            const auto cargo_spent=worm->Native().movement_spent,cargo_facing=worm->Native().facing,cargo_mask=worm->Native().observation_mask;
+            fixture.WithNativeController([&]{um->MoveWildNativeUnit(GSE_CALL,isle,sailed);});
+            GT_ASSERT(sea->units.empty() && isle->GetTile()==sailed && worm->GetTile()==sailed && sailed->units.size()==2
+                && isle->Native().movement_spent==3 && worm->Native().movement_spent==cargo_spent && worm->Native().facing==cargo_facing
+                && worm->Native().order==1 && worm->Native().waypoint_x[0]==isle->Native().id && worm->Native().waypoint_y[0]==0
+                && worm->Native().stack_previous==-1 && worm->Native().stack_next==isle->Native().id
+                && isle->Native().stack_previous==worm->Native().id && isle->Native().stack_next==-1
+                && worm->Native().observation_mask==cargo_mask,"Mode1 sailing lost its group order carrier association independent cargo state or occupancy");
+            sea=sailed;
             const auto worm_mask=worm->Native().observation_mask;
             fixture.WithNativeController([&]{um->ActivateWildNativeStack(GSE_CALL,isle,2);});
             GT_ASSERT(isle->GetTile()==sea && worm->GetTile()==sea && isle->Native().order==0 && worm->Native().order==0
                 && isle->Native().movement_spent==um->QueryNativeUnit(isle->Native(),0).full_allowance
                 && worm->Native().observation_mask==(worm_mask|2),"Shore activation moved cargo or omitted readiness observations or actual exhaustion");
-            auto* shore=game->GetMap()->GetTile(21,21);GT_ASSERT(!shore->is_water_tile,"Carrier fixture lacks ordinary shore");
+            auto* shore=game->GetMap()->GetTile(23,21);GT_ASSERT(!shore->is_water_tile,"Carrier fixture lacks ordinary shore");
             fixture.WithNativeController([&]{um->SetWildNativeWaypoint(GSE_CALL,worm,0x58,shore);um->MoveWildNativeUnit(GSE_CALL,worm,shore);um->DisbandWildNativeUnit(GSE_CALL,isle);});
             GT_ASSERT(!um->GetUnit(isle_id) && um->GetUnit(worm_id)==worm && worm->GetTile()==shore && sea->units.empty()
                 && worm->Native().movement_spent==3 && fixture.GameplayRandom()==random,"Canonical beaching or empty carrier retirement lost cargo positions budget or RNG");GT_OK();

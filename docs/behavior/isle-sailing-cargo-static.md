@@ -91,3 +91,15 @@ Those callers need their own gates; the existing carrier-loss contract remains.
 
 Private source for this caller link and raid-facility clarification is frozen in
 `tmp/reference/independent-isle-sailing-static-evidence-20261111/`.
+
+## Live caller
+
+`MoveWildNativeUnit` now admits native9 open-sea movement and prepares its mode1
+source carrier partition, existing/new cargo passes, group relocation, rebuilt
+source/destination links and tile presence together. The carrier pays one actual
+sea quantum; cargo keeps its own spent/facing and retained masks. Native sight
+publishes once for the final destination stack. The carrier command fixture
+runs birth→sailing with unassigned sentry Worm→shore activation→actual Worm
+beaching→carrier retirement; no intermediate off-map state is published.
+Sea/Base interactions and sea combat retain separate admission from this empty
+open-sea movement path.

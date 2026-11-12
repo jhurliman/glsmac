@@ -1000,7 +1000,13 @@ public:
             std::exception_ptr error;
             const auto generated_sources=WithCampaignMapSources([&]()->std::string {
                 std::thread native([&]{try {m_game.AcquireInitializationMap();} catch(...) {error=std::current_exception();}});
-                native.join();if(error) {std::rethrow_exception(error);}GT_OK();
+                native.join();if(error) {std::rethrow_exception(error);}
+                // These constructor inputs are borrowed CPU placeholders, not
+                // initialized renderer state. Retire them before their scope
+                // ends so ordinary work/flora correctly takes its headless path.
+                m_game.m_map->m_textures.source.texture_pcx=nullptr;
+                m_game.m_map->m_textures.source.ter1_pcx=nullptr;
+                GT_OK();
             });
             GT_ASSERT(generated_sources.empty(),"Generated map source acquisition: "+generated_sources);
             ProcessAccumulations();

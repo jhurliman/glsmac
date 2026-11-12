@@ -826,9 +826,13 @@ public:
         GT_FAIL("Replay did not settle its ordinary human decisions");
     }
 
-    std::string CheckLocalCampaignReplay(GSE_CALLABLE,size_t turns) {
+    std::string CheckLocalCampaignReplay(size_t turns) {
+        GT_ASSERT(!IsAccumulating(),"Campaign replay orchestration must run outside fixture.Run");
         GT_ASSERT(turns>0 && turns<=10,"Replay helper requires a bounded future continuation");
-        auto error=SettleLocalHumanChoices(GSE_CALL);GT_ASSERT(error.empty(),"Replay setup: "+error);
+        // This orchestration must run outside fixture.Run: restore obtains the
+        // engine binding itself. Each actual command owns one separate scope.
+        auto error=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {return SettleLocalHumanChoices(GSE_CALL);});
+        GT_ASSERT(error.empty(),"Replay setup: "+error);
         error=CheckLocalComputerBoundary();GT_ASSERT(error.empty(),"Replay setup: "+error);
         const auto checkpoint=m_game.SerializeWorldSnapshot();
         const auto checkpoint_turn=m_game.GetTurnId();
@@ -841,11 +845,13 @@ public:
         m_game.m_gameplay_entropy_word_source=[]()->uint32_t {throw std::runtime_error("Saved/future campaign resampled startup entropy");};
         std::vector<std::string> expected;
         const auto advance=[&]()->std::string {
-            auto next=DriveLocalHumanCampaign(GSE_CALL);GT_ASSERT(next.empty(),"Replay step: "+next);
-            m_game.Event(GSE_CALL,"complete_turn",{});m_game.ProcessEvents();
-            next=SettleLocalHumanChoices(GSE_CALL);GT_ASSERT(next.empty(),"Replay step: "+next);
-            next=CheckLocalComputerBoundary();GT_ASSERT(next.empty(),"Replay step: "+next);
-            GT_OK();
+            const auto commands=WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
+                auto next=DriveLocalHumanCampaign(GSE_CALL);GT_ASSERT(next.empty(),"Replay step: "+next);
+                m_game.Event(GSE_CALL,"complete_turn",{});m_game.ProcessEvents();
+                return SettleLocalHumanChoices(GSE_CALL);
+            });
+            GT_ASSERT(commands.empty(),"Replay commands: "+commands);
+            return CheckLocalComputerBoundary();
         };
         for(size_t i=0;i<turns;++i) {
             error=advance();GT_ASSERT(error.empty(),"Uninterrupted replay continuation: "+error);
@@ -952,12 +958,16 @@ public:
             GT_ASSERT(world->LoadInstalledPlanet(path.string(),false,active)==map::Map::EC_NONE,"Controller map import failed");
             }
             m_game.m_tm=new map::tile::TileManager(&m_game);
-            for(const auto* id:{"NUTRIENTS","MINERALS","ENERGY"}) {m_game.GetRM()->DefineResource(new game::backend::resource::Resource(id,id,{}));}
-            for(const auto* name:{"define_moraleset","define_unit","define_base_pop","define_base_facility","advance_turn","complete_turn","move_unit","attack_unit","unit_skip_turn"}) {
+            for(const auto* name:{"define_resource","define_no_resource","define_moraleset","define_unit","define_base_pop","define_base_facility","advance_turn","complete_turn","move_unit","attack_unit","unit_skip_turn"}) {
                 auto* handlers=static_cast<value::Object*>(RunScript(GSE_CALL,std::string("./GLSMAC_data/default/game/event/")+name));
                 RegisterEvent(name,new event::EventHandler(gc_space,name,static_cast<value::Callable*>(handlers->Get("validate")),nullptr,
                     static_cast<value::Callable*>(handlers->Get("apply")),static_cast<value::Callable*>(handlers->Get("rollback"))));
             }
+            auto* resources=static_cast<value::Object*>(RunScript(GSE_CALL,"./GLSMAC_data/default/resources"));
+            // Load actual presentation definitions only. The legacy script
+            // configure/calculation callback is superseded by native rules.
+            static_cast<value::Callable*>(resources->Get("define"))->Run(GSE_CALL,{m_game.Wrap(GSE_CALL)});
+            m_game.ProcessEvents();
             m_game.On(GSE_CALL,"create_world",NATIVE_CALL(this) {
                 auto* game=m_game.Wrap(GSE_CALL);
                 static_cast<value::Callable*>(RunScript(GSE_CALL,"./GLSMAC_data/default/game/bases"))->Run(GSE_CALL,{game});
@@ -8242,7 +8252,7 @@ std::string CheckSmacBaseStartupFixture( const bool queued, const int32_t diffic
 ConventionalUnitFixture::ConventionalUnitFixture() : fixture( std::make_unique< BackendFixture >() ) {}
 ConventionalUnitFixture::~ConventionalUnitFixture() = default;
 void ConventionalUnitFixture::WithNativeController(const std::function<void()>& callback) {fixture->WithNativeController(callback);}
-std::string ConventionalUnitFixture::CheckLocalCampaignReplay(GSE_CALLABLE,size_t turns) {return fixture->CheckLocalCampaignReplay(GSE_CALL,turns);}
+std::string ConventionalUnitFixture::CheckLocalCampaignReplay(size_t turns) {return fixture->CheckLocalCampaignReplay(turns);}
 std::string ConventionalUnitFixture::DriveLocalHumanCampaign(GSE_CALLABLE) {return fixture->DriveLocalHumanCampaign(GSE_CALL);}
 std::string ConventionalUnitFixture::CampaignSeedReport() const {return fixture->CampaignSeedReport();}
 LocalCampaignActions ConventionalUnitFixture::CampaignActions() const {return fixture->CampaignActions();}

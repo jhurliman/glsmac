@@ -97,7 +97,8 @@ Cells WithStartingBalance(const Cells& cells,smac_site::Geometry g,const smac_ba
     return result;
 }
 
-Cells WithBloomTerrain(const Cells& cells,smac_site::Geometry g,const base::SmacBloomTerrainPlan& plan) {
+Cells WithBloomTerrain(const Cells& cells,smac_site::Geometry g,const base::SmacBloomTerrainPlan& plan,std::optional<uint8_t> viewer) {
+    if(viewer && (*viewer<1 || *viewer>7)) {throw std::invalid_argument("Bloom memory requires a positive viewer");}
     Validate(cells,g);
     if (cells.size() != (size_t(g.width/2)*size_t(g.height))) { throw std::logic_error("Retained terrain is incomplete"); }
     auto result = cells;
@@ -125,6 +126,11 @@ Cells WithBloomTerrain(const Cells& cells,smac_site::Geometry g,const base::Smac
         // Copy only the event-owned terrain bits.
         write32(tile.bytes.data() + 8, (tile.Items() & ~event_items) | (after.items & event_items));
         write32(tile.bytes.data() + 12, after.landmarks);
+        if(viewer && plan.FungusCell() && delta.coordinate==*plan.FungusCell()) {
+            // Native5a9290 copies the complete resulting actual item word only
+            // for the admitted focused viewer, not all explored observers.
+            write32(tile.bytes.data()+12+4*(*viewer),after.items);
+        }
     }
     return result;
 }

@@ -109,7 +109,7 @@ inline std::string ProductionSource() {
 		const auto value = row == 1 ? Movement().RawRoadRate() : row == 7 ? rules.mineral_multiplier : row == 43 ? rules.retool_loss_percent
 			: row == 44 ? rules.retool_strictness : row == 45 ? rules.retool_exemption : row == 11 ? Specialists().minimum_base_size : row == 48 ? Territory().RawBorderDistance() : (row == 22 || row == 28 || row == 30) ? 25 : 0;
 		const auto token = row == 54 ? "Tech0" : row == 55 ? "Tech1" : row == 56 ? "Tech2" : row == 58 ? "Tech3" : "";
-		source += (row>=18 && row<=20 ? std::to_string(row)+","+std::to_string(row+1) : *token ? std::string( token ) : std::to_string( value )) + ", ; synthetic annotation\n";
+		source += (row==66 ? "0,1" : row>=18 && row<=20 ? std::to_string(row)+","+std::to_string(row+1) : *token ? std::string( token ) : std::to_string( value )) + ", ; synthetic annotation\n";
 	}
 	source += "#FACILITIES\n";
 	for ( const auto& facility : rules.facilities ) {

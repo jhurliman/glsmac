@@ -13,9 +13,10 @@ struct SmacEcologyRules {
     // Full source generation authority, when present. V1/short diagnostic
     // profiles retain absence and cannot silently use stock defaults.
     std::optional<std::array<int32_t,31>> world_builder;
+    std::optional<std::array<int32_t,2>> warming_frequency;
     static std::optional<SmacEcologyRules> Read(const std::string& source);
     void Validate() const;
-    bool operator==(const SmacEcologyRules& other) const { return sea_level_rises == other.sea_level_rises && world_builder==other.world_builder; }
+    bool operator==(const SmacEcologyRules& other) const { return sea_level_rises == other.sea_level_rises && world_builder==other.world_builder && warming_frequency==other.warming_frequency; }
     types::Buffer Serialize() const;
     static SmacEcologyRules Deserialize(types::Buffer buffer);
 };

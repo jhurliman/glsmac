@@ -40,24 +40,7 @@ void BeginOwnerEcologyAggregate(faction::SmacSimulationState& state,const settin
     // they cannot manufacture a newly calculated zero at an owner boundary.
     if(HasEcologyCalculationAuthority(state,settings,world)) {state.ecology_history->research_aggregate.at(owner)=0;}
 }
-void PostBaseEcologyAggregate(faction::SmacSimulationState& state,const settings::GlobalSettings& settings,const map::Map& world,const base::Base& base) {
-    if(!HasEcologyCalculationAuthority(state,settings,world)) {return;}
-    const auto owner=base.GetSmacResourceContext().owner_simulation_id;
-    const auto& cache=base.GetSmacUpkeepCache();
-    const auto* social=state.social.Find(owner);
-    if(!cache || !cache->calculation.eco_damage || !social || social->phase!=faction::SmacFactionSocialState::Phase::Refreshed) {
-        throw std::runtime_error("Ecology aggregate requires the committed resource pass and current PLANET");
-    }
-    // Research may have awarded technology. This consumer uses the retained
-    // final resource pass, rather than silently forcing a new calculation.
-    const auto contribution=base::SmacEcologyResearchContribution(*cache->calculation.eco_damage,social->current.at(7));
-    auto& aggregate=state.ecology_history->research_aggregate.at(owner);
-    const auto next=int64_t(aggregate)+contribution;
-    if(next<INT32_MIN || next>INT32_MAX) {throw std::overflow_error("Ecology aggregate exceeds measured signed32");}
-    aggregate=static_cast<int32_t>(next);
-    // The mandatory CRT draw and downstream event producer remain a separate
-    // pending integration. Posting alone is not a complete ecology handler.
-}
+
 }
 
 
@@ -324,7 +307,7 @@ void Game::ContinueCanonicalTurn(GSE_CALLABLE) {
 		}
 		if(!ContinueCanonicalResearch(GSE_CALL)) {return;}
 		if(next.stage!=Stage::Credit || !next.energy) {throw std::runtime_error("Canonical research omitted its credit stage");}
-        PostBaseEcologyAggregate(m_simulation->value,m_state->m_settings.global,*m_map,*base);
+        ProcessCanonicalBaseEcology(GSE_CALL,*base);
 		const auto notifications=PostCanonicalBaseMaintenance(*base,*next.energy);
 		m_bm->RefreshBase(base);
 		for(const auto& notification:notifications) {Message(notification);}
@@ -649,6 +632,7 @@ void Game::ContinueFactionController(GSE_CALLABLE) {
             m_is_turn_complete=false;break;
         }
         case Phase::WildlifeUpkeep:
+            ProcessCanonicalClimateStep();
             RunSmacWildlifeTurn(GSE_CALL);
             cursor.CompleteWildlifeUpkeep(cursor.Current());break;
         case Phase::WildlifeCommand: {

@@ -28,7 +28,7 @@ public:
     bool operator==(const SmacTerrainAuthority& other) const;
     SmacTerrainAuthority WithGlobalSpread(const smac_spread::Input&,const smac_spread::Result&,bool live_projection=false) const;
     SmacTerrainAuthority WithStartingBalance(const smac_balance::Result&) const;
-    SmacTerrainAuthority WithBloomTerrain(const base::SmacBloomTerrainPlan&) const;
+    SmacTerrainAuthority WithBloomTerrain(const base::SmacBloomTerrainPlan&,std::optional<uint8_t> viewer={}) const;
     smac_climate::World ExportClimateTerrain() const;
     SmacTerrainAuthority WithClimateTerrain(const smac_climate::World&,int32_t sea_offset,int32_t climate_extra) const;
     Origin SourceOrigin() const {return m_origin;}

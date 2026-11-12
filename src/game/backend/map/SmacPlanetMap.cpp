@@ -55,8 +55,8 @@ SmacPlanetMap SmacPlanetMap::WithGlobalSpread(const smac_spread::Input& before,c
 SmacPlanetMap SmacPlanetMap::WithStartingBalance(const smac_balance::Result& plan) const {
     SmacPlanetMap result;result.m_header=m_header;result.m_trailer=m_trailer;result.m_tiles=retained_terrain::WithStartingBalance(m_tiles,{int32_t(WIDTH),int32_t(HEIGHT),true},plan);return result;
 }
-SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const {
-    SmacPlanetMap result;result.m_header=m_header;result.m_trailer=m_trailer;result.m_tiles=retained_terrain::WithBloomTerrain(m_tiles,{int32_t(WIDTH),int32_t(HEIGHT),true},plan);return result;
+SmacPlanetMap SmacPlanetMap::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan,std::optional<uint8_t> viewer) const {
+    SmacPlanetMap result;result.m_header=m_header;result.m_trailer=m_trailer;result.m_tiles=retained_terrain::WithBloomTerrain(m_tiles,{int32_t(WIDTH),int32_t(HEIGHT),true},plan,viewer);return result;
 }
 smac_climate::World SmacPlanetMap::ExportClimateTerrain(bool wrap) const {
     return retained_terrain::ExportClimateTerrain(m_tiles,{int32_t(WIDTH),int32_t(HEIGHT),wrap});

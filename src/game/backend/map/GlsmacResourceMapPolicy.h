@@ -33,7 +33,7 @@ public:
     const std::shared_ptr<const SmacPlanetMap>& OriginalPlanetSource() const { return m_planet; }
     const std::shared_ptr<const SmacTerrainAuthority>& NativeTerrainSource() const {return m_native;}
 	bool AutomaticLandResources() const { return m_automatic_land_resources; }
-    GlsmacResourceMapPolicy WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const;
+    GlsmacResourceMapPolicy WithBloomTerrain(const base::SmacBloomTerrainPlan& plan,std::optional<uint8_t> viewer={}) const;
     GlsmacResourceMapPolicy WithStartingBalance(const smac_balance::Result& plan) const;
     GlsmacResourceMapPolicy WithGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const;
     GlsmacResourceMapPolicy WithLiveGlobalSpread(const smac_spread::Input& before,const smac_spread::Result& plan) const;

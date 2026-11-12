@@ -12,6 +12,7 @@
 #include "game/NativeTerrainWorld.h"
 #include "game/frontend/NativeTerrainSession.h"
 #include "game/backend/map/SmacLandmarkGeometry.h"
+#include "game/backend/base/SmacEcology.h"
 #include "util/String.h"
 #include "loader/txt/FactionTXTLoader.h"
 #include "loader/txt/TXTLoaders.h"
@@ -916,6 +917,57 @@ public:
                 }
             }
             GT_OK();
+        });
+    }
+
+    std::string CheckLiveEcologyTerrainTransaction() {
+        using namespace game::backend;
+        const auto startup=CheckCanonicalFirstBase(5,true,3,true);if(!startup.empty()) {return startup;}
+        return WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
+            auto* world=m_game.GetMap();const std::array<int32_t,2> point{{8,6}};auto* tile=world->GetTile(8,6);
+            const auto original_knowledge=world->GetSmacWorkerKnowledge()->CopyData();
+            const auto query=[&](int32_t x,int32_t y){return world->CopyEcologyBloomCell({{x,y}},original_knowledge);};
+            const auto plan=base::PrepareSmacBloomTerrain({point,80,80,true},6,3,true,query,[]{return 1;});
+            const auto before=m_game.SerializeWorldSnapshot();const auto random=m_game.m_simulation->value.gameplay_random;
+            const std::array<map::tile::elevation_t,5> heights{{*tile->elevation.center,*tile->elevation.left,*tile->elevation.top,*tile->elevation.right,*tile->elevation.bottom}};
+            auto prepared=world->PrepareEcologyBloom(plan,uint8_t(1));
+            GT_ASSERT(m_game.SerializeWorldSnapshot()==before && !world->GetEcologyBloomTerrainPayload(*prepared),"Headless bloom preparation published or required rendering");
+            bool rejected=false;
+            try {world->QueryEcologyBloom(*prepared,[&]{
+                if(!(tile->features&map::tile::FEATURE_XENOFUNGUS)) {throw std::logic_error("Staged bloom view omitted fungus");}
+                throw std::runtime_error("Injected detached native preparation failure");
+            });} catch(const std::runtime_error&) {rejected=true;}
+            GT_ASSERT(rejected && m_game.SerializeWorldSnapshot()==before,"Failed staged bloom query leaked terrain or memory");
+            const auto features=tile->features;tile->features^=map::tile::FEATURE_XENOFUNGUS;rejected=false;
+            try {world->CommitEcologyBloom(*prepared);}catch(const std::runtime_error&) {rejected=true;}
+            tile->features=features;
+            GT_ASSERT(rejected && m_game.SerializeWorldSnapshot()==before,"Stale bloom partially committed authority");
+            world->CommitEcologyBloom(*prepared);
+            const auto after=world->GetSmacWorkerKnowledge()->CopyData();const auto index=size_t(point[1])*40+point[0]/2;
+            GT_ASSERT((tile->features&map::tile::FEATURE_XENOFUNGUS) && after.remembered[1][index]
+                && (after.remembered[1][index]->features&map::tile::FEATURE_XENOFUNGUS),"Committed bloom omitted focused memory or actual terrain");
+            for(size_t owner=2;owner<8;++owner) {GT_ASSERT(after.remembered[owner]==original_knowledge.remembered[owner],"Bloom broadcast another observer's memory");}
+            GT_ASSERT(after.tiles==original_knowledge.tiles && m_game.m_simulation->value.gameplay_random==random,"Map publication invented exploration or consumed gameplay RNG");
+            const std::array<map::tile::elevation_t,5> final{{*tile->elevation.center,*tile->elevation.left,*tile->elevation.top,*tile->elevation.right,*tile->elevation.bottom}};
+            GT_ASSERT(final==heights,"Class-only bloom changed contours/shared display corners");
+            GT_ASSERT(map::GlsmacResourceMapPolicy::Deserialize(world->GetResourcePolicy()->Serialize().ToString())==*world->GetResourcePolicy(),"Bloom terrain lost saved native authority");GT_OK();
+        });
+    }
+
+    std::string CheckLiveEcologyZeroDamage() {
+        return WithEngineGameScriptValues([&](GSE_CALLABLE)->std::string {
+            const auto settled=SettleLocalHumanChoices(GSE_CALL);GT_ASSERT(settled.empty(),"Settle ecology research: "+settled);
+            auto& state=m_game.m_simulation->value;
+            game::backend::base::Base* current=nullptr;
+            for(const auto& row:m_game.GetBM()->GetBases()) {if(row.second->m_owner==m_game.m_slot) {current=row.second;break;}}
+            GT_ASSERT(current && current->GetSmacUpkeepCache() && current->GetSmacUpkeepCache()->calculation.eco_damage==0,"Opening ecology control requires real retained damage0");
+            const auto before=state.gameplay_random;const auto history=*state.ecology_history;
+            auto* wrapped=static_cast<value::Object*>(current->Wrap(GSE_CALL));
+            (void)static_cast<value::Callable*>(wrapped->Get("get_smac_resource_calculation"))->Run(GSE_CALL,{});
+            GT_ASSERT(state.gameplay_random==before && *state.ecology_history==history,"Resource preview entered live ecology event");
+            auto expected=before;(void)expected.NextCrtRaw15();
+            m_game.ProcessCanonicalBaseEcology(GSE_CALL,*current);
+            GT_ASSERT(state.gameplay_random==expected && *state.ecology_history==history,"Actual zero-damage handler omitted existing CRT draw or changed history");GT_OK();
         });
     }
 
@@ -13199,7 +13251,13 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
-    task->AddTest("SMAC milestone generated campaign restores and replays one human boundary",GT(){
+    task->AddTest("SMAC live ecology terrain transaction preserves owning rollback and viewer memory",GT(){
+        BackendFixture fixture;const auto result=fixture.CheckLiveEcologyTerrainTransaction();
+        GT_ASSERT(result.empty(),"Live ecology terrain: "+result);GT_OK();
+    });
+    for(const bool ecology:{false,true}) {
+    task->AddTest(ecology ? "SMAC live Base ecology consumes zero-damage CRT and keeps previews pure"
+        : "SMAC milestone generated campaign restores and replays one human boundary",GT(ecology){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
         std::map<std::string,std::string> sources;
         const auto source=[&](const std::string& name)->std::string {
@@ -13212,9 +13270,10 @@ void AddBackendTests( task::gsetests::GSETests* task ) {
         };
         BackendFixture fixture;const auto startup=fixture.StartLocalComputerCampaign(source,"",true);
         GT_ASSERT(startup.empty(),"Short generated replay startup: "+startup);
-        const auto result=fixture.CheckLocalCampaignReplay(1);
-        GT_ASSERT(result.empty(),"Short generated replay: "+result);GT_OK();
+        const auto result=ecology?fixture.CheckLiveEcologyZeroDamage():fixture.CheckLocalCampaignReplay(1);
+        GT_ASSERT(result.empty(),"Short generated campaign: "+result);GT_OK();
     });
+    }
     task->AddTest("SMAC milestone saved checkpoint restores and replays three human boundaries",GT(){
         const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");const auto* checkpoint=std::getenv("GLSMAC_CAMPAIGN_REPLAY_CHECKPOINT");
         if(!assets || !*assets || !checkpoint || !*checkpoint) {GT_OK();}

@@ -399,6 +399,14 @@ void AddSmacEcologyTests(task::gsetests::GSETests* task) {
         auto short_rules=SmacEcologyRules::Read(EcologySource("5,"));
         GT_ASSERT(short_rules && !short_rules->world_builder,"Legacy short ecology fixture invented generation defaults");GT_OK();
     });
+    task->AddTest("SMAC ecology freezes native warming frequency clamps and saves explicit absence",GT(){
+        std::string source="#RULES\n";for(int i=0;i<65;++i) {source+="0,\n";}source+="-9,2001 ; frequency\n"+EcologySource("5,");
+        const auto rules=SmacEcologyRules::Read(source);
+        GT_ASSERT(rules && rules->warming_frequency && rules->warming_frequency->at(0)==0 && rules->warming_frequency->at(1)==1000,"Loaded warming frequency missed native clamp");
+        GT_ASSERT(SmacEcologyRules::Deserialize(rules->Serialize())==*rules,"Frequency failed frozen rules transfer");
+        const auto legacy=SmacEcologyRules::Read(EcologySource("5,"));
+        GT_ASSERT(legacy && !legacy->warming_frequency && !SmacEcologyRules::Deserialize(legacy->Serialize()).warming_frequency,"Short old profile invented frequency1/1");GT_OK();
+    });
     task->AddTest("SMAC ecology host settings freeze source preserve old absence and reject partial replacement", GT() {
         using game::backend::settings::GlobalSettings;
         const auto source = [](const std::string& filename) {

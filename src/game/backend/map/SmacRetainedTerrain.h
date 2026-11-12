@@ -11,7 +11,7 @@ using Cells=std::vector<Cell>;
 Cells WithLiveGlobalSpread(const Cells&,smac_site::Geometry,const smac_spread::Input&,const smac_spread::Result&);
 Cells WithGlobalSpread(const Cells&,smac_site::Geometry,const smac_spread::Input&,const smac_spread::Result&);
 Cells WithStartingBalance(const Cells&,smac_site::Geometry,const smac_balance::Result&);
-Cells WithBloomTerrain(const Cells&,smac_site::Geometry,const base::SmacBloomTerrainPlan&);
+Cells WithBloomTerrain(const Cells&,smac_site::Geometry,const base::SmacBloomTerrainPlan&,std::optional<uint8_t> viewer={});
 smac_climate::World ExportClimateTerrain(const Cells&,smac_site::Geometry);
 Cells WithClimateTerrain(const Cells&,smac_site::Geometry,const smac_climate::World&);
 }

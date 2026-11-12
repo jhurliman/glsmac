@@ -319,6 +319,15 @@ void AddSmacPlanetMapTests(task::gsetests::GSETests* task) {
             }
             GT_ASSERT(original.OriginalPlanet()->Encode() == wire && prepared.OriginalPlanet()->Encode() == expected,
                 "Bloom changed source authority, contours, region or opaque bytes: " + std::string(row.id));
+            if(plan.FungusCell()) {
+                auto remembered=expected;const auto point=*plan.FungusCell();
+                const auto delta=std::find_if(plan.Changes().begin(),plan.Changes().end(),[&](const auto& value){return value.coordinate==point;});
+                GT_ASSERT(delta!=plan.Changes().end(),"Direct bloom omitted its changed cell");
+                Put(remembered,offset(point)+12+4*2,delta->after.items);
+                const auto disclosed=original.WithBloomTerrain(plan,uint8_t(2));
+                GT_ASSERT(disclosed.OriginalPlanet()->Encode()==remembered && Policy::Deserialize(disclosed.Serialize().ToString())==disclosed,
+                    "Bloom copied incomplete items, broadcast foreign memory or lost saved viewer word");
+            }
             using Authority=game::backend::map::SmacTerrainAuthority;
             Authority::Metadata meta;meta.width=uint32_t(row.map.width);meta.height=uint32_t(row.map.height);meta.horizontal_wrap=row.map.horizontal_wrap;
             meta.pattern=11446;meta.generation_primary_rules=0x3a0e;for(auto& category:meta.categories) {category=1;}meta.categories[0]=0;

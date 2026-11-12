@@ -253,6 +253,7 @@ void Game::PrepareNewSimulation() {
     for(size_t slot=1;slot<8;++slot) {value.dominance_native_keys->at(slot)=settings.GetSmacFactionStartupRules()->factions[slot-1].section;}
 	value.ecology_history=m_smac_cross_world_ecology;
 	value.faction_status=m_smac_cross_world_faction_status;
+	value.ecology_climate_schedule.emplace(); // measured fresh four-word sea schedule reset
 	value.ecology_warming_count=0; // measured global new-world reset, independent of faction initialization
 	value.remembered_governor=m_smac_cross_world_governor;
 	value.ecology_world=ecology_world;

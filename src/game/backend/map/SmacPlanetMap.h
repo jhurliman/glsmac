@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace game::backend::base { class SmacBloomTerrainPlan; }
 
@@ -38,7 +39,7 @@ public:
     std::string Encode() const;
     // Detached terrain publication: preserve contour/corners and every unrelated
     // source byte. Live item/presence preconditions remain the caller's responsibility.
-    SmacPlanetMap WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const;
+    SmacPlanetMap WithBloomTerrain(const base::SmacBloomTerrainPlan& plan,std::optional<uint8_t> viewer={}) const;
     // Explicit climate projection/publication. These methods do not rebuild
     // regions, territory, sites or entities; their owning transaction does so.
     smac_climate::World ExportClimateTerrain(bool horizontal_wrap) const;

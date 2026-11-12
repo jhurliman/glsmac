@@ -6,9 +6,10 @@
 
 namespace game::backend::settings {
 std::optional<SmacEcologyRules> SmacEcologyRules::Read(const std::string& source) {
-    bool present = false;
+    bool present = false,general_present=false;
     for (const auto& line : util::String::Split(source, '\n')) {
-        if (util::String::TrimCopy(line) == "#WORLDBUILDER") { present = true; break; }
+        if (util::String::TrimCopy(line) == "#WORLDBUILDER") { present = true; }
+        if(util::String::TrimCopy(line)=="#RULES") {general_present=true;}
     }
     if (!present) { return {}; }
     const auto rows = loader::txt::TXTLoader::ReadUniqueSection(source, "WORLDBUILDER");
@@ -39,29 +40,42 @@ std::optional<SmacEcologyRules> SmacEcologyRules::Read(const std::string& source
         result.world_builder->at(30)=integer(rows.at(26));
         result.world_builder->at(14)=result.sea_level_rises; // native loader clamp
     }
+    const auto general=general_present?loader::txt::TXTLoader::ReadUniqueSection(source,"RULES"):std::vector<std::string>{};
+    if(general.size()>65) {
+        const auto row=general[65].substr(0,general[65].find(';'));auto fields=util::String::Split(row,',');
+        if(fields.size()==3 && util::String::TrimCopy(fields.back()).empty()) {fields.pop_back();}
+        if(fields.size()!=2) {throw std::invalid_argument("Global warming frequency requires numerator/denominator");}
+        result.warming_frequency=std::array<int32_t,2>{{std::clamp(integer(fields[0]),0,1000),std::clamp(integer(fields[1]),1,1000)}};
+    }
     return result;
 }
 void SmacEcologyRules::Validate() const {
     if (sea_level_rises < 1 || sea_level_rises > 100) { throw std::invalid_argument("Loaded Sea Level Rises must be1..100"); }
+    if(warming_frequency && (warming_frequency->at(0)<0 || warming_frequency->at(0)>1000 || warming_frequency->at(1)<1 || warming_frequency->at(1)>1000)) {throw std::invalid_argument("Invalid loaded warming frequency");}
     if(world_builder && world_builder->at(14)!=sea_level_rises) {throw std::invalid_argument("Generation and ecology Sea Level Rises differ");}
 }
 types::Buffer SmacEcologyRules::Serialize() const {
-    Validate(); types::Buffer buffer;buffer.WriteInt(world_builder?2:1);buffer.WriteInt(sea_level_rises);
+    Validate(); types::Buffer buffer;buffer.WriteInt(warming_frequency?3:world_builder?2:1);buffer.WriteInt(sea_level_rises);
+    if(warming_frequency) {buffer.WriteBool(world_builder.has_value());}
     if(world_builder) {for(const auto value:*world_builder) {buffer.WriteInt(value);}}
+    if(warming_frequency) {for(const auto value:*warming_frequency) {buffer.WriteInt(value);}}
     return buffer;
 }
 SmacEcologyRules SmacEcologyRules::Deserialize(types::Buffer buffer) {
     if(buffer.lenw>MAX_WIRE_BYTES) {throw std::runtime_error("Oversized ecology/generation profile");}
     const auto version=buffer.ReadInt();
-    if(version!=1 && version!=2) {throw std::runtime_error("Unsupported ecology/generation profile");}
+    if(version!=1 && version!=2 && version!=3) {throw std::runtime_error("Unsupported ecology/generation profile");}
     const auto value=buffer.ReadInt();
     if(value<1 || value>100) {throw std::runtime_error("Invalid loaded ecology profile");}
     SmacEcologyRules result{static_cast<int32_t>(value),{}};
-    if(version==2) {
+    if(version==2 || (version==3 && buffer.ReadBool())) {
         result.world_builder.emplace();
         for(auto& row:*result.world_builder) {const auto raw=buffer.ReadInt();
             if(raw<INT32_MIN || raw>INT32_MAX) {throw std::runtime_error("Generation rule exceeds signed32");}row=static_cast<int32_t>(raw);}
     }
+    if(version==3) {const auto numerator=buffer.ReadInt(),denominator=buffer.ReadInt();
+        if(numerator<0 || numerator>1000 || denominator<1 || denominator>1000) {throw std::runtime_error("Invalid frozen warming frequency");}
+        result.warming_frequency=std::array<int32_t,2>{{int32_t(numerator),int32_t(denominator)}};}
     if(buffer.lenr!=buffer.lenw) {throw std::runtime_error("Trailing ecology/generation profile");}
     result.Validate();return result;
 }

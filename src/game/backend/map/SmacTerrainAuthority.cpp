@@ -62,9 +62,9 @@ SmacTerrainAuthority SmacTerrainAuthority::WithStartingBalance(const smac_balanc
     if(m_installed) {return Installed(m_installed->WithStartingBalance(plan));}
     SmacTerrainAuthority result;result.m_origin=m_origin;result.m_metadata=m_metadata;result.m_generated=retained_terrain::WithStartingBalance(m_generated,{int32_t(m_metadata.width),int32_t(m_metadata.height),m_metadata.horizontal_wrap},plan);return result;
 }
-SmacTerrainAuthority SmacTerrainAuthority::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const {
-    if(m_installed) {return Installed(m_installed->WithBloomTerrain(plan));}
-    SmacTerrainAuthority result;result.m_origin=m_origin;result.m_metadata=m_metadata;result.m_generated=retained_terrain::WithBloomTerrain(m_generated,{int32_t(m_metadata.width),int32_t(m_metadata.height),m_metadata.horizontal_wrap},plan);
+SmacTerrainAuthority SmacTerrainAuthority::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan,std::optional<uint8_t> viewer) const {
+    if(m_installed) {return Installed(m_installed->WithBloomTerrain(plan,viewer));}
+    SmacTerrainAuthority result;result.m_origin=m_origin;result.m_metadata=m_metadata;result.m_generated=retained_terrain::WithBloomTerrain(m_generated,{int32_t(m_metadata.width),int32_t(m_metadata.height),m_metadata.horizontal_wrap},plan,viewer);
     (void)result.ExportClimateTerrain();return result;
 }
 smac_climate::World SmacTerrainAuthority::ExportClimateTerrain() const {

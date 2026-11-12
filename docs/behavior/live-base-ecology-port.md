@@ -52,3 +52,37 @@ live calculation, resource processing, cache, production and canonical snapshot
 translation units; other objects reuse the current normal build and leak
 detection is disabled. This is calculation/cache integration, not a claim that blooms, aggregate
 posting, ecological facility completion or every ecological event is playable.
+
+
+## Live post-research event transaction
+
+Ordinary campaigns now connect the retained final resource pass to the actual
+handler after research: aggregate contribution, mandatory existing CRT draw
+(including damage0), saved rule gates, ordered selection and terrain plan.
+The AI post-terrain gate consumes its actual extra CRT calls and undoes only H;
+terrain and earlier draws remain. One-shot, H and Voice holds follow in order.
+
+The owning Map transaction validates live preimages, prepares native authority,
+site-cache invalidation and renderer payloads, and exposes a temporary staged
+view to the existing ordered native factory. Failed preparation publishes
+nothing. Class-only updates preserve contours and shared corner heights. The
+single admitted focused viewer receives the full direct-cell item memory copy;
+peer memory/exploration is preserved until actual native sight discloses it.
+Ordinary notices use their separate viewer admission.
+
+Frozen ecology profile V3 retains the native warming-frequency pair. Simulation
+V40 adds the independent signed pending/increment/divisor/accumulator schedule,
+with fresh zero authority and absent history on V39 and older migration. The
+threshold scheduler increments the admitted global count, applies the verified
+clamps/severity, updates native climate-extra and reschedules the complete signed
+pending amount. It consumes no guessed RNG budget.
+
+The complete deferred climate recalculation and admitted volcanic eruption
+remain untranslated. Their actual admission is evaluated; an admitted eruption
+or due sea step explicitly stops before publication rather than suppressing the
+branch or fabricating terrain effects. The later-step accumulator advances
+normally before a step is due. Loaded native factories requiring the separate
+assignment tail retain their existing explicit rejection. These limits are
+material beyond the early campaign slice; this is not complete climate parity.
+Legacy diagnostic worlds lacking frozen event rules retain aggregate-only
+capability without invented rule words or frequency defaults.

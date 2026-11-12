@@ -97,7 +97,7 @@ std::string Wire( const SmacSimulationState& value, size_t index = SIZE_MAX, int
     if(!legacy && !v12) {buffer.WriteInt(value.human_membership);}
 	return buffer.ToString();
 }
-std::string CurrentWire(const SmacSimulationState& value,int64_t version=39,bool include_capabilities=true,bool include_military=true) {
+std::string CurrentWire(const SmacSimulationState& value,int64_t version=40,bool include_capabilities=true,bool include_military=true) {
     types::Buffer suffix;suffix.WriteBool(value.strategy.has_value());
     if(value.strategy) {
         for(const auto& [owner,state]:*value.strategy) {
@@ -222,6 +222,11 @@ std::string CurrentWire(const SmacSimulationState& value,int64_t version=39,bool
             }
         }
     }
+    if(version>=40) {
+        suffix.WriteBool(value.ecology_climate_schedule.has_value());
+        if(value.ecology_climate_schedule) {const auto& c=*value.ecology_climate_schedule;
+            for(const auto word:{c.pending,c.increment,c.divisor,c.accumulator}) {suffix.WriteInt(word);}}
+    }
     return Wire(value,1,version)+suffix.ToString();
 }
 
@@ -239,6 +244,15 @@ unit::SmacPredefinedUnitCatalog CapabilityCatalog() {
 }
 
 void AddSmacSimulationStateTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC ecology V40 preserves independent signed sea schedule and legacy absence",GT(){
+        const auto technologies=smac_rules_fixture::Technologies();const auto profiles=smac_startup_fixture::Factions();const auto units=smac_startup_fixture::Units();
+        auto state=State();state.ecology_climate_schedule=faction::SmacEcologyClimateSchedule{-3,7,20,19};
+        const auto wire=state.Serialize(technologies,profiles,units).ToString();
+        GT_ASSERT(wire==CurrentWire(state) && SmacSimulationState::Deserialize(wire,technologies,profiles,units)==state,"V40 changed signed pending or fractional schedule history");
+        const auto legacy=SmacSimulationState::Deserialize(CurrentWire(state,39),technologies,profiles,units);
+        GT_ASSERT(!legacy.ecology_climate_schedule,"V39 inferred a schedule from current warming or terrain");GT_OK();
+    });
+
     task->AddTest("SMAC Vendetta raw history preserves source write order fresh reuse and unavailable increments",GT(){
         for(int scenario=0;scenario<7;++scenario) {
             faction::SmacHostileState state;state.owners.emplace(1,faction::SmacHostileOwner{});state.owners.emplace(2,faction::SmacHostileOwner{});

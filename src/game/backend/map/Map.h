@@ -1,6 +1,7 @@
 #pragma once
 
 namespace game::native_terrain {struct World;}
+namespace game::backend::base {class SmacBloomTerrainPlan;struct SmacBloomTerrainCell;}
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -187,6 +188,23 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
     // Restores Map flora fields and geometry caches on normal/exceptional exit.
     void QueryGlobalSpread(const PreparedGlobalSpread& prepared,const std::function<void()>& query);
 
+    // Same owning accumulation as the event. All preimages, native authority,
+    // observer memory and render work are prepared before live publication.
+    class PreparedEcologyBloom {
+    public:
+        ~PreparedEcologyBloom();
+    private:
+        friend class Map;
+        struct Data;
+        PreparedEcologyBloom();
+        std::unique_ptr<Data> data;
+    };
+    base::SmacBloomTerrainCell CopyEcologyBloomCell(std::array<int32_t,2> point,const SmacWorkerKnowledge::Data& knowledge) const;
+    std::unique_ptr<PreparedEcologyBloom> PrepareEcologyBloom(const base::SmacBloomTerrainPlan& plan,std::optional<uint8_t> viewer={},std::optional<int32_t> climate_extra={});
+    const TerrainRenderUpdate* GetEcologyBloomTerrainPayload(const PreparedEcologyBloom& prepared) const;
+    void CommitEcologyBloom(PreparedEcologyBloom& prepared);
+    void QueryEcologyBloom(const PreparedEcologyBloom& prepared,const std::function<void()>& query);
+
     smac_terrain::LandmarkGeometry* GetNativeGeometry() const;
 	const size_t GetHeight() const;
 
@@ -222,6 +240,7 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 
 private:
     void ValidateGlobalSpread(const PreparedGlobalSpread& prepared) const;
+    void ValidateEcologyBloom(const PreparedEcologyBloom& prepared) const;
 	GlsmacTerritoryTopology PrepareSiteRatings(const GlsmacTerritoryTopology& topology,
 		const std::vector<smac_site::Coordinate>& bases,size_t turn,std::optional<smac_site::Coordinate> point) const;
     const error_code_t LoadNativeTerrain(const GlsmacResourceMapPolicy& policy,MT_CANCELABLE);

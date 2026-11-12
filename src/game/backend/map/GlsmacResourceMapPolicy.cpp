@@ -80,10 +80,10 @@ GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithStartingBalance(const smac_
     auto result=*this;result.SetOriginalSource(m_planet->WithStartingBalance(plan));return result;
 }
 
-GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan) const {
-    if(m_native && !m_planet) {return GeneratedTerrainV3(m_native->WithBloomTerrain(plan));}
+GlsmacResourceMapPolicy GlsmacResourceMapPolicy::WithBloomTerrain(const base::SmacBloomTerrainPlan& plan,std::optional<uint8_t> viewer) const {
+    if(m_native && !m_planet) {return GeneratedTerrainV3(m_native->WithBloomTerrain(plan,viewer));}
     if (!m_planet) { throw std::runtime_error("Bloom terrain requires original Planet resource authority"); }
-    const auto updated=m_planet->WithBloomTerrain(plan);
+    const auto updated=m_planet->WithBloomTerrain(plan,viewer);
     return m_retained_climate ? RetainedClimatePlanetV2(updated,m_automatic_land_resources):InstalledPlanetV1(updated,m_automatic_land_resources);
 }
 

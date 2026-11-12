@@ -490,6 +490,8 @@ private:
     void RunNativeCommands(GSE_CALLABLE);
     void GrantFirstOwnerTechnologies(GSE_CALLABLE,int32_t owner);
     void RunSmacWildlifeTurn(GSE_CALLABLE);
+    void ProcessCanonicalBaseEcology(GSE_CALLABLE,base::Base& base);
+    void ProcessCanonicalClimateStep();
     uint8_t ActiveFactionMask() const;
     void PublishCanonicalCommandTurn(GSE_CALLABLE);
     std::optional<int32_t> m_smac_controller_owner;

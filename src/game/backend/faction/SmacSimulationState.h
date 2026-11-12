@@ -145,6 +145,11 @@ struct SmacEcologyHistory {
     }
 };
 
+struct SmacEcologyClimateSchedule {
+    int32_t pending=0,increment=0,divisor=0,accumulator=0;
+    bool operator==(const SmacEcologyClimateSchedule& other) const noexcept {return pending==other.pending && increment==other.increment && divisor==other.divisor && accumulator==other.accumulator;}
+};
+
 struct SmacSimulationState {
 	// Supported-campaign admission, not inferred project ownership. Future
 	// project consumers must retire this capability before activating effects.
@@ -215,6 +220,7 @@ struct SmacSimulationState {
 	// global word, not faction H; new-world reset clears it before owner setup.
 	SmacFactionStatusWords faction_status;
 	std::optional<int32_t> ecology_warming_count;
+    std::optional<SmacEcologyClimateSchedule> ecology_climate_schedule;
 	// Absent before V29; restore never initializes or recounts native state.
 	std::optional<SmacNativeFactoryState> native_factory;
 	// V11-V29 did not retain battle-plan targets. IDs are stable manager IDs,

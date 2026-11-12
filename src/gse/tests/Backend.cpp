@@ -916,6 +916,63 @@ public:
         });
     }
 
+    std::string ConfigureMilestoneFactionPresentations() {
+        using namespace game::backend;
+        const auto* root=std::getenv("GLSMAC_STARTUP_ASSETS");
+        if(!root || !*root) {return "Milestone faction presentation requires GLSMAC_STARTUP_ASSETS";}
+        // Real import callables still use ResourceManager resolution. Bind only
+        // these owned files, with absolute names, for the synchronous import.
+        ::resource::ResourceManager resources("unused-milestone-faction-import");
+        std::map<std::string,std::string> paths;
+        for(const auto& file:std::filesystem::directory_iterator(root)) {
+            if(!file.is_regular_file()) {continue;}
+            auto name=file.path().filename().string();std::transform(name.begin(),name.end(),name.begin(),[](unsigned char c){return char(std::tolower(c));});
+            const auto path=std::filesystem::absolute(file.path()).string();paths.emplace(name,path);
+            auto key=path;std::transform(key.begin(),key.end(),key.begin(),[](unsigned char c){return char(std::tolower(c));});
+            resources.m_custom_resource_paths.emplace(key,path);
+        }
+        auto* previous=g_engine->m_resource_manager;
+        {std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=&resources;}
+        util::FinallyGuard restore([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_resource_manager=previous;});
+        return WithScriptValues([&](GSE_CALLABLE)->std::string {
+            std::vector<std::pair<Player*,std::string>> selected;
+            for(auto* player:m_state->m_players) {if(const auto* faction=player->GetFaction()) {selected.emplace_back(player,faction->m_id);}}
+            auto* native=static_cast<value::Object*>(m_state->GetFM()->Wrap(GSE_CALL));
+            gse::value::object_properties_t imports{{"add",native->Get("add")}};
+            for(const auto* method:{"import_display_identity","import_base_names","import_colors"}) {
+                auto* invoke=static_cast<value::Callable*>(native->Get(method));
+                imports.emplace(method,NATIVE_CALL(invoke,&paths) {
+                    if(arguments.empty() || arguments.front()->type!=VT_STRING) {throw std::runtime_error("Faction import needs its source filename");}
+                    const auto name=static_cast<value::String*>(arguments.front())->value;
+                    const auto found=paths.find(name);if(found==paths.end()) {throw std::runtime_error("Missing owned faction presentation: "+name);}
+                    auto args=arguments;args.front()=VALUE(value::String,,found->second);
+                    return invoke->Run(GSE_CALL,args);
+                }));
+            }
+            auto* facade=VALUEEXT(value::Object,GSE_CALL,imports);
+            auto* module=static_cast<value::Object*>(RunScript(GSE_CALL,"./GLSMAC_data/default/factions"));
+            static_cast<value::Callable*>(module->Get("configure"))->Run(GSE_CALL,{facade,VALUE(value::String,,"smac")});
+            for(const auto& row:selected) {row.first->SetFaction(m_state->GetFM()->Get(row.second));}
+            // Cheap pre-start capture contract: actual atlas decoding, metadata,
+            // names and display identity must survive their real saved codec.
+            for(const auto* id:{"GAIANS","HIVE","UNIVERSITY","MORGANITES","SPARTANS","BELIEVERS","PEACEKEEPERS"}) {
+                const auto* faction=m_state->GetFM()->Get(id);
+                GT_ASSERT(faction && faction->m_display_identity && !faction->m_display_identity->leader_name.empty()
+                    && !faction->m_base_names.land.empty(),"Milestone faction lacks source identity or Base names");
+                const auto& art=faction->m_bases_render;
+                GT_ASSERT(!art.file.empty() && art.cell_width==100 && art.cell_height==75 && art.cell_padding==1,"Milestone faction lacks Base atlas metadata");
+                const auto file=paths.find(art.file);GT_ASSERT(file!=paths.end(),"Milestone Base atlas is unavailable");
+                const auto* atlas=g_engine->GetTextureLoader()->TryLoadCustomTexture(file->second);
+                GT_ASSERT(atlas && atlas->GetWidth()>=1024 && atlas->GetHeight()>=768,"Milestone Base atlas did not decode");
+                faction::Faction saved;saved.Deserialize(faction->Serialize());
+                GT_ASSERT(saved.m_bases_render.file==art.file && saved.m_bases_render.cell_width==art.cell_width
+                    && saved.m_display_identity==faction->m_display_identity && saved.m_base_names.land==faction->m_base_names.land,
+                    "Milestone faction presentation failed saved transfer");
+            }
+            GT_OK();
+        });
+    }
+
     std::string StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet,bool generated=false) {
         using namespace game::backend;
         m_campaign_generated=generated;
@@ -923,10 +980,9 @@ public:
         auto& settings=m_state->m_settings.global;
         settings.SelectRuleset("smac");settings.InitializeHostRules(source);
         smac_rules_fixture::AcceptWorldSize(settings);
+        const auto presentations=ConfigureMilestoneFactionPresentations();
+        GT_ASSERT(presentations.empty(),"Milestone faction configure: "+presentations);
         EnableSimulationParticipants({0});
-        for(const auto& profile:settings.GetSmacFactionStartupRules()->factions) {
-            if(!m_state->GetFM()->Get(profile.port_id)) {m_state->GetFM()->Add(new faction::Faction(profile.port_id,profile.port_id));}
-        }
         settings.difficulty_level=0;
         if(generated) {
             settings.SelectSmacWorldSize(2);settings.map.type=settings::MapSettings::MT_RANDOM;
@@ -942,8 +998,11 @@ public:
             util::FinallyGuard restore([&]{std::lock_guard lock(g_engine->GetGC()->m_spaces_mutex);g_engine->m_game=previous_game;});
             m_map.release();util::FinallyGuard recover([&]{m_game.RetireOldMap();m_map.reset(m_game.m_map);});
             std::exception_ptr error;
-            std::thread native([&]{try {m_game.AcquireInitializationMap();} catch(...) {error=std::current_exception();}});
-            native.join();if(error) {std::rethrow_exception(error);}
+            const auto generated_sources=WithCampaignMapSources([&]()->std::string {
+                std::thread native([&]{try {m_game.AcquireInitializationMap();} catch(...) {error=std::current_exception();}});
+                native.join();if(error) {std::rethrow_exception(error);}GT_OK();
+            });
+            GT_ASSERT(generated_sources.empty(),"Generated map source acquisition: "+generated_sources);
             ProcessAccumulations();
             GT_ASSERT(m_game.m_active_admission->generated_map && m_game.GetMap()->GetResourcePolicy()->NativeTerrainSource(),"Generated campaign omitted native terrain authority");
         }
@@ -8259,7 +8318,7 @@ LocalCampaignActions ConventionalUnitFixture::CampaignActions() const {return fi
 std::vector<LocalFactionProgress> ConventionalUnitFixture::CampaignProgress() const {return fixture->CampaignProgress();}
 std::string ConventionalUnitFixture::CheckLocalComputerBoundary() {return fixture->CheckLocalComputerBoundary();}
 std::string ConventionalUnitFixture::StartLocalComputerCampaign(const std::function<std::string(const std::string&)>& source,const std::string& planet) {return fixture->StartLocalComputerCampaign(source,planet);}
-std::string ConventionalUnitFixture::StartGeneratedLocalComputerCampaign(const std::function<std::string(const std::string&)>& source) {return BackendFixture::WithCampaignMapSources([&]{return fixture->StartLocalComputerCampaign(source,"",true);});}
+std::string ConventionalUnitFixture::StartGeneratedLocalComputerCampaign(const std::function<std::string(const std::string&)>& source) {return fixture->StartLocalComputerCampaign(source,"",true);}
 
 void ConventionalUnitFixture::Configure( bool refreshed, int32_t rate, bool single, bool selected_rover ) { fixture->ConfigureConventional( refreshed, rate, single, selected_rover ); }
 void ConventionalUnitFixture::ConfigureMovementCampaign( bool selected_rover ) { fixture->ConfigureConventional( true, 3, false, selected_rover, true ); }
@@ -13110,6 +13169,12 @@ static void AddUnitSnapshotTests( task::gsetests::GSETests* task ) {
 }
 
 void AddBackendTests( task::gsetests::GSETests* task ) {
+    task->AddTest("SMAC milestone faction presentations import owned atlas definitions",GT(){
+        const auto* assets=std::getenv("GLSMAC_STARTUP_ASSETS");if(!assets || !*assets) {GT_OK();}
+        BackendFixture fixture;const auto result=fixture.ConfigureMilestoneFactionPresentations();
+        GT_ASSERT(result.empty(),"Owned faction presentation smoke: "+result);GT_OK();
+    });
+
     task->AddTest("Developed reference selects owned Scout after lower-ID workers",GT(){
         {BackendFixture fixture;const auto error=fixture.CheckDevelopedReferenceScoutSelection();GT_ASSERT(error.empty(),"Mixed foreign/worker selection: "+error);}
         {BackendFixture fixture;const auto error=fixture.CheckDevelopedReferenceScoutSelection(true);GT_ASSERT(error.empty(),"Mixed Rover/Scout selection: "+error);}

@@ -80,7 +80,10 @@ void AddSmacLiveEconomyTests(task::gsetests::GSETests* task) {
                 }
                 result+=line+'\n';
             }
-            result+="\n#WORLDBUILDER\n";for(int i=0;i<31;++i) {result+="5\n";}
+            //27 source rows contain31 numbers: row26 is the five-field
+            // continent ratio vector, not five separate scalar source rows.
+            result+="\n#WORLDBUILDER\n";
+            for(int row=0;row<27;++row) {result+=row==25?"3,6,12,18,24\n":"5\n";}
             return result;
         };
         ConventionalUnitFixture fixture;fixture.ConfigureTwoResourceParticipants(source);std::string snapshot;

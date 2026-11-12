@@ -136,7 +136,6 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
                 MakeBase(GSE_CALL,game,901,0,1,2,2,3);MakeBase(GSE_CALL,game,800,6,2,6,4,3);
                 const auto spawn=[&](size_t id,size_t slot,int32_t owner,size_t x,size_t y) {
                     ConventionalUnitState record{2,owner,1,0,0,false,ConventionalUnitState::Home::None,SmacMoraleMode::Mode0};
-                    record.retained_state_word=0x400u;
                     return game->GetUM()->SpawnConventionalUnit(GSE_CALL,id,game->GetUM()->GetUnitDef("knowledge-scout"),
                         &game->GetState()->m_slots->GetSlot(slot),game->GetMap()->GetTile(x,y),record);
                 };
@@ -154,6 +153,7 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
                 auto* row=static_cast<value::Object*>(rows[0]);
                 const auto expected=static_cast<value::String*>(row->Get("expected_state"))->value;
                 if(scenario==3) {fixture.ResourceState([](auto& state){state.hostility.owners.at(2).directions[1].secondary=1;});}
+                const auto actor_before=Unit::Serialize(actor).ToString(),other_before=Unit::Serialize(other).ToString();
                 const auto before=fixture.Snapshot();const auto random=fixture.GameplayRandom();
                 const auto command=gse::value::object_properties_t{{"target",VALUE(value::Int,,2)},
                     {"kind",VALUE(value::String,,scenario==1?"truce":"treaty")},{"expected_state",VALUE(value::String,,expected)}};
@@ -173,8 +173,13 @@ void AddSmacLiveWorkerKnowledgeTests( task::gsetests::GSETests* task ) {
                         if(scenario==0) {authority=authority && state.diplomacy_metadata->grievance[2][1]==0 && state.faction_status.values[2] && (*state.faction_status.values[2]&0x10000u);}
                     });
                     GT_ASSERT(authority,"accepted peace lost exact directed date bookkeeping or territory status aftermath");
-                    GT_ASSERT((*actor->Conventional().retained_state_word&0x400u)!=0 && ((*other->Conventional().retained_state_word&0x400u)!=0)==(scenario==1),
-                        "Treaty failed to clear the whole roster or mark qualifying actor; Truce incorrectly scanned Units");
+                    if(scenario==1) {
+                        GT_ASSERT(Unit::Serialize(actor).ToString()==actor_before && Unit::Serialize(other).ToString()==other_before,
+                            "Truce changed a Unit record; its wrapper must not scan or alter Units");
+                    } else {
+                        GT_ASSERT((*actor->Conventional().retained_state_word&0x400u)!=0 && (*other->Conventional().retained_state_word&0x400u)==0,
+                            "Treaty failed to clear the whole roster or mark qualifying actor");
+                    }
                     const auto after=fixture.Snapshot();game->Event(GSE_CALL,"offer_smac_peace",command);fixture.DrainEvents();
                     GT_ASSERT(fixture.Snapshot()==after && fixture.GameplayRandom()==advanced,"duplicate retired diplomatic offer replayed effects or RNG");
                 }

@@ -250,12 +250,16 @@ std::array< int64_t, 3 > Game::CalculateCanonicalTileResources( const map::tile:
 	if ( !base_count ) { throw std::runtime_error( "Canonical resource owner has no registered base" ); }
 
 	const feature_t supported_features = FEATURE_RIVER | FEATURE_MONOLITH | FEATURE_XENOFUNGUS | FEATURE_JUNGLE
-		| (m_map->GetResourcePolicy()->OriginalPlanet() ? FEATURE_URANIUM | FEATURE_GEOTHERMAL | FEATURE_VOLCANO | FEATURE_GARLAND_CRATER | FEATURE_FOSSIL_FIELD_RIDGE : 0);
+		| (m_map->GetResourcePolicy()->NativeTerrainSource() ? FEATURE_URANIUM | FEATURE_GEOTHERMAL | FEATURE_VOLCANO
+            | FEATURE_GARLAND_CRATER | FEATURE_FOSSIL_FIELD_RIDGE | FEATURE_SUNNY_MESA | FEATURE_DUNES
+            | FEATURE_UNITY_POD | FEATURE_UNITY_ENERGY | FEATURE_UNITY_CHOPPER | FEATURE_UNITY_RADAR : 0);
 	constexpr terraforming_t supported_terraforming = TERRAFORMING_ROAD | TERRAFORMING_MAG_TUBE | TERRAFORMING_FOREST
 		| TERRAFORMING_FARM | TERRAFORMING_SOIL_ENRICHER | TERRAFORMING_SOLAR | TERRAFORMING_MINE
 		| TERRAFORMING_CONDENSER | TERRAFORMING_BOREHOLE | TERRAFORMING_SENSOR | TERRAFORMING_BUNKER | TERRAFORMING_AIRBASE;
 	if ( ( tile.features & ~supported_features ) || ( tile.terraforming & ~supported_terraforming ) ) {
-		throw std::runtime_error( "Canonical resource tile has unsupported landmark/ownership metadata" );
+		throw std::runtime_error( "Canonical resource tile has unsupported landmark/ownership metadata at "
+            +std::to_string(tile.coord.x)+","+std::to_string(tile.coord.y)+" features="+std::to_string(tile.features)
+            +" terraforming="+std::to_string(tile.terraforming) );
 	}
 	if ( tile.moisture < MOISTURE_ARID || tile.moisture > MOISTURE_RAINY
 		|| tile.rockiness < ROCKINESS_FLAT || tile.rockiness > ROCKINESS_ROCKY || !tile.elevation.center ) {
